@@ -738,7 +738,7 @@ namespace LinqToDB.SqlQuery
 		public static string SuggestTableSourceAlias(SelectQuery selectQuery, string alias)
 		{
 			var aliases = new[] { alias };
-			var currentAliases = EnumerateAccessibleTableSources(selectQuery).Where(ts => ts.Alias != null).Select(ts => ts.Alias);
+			var currentAliases = EnumerateAccessibleTableSources(selectQuery).Where(ts => ts.Alias != null).Select(ts => ts.Alias!);
 			Utils.MakeUniqueNames(aliases, currentAliases, s => s, (_, n, _) => aliases[0] = n);
 
 			return aliases[0];

@@ -692,7 +692,7 @@ namespace LinqToDB.SqlQuery
 
 							newElement = new SqlUpdateStatement(selectQuery ?? s.SelectQuery)
 							{
-								Update = update,
+								Update = update ?? s.Update,
 								Output = output,
 								Tag    = tag,
 								With   = with,

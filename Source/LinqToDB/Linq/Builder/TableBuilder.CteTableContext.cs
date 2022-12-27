@@ -192,7 +192,6 @@ namespace LinqToDB.Linq.Builder
 							newField = new SqlField(placeholder.Sql.SystemType ?? typeof(object), "field",
 								placeholder.Sql.CanBeNull);
 
-							var name = "field";
 							Utils.MakeUniqueNames(new []{newField}, staticNames: CteTable.Fields.Select(f => f.Name), f => f.Name, (f, n, _) => f.Name = n);
 						}
 

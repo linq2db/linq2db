@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -89,7 +87,7 @@ namespace LinqToDB.SqlQuery
 			set => RawAlias = value;
 		}
 
-		private static string? GetAlias(ISqlExpression? expr)
+		static string? GetAlias(ISqlExpression? expr)
 		{
 			switch (expr)
 			{
@@ -145,10 +143,10 @@ namespace LinqToDB.SqlQuery
 		public override string ToString()
 		{
 #if OVERRIDETOSTRING
-			var sb  = new StringBuilder();
-			var dic = new Dictionary<IQueryElement, IQueryElement>();
+			var writer = new SqlTextWriter();
+			var dic    = new Dictionary<IQueryElement, IQueryElement>();
 
-			sb
+			writer
 				.Append('t')
 				.Append(Parent?.SourceID ?? -1)
 #if DEBUG
@@ -156,23 +154,23 @@ namespace LinqToDB.SqlQuery
 #endif
 				.Append('.')
 				.Append(Alias ?? "c")
-				.Append(" => ");
-
-			Expression.ToString(sb, dic);
+				.Append(" => ")
+				.Append(Expression, dic);
 
 			var underlying = UnderlyingExpression();
 			if (!ReferenceEquals(underlying, Expression))
 			{
-				sb.Append(" := ");
-				underlying.ToString(sb, dic);
+				writer
+					.Append(" := ")
+					.Append(underlying, dic);
 			}
 
-			return sb.ToString();
+			return writer.ToString();
 
+#else
 			if (Expression is SqlField)
 				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
 
-#else
 			return base.ToString()!;
 #endif
 		}

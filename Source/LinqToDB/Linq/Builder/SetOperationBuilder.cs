@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
@@ -9,9 +8,9 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 
-	sealed class SetOperationBuilder : MethodCallBuilder
+	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
+		static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
 
 		#region Builder
 
@@ -122,22 +121,22 @@ namespace LinqToDB.Linq.Builder
 				Init();
 			}
 
-			readonly         Type                      _type;
-			readonly         bool                      _isObject;
-			readonly         MethodCallExpression      _methodCall;
-			private readonly SetOperation              _setOperation;
-			readonly         SubQueryContext           _sequence1;
-			readonly         SubQueryContext           _sequence2;
-			private          Expression                _leftSqlExpr  = null!;
-			private          Expression                _rightSqlExpr = null!;
-			private          SqlPlaceholderExpression? _setIdPlaceholder;
+			readonly Type                 _type;
+			readonly bool                 _isObject;
+			readonly MethodCallExpression _methodCall;
+			readonly SetOperation         _setOperation;
+			readonly SubQueryContext      _sequence1;
+			readonly SubQueryContext      _sequence2;
+			Expression                    _leftSqlExpr  = null!;
+			Expression                    _rightSqlExpr = null!;
+			SqlPlaceholderExpression?     _setIdPlaceholder;
 
 			readonly Dictionary<Expression, (
 				int idx,
 				SqlGenericConstructorExpression.Assignment left,
 				SqlGenericConstructorExpression.Assignment right)> _matchedPairs = new(ExpressionEqualityComparer.Instance);
 
-			private List<
+			List<
 				(
 				Expression key,
 				SqlGenericConstructorExpression.Parameter left,
@@ -145,7 +144,7 @@ namespace LinqToDB.Linq.Builder
 
 			readonly Dictionary<Expression, SqlPlaceholderExpression> _createdSQL = new(ExpressionEqualityComparer.Instance);
 
-			private SqlGenericConstructorExpression? _body;
+			SqlGenericConstructorExpression? _body;
 
 			static string? GenerateColumnAlias(Expression expr)
 			{
@@ -250,6 +249,9 @@ namespace LinqToDB.Linq.Builder
 								{
 									assignmentExpr = MatchSequences(assignmentExpr, left.Expression, right.Expression,
 										leftSequence, rightSequence, ref mismatches);
+
+									if (assignmentExpr == null)
+										throw new InvalidOperationException();
 								}
 								else
 								{
@@ -298,6 +300,9 @@ namespace LinqToDB.Linq.Builder
 									SqlGenericConstructorExpression.CreateType.Incompatible,
 									genericRight.Type, null, null), right.Expression,
 								leftSequence, rightSequence, ref mismatches);
+
+							if (assignmentExpr == null)
+								throw new InvalidOperationException();
 						}
 						else
 						{
@@ -326,7 +331,6 @@ namespace LinqToDB.Linq.Builder
 
 					var maxParametersCount = Math.Max(leftGeneric.Parameters.Count, rightGeneric.Parameters.Count);
 
-					List<SqlGenericConstructorExpression.Parameter>? newParameters = null;      
 					if (maxParametersCount > 0)
 					{
 						var isConstructMismatch = rightGeneric.Constructor       != leftGeneric.Constructor ||
@@ -334,7 +338,8 @@ namespace LinqToDB.Linq.Builder
 
 						_matchedParamPairs ??= new ();
 
-						newParameters = new List<SqlGenericConstructorExpression.Parameter>(maxParametersCount);
+						var newParameters = new List<SqlGenericConstructorExpression.Parameter>(maxParametersCount);
+
 						for (int i = 0; i < leftGeneric.Parameters.Count; i++)
 						{
 							var left = leftGeneric.Parameters[i];
@@ -364,12 +369,12 @@ namespace LinqToDB.Linq.Builder
 							else
 							{
 								throw new NotImplementedException();
-
+								/*
 								// we cannot use positioned match. We have to use matching via MemberInfo
 								if (left.MemberInfo != null)
 								{
 									throw new NotImplementedException();
-								}
+								}*/
 							}
 
 							if (right == null)
@@ -383,6 +388,9 @@ namespace LinqToDB.Linq.Builder
 							{
 								assignmentExpr = MatchSequences(assignmentExpr, left.Expression, right.Expression,
 									leftSequence, rightSequence, ref mismatches);
+
+								if (assignmentExpr == null)
+									throw new InvalidOperationException();
 							}
 							else
 							{
@@ -430,11 +438,11 @@ namespace LinqToDB.Linq.Builder
 				return createType;
 			}
 
-			private static MethodInfo _keySetIdMethosInfo =
+			static MethodInfo _keySetIdMethosInfo =
 				Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(typeof(int));
 
-			private const           string     ProjectionSetIdFieldName = "__projection__set_id__";
-			private static readonly Expression _setIdFieldName          = Expression.Constant(ProjectionSetIdFieldName);
+			const           string     ProjectionSetIdFieldName = "__projection__set_id__";
+			static readonly Expression _setIdFieldName          = Expression.Constant(ProjectionSetIdFieldName);
 
 			Expression CorrectAssignments(Expression root, SqlGenericConstructorExpression constructorExpression)
 			{
@@ -685,13 +693,6 @@ namespace LinqToDB.Linq.Builder
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				throw new NotImplementedException();
-
-				/*var expr = Builder.FinalizeProjection(this,
-					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
-
-				var mapper = Builder.BuildMapper<T>(expr);
-
-				QueryRunner.SetRunQuery(query, mapper);*/
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)

@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 
 // ReSharper disable InconsistentNaming
 
@@ -10,7 +8,6 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Common.Internal;
-	using DataProvider;
 	using Expressions;
 	using Extensions;
 	using Linq;
@@ -366,22 +363,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					// remove current column wrapping
-					for (var index = 0; index < statement.Update.Items.Count; index++)
-					{
-						var item = statement.Update.Items[index];
-
-						var column = QueryHelper.NeedColumnForExpression(statement.SelectQuery, item.Column, false);
-						if (column != null)
-							item.Column = column;
-
-						item.Expression = item.Expression.Convert(statement.SelectQuery, (v, e) =>
-						{
-							if (e is SqlColumn column && column.Parent == v.Context)
-								return column.Expression;
-							return e;
-						});
-					}
+					CorrectUpdateSetters(statement);
 				}
 			}
 
@@ -2759,6 +2741,22 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
+		protected static SqlOutputClause? RemapToOriginalTable(SqlOutputClause? outputClause)
+		{
+			//remapping to table back
+			if (outputClause != null)
+			{
+				outputClause = outputClause.Convert((object?)null, (_, e) =>
+				{
+					if (e is SqlAnchor { AnchorKind: SqlAnchor.AnchorKindEnum.Deleted } anchor)
+						return anchor.SqlExpression;
+					return e;
+				}, true);
+			}
+
+			return outputClause;
+		}
+
 		protected static bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
 		{
 			source = null;
@@ -2897,8 +2895,10 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement)
 		{
-			var tableToUpdate = updateStatement.GetUpdateTable();
-			var needsComparison = !HasComparisonInQuery(updateStatement.SelectQuery, tableToUpdate);
+			if (updateStatement.Update.Table == null)
+				throw new InvalidOperationException();
+
+			var needsComparison = !HasComparisonInQuery(updateStatement.SelectQuery, updateStatement.Update.Table);
 
 			if (updateStatement.Update.Table != null)
 			{
@@ -2920,24 +2920,21 @@ namespace LinqToDB.SqlProvider
 				var newUpdateStatement = new SqlUpdateStatement(sql);
 				updateStatement.SelectQuery.ParentSelect = sql;
 
-				if (tableToUpdate == null)
-					throw new LinqToDBException("Query can't be translated to UPDATE Statement.");
-
 				Dictionary<IQueryElement, IQueryElement>? replaceTree = null;
 
-				var clonedQuery = CloneQuery(updateStatement.SelectQuery, needsComparison ? null : tableToUpdate, out replaceTree);
+				var clonedQuery = CloneQuery(updateStatement.SelectQuery, needsComparison ? null : updateStatement.Update.Table, out replaceTree);
 
 				SqlTable? tableToCompare = null;
-				if (replaceTree.TryGetValue(tableToUpdate, out var newTable))
+				if (replaceTree.TryGetValue(updateStatement.Update.Table, out var newTable))
 				{
 					tableToCompare = (SqlTable)newTable;
 				}
 
 				if (tableToCompare != null)
 				{
-					replaceTree = CorrectReplaceTree(replaceTree, tableToUpdate);
+					replaceTree = CorrectReplaceTree(replaceTree, updateStatement.Update.Table);
 
-					ApplyUpdateTableComparison(clonedQuery, tableToUpdate, tableToCompare);
+					ApplyUpdateTableComparison(clonedQuery, updateStatement.Update.Table, tableToCompare);
 				}
 
 				CorrectUpdateSetters(updateStatement);
@@ -2954,8 +2951,8 @@ namespace LinqToDB.SqlProvider
 					{
 						var usedSources = new HashSet<ISqlTableSource>();
 						QueryHelper.GetUsedSources(item.Expression!, usedSources);
-						usedSources.Remove(tableToUpdate);
-						if (replaceTree?.TryGetValue(tableToUpdate, out var replaced) == true)
+						usedSources.Remove(updateStatement.Update.Table);
+						if (replaceTree?.TryGetValue(updateStatement.Update.Table, out var replaced) == true)
 							usedSources.Remove((ISqlTableSource)replaced);
 
 						if (usedSources.Count > 0)
@@ -2971,7 +2968,7 @@ namespace LinqToDB.SqlProvider
 
 						processUniversalUpdate = false;
 
-						var innerQuery = CloneQuery(clonedQuery, tableToUpdate, out var innerTree);
+						var innerQuery = CloneQuery(clonedQuery, updateStatement.Update.Table, out var innerTree);
 						innerQuery.Select.Columns.Clear();
 
 						var rows = new List<(ISqlExpression, ISqlExpression)>(updateStatement.Update.Items.Count);
@@ -3011,13 +3008,13 @@ namespace LinqToDB.SqlProvider
 						var ex = item.Expression;
 
 						QueryHelper.GetUsedSources(ex, usedSources);
-						usedSources.Remove(tableToUpdate);
+						usedSources.Remove(updateStatement.Update.Table);
 
 						if (usedSources.Count > 0)
 						{
 							// it means that update value column depends on other tables and we have to generate more complicated query
 
-							var innerQuery = CloneQuery(clonedQuery, tableToUpdate, out var iterationTree);
+							var innerQuery = CloneQuery(clonedQuery, updateStatement.Update.Table, out var iterationTree);
 
 							ex = RemapCloned(ex, replaceTree, iterationTree);
 
@@ -3042,10 +3039,10 @@ namespace LinqToDB.SqlProvider
 
 				if (updateStatement.Output != null)
 				{
-					newUpdateStatement.Output =  RemapCloned(updateStatement.Output, replaceTree, null);
+					newUpdateStatement.Output = RemapCloned(updateStatement.Output, replaceTree, null);
 				}
 
-				newUpdateStatement.Update.Table = updateStatement.Update.Table != null ? tableToUpdate : null;
+				newUpdateStatement.Update.Table = updateStatement.Update.Table;
 				newUpdateStatement.With         = updateStatement.With;
 
 				clonedQuery.RemoveNotUnusedColumns();
@@ -3057,11 +3054,11 @@ namespace LinqToDB.SqlProvider
 				updateStatement = newUpdateStatement;
 			}
 
-			var ts = FindTableSource(new Stack<IQueryElement>(), updateStatement.SelectQuery, tableToUpdate);
-			if (ts.tableSource != null)
-				ts.tableSource.Alias = "$F";
+			var (tableSource, _) = FindTableSource(new Stack<IQueryElement>(), updateStatement.SelectQuery, updateStatement.Update.Table!);
+			if (tableSource != null)
+				tableSource.Alias = "$F";
 
-			if (ts.tableSource == null)
+			if (tableSource == null)
 			{
 				CorrectUpdateSetters(updateStatement);
 			}

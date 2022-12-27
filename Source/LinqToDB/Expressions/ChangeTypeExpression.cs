@@ -25,9 +25,9 @@ namespace LinqToDB.Expressions
 			return "(" +  "(" + Type + ")" + Expression + ")";
 		}
 
-		protected bool Equals(ChangeTypeExpression other)
+		bool Equals(ChangeTypeExpression other)
 		{
-			return _type.Equals(other._type) && Expression.Equals(other.Expression);
+			return _type == other._type && Expression.Equals(other.Expression);
 		}
 
 		public override bool Equals(object? obj)

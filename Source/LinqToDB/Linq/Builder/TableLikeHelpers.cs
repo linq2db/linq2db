@@ -10,9 +10,9 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static List<MemberInfo> GetMemberPath(Expression expr)
 		{
-			var     result  = new List<MemberInfo>();
-			var     current = expr;
-			string? alias   = null;
+			var result  = new List<MemberInfo>();
+			var current = expr;
+
 			while (current is MemberExpression memberExpression)
 			{
 				result.Insert(0, memberExpression.Member);

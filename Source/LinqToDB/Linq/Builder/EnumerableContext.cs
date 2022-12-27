@@ -21,9 +21,9 @@ namespace LinqToDB.Linq.Builder
 		readonly Type _elementType;
 
 #if DEBUG
-		public string?               SqlQueryText { get; }
-		public string  Path          => this.GetPath();
-		public int     ContextId     { get; }
+		public string SqlQueryText => SelectQuery.ToString();
+		public string Path         => this.GetPath();
+		public int    ContextId    { get; }
 #endif
 		public  ExpressionBuilder    Builder       { get; }
 		public  Expression           Expression    { get; }

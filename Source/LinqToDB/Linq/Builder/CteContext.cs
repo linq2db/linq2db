@@ -8,13 +8,13 @@ namespace LinqToDB.Linq.Builder
 	internal class CteContext : IBuildContext
 	{
 #if DEBUG
-		public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
+		public string SqlQueryText => CteInnerQueryContext == null ? "" : SelectQuery.SqlText;
 		public string Path         => this.GetPath();
 		public int    ContextId    { get; }
 #endif
-		public SelectQuery? SelectQuery
+		public SelectQuery SelectQuery
 		{
-			get => CteInnerQueryContext?.SelectQuery;
+			get => CteInnerQueryContext?.SelectQuery ?? new SelectQuery();
 			set { }
 		}
 
@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
 		{
 			Builder              = builder;
-			CteInnerQueryContext = cteInnerQueryContext;
+			CteInnerQueryContext = cteInnerQueryContext; 
 			CteClause            = cteClause;
 			Expression           = cteExpression;
 

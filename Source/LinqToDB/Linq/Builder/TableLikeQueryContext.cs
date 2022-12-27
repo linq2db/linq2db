@@ -13,9 +13,9 @@ namespace LinqToDB.Linq.Builder
 		public string Path         => this.GetPath();
 		public int    ContextId    { get; }
 #endif
-		public SelectQuery? SelectQuery
+		public SelectQuery SelectQuery
 		{
-			get => InnerQueryContext?.SelectQuery;
+			get => InnerQueryContext.SelectQuery;
 			set { }
 		}
 

@@ -71,6 +71,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
+		[CLSCompliant(false)]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SqlTextWriter Append(sbyte value)
 		{
@@ -135,6 +136,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
+		[CLSCompliant(false)]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SqlTextWriter Append(ushort value)
 		{
@@ -143,6 +145,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
+		[CLSCompliant(false)]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SqlTextWriter Append(uint value)
 		{
@@ -151,6 +154,7 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
+		[CLSCompliant(false)]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SqlTextWriter Append(ulong value)
 		{

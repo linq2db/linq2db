@@ -29,10 +29,10 @@ namespace LinqToDB.Linq.Builder
 
 		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out UpdateContext updateContext)
 		{
-			updateContext = sequence as UpdateContext;
-			if (updateContext != null)
+			if (sequence is UpdateContext current)
 			{
-				sequence = updateContext.Sequence;
+				sequence      = current.Sequence;
+				updateContext = current;
 			}
 			else
 			{
