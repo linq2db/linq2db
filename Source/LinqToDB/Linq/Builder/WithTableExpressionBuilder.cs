@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class WithTableExpressionBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames =
+		static readonly string[] MethodNames =
 		{
 			nameof(LinqExtensions.With),
 			nameof(LinqExtensions.WithTableExpression)

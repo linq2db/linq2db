@@ -4,6 +4,7 @@ using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	//TODO: probably remove, SqlAdjustTypeExpression is doing what you need
 	sealed class ChangeTypeExpressionBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }

@@ -265,12 +265,8 @@ namespace LinqToDB.Linq.Builder
 
 		public static SqlTable? GetTargetTable(IBuildContext target)
 		{
-			var tableContext = SequenceHelper.GetTableContext(target);
-			if (tableContext != null)
-				return tableContext.SqlTable;
-
-			var cteContext = SequenceHelper.GetCteContext(target);
-			return cteContext?.CteTable;
+			var tableContext = SequenceHelper.GetTableOrCteContext(target);
+			return tableContext?.SqlTable;
 		}
 
 		static Expression EnsureType(Expression expression, Type type)

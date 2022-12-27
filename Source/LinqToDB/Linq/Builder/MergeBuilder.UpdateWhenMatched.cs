@@ -1,11 +1,10 @@
-﻿using System.Linq;
-using System.Linq.Expressions;
-using LinqToDB.Extensions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Extensions;
+	using LinqToDB.Expressions;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
