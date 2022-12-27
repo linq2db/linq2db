@@ -38,14 +38,7 @@ namespace LinqToDB.Common.Internal.Cache
 
 		private static CacheEntryStack<TKey,TEntry> GetOrCreateScopes()
 		{
-			var scopes = Scopes;
-			if (scopes == null)
-			{
-				scopes = CacheEntryStack<TKey,TEntry>.Empty;
-				Scopes = scopes;
-			}
-
-			return scopes;
+			return Scopes ??= CacheEntryStack<TKey,TEntry>.Empty;
 		}
 
 		private sealed class ScopeLease : IDisposable

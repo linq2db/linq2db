@@ -14,7 +14,6 @@ using System.Runtime.CompilerServices;
 using System.Diagnostics;
 
 using JetBrains.Annotations;
-using LinqToDB.Common.Internal;
 
 // type, readertype, configID, sql, additionalKey, isScalar
 using QueryKey = System.ValueTuple<System.Type, System.Type, int, string, string?, bool>;
@@ -23,6 +22,7 @@ namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using Common.Internal.Cache;
 	using Expressions;
 	using Extensions;

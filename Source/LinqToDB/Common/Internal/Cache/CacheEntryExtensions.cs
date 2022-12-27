@@ -15,7 +15,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <returns>The <see cref="ICacheEntry{TKey,TEntry}"/> for chaining.</returns>
 		public static ICacheEntry<TKey,TEntry> SetPriority<TKey,TEntry>(
 			this ICacheEntry<TKey,TEntry> entry,
-			CacheItemPriority              priority)
+			CacheItemPriority             priority)
 			where TKey: notnull
 		{
 			entry.Priority = priority;
@@ -30,7 +30,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <returns>The <see cref="ICacheEntry{TKey,TEntry}"/> for chaining.</returns>
 		public static ICacheEntry<TKey,TEntry> AddExpirationToken<TKey,TEntry>(
 			this ICacheEntry<TKey,TEntry> entry,
-			IChangeToken                   expirationToken)
+			IChangeToken                  expirationToken)
 			where TKey: notnull
 		{
 			if (expirationToken == null)
@@ -50,7 +50,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <returns>The <see cref="ICacheEntry{TKey,TEntry}"/> for chaining.</returns>
 		public static ICacheEntry<TKey,TEntry> SetAbsoluteExpiration<TKey,TEntry>(
 			this ICacheEntry<TKey,TEntry> entry,
-			TimeSpan                       relative)
+			TimeSpan                      relative)
 			where TKey: notnull
 		{
 			entry.AbsoluteExpirationRelativeToNow = relative;
@@ -65,7 +65,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <returns>The <see cref="ICacheEntry{TKey,TEntry}"/> for chaining.</returns>
 		public static ICacheEntry<TKey,TEntry> SetAbsoluteExpiration<TKey,TEntry>(
 			this ICacheEntry<TKey,TEntry> entry,
-			DateTimeOffset                 absolute)
+			DateTimeOffset                absolute)
 			where TKey : notnull
 		{
 			entry.AbsoluteExpiration = absolute;
@@ -81,7 +81,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <returns>The <see cref="ICacheEntry{TKey,TEntry}"/> for chaining.</returns>
 		public static ICacheEntry<TKey,TEntry> SetSlidingExpiration<TKey,TEntry>(
 			this ICacheEntry<TKey,TEntry> entry,
-			TimeSpan                       offset)
+			TimeSpan                      offset)
 			where TKey : notnull
 		{
 			entry.SlidingExpiration = offset;
@@ -96,7 +96,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <returns>The <see cref="ICacheEntry{TKey,TEntry}"/> for chaining.</returns>
 		public static ICacheEntry<TKey,TEntry> RegisterPostEvictionCallback<TKey,TEntry>(
 			this ICacheEntry<TKey,TEntry> entry,
-			PostEvictionDelegate<TKey>     callback)
+			PostEvictionDelegate<TKey>    callback)
 			where TKey : notnull
 		{
 			if (callback == null)
@@ -116,8 +116,8 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <returns>The <see cref="ICacheEntry{TKey,TEntry}"/> for chaining.</returns>
 		public static ICacheEntry<TKey,TEntry> RegisterPostEvictionCallback<TKey,TEntry>(
 			this ICacheEntry<TKey,TEntry> entry,
-			PostEvictionDelegate<TKey>     callback,
-			object?                        state)
+			PostEvictionDelegate<TKey>    callback,
+			object?                       state)
 			where TKey : notnull
 		{
 			if (callback == null)
@@ -156,7 +156,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// <returns>The <see cref="ICacheEntry{TKey,TEntry}"/> for chaining.</returns>
 		public static ICacheEntry<TKey,TEntry> SetSize<TKey,TEntry>(
 			this ICacheEntry<TKey,TEntry> entry,
-			long                           size)
+			long                          size)
 			where TKey : notnull
 		{
 			if (size < 0)
