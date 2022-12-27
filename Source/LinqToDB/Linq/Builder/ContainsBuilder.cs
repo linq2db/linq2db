@@ -20,13 +20,15 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var innerQuery = new SelectQuery();
+			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery));
+
 			var buildInStatement = false;
 
 			sequence         = new SubQueryContext(sequence);
 			buildInStatement = true;
 
-			return new ContainsContext(buildInfo.Parent, methodCall, sequence, buildInStatement);
+			return new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence, buildInStatement);
 		}
 
 		public static bool IsConstant(MethodCallExpression methodCall)
@@ -37,73 +39,114 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(false) == false;
 		}
 
-		sealed class ContainsContext : SequenceContextBase
+		sealed class ContainsContext : IBuildContext
 		{
+#if DEBUG
+			public string SqlQueryText => SelectQuery.SqlText;
+			public string Path         => this.GetPath();
+			public int    ContextId    { get; }
+#endif
+			public Expression Expression => _methodCall;
+
+			public SelectQuery SelectQuery
+			{
+				get => OuterQuery;
+				set { }
+			}
+
+			public SqlStatement?  Statement { get; set; }
+			public IBuildContext? Parent    { get; set; }
+
+			public   SelectQuery          OuterQuery    { get; }
+			public   IBuildContext        InnerSequence { get; }
+			public   ExpressionBuilder    Builder       => InnerSequence.Builder;
+
 			readonly MethodCallExpression _methodCall;
 			readonly bool                 _buildInStatement;
 
-			public ContainsContext(IBuildContext? parent, MethodCallExpression methodCall, IBuildContext sequence, bool buildInStatement)
-				: base(parent, sequence, null)
+			public ContainsContext(IBuildContext? parent, MethodCallExpression methodCall, SelectQuery outerQuery, IBuildContext innerSequence, bool buildInStatement)
 			{
+				OuterQuery        = outerQuery;
 				_methodCall       = methodCall;
 				_buildInStatement = buildInStatement;
+				InnerSequence     = innerSequence;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+
+			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
+			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
+			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
+			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				return this;
 			}
 
-			public override ISqlExpression GetSubQuery(IBuildContext? context)
+			public int  ConvertToParentIndex(int index, IBuildContext context)
 			{
 				throw new NotImplementedException();
 			}
 
-			SqlPlaceholderExpression? _placeholder;
-
-			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			public void SetAlias(string?         alias)
 			{
-				if (!(flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Expression)))
-					return base.MakeExpression(path, flags);
-
-				if (_placeholder != null)
-					return _placeholder;
-
-				_placeholder = CreatePlaceholder(ProjectFlags.SQL);
-
-				return _placeholder;
+				throw new NotImplementedException();
 			}
 
-			public override IBuildContext Clone(CloningContext context)
+			public ISqlExpression GetSubQuery(IBuildContext? context)
 			{
-				var result = new ContainsContext(null, _methodCall, context.CloneContext(Sequence), _buildInStatement);
-				if (_placeholder != null)
-					result._placeholder = context.CloneExpression(_placeholder);
+				throw new NotImplementedException();
+			}
+
+			public SqlStatement GetResultStatement()
+			{
+				return new SqlSelectStatement(OuterQuery);
+			}
+
+			public void CompleteColumns()
+			{
+			}
+
+			SqlPlaceholderExpression? _cachedPlaceholder;
+
+			public Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (_cachedPlaceholder != null)
+					return _cachedPlaceholder;
+
+				var placeholder = CreatePlaceholder(flags.SqlFlag());
+
+				if (!flags.IsTest())
+					_cachedPlaceholder = placeholder;
+
+				return placeholder;
+			}
+
+			public IBuildContext Clone(CloningContext context)
+			{
+				var result = new ContainsContext(null, _methodCall, context.CloneElement(OuterQuery), context.CloneContext(InnerSequence), _buildInStatement);
+				if (_cachedPlaceholder != null)
+					result._cachedPlaceholder = context.CloneExpression(_cachedPlaceholder);
 				return result;
 			}
 
@@ -113,30 +156,35 @@ namespace LinqToDB.Linq.Builder
 				var param = Expression.Parameter(args[0], "param");
 				var expr  = _methodCall.Arguments[1];
 
-				var subQueryCtx = (SubQueryContext)Sequence;
+				var testPlaceholder = Builder.TryConvertToSqlPlaceholder(InnerSequence, expr, flags);
 
-				var testPlaceholder = Builder.TryConvertToSqlPlaceholder(Parent, expr, flags);
-
-				var contextRef = new ContextRefExpression(args[0], subQueryCtx);
-				var sequencePlaceholder = Builder.TryConvertToSqlPlaceholder(subQueryCtx, contextRef, flags);
+				var contextRef          = new ContextRefExpression(args[0], InnerSequence);
+				var sequencePlaceholder = Builder.TryConvertToSqlPlaceholder(InnerSequence, contextRef, flags);
 
 				SqlCondition cond;
 
-				if ((Sequence.SelectQuery != SelectQuery || _buildInStatement) && testPlaceholder != null && sequencePlaceholder != null)
+				if (_buildInStatement && testPlaceholder != null && sequencePlaceholder != null)
 				{
-					_ = Builder.ToColumns(Sequence, sequencePlaceholder);
-					cond = new SqlCondition(false, new SqlPredicate.InSubQuery(testPlaceholder.Sql, false, SelectQuery));
+					if (!flags.IsTest())
+						_ = Builder.ToColumns(InnerSequence, sequencePlaceholder);
+					cond = new SqlCondition(false, new SqlPredicate.InSubQuery(testPlaceholder.Sql, false, InnerSequence.SelectQuery));
 				}
 				else
 				{
 					var condition = Expression.Lambda(ExpressionBuilder.Equal(Builder.MappingSchema, param, expr), param);
-					var sequence  = Builder.BuildWhere(Parent, Sequence, condition, checkForSubQuery: true, enforceHaving: false, isTest: false);
+					var sequence  = Builder.BuildWhere(Parent, InnerSequence, condition, checkForSubQuery: true, enforceHaving: false, isTest: flags.IsTest());
 					cond = new SqlCondition(false, new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery)));
 				}
 
 				var subQuerySql = new SqlSearchCondition(cond);
 
-				return ExpressionBuilder.CreatePlaceholder(Parent, subQuerySql, _methodCall);
+				return ExpressionBuilder.CreatePlaceholder(OuterQuery, subQuerySql, _methodCall);
+			}
+
+			public void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				var mapper = Builder.BuildMapper<object>(expr);
+				QueryRunner.SetRunQuery(query, mapper);
 			}
 		}
 	}
