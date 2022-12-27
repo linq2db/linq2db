@@ -319,7 +319,7 @@ namespace LinqToDB.Linq.Builder
 							var ex = new LinqToDBException(
 								"You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.\n" +
 								"Set Configuration.Linq.GuardGrouping = false to disable this check.\n" +
-								"Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard().\n" +
+								"Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard() or using options.UseGuardGrouping(false) configuration extension.\n" +
 								"NOTE! By disabling this guard you accept additional Database Connection(s) to the server for processing such requests."
 							)
 							{

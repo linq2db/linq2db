@@ -14,7 +14,11 @@ namespace LinqToDB.Common.Internal
 	using Expressions;
 	using Linq;
 
-	sealed class IdentifierBuilder
+	/// <summary>
+	/// Internal infrastructure API.
+	/// Provides functionality for <see cref="IConfigurationID.ConfigurationID"/> generation.
+	/// </summary>
+	public sealed class IdentifierBuilder
 	{
 		public IdentifierBuilder()
 		{
@@ -71,7 +75,7 @@ namespace LinqToDB.Common.Internal
 		{
 			_stringBuilder
 				.Append('.')
-				.Append(data)
+				.Append(GetObjectID(data))
 				;
 			return this;
 		}
@@ -176,8 +180,12 @@ namespace LinqToDB.Common.Internal
 			{
 				IConfigurationID c => c.ConfigurationID.ToString(),
 				Type t             => GetObjectID(t),
+				Delegate d         => GetObjectID(d.Method),
 				int  i             => GetIntID(i),
 				null               => string.Empty,
+				string str         => str,
+				IEnumerable col    => $"[{string.Join(",", col.Cast<object?>().Select(GetObjectID))}]",
+				Expression ex      => GetObjectID(ex).ToString(),
 				_                  => GetOrAddObject(obj)
 			};
 

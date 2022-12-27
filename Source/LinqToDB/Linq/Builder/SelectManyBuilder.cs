@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 				if (joinType == JoinType.Auto)
 				{
 					var isApplyJoin =
-						//Common.Configuration.Linq.PrefereApply    ||
+						//builder.DataOptions.LinqOptions.PreferApply    ||
 						collection.SelectQuery.Select.HasModifier ||
 						table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0 ||
 						table.SqlTable is SqlRawSqlTable rawTable && rawTable.Parameters.Length > 0;

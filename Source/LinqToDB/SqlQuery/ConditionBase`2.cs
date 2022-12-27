@@ -93,12 +93,12 @@ namespace LinqToDB.SqlQuery
 
 			#region Predicate.In
 
-			public T2 In   (SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, false, subQuery)); }
-			public T2 NotIn(SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, true,  subQuery)); }
+			public T2 InSubQuery   (SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, false, subQuery)); }
+			public T2 NotInSubQuery(SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, true,  subQuery)); }
 
-			SqlPredicate.InList CreateInList(bool isNot, object[]? exprs)
+			SqlPredicate.InList CreateInList(bool isNot, bool compareNullsAsValues, object[]? exprs)
 			{
-				var list = new SqlPredicate.InList(_expr, Common.Configuration.Linq.CompareNullsAsValues ? false : null, isNot);
+				var list = new SqlPredicate.InList(_expr, compareNullsAsValues ? false : null, isNot);
 
 				if (exprs?.Length > 0)
 				{
@@ -117,8 +117,8 @@ namespace LinqToDB.SqlQuery
 				return list;
 			}
 
-			public T2 In   (params object[] exprs) { return Add(CreateInList(false, exprs)); }
-			public T2 NotIn(params object[] exprs) { return Add(CreateInList(true,  exprs)); }
+			public T2 In   (bool compareNullsAsValues, params object[] exprs) { return Add(CreateInList(false, compareNullsAsValues, exprs));  }
+			public T2 NotIn(bool compareNullsAsValues, params object[] exprs) { return Add(CreateInList(true,  compareNullsAsValues,  exprs)); }
 
 			#endregion
 		}

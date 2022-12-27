@@ -6,36 +6,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="..\Linq\Common\ConnectionBuilderTests.cs" Link="ConnectionBuilderTests.cs" />
-		<Compile Include="..\Linq\DataProvider\SqlServerTests.cs" Link="SqlServerTests.cs" />
-		<Compile Include="..\Linq\Data\DataConnectionTests.cs" Link="DataConnectionTests.cs" />
-		<Compile Include="..\Linq\Data\RetryPolicyTest.cs" Link="RetryPolicyTest.cs" />
-		<Compile Include="..\Linq\Data\TraceTests.cs" Link="TraceTests.cs" />
-		<Compile Include="..\Linq\Linq\AbstractionTests.cs" Link="AbstractionTests.cs" />
-		<Compile Include="..\Linq\Linq\AK107Tests.cs" Link="AK107Tests.cs" />
-		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />
-		<Compile Include="..\Linq\Linq\AnalyticTests.cs" Link="AnalyticTests.cs" />
-		<Compile Include="..\Linq\Linq\AssociationTests.cs" Link="AssociationTests.cs" />
-		<Compile Include="..\Linq\Linq\BatchTests.cs" Link="BatchTests.cs" />
-		<Compile Include="..\Linq\Linq\CachingTests.cs" Link="CachingTests.cs" />
-		<Compile Include="..\Linq\Linq\CalculatedColumnTests.cs" Link="CalculatedColumnTests.cs" />
-		<Compile Include="..\Linq\Linq\CharTypesTests.cs" Link="CharTypesTests.cs" />
-		<Compile Include="..\Linq\Linq\ColumnAliasTests.cs" Link="ColumnAliasTests.cs" />
-		<Compile Include="..\Linq\Linq\CommonTests.cs" Link="CommonTests.cs" />
-		<Compile Include="..\Linq\Linq\CompileTests.cs" Link="CompileTests.cs" />
-		<Compile Include="..\Linq\Linq\CompileTestsAsync.cs" Link="CompileTestsAsync.cs" />
-		<Compile Include="..\Linq\Linq\ComplexTests.cs" Link="ComplexTests.cs" />
-		<Compile Include="..\Linq\Linq\ComplexTests2.cs" Link="ComplexTests2.cs" />
-		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
-		<Compile Include="..\Linq\Linq\ConstructorTests.cs" Link="ConstructorTests.cs" />
-		<Compile Include="..\Linq\Linq\ContainsTests.cs" Link="ContainsTests.cs" />
-		<Compile Include="..\Linq\Linq\GroupByTests.cs" Link="GroupByTests.cs" />
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />
-		<Compile Include="..\Linq\Update\BulkCopyTests.cs" Link="BulkCopyTests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue1174Tests.cs" Link="Issue1174Tests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue1498Tests.cs" Link="Issue1498Tests.cs" />
-		<Compile Include="..\Linq\UserTests\Issue927Tests.cs" Link="Issue927Tests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
