@@ -66,6 +66,7 @@ namespace LinqToDB.Linq.Builder
 
 			public ContainsContext(IBuildContext? parent, MethodCallExpression methodCall, SelectQuery outerQuery, IBuildContext innerSequence, bool buildInStatement)
 			{
+				Parent            = parent;
 				OuterQuery        = outerQuery;
 				_methodCall       = methodCall;
 				_buildInStatement = buildInStatement;

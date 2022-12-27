@@ -103,16 +103,21 @@ namespace LinqToDB.Linq.Builder
 				if (!SequenceHelper.IsSameContext(path, this))
 					throw new InvalidOperationException();
 
-				if (_innerSql == null)
-				{ 
-					var cond = new SqlCondition(
-						_methodCall.Method.Name.StartsWith("All"),
-						new SqlPredicate.FuncLike(SqlFunction.CreateExists(Sequence.SelectQuery)));
+				if (_innerSql != null)
+					return _innerSql;
 
-					_innerSql = ExpressionBuilder.CreatePlaceholder(Parent?.SelectQuery ?? SelectQuery, new SqlSearchCondition(cond), path, convertType: typeof(bool));
+				var cond = new SqlCondition(
+					_methodCall.Method.Name.StartsWith("All"),
+					new SqlPredicate.FuncLike(SqlFunction.CreateExists(Sequence.SelectQuery)));
+
+				var innerSql = ExpressionBuilder.CreatePlaceholder(Parent?.SelectQuery ?? SelectQuery, new SqlSearchCondition(cond), path, convertType: typeof(bool));
+
+				if (flags.IsTest())
+				{
+					_innerSql = innerSql;
 				}
 
-				return _innerSql;
+				return innerSql;
 			}
 
 			public override SqlStatement GetResultStatement()
