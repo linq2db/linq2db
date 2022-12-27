@@ -3621,7 +3621,7 @@ namespace LinqToDB.SqlProvider
 						var takeValue = takeExpr.EvaluateExpression(optimizationContext.Context)!;
 						var takeParameter = new SqlParameter(new DbDataType(takeValue.GetType()), "take", takeValue)
 						{
-							IsQueryParameter = !QueryHelper.NeedParameterInlining(takeExpr)
+							IsQueryParameter = dataOptions.LinqOptions.ParameterizeTakeSkip && !QueryHelper.NeedParameterInlining(takeExpr)
 						};
 						takeExpr = takeParameter;
 					}
