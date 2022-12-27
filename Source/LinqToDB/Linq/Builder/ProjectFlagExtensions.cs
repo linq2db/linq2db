@@ -41,6 +41,18 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsRoot(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.Root) != 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsAssociationRoot(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.AssociationRoot) != 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsSql(this ProjectFlags flags)
 		{
 			return (flags & ProjectFlags.SQL) != 0;

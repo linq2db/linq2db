@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
@@ -8,7 +6,6 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
-	using Common;
 
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
@@ -85,59 +82,6 @@ namespace LinqToDB.Linq.Builder
 			return loadWithSequence;
 		}
 
-		/*
-		TableBuilder.TableContext GetTableContext(IBuildContext ctx, Expression path, out Expression? stopExpression)
-		{
-			stopExpression = null;
-
-			var table = ctx as TableBuilder.TableContext;
-
-			if (table != null)
-				return table;
-
-			if (ctx is LoadWithContext lwCtx)
-				return lwCtx.TableContext;
-
-			var isTableResult = ctx.IsExpression(null, 0, RequestFor.Table);
-			if (isTableResult.Result)
-			{
-				table = isTableResult.Context as TableBuilder.TableContext;
-				if (table != null)
-					return table;
-			}
-
-			var maxLevel = path.GetLevel(ctx.Builder.MappingSchema);
-			var level    = 1;
-			while (level <= maxLevel)
-			{
-				var levelExpression = path.GetLevelExpression(ctx.Builder.MappingSchema, level);
-				isTableResult       = ctx.IsExpression(levelExpression, 1, RequestFor.Table);
-				if (isTableResult.Result)
-				{
-					table = isTableResult.Context switch
-					{
-						TableBuilder.TableContext t => t,
-						AssociationContext a => a.TableContext as TableBuilder.TableContext,
-						_ => null
-					};
-
-					if (table != null)
-					{
-						stopExpression = levelExpression;
-						return table;
-					}
-				}
-
-				++level;
-			}
-
-			var expr = path.GetLevelExpression(ctx.Builder.MappingSchema, 0);
-
-			throw new LinqToDBException(
-				$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{expr.Type.Name}>() method.");
-		}
-		*/
-
 		static (IBuildContext context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
@@ -162,15 +106,15 @@ namespace LinqToDB.Linq.Builder
 				filterExpression = lambda;
 			}
 
-			var extractResult = GetAssociations(builder, currentExpression, stopExpression);
-			if (extractResult.context == null)
+			var (context, members) = GetAssociations(builder, currentExpression, stopExpression);
+			if (context == null)
 				return default;
 
-			var loadWithInfos = extractResult.members
+			var loadWithInfos = members
 				.Select((m, i) => new LoadWithInfo(m) { MemberFilter = i == 0 ? filterExpression : null })
 				.ToArray();
 
-			return (extractResult.context, loadWithInfos);
+			return (context, loadWithInfos);
 		}
 
 		static (IBuildContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
@@ -326,12 +270,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if(SequenceHelper.IsSameContext(path, this))
+				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if (flags.HasFlag(ProjectFlags.Root))
+					if (flags.IsRoot())
 						return path;
 
-					if (flags.HasFlag(ProjectFlags.AssociationRoot))
+					if (flags.IsAssociationRoot())
 						return new ContextRefExpression(path.Type, RegisterContext);
 				}
 				return base.MakeExpression(path, flags);
