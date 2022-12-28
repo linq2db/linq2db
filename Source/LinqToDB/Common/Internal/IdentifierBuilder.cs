@@ -18,7 +18,7 @@ namespace LinqToDB.Common.Internal
 	/// Internal infrastructure API.
 	/// Provides functionality for <see cref="IConfigurationID.ConfigurationID"/> generation.
 	/// </summary>
-	public sealed class IdentifierBuilder
+	sealed class IdentifierBuilder
 	{
 		public IdentifierBuilder()
 		{
