@@ -30,12 +30,15 @@ namespace LinqToDB.Linq.Builder
 
 				if (!setter.IsNullValue())
 				{
-					var setterExpression = (LambdaExpression)setter.Unwrap();
+					var setterLambda = (LambdaExpression)setter.Unwrap();
 					
-					var setterExpressionCorrected = mergeContext.SourceContext.PrepareTargetSourceLambda(setterExpression);
+					var setterExpression = mergeContext.SourceContext.PrepareTargetSource(setterLambda);
 
 					var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
-					UpdateBuilder.ParseSetter(builder, mergeContext.SourceContext.TargetContextRef, setterExpressionCorrected, setterExpressions);
+					UpdateBuilder.ParseSetter(builder,
+						mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type),
+						setterExpression, setterExpressions);
+
 					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
 				}
 				else
@@ -73,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var condition = predicate.UnwrapLambda();
 
-					var conditionPrepared = mergeContext.SourceContext.PrepareTargetSourceLambda(condition);
+					var conditionPrepared = mergeContext.SourceContext.PrepareTargetSource(condition);
 
 					operation.Where = new SqlSearchCondition();
 

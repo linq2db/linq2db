@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 				if (!predicate.IsNullValue())
 				{
 					var condition   = predicate.UnwrapLambda();
-					var conditionExpression = mergeContext.SourceContext.PrepareTargetSourceLambda(condition);
+					var conditionExpression = mergeContext.SourceContext.PrepareTargetSource(condition);
 
 					operation.Where = new SqlSearchCondition();
 

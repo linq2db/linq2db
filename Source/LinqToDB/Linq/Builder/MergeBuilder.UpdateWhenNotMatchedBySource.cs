@@ -25,13 +25,16 @@ namespace LinqToDB.Linq.Builder
 				var operation = new SqlMergeOperationClause(MergeOperationType.UpdateBySource);
 				statement.Operations.Add(operation);
 
-				Expression predicate = methodCall.Arguments[1];
-				var setter = methodCall.Arguments[2].UnwrapLambda();
+				var predicate = methodCall.Arguments[1];
+				var setterLambda = methodCall.Arguments[2].UnwrapLambda();
 
-				var setterCorrected = mergeContext.SourceContext.PrepareSelfTargetLambda(setter);
+				var setterExpression = mergeContext.SourceContext.PrepareSelfTargetLambda(setterLambda);
 
 				var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
-				UpdateBuilder.ParseSetter(builder, mergeContext.SourceContext.TargetContextRef, setterCorrected, setterExpressions);
+				UpdateBuilder.ParseSetter(builder,
+					mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type), setterExpression,
+					setterExpressions);
+
 				UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
 				
 				if (!predicate.IsNullValue())

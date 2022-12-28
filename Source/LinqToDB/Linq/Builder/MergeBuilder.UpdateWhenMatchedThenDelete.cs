@@ -31,14 +31,16 @@ namespace LinqToDB.Linq.Builder
 
 				if (!setter.IsNullValue())
 				{
-					var setterExpression = setter.UnwrapLambda();
-					var setterExpressionCorrected = mergeContext.SourceContext.PrepareTargetSourceLambda(setterExpression);
+					var setterLambda = setter.UnwrapLambda();
+					var setterExpression = mergeContext.SourceContext.PrepareTargetSource(setterLambda);
 
-					mergeContext.SourceContext.TargetContextRef.Alias = setterExpression.Parameters[0].Name;
-					mergeContext.SourceContext.SourceContextRef.Alias = setterExpression.Parameters[1].Name;
+					mergeContext.SourceContext.TargetContextRef.Alias = setterLambda.Parameters[0].Name;
+					mergeContext.SourceContext.SourceContextRef.Alias = setterLambda.Parameters[1].Name;
 
 					var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
-					UpdateBuilder.ParseSetter(builder, mergeContext.SourceContext.TargetContextRef, setterExpressionCorrected, setterExpressions);
+					UpdateBuilder.ParseSetter(builder,
+						mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type), setterExpression,
+						setterExpressions);
 					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
 				}
 				else
@@ -64,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 				if (!predicate.IsNullValue())
 				{
 					var predicateCondition = predicate.UnwrapLambda();
-					var predicateConditionCorrected = mergeContext.SourceContext.PrepareTargetSourceLambda(predicateCondition);
+					var predicateConditionCorrected = mergeContext.SourceContext.PrepareTargetSource(predicateCondition);
 
 					operation.Where = new SqlSearchCondition();
 
@@ -75,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 				if (!deletePredicate.IsNullValue())
 				{
 					var deleteCondition = deletePredicate.UnwrapLambda();
-					var deleteConditionCorrected = mergeContext.SourceContext.PrepareTargetSourceLambda(deleteCondition);
+					var deleteConditionCorrected = mergeContext.SourceContext.PrepareTargetSource(deleteCondition);
 
 					operation.WhereDelete = new SqlSearchCondition();
 

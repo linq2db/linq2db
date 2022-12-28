@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 			return lambdaExpression.GetBody(SourcePropAccess);
 		}
 
-		public Expression PrepareTargetSourceLambda(LambdaExpression lambdaExpression)
+		public Expression PrepareTargetSource(LambdaExpression lambdaExpression)
 		{
 			if (lambdaExpression.Parameters.Count != 2)
 				throw new InvalidOperationException();
