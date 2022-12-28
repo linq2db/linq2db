@@ -73,16 +73,9 @@ namespace LinqToDB.Linq.Builder
 			var outerKeySelector = SequenceHelper.PrepareBody(outerKeyLambda, outerContext).Unwrap();
 			var innerKeySelector = SequenceHelper.PrepareBody(innerKeyLambda, innerKeyContext).Unwrap();
 
-			var comparePredicate = builder.ConvertCompare(outerContext, ExpressionType.Equal, outerKeySelector, innerKeySelector,
-				buildInfo.GetFlags(ProjectFlags.SQL));
+			var compareSearchCondition = builder.GenerateComparison(outerContext, outerKeySelector, innerKeySelector);
 
-			if (comparePredicate == null)
-				throw new LinqException($"Could not create comparison for '{SqlErrorExpression.PrepareExpression(outerKeyLambda)}' and {SqlErrorExpression.PrepareExpression(innerKeyLambda)}.");
-
-			if (comparePredicate is SqlSearchCondition sc)
-				join.JoinedTable.Condition.Conditions.AddRange(sc.Conditions);
-			else
-				join.JoinedTable.Condition.Conditions.Add(new SqlCondition(false, comparePredicate, false));
+			join.JoinedTable.Condition.Conditions.AddRange(compareSearchCondition.Conditions);
 
 			return new SelectContext(buildInfo.Parent, selector, buildInfo.IsSubQuery, outerContext, innerContext)
 #if DEBUG

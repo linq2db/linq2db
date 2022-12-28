@@ -7,24 +7,36 @@ namespace LinqToDB.Expressions
 
 	class SqlErrorExpression : Expression
 	{
-		public SqlErrorExpression(IBuildContext? buildContext, Expression expression)
+		public SqlErrorExpression(IBuildContext? buildContext, Expression expression) : this(buildContext, expression, expression.Type)
+		{}
+
+		public SqlErrorExpression(IBuildContext? buildContext, Expression expression, Type resultType)
 		{
 			BuildContext = buildContext;
 			Expression   = expression;
+			ResultType   = resultType;
 		}
 
 		public IBuildContext? BuildContext { get; }
 		public Expression     Expression   { get; }
+		public Type           ResultType   { get; }
 
 		internal SqlInfo? Sql { get; set; }
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
-		public override Type           Type      => Expression.Type;
+		public override Type           Type      => ResultType;
 		public override bool           CanReduce => true;
 
 		public override Expression Reduce()
 		{
 			throw CreateError(Expression);
+		}
+
+		public SqlErrorExpression WithType(Type type)
+		{
+			if (ResultType == type)
+				return this;
+			return new SqlErrorExpression(BuildContext, Expression, type);
 		}
 
 		public Exception CreateError()

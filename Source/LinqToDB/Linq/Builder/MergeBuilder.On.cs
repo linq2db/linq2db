@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 					var sourceKeyLambda = methodCall.Arguments[2].UnwrapLambda();
 
 					var targetKeySelector = mergeContext.SourceContext.PrepareTargetLambda(targetKeyLambda);
-					var sourceKeySelector = mergeContext.SourceContext.PrepareSourceLambda(sourceKeyLambda);
+					var sourceKeySelector = mergeContext.SourceContext.PrepareSourceBody(sourceKeyLambda);
 
 					mergeContext.SourceContext.TargetKeySelector = targetKeySelector;
 					mergeContext.SourceContext.SourceKeySelector = sourceKeySelector;
@@ -58,6 +58,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// OnTargetKey<TTarget>(IMergeableOn<TTarget, TTarget> merge)
 					//
+
 					var targetType       = statement.Target.SystemType!;
 					var pTarget          = Expression.Parameter(targetType, "t");
 					var pSource          = Expression.Parameter(targetType, "s");

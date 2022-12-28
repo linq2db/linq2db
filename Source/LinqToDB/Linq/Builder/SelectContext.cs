@@ -180,7 +180,9 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				result = Builder.Project(this, path, null, 0, flags, Body, true);
+				// We can omit strict for expression building. It will help to do not crash when user uses Automapper and it tries to map non accessible fields
+				//
+				result = Builder.Project(this, path, null, 0, flags, Body, strict: !flags.IsExpression());
 
 				if (!ReferenceEquals(result, Body))
 				{

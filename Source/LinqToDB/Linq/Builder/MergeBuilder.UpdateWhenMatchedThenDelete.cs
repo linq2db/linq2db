@@ -32,17 +32,14 @@ namespace LinqToDB.Linq.Builder
 				if (!setter.IsNullValue())
 				{
 					var setterExpression = setter.UnwrapLambda();
-					var setterExpressionCorrected = Expression.Lambda(mergeContext.SourceContext.PrepareTargetSourceLambda(setterExpression));
+					var setterExpressionCorrected = mergeContext.SourceContext.PrepareTargetSourceLambda(setterExpression);
 
 					mergeContext.SourceContext.TargetContextRef.Alias = setterExpression.Parameters[0].Name;
 					mergeContext.SourceContext.SourceContextRef.Alias = setterExpression.Parameters[1].Name;
 
-					UpdateBuilder.BuildSetterWithContext(
-						builder,
-						buildInfo,
-						setterExpressionCorrected,
-						mergeContext.TargetContext,
-						operation.Items);
+					var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+					UpdateBuilder.ParseSetter(builder, mergeContext.SourceContext.TargetContextRef, setterExpressionCorrected, setterExpressions);
+					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
 				}
 				else
 				{

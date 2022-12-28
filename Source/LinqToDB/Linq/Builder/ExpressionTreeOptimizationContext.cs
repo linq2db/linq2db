@@ -771,6 +771,7 @@ namespace LinqToDB.Linq.Builder
 						return true;
 					break;
 				}
+
 				case ExpressionType.Extension:
 				{
 					if (ex is ContextRefExpression)
@@ -814,6 +815,9 @@ namespace LinqToDB.Linq.Builder
 				return false;
 
 			if (MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
+				return true;
+
+			if (ex.Type == typeof(void))
 				return true;
 
 			switch (ex.NodeType)

@@ -60,6 +60,12 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsExpression(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.Expression) != 0;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsTable(this ProjectFlags flags)
 		{
 			return (flags & ProjectFlags.Table) != 0;

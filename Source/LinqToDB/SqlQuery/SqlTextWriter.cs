@@ -138,6 +138,15 @@ namespace LinqToDB.SqlQuery
 
 		[CLSCompliant(false)]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SqlTextWriter Append(char value)
+		{
+			AppendIndentIfNeeded();
+			StringBuilder.Append(value);
+			return this;
+		}
+
+		[CLSCompliant(false)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SqlTextWriter Append(ushort value)
 		{
 			AppendIndentIfNeeded();

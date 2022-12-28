@@ -210,14 +210,8 @@ namespace LinqToDB.Linq.Builder
 							var sequenceRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, sequenceTableContext);
 							var intoRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
 
-							var predicate = builder.ConvertCompare(sequence, ExpressionType.Equal,
-								sequenceRef, intoRef, ProjectFlags.SQL);
-
-							if (predicate == null)
-								throw new LinqToDBException("Cannot create update statement.");
-
-							sequenceTableContext.SelectQuery.Where.EnsureConjunction();
-							sequenceTableContext.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
+							var compareSearchCondition = builder.GenerateComparison(sequence, sequenceRef, intoRef);
+							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
 						}
 						else
 						{
@@ -374,6 +368,8 @@ namespace LinqToDB.Linq.Builder
 			List<SqlSetExpression> items,
 			params IBuildContext[] sequences)
 		{
+			throw new NotImplementedException();
+
 			var setterBody     = SequenceHelper.PrepareBody(setter, sequences);
 			var sourceSequence = sequences[0];
 			var setterExpr     = builder.ConvertToSqlExpr(sourceSequence, setterBody);
@@ -484,7 +480,12 @@ namespace LinqToDB.Linq.Builder
 						columnDescriptor: columnDescriptor, unwrap: false);
 
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
+					{
+						if (sqlExpr is SqlErrorExpression errorExpr)
+							throw errorExpr.CreateError();
+
 						throw SqlErrorExpression.CreateError(valueExpression);
+					}
 
 					var sql = createColumns
 						? valuesContext.SelectQuery.Select.AddNewColumn(placeholder.Sql)

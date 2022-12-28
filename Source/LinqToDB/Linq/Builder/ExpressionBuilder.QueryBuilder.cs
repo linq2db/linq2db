@@ -425,10 +425,10 @@ namespace LinqToDB.Linq.Builder
 			return new SqlErrorExpression(context, expression);
 		}
 
-		public Expression BuildSqlExpression(Dictionary<Expression, Expression> translated, IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
+		public Expression BuildSqlExpression(Dictionary<Expression, Expression> translated, IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null, bool doNotConstruct = false)
 		{
 			var result = expression.Transform(
-				(builder: this, context, flags, alias, translated),
+				(builder: this, context, flags, alias, translated, doNotConstruct),
 				static (context, expr) =>
 				{
 					// Shortcut: if expression can be compiled we can live it as is but inject accessors 
@@ -493,11 +493,6 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.MemberAccess:
 							{
 								var ma = (MemberExpression)expr;
-
-								/*if (context.builder.IsServerSideOnly(ma) || context.builder.PreferServerSide(ma, false) && !context.builder.HasNoneSqlMember(ma))
-								{
-									return new TransformInfo(context.builder.ConvertToSqlExpr(context.context, expr, context.flags.SqlFlag(), alias: context.alias));
-								}*/
 
 								var newExpr = context.builder.ExposeExpression(ma);
 
@@ -624,10 +619,6 @@ namespace LinqToDB.Linq.Builder
 							if (expr is ContextRefExpression contextRef)
 							{
 								var buildExpr = context.builder.MakeExpression(contextRef.BuildContext, contextRef, context.flags);
-								if (buildExpr.Type != expr.Type)
-								{
-									buildExpr = Expression.Convert(buildExpr, expr.Type);
-								}
 
 								if (!ReferenceEquals(buildExpr, contextRef))
 								{
@@ -641,18 +632,17 @@ namespace LinqToDB.Linq.Builder
 								return new TransformInfo(buildExpr, false, true);
 							}
 
-							if (expr is SqlGenericConstructorExpression constructorExpression)
+							if (expr is SqlGenericConstructorExpression)
 							{
-								if (context.flags.HasFlag(ProjectFlags.Expression))
+								if (context.flags.HasFlag(ProjectFlags.Expression) && !context.doNotConstruct)
 								{
-									var constructed = context.builder.TryConstruct(context.builder.MappingSchema, constructorExpression, context.context, context.flags);
-									if (!ReferenceEquals(constructed, constructorExpression))
-									{
-										constructed = context.builder.BuildSqlExpression(context.translated,
-											context.context, constructed, context.flags, context.alias);
-									}
+									var newConstructor = (SqlGenericConstructorExpression)context.builder.BuildSqlExpression(context.translated,
+										context.context, expr, context.flags, context.alias, doNotConstruct: true);
+
+									var constructed = context.builder.TryConstruct(context.builder.MappingSchema, newConstructor, context.context, context.flags);
+
 									context.translated[expr] = constructed;
-									return new TransformInfo(constructed, false, true);
+									return new TransformInfo(constructed, true);
 								}
 							}
 

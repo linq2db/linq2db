@@ -28,16 +28,12 @@ namespace LinqToDB.Linq.Builder
 				Expression predicate = methodCall.Arguments[1];
 				var setter = methodCall.Arguments[2].UnwrapLambda();
 
-				var setterCorrected = Expression.Lambda(mergeContext.SourceContext.PrepareSelfTargetLambda(setter));
+				var setterCorrected = mergeContext.SourceContext.PrepareSelfTargetLambda(setter);
 
-				UpdateBuilder.BuildSetter(
-					builder,
-					buildInfo,
-					setterCorrected,
-					mergeContext.TargetContext,
-					operation.Items,
-					mergeContext.SourceContext);
-
+				var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+				UpdateBuilder.ParseSetter(builder, mergeContext.SourceContext.TargetContextRef, setterCorrected, setterExpressions);
+				UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
+				
 				if (!predicate.IsNullValue())
 				{
 					var condition          = predicate.UnwrapLambda();

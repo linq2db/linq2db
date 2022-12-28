@@ -154,16 +154,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (!source.IsTargetAssociation(targetKeySelector))
 				{
-					var comparePredicate = builder.ConvertCompare(source.SourceContextRef.BuildContext, ExpressionType.Equal, targetKeySelector, sourceKeySelector,
-						ProjectFlags.SQL);
-
-					if (comparePredicate == null)
-						throw new LinqException($"Could not create comparison for '{SqlErrorExpression.PrepareExpression(targetKeySelector)}' and {SqlErrorExpression.PrepareExpression(sourceKeySelector)}.");
-
-					if (comparePredicate is SqlSearchCondition sc)
-						searchCondition.Conditions.AddRange(sc.Conditions);
-					else
-						searchCondition.Conditions.Add(new SqlCondition(false, comparePredicate, false));
+					var compareSearchCondition = builder.GenerateComparison(source.SourceContextRef.BuildContext, targetKeySelector, sourceKeySelector);
+					searchCondition.Conditions.AddRange(compareSearchCondition.Conditions);
 				}
 				else
 				{
@@ -174,18 +166,11 @@ namespace LinqToDB.Linq.Builder
 
 					var correctedTargetKeySelector = targetKeySelector.Replace(source.TargetPropAccess, clonedContextRef);
 
-					var comparePredicate = builder.ConvertCompare(clonedTargetContext, ExpressionType.Equal, correctedTargetKeySelector, sourceKeySelector,
-						ProjectFlags.SQL);
-
-					if (comparePredicate == null)
-						throw new LinqException($"Could not create comparison for '{SqlErrorExpression.PrepareExpression(targetKeySelector)}' and {SqlErrorExpression.PrepareExpression(sourceKeySelector)}.");
+					var compareSearchCondition = builder.GenerateComparison(clonedTargetContext, correctedTargetKeySelector, sourceKeySelector);
 
 					var selectQuery = clonedTargetContext.SelectQuery;
 
-					if (comparePredicate is SqlSearchCondition sc)
-						selectQuery.Where.SearchCondition.Conditions.AddRange(sc.Conditions);
-					else
-						selectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, comparePredicate, false));
+					selectQuery.Where.SearchCondition.Conditions.AddRange(compareSearchCondition.Conditions);
 
 					var targetTable = GetTargetTable(targetContext);
 					if (targetTable == null)

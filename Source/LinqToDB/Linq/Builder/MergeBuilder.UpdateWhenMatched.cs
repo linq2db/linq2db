@@ -32,14 +32,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					var setterExpression = (LambdaExpression)setter.Unwrap();
 					
-					var setterExpressionCorrected = Expression.Lambda(mergeContext.SourceContext.PrepareTargetSourceLambda(setterExpression));
+					var setterExpressionCorrected = mergeContext.SourceContext.PrepareTargetSourceLambda(setterExpression);
 
-					UpdateBuilder.BuildSetterWithContext(
-						builder,
-						buildInfo,
-						setterExpressionCorrected,
-						mergeContext.TargetContext,
-						operation.Items);
+					var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+					UpdateBuilder.ParseSetter(builder, mergeContext.SourceContext.TargetContextRef, setterExpressionCorrected, setterExpressions);
+					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
 				}
 				else
 				{

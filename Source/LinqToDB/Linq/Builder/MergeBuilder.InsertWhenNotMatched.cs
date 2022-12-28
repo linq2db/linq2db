@@ -28,62 +28,33 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				var setter    = methodCall.Arguments[2];
 
+				Expression setterExpression;
+
 				if (!setter.IsNullValue())
 				{
-					var setterExpression = setter.UnwrapLambda();
+					var setterLambda = setter.UnwrapLambda();
 
-					var correctedExpression = Expression.Lambda(mergeContext.SourceContext.PrepareSourceLambda(setterExpression));
+					setterExpression = mergeContext.SourceContext.PrepareSourceBody(setterLambda);
 
-					UpdateBuilder.BuildSetterWithContext(
-						builder,
-						buildInfo,
-						correctedExpression,
-						mergeContext.TargetContext,
-						operation.Items,
-						mergeContext.SourceContext);
 				}
 				else
 				{
 					// build setters like QueryRunner.Insert
-					var sqlTable   = (SqlTable)statement.Target.Source;
 
-					var sourceRef = mergeContext.SourceContext.SourcePropAccess;
-					var targetRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.TargetContext);
-
-					var ed = builder.MappingSchema.GetEntityDescriptor(sqlTable.ObjectType);
-
-					foreach (var column in ed.Columns)
-					{
-						var targetExpression = ExpressionExtensions.GetMemberGetter(column.MemberInfo, targetRef);
-
-						if (!column.SkipOnInsert)
-						{
-							var sourceMemberInfo = sourceRef.Type.GetMemberEx(column.MemberInfo);
-							if (sourceMemberInfo is null)
-								throw new InvalidOperationException($"Member '{column.MemberInfo}' not found in type '{sourceRef.Type}'.");
-
-							var sourceExpression = ExpressionExtensions.GetMemberGetter(sourceMemberInfo, sourceRef);
-							var tgtExpr          = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
-							var srcExpr          = builder.ConvertToSql(mergeContext.SourceContext, sourceExpression);
-
-							operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
-						}
-						else if (column.IsIdentity)
-						{
-							var expr    = builder.DataContext.CreateSqlProvider().GetIdentityExpression(sqlTable);
-							var tgtExpr = builder.ConvertToSql(mergeContext.TargetContext, targetExpression);
-
-							if (expr != null)
-								operation.Items.Add(new SqlSetExpression(tgtExpr, expr));
-						}
-					}
+					setterExpression = builder.BuildFullEntityExpression(mergeContext.SourceContext.SourcePropAccess,
+						mergeContext.SourceContext.SourceContextRef.Type, ProjectFlags.SQL,
+						ExpressionBuilder.FullEntityPurpose.Insert);
 				}
+
+				var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
+				UpdateBuilder.ParseSetter(builder, mergeContext.SourceContext.TargetContextRef, setterExpression, setterExpressions);
+				UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
 
 				if (!predicate.IsNullValue())
 				{
 					var condition = predicate.UnwrapLambda();
 
-					var conditionExpr = mergeContext.SourceContext.PrepareSourceLambda(condition);
+					var conditionExpr = mergeContext.SourceContext.PrepareSourceBody(condition);
 
 					operation.Where = new SqlSearchCondition();
 

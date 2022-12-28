@@ -1492,9 +1492,21 @@ namespace LinqToDB.Linq.Builder
 
 		#region Predicate Converter
 
-		//TODO: return SqlPlaceholderExpression
 		ISqlPredicate? ConvertPredicate(IBuildContext? context, Expression expression, ProjectFlags flags)
 		{
+			ISqlPredicate? CheckExpression(Expression expr)
+			{
+				if (expr is SqlPlaceholderExpression placheolder && placheolder.Sql is SqlSearchCondition sc)
+					return sc;
+				if (flags.IsTest())
+					return null;
+
+				if (expr is SqlErrorExpression error)
+					throw error.CreateError();
+
+				throw CreateSqlError(context, expression).CreateError();
+			}
+
 			ISqlExpression IsCaseSensitive(MethodCallExpression mc)
 			{
 				if (mc.Arguments.Count <= 1)
@@ -1548,7 +1560,7 @@ namespace LinqToDB.Linq.Builder
 						return ConvertPredicate(context, optimized, flags);
 					}
 
-					return ConvertCompare(context, expression.NodeType, left, right, flags);
+					return CheckExpression(ConvertCompareExpression(context, expression.NodeType, left, right, flags));
 				}
 
 				case ExpressionType.Call:
@@ -1558,15 +1570,15 @@ namespace LinqToDB.Linq.Builder
 					ISqlPredicate? predicate = null;
 
 					if (e.Method.Name == "Equals" && e.Object != null && e.Arguments.Count == 1)
-						return ConvertCompare(context, ExpressionType.Equal, e.Object, e.Arguments[0], flags);
+						return CheckExpression(ConvertCompareExpression(context, ExpressionType.Equal, e.Object, e.Arguments[0], flags));
 
 					if (e.Method.DeclaringType == typeof(string))
 					{
 						switch (e.Method.Name)
 						{
-								case "Contains"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(e), flags); break;
-								case "StartsWith" : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(e), flags); break;
-								case "EndsWith"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(e), flags); break;
+							case "Contains"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.Contains,   IsCaseSensitive(e), flags); break;
+							case "StartsWith" : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.StartsWith, IsCaseSensitive(e), flags); break;
+							case "EndsWith"   : predicate = CreateStringPredicate(context, e, SqlPredicate.SearchString.SearchKind.EndsWith,   IsCaseSensitive(e), flags); break;
 						}
 					}
 					else if (e.Method.Name == "Contains")
@@ -1701,12 +1713,31 @@ namespace LinqToDB.Linq.Builder
 			return Expression.Lambda(body, param);
 		}
 
-		public ISqlPredicate? ConvertCompare(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right, ProjectFlags flags)
+		public SqlSearchCondition GenerateComparison(
+			IBuildContext? context, 
+			Expression     left,
+			Expression     right)
 		{
-			SqlSearchCondition? GenerateNullComparison(List<SqlPlaceholderExpression> placeholders, bool isNot)
+			var expr = ConvertCompareExpression(context, ExpressionType.Equal, left, right, ProjectFlags.SQL);
+			if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
+				return sc;
+			if (expr is SqlErrorExpression error)
+				throw error.CreateError();
+
+			throw CreateSqlError(context, Expression.Equal(left, right)).CreateError();
+		}
+
+		Expression ConvertCompareExpression(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right, ProjectFlags flags)
+		{
+			Expression GetOriginalExpression()
+			{
+				return Expression.MakeBinary(nodeType, left, right);
+			}
+
+			Expression GenerateNullComparison(List<SqlPlaceholderExpression> placeholders, bool isNot)
 			{
 				if (placeholders.Count == 0)
-					return null;
+					return GetOriginalExpression();
 
 				var notNull = placeholders.Where(p => p.Sql.CanBeNull != isNot).ToList();
 				if (notNull.Count == 0)
@@ -1718,17 +1749,23 @@ namespace LinqToDB.Linq.Builder
 					searchCondition.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(placeholder.Sql, isNot), isNot));
 				}
 
-				return searchCondition;
+				return CreatePlaceholder(context, searchCondition, GetOriginalExpression());
 			}
 
-			SqlSearchCondition GenerateObjectComparison(SqlGenericConstructorExpression genericConstructor, Expression paramExpr)
+			Expression GenerateObjectComparison(SqlGenericConstructorExpression genericConstructor, Expression paramExpr)
 			{
 				var searchCondition = new SqlSearchCondition();
-				GenerateObjectComparisonRecursive(searchCondition, genericConstructor, paramExpr);
-				return searchCondition;
+
+				Expression? errorExpression = null;
+				if (!GenerateObjectComparisonRecursive(searchCondition, genericConstructor, paramExpr, ref errorExpression))
+				{
+					return errorExpression ?? throw new InvalidOperationException();
+				}
+
+				return CreatePlaceholder(context, searchCondition, GetOriginalExpression());
 			}
 
-			void GenerateObjectComparisonRecursive(SqlSearchCondition searchCondition, SqlGenericConstructorExpression genericConstructor, Expression paramExpr)
+			bool GenerateObjectComparisonRecursive(SqlSearchCondition searchCondition, SqlGenericConstructorExpression genericConstructor, Expression paramExpr, ref Expression? errorExpression)
 			{
 				foreach (var assignment in genericConstructor.Assignments)
 				{
@@ -1736,7 +1773,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (assignment.Expression is SqlGenericConstructorExpression subGeneric)
 					{
-						GenerateObjectComparisonRecursive(searchCondition, subGeneric, accessExpression);
+						if (!GenerateObjectComparisonRecursive(searchCondition, subGeneric, accessExpression,
+							    ref errorExpression))
+							return false;
 					}
 					else if (assignment.Expression is SqlPlaceholderExpression placeholder)
 					{
@@ -1753,15 +1792,22 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						throw new InvalidOperationException(
-							$"Expression '{assignment.Expression}' cannot be used for comparison.");
+						errorExpression = accessExpression;
+						return false;
+						/*throw new InvalidOperationException(
+							$"Expression '{assignment.Expression}' cannot be used for comparison.");*/
 					}
 
 				}
+
+				return true;
 			}
 
-			ISqlPredicate? GenerateConstructorComparison(SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
+			Expression GenerateConstructorComparison(SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
 			{
+				var strict = leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.Full ||
+				             rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.Full;
+
 				var searchCondition = new SqlSearchCondition();
 				var usedMembers     = new HashSet<MemberInfo>(MemberInfoEqualityComparer.Default);
 
@@ -1769,6 +1815,12 @@ namespace LinqToDB.Linq.Builder
 				{
 					var found = rightConstructor.Assignments.FirstOrDefault(a =>
 						MemberInfoEqualityComparer.Default.Equals(a.MemberInfo, leftAssignment.MemberInfo));
+
+					if (found == null && strict)
+					{
+						// fail fast and prepare correct error expression
+						return CreateSqlError(context, Expression.MakeMemberAccess(right, leftAssignment.MemberInfo));
+					}
 
 					var rightExpression = found?.Expression;
 					if (rightExpression == null)
@@ -1780,10 +1832,10 @@ namespace LinqToDB.Linq.Builder
 						usedMembers.Add(found!.MemberInfo);
 					}
 
-					var predicate = ConvertCompare(context, nodeType, leftAssignment.Expression, rightExpression, flags);
-					if (predicate == null)
-						return null;
-					searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
+					var predicateExpr = ConvertCompareExpression(context, nodeType, leftAssignment.Expression, rightExpression, flags);
+					if (predicateExpr is not SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
+						return predicateExpr;
+					searchCondition.Conditions.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
 				}
 
 				foreach (var rightAssignment in rightConstructor.Assignments)
@@ -1791,15 +1843,21 @@ namespace LinqToDB.Linq.Builder
 					if (usedMembers.Contains(rightAssignment.MemberInfo))
 						continue;
 
+					if (strict)
+					{
+						// fail fast and prepare correct error expression
+						return CreateSqlError(context, Expression.MakeMemberAccess(left, rightAssignment.MemberInfo));
+					}
+
 					var leftExpression = Expression.Default(rightAssignment.Expression.Type);
 
-					var predicate = ConvertCompare(context, nodeType, leftExpression, rightAssignment.Expression, flags);
-					if (predicate == null)
-						return null;
-					searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
+					var predicateExpr = ConvertCompareExpression(context, nodeType, leftExpression, rightAssignment.Expression, flags);
+					if (predicateExpr is not SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
+						return predicateExpr;
+					searchCondition.Conditions.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
 				}
 
-				return searchCondition;
+				return CreatePlaceholder(context, searchCondition, GetOriginalExpression());
 			}
 
 
@@ -1815,6 +1873,12 @@ namespace LinqToDB.Linq.Builder
 			var columnDescriptor = SuggestColumnDescriptor(context, left, right, flags);
 			var leftExpr         = ConvertToSqlExpr(context, left, flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
+
+			if (leftExpr is SqlErrorExpression leftError)
+				return leftError.WithType(typeof(bool));
+
+			if (rightExpr is SqlErrorExpression rightError)
+				return rightError.WithType(typeof(bool));
 
 			if (leftExpr is SqlPlaceholderExpression placeholderLeft)
 			{
@@ -1844,19 +1908,6 @@ namespace LinqToDB.Linq.Builder
 
 					if (l is SqlValue lv && lv.Value == null)
 					{
-						/*if (rightExpr is SqlGenericConstructorExpression genericRight && (genericRight.ConstructType ==
-							    SqlGenericConstructorExpression.CreateType.New || genericRight.ConstructType ==
-							    SqlGenericConstructorExpression.CreateType.MemberInit))
-						{
-							var sc = new SqlSearchCondition();
-							if (isNot)
-							{
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(false))));
-							}
-
-							return sc;
-						}*/
-
 						if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Conditions.Count == 1)
 						{
 							var condition  = rightSearchCond.Conditions[0];
@@ -1867,9 +1918,9 @@ namespace LinqToDB.Linq.Builder
 							if (condition.Predicate is SqlPredicate.IsNull isnull)
 							{
 								if (isnull.IsNot == localIsNot)
-									return isnull;
+									return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, isnull)), GetOriginalExpression());
 
-								return (ISqlPredicate)isnull.Invert();
+								return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, (ISqlPredicate)isnull.Invert())), GetOriginalExpression());
 							}
 						}
 
@@ -1879,19 +1930,6 @@ namespace LinqToDB.Linq.Builder
 
 					if (r is SqlValue rv && rv.Value == null)
 					{
-						/*if (leftExpr is SqlGenericConstructorExpression genericLeft && (genericLeft.ConstructType ==
-							    SqlGenericConstructorExpression.CreateType.New || genericLeft.ConstructType ==
-							    SqlGenericConstructorExpression.CreateType.MemberInit))
-						{
-							var sc = new SqlSearchCondition();
-							if (isNot)
-							{
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(new SqlValue(false))));
-							}
-
-							return sc;
-						}*/
-
 						if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Conditions.Count == 1)
 						{
 							var condition  = leftSearchCond.Conditions[0];
@@ -1902,9 +1940,9 @@ namespace LinqToDB.Linq.Builder
 							if (condition.Predicate is SqlPredicate.IsNull isnull)
 							{
 								if (isnull.IsNot == localIsNot)
-									return isnull;
+									return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, isnull)), GetOriginalExpression());
 
-								return (ISqlPredicate)isnull.Invert();
+								return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, (ISqlPredicate)isnull.Invert())), GetOriginalExpression());
 							}
 						}
 
@@ -1939,7 +1977,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var p = ConvertEnumConversion(context!, left, op, right);
 				if (p != null)
-					return p;
+					return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, p)), GetOriginalExpression());
 			}
 
 			l ??= ConvertToSql(context, left, flags, unwrap: false, columnDescriptor: columnDescriptor);
@@ -2050,7 +2088,8 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal, CompareNullsAsValues ? true : null);
-			return predicate;
+
+			return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, predicate)), GetOriginalExpression());
 		}
 
 		public static List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
@@ -3826,9 +3865,9 @@ namespace LinqToDB.Linq.Builder
 		/// <returns></returns>
 		public Expression MakeExpression(IBuildContext? currentContext, Expression path, ProjectFlags flags)
 		{
-			static Expression ExecuteMake(IBuildContext context, Expression expresion, ProjectFlags projectFlags)
+			static Expression ExecuteMake(IBuildContext context, Expression expression, ProjectFlags projectFlags)
 			{
-				var result = context.MakeExpression(expresion, projectFlags);
+				var result = context.MakeExpression(expression, projectFlags);
 				return result;
 			}
 

@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 				: new SqlTableLikeSource { SourceQuery = sourceContextRef.BuildContext.SelectQuery };
 		}
 
-		public Expression PrepareSourceLambda(LambdaExpression lambdaExpression)
+		public Expression PrepareSourceBody(LambdaExpression lambdaExpression)
 		{
 			if (lambdaExpression.Parameters.Count != 1)
 				throw new InvalidOperationException();

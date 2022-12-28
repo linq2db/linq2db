@@ -35,6 +35,7 @@ namespace LinqToDB.Linq.Builder
 					builder.PopDisabledFilter();
 
 				var targetTable = GetTargetTable(target);
+
 				if (targetTable == null)
 					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
 

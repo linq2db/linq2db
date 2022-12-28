@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Linq;
@@ -443,23 +444,21 @@ namespace Tests.xUpdate
 
 				var results = source.ToList();
 
-				// 5 commas after selected columns and 1 comma in join
-				var explicitJoin = db.LastQuery!.Contains("JOIN");
-				Assert.AreEqual(explicitJoin ? 5 : 6, db.LastQuery!.Count(c => c == ','));
+				var selectQuery = source.GetSelectQuery();
+				selectQuery.Select.Columns.Count.Should().Be(6);
+				selectQuery.Select.From.Tables.Should().HaveCount(1);
+				selectQuery.Select.From.Tables[0].Joins.Should().HaveCount(1);
 
-				Assert.AreEqual(16, results.Count);
+				results.Should().HaveCount(16);
 			}
 		}
 
-		[ActiveIssue(896, Details = "Selects 10 columns instead of 6. Also see InsertFromCrossJoinedSourceQuery2Workaround for workaround")]
 		[Test]
 		public void InsertFromCrossJoinedSourceQuery2([MergeDataContextSource(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				PrepareData(db);
-
-				var table = GetTarget(db);
 
 				var source = from t1 in db.GetTable<TestMapping1>().TableName("TestMerge1")
 							 from t2 in db.GetTable<TestMapping1>().TableName("TestMerge2")
@@ -476,10 +475,10 @@ namespace Tests.xUpdate
 
 				var results = source.ToList();
 
-				// 5 commas after selected columns and 1 comma in join
-				Assert.AreEqual(6, db.LastQuery!.Count(c => c == ','));
+				var selectQuery = source.GetSelectQuery();
+				selectQuery.Select.Columns.Count.Should().Be(6);
 
-				Assert.AreEqual(16, results.Count);
+				results.Should().HaveCount(16);
 			}
 		}
 

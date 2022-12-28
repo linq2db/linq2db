@@ -373,7 +373,7 @@ namespace LinqToDB.Expressions
 					if (!mc.Method.IsStatic)
 						break;
 
-					if (mc.IsSqlRow() || mc.Method.DeclaringType == typeof(string))
+					if (mc.Method.IsSqlPropertyMethodEx() || mc.IsSqlRow() || mc.Method.DeclaringType == typeof(string))
 						break;
 
 					return new SqlGenericConstructorExpression(mc);

@@ -280,6 +280,11 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
+					// It will help to do not crash when user uses Automapper and it tries to map non accessible fields
+					//
+					if (flags.IsExpression())
+						return new DefaultValueExpression(Builder.MappingSchema, path.Type);
+
 					return path;
 				}
 
