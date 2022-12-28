@@ -3,6 +3,7 @@
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
+	using Common;
 	using LinqToDB.Expressions;
 
 	internal class CteContext : IBuildContext
@@ -119,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 					var index = CteClause.Fields.Count;
 					var field = TableLikeHelpers.RegisterFieldMapping(CteClause.Fields, index, () =>
 					{
-						var newField = new SqlField(path.Type, TableLikeHelpers.GenerateColumnAlias(path), true);
+						var newField = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path), true);
 						return newField;
 					});
 

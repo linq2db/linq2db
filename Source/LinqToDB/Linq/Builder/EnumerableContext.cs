@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 				var (member, column) = columnsInfo[index];
 				var field            = column != null
 					? new SqlField(column)
-					: new SqlField(member.GetMemberType(), "item" + (index + 1), true);
+					: new SqlField(new DbDataType(member.GetMemberType()), "item" + (index + 1), true);
 				fields[index]        = field;
 			}
 
@@ -135,13 +135,6 @@ namespace LinqToDB.Linq.Builder
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
 			throw new NotImplementedException();
-
-			/*var expr = Builder.FinalizeProjection(this,
-				Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
-
-			var mapper = Builder.BuildMapper<T>(expr);
-
-			QueryRunner.SetRunQuery(query, mapper);*/
 		}
 
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)

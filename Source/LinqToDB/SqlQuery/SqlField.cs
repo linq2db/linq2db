@@ -21,14 +21,14 @@ namespace LinqToDB.SqlQuery
 			CanBeNull = true;
 		}
 
-		public SqlField(Type systemType, string? name, bool canBeNull)
+		public SqlField(DbDataType dbDataType, string? name, bool canBeNull)
 		{
-			Type      = new DbDataType(systemType);
+			Type      = dbDataType;
 			Name      = name!;
 			CanBeNull = canBeNull;
 		}
 
-		private SqlField(ISqlTableSource table, string name, string physicalName)
+		SqlField(ISqlTableSource table, string name, string physicalName)
 		{
 			Table        = table;
 			Name         = name;
@@ -96,7 +96,7 @@ namespace LinqToDB.SqlQuery
 
 		Type ISqlExpression.SystemType => Type.SystemType;
 
-		private string? _physicalName;
+		string? _physicalName;
 		public  string   PhysicalName
 		{
 			get => _physicalName ?? Name;

@@ -708,7 +708,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if (cte.Fields.Count == 0)
 			{
-				cte.Fields.Add(new SqlField(typeof(int), "any", false));
+				cte.Fields.Add(new SqlField(new DbDataType(typeof(int)), "any", false));
 				cte.Body!.Select.AddNew(new SqlValue(1), "any");
 			}
 		}

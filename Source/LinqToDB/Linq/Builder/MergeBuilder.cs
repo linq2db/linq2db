@@ -56,12 +56,12 @@ namespace LinqToDB.Linq.Builder
 				var selectQuery = new SelectQuery();
 
 				var actionFieldContext  = new SingleExpressionContext(null, builder, actionField, selectQuery);
-				var deletedTableContext = new TableBuilder.TableContext(builder, selectQuery, deletedTable);
-				var insertedTableConext = new TableBuilder.TableContext(builder, selectQuery, insertedTable);
+				var deletedTableContext = new AnchorContext(null, new TableBuilder.TableContext(builder, selectQuery, deletedTable), SqlAnchor.AnchorKindEnum.Deleted);
+				var insertedTableConext = new AnchorContext(null, new TableBuilder.TableContext(builder, selectQuery, insertedTable), SqlAnchor.AnchorKindEnum.Inserted);
 
 				if (kind == MergeKind.MergeWithOutput)
 				{
-					var outputExpression = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+					var outputExpression = methodCall.Arguments[1].UnwrapLambda();
 
 					var outputContext = new MergeOutputContext(
 						buildInfo.Parent,
@@ -76,21 +76,18 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var outputExpression = (LambdaExpression)methodCall.Arguments[2].Unwrap();
+					var outputLambda = methodCall.Arguments[2].UnwrapLambda();
+					var outputExpression = SequenceHelper.PrepareBody(outputLambda, actionFieldContext,
+						deletedTableContext, insertedTableConext);
 
 					var outputTable = methodCall.Arguments[1];
 					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
+					var destinationRef = new ContextRefExpression(methodCall.Method.GetGenericArguments()[2], destination);
 
-					UpdateBuilder.BuildSetterWithContext(
-						builder,
-						buildInfo,
-						outputExpression,
-						destination,
-						mergeContext.Merge.Output.OutputItems,
-						actionFieldContext,
-						deletedTableContext,
-						insertedTableConext
-					);
+					var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
+					UpdateBuilder.ParseSetter(builder, destinationRef, outputExpression, outputSetters);
+					UpdateBuilder.InitializeSetExpressions(builder, mergeContext.SourceContext,
+						mergeContext.TargetContext, outputSetters, mergeContext.Merge.Output.OutputItems, false);
 
 					mergeContext.Merge.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 				}

@@ -26,7 +26,7 @@ namespace LinqToDB.SqlQuery
 
 		public string          Name   => "Source";
 
-		public List<SqlField> SourceFields { get; } = new List<SqlField>();
+		public List<SqlField> SourceFields { get; } = new ();
 
 		void AddField(SqlField field)
 		{
@@ -37,12 +37,6 @@ namespace LinqToDB.SqlQuery
 		public SqlValuesTable?  SourceEnumerable { get; internal set; }
 		public SelectQuery?     SourceQuery      { get; internal set; }
 		public ISqlTableSource  Source => (ISqlTableSource?)SourceQuery ?? SourceEnumerable!;
-
-		public void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
-		{
-			if (SourceQuery != null)
-				SourceQuery = func(context, SourceQuery);
-		}
 
 		public bool IsParameterDependent
 		{

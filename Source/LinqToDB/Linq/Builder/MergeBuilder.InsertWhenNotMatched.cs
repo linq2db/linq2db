@@ -47,7 +47,9 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
-				UpdateBuilder.ParseSetter(builder, mergeContext.SourceContext.TargetContextRef, setterExpression, setterExpressions);
+				UpdateBuilder.ParseSetter(builder,
+					mergeContext.SourceContext.TargetContextRef.WithType(setterExpression.Type), setterExpression,
+					setterExpressions);
 				UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
 
 				if (!predicate.IsNullValue())

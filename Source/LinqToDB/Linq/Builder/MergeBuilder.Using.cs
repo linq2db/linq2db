@@ -27,7 +27,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				var sourceContext         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+				var sourceContext =
+					builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 				var genericArgs = methodCall.Method.GetGenericArguments();
 
