@@ -1425,10 +1425,10 @@ namespace Tests.xUpdate
 						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null }
 					};
 
-					var options = new BulkCopyOptions();
-					options.MaxBatchSize = 1;
+					var options = new BulkCopyOptions { MaxBatchSize = 1 };
+
 					if (context.IsAnyOf(ProviderName.ClickHouseClient))
-						options.WithoutSession = true;
+						options = options with { WithoutSession = true };
 
 					((DataConnection)db).BulkCopy(options, data);
 				}
@@ -1448,8 +1448,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-					var options          = GetDefaultBulkCopyOptions(context);
-					options.MaxBatchSize = 100;
+					var options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 100 };
 
 					((DataConnection)db).BulkCopy(options, new[]
 					{

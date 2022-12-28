@@ -28,6 +28,7 @@ namespace LinqToDB
 			_retryPolicyOptions = options._retryPolicyOptions;
 			_connectionOptions  = options._connectionOptions;
 			_dataContextOptions = options._dataContextOptions;
+			_bulkCopyOptions    = options._bulkCopyOptions;
 		}
 
 		protected override DataOptions Clone()
@@ -48,6 +49,7 @@ namespace LinqToDB
 				case RetryPolicyOptions rp  : return ReferenceEquals(_retryPolicyOptions, rp)  ? this : new(this) { _retryPolicyOptions = rp  };
 				case ConnectionOptions  co  : return ReferenceEquals(_connectionOptions,  co)  ? this : new(this) { _connectionOptions  = co  };
 				case DataContextOptions dco : return ReferenceEquals(_dataContextOptions, dco) ? this : new(this) { _dataContextOptions = dco };
+				case BulkCopyOptions    bco : return ReferenceEquals(_bulkCopyOptions,    bco) ? this : new(this) { _bulkCopyOptions    = bco };
 				default                     : return base.WithOptions(options);
 			}
 		}
@@ -56,11 +58,13 @@ namespace LinqToDB
 		RetryPolicyOptions? _retryPolicyOptions;
 		ConnectionOptions?  _connectionOptions;
 		DataContextOptions? _dataContextOptions;
+		BulkCopyOptions?    _bulkCopyOptions;
 
 		public LinqOptions        LinqOptions        => _linqOptions        ??= Common.Configuration.Linq.Options;
 		public RetryPolicyOptions RetryPolicyOptions => _retryPolicyOptions ??= Common.Configuration.RetryPolicy.Options;
 		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= DataConnection.DefaultDataOptions.ConnectionOptions;
 		public DataContextOptions DataContextOptions => _dataContextOptions ??= DataContextOptions.Empty;
+		public BulkCopyOptions    BulkCopyOptions    => _bulkCopyOptions    ??= BulkCopyOptions.Empty;
 
 		public override IEnumerable<IOptionSet> OptionSets
 		{
@@ -72,6 +76,9 @@ namespace LinqToDB
 
 				if (_dataContextOptions != null)
 					yield return _dataContextOptions;
+
+				if (_bulkCopyOptions != null)
+					yield return _bulkCopyOptions;
 
 				foreach (var item in base.OptionSets)
 					yield return item;
@@ -87,6 +94,7 @@ namespace LinqToDB
 			if (type == typeof(RetryPolicyOptions)) return (TSet?)(IOptionSet?)RetryPolicyOptions;
 			if (type == typeof(ConnectionOptions))  return (TSet?)(IOptionSet?)ConnectionOptions;
 			if (type == typeof(DataContextOptions)) return (TSet?)(IOptionSet?)_dataContextOptions;
+			if (type == typeof(BulkCopyOptions))    return (TSet?)(IOptionSet?)_bulkCopyOptions;
 
 			return base.Find<TSet>();
 		}
@@ -118,6 +126,7 @@ namespace LinqToDB
 			.Add(RetryPolicyOptions)
 			.Add(ConnectionOptions)
 			.Add(DataContextOptions)
+			.Add(BulkCopyOptions)
 			.AddRange(base.OptionSets)
 			.CreateID();
 

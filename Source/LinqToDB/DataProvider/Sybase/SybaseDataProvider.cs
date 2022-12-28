@@ -215,44 +215,46 @@ namespace LinqToDB.DataProvider.Sybase
 
 		SybaseBulkCopy? _bulkCopy;
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
-			BulkCopyOptions                                        bulkCopyOptions,
-			IEnumerable<T>                                         source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-			_bulkCopy ??= new SybaseBulkCopy(this);
+			_bulkCopy ??= new (this);
 
 			return _bulkCopy.BulkCopy(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					SybaseTools.DefaultBulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
-				bulkCopyOptions,
+				options.BulkCopyOptions,
 				source);
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
-			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			_bulkCopy ??= new SybaseBulkCopy(this);
+			_bulkCopy ??= new (this);
 
 			return _bulkCopy.BulkCopyAsync(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					SybaseTools.DefaultBulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
-				bulkCopyOptions,
+				options.BulkCopyOptions,
 				source,
 				cancellationToken);
 		}
 
 #if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
-			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			_bulkCopy ??= new SybaseBulkCopy(this);
+			_bulkCopy ??= new (this);
 
 			return _bulkCopy.BulkCopyAsync(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SybaseTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					SybaseTools.DefaultBulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
-				bulkCopyOptions,
+				options.BulkCopyOptions,
 				source,
 				cancellationToken);
 		}

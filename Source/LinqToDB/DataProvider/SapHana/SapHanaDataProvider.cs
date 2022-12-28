@@ -137,38 +137,40 @@ namespace LinqToDB.DataProvider.SapHana
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
-			BulkCopyOptions                                        bulkCopyOptions,
-			IEnumerable<T>                                         source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			return new SapHanaBulkCopy(this).BulkCopy(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					SapHanaTools.DefaultBulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
-				bulkCopyOptions,
+				options.BulkCopyOptions,
 				source);
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
-			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SapHanaBulkCopy(this).BulkCopyAsync(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					SapHanaTools.DefaultBulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
-				bulkCopyOptions,
+				options.BulkCopyOptions,
 				source,
 				cancellationToken);
 		}
 
 #if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
-			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SapHanaBulkCopy(this).BulkCopyAsync(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? SapHanaTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					SapHanaTools.DefaultBulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
-				bulkCopyOptions,
+				options.BulkCopyOptions,
 				source,
 				cancellationToken);
 		}

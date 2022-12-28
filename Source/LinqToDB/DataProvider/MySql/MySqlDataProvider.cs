@@ -129,47 +129,49 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table,
-			BulkCopyOptions                                        bulkCopyOptions,
-			IEnumerable<T>                                         source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopy(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					MySqlTools.DefaultBulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
-				bulkCopyOptions,
+				options.BulkCopyOptions,
 				source);
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
-			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					MySqlTools.DefaultBulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
-				bulkCopyOptions,
+				options.BulkCopyOptions,
 				source,
 				cancellationToken);
 		}
 
 #if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
-			BulkCopyOptions bulkCopyOptions,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
-				bulkCopyOptions.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : bulkCopyOptions.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					MySqlTools.DefaultBulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
-				bulkCopyOptions,
+				options.BulkCopyOptions,
 				source,
 				cancellationToken);
 		}

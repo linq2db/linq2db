@@ -65,14 +65,12 @@ namespace LinqToDB.DataProvider
 		BulkCopyRowsCopied BulkCopy<T>(
 			DataOptions     options,
 			ITable<T>       table,
-			BulkCopyOptions bulkCopyOptions,
 			IEnumerable<T>  source)
 		where T : notnull;
 
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			DataOptions       options,
 			ITable<T>         table,
-			BulkCopyOptions   bulkCopyOptions,
 			IEnumerable<T>    source,
 			CancellationToken cancellationToken)
 		where T : notnull;
@@ -81,7 +79,6 @@ namespace LinqToDB.DataProvider
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			DataOptions         options,
 			ITable<T>           table,
-			BulkCopyOptions     bulkCopyOptions,
 			IAsyncEnumerable<T> source,
 			CancellationToken   cancellationToken)
 		where T: notnull;

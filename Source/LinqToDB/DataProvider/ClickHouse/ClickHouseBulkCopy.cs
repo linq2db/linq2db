@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	using Async;
 	using Common;
 	using Data;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using SqlProvider;
 
 	sealed class ClickHouseBulkCopy : BasicBulkCopy

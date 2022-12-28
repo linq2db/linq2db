@@ -135,20 +135,20 @@ namespace LinqToDB
 	/// </param>
 	public sealed record LinqOptions
 	(
-		bool PreloadGroups,
-		bool IgnoreEmptyUpdate,
-		bool GenerateExpressionTest,
-		bool TraceMapperExpression,
-		bool DoNotClearOrderBys,
-		bool OptimizeJoins,
-		bool CompareNullsAsValues,
-		bool GuardGrouping,
-		bool DisableQueryCache,
+		bool     PreloadGroups,
+		bool     IgnoreEmptyUpdate,
+		bool     GenerateExpressionTest,
+		bool     TraceMapperExpression,
+		bool     DoNotClearOrderBys,
+		bool     OptimizeJoins,
+		bool     CompareNullsAsValues,
+		bool     GuardGrouping,
+		bool     DisableQueryCache,
 		TimeSpan CacheSlidingExpiration,
-		bool PreferApply,
-		bool KeepDistinctOrdered,
-		bool ParameterizeTakeSkip,
-		bool EnableAutoFluentMapping
+		bool     PreferApply,
+		bool     KeepDistinctOrdered,
+		bool     ParameterizeTakeSkip,
+		bool     EnableAutoFluentMapping
 	)
 		: IOptionSet
 	{
@@ -188,7 +188,8 @@ namespace LinqToDB
 			EnableAutoFluentMapping = original.EnableAutoFluentMapping;
 		}
 
-		int IConfigurationID.ConfigurationID => ((int?)new IdentifierBuilder()
+		int? _configurationID;
+		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
 			.Add(PreloadGroups)
 			.Add(IgnoreEmptyUpdate)
 			.Add(GenerateExpressionTest)
@@ -203,7 +204,7 @@ namespace LinqToDB
 			.Add(KeepDistinctOrdered)
 			.Add(ParameterizeTakeSkip)
 			.Add(EnableAutoFluentMapping)
-			.CreateID()).Value;
+			.CreateID();
 
 		#region IEquatable implementation
 
