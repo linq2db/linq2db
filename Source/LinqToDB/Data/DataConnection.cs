@@ -36,6 +36,13 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property.
+		/// </summary>
+		public DataConnection(Func<DataOptions,DataOptions> optionsSetter) : this(optionsSetter(DefaultDataOptions))
+		{
+		}
+
+		/// <summary>
 		/// Creates database connection object that uses provided connection configuration.
 		/// </summary>
 		/// <param name="configurationString">Name of database connection configuration to use with this connection.
@@ -48,10 +55,31 @@ namespace LinqToDB.Data
 		}
 
 		/// <summary>
+		/// Creates database connection object that uses provided connection configuration.
+		/// </summary>
+		/// <param name="configurationString">Name of database connection configuration to use with this connection.
+		/// In case of <c>null</c>, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
+		public DataConnection(string? configurationString, Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(configurationString == null
+				? DefaultDataOptions
+				: ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(configurationString)))))
+		{
+		}
+
+		/// <summary>
 		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property and provided mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
-		public DataConnection(MappingSchema mappingSchema) : this(new DataOptions().UseMappingSchema(mappingSchema))
+		public DataConnection(MappingSchema mappingSchema) : this(DefaultDataOptions.UseMappingSchema(mappingSchema))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses default connection configuration from <see cref="DefaultConfiguration"/> property and provided mapping schema.
+		/// </summary>
+		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		public DataConnection(MappingSchema mappingSchema, Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseMappingSchema(mappingSchema)))
 		{
 		}
 
@@ -62,7 +90,18 @@ namespace LinqToDB.Data
 		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(string? configurationString, MappingSchema mappingSchema)
-			: this(new DataOptions().UseConfigurationString(configurationString).UseMappingSchema(mappingSchema))
+			: this(DefaultDataOptions.UseConfigurationString(configurationString).UseMappingSchema(mappingSchema))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses provided connection configuration and mapping schema.
+		/// </summary>
+		/// <param name="configurationString">Name of database connection configuration to use with this connection.
+		/// In case of null, configuration from <see cref="DefaultConfiguration"/> property will be used.</param>
+		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		public DataConnection(string? configurationString, MappingSchema mappingSchema, Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseConfigurationString(configurationString).UseMappingSchema(mappingSchema)))
 		{
 		}
 
@@ -76,7 +115,22 @@ namespace LinqToDB.Data
 			string        providerName,
 			string        connectionString,
 			MappingSchema mappingSchema)
-			: this(new DataOptions().UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
+			: this(DefaultDataOptions.UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider, connection string and mapping schema.
+		/// </summary>
+		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
+		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		public DataConnection(
+			string                        providerName,
+			string                        connectionString,
+			MappingSchema                 mappingSchema,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseConnectionString(providerName, connectionString).UseMappingSchema(mappingSchema)))
 		{
 		}
 
@@ -88,7 +142,20 @@ namespace LinqToDB.Data
 		public DataConnection(
 			string providerName,
 			string connectionString)
-			: this(new DataOptions().UseConnectionString(providerName, connectionString))
+			: this(DefaultDataOptions.UseConnectionString(providerName, connectionString))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider and connection string.
+		/// </summary>
+		/// <param name="providerName">Name of database provider to use with this connection. <see cref="ProviderName"/> class for list of providers.</param>
+		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		public DataConnection(
+			string                        providerName,
+			string                        connectionString,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseConnectionString(providerName, connectionString)))
 		{
 		}
 
@@ -102,7 +169,22 @@ namespace LinqToDB.Data
 			IDataProvider dataProvider,
 			string        connectionString,
 			MappingSchema mappingSchema)
-			: this(new DataOptions().UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema))
+			: this(DefaultDataOptions.UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider, connection string and mapping schema.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		public DataConnection(
+			IDataProvider                 dataProvider,
+			string                        connectionString,
+			MappingSchema                 mappingSchema,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseConnectionString(dataProvider, connectionString).UseMappingSchema(mappingSchema)))
 		{
 		}
 
@@ -114,7 +196,20 @@ namespace LinqToDB.Data
 		public DataConnection(
 			IDataProvider dataProvider,
 			string        connectionString)
-			: this(new DataOptions().UseConnectionString(dataProvider, connectionString))
+			: this(DefaultDataOptions.UseConnectionString(dataProvider, connectionString))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider and connection string.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connectionString">Database connection string to use for connection with database.</param>
+		public DataConnection(
+			IDataProvider                 dataProvider,
+			string                        connectionString,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseConnectionString(dataProvider, connectionString)))
 		{
 		}
 
@@ -125,10 +220,25 @@ namespace LinqToDB.Data
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider       dataProvider,
+			IDataProvider      dataProvider,
 			Func<DbConnection> connectionFactory,
-			MappingSchema       mappingSchema)
-			: this(new DataOptions().UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
+			MappingSchema      mappingSchema)
+			: this(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider, connection factory and mapping schema.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connectionFactory">Database connection factory method.</param>
+		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		public DataConnection(
+			IDataProvider                 dataProvider,
+			Func<DbConnection>            connectionFactory,
+			MappingSchema                 mappingSchema,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema)))
 		{
 		}
 
@@ -138,9 +248,22 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		public DataConnection(
-			IDataProvider       dataProvider,
+			IDataProvider      dataProvider,
 			Func<DbConnection> connectionFactory)
-			: this(new DataOptions().UseConnectionFactory(dataProvider, connectionFactory))
+			: this(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider and connection factory.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connectionFactory">Database connection factory method.</param>
+		public DataConnection(
+			IDataProvider                 dataProvider,
+			Func<DbConnection>            connectionFactory,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory)))
 		{
 		}
 
@@ -154,7 +277,22 @@ namespace LinqToDB.Data
 			IDataProvider dataProvider,
 			DbConnection  connection,
 			MappingSchema mappingSchema)
-			: this(new DataOptions().UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))
+			: this(DefaultDataOptions.UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider, connection and mapping schema.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connection">Existing database connection to use.</param>
+		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		public DataConnection(
+			IDataProvider                 dataProvider,
+			DbConnection                  connection,
+			MappingSchema                 mappingSchema,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseConnection(dataProvider, connection).UseMappingSchema(mappingSchema)))
 		{
 		}
 
@@ -178,12 +316,43 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connection">Existing database connection to use.</param>
+		/// <remarks>
+		/// <paramref name="connection"/> would not be disposed.
+		/// </remarks>
+		public DataConnection(
+			IDataProvider dataProvider,
+			DbConnection  connection,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(dataProvider, connection, false, optionsSetter)
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider and connection.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connection">Existing database connection to use.</param>
 		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing.</param>
 		public DataConnection(
 			IDataProvider dataProvider,
 			DbConnection  connection,
 			bool          disposeConnection)
-			: this(new DataOptions().UseConnection(dataProvider, connection, disposeConnection))
+			: this(DefaultDataOptions.UseConnection(dataProvider, connection, disposeConnection))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider and connection.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="connection">Existing database connection to use.</param>
+		/// <param name="disposeConnection">If true <paramref name="connection"/> would be disposed on DataConnection disposing.</param>
+		public DataConnection(
+			IDataProvider                 dataProvider,
+			DbConnection                  connection,
+			bool                          disposeConnection,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseConnection(dataProvider, connection, disposeConnection)))
 		{
 		}
 
@@ -194,10 +363,25 @@ namespace LinqToDB.Data
 		/// <param name="transaction">Existing database transaction to use.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider  dataProvider,
+			IDataProvider dataProvider,
 			DbTransaction transaction,
-			MappingSchema  mappingSchema)
-			: this(new DataOptions().UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
+			MappingSchema mappingSchema)
+			: this(DefaultDataOptions.UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider, transaction and mapping schema.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="transaction">Existing database transaction to use.</param>
+		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
+		public DataConnection(
+			IDataProvider                 dataProvider,
+			DbTransaction                 transaction,
+			MappingSchema                 mappingSchema,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseTransaction(dataProvider, transaction).UseMappingSchema(mappingSchema)))
 		{
 		}
 
@@ -209,7 +393,20 @@ namespace LinqToDB.Data
 		public DataConnection(
 			IDataProvider dataProvider,
 			DbTransaction transaction)
-			: this(new DataOptions().UseTransaction(dataProvider, transaction))
+			: this(DefaultDataOptions.UseTransaction(dataProvider, transaction))
+		{
+		}
+
+		/// <summary>
+		/// Creates database connection object that uses specified database provider and transaction.
+		/// </summary>
+		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
+		/// <param name="transaction">Existing database transaction to use.</param>
+		public DataConnection(
+			IDataProvider                 dataProvider,
+			DbTransaction                 transaction,
+			Func<DataOptions,DataOptions> optionsSetter)
+			: this(optionsSetter(DefaultDataOptions.UseTransaction(dataProvider, transaction)))
 		{
 		}
 

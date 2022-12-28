@@ -41,7 +41,7 @@ namespace LinqToDB.Data
 	/// </param>
 	public sealed record ConnectionOptions
 	(
-		string?              ConfigurationString,
+		string?              ConfigurationString = default,
 		string?              ConnectionString    = default,
 		IDataProvider?       DataProvider        = default,
 		string?              ProviderName        = default,

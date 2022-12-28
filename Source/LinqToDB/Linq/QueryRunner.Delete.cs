@@ -99,7 +99,7 @@ namespace LinqToDB.Linq
 						dataContext,
 						static (entry, key, context) =>
 						{
-							entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpiration;
+							entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
@@ -137,7 +137,7 @@ namespace LinqToDB.Linq
 						dataContext,
 						static (entry, key, context) =>
 						{
-							entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpiration;
+							entry.SlidingExpiration = context.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 							return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 

@@ -335,7 +335,7 @@ namespace LinqToDB.Common
 			/// </summary>
 			public static TimeSpan CacheSlidingExpiration
 			{
-				get => Options.CacheSlidingExpiration;
+				get => Options.CacheSlidingExpirationOrDefault;
 				set
 				{
 					if (Options.CacheSlidingExpiration != value)

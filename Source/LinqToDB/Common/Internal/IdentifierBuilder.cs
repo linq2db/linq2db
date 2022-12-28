@@ -186,6 +186,7 @@ namespace LinqToDB.Common.Internal
 				string str         => str,
 				IEnumerable col    => $"[{string.Join(",", col.Cast<object?>().Select(GetObjectID))}]",
 				Expression ex      => GetObjectID(ex).ToString(),
+				TimeSpan ts        => ts.Ticks.ToString(),
 				_                  => GetOrAddObject(obj)
 			};
 

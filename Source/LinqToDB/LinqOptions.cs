@@ -135,38 +135,24 @@ namespace LinqToDB
 	/// </param>
 	public sealed record LinqOptions
 	(
-		bool     PreloadGroups,
-		bool     IgnoreEmptyUpdate,
-		bool     GenerateExpressionTest,
-		bool     TraceMapperExpression,
-		bool     DoNotClearOrderBys,
-		bool     OptimizeJoins,
-		bool     CompareNullsAsValues,
-		bool     GuardGrouping,
-		bool     DisableQueryCache,
-		TimeSpan CacheSlidingExpiration,
-		bool     PreferApply,
-		bool     KeepDistinctOrdered,
-		bool     ParameterizeTakeSkip,
-		bool     EnableAutoFluentMapping
+		bool      PreloadGroups           = false,
+		bool      IgnoreEmptyUpdate       = false,
+		bool      GenerateExpressionTest  = false,
+		bool      TraceMapperExpression   = false,
+		bool      DoNotClearOrderBys      = false,
+		bool      OptimizeJoins           = true,
+		bool      CompareNullsAsValues    = true,
+		bool      GuardGrouping           = true,
+		bool      DisableQueryCache       = false,
+		TimeSpan? CacheSlidingExpiration  = default,
+		bool      PreferApply             = true,
+		bool      KeepDistinctOrdered     = true,
+		bool      ParameterizeTakeSkip    = true,
+		bool      EnableAutoFluentMapping = true
 	)
 		: IOptionSet
 	{
-		public LinqOptions() : this(
-			PreloadGroups           : false,
-			IgnoreEmptyUpdate       : false,
-			GenerateExpressionTest  : false,
-			TraceMapperExpression   : false,
-			DoNotClearOrderBys      : false,
-			OptimizeJoins           : true,
-			CompareNullsAsValues    : true,
-			GuardGrouping           : true,
-			DisableQueryCache       : false,
-			CacheSlidingExpiration  : TimeSpan.FromHours(1),
-			PreferApply             : true,
-			KeepDistinctOrdered     : true,
-			ParameterizeTakeSkip    : true,
-			EnableAutoFluentMapping : true)
+		public LinqOptions() : this(CacheSlidingExpiration : TimeSpan.FromHours(1))
 		{
 		}
 
@@ -205,6 +191,8 @@ namespace LinqToDB
 			.Add(ParameterizeTakeSkip)
 			.Add(EnableAutoFluentMapping)
 			.CreateID();
+
+		public TimeSpan CacheSlidingExpirationOrDefault => CacheSlidingExpiration ?? TimeSpan.FromHours(1);
 
 		#region IEquatable implementation
 

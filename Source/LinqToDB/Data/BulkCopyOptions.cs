@@ -63,54 +63,34 @@ namespace LinqToDB.Data
 	/// </summary>
 	public sealed record BulkCopyOptions
 	(
-		int?                        MaxBatchSize,
-		int?                        BulkCopyTimeout,
-		BulkCopyType                BulkCopyType,
-		bool?                       CheckConstraints,
-		bool?                       KeepIdentity,
-		bool?                       TableLock,
-		bool?                       KeepNulls,
-		bool?                       FireTriggers,
-		bool?                       UseInternalTransaction,
-		string?                     ServerName,
-		string?                     DatabaseName,
-		string?                     SchemaName,
-		string?                     TableName,
-		TableOptions                TableOptions,
-		int                         NotifyAfter,
-		Action<BulkCopyRowsCopied>? RowsCopiedCallback,
-		bool                        UseParameters,
-		int?                        MaxParametersForBatch,
-		int?                        MaxDegreeOfParallelism,
-		bool                        WithoutSession
+		int?                        MaxBatchSize           = default,
+		int?                        BulkCopyTimeout        = default,
+		BulkCopyType                BulkCopyType           = default,
+		bool?                       CheckConstraints       = default,
+		bool?                       KeepIdentity           = default,
+		bool?                       TableLock              = default,
+		bool?                       KeepNulls              = default,
+		bool?                       FireTriggers           = default,
+		bool?                       UseInternalTransaction = default,
+		string?                     ServerName             = default,
+		string?                     DatabaseName           = default,
+		string?                     SchemaName             = default,
+		string?                     TableName              = default,
+		TableOptions                TableOptions           = default,
+		int                         NotifyAfter            = default,
+		Action<BulkCopyRowsCopied>? RowsCopiedCallback     = default,
+		bool                        UseParameters          = default,
+		int?                        MaxParametersForBatch  = default,
+		int?                        MaxDegreeOfParallelism = default,
+		bool                        WithoutSession         = default
 	)
 		: IOptionSet
 	{
-		public BulkCopyOptions() : this(
-			MaxBatchSize           : null,
-			BulkCopyTimeout        : null,
-			BulkCopyType           : BulkCopyType.Default,
-			CheckConstraints       : null,
-			KeepIdentity           : null,
-			TableLock              : null,
-			KeepNulls              : null,
-			FireTriggers           : null,
-			UseInternalTransaction : null,
-			ServerName             : null,
-			DatabaseName           : null,
-			SchemaName             : null,
-			TableName              : null,
-			TableOptions           : TableOptions.NotSet,
-			NotifyAfter            : 0,
-			RowsCopiedCallback     : null,
-			UseParameters          : false,
-			MaxParametersForBatch  : null,
-			MaxDegreeOfParallelism : null,
-			WithoutSession         : false)
+		public BulkCopyOptions() : this((int?)null)
 		{
 		}
 
-		public BulkCopyOptions(BulkCopyOptions options)
+		BulkCopyOptions(BulkCopyOptions options)
 		{
 			MaxBatchSize           = options.MaxBatchSize;
 			BulkCopyTimeout        = options.BulkCopyTimeout;

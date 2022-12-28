@@ -1416,7 +1416,7 @@ namespace LinqToDB.Data
 				dataConnection,
 				static (o, ctx) =>
 			{
-				o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpiration;
+				o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
 				var type = o.Key.type;
 				var td   = ctx.MappingSchema.GetEntityDescriptor(type);
@@ -1563,7 +1563,7 @@ namespace LinqToDB.Data
 				(dataConnection, dataReader),
 				static (e, context) =>
 			{
-				e.SlidingExpiration = context.dataConnection.Options.LinqOptions.CacheSlidingExpiration;
+				e.SlidingExpiration = context.dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
 				if (!e.Key.Item6 && IsDynamicType(typeof(T)))
 				{
@@ -1602,7 +1602,7 @@ namespace LinqToDB.Data
 			}
 
 			_objectReaders.Set(key, func,
-				new MemoryCacheEntryOptions<QueryKey> { SlidingExpiration = dataConnection.Options.LinqOptions.CacheSlidingExpiration });
+				new MemoryCacheEntryOptions<QueryKey> { SlidingExpiration = dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault });
 
 			return (Func<DbDataReader,T>)func;
 		}
@@ -1626,7 +1626,7 @@ namespace LinqToDB.Data
 					dataConnection,
 					static (o, ctx) =>
 				{
-					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
 					var expr = ctx.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
 
@@ -1751,7 +1751,7 @@ namespace LinqToDB.Data
 					dataConnection,
 					static (o, ctx) =>
 				{
-					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
 					var expr = ctx.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
 

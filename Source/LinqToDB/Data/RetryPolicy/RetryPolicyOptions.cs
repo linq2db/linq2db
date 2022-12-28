@@ -30,7 +30,7 @@ namespace LinqToDB.Data.RetryPolicy
 	/// </param>
 	public sealed record RetryPolicyOptions
 	(
-		IRetryPolicy?                       RetryPolicy,
+		IRetryPolicy?                       RetryPolicy     = default,
 		Func<DataConnection,IRetryPolicy?>? Factory         = default,
 		int                                 MaxRetryCount   = default,
 		TimeSpan                            MaxDelay        = default,
@@ -44,7 +44,7 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 		}
 
-		public RetryPolicyOptions(RetryPolicyOptions original)
+		RetryPolicyOptions(RetryPolicyOptions original)
 		{
 			RetryPolicy     = original.RetryPolicy;
 			Factory         = original.Factory;

@@ -17,7 +17,7 @@ namespace LinqToDB.Data
 	/// </param>
 	public sealed record QueryTraceOptions
 	(
-		TraceLevel?                         TraceLevel,
+		TraceLevel?                         TraceLevel = default,
 		Action<TraceInfo>?                  OnTrace    = default,
 		Action<string?,string?,TraceLevel>? WriteTrace = default
 	)
@@ -27,7 +27,7 @@ namespace LinqToDB.Data
 		{
 		}
 
-		public QueryTraceOptions(QueryTraceOptions original)
+		QueryTraceOptions(QueryTraceOptions original)
 		{
 			TraceLevel = original.TraceLevel;
 			OnTrace    = original.OnTrace;

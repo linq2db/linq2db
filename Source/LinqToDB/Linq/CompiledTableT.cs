@@ -34,7 +34,7 @@ namespace LinqToDB.Linq
 				(dataContext, lambda: _lambda, dataOptions),
 				static (o, key, ctx) =>
 				{
-					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
 					var query = new Query<T>(ctx.dataContext, key.expression);
 
