@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
+using System.IO;
+using System.Security;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using System.Data.Common;
-	using System.IO;
-	using System.Security;
+	using Configuration;
 	using Data;
-	using LinqToDB.Configuration;
 
 	/// <summary>
 	/// Contains Access provider management tools.
@@ -154,7 +153,12 @@ namespace LinqToDB.DataProvider.Access
 		/// methods, if mode is not specified explicitly.
 		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 		/// </summary>
-		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use AccessOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => AccessOptions.Default.BulkCopyType;
+			set => AccessOptions.Default = AccessOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

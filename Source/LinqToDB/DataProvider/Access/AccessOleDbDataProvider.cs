@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			return new AccessBulkCopy().BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					AccessTools.DefaultBulkCopyType :
+					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			return new AccessBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					AccessTools.DefaultBulkCopyType :
+					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
@@ -140,7 +140,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			return new AccessBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					AccessTools.DefaultBulkCopyType :
+					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,

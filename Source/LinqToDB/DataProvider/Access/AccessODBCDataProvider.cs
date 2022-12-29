@@ -141,10 +141,9 @@ namespace LinqToDB.DataProvider.Access
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-
 			return new AccessBulkCopy().BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					AccessTools.DefaultBulkCopyType :
+					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
@@ -155,10 +154,9 @@ namespace LinqToDB.DataProvider.Access
 			IEnumerable<T>    source,
 			CancellationToken cancellationToken)
 		{
-
 			return new AccessBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					AccessTools.DefaultBulkCopyType :
+					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
@@ -170,10 +168,9 @@ namespace LinqToDB.DataProvider.Access
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-
 			return new AccessBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					AccessTools.DefaultBulkCopyType :
+					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
