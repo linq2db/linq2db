@@ -10,11 +10,9 @@ namespace LinqToDB.DataProvider.Oracle
 	/// Specify AlternativeBulkCopy used by Oracle Provider.
 	/// </param>
 	/// <param name="DontEscapeLowercaseIdentifiers">
-	/// <summary>
 	/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
 	/// Default value: <c>false</c>.
 	/// This flag is added for backward compatibility and not recommended for use with new applications.
-	/// </summary>
 	/// </param>
 	public sealed record OracleOptions
 	(

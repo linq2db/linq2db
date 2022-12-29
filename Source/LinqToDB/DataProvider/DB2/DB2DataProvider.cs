@@ -200,7 +200,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					DB2Tools.DefaultBulkCopyType :
+					options.FindOrDefault(DB2Options.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
@@ -214,7 +214,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					DB2Tools.DefaultBulkCopyType :
+					options.FindOrDefault(DB2Options.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
@@ -230,7 +230,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					DB2Tools.DefaultBulkCopyType :
+					options.FindOrDefault(DB2Options.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
