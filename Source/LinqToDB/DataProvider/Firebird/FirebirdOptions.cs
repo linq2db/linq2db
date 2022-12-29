@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Data;
 
 	/// <param name="BulkCopyType">
-	/// Default bulk copy mode, used for DB2 by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// Default bulk copy mode, used for Firebird by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
 	/// methods, if mode is not specified explicitly.
 	/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 	/// </param>

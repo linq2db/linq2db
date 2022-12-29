@@ -203,7 +203,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return new InformixBulkCopy(this).BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					InformixTools.DefaultBulkCopyType :
+					options.FindOrDefault(InformixOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -215,7 +215,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return new InformixBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					InformixTools.DefaultBulkCopyType :
+					options.FindOrDefault(InformixOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -229,7 +229,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return new InformixBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					InformixTools.DefaultBulkCopyType :
+					options.FindOrDefault(InformixOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
