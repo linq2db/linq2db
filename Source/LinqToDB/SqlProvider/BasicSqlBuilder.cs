@@ -712,7 +712,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildAlterDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 		}
-		
+
 		protected virtual void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			AppendIndent();
@@ -2215,7 +2215,7 @@ namespace LinqToDB.SqlProvider
 					if (doTake)
 						StringBuilder.Append(' ');
 		}
-		
+
 				if (doTake)
 		{
 					StringBuilder.AppendFormat(
@@ -2868,7 +2868,7 @@ namespace LinqToDB.SqlProvider
 						if (inlining)
 						{
 							var paramValue = parm.GetParameterValue(OptimizationContext.Context.ParameterValues);
-							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.ProviderValue))
+							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), DataOptions, paramValue.ProviderValue))
 								inlining = false;
 						}
 
@@ -3038,7 +3038,7 @@ namespace LinqToDB.SqlProvider
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);
 			else
-			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, value);
+			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, DataOptions, value);
 		}
 
 		#endregion
@@ -3631,7 +3631,7 @@ namespace LinqToDB.SqlProvider
 							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(bytes, 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
-						MappingSchema.ValueToSqlConverter.TryConvert(sb, trimmed);
+						MappingSchema.ValueToSqlConverter.TryConvert(sb, DataOptions, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {bytes.Length}");
@@ -3647,7 +3647,7 @@ namespace LinqToDB.SqlProvider
 							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
-						MappingSchema.TryConvertToSql(sb, null, trimmed);
+						MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {binaryData.Length}");
@@ -3660,12 +3660,12 @@ namespace LinqToDB.SqlProvider
 						var trimmed =
 							s.Substring(0,
 								Configuration.MaxStringParameterLengthLogging);
-						MappingSchema.TryConvertToSql(sb, null, trimmed);
+						MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {s.Length}");
 					}
-					else if (!MappingSchema.TryConvertToSql(sb, null, p.Value))
+					else if (!MappingSchema.TryConvertToSql(sb, null, DataOptions, p.Value))
 						FormatParameterValue(sb, p.Value);
 					sb.AppendLine();
 				}

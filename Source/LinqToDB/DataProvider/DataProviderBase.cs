@@ -461,14 +461,14 @@ namespace LinqToDB.DataProvider
 		public virtual BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopy(options.BulkCopyOptions.BulkCopyType, table, options.BulkCopyOptions, source);
+			return new BasicBulkCopy().BulkCopy(options.BulkCopyOptions.BulkCopyType, table, options, source);
 		}
 
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options.BulkCopyOptions, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 
 #if NATIVE_ASYNC
@@ -476,7 +476,7 @@ namespace LinqToDB.DataProvider
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options.BulkCopyOptions, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 #endif
 

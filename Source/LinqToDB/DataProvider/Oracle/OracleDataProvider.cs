@@ -342,7 +342,7 @@ namespace LinqToDB.DataProvider.Oracle
 					oracleOptions.BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -357,7 +357,7 @@ namespace LinqToDB.DataProvider.Oracle
 					oracleOptions.BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -374,7 +374,7 @@ namespace LinqToDB.DataProvider.Oracle
 					extension.BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

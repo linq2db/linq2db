@@ -337,7 +337,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					PostgreSQLTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -349,7 +349,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					PostgreSQLTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -363,7 +363,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					PostgreSQLTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

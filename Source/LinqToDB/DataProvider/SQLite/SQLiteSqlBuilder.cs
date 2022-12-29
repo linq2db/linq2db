@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.SQLite
 			if (statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME=");
-				MappingSchema.ConvertToSqlValue(StringBuilder, null, trun.Table!.TableName.Name);
+				MappingSchema.ConvertToSqlValue(StringBuilder, null, DataOptions, trun.Table!.TableName.Name);
 			}
 			else
 			{

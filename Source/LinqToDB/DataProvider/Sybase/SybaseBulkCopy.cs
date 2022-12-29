@@ -31,9 +31,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			var connections = GetProviderConnection(table);
 			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
@@ -41,7 +39,7 @@ namespace LinqToDB.DataProvider.Sybase
 				return ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
-					options,
+					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source));
 			}
 
@@ -49,10 +47,7 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>         table,
-			BulkCopyOptions   options,
-			IEnumerable<T>    source,
-			CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
 			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
@@ -61,7 +56,7 @@ namespace LinqToDB.DataProvider.Sybase
 				return Task.FromResult(ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
-					options,
+					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source)));
 			}
 
@@ -70,10 +65,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>           table,
-			BulkCopyOptions     options,
-			IAsyncEnumerable<T> source,
-			CancellationToken   cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
 			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
@@ -82,7 +74,7 @@ namespace LinqToDB.DataProvider.Sybase
 				return Task.FromResult(ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
-					options,
+					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken)));
 			}
 
@@ -194,20 +186,20 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			return MultipleRowsCopy2(table, options, source, "");
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
 		}
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
 		}

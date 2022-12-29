@@ -163,6 +163,20 @@ namespace LinqToDB.Mapping
 		/// </param>
 		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
 		{
+			ValueToSqlConverter.SetConverter(type, (sb,dt,_,v) => converter(sb, dt, v));
+		}
+
+		/// <summary>
+		/// Sets value to SQL converter action for specific value type.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <param name="converter">Converter action. Action accepts three parameters:
+		/// - SQL string builder to write generated value SQL to;
+		/// - value SQL type descriptor;
+		/// - value.
+		/// </param>
+		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
+		{
 			ValueToSqlConverter.SetConverter(type, converter);
 		}
 

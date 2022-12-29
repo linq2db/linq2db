@@ -70,17 +70,17 @@ namespace Tests
 
 	public class FirebirdQuoteMode : IDisposable
 	{
-		private readonly FirebirdIdentifierQuoteMode _oldMode;
+		readonly FirebirdOptions _options;
 
 		public FirebirdQuoteMode(FirebirdIdentifierQuoteMode mode)
 		{
-			_oldMode = FirebirdConfiguration.IdentifierQuoteMode;
-			FirebirdConfiguration.IdentifierQuoteMode = mode;
+			_options                = FirebirdOptions.Default;
+			FirebirdOptions.Default = FirebirdOptions.Default with { IdentifierQuoteMode = mode };
 		}
 
 		void IDisposable.Dispose()
 		{
-			FirebirdConfiguration.IdentifierQuoteMode = _oldMode;
+			FirebirdOptions.Default = _options;
 		}
 	}
 

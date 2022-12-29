@@ -206,7 +206,7 @@ namespace LinqToDB.DataProvider.Informix
 					InformixTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -218,7 +218,7 @@ namespace LinqToDB.DataProvider.Informix
 					InformixTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider.Informix
 					InformixTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

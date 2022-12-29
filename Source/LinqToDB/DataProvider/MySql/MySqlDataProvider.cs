@@ -139,7 +139,7 @@ namespace LinqToDB.DataProvider.MySql
 					MySqlTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -154,7 +154,7 @@ namespace LinqToDB.DataProvider.MySql
 					MySqlTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -171,7 +171,7 @@ namespace LinqToDB.DataProvider.MySql
 					MySqlTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

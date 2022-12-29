@@ -139,10 +139,10 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			return new FirebirdBulkCopy().BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					FirebirdTools.DefaultBulkCopyType :
+					options.FindOrDefault(FirebirdOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -151,10 +151,10 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			return new FirebirdBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					FirebirdTools.DefaultBulkCopyType :
+					options.FindOrDefault(FirebirdOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -165,10 +165,10 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			return new FirebirdBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					FirebirdTools.DefaultBulkCopyType :
+					options.FindOrDefault(FirebirdOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

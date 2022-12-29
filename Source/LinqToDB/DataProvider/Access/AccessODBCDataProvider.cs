@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Access
 					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -159,7 +159,7 @@ namespace LinqToDB.DataProvider.Access
 					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -173,7 +173,7 @@ namespace LinqToDB.DataProvider.Access
 					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

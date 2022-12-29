@@ -21,19 +21,19 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
+			SetValueToSqlConverter(typeof(bool), (sb,_,_,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
 			SetDataType(typeof(byte?),  new SqlDataType(DataType.Int16,    typeof(byte)));
 
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 #endif
 		}
 

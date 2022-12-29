@@ -203,7 +203,7 @@ namespace LinqToDB.DataProvider.DB2
 					options.FindOrDefault(DB2Options.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -217,7 +217,7 @@ namespace LinqToDB.DataProvider.DB2
 					options.FindOrDefault(DB2Options.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -233,7 +233,7 @@ namespace LinqToDB.DataProvider.DB2
 					options.FindOrDefault(DB2Options.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

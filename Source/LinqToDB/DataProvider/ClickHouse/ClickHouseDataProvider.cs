@@ -217,7 +217,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					options.FindOrDefault(ClickHouseOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -229,7 +229,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					options.FindOrDefault(ClickHouseOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -243,7 +243,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					options.FindOrDefault(ClickHouseOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

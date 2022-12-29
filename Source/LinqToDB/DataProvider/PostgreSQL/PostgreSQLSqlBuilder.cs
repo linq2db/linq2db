@@ -241,7 +241,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
-					MappingSchema.ConvertToSqlValue(sb, null, BuildObjectName(new StringBuilder(), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
+					MappingSchema.ConvertToSqlValue(sb, null, DataOptions, BuildObjectName(new (), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
 					sb.Append(')');
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}

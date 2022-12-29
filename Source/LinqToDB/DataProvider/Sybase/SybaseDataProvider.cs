@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.Sybase
 					SybaseTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -238,7 +238,7 @@ namespace LinqToDB.DataProvider.Sybase
 					SybaseTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -254,7 +254,7 @@ namespace LinqToDB.DataProvider.Sybase
 					SybaseTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

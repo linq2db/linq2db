@@ -36,15 +36,14 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T>  source)
+			ITable<T> table, DataOptions dataOptions, IEnumerable<T> source)
 		{
-			// database name is not a part of table FQN in oracle
-			var serverName   = options.ServerName ?? table.ServerName;
+			var options = dataOptions.BulkCopyOptions;
 
-			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null
-				&& serverName == null)
+			// database name is not a part of table FQN in oracle
+			var serverName = options.ServerName ?? table.ServerName;
+
+			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null && serverName == null)
 			{
 				var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 
@@ -61,6 +60,7 @@ namespace LinqToDB.DataProvider.Oracle
 					//   and gives "ORA-00904: "STRINGVALUE": invalid identifier" error
 					// That's quite common error in bulk copy implementation error by providers...
 					var supported = true;
+
 					foreach (var column in columns)
 						if (column.ColumnName != sb.ConvertInline(column.ColumnName, ConvertType.NameToQueryField))
 						{
@@ -76,8 +76,9 @@ namespace LinqToDB.DataProvider.Oracle
 						var sqlopt     = OracleProviderAdapter.BulkCopyOptions.Default;
 						var rc         = new BulkCopyRowsCopied();
 
-						var tableName   = sb.ConvertInline(options.TableName ?? table.TableName, ConvertType.NameToQueryTable);
-						var schemaName  = options.SchemaName ?? table.SchemaName;
+						var tableName  = sb.ConvertInline(options.TableName ?? table.TableName, ConvertType.NameToQueryTable);
+						var schemaName = options.SchemaName ?? table.SchemaName;
+
 						if (schemaName != null)
 							schemaName  = sb.ConvertInline(schemaName, ConvertType.NameToSchema);
 
@@ -124,11 +125,11 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 
-			return MultipleRowsCopy(table, options, source);
+			return MultipleRowsCopy(table, dataOptions, source);
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			// call the synchronous provider-specific implementation
 			return Task.FromResult(ProviderSpecificCopy(table, options, source));
@@ -136,7 +137,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 #if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
 			await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
@@ -148,7 +149,7 @@ namespace LinqToDB.DataProvider.Oracle
 #endif
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			return _useAlternativeBulkCopy switch
 			{
@@ -159,7 +160,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			switch (_useAlternativeBulkCopy)
 			{
@@ -171,7 +172,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			switch (_useAlternativeBulkCopy)
 			{

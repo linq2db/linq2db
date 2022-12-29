@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Data;
-	using LinqToDB.Mapping;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Mapping;
 
 	sealed class FirebirdBulkCopy : BasicBulkCopy
 	{
-		
 		/// <remarks>
 		/// Number based on http://www.firebirdfaq.org/faq197/
 		/// TODO: Add Compat Switch. Firebird 2.5 has 64k limit, Firebird 3.0+ 10MB.
@@ -37,20 +37,20 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			// firebird doesn't have built-in identity management, it must be implemented by user using generators and triggers
-			if (options.KeepIdentity == true)
+			if (options.BulkCopyOptions.KeepIdentity == true)
 				throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually.");
 
 			return MultipleRowsCopy2(table, options, source, " FROM rdb$database");
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			// firebird doesn't have built-in identity management, it must be implemented by user using generators and triggers
-			if (options.KeepIdentity == true)
+			if (options.BulkCopyOptions.KeepIdentity == true)
 				throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually.");
 
 			return MultipleRowsCopy2Async(table, options, source, " FROM rdb$database", cancellationToken);
@@ -58,10 +58,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			// firebird doesn't have built-in identity management, it must be implemented by user using generators and triggers
-			if (options.KeepIdentity == true)
+			if (options.BulkCopyOptions.KeepIdentity == true)
 				throw new LinqToDBException($"{nameof(BulkCopyOptions)}.{nameof(BulkCopyOptions.KeepIdentity)} = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually.");
 
 			return MultipleRowsCopy2Async(table, options, source, " FROM rdb$database", cancellationToken);

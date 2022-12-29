@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					SqlCeTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source);
 		}
 
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					SqlCeTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}
@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					SqlCeTools.DefaultBulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
-				options.BulkCopyOptions,
+				options,
 				source,
 				cancellationToken);
 		}

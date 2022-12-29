@@ -1626,7 +1626,7 @@ namespace LinqToDB.SqlProvider
 					//var dataType = new SqlDataType(value.ValueType);
 					_typeWrapper.Type = value.ValueType;
 
-					if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, value.Value))
+					if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, visitor.Context.DataOptions, value.Value))
 					{
 						// we cannot generate SQL literal, so just convert to parameter
 						var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, "value", value.Value);
