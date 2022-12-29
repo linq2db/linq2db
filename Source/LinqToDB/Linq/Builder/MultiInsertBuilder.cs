@@ -37,8 +37,6 @@ namespace LinqToDB.Linq.Builder
 
 		static IBuildContext BuildMultiInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			throw new NotImplementedException();
-
 			// MultiInsert(IQueryable)
 			//
 			var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));

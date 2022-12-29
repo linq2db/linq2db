@@ -2143,6 +2143,8 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
+				case QueryElementType.IsNullPredicate:
+					return ConvertIsNullPredicate(((SqlPredicate.IsNull)predicate));
 				case QueryElementType.LikePredicate:
 					return ConvertLikePredicate(visitor.Context.MappingSchema, (SqlPredicate.Like)predicate, visitor.Context.OptimizationContext.Context);
 				case QueryElementType.SearchStringPredicate:
@@ -2236,6 +2238,13 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return newExpr;
+		}
+
+		public virtual ISqlPredicate ConvertIsNullPredicate(SqlPredicate.IsNull isNull)
+		{
+			if (!isNull.Expr1.CanBeNull)
+				return new SqlPredicate.Expr(new SqlValue(isNull.IsNot));
+			return isNull;
 		}
 
 		/// <summary>

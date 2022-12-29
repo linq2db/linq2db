@@ -8,7 +8,7 @@ namespace LinqToDB.Expressions
 	using LinqToDB.Extensions;
 	using Reflection;
 
-	class SqlGenericConstructorExpression : Expression
+	internal class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
 	{
 		public class Assignment
 		{
@@ -41,6 +41,50 @@ namespace LinqToDB.Expressions
 			{
 				return $"{MemberInfo.Name} = {Expression}";
 			}
+
+			sealed class AssignmentEqualityComparer : IEqualityComparer<Assignment>
+			{
+				public bool Equals(Assignment x, Assignment y)
+				{
+					if (ReferenceEquals(x, y))
+					{
+						return true;
+					}
+
+					if (ReferenceEquals(x, null))
+					{
+						return false;
+					}
+
+					if (ReferenceEquals(y, null))
+					{
+						return false;
+					}
+
+					if (x.GetType() != y.GetType())
+					{
+						return false;
+					}
+
+					return x.MemberInfo.Equals(y.MemberInfo) &&
+					       x.IsMandatory == y.IsMandatory    && x.IsLoaded == y.IsLoaded &&
+					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
+				}
+
+				public int GetHashCode(Assignment obj)
+				{
+					unchecked
+					{
+						var hashCode = obj.MemberInfo.GetHashCode();
+						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
+						hashCode = (hashCode * 397) ^ obj.IsMandatory.GetHashCode();
+						hashCode = (hashCode * 397) ^ obj.IsLoaded.GetHashCode();
+						return hashCode;
+					}
+				}
+			}
+
+			public static IEqualityComparer<Assignment> AssignmentComparer { get; } = new AssignmentEqualityComparer();
 		}
 
 		public new class Parameter
@@ -71,6 +115,48 @@ namespace LinqToDB.Expressions
 					return $"{Expression}";
 				return $"{MemberInfo.Name}={Expression}";
 			}
+
+			sealed class MemberInfoExpressionParamTypeEqualityComparer : IEqualityComparer<Parameter>
+			{
+				public bool Equals(Parameter x, Parameter y)
+				{
+					if (ReferenceEquals(x, y))
+					{
+						return true;
+					}
+
+					if (ReferenceEquals(x, null))
+					{
+						return false;
+					}
+
+					if (ReferenceEquals(y, null))
+					{
+						return false;
+					}
+
+					if (x.GetType() != y.GetType())
+					{
+						return false;
+					}
+
+					return Equals(x.MemberInfo, y.MemberInfo) && x.ParamType.Equals(y.ParamType) &&
+					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
+				}
+
+				public int GetHashCode(Parameter obj)
+				{
+					unchecked
+					{
+						var hashCode = (obj.MemberInfo != null ? obj.MemberInfo.GetHashCode() : 0);
+						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
+						hashCode = (hashCode * 397) ^ obj.ParamType.GetHashCode();
+						return hashCode;
+					}
+				}
+			}
+
+			public static IEqualityComparer<Parameter> ParameterComparer { get; } = new MemberInfoExpressionParamTypeEqualityComparer();
 		}
 
 		SqlGenericConstructorExpression()
@@ -190,7 +276,7 @@ namespace LinqToDB.Expressions
 			Assignments   = items.AsReadOnly();
 		}
 
-		private static ReadOnlyCollection<Parameter> GetMethodParameters(MethodBase method, ReadOnlyCollection<Expression> arguments)
+		static ReadOnlyCollection<Parameter> GetMethodParameters(MethodBase method, ReadOnlyCollection<Expression> arguments)
 		{
 			if (arguments.Count == 0)
 				return Parameter.EmptyCollection;
@@ -208,7 +294,7 @@ namespace LinqToDB.Expressions
 			return parameters.AsReadOnly();
 		}
 
-		private static List<Assignment> GetBindingsAssignments(IList<MemberBinding> bindings)
+		static List<Assignment> GetBindingsAssignments(IList<MemberBinding> bindings)
 		{
 			var items = new List<Assignment>(bindings.Count);
 
@@ -252,7 +338,7 @@ namespace LinqToDB.Expressions
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      => ObjectType;
-		public override bool           CanReduce => true;
+		public override bool           CanReduce => false;
 
 		public override string ToString()
 		{
@@ -381,6 +467,97 @@ namespace LinqToDB.Expressions
 			}
 
 			return createExpression;
+		}
+
+		static int GetHashCode<T>(ICollection<T> collection, IEqualityComparer<T> comparer)
+		{
+			unchecked
+			{
+				var hashCode = 0;
+				foreach (var item in collection)
+				{
+					hashCode = (hashCode * 397) ^ comparer.GetHashCode(item);
+				}
+
+				return hashCode;
+			}
+		}
+
+		static bool EqualsLists<T>(IList<T> list1, IList<T> list2, IEqualityComparer<T> comparer)
+		{
+			if (list1.Count != list2.Count) return false;
+
+			for (int i = 0; i < list1.Count; i++)
+			{
+				if (!comparer.Equals(list1[i], list2[i]))
+					return false;
+			}
+
+			return true;
+		}
+
+		public bool Equals(SqlGenericConstructorExpression? other)
+		{
+			if (ReferenceEquals(null, other))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, other))
+			{
+				return true;
+			}
+
+			return Equals(NewExpression, other.NewExpression) && Equals(Constructor, other.Constructor) &&
+			       Equals(ConstructorMethod, other.ConstructorMethod) && ConstructType == other.ConstructType &&
+			       ObjectType.Equals(other.ObjectType) &&
+			       EqualsLists(Parameters, other.Parameters, Parameter.ParameterComparer) &&
+			       EqualsLists(Assignments, other.Assignments, Assignment.AssignmentComparer);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((SqlGenericConstructorExpression)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = (NewExpression != null ? NewExpression.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (Constructor       != null ? Constructor.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (ConstructorMethod != null ? ConstructorMethod.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (int)ConstructType;
+				hashCode = (hashCode * 397) ^ ObjectType.GetHashCode();
+				hashCode = (hashCode * 397) ^ GetHashCode(Parameters, Parameter.ParameterComparer);
+				hashCode = (hashCode * 397) ^ GetHashCode(Assignments, Assignment.AssignmentComparer);
+				return hashCode;
+			}
+		}
+
+		public static bool operator ==(SqlGenericConstructorExpression? left, SqlGenericConstructorExpression? right)
+		{
+			return Equals(left, right);
+		}
+
+		public static bool operator !=(SqlGenericConstructorExpression? left, SqlGenericConstructorExpression? right)
+		{
+			return !Equals(left, right);
 		}
 	}
 }

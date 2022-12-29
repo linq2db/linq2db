@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.New:
 					case ExpressionType.MemberInit:
 						{
-							var expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expression, ProjectFlags.Expression);
+							var expr = Builder.BuildSqlExpression(this, expression, ProjectFlags.Expression);
 
 							if (SelectQuery.Select.Columns.Count == 0)
 								SelectQuery.Select.Expr(new SqlValue(1));

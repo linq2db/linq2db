@@ -60,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 
 				var expr = base.MakeExpression(path, flags);
-				expr = Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, expr, flags);
+				expr = Builder.BuildSqlExpression(this, expr, flags);
 
 				if (flags.HasFlag(ProjectFlags.Expression) && expr is not SqlPlaceholderExpression)
 				{

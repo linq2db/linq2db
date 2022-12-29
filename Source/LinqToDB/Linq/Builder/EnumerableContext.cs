@@ -230,8 +230,7 @@ namespace LinqToDB.Linq.Builder
 				if (flags.HasFlag(ProjectFlags.Expression))
 					return Expression; // do nothing
 
-				var result =
-					Builder.BuildSqlExpression(new Dictionary<Expression, Expression>(), this, Expression, flags.SqlFlag());
+				var result = Builder.BuildSqlExpression(this, Expression, flags.SqlFlag());
 
 				return result;
 				//return Builder.BuildEntityExpression(this, _elementType, flags);

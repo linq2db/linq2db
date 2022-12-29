@@ -304,6 +304,17 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			expr = base.WrapColumnExpression(expr);
+			if (expr is SqlParameter param)
+			{
+				return new SqlFunction(param.Type.SystemType, "Convert", false, new SqlDataType(param.Type), param);
+			}
+
+			return expr;
+		}
+
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
 			if (name.Package != null)

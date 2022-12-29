@@ -2252,6 +2252,15 @@ namespace LinqToDB.SqlProvider
 			var len = StringBuilder.Length;
 			var parentPrecedence = condition.Precedence + 1;
 
+			if (condition.Conditions.Count == 0)
+			{
+				BuildPredicate(parentPrecedence, parentPrecedence,
+					new SqlPredicate.ExprExpr(
+						new SqlValue(true), 
+						SqlPredicate.Operator.Equal,
+						new SqlValue(true), false));
+			}
+
 			foreach (var cond in condition.Conditions)
 			{
 				if (isOr != null)

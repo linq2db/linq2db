@@ -1731,7 +1731,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			Expression GetOriginalExpression()
 			{
-				return Expression.MakeBinary(nodeType, left, right);
+				var rightExpr = right;
+				if (rightExpr.Type != left.Type)
+					rightExpr = Expression.Convert(rightExpr, left.Type);
+				return Expression.MakeBinary(nodeType, left, rightExpr);
 			}
 
 			Expression GenerateNullComparison(List<SqlPlaceholderExpression> placeholders, bool isNot)
@@ -2520,7 +2523,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (expr == null)
 			{
-				var sql = BuildSqlExpression(new Dictionary<Expression, Expression>(), context, arg, ProjectFlags.SQL | ProjectFlags.Keys, null);
+				var sql = BuildSqlExpression(context, arg, ProjectFlags.SQL | ProjectFlags.Keys, null);
 
 				var placeholders = CollectDistinctPlaceholders(sql);
 
@@ -3460,7 +3463,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (flags.HasFlag(ProjectFlags.SQL))
 			{
-				body = RemoveNullPropagation(body, true);
+				body = RemoveNullPropagation(body, flags.HasFlag(ProjectFlags.Keys));
 			}
 
 			switch (body.NodeType)
@@ -3885,7 +3888,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// try to find already converted to SQL
 				var sqlKey = new SqlCacheKey(path, null, null, null, flags.SqlFlag());
-				if (_cachedSql.TryGetValue(sqlKey, out var cachedSql))
+				if (_cachedSql.TryGetValue(sqlKey, out var cachedSql) && cachedSql is SqlPlaceholderExpression)
 				{
 					return cachedSql;
 				}
@@ -4149,13 +4152,12 @@ namespace LinqToDB.Linq.Builder
 								{
 									// apply only if it is convertible
 									//
-									var translated = new Dictionary<Expression, Expression>();
 									var newMc = mc.Update(
 										mc.Object == null
 											? null
-											: BuildSqlExpression(translated, currentContext, mc.Object, flags),
+											: BuildSqlExpression(currentContext, mc.Object, flags),
 										mc.Arguments.Select(a =>
-											BuildSqlExpression(translated, currentContext, a, flags)));
+											BuildSqlExpression(currentContext, a, flags)));
 
 									if (!ExpressionEqualityComparer.Instance.Equals(mc, newMc))
 									{

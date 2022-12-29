@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -297,7 +295,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return statement;
 		}
 
-		private static bool CastRequired(IReadOnlyList<IQueryElement> parents)
+		static bool CastRequired(IReadOnlyList<IQueryElement> parents)
 		{
 			for (var i = parents.Count - 1; i >= 0; i--)
 			{
@@ -338,7 +336,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return false;
 		}
 
-		private const string CASTEXPR = "Cast({0} as {1})";
+		const string CASTEXPR = "Cast({0} as {1})";
 		#endregion
 	}
 }

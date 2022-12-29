@@ -770,7 +770,7 @@ namespace Tests.Linq
 							? null
 							: new
 							{
-								ParentID = q.Info1 != null ? (int?)q.Info1.ParentID : (int?)null,
+								ParentID = q.Info1 != null ? q.Info1.ParentID : (int?)null,
 								q.Info1!.Value1,
 								Value2 = q.Info2.Value1
 							}
