@@ -136,7 +136,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			return new MySqlBulkCopy(this).BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					MySqlTools.DefaultBulkCopyType :
+					options.FindOrDefault(MySqlOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					MySqlTools.DefaultBulkCopyType :
+					options.FindOrDefault(MySqlOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -168,7 +168,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					MySqlTools.DefaultBulkCopyType :
+					options.FindOrDefault(MySqlOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,

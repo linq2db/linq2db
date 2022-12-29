@@ -27,11 +27,6 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
-		static MySqlSqlBuilder()
-		{
-			ParameterSymbol = '@';
-		}
-
 		protected override bool   IsRecursiveCteKeywordRequired   => true;
 		public    override bool   IsNestedJoinParenthesisRequired => true;
 		protected override bool   IsValuesSyntaxSupported         => false;
@@ -317,57 +312,74 @@ namespace LinqToDB.DataProvider.MySql
 				base.BuildFromClause(statement, selectQuery);
 		}
 
-		public static char ParameterSymbol           { get; set; }
-		public static bool TryConvertParameterSymbol { get; set; }
-
-		private static string _commandParameterPrefix = string.Empty;
-		public  static string  CommandParameterPrefix
+		[Obsolete("Use MySqlOptions.Default.ParameterSymbol instead.")]
+		public static char ParameterSymbol
 		{
-			get => _commandParameterPrefix;
-			set => _commandParameterPrefix = value ?? string.Empty;
+			get => MySqlOptions.Default.ParameterSymbol;
+			set => MySqlOptions.Default = MySqlOptions.Default with { ParameterSymbol = value };
 		}
 
-		private static string _sprocParameterPrefix = string.Empty;
-		public  static string  SprocParameterPrefix
+		[Obsolete("Use MySqlOptions.Default.TryConvertParameterSymbol instead.")]
+		public static bool TryConvertParameterSymbol
 		{
-			get => _sprocParameterPrefix;
-			set => _sprocParameterPrefix = value ?? string.Empty;
+			get => MySqlOptions.Default.TryConvertParameterSymbol;
+			set => MySqlOptions.Default = MySqlOptions.Default with { TryConvertParameterSymbol = value };
 		}
 
-		private static List<char>? _convertParameterSymbols;
-		public  static List<char>  ConvertParameterSymbols
+		[Obsolete("Use MySqlOptions.Default.CommandParameterPrefix instead.")]
+		public static string CommandParameterPrefix
 		{
-			get => _convertParameterSymbols ??= new List<char>();
-			set => _convertParameterSymbols = value ?? new List<char>();
+			get => MySqlOptions.Default.CommandParameterPrefix ?? string.Empty;
+			set => MySqlOptions.Default = MySqlOptions.Default with { CommandParameterPrefix = value ?? string.Empty };
 		}
+
+		[Obsolete("Use MySqlOptions.Default.SprocParameterPrefix instead.")]
+		public static string SprocParameterPrefix
+		{
+			get => MySqlOptions.Default.SprocParameterPrefix ?? string.Empty;
+			set => MySqlOptions.Default = MySqlOptions.Default with { SprocParameterPrefix = value ?? string.Empty };
+		}
+
+		static readonly IReadOnlyList<char> _readOnlyList = new List<char>().AsReadOnly();
+
+		[Obsolete("Use MySqlOptions.Default.ConvertParameterSymbols instead.")]
+		public static IReadOnlyList<char> ConvertParameterSymbols
+		{
+			get => MySqlOptions.Default.ConvertParameterSymbols ?? _readOnlyList;
+			set => MySqlOptions.Default = MySqlOptions.Default with { ConvertParameterSymbols = value ?? _readOnlyList };
+		}
+
+		MySqlOptions? _mySqlOptions;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
+			_mySqlOptions ??= DataOptions.FindOrDefault(MySqlOptions.Default);
+
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return sb.Append(ParameterSymbol).Append(value);
+					return sb.Append(_mySqlOptions.ParameterSymbol).Append(value);
 
 				case ConvertType.NameToCommandParameter:
-					return sb.Append(ParameterSymbol).Append(CommandParameterPrefix).Append(value);
+					return sb.Append(_mySqlOptions.ParameterSymbol).Append(_mySqlOptions.CommandParameterPrefix ?? string.Empty).Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
 							throw new ArgumentException("Argument 'value' must represent parameter name.");
 
-					if (value[0] == ParameterSymbol)
+					if (value[0] == _mySqlOptions.ParameterSymbol)
 						value = value.Substring(1);
 
-					if (value.StartsWith(SprocParameterPrefix, StringComparison.Ordinal))
-						value = value.Substring(SprocParameterPrefix.Length);
+					if (value.StartsWith(_mySqlOptions.SprocParameterPrefix ?? string.Empty, StringComparison.Ordinal))
+						value = value.Substring(_mySqlOptions.SprocParameterPrefix?.Length ?? 0);
 
-					return sb.Append(ParameterSymbol).Append(SprocParameterPrefix).Append(value);
+					return sb.Append(_mySqlOptions.ParameterSymbol).Append(_mySqlOptions.SprocParameterPrefix ?? string.Empty).Append(value);
 
 				case ConvertType.SprocParameterToName:
-					value = (value.Length > 0 && (value[0] == ParameterSymbol || (TryConvertParameterSymbol && ConvertParameterSymbols.Contains(value[0])))) ? value.Substring(1) : value;
+					value = value.Length > 0 && (value[0] == _mySqlOptions.ParameterSymbol || (_mySqlOptions.TryConvertParameterSymbol && (_mySqlOptions.ConvertParameterSymbols ?? _readOnlyList).Contains(value[0]))) ? value.Substring(1) : value;
 
-					if (!string.IsNullOrEmpty(SprocParameterPrefix) && value.StartsWith(SprocParameterPrefix))
-						value = value.Substring(SprocParameterPrefix.Length);
+					if (!string.IsNullOrEmpty(_mySqlOptions.SprocParameterPrefix) && value.StartsWith(_mySqlOptions.SprocParameterPrefix))
+						value = value.Substring(_mySqlOptions.SprocParameterPrefix?.Length ?? 0);
 
 					return sb.Append(value);
 

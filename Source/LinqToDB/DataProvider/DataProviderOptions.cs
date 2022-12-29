@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider
 {
@@ -7,7 +8,8 @@ namespace LinqToDB.DataProvider
 	using Data;
 
 	/// <param name="BulkCopyType">
-	/// BulkCopyType used by Data Provider by default.
+	/// Default bulk copy mode, used by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// methods, if mode is not specified explicitly.
 	/// </param>
 	public abstract record DataProviderOptions<T>
 	(
