@@ -36,12 +36,12 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T> table, DataOptions dataOptions, IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
-			var options = dataOptions.BulkCopyOptions;
+			var opts = options.BulkCopyOptions;
 
 			// database name is not a part of table FQN in oracle
-			var serverName = options.ServerName ?? table.ServerName;
+			var serverName = opts.ServerName ?? table.ServerName;
 
 			if (table.TryGetDataConnection(out var dataConnection) && _provider.Adapter.BulkCopy != null && serverName == null)
 			{
@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (connection != null)
 				{
 					var ed        = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
-					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
+					var columns   = ed.Columns.Where(c => !c.SkipOnInsert || opts.KeepIdentity == true && c.IsIdentity).ToList();
 					var sb        = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 
 					// ODP.NET doesn't bulk copy doesn't work if columns that require escaping:
@@ -76,30 +76,30 @@ namespace LinqToDB.DataProvider.Oracle
 						var sqlopt     = OracleProviderAdapter.BulkCopyOptions.Default;
 						var rc         = new BulkCopyRowsCopied();
 
-						var tableName  = sb.ConvertInline(options.TableName ?? table.TableName, ConvertType.NameToQueryTable);
-						var schemaName = options.SchemaName ?? table.SchemaName;
+						var tableName  = sb.ConvertInline(opts.TableName ?? table.TableName, ConvertType.NameToQueryTable);
+						var schemaName = opts.SchemaName ?? table.SchemaName;
 
 						if (schemaName != null)
 							schemaName  = sb.ConvertInline(schemaName, ConvertType.NameToSchema);
 
-						if (options.UseInternalTransaction == true) sqlopt |= OracleProviderAdapter.BulkCopyOptions.UseInternalTransaction;
-						if (options.CheckConstraints       == true) sqlopt |= OracleProviderAdapter.BulkCopyOptions.KeepConstraints;
-						if (options.FireTriggers           != true) sqlopt |= OracleProviderAdapter.BulkCopyOptions.DisableTriggers;
+						if (opts.UseInternalTransaction == true) sqlopt |= OracleProviderAdapter.BulkCopyOptions.UseInternalTransaction;
+						if (opts.CheckConstraints       == true) sqlopt |= OracleProviderAdapter.BulkCopyOptions.KeepConstraints;
+						if (opts.FireTriggers           != true) sqlopt |= OracleProviderAdapter.BulkCopyOptions.DisableTriggers;
 
-						var notifyAfter = options.NotifyAfter == 0 && options.MaxBatchSize.HasValue
-							? options.MaxBatchSize.Value
-							: options.NotifyAfter;
+						var notifyAfter = opts.NotifyAfter == 0 && opts.MaxBatchSize.HasValue
+							? opts.MaxBatchSize.Value
+							: opts.NotifyAfter;
 
 						using (var bc = _provider.Adapter.BulkCopy.Create(
 							connection,
 							sqlopt,
 							tableName,
 							schemaName,
-							notifyAfter != 0 && options.RowsCopiedCallback != null ? notifyAfter : null,
-							options.RowsCopiedCallback,
+							notifyAfter != 0 && opts.RowsCopiedCallback != null ? notifyAfter : null,
+							opts.RowsCopiedCallback,
 							rc,
-							options.MaxBatchSize,
-							options.BulkCopyTimeout ?? (Configuration.Data.BulkCopyUseConnectionCommandTimeout ? connection.ConnectionTimeout : null)))
+							opts.MaxBatchSize,
+							opts.BulkCopyTimeout ?? (Configuration.Data.BulkCopyUseConnectionCommandTimeout ? connection.ConnectionTimeout : null)))
 						{
 							for (var i = 0; i < columns.Count; i++)
 								bc.AddColumn(i, columns[i]);
@@ -115,8 +115,8 @@ namespace LinqToDB.DataProvider.Oracle
 						{
 							rc.RowsCopied = rd.Count;
 
-							if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-								options.RowsCopiedCallback(rc);
+							if (opts.NotifyAfter != 0 && opts.RowsCopiedCallback != null)
+								opts.RowsCopiedCallback(rc);
 						}
 
 						return rc;
@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 
-			return MultipleRowsCopy(table, dataOptions, source);
+			return MultipleRowsCopy(table, options, source);
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
