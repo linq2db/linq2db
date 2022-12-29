@@ -214,7 +214,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			return new ClickHouseBulkCopy(this).BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					ClickHouseTools.DefaultBulkCopyType :
+					options.FindOrDefault(ClickHouseOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
@@ -226,7 +226,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			return new ClickHouseBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					ClickHouseTools.DefaultBulkCopyType :
+					options.FindOrDefault(ClickHouseOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,
@@ -240,7 +240,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			return new ClickHouseBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					ClickHouseTools.DefaultBulkCopyType :
+					options.FindOrDefault(ClickHouseOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options.BulkCopyOptions,

@@ -1,28 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
 
-namespace LinqToDB.DataProvider.Access
+namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Common.Internal;
 	using Data;
 
 	/// <param name="BulkCopyType">
-	/// Default bulk copy mode, used for Access by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
-	/// methods, if mode is not specified explicitly.
-	/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
+	/// Default bulk copy mode.
+	/// Default value: <c>BulkCopyType.ProviderSpecific</c>.
 	/// </param>
-	public sealed record AccessOptions
+	public sealed record ClickHouseOptions
 	(
 		BulkCopyType BulkCopyType
 	)
-		: DataProviderOptions<AccessOptions>(BulkCopyType)
+		: DataProviderOptions<ClickHouseOptions>(BulkCopyType)
 	{
-		public AccessOptions() : this(BulkCopyType.MultipleRows)
+		public ClickHouseOptions() : this(BulkCopyType.ProviderSpecific)
 		{
 		}
 
-		AccessOptions(AccessOptions original) : base(original)
+		ClickHouseOptions(ClickHouseOptions original) : base(original)
 		{
 		}
 
@@ -31,7 +29,7 @@ namespace LinqToDB.DataProvider.Access
 
 		#region IEquatable implementation
 
-		public bool Equals(AccessOptions? other)
+		public bool Equals(ClickHouseOptions? other)
 		{
 			if (ReferenceEquals(null, other)) return false;
 			if (ReferenceEquals(this, other)) return true;
