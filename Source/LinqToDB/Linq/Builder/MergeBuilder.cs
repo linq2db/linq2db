@@ -39,13 +39,13 @@ namespace LinqToDB.Linq.Builder
 				kind = MergeKind.MergeWithOutput;
 			}
 
+			mergeContext.Kind = kind;
+
 			if (kind != MergeKind.Merge)
 			{
-				var objectType = methodCall.Method.GetGenericArguments()[0];
-
 				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), "$action", false);
-				var insertedTable = SqlTable.Inserted(objectType);
-				var deletedTable  = SqlTable.Deleted(objectType);
+
+				var (deletedContext, insertedContext, deletedTable, insertedTable) = UpdateBuilder.CreateDeletedInsertedContexts(builder, mergeContext.TargetContext, out var outputContext);
 
 				mergeContext.Merge.Output = new SqlOutputClause()
 				{
@@ -53,32 +53,22 @@ namespace LinqToDB.Linq.Builder
 					DeletedTable  = deletedTable,
 				};
 
-				var selectQuery = new SelectQuery();
+				mergeContext.OutputContext = outputContext;
 
+				var selectQuery = outputContext.SelectQuery;
 				var actionFieldContext  = new SingleExpressionContext(null, builder, actionField, selectQuery);
-				var deletedTableContext = new AnchorContext(null, new TableBuilder.TableContext(builder, selectQuery, deletedTable), SqlAnchor.AnchorKindEnum.Deleted);
-				var insertedTableConext = new AnchorContext(null, new TableBuilder.TableContext(builder, selectQuery, insertedTable), SqlAnchor.AnchorKindEnum.Inserted);
 
 				if (kind == MergeKind.MergeWithOutput)
 				{
-					var outputExpression = methodCall.Arguments[1].UnwrapLambda();
+					var outputLambda = methodCall.Arguments[1].UnwrapLambda();
+					var outputExpression = SequenceHelper.PrepareBody(outputLambda, actionFieldContext, deletedContext, insertedContext);
 
-					var outputContext = new MergeOutputContext(
-						buildInfo.Parent,
-						outputExpression,
-						mergeContext,
-						actionFieldContext,
-						deletedTableContext,
-						insertedTableConext
-					);
-
-					return outputContext;
+					mergeContext.OutputExpression = outputExpression;
 				}
 				else
 				{
 					var outputLambda = methodCall.Arguments[2].UnwrapLambda();
-					var outputExpression = SequenceHelper.PrepareBody(outputLambda, actionFieldContext,
-						deletedTableContext, insertedTableConext);
+					var outputExpression = SequenceHelper.PrepareBody(outputLambda, actionFieldContext, deletedContext, insertedContext);
 
 					var outputTable = methodCall.Arguments[1];
 					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
@@ -94,40 +84,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return mergeContext;
-		}
-
-		sealed class MergeOutputContext : SelectContext
-		{
-			public MergeOutputContext(IBuildContext? parent, LambdaExpression lambda, MergeContext mergeContext, IBuildContext emptyTable, IBuildContext deletedTable, IBuildContext insertedTable)
-				: base(parent, lambda, false, emptyTable, deletedTable, insertedTable)
-			{
-				Statement = mergeContext.Statement;
-				Sequence[0].SelectQuery.Select.Columns.Clear();
-				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
-				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
-			}
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				var expr   = BuildExpression(null, 0, false);
-				var mapper = Builder.BuildMapper<T>(expr);
-
-				var mergeStatement = (SqlMergeStatement)Statement!;
-
-				mergeStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
-
-				QueryRunner.SetRunQuery(query, mapper);
-			}
-
-			public override void SetRunQuery<T>(Query<T> query, Expression expr)
-			{
-				base.SetRunQuery(query, expr);
-
-				var mergeStatement = (SqlMergeStatement)Statement!;
-
-				mergeStatement.Output!.OutputColumns = Sequence[0].SelectQuery.Select.Columns.Select(c => c.Expression).ToList();
-
-			}
 		}
 
 		public static void BuildMatchCondition(ExpressionBuilder builder, Expression condition, TableLikeQueryContext source,

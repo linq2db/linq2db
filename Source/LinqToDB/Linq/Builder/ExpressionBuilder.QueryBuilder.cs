@@ -425,10 +425,10 @@ namespace LinqToDB.Linq.Builder
 			return new SqlErrorExpression(context, expression);
 		}
 
-		public Expression BuildSqlExpression(Dictionary<Expression, Expression> translated, IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null, bool doNotConstruct = false)
+		public Expression BuildSqlExpression(Dictionary<Expression, Expression> translated, IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
 		{
 			var result = expression.Transform(
-				(builder: this, context, flags, alias, translated, doNotConstruct),
+				(builder: this, context, flags, alias, translated),
 				static (context, expr) =>
 				{
 					// Shortcut: if expression can be compiled we can live it as is but inject accessors 
@@ -453,9 +453,6 @@ namespace LinqToDB.Linq.Builder
 
 						return new TransformInfo(valueExpr, true);
 					}
-
-					if (context.translated.TryGetValue(expr, out var replaced))
-						return new TransformInfo(replaced, true);
 
 					switch (expr.NodeType)
 					{
@@ -634,15 +631,27 @@ namespace LinqToDB.Linq.Builder
 
 							if (expr is SqlGenericConstructorExpression)
 							{
-								if (context.flags.HasFlag(ProjectFlags.Expression) && !context.doNotConstruct)
+								if (!context.translated.TryGetValue(expr, out var replaced) && replaced != expr)
 								{
-									var newConstructor = (SqlGenericConstructorExpression)context.builder.BuildSqlExpression(context.translated,
-										context.context, expr, context.flags, context.alias, doNotConstruct: true);
+									if (context.flags.HasFlag(ProjectFlags.Expression) &&
+									    !context.translated.ContainsKey(expr))
+									{
+										context.translated[expr] = expr;
+										var newConstructor =
+											(SqlGenericConstructorExpression)context.builder.BuildSqlExpression(
+												context.translated,
+												context.context, expr, context.flags, context.alias);
 
-									var constructed = context.builder.TryConstruct(context.builder.MappingSchema, newConstructor, context.context, context.flags);
+										var constructed = context.builder.TryConstruct(context.builder.MappingSchema,
+											newConstructor, context.context, context.flags);
 
-									context.translated[expr] = constructed;
-									return new TransformInfo(constructed, true);
+										context.translated[expr] = constructed;
+										return new TransformInfo(constructed, true);
+									}
+								}
+								else
+								{
+									return new TransformInfo(replaced, false, true);
 								}
 							}
 

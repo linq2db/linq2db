@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -241,36 +240,13 @@ namespace LinqToDB.Linq.Builder
 			if (updateContext.TargetTable == null)
 				throw new InvalidOperationException();
 
-			// create separate query for output
-			var outputSelectQuery = new SelectQuery();
-
-			IBuildContext insertedContext;
-			IBuildContext deletedContext;
-
-			if (updateContext.TargetTable is TableBuilder.CteTableContext cteTable)
-			{
-				insertedContext = new TableBuilder.CteTableContext(builder, null,
-					updateContext.TargetTable.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
-				deletedContext = new TableBuilder.CteTableContext(builder, null,
-					updateContext.TargetTable.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
-			}	
-			else
-			{
-				insertedContext = new TableBuilder.TableContext(builder, outputSelectQuery, updateContext.TargetTable.SqlTable);
-				deletedContext = new TableBuilder.TableContext(builder, outputSelectQuery, updateContext.TargetTable.SqlTable);
-			}
+			var (deletedContext, insertedContext, deletedTable, insertedTable) = CreateDeletedInsertedContexts(builder, updateContext.TargetTable, out _);
 
 			updateStatement.Output = new SqlOutputClause();
 
-			updateStatement.Output.InsertedTable = ((ITableContext)insertedContext).SqlTable;
-			updateStatement.Output.DeletedTable  = ((ITableContext)deletedContext).SqlTable;
-
-			if (builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables)
-			{
-				insertedContext = new AnchorContext(null, insertedContext, SqlAnchor.AnchorKindEnum.Inserted);
-				deletedContext  = new AnchorContext(null, deletedContext, SqlAnchor.AnchorKindEnum.Deleted);
-			}
-				
+			updateStatement.Output.DeletedTable  = deletedTable;
+			updateStatement.Output.InsertedTable = insertedTable;
+			
 			if (updateType == UpdateTypeEnum.UpdateOutput)
 			{
 				updateContext.OutputExpression = outputExpression;
@@ -317,6 +293,42 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		public static (IBuildContext deleted, IBuildContext inserted, SqlTable deletedTable, SqlTable insertedTable) CreateDeletedInsertedContexts(ExpressionBuilder builder, ITableContext targetTableContext, out IBuildContext outputContext)
+		{
+			// create separate query for output
+			var outputSelectQuery = new SelectQuery();
+
+			IBuildContext deletedContext;
+			IBuildContext insertedContext;
+			if (targetTableContext is TableBuilder.CteTableContext cteTable)
+			{
+				insertedContext = new TableBuilder.CteTableContext(builder, null,
+					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+				deletedContext = new TableBuilder.CteTableContext(builder, null,
+					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+			}
+			else
+			{
+				insertedContext = new TableBuilder.TableContext(builder, outputSelectQuery, targetTableContext.SqlTable);
+				deletedContext  = new TableBuilder.TableContext(builder, outputSelectQuery, targetTableContext.SqlTable);
+			}
+
+			outputContext = deletedContext;
+			
+			outputSelectQuery.From.Tables.Clear();
+
+			var deletedTable = ((ITableContext)deletedContext).SqlTable;
+			var insertedTable = ((ITableContext)insertedContext).SqlTable;
+
+			if (builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables)
+			{
+				insertedContext = new AnchorContext(null, insertedContext, SqlAnchor.AnchorKindEnum.Inserted);
+				deletedContext  = new AnchorContext(null, deletedContext, SqlAnchor.AnchorKindEnum.Deleted);
+			}
+
+			return (deletedContext, insertedContext, deletedTable, insertedTable);
+		}
+
 		public enum UpdateTypeEnum
 		{
 			Update,
@@ -348,88 +360,6 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		#region Helpers
-
-		internal static void BuildSetter(
-			ExpressionBuilder builder,
-			BuildInfo buildInfo,
-			LambdaExpression setter,
-			IBuildContext into,
-			List<SqlSetExpression> items,
-			IBuildContext sequence)
-		{
-			BuildSetterWithContext(builder, buildInfo, setter, into, items, sequence);
-		}
-
-		internal static void BuildSetterWithContext(
-			ExpressionBuilder      builder,
-			BuildInfo              buildInfo,
-			LambdaExpression       setter,
-			IBuildContext          into,
-			List<SqlSetExpression> items,
-			params IBuildContext[] sequences)
-		{
-			throw new NotImplementedException();
-
-			var setterBody     = SequenceHelper.PrepareBody(setter, sequences);
-			var sourceSequence = sequences[0];
-			var setterExpr     = builder.ConvertToSqlExpr(sourceSequence, setterBody);
-			if (setterExpr is not SqlGenericConstructorExpression)
-			{
-				// try again in Keys mode
-				setterExpr = builder.ConvertToSqlExpr(into, setterBody, ProjectFlags.SQL | ProjectFlags.Keys);
-			}
-
-			void BuildSetter(MemberExpression memberExpression, Expression expression)
-			{
-				var column = builder.ConvertToSql(into, memberExpression);
-				var expr   = builder.ConvertToSqlExpr(sourceSequence, expression, ProjectFlags.SQL, columnDescriptor: QueryHelper.GetColumnDescriptor(column));
-				var withColumns = expr;
-
-				// if there are joins we have to make columns
-				if (sourceSequence != into || QueryHelper.EnumerateAccessibleSources(sourceSequence.SelectQuery).Skip(1).Any())
-				{
-					withColumns = builder.ToColumns(sourceSequence, expr);
-				}
-
-				if (withColumns is not SqlPlaceholderExpression placeholder)
-					throw SqlErrorExpression.CreateError(withColumns);
-				
-				items.Insert(placeholder.Index ?? items.Count, new SqlSetExpression(column, placeholder.Sql));
-			}
-
-			void BuildGeneric(SqlGenericConstructorExpression generic, Expression path)
-			{
-				foreach (var assignment in generic.Assignments)
-				{
-					var member   = assignment.MemberInfo;
-					var argument = assignment.Expression;
-
-					if (member is MethodInfo mi)
-						member = mi.GetPropertyInfo();
-
-					var pe = Expression.MakeMemberAccess(path, member);
-
-					if (argument is SqlGenericConstructorExpression genericArgument)
-					{
-						BuildGeneric(genericArgument, Expression.MakeMemberAccess(path, member));
-					}
-					else
-					{
-						BuildSetter(pe, argument);
-					}
-				}
-			}
-
-			var bodyPath = new ContextRefExpression(setterExpr.Type, into);
-			var bodyExpr = setterExpr;
-
-			if (bodyExpr is SqlGenericConstructorExpression generic)
-			{
-				BuildGeneric(generic, bodyPath);
-			}
-			else
-				throw new LinqException($"Setter expression '{setterExpr}' cannot be used for build SQL.");
-		}
 
 		internal static void InitializeSetExpressions(
 			ExpressionBuilder           builder,
@@ -567,7 +497,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				foreach (var assignment in generic.Assignments)
 				{
-					ParseSet(Expression.MakeMemberAccess(targetRef, assignment.MemberInfo), Expression.MakeMemberAccess(targetRef, assignment.MemberInfo), assignment.Expression, envelopes);
+					var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
+					ParseSet(memberAccess, memberAccess, assignment.Expression, envelopes);
 				}
 			}
 			else
