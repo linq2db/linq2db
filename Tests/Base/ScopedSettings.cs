@@ -304,16 +304,16 @@ namespace Tests
 
 	public class OracleAlternativeBulkCopyMode : IDisposable
 	{
-		private readonly AlternativeBulkCopy _oldValue = OracleTools.UseAlternativeBulkCopy;
+		private readonly AlternativeBulkCopy _oldValue = OracleOptions.Default.AlternativeBulkCopy;
 
 		public OracleAlternativeBulkCopyMode(AlternativeBulkCopy mode)
 		{
-			OracleTools.UseAlternativeBulkCopy = mode;
+			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = mode };
 		}
 
 		void IDisposable.Dispose()
 		{
-			OracleTools.UseAlternativeBulkCopy = _oldValue;
+			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = _oldValue };
 		}
 	}
 

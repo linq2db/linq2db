@@ -334,7 +334,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-			var oracleOptions = options.Find<OracleOptions>() ?? OracleOptions.Default;
+			var oracleOptions = options.FindOrDefault(OracleOptions.Default);
 			var bulkCopy      = new OracleBulkCopy(this, oracleOptions.AlternativeBulkCopy);
 
 			return bulkCopy.BulkCopy(
@@ -349,7 +349,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var oracleOptions = options.Find<OracleOptions>() ?? OracleOptions.Default;
+			var oracleOptions = options.FindOrDefault(OracleOptions.Default);
 			var bulkCopy      = new OracleBulkCopy(this, oracleOptions.AlternativeBulkCopy);
 
 			return bulkCopy.BulkCopyAsync(
@@ -366,7 +366,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			var extension = options.Find<OracleOptions>() ?? OracleOptions.Default;
+			var extension = options.FindOrDefault(OracleOptions.Default);
 			var bulkCopy  = new OracleBulkCopy(this, extension.AlternativeBulkCopy);
 
 			return bulkCopy.BulkCopyAsync(

@@ -50,7 +50,7 @@ namespace Tests.Infrastructure
 		}
 
 		[Test]
-		public void OnTrace2Test()
+		public void OnTraceTest2()
 		{
 			string? s1 = null;
 

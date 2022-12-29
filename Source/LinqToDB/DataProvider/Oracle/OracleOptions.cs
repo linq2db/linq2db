@@ -6,40 +6,38 @@ namespace LinqToDB.DataProvider.Oracle
 	using Common.Internal;
 	using Data;
 
-	/// <param name="BulkCopyType">
-	/// BulkCopyType used by Oracle Provider by default.
-	/// </param>
 	/// <param name="AlternativeBulkCopy">
 	/// Specify AlternativeBulkCopy used by Oracle Provider.
+	/// </param>
+	/// <param name="DontEscapeLowercaseIdentifiers">
+	/// <summary>
+	/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
+	/// Default value: <c>false</c>.
+	/// This flag is added for backward compatibility and not recommended for use with new applications.
+	/// </summary>
 	/// </param>
 	public sealed record OracleOptions
 	(
 		BulkCopyType        BulkCopyType,
-		AlternativeBulkCopy AlternativeBulkCopy
+		AlternativeBulkCopy AlternativeBulkCopy,
+		bool                DontEscapeLowercaseIdentifiers
 	)
-		: IOptionSet
+		: DataProviderOptions<OracleOptions>(BulkCopyType)
 	{
-		public OracleOptions() : this(BulkCopyType.MultipleRows, AlternativeBulkCopy.InsertAll)
+		public OracleOptions() : this(BulkCopyType.MultipleRows, AlternativeBulkCopy.InsertAll, false)
 		{
 		}
 
-		OracleOptions(OracleOptions original)
+		OracleOptions(OracleOptions original) : base(original)
 		{
-			BulkCopyType        = original.BulkCopyType;
-			AlternativeBulkCopy = original.AlternativeBulkCopy;
+			AlternativeBulkCopy            = original.AlternativeBulkCopy;
+			DontEscapeLowercaseIdentifiers = original.DontEscapeLowercaseIdentifiers;
 		}
 
-		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(BulkCopyType)
+		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
 			.Add(AlternativeBulkCopy)
-			.CreateID();
-
-		/// <summary>
-		/// Default oracle options.
-		/// Default value: <c>OracleOptions(BulkCopyType.MultipleRows, AlternativeBulkCopy.InsertAll)</c>
-		/// </summary>
-		public static OracleOptions Default { get; set; } = new();
+			.Add(DontEscapeLowercaseIdentifiers)
+			;
 
 		#region IEquatable implementation
 

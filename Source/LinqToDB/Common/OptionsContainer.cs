@@ -83,6 +83,12 @@ namespace LinqToDB.Common
 			return null;
 		}
 
+		public TSet FindOrDefault<TSet>(TSet defaultOptions)
+			where TSet : class, IOptionSet
+		{
+			return Find<TSet>() ?? defaultOptions;
+		}
+
 		/// <summary>
 		/// Returns options set by set type <typeparamref name="TSet"/>. If options doesn't contain specific options set, it is created and added to options.
 		/// </summary>

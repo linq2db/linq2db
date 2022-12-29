@@ -3049,24 +3049,27 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
-				var initial = OracleTools.DontEscapeLowercaseIdentifiers;
+				var initial = OracleOptions.Default;
+
 				try
 				{
-					OracleTools.DontEscapeLowercaseIdentifiers = true;
-					db.GetTable<TestIdentifiersTable1>().ToList();
-					db.GetTable<TestIdentifiersTable2>().ToList();
+					OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = true };
+
+					_ = db.GetTable<TestIdentifiersTable1>().ToList();
+					_ = db.GetTable<TestIdentifiersTable2>().ToList();
 
 					Query.ClearCaches();
-					OracleTools.DontEscapeLowercaseIdentifiers = false;
+
+					OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = false };
 
 					// no specific exception type as it differ for managed and native providers
 					Assert.That(() => db.GetTable<TestIdentifiersTable1>().ToList(), Throws.Exception.With.Message.Contains("ORA-00942"));
 
-					db.GetTable<TestIdentifiersTable2>().ToList();
+					_ = db.GetTable<TestIdentifiersTable2>().ToList();
 				}
 				finally
 				{
-					OracleTools.DontEscapeLowercaseIdentifiers = initial;
+					OracleOptions.Default = initial;
 					Query.ClearCaches();
 				}
 			}
