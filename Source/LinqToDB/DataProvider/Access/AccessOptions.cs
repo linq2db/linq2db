@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.Access
 	/// </param>
 	public sealed record AccessOptions
 	(
-		BulkCopyType BulkCopyType
+		BulkCopyType BulkCopyType = BulkCopyType.MultipleRows
 	)
 		: DataProviderOptions<AccessOptions>(BulkCopyType)
 	{

@@ -16,13 +16,13 @@ namespace LinqToDB.DataProvider.Oracle
 	/// </param>
 	public sealed record OracleOptions
 	(
-		BulkCopyType        BulkCopyType,
-		AlternativeBulkCopy AlternativeBulkCopy,
-		bool                DontEscapeLowercaseIdentifiers
+		BulkCopyType        BulkCopyType                   = BulkCopyType.MultipleRows,
+		AlternativeBulkCopy AlternativeBulkCopy            = AlternativeBulkCopy.InsertAll,
+		bool                DontEscapeLowercaseIdentifiers = false
 	)
 		: DataProviderOptions<OracleOptions>(BulkCopyType)
 	{
-		public OracleOptions() : this(BulkCopyType.MultipleRows, AlternativeBulkCopy.InsertAll, false)
+		public OracleOptions() : this(BulkCopyType.MultipleRows)
 		{
 		}
 

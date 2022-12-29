@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	/// </param>
 	public sealed record ClickHouseOptions
 	(
-		BulkCopyType BulkCopyType
+		BulkCopyType BulkCopyType = BulkCopyType.ProviderSpecific
 	)
 		: DataProviderOptions<ClickHouseOptions>(BulkCopyType)
 	{

@@ -14,12 +14,12 @@ namespace LinqToDB.DataProvider.DB2
 	/// </param>
 	public sealed record DB2Options
 	(
-		BulkCopyType           BulkCopyType,
-		DB2IdentifierQuoteMode IdentifierQuoteMode
+		BulkCopyType           BulkCopyType        = BulkCopyType.MultipleRows,
+		DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto
 	)
 		: DataProviderOptions<DB2Options>(BulkCopyType)
 	{
-		public DB2Options() : this(BulkCopyType.MultipleRows, DB2IdentifierQuoteMode.Auto)
+		public DB2Options() : this(BulkCopyType.MultipleRows)
 		{
 		}
 
