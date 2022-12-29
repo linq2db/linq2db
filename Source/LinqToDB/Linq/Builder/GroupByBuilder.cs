@@ -3,7 +3,6 @@ using System.Collections;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -14,10 +13,11 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
+	using LinqToDB.Expressions;
 
 	sealed class GroupByBuilder : MethodCallBuilder
 	{
-		static readonly MethodInfo[] GroupingSetMethods = new [] { Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets };
+		static readonly MethodInfo[] GroupingSetMethods = { Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets };
 
 		#region Builder Methods
 
@@ -541,8 +541,6 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			readonly Dictionary<Tuple<Expression?,int,ConvertFlags>,SqlInfo[]> _expressionIndex = new ();
-
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
 				throw new NotImplementedException();
@@ -623,9 +621,6 @@ namespace LinqToDB.Linq.Builder
 					return GetEnumerator();
 				}
 			}
-
-			static MethodInfo _wrapSubQuery = MemberHelper.MethodOfGeneric(() =>
-				((GroupByContext)null!).WrapSubQuery<int, int>(null!, null!));
 
 			class GroupingEnumerable<TKey, TElement> : IResultEnumerable<IGrouping<TKey, TElement>>
 			{
@@ -721,40 +716,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 			}
-
-			void WrapSubQuery<TKey, TElement>(Query<IGrouping<TKey, TElement>> destQuery, ParameterExpression queryParameter)
-			{
-				var subqQuery = new Query<TElement>(Builder.DataContext, Builder.Expression);
-				subqQuery.Queries.Add(new QueryInfo(){Statement = Element.GetResultStatement()});
-
-				Element.BuildQuery(subqQuery, queryParameter);
-
-				var keyFunc = (Func<TElement, TKey>)_key.Lambda.Compile();
-				QueryRunner.WrapRunQuery(subqQuery, destQuery, e => new GroupingEnumerable<TKey, TElement>(e, keyFunc));
-			}
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-
-				// if we can compile Key - we can do grouping on the client side
-				/*if (Builder.CanBeCompiled(_key.Lambda))
-			{
-					var method = _wrapSubQuery.MakeGenericMethod(_key.Body.Type, Element.Body.Type);
-
-					method.Invoke(this, new object? []{query, queryParameter});
-
-					return;
-					}
-
-				var expr = Builder.FinalizeProjection(this,
-					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
-
-				var mapper = Builder.BuildMapper<T>(expr);
-
-				QueryRunner.SetRunQuery(query, mapper);*/
-			}
-				}
+		}
 
 		#endregion
 
