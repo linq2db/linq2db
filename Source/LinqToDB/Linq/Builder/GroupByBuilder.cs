@@ -112,7 +112,7 @@ namespace LinqToDB.Linq.Builder
 					var selectParam = (LambdaExpression)call.Arguments[1].Unwrap();
 					var type = selectParam.Body.Type;
 
-					if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>))
+					if (type.IsGenericType /*&& type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>)*/)
 					{
 						var selectParamBody = selectParam.Body.Unwrap();
 						MethodCallExpression? groupingMethod = null;
@@ -194,9 +194,9 @@ namespace LinqToDB.Linq.Builder
 				foreach (var groupingSet in EnumGroupingSets(groupingSetBody))
 				{
 					throw new NotImplementedException();
-					var groupSql = builder.ConvertExpressions(keySequence, groupingSet, ConvertFlags.Key, null);
+					/*var groupSql = builder.ConvertExpressions(keySequence, groupingSet, ConvertFlags.Key, null);
 					groupingSubquery.SelectQuery.GroupBy.Items.Add(
-						new SqlGroupingSet(groupSql.Select(s => keySequence.SelectQuery.Select.AddColumn(s.Sql))));
+						new SqlGroupingSet(groupSql.Select(s => keySequence.SelectQuery.Select.AddColumn(s.Sql))));*/
 				}
 
 				if (!hasSets)
@@ -607,10 +607,6 @@ namespace LinqToDB.Linq.Builder
 
 			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>
 			{
-				public Grouping()
-				{
-				}
-
 				public TKey                   Key   { get; set; } = default!;
 				public IEnumerable<TElement>? Items { get; set; } = default!;
 

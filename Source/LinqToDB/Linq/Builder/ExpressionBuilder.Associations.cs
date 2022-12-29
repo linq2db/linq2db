@@ -11,9 +11,6 @@ namespace LinqToDB.Linq.Builder
 
 	partial class ExpressionBuilder
 	{
-		Dictionary<AccessorMember, Tuple<IBuildContext, bool>>? _associationContexts;
-		Dictionary<AccessorMember, IBuildContext>?              _collectionAssociationContexts;
-
 		public bool IsAssociation(Expression expression)
 		{
 			if (expression is MemberExpression memberExpression)

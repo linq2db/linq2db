@@ -65,38 +65,12 @@ namespace LinqToDB.Linq.Builder
 
 			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
-				var expr   = BuildExpression(null, 0, false);
-				var mapper = Builder.BuildMapper<T>(expr);
-
-				QueryRunner.SetRunQuery(query, mapper);
+				throw new NotImplementedException();
 			}
 
 			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				expression ??= ((LambdaExpression)Expression!).Body.Unwrap();
-
-				switch (expression.NodeType)
-				{
-					case ExpressionType.New:
-					case ExpressionType.MemberInit:
-						{
-							var expr = Builder.BuildSqlExpression(this, expression, ProjectFlags.Expression);
-
-							if (SelectQuery.Select.Columns.Count == 0)
-								SelectQuery.Select.Expr(new SqlValue(1));
-
-							return expr;
-						}
-
-					default :
-						{
-							var expr = Builder.ConvertToSql(this, expression);
-							var idx  = SelectQuery.Select.Add(expr);
-
-							return Builder.BuildSql(expression.Type, idx, expr);
-						}
-				}
-
+				throw new NotImplementedException();
 			}
 
 			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
@@ -122,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 
 			public IBuildContext Clone(CloningContext context)
 			{
-				throw new NotImplementedException();
+				return new ScalarSelectContext(Builder);
 			}
 
 			public void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -134,11 +108,7 @@ namespace LinqToDB.Linq.Builder
 
 			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				return requestFlag switch
-				{
-					RequestFor.Expression => IsExpressionResult.True,
-					_                     => IsExpressionResult.False,
-				};
+				throw new NotImplementedException();
 			}
 
 			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)

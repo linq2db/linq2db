@@ -1,6 +1,5 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -10,6 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Reflection;
 	using SqlQuery;
+	using LinqToDB.Expressions;
 
 	partial class ExpressionBuilder
 	{

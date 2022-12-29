@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using LinqToDB.Expressions;
 
-	sealed partial class ExpressionBuilder
+	internal sealed partial class ExpressionBuilder
 	{
 		#region Sequence
 
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 
 		readonly Query                             _query;
 		readonly IReadOnlyList<ISequenceBuilder>   _builders = _sequenceBuilders;
-		private  bool                              _reorder;
+		bool                                       _reorder;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
@@ -153,18 +153,6 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
 
-		static bool _isDataContextParamInitialized;
-
-		public static ParameterExpression GetDataContextParam()
-		{
-			if (!_isDataContextParamInitialized)
-			{
-				_isDataContextParamInitialized = true;
-			}
-
-			return DataContextParam;
-		}
-
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
 		#endregion
@@ -213,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 		/// <summary>
 		/// Contains information from which expression sequence were built. Used for Eager Loading.
 		/// </summary>
-		private Dictionary<IBuildContext, Expression> _sequenceExpressions = new();
+		Dictionary<IBuildContext, Expression> _sequenceExpressions = new();
 
 		public Expression GetSequenceExpression(IBuildContext sequence)
 		{
@@ -224,11 +212,6 @@ namespace LinqToDB.Linq.Builder
 				return GetSequenceExpression(sc.SubQuery);
 
 			throw new InvalidOperationException("Sequence has no registered expression");
-		}
-
-		public void AssignSequenceExpression(IBuildContext sequence, Expression sequenceExpression)
-		{
-			_sequenceExpressions[sequence] = sequenceExpression;
 		}
 
 		public IBuildContext BuildSequence(BuildInfo buildInfo)
@@ -506,10 +489,6 @@ namespace LinqToDB.Linq.Builder
 						{
 							switch (call.Method.Name)
 							{
-								case "Where"                : return new TransformInfo(ConvertWhere         (call));
-								//case "GroupBy"              : return new TransformInfo(ConvertGroupBy       (call));
-								case "SelectMany"           : return new TransformInfo(ConvertSelectMany    (call));
-								case "Select"               : return new TransformInfo(ConvertSelect        (call));
 								case "LongCount"            :
 								case "Count"                :
 								case "Single"               :
@@ -522,14 +501,6 @@ namespace LinqToDB.Linq.Builder
 								case "SingleOrDefaultAsync" :
 								case "FirstAsync"           :
 								case "FirstOrDefaultAsync"  : return new TransformInfo(ConvertPredicateAsync(call));
-								case "Min"                  :
-								case "Max"                  : return new TransformInfo(ConvertSelector      (call, true));
-								case "Sum"                  :
-								case "Average"              : return new TransformInfo(ConvertSelector      (call, false));
-								case "MinAsync"             :
-								case "MaxAsync"             : return new TransformInfo(ConvertSelectorAsync (call, true));
-								case "SumAsync"             :
-								case "AverageAsync"         : return new TransformInfo(ConvertSelectorAsync (call, false));
 								case "ElementAt"            :
 								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
 								case "LoadWithAsTable"      : return new TransformInfo(expr, true);
@@ -570,11 +541,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return new TransformInfo(expr);
-		}
-
-		LambdaExpression? ConvertMethodExpression(Type type, MemberInfo mi, out string? alias)
-		{
-			return _optimizationContext.ConvertMethodExpression(type, mi, out alias);
 		}
 
 		Expression ConvertSubquery(Expression expr)
@@ -641,545 +607,6 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region ConvertWhere
-
-		Expression ConvertWhere(MethodCallExpression method)
-		{
-			return method;
-
-			/*var sequence  = OptimizeExpression(method.Arguments[0]);
-			var predicate = OptimizeExpression(method.Arguments[1]);
-			var lambda    = (LambdaExpression)predicate.Unwrap();
-			var lparam    = lambda.Parameters[0];
-			var lbody     = lambda.Body;
-
-			if (lambda.Parameters.Count > 1)
-				return method;
-
-			var exprs     = new List<Expression>();
-
-			lbody.Visit((exprs, MappingSchema), static (context, ex) =>
-			{
-				if (ex.NodeType == ExpressionType.Call)
-				{
-					var call = (MethodCallExpression)ex;
-
-					if (call.Arguments.Count > 0)
-					{
-						var arg = call.Arguments[0];
-
-						if (call.IsAggregate(context.MappingSchema))
-						{
-							while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression)arg).Method.Name == "Select")
-								arg = ((MethodCallExpression)arg).Arguments[0];
-
-							if (arg.NodeType == ExpressionType.Call)
-								context.exprs.Add(ex);
-						}
-						else if (call.IsQueryable(CountBuilder.MethodNames))
-						{
-							//while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression) arg).Method.Name == "Select")
-							//	arg = ((MethodCallExpression) arg).Arguments[0];
-
-							if (arg.NodeType == ExpressionType.Call)
-								context.exprs.Add(ex);
-						}
-					}
-				}
-			});
-
-			Expression? expr = null;
-
-			if (exprs.Count > 0)
-			{
-				expr = lparam;
-
-				foreach (var ex in exprs)
-				{
-					var type   = typeof(ExpressionHolder<,>).MakeGenericType(expr.Type, ex.Type);
-					var fields = type.GetFields();
-
-					expr = Expression.MemberInit(
-						Expression.New(type),
-						Expression.Bind(fields[0], expr),
-						Expression.Bind(fields[1], ex));
-				}
-
-				var dic  = new Dictionary<Expression, Expression>();
-				var parm = Expression.Parameter(expr.Type, lparam.Name);
-
-				for (var i = 0; i < exprs.Count; i++)
-				{
-					Expression ex = parm;
-
-					for (var j = i; j < exprs.Count - 1; j++)
-						ex = ExpressionHelper.PropertyOrField(ex, "p");
-
-					ex = ExpressionHelper.PropertyOrField(ex, "ex");
-
-					dic.Add(exprs[i], ex);
-
-					(_subQueryExpressions ??= new()).Add(ex);
-				}
-
-				var newBody = lbody.Transform(dic, static (dic, ex) => dic.TryGetValue(ex, out var e) ? e : ex);
-
-				var nparm = exprs.Aggregate<Expression,Expression>(parm, static (c,t) => ExpressionHelper.PropertyOrField(c, "p"));
-
-				newBody   = newBody.Replace(lparam, nparm);
-				predicate = Expression.Lambda(newBody, parm);
-
-				var methodInfo = GetMethodInfo(method, "Select");
-
-				methodInfo = methodInfo.MakeGenericMethod(lparam.Type, expr.Type);
-				sequence   = Expression.Call(methodInfo, sequence, Expression.Lambda(expr, lparam));
-			}
-
-			if (!ReferenceEquals(sequence, method.Arguments[0]) || !ReferenceEquals(predicate, method.Arguments[1]))
-			{
-				var methodInfo  = method.Method.GetGenericMethodDefinition();
-				var genericType = sequence.Type.GetGenericArguments()[0];
-				var newMethod   = methodInfo.MakeGenericMethod(genericType);
-
-				var previous    = method;
-				method = Expression.Call(newMethod, sequence, predicate);
-
-				if (exprs.Count > 0)
-				{
-					var parameter = Expression.Parameter(expr!.Type, lparam.Name);
-
-					methodInfo = GetMethodInfo(method, "Select");
-					methodInfo = methodInfo.MakeGenericMethod(expr.Type, lparam.Type);
-					method     = Expression.Call(methodInfo, method,
-						Expression.Lambda(
-							exprs.Aggregate((Expression)parameter, static (current,_) => ExpressionHelper.PropertyOrField(current, "p")),
-							parameter));
-
-				}
-			}
-
-			return method;*/
-		}
-
-		#endregion
-
-		#region ConvertGroupBy
-
-		public sealed class GroupSubQuery<TKey,TElement>
-		{
-			public TKey     Key     = default!;
-			public TElement Element = default!;
-		}
-
-		interface IGroupByHelper
-		{
-			void Set(bool wrapInSubQuery, Expression sourceExpression, LambdaExpression keySelector, LambdaExpression? elementSelector, LambdaExpression? resultSelector);
-
-			Expression AddElementSelectorQ  ();
-			Expression AddElementSelectorE  ();
-			Expression AddResultQ           ();
-			Expression AddResultE           ();
-			Expression WrapInSubQueryQ      ();
-			Expression WrapInSubQueryE      ();
-			Expression WrapInSubQueryResultQ();
-			Expression WrapInSubQueryResultE();
-		}
-
-		sealed class GroupByHelper<TSource,TKey,TElement,TResult> : IGroupByHelper
-		{
-			bool              _wrapInSubQuery;
-			Expression        _sourceExpression = null!;
-			LambdaExpression  _keySelector      = null!;
-			LambdaExpression? _elementSelector;
-			LambdaExpression? _resultSelector;
-
-			public void Set(
-				bool              wrapInSubQuery,
-				Expression        sourceExpression,
-				LambdaExpression  keySelector,
-				LambdaExpression? elementSelector,
-				LambdaExpression? resultSelector)
-			{
-				_wrapInSubQuery   = wrapInSubQuery;
-				_sourceExpression = sourceExpression;
-				_keySelector      = keySelector;
-				_elementSelector  = elementSelector;
-				_resultSelector   = resultSelector;
-			}
-
-			public Expression AddElementSelectorQ()
-			{
-				Expression<Func<IQueryable<TSource>,TKey,TElement,TResult,IQueryable<IGrouping<TKey,TSource>>>> func = (source,key,e,r) => source
-					.GroupBy(keyParam => key, _ => _)
-					;
-
-				var body   = func.Body.Unwrap();
-				var keyArg = GetLambda(body, Arg1).Parameters[0]; // .GroupBy(keyParam
-
-				return Convert(func, keyArg, null, null);
-			}
-
-			public Expression AddElementSelectorE()
-			{
-				Expression<Func<IEnumerable<TSource>,TKey,TElement,TResult,IEnumerable<IGrouping<TKey,TSource>>>> func = (source,key,e,r) => source
-					.GroupBy(keyParam => key, _ => _)
-					;
-
-				var body   = func.Body.Unwrap();
-				var keyArg = GetLambda(body, Arg1).Parameters[0]; // .GroupBy(keyParam
-
-				return Convert(func, keyArg, null, null);
-			}
-
-			public Expression AddResultQ()
-			{
-				Expression<Func<IQueryable<TSource>,TKey,TElement,TResult,IQueryable<TResult>>> func = (source,key,e,r) => source
-					.GroupBy(keyParam => key, elemParam => e)
-					.Select (resParam => r)
-					;
-
-				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, Arg01).Parameters[0]; // .GroupBy(keyParam
-				var elemArg = GetLambda(body, Arg02).Parameters[0]; // .GroupBy(..., elemParam
-				var resArg  = GetLambda(body, Arg1 ).Parameters[0]; // .Select (resParam
-
-				return Convert(func, keyArg, elemArg, resArg);
-			}
-
-			public Expression AddResultE()
-			{
-				Expression<Func<IEnumerable<TSource>,TKey,TElement,TResult,IEnumerable<TResult>>> func = (source,key,e,r) => source
-					.GroupBy(keyParam => key, elemParam => e)
-					.Select (resParam => r)
-					;
-
-				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, Arg01).Parameters[0]; // .GroupBy(keyParam
-				var elemArg = GetLambda(body, Arg02).Parameters[0]; // .GroupBy(..., elemParam
-				var resArg  = GetLambda(body, Arg1 ).Parameters[0]; // .Select (resParam
-
-				return Convert(func, keyArg, elemArg, resArg);
-			}
-
-			public Expression WrapInSubQueryQ()
-			{
-				Expression<Func<IQueryable<TSource>,TKey,TElement,TResult,IQueryable<IGrouping<TKey,TElement>>>> func = (source,key,e,r) => source
-					.Select(selectParam => new GroupSubQuery<TKey,TSource>
-					{
-						Key     = key,
-						Element = selectParam
-					})
-					.GroupBy(underscore => underscore.Key, elemParam => e)
-					;
-
-				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, Arg01).Parameters[0]; // .Select (selectParam
-				var elemArg = GetLambda(body, Arg2 ).Parameters[0]; // .GroupBy(..., elemParam
-
-				return Convert(func, keyArg, elemArg, null);
-			}
-
-			public Expression WrapInSubQueryE()
-			{
-				Expression<Func<IEnumerable<TSource>,TKey,TElement,TResult,IEnumerable<IGrouping<TKey,TElement>>>> func = (source,key,e,r) => source
-					.Select(selectParam => new GroupSubQuery<TKey,TSource>
-					{
-						Key     = key,
-						Element = selectParam
-					})
-					.GroupBy(underscore => underscore.Key, elemParam => e)
-					;
-
-				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, Arg01).Parameters[0]; // .Select (selectParam
-				var elemArg = GetLambda(body, Arg2 ).Parameters[0]; // .GroupBy(..., elemParam
-
-				return Convert(func, keyArg, elemArg, null);
-			}
-
-			public Expression WrapInSubQueryResultQ()
-			{
-				Expression<Func<IQueryable<TSource>,TKey,TElement,TResult,IQueryable<TResult>>> func = (source,key,e,r) => source
-					.Select(selectParam => new GroupSubQuery<TKey,TSource>
-					{
-						Key     = key,
-						Element = selectParam
-					})
-					.GroupBy(underscore => underscore.Key, elemParam => e)
-					.Select (resParam => r)
-					;
-
-				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, Arg001).Parameters[0]; // .Select (selectParam
-				var elemArg = GetLambda(body, Arg02 ).Parameters[0]; // .GroupBy(..., elemParam
-				var resArg  = GetLambda(body, Arg1  ).Parameters[0]; // .Select (resParam
-
-				return Convert(func, keyArg, elemArg, resArg);
-			}
-
-			public Expression WrapInSubQueryResultE()
-			{
-				Expression<Func<IEnumerable<TSource>,TKey,TElement,TResult,IEnumerable<TResult>>> func = (source,key,e,r) => source
-					.Select(selectParam => new GroupSubQuery<TKey,TSource>
-					{
-						Key     = key,
-						Element = selectParam
-					})
-					.GroupBy(underscore => underscore.Key, elemParam => e)
-					.Select (resParam => r)
-					;
-
-				var body    = func.Body.Unwrap();
-				var keyArg  = GetLambda(body, Arg001).Parameters[0]; // .Select (selectParam
-				var elemArg = GetLambda(body, Arg02 ).Parameters[0]; // .GroupBy(..., elemParam
-				var resArg  = GetLambda(body, Arg1  ).Parameters[0]; // .Select (resParam
-
-				return Convert(func, keyArg, elemArg, resArg);
-			}
-
-			Expression Convert(
-				LambdaExpression     func,
-				ParameterExpression  keyArg,
-				ParameterExpression? elemArg,
-				ParameterExpression? resArg)
-			{
-				var body = func.Body.Unwrap();
-				var expr = body.Transform((builder: this, func, keyArg, elemArg, resArg), static (context, ex) =>
-				{
-					if (ReferenceEquals(ex, context.func.Parameters[0]))
-						return context.builder._sourceExpression;
-
-					if (ReferenceEquals(ex, context.func.Parameters[1]))
-						return context.builder._keySelector.Body.Replace(context.builder._keySelector.Parameters[0], context.keyArg);
-
-					if (ReferenceEquals(ex, context.func.Parameters[2]))
-					{
-						Expression obj = context.elemArg!;
-
-						if (context.builder._wrapInSubQuery)
-							obj = ExpressionHelper.PropertyOrField(context.elemArg!, "Element");
-
-						if (context.builder._elementSelector == null)
-							return obj;
-
-						return context.builder._elementSelector.Body.Replace(context.builder._elementSelector!.Parameters[0], obj);
-					}
-
-					if (ReferenceEquals(ex, context.func.Parameters[3]))
-						return context.builder._resultSelector!.Body.Transform(
-							(parameters: context.builder._resultSelector!.Parameters, resArg: context.resArg!),
-							static (context, e) =>
-							{
-								if (ReferenceEquals(e, context.parameters[0]))
-									return ExpressionHelper.PropertyOrField(context.resArg, "Key");
-
-								if (ReferenceEquals(e, context.parameters[1]))
-									return context.resArg;
-
-								return e;
-							});
-
-					return ex;
-				});
-
-				return expr;
-			}
-		}
-
-		private static readonly int[] Arg1   = new [] { 1 };
-		private static readonly int[] Arg2   = new [] { 2 };
-		private static readonly int[] Arg01  = new [] { 0, 1 };
-		private static readonly int[] Arg02  = new [] { 0, 2 };
-		private static readonly int[] Arg001 = new [] { 0, 0, 1 };
-
-		static LambdaExpression GetLambda(Expression expression, int[] n)
-		{
-			foreach (var i in n)
-				expression = ((MethodCallExpression)expression).Arguments[i].Unwrap();
-			return (LambdaExpression)expression;
-		}
-
-		Expression ConvertGroupBy(MethodCallExpression method)
-		{
-			if (method.Arguments[method.Arguments.Count - 1].Unwrap().NodeType != ExpressionType.Lambda)
-				return method;
-
-			// TSource, TKey, TElement, TResult
-			var typeArgs = new Type?[4];
-			var args     = method.Method.GetGenericMethodDefinition().GetGenericArguments();
-			var argTypes = method.Method.GetGenericArguments();
-			for (var i = 0; i < args.Length; i++)
-			{
-				switch (args[i].Name)
-				{
-					case "TSource" : typeArgs[0] = argTypes[i]; break;
-					case "TKey"    : typeArgs[1] = argTypes[i]; break;
-					case "TElement": typeArgs[2] = argTypes[i]; break;
-					case "TResult" : typeArgs[3] = argTypes[i]; break;
-					default: throw new InvalidOperationException($"Unexpected GroupBy type parameter: {args[i].Name}");
-				}
-			}
-
-			var sourceExpression = OptimizeExpression(method.Arguments[0].Unwrap());
-			var keySelector      = (LambdaExpression)OptimizeExpression(method.Arguments[1].Unwrap());
-			var elementSelector  = typeArgs[2] != null ? (LambdaExpression)OptimizeExpression(method.Arguments[2].Unwrap())                     : null;
-			var resultSelector   = typeArgs[3] != null ? (LambdaExpression)OptimizeExpression(method.Arguments[typeArgs[2] != null ? 3 : 2].Unwrap()) : null;
-
-			var needSubQuery = null != (_isExpressionVisitor ??= FindVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.IsExpression(e))).Find(ConvertExpression(keySelector.Body.Unwrap()));
-
-			if (!needSubQuery && resultSelector == null && elementSelector != null)
-				return method;
-
-			var gtype  = typeof(GroupByHelper<,,,>).MakeGenericType(
-				typeArgs[0]!,
-				typeArgs[1]!,
-				typeArgs[2] ?? typeArgs[0]!,
-				typeArgs[3] ?? typeArgs[0]!);
-
-			var helper =
-				//Expression.Lambda<Func<IGroupByHelper>>(
-				//	Expression.Convert(Expression.New(gtype), typeof(IGroupByHelper)))
-				//.CompileExpression()();
-				(IGroupByHelper)Activator.CreateInstance(gtype)!;
-
-			helper.Set(needSubQuery, sourceExpression, keySelector, elementSelector, resultSelector);
-
-			if (method.Method.DeclaringType == typeof(Queryable))
-			{
-				if (!needSubQuery)
-					return resultSelector == null ? helper.AddElementSelectorQ() : helper.AddResultQ();
-
-				return resultSelector == null ? helper.WrapInSubQueryQ() : helper.WrapInSubQueryResultQ();
-			}
-			else
-			{
-				if (!needSubQuery)
-					return resultSelector == null ? helper.AddElementSelectorE() : helper.AddResultE();
-
-				return resultSelector == null ? helper.WrapInSubQueryE() : helper.WrapInSubQueryResultE();
-			}
-		}
-
-		private FindVisitor<ExpressionBuilder>? _isExpressionVisitor;
-		bool IsExpression(Expression ex)
-		{
-			switch (ex.NodeType)
-			{
-				case ExpressionType.Convert        :
-				case ExpressionType.ConvertChecked :
-				case ExpressionType.MemberInit     :
-				case ExpressionType.New            :
-				case ExpressionType.NewArrayBounds :
-				case ExpressionType.NewArrayInit   :
-				case ExpressionType.Parameter      : return false;
-				case ExpressionType.MemberAccess   :
-					{
-						var ma   = (MemberExpression)ex;
-						var attr = ma.Member.GetExpressionAttribute(MappingSchema);
-
-						if (attr != null)
-							return true;
-
-						return false;
-					}
-			}
-
-			return true;
-		}
-
-		#endregion
-
-		#region ConvertSelectMany
-
-		interface ISelectManyHelper
-		{
-			void Set(Expression sourceExpression, LambdaExpression colSelector);
-
-			Expression AddElementSelectorQ();
-			Expression AddElementSelectorE();
-		}
-
-		sealed class SelectManyHelper<TSource,TCollection> : ISelectManyHelper
-		{
-			Expression       _sourceExpression = null!;
-			LambdaExpression _colSelector = null!;
-
-			public void Set(Expression sourceExpression, LambdaExpression colSelector)
-			{
-				_sourceExpression = sourceExpression;
-				_colSelector      = colSelector;
-			}
-
-			public Expression AddElementSelectorQ()
-			{
-				Expression<Func<IQueryable<TSource>,IEnumerable<TCollection>,IQueryable<TCollection>>> func = (source,col) => source
-					.SelectMany(cp => col, (s,c) => c)
-					;
-
-				var body   = func.Body.Unwrap();
-				var colArg = GetLambda(body, Arg1).Parameters[0]; // .SelectMany(colParam
-
-				return Convert(func, colArg);
-			}
-
-			public Expression AddElementSelectorE()
-			{
-				Expression<Func<IEnumerable<TSource>,IEnumerable<TCollection>,IEnumerable<TCollection>>> func = (source,col) => source
-					.SelectMany(cp => col, (s,c) => c)
-					;
-
-				var body   = func.Body.Unwrap();
-				var colArg = GetLambda(body, Arg1).Parameters[0]; // .SelectMany(colParam
-
-				return Convert(func, colArg);
-			}
-
-			Expression Convert(LambdaExpression func, ParameterExpression colArg)
-			{
-				var body = func.Body.Unwrap();
-				var expr = body.Transform((builder: this, func, colArg), static (context, ex) =>
-				{
-					if (ex == context.func.Parameters[0])
-						return context.builder._sourceExpression;
-
-					if (ex == context.func.Parameters[1])
-						return context.builder._colSelector.Body.Replace(context.builder._colSelector.Parameters[0], context.colArg);
-
-					return ex;
-				});
-
-				return expr;
-			}
-		}
-
-		Expression ConvertSelectMany(MethodCallExpression method)
-		{
-			if (method.Arguments.Count != 2 || ((LambdaExpression)method.Arguments[1].Unwrap()).Parameters.Count != 1)
-				return method;
-
-			var args = method.Method.GetGenericArguments();
-
-			var sourceExpression = OptimizeExpression(method.Arguments[0].Unwrap());
-			var colSelector      = (LambdaExpression)OptimizeExpression(method.Arguments[1].Unwrap());
-
-			var gtype  = typeof(SelectManyHelper<,>).MakeGenericType(args[0], args[1]);
-			var helper =
-				//Expression.Lambda<Func<ISelectManyHelper>>(
-				//	Expression.Convert(Expression.New(gtype), typeof(ISelectManyHelper)))
-				//.CompileExpression()();
-				(ISelectManyHelper)Activator.CreateInstance(gtype)!;
-
-			helper.Set(sourceExpression, colSelector);
-
-			var converted = method.Method.DeclaringType == typeof(Queryable) ?
-				helper.AddElementSelectorQ() :
-				helper.AddElementSelectorE();
-
-			return converted;
-		}
-
-		#endregion
-
 		#region ConvertPredicate
 
 		Expression ConvertPredicate(MethodCallExpression method)
@@ -1233,140 +660,6 @@ namespace LinqToDB.Linq.Builder
 					OptimizeExpression(method.Arguments[0]),
 					OptimizeExpression(method.Arguments[1])),
 				OptimizeExpression(method.Arguments[2]));
-
-			return converted;
-		}
-
-		#endregion
-
-		#region ConvertSelector
-
-		Expression ConvertSelector(MethodCallExpression method, bool isGeneric)
-		{
-			if (method.Arguments.Count != 2)
-				return method;
-
-			isGeneric = isGeneric && method.Method.DeclaringType == typeof(Queryable);
-
-			var types = GetMethodGenericTypes(method);
-			var sm    = GetMethodInfo(method, "Select");
-			var cm    = GetQueryableMethodInfo((method, isGeneric, types), method, static (context, m, isDefault) =>
-			{
-				if (m.Name == context.method.Method.Name)
-				{
-					var ps = m.GetParameters();
-
-					if (ps.Length == 1)
-					{
-						if (context.isGeneric)
-							return true;
-
-						var ts = ps[0].ParameterType.GetGenericArguments();
-						return ts[0] == context.types[1] || isDefault && ts[0].IsGenericParameter;
-					}
-				}
-
-				return false;
-			});
-
-			var argType = types[0];
-
-			sm = sm.MakeGenericMethod(argType, types[1]);
-
-			if (cm.IsGenericMethodDefinition)
-				cm = cm.MakeGenericMethod(types[1]);
-
-			var converted = Expression.Call(null, cm,
-				OptimizeExpression(Expression.Call(null, sm,
-					method.Arguments[0],
-					method.Arguments[1])));
-
-			return converted;
-		}
-
-		Expression ConvertSelectorAsync(MethodCallExpression method, bool isGeneric)
-		{
-			if (method.Arguments.Count != 3)
-				return method;
-
-			isGeneric = isGeneric && method.Method.DeclaringType == typeof(AsyncExtensions);
-
-			var types = GetMethodGenericTypes(method);
-			var sm    = GetMethodInfo(method, "Select");
-			MethodInfo? cm = null;
-			foreach (var m in AsyncExtensionsMethods)
-			{
-				if (m.Name == method.Method.Name)
-				{
-					var ps = m.GetParameters();
-
-					if (ps.Length == 2)
-					{
-						if (isGeneric)
-						{
-							cm = m;
-							break;
-						}
-
-						var ts = ps[0].ParameterType.GetGenericArguments();
-						if (ts[0] == types[1])// || isDefault && ts[0].IsGenericParameter;
-						{
-							cm = m;
-							break;
-						}
-					}
-				}
-			}
-			if (cm == null)
-				throw new InvalidOperationException("Sequence contains no elements");
-
-			var argType = types[0];
-
-			sm = sm.MakeGenericMethod(argType, types[1]);
-
-			if (cm.IsGenericMethodDefinition)
-				cm = cm.MakeGenericMethod(types[1]);
-
-			var converted = Expression.Call(null, cm,
-				OptimizeExpression(Expression.Call(null, sm,
-					method.Arguments[0],
-					method.Arguments[1])),
-				OptimizeExpression(method.Arguments[2]));
-
-			return converted;
-		}
-
-		#endregion
-
-		#region ConvertSelect
-
-		Expression ConvertSelect(MethodCallExpression method)
-		{
-			var sequence = OptimizeExpression(method.Arguments[0]);
-			var lambda   = (LambdaExpression)method.Arguments[1].Unwrap();
-
-			if (lambda.Parameters.Count > 1 ||
-				sequence.NodeType != ExpressionType.Call ||
-				((MethodCallExpression)sequence).Method.Name != method.Method.Name)
-			{
-				return method;
-			}
-
-			var slambda = (LambdaExpression)((MethodCallExpression)sequence).Arguments[1].Unwrap();
-			var sbody   = slambda.Body.Unwrap();
-
-			if (slambda.Parameters.Count > 1 || sbody.NodeType != ExpressionType.MemberAccess)
-				return method;
-
-			lambda = (LambdaExpression)OptimizeExpression(lambda);
-
-			var types1 = GetMethodGenericTypes((MethodCallExpression)sequence);
-			var types2 = GetMethodGenericTypes(method);
-
-			var converted =  Expression.Call(null,
-				GetMethodInfo(method, "Select").MakeGenericMethod(types1[0], types2[1]),
-				((MethodCallExpression)sequence).Arguments[0],
-				Expression.Lambda(lambda.GetBody(sbody), slambda.Parameters[0]));
 
 			return converted;
 		}
@@ -1538,7 +831,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Set Context Helpers
 
-		private Dictionary<int, int>? _generatedSetIds;
+		Dictionary<int, int>? _generatedSetIds;
 
 		public int GenerateSetId(int sourceId)
 		{

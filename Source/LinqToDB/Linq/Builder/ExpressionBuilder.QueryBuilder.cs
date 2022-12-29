@@ -1,12 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Data.Common;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Extensions;
 	using Mapping;
 	using Reflection;
@@ -555,68 +553,6 @@ namespace LinqToDB.Linq.Builder
 			var resultExpr = (Expression)new ContextRefExpression(unwrapped.Type, info.Context);
 
 			return resultExpr;
-		}
-
-		static bool EnforceServerSide(IBuildContext context)
-		{
-			return context.SelectQuery.Select.IsDistinct;
-		}
-
-		#endregion
-
-		#region BuildSql
-
-		Expression BuildSql(IBuildContext context, Expression expression, string? alias)
-		{
-			//TODO: Check that we can pass column descriptor here
-			var sqlex = ConvertToSqlExpression(context, expression, null, false);
-			var idx   = context.SelectQuery.Select.Add(sqlex);
-
-			if (alias != null)
-				context.SelectQuery.Select.Columns[idx].RawAlias = alias;
-
-			idx = context.ConvertToParentIndex(idx, context);
-
-			var field = BuildSql(expression, idx, sqlex);
-
-			return field;
-		}
-
-		Expression BuildSql(IBuildContext context, ISqlExpression sqlExpression, Type overrideType, string? alias)
-		{
-			var idx   = context.SelectQuery.Select.Add(sqlExpression);
-
-			if (alias != null)
-				context.SelectQuery.Select.Columns[idx].RawAlias = alias;
-
-			idx = context.ConvertToParentIndex(idx, context);
-
-			var field = BuildSql(overrideType ?? sqlExpression.SystemType!, idx, sqlExpression);
-
-			return field;
-		}
-
-		public Expression BuildSql(Expression expression, int idx, ISqlExpression sqlExpression)
-		{
-			var type = expression.Type;
-
-			if (_convertedExpressions.TryGetValue(expression, out var cex))
-			{
-				if (cex.Type.IsNullable() && !type.IsNullable() && type.IsSameOrParentOf(cex.Type.ToNullableUnderlying()))
-					type = cex.Type;
-			}
-
-			return BuildSql(type, idx, sqlExpression);
-		}
-
-		public Expression BuildSql(Type type, int idx, IValueConverter? converter)
-		{
-			return new ConvertFromDataReaderExpression(type, idx, converter, DataReaderLocal, (bool?)null);
-		}
-
-		public Expression BuildSql(Type type, int idx, ISqlExpression? sourceExpression)
-		{
-			return BuildSql(type, idx, QueryHelper.GetValueConverter(sourceExpression));
 		}
 
 		#endregion

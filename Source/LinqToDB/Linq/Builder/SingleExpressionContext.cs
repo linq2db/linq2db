@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class SingleExpressionContext : IBuildContext
 	{
-		public SingleExpressionContext(IBuildContext? parent, ExpressionBuilder builder, SqlField sqlExpression, SelectQuery selectQuery)
+		public SingleExpressionContext(IBuildContext? parent, ExpressionBuilder builder, ISqlExpression sqlExpression, SelectQuery selectQuery)
 		{
 			Parent        = parent;
 			Builder       = builder;
@@ -35,32 +35,22 @@ namespace LinqToDB.Linq.Builder
 
 		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 		{
-			var expr   = BuildExpression(null, 0, false);
-			var mapper = Builder.BuildMapper<T>(expr);
-
-			QueryRunner.SetRunQuery(query, mapper);
+			throw new NotImplementedException();
 		}
 
 		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 		{
-			var info = ConvertToIndex(null, 0, ConvertFlags.All);
-			if (info.Length != 1)
-				throw new InvalidOperationException();
-
-			var parentIndex = ConvertToParentIndex(info[0].Index, this);
-			return Builder.BuildSql(SqlExpression.SystemType ?? typeof(object), parentIndex, info[0].Sql);
+			throw new NotImplementedException();
 		}
 
 		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 		{
-			return new[] { new SqlInfo(SqlExpression) };
+			throw new NotImplementedException();
 		}
 
 		public SqlInfo[] ConvertToIndex (Expression? expression, int level, ConvertFlags flags)
 		{
-			var idx = SelectQuery.Select.Add(SqlExpression);
-
-			return new SqlInfo[] { new SqlInfo(SqlExpression, SelectQuery, idx) };
+			throw new NotImplementedException();
 		}
 
 		public Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -69,12 +59,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				return ExpressionBuilder.CreatePlaceholder(this, SqlExpression, path);
 			}
+
 			throw new NotImplementedException();
 		}
 
 		public IBuildContext Clone(CloningContext context)
 		{
-			throw new NotImplementedException();
+			return new SingleExpressionContext(Parent, Builder, context.CloneElement(SqlExpression),
+				context.CloneElement(SelectQuery));
 		}
 
 		public void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -86,19 +78,6 @@ namespace LinqToDB.Linq.Builder
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
-			if (requestFlag != RequestFor.Field)
-			{
-				return IsExpressionResult.False;
-			}
-
-			if (expression != null)
-			{
-				if (expression is ParameterExpression)
-				{
-					throw new NotImplementedException();
-				}
-			}
-
 			throw new NotImplementedException();
 		}
 
@@ -109,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 
 		public SqlStatement GetResultStatement()
 		{
-			throw new NotImplementedException();
+			throw new InvalidOperationException();
 		}
 
 		public void CompleteColumns()
@@ -118,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
 		{
-			return Parent?.ConvertToParentIndex(index, this) ?? index;
+			throw new NotImplementedException();
 		}
 
 		public void SetAlias(string? alias)

@@ -1,16 +1,13 @@
 ﻿using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using Mapping;
 	using Reflection;
-	using static LinqToDB.Reflection.Methods.LinqToDB;
+	using LinqToDB.Expressions;
 
 	internal partial class ExpressionBuilder
 	{
@@ -467,7 +464,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							//TODO: strange behaviour, Member of inheritance has no Discriminator column
 
-							var dynamicPropCall = Expression.Call(SqlExt.Property.MakeGenericMethod(discriminatorMemberInfo.GetMemberType()),
+							var dynamicPropCall = Expression.Call(Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(discriminatorMemberInfo.GetMemberType()),
 								contextRef, Expression.Constant(discriminatorMemberInfo.Name));
 
 							var dynamicSql = ConvertToSqlPlaceholder(context, dynamicPropCall, columnDescriptor: inheritance.Discriminator);
