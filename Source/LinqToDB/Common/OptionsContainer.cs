@@ -83,20 +83,10 @@ namespace LinqToDB.Common
 			return null;
 		}
 
-		Type?       _lastFoundType;
-		IOptionSet? _lastFoundSet;
-
 		public TSet FindOrDefault<TSet>(TSet defaultOptions)
 			where TSet : class, IOptionSet
 		{
-			var type = typeof(TSet);
-
-			if (_lastFoundType == type)
-				return (TSet)_lastFoundSet!;
-
-			_lastFoundType = type;
-
-			return (TSet)(_lastFoundSet = Find<TSet>() ?? defaultOptions);
+			return Find<TSet>() ?? defaultOptions;
 		}
 
 		/// <summary>
