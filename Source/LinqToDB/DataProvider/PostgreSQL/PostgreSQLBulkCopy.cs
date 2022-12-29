@@ -150,19 +150,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			int                                        batchSize,
 			NpgsqlProviderAdapter.NpgsqlBinaryImporter writer)
 		{
+			var pgOptions    = dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default);
 			var currentCount = 0;
 			var rowsCopied   = new BulkCopyRowsCopied();
+
 			try
 			{
 				foreach (var item in source)
 				{
 					writer.StartRow();
+
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
-							writer.Write(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value);
+							writer.Write(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value);
 						else
-							writer.Write(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!);
+							writer.Write(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!);
 					}
 
 					currentCount++;
@@ -261,7 +264,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				return ProviderSpecificCopySyncImpl(dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 			}
 
-			var rowsCopied = new BulkCopyRowsCopied();
+			var pgOptions    = dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default);
+			var rowsCopied   = new BulkCopyRowsCopied();
 			var currentCount = 0;
 
 			try
@@ -272,10 +276,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
 								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
 							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					}
 
@@ -369,7 +373,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				}
 			}
 
-			var rowsCopied  = new BulkCopyRowsCopied();
+			var pgOptions    = dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default);
+			var rowsCopied   = new BulkCopyRowsCopied();
 			var currentCount = 0;
 
 			try
@@ -380,10 +385,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						else
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
 

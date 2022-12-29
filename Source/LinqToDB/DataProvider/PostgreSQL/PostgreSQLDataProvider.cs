@@ -217,9 +217,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal object? NormalizeTimeStamp(object? value, DbDataType dataType)
+		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, DbDataType dataType)
 		{
-			if (PostgreSQLTools.NormalizeTimestampData)
+			if (options.NormalizeTimestampData)
 			{
 				// normalize DateTimeOffset values to prevent unnecessary (in this case) npgsql 6.0.0 complains
 				if (value is DateTimeOffset dto && dto.Offset != TimeSpan.Zero)
@@ -245,9 +245,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
+			{
 				dataType = dataType.WithDataType(DataType.Dictionary);
+			}
 			else
-				value = NormalizeTimeStamp(value, dataType);
+			{
+				value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, dataType);
+			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
@@ -334,7 +338,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return new PostgreSQLBulkCopy(this).BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					PostgreSQLTools.DefaultBulkCopyType :
+					options.FindOrDefault(PostgreSQLOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -346,7 +350,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return new PostgreSQLBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					PostgreSQLTools.DefaultBulkCopyType :
+					options.FindOrDefault(PostgreSQLOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -360,7 +364,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return new PostgreSQLBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					PostgreSQLTools.DefaultBulkCopyType :
+					options.FindOrDefault(PostgreSQLOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
@@ -141,7 +140,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);
 		}
 
-		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
+		[Obsolete("Use PostgreSQLOptions.Default.IdentifierQuoteMode instead.")]
+		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode
+		{
+			get => PostgreSQLOptions.Default.IdentifierQuoteMode;
+			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { IdentifierQuoteMode = value };
+		}
+
+		PostgreSQLOptions? _options;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -155,14 +161,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
 				case ConvertType.SequenceName         :
-					if (IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
+					_options ??= DataOptions.FindOrDefault(PostgreSQLOptions.Default);
+
+					if (_options.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
-						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
-							|| IsReserved(value)
-							|| value.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
+						if (_options.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+						    || IsReserved(value)
+						    || value.Any(c => char.IsWhiteSpace(c) || _options.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
 
