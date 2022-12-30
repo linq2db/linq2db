@@ -1,16 +1,17 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
+using System.IO;
 using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Common;
 	using Data;
 	using Configuration;
-	using System;
-	using System.IO;
-	using LinqToDB.Common;
 
+	[PublicAPI]
 	public static class SapHanaTools
 	{
 		static readonly Lazy<IDataProvider> _hanaDataProvider     = DataConnection.CreateDataProvider<SapHanaDataProvider>();
@@ -18,16 +19,16 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public static void ResolveSapHana(string path)
 		{
-			new AssemblyResolver(
+			_ = new AssemblyResolver(
 				path,
-			DetectedProviderName == ProviderName.SapHanaNative
-						? SapHanaProviderAdapter.AssemblyName
-						: OdbcProviderAdapter.AssemblyName);
+				DetectedProviderName == ProviderName.SapHanaNative
+					? SapHanaProviderAdapter.AssemblyName
+					: OdbcProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveSapHana(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName!);
+			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		public static IDataProvider GetDataProvider(string? providerName = null, string? assemblyName = null)
@@ -108,6 +109,11 @@ namespace LinqToDB.DataProvider.SapHana
 			return null;
 		}
 
-		public static BulkCopyType DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use SapHanaOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => SapHanaOptions.Default.BulkCopyType;
+			set => SapHanaOptions.Default = SapHanaOptions.Default with { BulkCopyType = value };
+		}
 	}
 }

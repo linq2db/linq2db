@@ -141,7 +141,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			return new SapHanaBulkCopy(this).BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SapHanaTools.DefaultBulkCopyType :
+					options.FindOrDefault(SapHanaOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -153,7 +153,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			return new SapHanaBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SapHanaTools.DefaultBulkCopyType :
+					options.FindOrDefault(SapHanaOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -167,7 +167,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			return new SapHanaBulkCopy(this).BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SapHanaTools.DefaultBulkCopyType :
+					options.FindOrDefault(SapHanaOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
