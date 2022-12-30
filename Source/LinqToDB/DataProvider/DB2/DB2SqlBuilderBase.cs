@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
+	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
 		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -172,8 +172,6 @@ namespace LinqToDB.DataProvider.DB2
 			set => DB2Options.Default = DB2Options.Default with { IdentifierQuoteMode = value };
 		}
 
-		DB2Options? _db2Options;
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -198,14 +196,12 @@ namespace LinqToDB.DataProvider.DB2
 				case ConvertType.NameToSchema         :
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToQueryTableAlias:
-					_db2Options ??= DataOptions.FindOrDefault(DB2Options.Default);
-
-					if (_db2Options.IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
+					if (ProviderOptions.IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
-						if (_db2Options.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
+						if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
 						    value.StartsWith("_") ||
 						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return sb.Append('"').Append(value).Append('"');

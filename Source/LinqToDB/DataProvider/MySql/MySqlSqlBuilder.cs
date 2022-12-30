@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-	sealed class MySqlSqlBuilder : BasicSqlBuilder
+	sealed class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
 		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -349,37 +349,33 @@ namespace LinqToDB.DataProvider.MySql
 			set => MySqlOptions.Default = MySqlOptions.Default with { ConvertParameterSymbols = value ?? _readOnlyList };
 		}
 
-		MySqlOptions? _mySqlOptions;
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
-			_mySqlOptions ??= DataOptions.FindOrDefault(MySqlOptions.Default);
-
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
-					return sb.Append(_mySqlOptions.ParameterSymbol).Append(value);
+					return sb.Append(ProviderOptions.ParameterSymbol).Append(value);
 
 				case ConvertType.NameToCommandParameter:
-					return sb.Append(_mySqlOptions.ParameterSymbol).Append(_mySqlOptions.CommandParameterPrefix ?? string.Empty).Append(value);
+					return sb.Append(ProviderOptions.ParameterSymbol).Append(ProviderOptions.CommandParameterPrefix ?? string.Empty).Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
 							throw new ArgumentException("Argument 'value' must represent parameter name.");
 
-					if (value[0] == _mySqlOptions.ParameterSymbol)
+					if (value[0] == ProviderOptions.ParameterSymbol)
 						value = value.Substring(1);
 
-					if (value.StartsWith(_mySqlOptions.SprocParameterPrefix ?? string.Empty, StringComparison.Ordinal))
-						value = value.Substring(_mySqlOptions.SprocParameterPrefix?.Length ?? 0);
+					if (value.StartsWith(ProviderOptions.SprocParameterPrefix ?? string.Empty, StringComparison.Ordinal))
+						value = value.Substring(ProviderOptions.SprocParameterPrefix?.Length ?? 0);
 
-					return sb.Append(_mySqlOptions.ParameterSymbol).Append(_mySqlOptions.SprocParameterPrefix ?? string.Empty).Append(value);
+					return sb.Append(ProviderOptions.ParameterSymbol).Append(ProviderOptions.SprocParameterPrefix ?? string.Empty).Append(value);
 
 				case ConvertType.SprocParameterToName:
-					value = value.Length > 0 && (value[0] == _mySqlOptions.ParameterSymbol || (_mySqlOptions.TryConvertParameterSymbol && (_mySqlOptions.ConvertParameterSymbols ?? _readOnlyList).Contains(value[0]))) ? value.Substring(1) : value;
+					value = value.Length > 0 && (value[0] == ProviderOptions.ParameterSymbol || (ProviderOptions.TryConvertParameterSymbol && (ProviderOptions.ConvertParameterSymbols ?? _readOnlyList).Contains(value[0]))) ? value.Substring(1) : value;
 
-					if (!string.IsNullOrEmpty(_mySqlOptions.SprocParameterPrefix) && value.StartsWith(_mySqlOptions.SprocParameterPrefix))
-						value = value.Substring(_mySqlOptions.SprocParameterPrefix?.Length ?? 0);
+					if (!string.IsNullOrEmpty(ProviderOptions.SprocParameterPrefix) && value.StartsWith(ProviderOptions.SprocParameterPrefix))
+						value = value.Substring(ProviderOptions.SprocParameterPrefix?.Length ?? 0);
 
 					return sb.Append(value);
 

@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using SqlQuery;
 
-	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
+	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleOptions>
 	{
 		protected OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -175,29 +175,20 @@ namespace LinqToDB.DataProvider.Oracle
 			return ReservedWords.IsReserved(word, ProviderName.Oracle);
 		}
 
-		OracleOptions? _oracleOptions;
-
 		/// <summary>
 		/// Check if identifier is valid without quotation. Expects non-zero length string as input.
 		/// </summary>
 		private bool IsValidIdentifier(string name)
 		{
-			_oracleOptions ??= DataOptions.FindOrDefault(OracleOptions.Default);
-
 			// https://docs.oracle.com/cd/B28359_01/server.111/b28286/sql_elements008.htm#SQLRF00223
 			// TODO: "Nonquoted identifiers can contain only alphanumeric characters from your database character set"
 			// now we check only for latin letters
 			// Also we should allow only uppercase letters:
 			// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
-			return !IsReserved(name) &&
-				((_oracleOptions.DontEscapeLowercaseIdentifiers && name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
+			return !IsReserved(name)                                                                                               &&
+				((ProviderOptions.DontEscapeLowercaseIdentifiers && name[0] is >= 'a' and <= 'z') || name[0] is >= 'A' and <= 'Z') &&
 				name.All(c =>
-					(_oracleOptions.DontEscapeLowercaseIdentifiers && c >= 'a' && c <= 'z') ||
-					(c >= 'A' && c <= 'Z') ||
-					(c >= '0' && c <= '9') ||
-					c == '$' ||
-					c == '#' ||
-					c == '_');
+					(ProviderOptions.DontEscapeLowercaseIdentifiers && c is >= 'a' and <= 'z') || c is >= 'A' and <= 'Z' or >= '0' and <= '9' or '$' or '#' or '_');
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)

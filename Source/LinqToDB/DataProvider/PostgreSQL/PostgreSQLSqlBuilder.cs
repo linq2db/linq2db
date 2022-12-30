@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using SqlQuery;
 
-	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder
+	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder<PostgreSQLOptions>
 	{
 		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -147,8 +147,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { IdentifierQuoteMode = value };
 		}
 
-		PostgreSQLOptions? _options;
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -161,16 +159,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
 				case ConvertType.SequenceName         :
-					_options ??= DataOptions.FindOrDefault(PostgreSQLOptions.Default);
-
-					if (_options.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
+					if (ProviderOptions.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
-						if (_options.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+						if (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
 						    || IsReserved(value)
-						    || value.Any(c => char.IsWhiteSpace(c) || _options.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
+						    || value.Any(c => char.IsWhiteSpace(c) || ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
 

@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using SqlQuery;
 	using SqlProvider;
 
-	public partial class FirebirdSqlBuilder : BasicSqlBuilder
+	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
 	{
 		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
@@ -160,8 +160,6 @@ namespace LinqToDB.DataProvider.Firebird
 					c == '_');
 		}
 
-		FirebirdOptions? _firebirdOptions;
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -173,10 +171,8 @@ namespace LinqToDB.DataProvider.Firebird
 				case ConvertType.NameToProcedure       :
 				case ConvertType.NameToPackage         :
 				case ConvertType.SequenceName          :
-					_firebirdOptions = DataOptions.FindOrDefault(FirebirdOptions.Default);
-
-					if (_firebirdOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-					   (_firebirdOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
+					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+					   (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
 					{
 						// I wonder what to do if identifier has " in name?
 						return sb.Append('"').Append(value).Append('"');
@@ -261,11 +257,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 					var identifierValue = identifier;
 
-					_firebirdOptions = DataOptions.FindOrDefault(FirebirdOptions.Default);
-
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (_firebirdOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-						_firebirdOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpperInvariant();
 
 					BuildValue(null, identifierValue);
@@ -408,11 +402,9 @@ namespace LinqToDB.DataProvider.Firebird
 
 						var identifierValue = createTable.Table.TableName.Name;
 
-						_firebirdOptions = DataOptions.FindOrDefault(FirebirdOptions.Default);
-
 						// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-						if (_firebirdOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-							_firebirdOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+						if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+							ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 							identifierValue = identifierValue.ToUpperInvariant();
 
 						BuildValue(null, identifierValue);
@@ -453,11 +445,9 @@ namespace LinqToDB.DataProvider.Firebird
 				{
 					var identifierValue = createTable.Table.TableName.Name;
 
-					_firebirdOptions = DataOptions.FindOrDefault(FirebirdOptions.Default);
-
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (_firebirdOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-						_firebirdOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpperInvariant();
 
 					Indent--;
