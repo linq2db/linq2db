@@ -131,7 +131,12 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
+		[Obsolete("Use SqlServerOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => SqlServerOptions.Default.BulkCopyType;
+			set => SqlServerOptions.Default = SqlServerOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 

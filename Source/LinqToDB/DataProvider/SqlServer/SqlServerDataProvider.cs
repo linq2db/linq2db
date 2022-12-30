@@ -466,7 +466,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SqlServerTools.DefaultBulkCopyType :
+					options.FindOrDefault(SqlServerOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -480,7 +480,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SqlServerTools.DefaultBulkCopyType :
+					options.FindOrDefault(SqlServerOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -496,7 +496,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SqlServerTools.DefaultBulkCopyType :
+					options.FindOrDefault(SqlServerOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
