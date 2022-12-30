@@ -1006,7 +1006,8 @@ namespace Tests.xUpdate
 		{
 			try
 			{
-				SqlServerConfiguration.GenerateScopeIdentity = false;
+				SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = false };
+
 				using (var db = GetDataConnection(context))
 				{
 					var id = (Guid) db.InsertWithIdentity(new GuidID {Field1 = 1});
@@ -1015,7 +1016,7 @@ namespace Tests.xUpdate
 			}
 			finally
 			{
-				SqlServerConfiguration.GenerateScopeIdentity = true;
+				SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = true };
 			}
 		}
 
@@ -1027,7 +1028,8 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					SqlServerConfiguration.GenerateScopeIdentity = false;
+					SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = false };
+
 					for (var i = 0; i < 2; i++)
 					{
 						var person = new Person
@@ -1049,7 +1051,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					SqlServerConfiguration.GenerateScopeIdentity = true;
+					SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = true };
 				}
 			}
 		}
