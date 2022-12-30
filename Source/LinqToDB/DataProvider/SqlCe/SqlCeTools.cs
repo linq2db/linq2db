@@ -75,7 +75,12 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use SqlCeOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => SqlCeOptions.Default.BulkCopyType;
+			set => SqlCeOptions.Default = SqlCeOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

@@ -148,7 +148,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			return new SqlCeBulkCopy().BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SqlCeTools.DefaultBulkCopyType :
+					options.FindOrDefault(SqlCeOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -160,7 +160,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			return new SqlCeBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SqlCeTools.DefaultBulkCopyType :
+					options.FindOrDefault(SqlCeOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 			return new SqlCeBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SqlCeTools.DefaultBulkCopyType :
+					options.FindOrDefault(SqlCeOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
