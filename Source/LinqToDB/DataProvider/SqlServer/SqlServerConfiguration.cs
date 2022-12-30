@@ -10,6 +10,5 @@ namespace LinqToDB.DataProvider.SqlServer
 			get => SqlServerOptions.Default.GenerateScopeIdentity;
 			set => SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = value };
 		}
-
 	}
 }

@@ -221,7 +221,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			return _bulkCopy.BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SybaseTools.DefaultBulkCopyType :
+					options.FindOrDefault(SybaseOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -235,7 +235,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SybaseTools.DefaultBulkCopyType :
+					options.FindOrDefault(SybaseOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			return _bulkCopy.BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SybaseTools.DefaultBulkCopyType :
+					options.FindOrDefault(SybaseOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
