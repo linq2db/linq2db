@@ -176,7 +176,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 #endif
 
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			// provider fails to set AllowDBNull for some results
 			return true;

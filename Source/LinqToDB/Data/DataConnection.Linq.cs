@@ -32,7 +32,7 @@ namespace LinqToDB.Data
 
 		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
-			return DataProvider.IsDBNullAllowed(reader, idx);
+			return DataProvider.IsDBNullAllowed(Options, reader, idx);
 		}
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)

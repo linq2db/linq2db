@@ -348,7 +348,7 @@ namespace LinqToDB
 			return DataProvider.GetReaderExpression(reader, idx, readerExpression, toType);
 		}
 
-		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx) => DataProvider.IsDBNullAllowed(reader, idx);
+		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx) => DataProvider.IsDBNullAllowed(Options, reader, idx);
 
 		/// <summary>
 		/// Creates instance of <see cref="DataConnection"/> class, attached to same database connection/transaction passed in options.

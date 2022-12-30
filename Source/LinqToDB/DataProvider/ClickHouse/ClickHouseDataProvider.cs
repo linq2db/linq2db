@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		public override ISchemaProvider GetSchemaProvider() => new ClickHouseSchemaProvider();
 
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			// https://github.com/Octonica/ClickHouseClient/issues/55
 			if (Provider == ClickHouseProvider.Octonica)

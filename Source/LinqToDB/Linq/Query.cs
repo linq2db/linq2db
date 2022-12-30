@@ -17,7 +17,6 @@ namespace LinqToDB.Linq
 #endif
 	using Builder;
 	using Common;
-	using Common.Internal;
 	using Common.Logging;
 	using Interceptors;
 	using LinqToDB.Expressions;

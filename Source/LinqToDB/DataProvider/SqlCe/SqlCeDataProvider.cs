@@ -137,7 +137,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 #endregion
 
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			return true;
 		}

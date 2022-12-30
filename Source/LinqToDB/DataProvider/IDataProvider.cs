@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider
 #endif
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (DbDataReader reader, int idx, Expression readerExpression, Type toType);
-		bool?              IsDBNullAllowed       (DbDataReader reader, int idx);
+		bool?              IsDBNullAllowed       (DataOptions options, DbDataReader reader, int idx);
 		void               SetParameter          (DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value);
 		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);

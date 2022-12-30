@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdSchemaProvider(this);
 		}
 
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			return true;
 		}

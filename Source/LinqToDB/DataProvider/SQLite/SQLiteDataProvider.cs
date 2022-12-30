@@ -208,12 +208,12 @@ namespace LinqToDB.DataProvider.SQLite
 			return new SQLiteSchemaProvider();
 		}
 
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
-			if (SQLiteTools.AlwaysCheckDbNull)
+			if (options.FindOrDefault(SQLiteOptions.Default).AlwaysCheckDbNull)
 				return true;
 
-			return base.IsDBNullAllowed(reader, idx);
+			return base.IsDBNullAllowed(options, reader, idx);
 		}
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
@@ -285,7 +285,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			return new SQLiteBulkCopy().BulkCopy(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SQLiteTools.DefaultBulkCopyType :
+					options.FindOrDefault(SQLiteOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			return new SQLiteBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SQLiteTools.DefaultBulkCopyType :
+					options.FindOrDefault(SQLiteOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
@@ -311,7 +311,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			return new SQLiteBulkCopy().BulkCopyAsync(
 				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
-					SQLiteTools.DefaultBulkCopyType :
+					options.FindOrDefault(SQLiteOptions.Default).BulkCopyType :
 					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,

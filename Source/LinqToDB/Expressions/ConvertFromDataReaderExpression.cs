@@ -7,7 +7,7 @@ namespace LinqToDB.Expressions
 {
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Linq;
 	using Reflection;
 	using Mapping;
