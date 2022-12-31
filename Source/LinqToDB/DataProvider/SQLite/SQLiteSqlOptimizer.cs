@@ -219,7 +219,7 @@ namespace LinqToDB.DataProvider.SQLite
 			          || type == typeof(DateTimeOffset?);
 		}
 
-		protected override ISqlExpression ConvertConvertion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
 		{
 			if (!func.DoNotOptimize)
 			{
@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider.SQLite
 					func.DoNotOptimize = true;
 			}
 
-			return base.ConvertConvertion(func);
+			return base.ConvertConversion(func);
 		}
 	}
 }

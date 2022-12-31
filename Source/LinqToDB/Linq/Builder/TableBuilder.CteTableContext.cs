@@ -231,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 					return newField;
 				});
 
-				var field = SqlTable[cteField.Name!];
+				var field = SqlTable.FindFieldByMemberName(cteField.Name!);
 				if (field == null)
 				{
 					field = new SqlField(cteField);
