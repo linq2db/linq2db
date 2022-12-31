@@ -32,6 +32,7 @@ namespace LinqToDB.SqlQuery
 			Type = GetDataType(dataType).Type.WithDataType(dataType).WithLength(length);
 		}
 
+		[Obsolete($"Use {nameof(SqlDataType)}({nameof(DataType)}) constructor instead")]
 		public SqlDataType(Type type)
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
@@ -203,7 +204,7 @@ namespace LinqToDB.SqlQuery
 		public static int? GetMaxDisplaySize(DataType dbType) { return _typeInfo[(int)dbType].MaxDisplaySize; }
 
 		[Obsolete($"Use {nameof(MappingSchema)}.{nameof(MappingSchema.GetDataType)}() method instead")]
-		public static SqlDataType GetDataType(Type type)
+		private static SqlDataType GetDataType(Type type)
 		{
 			var underlyingType = type;
 

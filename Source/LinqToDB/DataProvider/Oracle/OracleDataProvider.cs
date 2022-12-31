@@ -22,17 +22,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		[Obsolete("Use .ctor(string name, OracleProvider provider, OracleVersion version)")]
-		protected OracleDataProvider(string name)
-			: this(name, OracleProvider.Managed, OracleVersion.v12)
-		{ }
-
-		[Obsolete("Use .ctor(string name, OracleProvider provider, OracleVersion version)")]
-		protected OracleDataProvider(string name, OracleVersion version)
-			: this(name, OracleProvider.Managed, version)
-		{
-		}
-
 		protected OracleDataProvider(string name, OracleProvider provider, OracleVersion version)
 			: base(name, GetMappingSchema(provider, version), OracleProviderAdapter.GetInstance(provider))
 		{

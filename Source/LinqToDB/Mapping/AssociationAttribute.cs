@@ -121,30 +121,6 @@ namespace LinqToDB.Mapping
 		public bool         CanBeNull           { get; set; }
 
 		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public string?      KeyName             { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public string?      BackReferenceName   { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public bool         IsBackReference     { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public Relationship Relationship        { get; set; }
-
-		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
 		/// </summary>
 		public string?      AliasName           { get; set; }
