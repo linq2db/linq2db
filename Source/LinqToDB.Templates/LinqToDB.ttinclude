@@ -17,24 +17,30 @@ Action AfterGenerateLinqToDBModel  = () => {};
 public Func<Table,MemberBase> GenerateProviderSpecificTable = _ => null;
 public Func<Parameter, bool>  GenerateProcedureDbType       = _ => false;
 
-static bool GenerateLinqToDBConnectionOptionsConstructors = true;
-bool   GenerateObsoleteAttributeForAliases                = false;
-bool   GenerateFindExtensions                             = true;
-bool   IsCompactColumns                                   = true;
-bool   IsCompactColumnAliases                             = true;
-bool   GenerateDataTypes                                  = false;
-bool?  GenerateLengthProperty                             = null;
-bool?  GeneratePrecisionProperty                          = null;
-bool?  GenerateScaleProperty                              = null;
-bool   GenerateDbTypes                                    = false;
-bool   GenerateSchemaAsType                               = false;
-bool   GenerateViews                                      = true;
-bool   GenerateProcedureResultAsList                      = false;
-bool   GenerateProceduresOnTypedContext                   = true;
-bool   PrefixTableMappingWithSchema                       = true;
-bool   PrefixTableMappingForDefaultSchema                 = false;
-string SchemaNameSuffix                                   = "Schema";
-string SchemaDataContextTypeName                          = "DataContext";
+static bool GenerateLinqToDBConnectionOptionsConstructors
+{
+	get { return GenerateDataOptionsConstructors;  }
+	set { GenerateDataOptionsConstructors = value; }
+}
+
+static bool GenerateDataOptionsConstructors = true;
+bool   GenerateObsoleteAttributeForAliases  = false;
+bool   GenerateFindExtensions               = true;
+bool   IsCompactColumns                     = true;
+bool   IsCompactColumnAliases               = true;
+bool   GenerateDataTypes                    = false;
+bool?  GenerateLengthProperty               = null;
+bool?  GeneratePrecisionProperty            = null;
+bool?  GenerateScaleProperty                = null;
+bool   GenerateDbTypes                      = false;
+bool   GenerateSchemaAsType                 = false;
+bool   GenerateViews                        = true;
+bool   GenerateProcedureResultAsList        = false;
+bool   GenerateProceduresOnTypedContext     = true;
+bool   PrefixTableMappingWithSchema         = true;
+bool   PrefixTableMappingForDefaultSchema   = false;
+string SchemaNameSuffix                     = "Schema";
+string SchemaDataContextTypeName            = "DataContext";
 
 public Dictionary<string,string> SchemaNameMapping = new Dictionary<string,string>();
 
@@ -45,12 +51,30 @@ public Func<Column, string, string, bool, string> BuildColumnComparison = (c, pa
 private static IEnumerable<Method> GetConstructorsImpl(string defaultConfiguration, string name)
 {
 	if (defaultConfiguration == null)
-		yield return new Method(null, name);
-	else
-		yield return new Method(null, name) { AfterSignature = { ": base(\"" + defaultConfiguration + "\")" } };
-	yield return new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } };
+	{
+		var m = new Method(null, name);
 
-	if (GenerateLinqToDBConnectionOptionsConstructors)
+		if (!string.IsNullOrEmpty(GetDataOptionsMethod))
+			m.AfterSignature.Add(": base(" + string.Format(GetDataOptionsMethod, "") + ")");
+
+		yield return m;
+	}
+	else
+		yield return new Method(null, name) { AfterSignature =
+		{
+			string.IsNullOrEmpty(GetDataOptionsMethod) ?
+				": base(\"" + defaultConfiguration + "\")" :
+				": base(" + string.Format(GetDataOptionsMethod, '"' + defaultConfiguration + '"') + ")"
+		}};
+
+	yield return new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature =
+	{
+		string.IsNullOrEmpty(GetDataOptionsMethod) ?
+			": base(configuration)" :
+			": base(" + string.Format(GetDataOptionsMethod, "configuration") + ")"
+	} };
+
+	if (GenerateDataOptionsConstructors)
 	{
 		yield return new Method(null, name, new Func<string>[] { () => "DataOptions options" }) { AfterSignature = { ": base(options)" } };
 		yield return new Method(null, name, new Func<string>[] { () => string.Format("DataOptions<{0}> options", name) }) { AfterSignature = { ": base(options.Options)" } };
@@ -247,7 +271,6 @@ void GenerateTypesFromMetadata()
 		}
 
 		var tableAttrs = new List<string>();
-
 
 		if (GenerateDatabaseNameFromTable && t.TableSchema.CatalogName != null)
 			tableAttrs.Add("Database=" + ToStringLiteral(t.TableSchema.CatalogName));
