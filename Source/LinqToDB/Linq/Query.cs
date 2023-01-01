@@ -290,22 +290,20 @@ namespace LinqToDB.Linq
 		{
 			sealed class QueryCacheEntry
 			{
-				public QueryCacheEntry(Query<T> query, QueryFlags queryFlags, DataOptions dataOptions)
+				public QueryCacheEntry(Query<T> query, QueryFlags queryFlags)
 				{
 					// query doesn't have GetHashCode now, so we cannot precalculate hashcode to speed-up search
 					Query       = query;
-					DataOptions = dataOptions;
 					QueryFlags  = queryFlags;
 				}
 
-				public Query<T>    Query       { get; }
-				public DataOptions DataOptions { get; }
-				public QueryFlags  QueryFlags  { get; }
+				public Query<T>   Query      { get; }
+				public QueryFlags QueryFlags { get; }
 
 				// accepts components to avoid QueryCacheEntry allocation for cached query
-				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags, DataOptions dataOptions)
+				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags)
 				{
-					return QueryFlags == queryFlags /*&& DataOptions == dataOptions*/ && Query.Compare(context, queryExpression);
+					return QueryFlags == queryFlags && Query.Compare(context, queryExpression);
 				}
 			}
 
@@ -365,7 +363,7 @@ namespace LinqToDB.Linq
 				}
 
 				for (var i = 0; i < cache.Length; i++)
-					if (cache[i].Compare(dataContext, query.Expression!, queryFlags, dataOptions))
+					if (cache[i].Compare(dataContext, query.Expression!, queryFlags))
 						// already added by another thread
 						return;
 
@@ -382,7 +380,7 @@ namespace LinqToDB.Linq
 						// check only added queries, each version could add 1 query to first position, so we
 						// test only first N queries
 						for (var i = 0; i < cache.Length && i < versionsDiff; i++)
-							if (cache[i].Compare(dataContext, query.Expression!, queryFlags, dataOptions))
+							if (cache[i].Compare(dataContext, query.Expression!, queryFlags))
 								// already added by another thread
 								return;
 					}
@@ -392,7 +390,7 @@ namespace LinqToDB.Linq
 					var newCache      = new QueryCacheEntry[cache.Length == CacheSize ? CacheSize : cache.Length + 1];
 					var newPriorities = new int[newCache.Length];
 
-					newCache[0]      = new QueryCacheEntry(query, queryFlags, dataOptions);
+					newCache[0]      = new QueryCacheEntry(query, queryFlags);
 					newPriorities[0] = 0;
 
 					for (var i = 1; i < newCache.Length; i++)
@@ -432,7 +430,7 @@ namespace LinqToDB.Linq
 						// if we have reordering lock, we can enumerate queries in priority order
 						var idx = allowReordering ? indexes[i] : i;
 
-						if (cache[idx].Compare(dataContext, expr, queryFlags, dataOptions))
+						if (cache[idx].Compare(dataContext, expr, queryFlags))
 						{
 							// do reorder only if it is not blocked and cache wasn't replaced by new one
 							if (i > 0 && version == _version && allowReordering)

@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Data;
 
 	/// <param name="AlternativeBulkCopy">
-	/// Specify AlternativeBulkCopy used by Oracle Provider.
+	/// Defines type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
 	/// </param>
 	/// <param name="DontEscapeLowercaseIdentifiers">
 	/// Gets or sets flag to tell LinqToDB to quote identifiers, if they contain lowercase letters.
