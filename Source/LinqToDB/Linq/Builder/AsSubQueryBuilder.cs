@@ -1,10 +1,8 @@
-﻿using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
 
 	sealed class AsSubQueryBuilder : MethodCallBuilder
 	{
@@ -22,20 +20,7 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.Arguments.Count > 1)
 				sequence.SelectQuery.QueryName = (string?)methodCall.Arguments[1].EvaluateExpression();
 
-			var elementType = methodCall.Arguments[0].Type.GetGenericArguments()[0];
-			if (typeof(IGrouping<,>).IsSameOrParentOf(elementType))
-			{
-				// It is special case when we are trying to make subquery from GroupBy
-
-				sequence.ConvertToIndex(null, 0, ConvertFlags.Key);
-				var param  = Expression.Parameter(elementType);
-				var lambda = Expression.Lambda(Expression.PropertyOrField(param, "Key"), param);
-
-				sequence = new SubQueryContext(sequence);
-				sequence = new SelectContext(buildInfo.Parent, lambda, buildInfo.IsSubQuery, sequence);
-			}
-			else 
-				sequence = new SubQueryContext(sequence);
+			sequence = new SubQueryContext(sequence);
 			
 			return sequence;
 		}

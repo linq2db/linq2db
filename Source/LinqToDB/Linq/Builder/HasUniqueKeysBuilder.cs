@@ -1,9 +1,9 @@
-﻿using System.Linq;
-using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+
 	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -15,8 +15,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var keySelector = (LambdaExpression) methodCall.Arguments[1].Unwrap();
-			var keyContext  = new SelectContext(buildInfo.Parent, keySelector, false, sequence);
+			var keySelector = methodCall.Arguments[1].UnwrapLambda();
+			var keyContext  = new SelectContext(buildInfo.Parent, keySelector, sequence, false);
 
 			var keySql = builder.ConvertToSqlExpr(keyContext, new ContextRefExpression(keySelector.Parameters[0].Type, keyContext));
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -11,17 +10,26 @@ namespace LinqToDB.Linq.Builder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return
-				methodCall.IsQueryable("SelectMany") &&
-				methodCall.Arguments.Count == 3      &&
-				((LambdaExpression)methodCall.Arguments[1].Unwrap()).Parameters.Count == 1;
+			return methodCall.IsQueryable("SelectMany");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence           = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var collectionSelector = methodCall.Arguments[1].UnwrapLambda();
-			var resultSelector     = methodCall.Arguments[2].UnwrapLambda();
+			var genericArguments = methodCall.Method.GetGenericArguments();
+
+			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			var collectionSelector = SequenceHelper.GetArgumentLambda(methodCall, "collectionSelector") ??
+			                         SequenceHelper.GetArgumentLambda(methodCall, "selector");
+
+			if (collectionSelector == null)
+			{
+				var param            = Expression.Parameter(genericArguments[0], "source");
+				collectionSelector   = Expression.Lambda(Expression.Convert(param, typeof(IEnumerable<>).MakeGenericType(genericArguments[1])), param);
+			}
+
+			var selector       = SequenceHelper.GetArgumentLambda(methodCall, "selector");
+			var resultSelector = SequenceHelper.GetArgumentLambda(methodCall, "resultSelector");
 
 			sequence = new SubQueryContext(sequence);
 
@@ -42,14 +50,27 @@ namespace LinqToDB.Linq.Builder
 			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
 
-			IBuildContext context = new SelectContext(buildInfo.Parent, resultSelector, buildInfo.IsSubQuery, sequence,
-				collection);
+			Expression resultExpression;
 
+			if (resultSelector == null)
+			{
+				resultExpression = new ContextRefExpression(genericArguments[^1], collection);
+			}
+			else 
+			{
+				resultExpression = SequenceHelper.ReplaceBody(resultSelector.Body, resultSelector.Parameters[0], sequence);
+				if (resultSelector.Parameters.Count > 1)
+				{
+					resultExpression = SequenceHelper.ReplaceBody(resultExpression, resultSelector.Parameters[1], collection);
+				}
+			}
+
+			var context = new SelectContext(buildInfo.Parent, resultExpression, sequence, buildInfo.IsSubQuery);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
 			string? collectionAlias = null;
 
-			if (resultSelector.Parameters.Count > 1)
+			if (resultSelector?.Parameters.Count > 1)
 			{
 				collectionAlias = resultSelector.Parameters[1].Name;
 				collection.SetAlias(collectionAlias);

@@ -4,26 +4,19 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	class ScopeContext : PassThroughContext
+	class ScopeContext : BuildContextBase
 	{
-		public   IBuildContext UpTo { get; }
+		public IBuildContext Context { get; }
+		public IBuildContext UpTo    { get; }
 
-		public override SelectQuery SelectQuery { get => UpTo.SelectQuery; set => UpTo.SelectQuery = value; }
-
-		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context)
+		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context.Builder, upTo.SelectQuery)
 		{
-			UpTo = upTo;
+			Context = context;
+			UpTo    = upTo;
 		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			/*if ((flags.HasFlag(ProjectFlags.Root)            ||
-			                                                 flags.HasFlag(ProjectFlags.AssociationRoot) ||
-			                                                 flags.HasFlag(ProjectFlags.Expand)))
-			{
-				return path;
-			}*/
-
 			var correctedPath = SequenceHelper.CorrectExpression(path, this, Context);
 			var newExpr       = Builder.MakeExpression(Context, correctedPath, flags);
 
@@ -40,9 +33,25 @@ namespace LinqToDB.Linq.Builder
 			return newExpr;
 		}
 
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
+		{
+			Context.SetRunQuery(query, expr);
+		}
+
 		public override IBuildContext Clone(CloningContext context)
 		{
 			return new ScopeContext(context.CloneContext(Context), context.CloneContext(UpTo));
+		}
+
+		public override SqlStatement GetResultStatement()
+		{
+			return Context.GetResultStatement();
+		}
+
+		public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+		{
+			expression = SequenceHelper.CorrectExpression(expression, this, Context);
+			return Context.GetContext(expression, level, buildInfo);
 		}
 	}
 }

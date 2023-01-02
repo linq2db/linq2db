@@ -61,9 +61,16 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					Expression refExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
+					Expression valueExpression;
+					if (methodCall.Arguments.Count == 2)
+					{
+						var lambda = methodCall.Arguments[1].UnwrapLambda();
+						valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
+					}
+					else
+						valueExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
 
-					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, refExpression, ProjectFlags.SQL);
+					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, valueExpression, ProjectFlags.SQL);
 					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
 
 					var sql = sqlPlaceholder.Sql;
@@ -151,9 +158,16 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					Expression refExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
+					Expression valueExpression;
+					if (methodCall.Arguments.Count == 2)
+					{
+						var lambda = methodCall.Arguments[1].UnwrapLambda();
+						valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
+					}
+					else
+						valueExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
 
-					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, refExpression, ProjectFlags.SQL);
+					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, ProjectFlags.SQL);
 					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
 
 					var sql = sqlPlaceholder.Sql;

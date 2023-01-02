@@ -7,22 +7,16 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	class SubQueryContext : PassThroughContext
+	class SubQueryContext : BuildContextBase
 	{
-#if DEBUG
-		public override string? SqlQueryText => SelectQuery.ToString();
-#endif
-
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
-			: base(subQuery)
+			: base(subQuery.Builder, selectQuery)
 		{
 			if (selectQuery == subQuery.SelectQuery)
 				throw new ArgumentException("Wrong subQuery argument.", nameof(subQuery));
 
 			SubQuery        = subQuery;
 			SubQuery.Parent = this;
-			SelectQuery     = selectQuery;
-			Statement       = subQuery.Statement;
 
 			if (addToSql)
 				selectQuery.From.Table(SubQuery.SelectQuery);
@@ -31,27 +25,9 @@ namespace LinqToDB.Linq.Builder
 		public SubQueryContext(IBuildContext subQuery, bool addToSql = true)
 			: this(subQuery, new SelectQuery { ParentSelect = subQuery.SelectQuery.ParentSelect }, addToSql)
 		{
-			Statement = subQuery.Statement;
 		}
 
-		public          IBuildContext  SubQuery    { get; private set; }
-		public override SelectQuery    SelectQuery { get; set; }
-		public override IBuildContext? Parent      { get; set; }
-
-		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-		{
-			throw new NotImplementedException();
-		}
+		public IBuildContext SubQuery { get; }
 
 		protected virtual bool OptimizeColumns => true;
 		protected internal readonly Dictionary<int,int> ColumnIndexes = new ();
@@ -59,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 		protected virtual int GetIndex(int index, ISqlExpression column)
 		{
 			throw new NotImplementedException();
-			}
+		}
 
 		public override int ConvertToParentIndex(int index, IBuildContext context)
 		{
@@ -78,6 +54,12 @@ namespace LinqToDB.Linq.Builder
 				SelectQuery.From.Tables[0].Alias = alias;
 		}
 
+		public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+		{
+			expression = SequenceHelper.CorrectExpression(expression, this, SubQuery);
+			return SubQuery.GetContext(expression, level, buildInfo);
+		}
+
 		public override ISqlExpression? GetSubQuery(IBuildContext context)
 		{
 			return null;
@@ -88,18 +70,24 @@ namespace LinqToDB.Linq.Builder
 			return Statement ??= new SqlSelectStatement(SelectQuery);
 		}
 
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
+		{
+			SubQuery.SetRunQuery(query, expr);
+		}
+
 		public override IBuildContext Clone(CloningContext context)
 		{
 			var selectQuery = context.CloneElement(SelectQuery);
 			return new SubQueryContext(context.CloneContext(SubQuery), selectQuery, false);
-	}
+		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
 				return path;
 
-			var result = base.MakeExpression(path, flags);
+			var result = SequenceHelper.CorrectExpression(path, this, SubQuery);
+			result = Builder.MakeExpression(SubQuery, result, flags);
 
 			if (flags.HasFlag(ProjectFlags.Table))
 				return result;

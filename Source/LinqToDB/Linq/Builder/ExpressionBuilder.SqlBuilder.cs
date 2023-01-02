@@ -566,8 +566,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				IBuildContext valueSequence = context;
 
-				if (context is SelectContext sc && sc.Sequence[0] is GroupByBuilder.GroupByContext)
-					valueSequence = sc.Sequence[0];
+				if (context is SelectContext sc && sc.Sequence is GroupByBuilder.GroupByContext)
+					valueSequence = sc.Sequence;
 
 				if (valueSequence is GroupByBuilder.GroupByContext groupByContext)
 				{

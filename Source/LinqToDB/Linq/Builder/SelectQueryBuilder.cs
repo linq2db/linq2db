@@ -13,8 +13,9 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = new SelectContext(buildInfo.Parent, builder,
-				methodCall.Arguments[1].UnwrapLambda(),
+			var sequence = new SelectContext(buildInfo.Parent,
+				builder,
+				methodCall.Arguments[1].UnwrapLambda().Body,
 				buildInfo.SelectQuery, buildInfo.IsSubQuery);
 
 			return sequence;

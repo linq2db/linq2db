@@ -33,7 +33,9 @@ namespace LinqToDB.Linq.Builder
 				outerKey,
 				innerKeyLambda, innerExpression);
 
-			var context = new SelectContext(buildInfo.Parent, resultLambda, buildInfo.IsSubQuery, outerContext, innerContext);
+			var resultExpression = SequenceHelper.PrepareBody(resultLambda, outerContext, innerContext);
+
+			var context = new SelectContext(buildInfo.Parent, resultExpression, outerContext, buildInfo.IsSubQuery);
 
 			return context;
 		}

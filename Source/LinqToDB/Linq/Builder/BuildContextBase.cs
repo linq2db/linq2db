@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
-			throw new NotImplementedException();
+			return null;
 		}
 
 		public virtual int ConvertToParentIndex(int index, IBuildContext context)

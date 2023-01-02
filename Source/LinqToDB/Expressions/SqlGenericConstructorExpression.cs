@@ -1,12 +1,12 @@
 ﻿using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Reflection;
+	using SqlQuery;
 
 	internal class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
 	{

@@ -20,126 +20,44 @@ namespace LinqToDB.Linq.Builder
 	//
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	class SelectContext : IBuildContext
+	class SelectContext : BuildContextBase
 	{
 		#region Init
 
 #if DEBUG
-		public string SqlQueryText  => SelectQuery == null ? "" : SelectQuery.SqlText;
-		public string Path          => this.GetPath();
-		public int    ContextId     { get; }
-
 		public MethodCallExpression? Debug_MethodCall;
 #endif
 
-		public IBuildContext[]   Sequence    { [DebuggerStepThrough] get; }
-		public LambdaExpression? Lambda      { [DebuggerStepThrough] get; set; }
-		public Expression        Body        { [DebuggerStepThrough] get; set; }
-		public ExpressionBuilder Builder     { [DebuggerStepThrough] get; }
-		public SelectQuery       SelectQuery { [DebuggerStepThrough] get; set; }
-		public SqlStatement?     Statement   { [DebuggerStepThrough] get; set; }
-		public IBuildContext?    Parent      { [DebuggerStepThrough] get; set; }
+		public IBuildContext? Sequence   { [DebuggerStepThrough] get; }
+		public Expression     Body       { [DebuggerStepThrough] get; set; }
+		public bool           IsSubQuery { get; }
 
-		Expression IBuildContext.Expression => Body;
+		public override Expression? Expression => Body;
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
-		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery, bool isSubQuery)
+		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, Expression body, SelectQuery selectQuery, bool isSubQuery)
+			: base(builder, selectQuery)
 		{
-			Parent      = parent;
-			Sequence    = Array<IBuildContext>.Empty;
-			Builder     = builder;
-			Lambda      = lambda;
-			Body        = lambda.Body;
-			SelectQuery = selectQuery;
-			IsSubQuery  = isSubQuery;
-
-			Builder.Contexts.Add(this);
-#if DEBUG
-			ContextId = builder.GenerateContextId();
-#endif
+			Parent     = parent;
+			IsSubQuery = isSubQuery;
+			Body       = body;
 		}
 
 		public SelectContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences)
+			: this(parent, SequenceHelper.PrepareBody(lambda, sequences), sequences[0], isSubQuery)
 		{
-			Parent     = parent;
-			Sequence   = sequences;
-			Builder    = sequences[0].Builder;
-			Lambda     = lambda;
-			IsSubQuery = isSubQuery;
-			Body       = SequenceHelper.PrepareBody(lambda, sequences);
-
-			SelectQuery   = sequences[0].SelectQuery;
-
-			foreach (var context in Sequence)
-				context.Parent = this;
-
-			Builder.Contexts.Add(this);
-#if DEBUG
-			ContextId = Builder.GenerateContextId();
-#endif
 		}
 
 		public SelectContext(IBuildContext? parent, Expression body, IBuildContext sequence, bool isSubQuery)
+			: this(parent, sequence.Builder, body, sequence.SelectQuery, isSubQuery)
 		{
-			Parent     = parent;
-			Sequence   = new[] { sequence };
-			Builder    = sequence.Builder;
-			IsSubQuery = isSubQuery;
-			Body       = body;
-
-			SelectQuery = sequence.SelectQuery;
-#if DEBUG
-			ContextId = Builder.GenerateContextId();
-#endif
+			Sequence   = sequence;
 		}
 
 		#endregion
 
-		#region BuildQuery
-
-		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-		{
-			throw new NotImplementedException();
-
-			/*var expr = Builder.FinalizeProjection(this,
-				Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
-
-			var mapper = Builder.BuildMapper<T>(expr);
-
-			QueryRunner.SetRunQuery(query, mapper);*/
-		}
-
-		#endregion
-
-		#region BuildExpression
-
-		public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
-
-		#region ConvertToSql
-
-		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
-
-		#region ConvertToIndex
-
-		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
-
-		public virtual Expression MakeExpression(Expression path, ProjectFlags flags)
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			Expression result;
 
@@ -167,8 +85,14 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (!(path.Type.IsSameOrParentOf(Body.Type) || Body.Type.IsSameOrParentOf(path.Type)) && flags.HasFlag(ProjectFlags.Expression))
-					return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
+				if (flags.IsExpression() && Body is not ContextRefExpression)
+				{
+					if (!(path.Type.IsSameOrParentOf(Body.Type) || Body.Type.IsSameOrParentOf(path.Type)))
+					{
+						return new SqlEagerLoadExpression((ContextRefExpression)path, path,
+							GetEagerLoadExpression(path));
+					}
+				}
 
 				if (Body.NodeType == ExpressionType.TypeAs)
 				{
@@ -201,13 +125,12 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public virtual IBuildContext Clone(CloningContext context)
+		public override IBuildContext Clone(CloningContext context)
 		{
-			return new SelectContext(null, context.CloneExpression(Lambda), IsSubQuery,
-				Sequence.Select(s => context.CloneContext(s)).ToArray());
+			return new SelectContext(null, context.CloneExpression(Body), context.CloneContext(Sequence), IsSubQuery);
 		}
 
-		public virtual void SetRunQuery<T>(Query<T> query, Expression expr)
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
 			var mapper = Builder.BuildMapper<T>(expr);
 
@@ -219,15 +142,6 @@ namespace LinqToDB.Linq.Builder
 			return Builder.GetSequenceExpression(this);
 		}
 
-		#region IsExpression
-
-		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
-
 		#region GetContext
 
 		public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
@@ -237,17 +151,6 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region ConvertToParentIndex
-
-		public virtual int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
-
-		#region SetAlias
-
 		public virtual void SetAlias(string? alias)
 		{
 			if (!string.IsNullOrEmpty(alias) && !alias!.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
@@ -256,38 +159,21 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		#endregion
-
-		#region GetSubQuery
-
 		public ISqlExpression? GetSubQuery(IBuildContext context)
 		{
 			return null;
 		}
 
-		#endregion
-
-		public virtual SqlStatement GetResultStatement()
+		public override SqlStatement GetResultStatement()
 		{
-			return Statement ??= new SqlSelectStatement(SelectQuery);
+			return new SqlSelectStatement(SelectQuery);
 		}
 
-		public virtual void CompleteColumns()
+		public override void CompleteColumns()
 		{
 			ExpressionBuilder.EnsureAggregateColumns(this, SelectQuery);
 
-			foreach (var sequence in Sequence)
-			{
-				sequence.CompleteColumns();
-			}
+			Sequence.CompleteColumns();
 		}
-
-		public bool IsSubQuery { get; }
-
-		IBuildContext? GetSequence(Expression expression, int level)
-		{
-			return null;
-		}
-
 	}
 }
