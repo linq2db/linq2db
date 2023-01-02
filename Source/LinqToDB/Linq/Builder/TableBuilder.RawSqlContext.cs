@@ -126,7 +126,6 @@ namespace LinqToDB.Linq.Builder
 				// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder 
 				if (isScalar)
 				{
-					IsScalar = true;
 					SqlTable.CanBeNull = false;
 				}
 			}

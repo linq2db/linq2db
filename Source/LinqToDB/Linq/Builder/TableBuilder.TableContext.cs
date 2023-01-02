@@ -13,36 +13,17 @@ namespace LinqToDB.Linq.Builder
 	partial class TableBuilder
 	{
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-		public class TableContext : ITableContext
+		public class TableContext : BuildContextBase, ITableContext
 		{
 			#region Properties
 
-#if DEBUG
-			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-			public string Path => this.GetPath();
-			public int    ContextId    { get; private set; }
-#endif
+			public override Expression? Expression { get; }
 
-			public ExpressionBuilder      Builder     { get; }
-			public Expression?            Expression  { get; }
-
-			public SelectQuery            SelectQuery { get; set; }
-			public SqlStatement?          Statement   { get; set; }
-
-			public List<LoadWithInfo[]>?  LoadWith    { get; set; }
-
-			public virtual IBuildContext? Parent      { get; set; }
-			public bool                   IsScalar    { get; set; }
-
-			public Type             OriginalType     = null!;
-			public EntityDescriptor EntityDescriptor = null!;
+			public Type             OriginalType;
+			public EntityDescriptor EntityDescriptor;
 
 			public Type     ObjectType { get; set; }
 			public SqlTable SqlTable   { get; set; }
-
-			internal bool           ForceLeftJoinAssociations { get; set; }
-
-			public bool             AssociationsToSubQueries { get; set; }
 
 			public bool IsSubQuery { get; }
 
@@ -50,14 +31,12 @@ namespace LinqToDB.Linq.Builder
 
 			#region Init
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
+			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType) : base (builder, buildInfo.SelectQuery)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
-				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
-				IsSubQuery               = buildInfo.IsSubQuery;
+				Parent      = buildInfo.Parent;
+				Expression  = buildInfo.Expression;
+				SelectQuery = buildInfo.SelectQuery;
+				IsSubQuery  = buildInfo.IsSubQuery;
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
@@ -70,55 +49,48 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
+			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table) : base (builder, buildInfo.SelectQuery)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
-				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
-				IsSubQuery               = buildInfo.IsSubQuery;
-
-				OriginalType     = table.ObjectType;
-				ObjectType       = GetObjectType();
-				SqlTable         = table;
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
-
-				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
-					SelectQuery.From.Table(SqlTable);
-
-				Init(true);
-			}
-
-			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table)
-			{
-				Builder          = builder;
-				Parent           = null;
-				Expression       = null;
-				SelectQuery      = selectQuery;
-				IsSubQuery  = false;
-
-				OriginalType     = table.ObjectType;
-				ObjectType       = GetObjectType();
-				SqlTable         = table;
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
-
-				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
-					SelectQuery.From.Table(SqlTable);
-
-				Init(true);
-			}
-
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
-			{
-				Builder     = builder;
 				Parent      = buildInfo.Parent;
 				Expression  = buildInfo.Expression;
 				SelectQuery = buildInfo.SelectQuery;
-				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
-				IsSubQuery               = buildInfo.IsSubQuery;
+				IsSubQuery  = buildInfo.IsSubQuery;
 
-				var mc   = (MethodCallExpression)Expression;
+				OriginalType     = table.ObjectType;
+				ObjectType       = GetObjectType();
+				SqlTable         = table;
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+
+				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
+					SelectQuery.From.Table(SqlTable);
+
+				Init(true);
+			}
+
+			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table) : base(builder, selectQuery)
+			{
+				Parent     = null;
+				Expression = null;
+				IsSubQuery = false;
+
+				OriginalType     = table.ObjectType;
+				ObjectType       = GetObjectType();
+				SqlTable         = table;
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+
+				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
+					SelectQuery.From.Table(SqlTable);
+
+				Init(true);
+			}
+
+			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo) : base (builder, buildInfo.SelectQuery)
+			{
+				Parent     = buildInfo.Parent;
+				Expression = buildInfo.Expression;
+				IsSubQuery = buildInfo.IsSubQuery;
+
+				var mc   = (MethodCallExpression)buildInfo.Expression;
 				var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema)!;
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
@@ -153,11 +125,6 @@ namespace LinqToDB.Linq.Builder
 
 			protected void Init(bool applyFilters)
 			{
-				Builder.Contexts.Add(this);
-#if DEBUG
-				ContextId = Builder.GenerateContextId();
-#endif
-
 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
 
 				// Original table is a parent.
@@ -198,25 +165,7 @@ namespace LinqToDB.Linq.Builder
 
 			#endregion
 
-			#region ConvertToSql
-
-			public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			#endregion
-
-			#region ConvertToIndex
-
-			public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			SqlGenericConstructorExpression? _fullEntityExpression;
-
-			public Expression MakeExpression(Expression path, ProjectFlags flags)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
 					return path;
@@ -287,32 +236,21 @@ namespace LinqToDB.Linq.Builder
 				return placeholder;
 			}
 
-			public IBuildContext Clone(CloningContext context)
+			public override IBuildContext Clone(CloningContext context)
 			{
 				return new TableContext(Builder, context.CloneElement(SelectQuery), context.CloneElement(SqlTable));
 			}
 
-			public void SetRunQuery<T>(Query<T> query, Expression expr)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			#endregion
-
-			#region IsExpression
-
-			public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException(); 
-			}
-
-			#endregion
-
 			#region GetContext
 
-			public IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				if (!buildInfo.CreateSubQuery)
 					return this;
@@ -321,46 +259,24 @@ namespace LinqToDB.Linq.Builder
 				var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
 				return context;
-										}
-
-			public virtual SqlStatement GetResultStatement()
-			{
-				return Statement ??= new SqlSelectStatement(SelectQuery);
 			}
 
-			public void CompleteColumns()
+			public override SqlStatement GetResultStatement()
 			{
-			}
-
-			#endregion
-
-			#region ConvertToParentIndex
-
-			public virtual int ConvertToParentIndex(int index, IBuildContext? context)
-			{
-				throw new NotImplementedException(); 
+				return new SqlSelectStatement(SelectQuery);
 			}
 
 			#endregion
 
 			#region SetAlias
 
-			public void SetAlias(string? alias)
+			public override void SetAlias(string? alias)
 			{
-				if (alias == null || SqlTable == null)
+				if (alias == null)
 					return;
 
 				if (!alias.Contains('<'))
 					SqlTable.Alias ??= alias;
-			}
-
-			#endregion
-
-			#region GetSubQuery
-
-			public ISqlExpression? GetSubQuery(IBuildContext context)
-			{
-				return null;
 			}
 
 			#endregion
