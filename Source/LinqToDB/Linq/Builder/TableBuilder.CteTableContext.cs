@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.Common;
 
@@ -44,7 +42,6 @@ namespace LinqToDB.Linq.Builder
 
 			var objectType      = methodCall.Method.GetGenericArguments()[0];
 			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, objectType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
-			cteTableContext.EnsureInitialized();
 
 			// populate all fields
 			if (isRecursive)
@@ -59,32 +56,20 @@ namespace LinqToDB.Linq.Builder
 			var cteContext = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
 
 			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, queryable.ElementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
-			cteTableContext.EnsureInitialized();
 
 			return cteTableContext;
 		}
 
-		public sealed class CteTableContext: ITableContext
+		public sealed class CteTableContext: BuildContextBase, ITableContext
 		{
-#if DEBUG
-			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-			public string Path         => this.GetPath();
-			public int    ContextId    { get; private set; }
-#endif
+			public CteContext  CteContext { get; }
+			public SqlCteTable CteTable   { get; }
 
-			public CteContext CteContext { get; }
+			public Type     ObjectType => CteTable.ObjectType;
+			public SqlTable SqlTable   => CteTable;
 
-			public SelectQuery    SelectQuery { get; set; }
-			public SqlStatement?  Statement   { get; set; }
-			public IBuildContext? Parent      { get; set; }
-
-			public ExpressionBuilder Builder    { get; }
-			public Expression?       Expression { get; }
-			public SqlCteTable       CteTable   { get; }
-
-			public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest)
+			public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest) : base(builder, selectQuery)
 			{
-				Builder     = builder;
 				Parent      = parent;
 				CteContext = cteContext;
 				SelectQuery = selectQuery;
@@ -92,25 +77,16 @@ namespace LinqToDB.Linq.Builder
 
 				if (!isTest)
 					SelectQuery.From.Table(CteTable);
-
-#if DEBUG
-				ContextId = Builder.GenerateContextId();
-#endif
 			}
 
-			public void SetRunQuery<T>(Query<T> query, Expression expr)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var mapper = Builder.BuildMapper<T>(expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
 				if (!buildInfo.CreateSubQuery)
 					return this;
@@ -121,19 +97,9 @@ namespace LinqToDB.Linq.Builder
 				return context;
 			}
 
-			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
 			Dictionary<SqlPlaceholderExpression, SqlPlaceholderExpression> _fieldsMap = new ();
 
-			public Expression MakeExpression(Expression path, ProjectFlags flags)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Table))
 					return path;
@@ -224,53 +190,15 @@ namespace LinqToDB.Linq.Builder
 				return transformed;
 			}
 
-			public IBuildContext Clone(CloningContext context)
+			public override IBuildContext Clone(CloningContext context)
 			{
 				throw new NotImplementedException();
 			}
 
-			public int ConvertToParentIndex(int index, IBuildContext? context)
+			public override SqlStatement GetResultStatement()
 			{
-				throw new NotImplementedException();
+				return new SqlSelectStatement(SelectQuery);
 			}
-
-			public void SetAlias(string? alias)
-			{
-			}
-
-			public ISqlExpression? GetSubQuery(IBuildContext context)
-			{
-				throw new NotImplementedException();
-			}
-
-			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-			}
-
-			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlStatement GetResultStatement()
-			{
-				return Statement ??= new SqlSelectStatement(SelectQuery);
-			}
-
-			public void CompleteColumns()
-			{
-				throw new NotImplementedException();
-			}
-
-			public Type ObjectType => CteTable.ObjectType;
-
-			public SqlTable SqlTable => CteTable;
-
-			public void EnsureInitialized()
-			{
-			}
-
 		}
 	}
 }

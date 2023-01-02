@@ -6,24 +6,12 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using LinqToDB.Expressions;
 
-	internal class CteContext : IBuildContext
+	internal class CteContext : BuildContextBase, IBuildContext
 	{
-#if DEBUG
-		public string SqlQueryText => CteInnerQueryContext == null ? "" : SelectQuery.SqlText;
-		public string Path         => this.GetPath();
-		public int    ContextId    { get; }
-#endif
-		public SelectQuery SelectQuery
-		{
-			get => CteInnerQueryContext?.SelectQuery ?? new SelectQuery();
-			set { }
-		}
-
 		public SqlStatement?  Statement { get; set; }
 		public IBuildContext? Parent    { get; set; }
 
-		public ExpressionBuilder Builder              { get; }
-		public Expression?       Expression           { get; }
+		public override Expression? Expression { get; }
 
 		public IBuildContext?   CteInnerQueryContext { get; private set; }
 		public SubQueryContext? SubqueryContext      { get; private set; }
@@ -31,9 +19,9 @@ namespace LinqToDB.Linq.Builder
 
 		ContextRefExpression CteContextRef { get; }
 
-		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
+		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression) 
+			: base(builder, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
 		{
-			Builder              = builder;
 			CteInnerQueryContext = cteInnerQueryContext; 
 			CteClause            = cteClause;
 			Expression           = cteExpression;
@@ -41,30 +29,6 @@ namespace LinqToDB.Linq.Builder
 			var elementType = ExpressionBuilder.GetEnumerableElementType(cteExpression.Type);
 
 			CteContextRef = new ContextRefExpression(elementType, this);
-
-#if DEBUG
-			ContextId = Builder.GenerateContextId();
-#endif
-		}
-
-		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
 		}
 
 		Dictionary<SqlPlaceholderExpression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
@@ -87,6 +51,7 @@ namespace LinqToDB.Linq.Builder
 
 			CteInnerQueryContext = cteInnerQueryContext;
 			CteClause.Body       = cteInnerQueryContext.SelectQuery;
+			SelectQuery          = cteInnerQueryContext.SelectQuery;
 			SubqueryContext      = new SubQueryContext(cteInnerQueryContext);
 
 			foreach (var mapped in _recursiveMap.OrderBy(m => m.Value.Index).ToList())
@@ -108,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public Expression MakeExpression(Expression path, ProjectFlags flags)
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
 				return path;
@@ -178,49 +143,20 @@ namespace LinqToDB.Linq.Builder
 			return transformed;
 		}
 
-		public IBuildContext Clone(CloningContext context)
+		public override IBuildContext Clone(CloningContext context)
 		{
 			throw new NotImplementedException();
 		}
 
-		public void SetRunQuery<T>(Query<T> query, Expression expr)
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
-			throw new NotImplementedException();
+			throw new InvalidOperationException();
 		}
 
-		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
+		public override SqlStatement GetResultStatement()
 		{
-			throw new NotImplementedException();
+			throw new InvalidOperationException();
 		}
-
-		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-		{
-			return null;
-		}
-
-		public int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void SetAlias(string? alias)
-		{
-			throw new NotImplementedException();
-		}
-
-		public ISqlExpression? GetSubQuery(IBuildContext context)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlStatement GetResultStatement()
-		{
-			throw new NotImplementedException();
-		}
-
-		public void CompleteColumns()
-		{
-			throw new NotImplementedException();
-		}
+		
 	}
 }
