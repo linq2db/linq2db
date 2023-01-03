@@ -148,21 +148,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return Version switch
 			{
-				SqlServerVersion.v2005 => new SqlServer2005SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2014 => new SqlServer2014SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2016 => new SqlServer2016SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
-				SqlServerVersion.v2022 => new SqlServer2022SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags),
+				SqlServerVersion.v2005 => new SqlServer2005SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				SqlServerVersion.v2008 => new SqlServer2008SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				SqlServerVersion.v2012 => new SqlServer2012SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				SqlServerVersion.v2014 => new SqlServer2014SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				SqlServerVersion.v2016 => new SqlServer2016SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				SqlServerVersion.v2017 => new SqlServer2017SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				SqlServerVersion.v2019 => new SqlServer2019SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				SqlServerVersion.v2022 => new SqlServer2022SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				_                      => throw new InvalidOperationException(),
 			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
 		public override ISchemaProvider GetSchemaProvider()
 		{

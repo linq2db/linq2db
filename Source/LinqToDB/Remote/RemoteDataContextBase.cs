@@ -256,7 +256,7 @@ namespace LinqToDB.Remote
 						key =>
 					{
 						var mappingSchema = MappingSchema;
-						var sqlOptimizer  = GetSqlOptimizer();
+						var sqlOptimizer  = GetSqlOptimizer(Options);
 #else
 					_createSqlProvider = _sqlBuilders.GetOrAdd(
 						key,
@@ -287,7 +287,7 @@ namespace LinqToDB.Remote
 #if NET45 || NET46 || NETSTANDARD2_0
 					);
 #else
-					, (MappingSchema, GetSqlOptimizer()));
+					, (MappingSchema, GetSqlOptimizer(Options)));
 #endif
 				}
 
@@ -295,26 +295,37 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>> _sqlOptimizers = new ();
+		static readonly ConcurrentDictionary<Tuple<Type,SqlProviderFlags>,Func<DataOptions,ISqlOptimizer>> _sqlOptimizers = new ();
 
-		Func<ISqlOptimizer>? _getSqlOptimizer;
+		Func<DataOptions,ISqlOptimizer>? _getSqlOptimizer;
 
-		public Func<ISqlOptimizer> GetSqlOptimizer
+		public Func<DataOptions,ISqlOptimizer> GetSqlOptimizer
 		{
 			get
 			{
 				if (_getSqlOptimizer == null)
 				{
-					var key  = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
+					var key = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
 
 					_getSqlOptimizer = _sqlOptimizers.GetOrAdd(key, static key =>
-						Expression.Lambda<Func<ISqlOptimizer>>(
-								Expression.New(
-									key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags)}) ??
-									throw new InvalidOperationException(
-										$"Constructor for type '{key.Item1.Name}' not found."),
-									Expression.Constant(key.Item2)))
-							.CompileExpression());
+					{
+						var p = Expression.Parameter(typeof(DataOptions));
+						var c = key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags)});
+
+						if (c != null)
+							return Expression.Lambda<Func<DataOptions,ISqlOptimizer>>(
+								Expression.New(c, Expression.Constant(key.Item2)),
+								p)
+								.CompileExpression();
+
+						return Expression.Lambda<Func<DataOptions,ISqlOptimizer>>(
+							Expression.New(
+								key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
+								Expression.Constant(key.Item2),
+								p),
+							p)
+							.CompileExpression();
+					});
 				}
 
 				return _getSqlOptimizer;

@@ -10,9 +10,15 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 	sealed class ClickHouseSqlOptimizer : BasicSqlOptimizer
 	{
-		public ClickHouseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public ClickHouseSqlOptimizer(SqlProviderFlags sqlProviderFlags, DataOptions dataOptions) : base(sqlProviderFlags)
 		{
+			_dataOptions = dataOptions;
 		}
+
+		readonly DataOptions _dataOptions;
+
+		ClickHouseOptions?   _providerOptions;
+		public ClickHouseOptions ProviderOptions => _providerOptions ??= _dataOptions.FindOrDefault(ClickHouseOptions.Default);
 
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
 		{
@@ -253,7 +259,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				{
 					// use standard-compatible aggregates
 					// https://github.com/ClickHouse/ClickHouse/pull/16123
-					if (func.IsAggregate && ClickHouseConfiguration.UseStandardCompatibleAggregates)
+					if (func.IsAggregate && ProviderOptions.UseStandardCompatibleAggregates)
 					{
 						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + "OrNull", true, func.IsPure, func.Precedence, func.Parameters)
 						{

@@ -18,7 +18,7 @@ public class TestsInitialization
 	public void TestAssemblySetup()
 	{
 		// required for tests expectations
-		ClickHouseConfiguration.UseStandardCompatibleAggregates = true;
+		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
 
 		// uncomment it to run tests with SeqentialAccess command behavior
 		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;

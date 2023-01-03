@@ -115,8 +115,8 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected abstract DbConnection  CreateConnectionInternal (string connectionString);
-		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions);
-		public    abstract ISqlOptimizer GetSqlOptimizer ();
+		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema   mappingSchema, DataOptions dataOptions);
+		public    abstract ISqlOptimizer GetSqlOptimizer (DataOptions     dataOptions);
 
 		public virtual DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{

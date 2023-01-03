@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.SQLite
 		static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = DataConnection.CreateDataProvider<SQLiteDataProviderClassic>();
 		static readonly Lazy<IDataProvider> _SQLiteMSDataProvider      = DataConnection.CreateDataProvider<SQLiteDataProviderMS>();
 
-		[Obsolete("Use SQLiteOptions.Default.BulkCopyType instead.")]
+		[Obsolete("Use SQLiteOptions.Default.AlwaysCheckDbNull instead.")]
 		public static bool AlwaysCheckDbNull
 		{
 			get => SQLiteOptions.Default.AlwaysCheckDbNull;

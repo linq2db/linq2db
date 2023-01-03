@@ -33,18 +33,18 @@ namespace Tests.Samples
 				MappingSchema = mappingSchema;
 			}
 
-			public string              ContextName           => _context.ContextName;
-			public int                 ConfigurationID       => _context.ConfigurationID;
-			public Func<ISqlOptimizer> GetSqlOptimizer       => _context.GetSqlOptimizer;
-			public Type                DataReaderType        => _context.DataReaderType;
-			public Func<ISqlBuilder>   CreateSqlProvider     => _context.CreateSqlProvider;
-			public List<string>        NextQueryHints        => _context.NextQueryHints;
-			public List<string>        QueryHints            => _context.QueryHints;
-			public SqlProviderFlags    SqlProviderFlags      => _context.SqlProviderFlags;
-			public TableOptions        SupportedTableOptions => _context.SupportedTableOptions;
+			public string                          ContextName           => _context.ContextName;
+			public int                             ConfigurationID       => _context.ConfigurationID;
+			public Func<DataOptions,ISqlOptimizer> GetSqlOptimizer       => _context.GetSqlOptimizer;
+			public Type                            DataReaderType        => _context.DataReaderType;
+			public Func<ISqlBuilder>               CreateSqlProvider     => _context.CreateSqlProvider;
+			public List<string>                    NextQueryHints        => _context.NextQueryHints;
+			public List<string>                    QueryHints            => _context.QueryHints;
+			public SqlProviderFlags                SqlProviderFlags      => _context.SqlProviderFlags;
+			public TableOptions                    SupportedTableOptions => _context.SupportedTableOptions;
 
-			public MappingSchema       MappingSchema { get; }
-			public bool                CloseAfterUse { get; set; }
+			public MappingSchema MappingSchema { get; }
+			public bool          CloseAfterUse { get; set; }
 
 			public bool InlineParameters
 			{

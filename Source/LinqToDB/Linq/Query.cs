@@ -43,7 +43,7 @@ namespace LinqToDB.Linq
 			ContextType             = dataContext.GetType();
 			Expression              = expression;
 			MappingSchema           = dataContext.MappingSchema;
-			SqlOptimizer            = dataContext.GetSqlOptimizer();
+			SqlOptimizer            = dataContext.GetSqlOptimizer(dataContext.Options);
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
 			DataOptions             = dataContext.Options;
 			InlineParameters        = dataContext.InlineParameters;

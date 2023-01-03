@@ -34,7 +34,6 @@ namespace LinqToDB.DataProvider
 
 		/// <summary>
 		/// Default options.
-		/// Default value: <c>OracleOptions(BulkCopyType.MultipleRows, AlternativeBulkCopy.InsertAll)</c>
 		/// </summary>
 		public static T Default { get; set; } = new();
 	}

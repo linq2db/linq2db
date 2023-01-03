@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Data
 {
-	using Common.Internal;
 	using DataProvider;
 	using SqlProvider;
 	using SqlQuery;
@@ -65,12 +64,12 @@ namespace LinqToDB.Data
 
 		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
 
-		static Func<ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
+		static Func<DataOptions,ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
 		{
 			return dp.GetSqlOptimizer;
 		}
 
-		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
+		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
 
 		#endregion
 	}

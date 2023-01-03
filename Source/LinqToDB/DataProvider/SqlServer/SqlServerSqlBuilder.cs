@@ -49,8 +49,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
-							.AppendLine(")")
-							.AppendLine();
+						.AppendLine(")")
+						.AppendLine();
 				}
 			}
 

@@ -241,7 +241,7 @@ namespace LinqToDB.Data
 				}
 
 				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
-				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer();
+				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (dataConnection.Options);
 
 				var cc = sqlBuilder.CommandCount(sql);
 				var sb = new StringBuilder();

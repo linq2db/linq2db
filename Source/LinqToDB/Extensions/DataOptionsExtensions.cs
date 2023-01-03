@@ -413,51 +413,81 @@ namespace LinqToDB
 
 		#region ConnectionOptions
 
+		/// <summary>
+		/// Sets ConfigurationString option.
+		/// </summary>
 		public static ConnectionOptions WithConfigurationString(this ConnectionOptions options, string? configurationString)
 		{
 			return options with { ConfigurationString = configurationString };
 		}
 
+		/// <summary>
+		/// Sets ConnectionString option.
+		/// </summary>
 		public static ConnectionOptions WithConnectionString(this ConnectionOptions options, string? connectionString)
 		{
 			return options with { ConnectionString = connectionString };
 		}
 
+		/// <summary>
+		/// Sets DataProvider option.
+		/// </summary>
 		public static ConnectionOptions WithDataProvider(this ConnectionOptions options, IDataProvider? dataProvider)
 		{
 			return options with { DataProvider = dataProvider };
 		}
 
+		/// <summary>
+		/// Sets ProviderName option.
+		/// </summary>
 		public static ConnectionOptions WithProviderName(this ConnectionOptions options, string providerName)
 		{
 			return options with { ProviderName = providerName };
 		}
 
+		/// <summary>
+		/// Sets MappingSchema option.
+		/// </summary>
 		public static ConnectionOptions WithMappingSchema(this ConnectionOptions options, MappingSchema mappingSchema)
 		{
 			return options with { MappingSchema = mappingSchema };
 		}
 
+		/// <summary>
+		/// Sets DbConnection option.
+		/// </summary>
 		public static ConnectionOptions WithDbConnection(this ConnectionOptions options, DbConnection? connection)
 		{
 			return options with { DbConnection = connection };
 		}
 
+		/// <summary>
+		/// Sets DbTransaction option.
+		/// </summary>
 		public static ConnectionOptions WithDbTransaction(this ConnectionOptions options, DbTransaction transaction)
 		{
 			return options with { DbTransaction = transaction };
 		}
 
+		/// <summary>
+		/// Sets DisposeConnection option.
+		/// </summary>
 		public static ConnectionOptions WithDisposeConnection(this ConnectionOptions options, bool disposeConnection)
 		{
 			return options with { DisposeConnection = disposeConnection };
 		}
 
+		/// <summary>
+		/// Sets ConnectionFactory option.
+		/// </summary>
 		public static ConnectionOptions WithConnectionFactory(this ConnectionOptions options, Func<DbConnection> connectionFactory)
 		{
 			return options with { ConnectionFactory = connectionFactory };
 		}
 
+		/// <summary>
+		/// Sets DataProviderFactory option.
+		/// </summary>
 		public static ConnectionOptions WithDataProviderFactory(this ConnectionOptions options, Func<IDataProvider>? dataProviderFactory)
 		{
 			return options with { DataProviderFactory = dataProviderFactory };
@@ -467,72 +497,114 @@ namespace LinqToDB
 
 		#region DataOptions.ConnectionOptions
 
+		/// <summary>
+		/// Defines provider name and connection sting to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConnectionString(this DataOptions options, string providerName, string connectionString)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { ProviderName = providerName, ConnectionString = connectionString });
 		}
 
+		/// <summary>
+		/// Defines data provider and connection sting to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConnectionString(this DataOptions options, IDataProvider dataProvider, string connectionString)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, ConnectionString = connectionString });
 		}
 
+		/// <summary>
+		/// Defines connection sting to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConnectionString(this DataOptions options, string connectionString)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionString = connectionString });
 		}
 
+		/// <summary>
+		/// Defines configuration sting to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConfigurationString(this DataOptions options, string? configurationString)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { ConfigurationString = configurationString });
 		}
 
+		/// <summary>
+		/// Defines configuration sting and MappingSchema to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConfigurationString(this DataOptions options, string configurationString, MappingSchema mappingSchema)
 		{
 			return options
 				.WithOptions<ConnectionOptions> (o => o with { ConfigurationString = configurationString, MappingSchema = mappingSchema });
 		}
 
+		/// <summary>
+		/// Defines DbConnection to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConnection(this DataOptions options, DbConnection connection)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DbConnection = connection });
 		}
 
+		/// <summary>
+		/// Defines data provider and DbConnection to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConnection(this DataOptions options, IDataProvider dataProvider, DbConnection connection)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbConnection = connection });
 		}
 
+		/// <summary>
+		/// Defines data provider and DbConnection to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConnection(this DataOptions options, IDataProvider dataProvider, DbConnection connection, bool disposeConnection)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbConnection = connection, DisposeConnection = disposeConnection });
 		}
 
+		/// <summary>
+		/// Defines provider name to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseProvider(this DataOptions options, string providerName)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { ProviderName = providerName });
 		}
 
+		/// <summary>
+		/// Defines data provider to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseDataProvider(this DataOptions options, IDataProvider dataProvider)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider });
 		}
 
+		/// <summary>
+		/// Defines mapping schema to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseMappingSchema(this DataOptions options, MappingSchema mappingSchema)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { MappingSchema = mappingSchema });
 		}
 
+		/// <summary>
+		/// Defines connection factory to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConnectionFactory(this DataOptions options, Func<DbConnection> connectionFactory)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionFactory = connectionFactory });
 		}
 
+		/// <summary>
+		/// Defines data provider and connection factory to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseConnectionFactory(this DataOptions options, IDataProvider dataProvider, Func<DbConnection> connectionFactory)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, ConnectionFactory = connectionFactory });
 		}
 
+		/// <summary>
+		/// Defines data provider and transaction to use with DataOptions.
+		/// </summary>
 		public static DataOptions UseTransaction(this DataOptions options, IDataProvider dataProvider, DbTransaction transaction)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbTransaction = transaction });
@@ -647,6 +719,9 @@ namespace LinqToDB
 			});
 		}
 
+		/// <summary>
+		/// Removes <see cref="IInterceptor" /> instance from the context.
+		/// </summary>
 		public static DataOptions RemoveInterceptor(this DataOptions options, IInterceptor interceptor)
 		{
 			return options.WithOptions<DataContextOptions>(o =>
@@ -894,16 +969,25 @@ namespace LinqToDB
 			return options with { MaxBatchSize = maxBatchSize };
 		}
 
+		/// <summary>
+		/// Number of seconds for the operation to complete before it times out.
+		/// </summary>
 		public static BulkCopyOptions WithBulkCopyTimeout(this BulkCopyOptions options, int? bulkCopyTimeout)
 		{
 			return options with { BulkCopyTimeout = bulkCopyTimeout };
 		}
 
+		/// <summary>
+		/// Bulk copy mode.
+		/// </summary>
 		public static BulkCopyOptions WithBulkCopyType(this BulkCopyOptions options, BulkCopyType bulkCopyType)
 		{
 			return options with { BulkCopyType = bulkCopyType };
 		}
 
+		/// <summary>
+		/// Checks constraints while data is being inserted.
+		/// </summary>
 		public static BulkCopyOptions WithCheckConstraints(this BulkCopyOptions options, bool? checkConstraints)
 		{
 			return options with { CheckConstraints = checkConstraints };
@@ -920,21 +1004,33 @@ namespace LinqToDB
 			return options with { KeepIdentity = keepIdentity };
 		}
 
+		/// <summary>
+		/// Obtains a bulk update lock for the duration of the bulk copy operation.
+		/// </summary>
 		public static BulkCopyOptions WithTableLock(this BulkCopyOptions options, bool? tableLock)
 		{
 			return options with { TableLock = tableLock };
 		}
 
+		/// <summary>
+		/// Preserves null values in the destination table regardless of the settings for default values.
+		/// </summary>
 		public static BulkCopyOptions WithKeepNulls(this BulkCopyOptions options, bool? keepNulls)
 		{
 			return options with { KeepNulls = keepNulls };
 		}
 
+		/// <summary>
+		/// When specified, causes the server to fire the insert triggers for the rows being inserted into the database.
+		/// </summary>
 		public static BulkCopyOptions WithFireTriggers(this BulkCopyOptions options, bool? fireTriggers)
 		{
 			return options with { FireTriggers = fireTriggers };
 		}
 
+		/// <summary>
+		/// When specified, each batch of the bulk-copy operation will occur within a transaction.
+		/// </summary>
 		public static BulkCopyOptions WithUseInternalTransaction(this BulkCopyOptions options, bool? useInternalTransaction)
 		{
 			return options with { UseInternalTransaction = useInternalTransaction };
@@ -1052,6 +1148,9 @@ namespace LinqToDB
 			return options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize });
 		}
 
+		/// <summary>
+		/// Number of seconds for the operation to complete before it times out.
+		/// </summary>
 		public static DataOptions UseBulkCopyTimeout(this DataOptions options, int? bulkCopyTimeout)
 		{
 			return options.WithOptions<BulkCopyOptions>(o => o with { BulkCopyTimeout = bulkCopyTimeout });

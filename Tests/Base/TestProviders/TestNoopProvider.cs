@@ -298,7 +298,7 @@ namespace Tests
 
 		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema, DataOptions dataOptions) => new TestNoopSqlBuilder(this, MappingSchema, dataOptions);
 		public override ISchemaProvider GetSchemaProvider()   => throw new NotImplementedException();
-		public override ISqlOptimizer   GetSqlOptimizer  ()   => TestNoopSqlOptimizer.Instance;
+		public override ISqlOptimizer   GetSqlOptimizer  (DataOptions dataOptions) => TestNoopSqlOptimizer.Instance;
 		public override TableOptions    SupportedTableOptions => TableOptions.None;
 	}
 

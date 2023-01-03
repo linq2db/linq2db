@@ -26,8 +26,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 	public abstract class ClickHouseDataProvider : DynamicDataProviderBase<ClickHouseProviderAdapter>
 	{
-		readonly ISqlOptimizer _sqlOptimizer;
-
 		protected ClickHouseDataProvider(string name, ClickHouseProvider provider)
 			: base(name, GetMappingSchema(provider), ClickHouseProviderAdapter.GetInstance(provider))
 		{
@@ -56,8 +54,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			//SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 			// 2. not tested as we don't support parameters currently
 			//SqlProviderFlags.AcceptsTakeAsParameter = true;
-
-			_sqlOptimizer = new ClickHouseSqlOptimizer(SqlProviderFlags);
 
 			if (Adapter.GetSByteReaderMethod          != null) SetProviderField(typeof(sbyte         ), Adapter.GetSByteReaderMethod,          Adapter.DataReaderType);
 			if (Adapter.GetUInt16ReaderMethod         != null) SetProviderField(typeof(ushort        ), Adapter.GetUInt16ReaderMethod,         Adapter.DataReaderType);
@@ -131,10 +127,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new ClickHouseSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(), SqlProviderFlags);
+			return new ClickHouseSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
-		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => new ClickHouseSqlOptimizer(SqlProviderFlags, dataOptions);
 
 		public override ISchemaProvider GetSchemaProvider() => new ClickHouseSchemaProvider();
 

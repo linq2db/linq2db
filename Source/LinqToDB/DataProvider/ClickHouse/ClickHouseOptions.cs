@@ -10,9 +10,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 	/// Default bulk copy mode.
 	/// Default value: <c>BulkCopyType.ProviderSpecific</c>.
 	/// </param>
+	/// <param name="UseStandardCompatibleAggregates">
+	/// Enables -OrNull combinator for Min, Max, Sum and Avg aggregation functions to support SQL standard-compatible behavior.
+	/// Default value: <c>false</c>.
+	/// </param>
 	public sealed record ClickHouseOptions
 	(
-		BulkCopyType BulkCopyType = BulkCopyType.ProviderSpecific
+		BulkCopyType BulkCopyType                    = BulkCopyType.ProviderSpecific,
+		bool         UseStandardCompatibleAggregates = default
 	)
 		: DataProviderOptions<ClickHouseOptions>(BulkCopyType)
 	{
@@ -22,9 +27,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		ClickHouseOptions(ClickHouseOptions original) : base(original)
 		{
+			UseStandardCompatibleAggregates = original.UseStandardCompatibleAggregates;
 		}
 
 		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
+			.Add(UseStandardCompatibleAggregates)
 			;
 
 		#region IEquatable implementation

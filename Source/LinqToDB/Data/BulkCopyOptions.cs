@@ -1,9 +1,11 @@
 ﻿using System;
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using System.Collections.Generic;
 
 namespace LinqToDB.Data
 {
+	using Common;
+	using Common.Internal;
+
 	/// <param name="MaxBatchSize">
 	/// Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server.
 	/// Returns an integer value or zero if no value has been set.
@@ -57,6 +59,13 @@ namespace LinqToDB.Data
 	/// <param name="WithoutSession">
 	/// Implemented only by ClickHouse.Client provider. When set, provider-specific bulk copy will use session-less connection even if called over connection with session.
 	/// Note that session-less connections cannot be used with session-bound functionality like temporary tables.
+	/// </param>
+	/// <param name="BulkCopyTimeout">
+	/// Number of seconds for the operation to complete before it times out.
+	/// /// </param>
+	/// <param name="BulkCopyType">
+	/// Default bulk copy mode, used by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// methods, if mode is not specified explicitly.
 	/// </param>
 	/// <summary>
 	/// Defines behavior of <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, BulkCopyOptions, System.Collections.Generic.IEnumerable{T})"/> method.

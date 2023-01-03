@@ -36,7 +36,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Gets SQL optimizer service factory method for current context data provider.
 		/// </summary>
-		Func<ISqlOptimizer> GetSqlOptimizer       { get; }
+		Func<DataOptions,ISqlOptimizer> GetSqlOptimizer { get; }
 		/// <summary>
 		/// Gets SQL support flags for current context data provider.
 		/// </summary>
