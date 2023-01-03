@@ -109,6 +109,8 @@ namespace Tests.DataProvider
 			else
 				ent.Property(e => e.ColumnNullable).IsNotColumn();
 
+			ent.Build();
+
 			// start testing
 			using var db = GetDataConnection(context, ms);
 

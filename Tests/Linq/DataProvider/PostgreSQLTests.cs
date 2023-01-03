@@ -2195,7 +2195,8 @@ namespace Tests.DataProvider
 
 			ms.GetFluentMappingBuilder()
 				.Entity<DataTypeBinaryMapping>()
-					.Property(p => p.Binary).HasDataType(DataType.Binary).IsNullable(false);
+					.Property(p => p.Binary).HasDataType(DataType.Binary).IsNullable(false)
+				.Build();
 
 			using (var db = (DataConnection)GetDataContext(context, ms))
 			using (db.CreateLocalTable<DataTypeBinaryMapping>())

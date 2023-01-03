@@ -33,7 +33,8 @@ namespace Tests.xUpdate
 							.IsIdentity()
 							.IsPrimaryKey()
 						.Property(t => t.Field1)
-							.HasLength(50);
+							.HasLength(50)
+					.Build();
 
 				db.DropTable<TestTable>(throwExceptionIfNotExists:false);
 
@@ -55,7 +56,8 @@ namespace Tests.xUpdate
 							.IsIdentity()
 							.IsPrimaryKey()
 						.Property(t => t.Field1)
-							.HasLength(50);
+							.HasLength(50)
+					.Build();
 
 				await db.DropTableAsync<TestTable>(throwExceptionIfNotExists:false);
 
@@ -74,7 +76,8 @@ namespace Tests.xUpdate
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<TestTable>()
 						.Property(t => t.Field1)
-							.HasLength(50);
+							.HasLength(50)
+					.Build();
 
 				const string tableName = "TestTable";
 
@@ -123,7 +126,8 @@ namespace Tests.xUpdate
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<TestTable>()
 						.Property(t => t.Field1)
-							.HasLength(50);
+							.HasLength(50)
+					.Build();
 
 				const string tableName = "TestTable";
 
@@ -258,7 +262,8 @@ namespace Tests.xUpdate
 						.HasTableName("aa")
 						.Property(t => t.bb).IsPrimaryKey()
 						.Property(t => t.cc)
-					;
+
+					.Build();
 
 				try
 				{

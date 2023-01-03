@@ -276,21 +276,13 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		public Type[] GetRegisteredTypes()
+		public IEnumerable<Type> GetRegisteredTypes()
 		{
 			switch (MetadataReader)
 			{
-				case FluentMetadataReader fr :
-					return fr.GetRegisteredTypes();
-				case MetadataReader mr :
-					return
-					(
-						from f in mr.Readers.OfType<FluentMetadataReader>()
-						from t in f.GetRegisteredTypes()
-						select t
-					)
-					.ToArray();
-				default : return Array<Type>.Empty;
+				case FluentMetadataReader fr : return fr.GetRegisteredTypes();
+				case MetadataReader mr       : return mr.GetRegisteredTypes();
+				default                      : return Array<Type>.Empty;
 			}
 		}
 
@@ -343,34 +335,6 @@ namespace LinqToDB.Mapping
 							.Add(IdentifierBuilder.GetObjectID(value))
 							;
 					}
-				}
-			}
-
-			var list = new List<FluentMetadataReader>();
-
-			switch (MetadataReader)
-			{
-				case FluentMetadataReader fr :
-					list.Add(fr);
-					break;
-				case MetadataReader mr :
-					foreach (var r in mr.Readers)
-						if (r is FluentMetadataReader fr)
-							list.Add(fr);
-					break;
-			}
-
-			idBuilder.Add(list.Count);
-
-			if (list.Count > 0)
-			{
-				foreach (var id in
-					from id in list
-					from a in id.GetObjectIDs()
-					orderby a
-					select a)
-				{
-					idBuilder.Add(id);
 				}
 			}
 

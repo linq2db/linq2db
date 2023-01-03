@@ -1077,7 +1077,8 @@ namespace Tests.DataProvider
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AllType>()
-						.HasTableName("AllTypeCreateTest");
+						.HasTableName("AllTypeCreateTest")
+					.Build();
 
 				try
 				{

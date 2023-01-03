@@ -174,7 +174,10 @@ namespace Tests.xUpdate
 			var entity = ms.GetFluentMappingBuilder()
 				.Entity<CreateTableTypes>()
 				.HasColumn(e => e.Id);
+
 			testCase.ColumnBuilder(entity);
+
+			entity.Build();
 
 			var options = new JsonSerializerOptions () { IncludeFields = true };
 

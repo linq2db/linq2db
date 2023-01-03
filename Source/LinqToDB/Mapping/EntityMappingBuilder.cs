@@ -48,70 +48,19 @@ namespace LinqToDB.Mapping
 		#region GetAttributes
 
 		/// <summary>
-		/// Returns attributes of specified type, applied to current entity type.
-		/// </summary>
-		/// <typeparam name="TA">Mapping attribute type.</typeparam>
-		/// <returns>Returns list of attributes, applied to current entity type.</returns>
-		public TA[] GetAllAttributes<TA>()
-			where TA : MappingAttribute
-		{
-			return _builder.GetAttributes<TA>(typeof(TEntity));
-		}
-
-		/// <summary>
-		/// Returns attributes of specified type, applied to specified entity type.
-		/// </summary>
-		/// <typeparam name="TA">Mapping attribute type.</typeparam>
-		/// <param name="type">Entity type.</param>
-		/// <returns>Returns list of attributes, applied to specified entity type.</returns>
-		public TA[] GetAllAttributes<TA>(Type type)
-			where TA : MappingAttribute
-		{
-			return _builder.GetAttributes<TA>(type);
-		}
-
-		/// <summary>
-		/// Returns attributes of specified type, applied to specified entity member.
-		/// Member could be inherited from parent classes.
-		/// </summary>
-		/// <typeparam name="TA">Mapping attribute type.</typeparam>
-		/// <param name="memberInfo">Member info object.</param>
-		/// <returns>Returns list of attributes, applied to specified entity member.</returns>
-		public TA[] GetAllAttributes<TA>(MemberInfo memberInfo)
-			where TA : MappingAttribute
-		{
-			return _builder.GetAttributes<TA>(typeof(TEntity), memberInfo);
-		}
-
-		/// <summary>
-		/// Returns attributes of specified type, applied to current entity type and active for current configuration.
-		/// </summary>
-		/// <typeparam name="TA">Mapping attribute type.</typeparam>
-		/// <returns>Returns list of attributes.</returns>
-		public TA[] GetCurrentAttributes<TA>()
-			where TA : MappingAttribute
-		{
-			var attrs = GetAllAttributes<TA>();
-
-			return string.IsNullOrEmpty(Configuration) ?
-				attrs.Where(a => string.IsNullOrEmpty(a.Configuration)).ToArray() :
-				attrs.Where(a => Configuration ==     a.Configuration). ToArray();
-		}
-
-		/// <summary>
 		/// Returns attributes of specified type, applied to specified entity type and active for current configuration.
 		/// </summary>
 		/// <typeparam name="TA">Mapping attribute type.</typeparam>
 		/// <param name="type">Entity type.</param>
 		/// <returns>Returns list of attributes.</returns>
-		public TA[] GetCurrentAttributes<TA>(Type type)
+		private IEnumerable<TA> GetAttributes<TA>(Type type)
 			where TA : MappingAttribute
 		{
-			var attrs = GetAllAttributes<TA>(type);
+			var attrs = _builder.GetAttributes<TA>(type);
 
 			return string.IsNullOrEmpty(Configuration) ?
-				attrs.Where(a => string.IsNullOrEmpty(a.Configuration)).ToArray() :
-				attrs.Where(a => Configuration ==     a.Configuration). ToArray();
+				attrs.Where(a => string.IsNullOrEmpty(a.Configuration)):
+				attrs.Where(a => Configuration ==     a.Configuration) ;
 		}
 
 		/// <summary>
@@ -120,14 +69,14 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="TA">Mapping attribute type.</typeparam>
 		/// <param name="memberInfo">Member info object.</param>
 		/// <returns>Returns list of attributes.</returns>
-		public TA[] GetCurrentAttributes<TA>(MemberInfo memberInfo)
+		private IEnumerable<TA> GetAttributes<TA>(MemberInfo memberInfo)
 			where TA : MappingAttribute
 		{
-			var attrs = GetAllAttributes<TA>(memberInfo);
+			var attrs = _builder.GetAttributes<TA>(typeof(TEntity), memberInfo);
 
 			return string.IsNullOrEmpty(Configuration) ?
-				attrs.Where(a => string.IsNullOrEmpty(a.Configuration)).ToArray() :
-				attrs.Where(a => Configuration ==     a.Configuration). ToArray();
+				attrs.Where(a => string.IsNullOrEmpty(a.Configuration)):
+				attrs.Where(a => Configuration ==     a.Configuration) ;
 		}
 
 		#endregion
@@ -142,7 +91,6 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<TEntity> HasAttribute(MappingAttribute attribute)
 		{
 			_builder.HasAttribute(typeof(TEntity), attribute);
-			_builder.MappingSchema.ResetID();
 			return this;
 		}
 
@@ -155,7 +103,6 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<TEntity> HasAttribute(MemberInfo memberInfo, MappingAttribute attribute)
 		{
 			_builder.HasAttribute(memberInfo, attribute);
-			_builder.MappingSchema.ResetID();
 			return this;
 		}
 
@@ -168,7 +115,6 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<TEntity> HasAttribute(LambdaExpression func, MappingAttribute attribute)
 		{
 			_builder.HasAttribute(func, attribute);
-			_builder.MappingSchema.ResetID();
 			return this;
 		}
 
@@ -181,7 +127,6 @@ namespace LinqToDB.Mapping
 		public EntityMappingBuilder<TEntity> HasAttribute(Expression<Func<TEntity,object?>> func, MappingAttribute attribute)
 		{
 			_builder.HasAttribute(func, attribute);
-			_builder.MappingSchema.ResetID();
 			return this;
 		}
 
@@ -665,11 +610,9 @@ namespace LinqToDB.Mapping
 			Func<TA,TA>      overrideAttribute)
 			where TA : MappingAttribute
 		{
-			_builder.MappingSchema.ResetID();
+			var existingAttr = GetAttributes<TA>(typeof(TEntity)).FirstOrDefault();
 
-			var attrs = GetCurrentAttributes<TA>(typeof(TEntity));
-
-			if (attrs.Length == 0)
+			if (existingAttr == null)
 			{
 				var attr = _builder.MappingSchema.GetAttribute<TA>(typeof(TEntity));
 
@@ -686,7 +629,7 @@ namespace LinqToDB.Mapping
 				_builder.HasAttribute(typeof(TEntity), getNew());
 			}
 			else
-				modifyExisting(attrs[0]);
+				modifyExisting(existingAttr);
 
 			return this;
 		}
@@ -697,9 +640,7 @@ namespace LinqToDB.Mapping
 			Func<IEnumerable<TA>, TA?> existingGetter)
 			where TA : MappingAttribute
 		{
-			_builder.MappingSchema.ResetID();
-
-			var attr = existingGetter(GetCurrentAttributes<TA>(typeof(TEntity)));
+			var attr = existingGetter(GetAttributes<TA>(typeof(TEntity)));
 
 			if (attr == null)
 			{
@@ -723,8 +664,6 @@ namespace LinqToDB.Mapping
 			)
 			where TA : MappingAttribute
 		{
-			_builder.MappingSchema.ResetID();
-
 			var ex = func.Body;
 
 			if (ex is UnaryExpression expression)
@@ -740,7 +679,7 @@ namespace LinqToDB.Mapping
 
 				if (memberInfo == null) throw new ArgumentException($"'{e}' cant be converted to a class member.");
 
-				var attr = existingGetter!(GetAllAttributes<TA>(memberInfo));
+				var attr = existingGetter!(_builder.GetAttributes<TA>(typeof(TEntity), memberInfo));
 
 				if (attr == null)
 				{
@@ -786,6 +725,14 @@ namespace LinqToDB.Mapping
 			where TA : MappingAttribute
 		{
 			return attrs.FirstOrDefault();
+		}
+
+		/// <summary>
+		/// Adds configured mappings to builder's mapping schema.
+		/// </summary>
+		public void Build()
+		{
+			_builder.Build();
 		}
 	}
 }

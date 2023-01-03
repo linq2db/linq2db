@@ -14,15 +14,46 @@ namespace LinqToDB.Metadata
 
 	public class FluentMetadataReader : IMetadataReader
 	{
-		// don't forget to put lock on List<Attribute> when access it
-		readonly ConcurrentDictionary<Type,List<MappingAttribute>>               _types          = new();
-		readonly ConcurrentDictionary<MemberInfo,List<MappingAttribute>>         _members        = new ();
-		// set used to guarantee uniqueness
-		// list used to guarantee same order for columns in select queries
-		readonly ConcurrentDictionary<Type,(ISet<MemberInfo>,IList<MemberInfo>)> _dynamicColumns = new();
+		readonly ConcurrentDictionary<Type,MappingAttribute[]>       _types          = new();
+		readonly ConcurrentDictionary<MemberInfo,MappingAttribute[]> _members        = new();
+		readonly ConcurrentDictionary<Type, MemberInfo[]>            _dynamicColumns = new();
+
+		readonly MappingAttributesCache _cache = new (static source => (MappingAttribute[])source.GetCustomAttributes(typeof(MappingAttribute), inherit: false));
+
+		private MappingAttribute[] GetAllAttributes(ICustomAttributeProvider attributeProvider)
+		{
+			if (attributeProvider is Type       type) return _types  .TryGetValue(type, out var typeAttributes  ) ? typeAttributes   : Array<MappingAttribute>.Empty;
+			if (attributeProvider is MemberInfo mi  ) return _members.TryGetValue(mi  , out var memberAttributes) ? memberAttributes : Array<MappingAttribute>.Empty;
+			return Array<MappingAttribute>.Empty;
+		}
 
 		static bool IsSystemOrNullType(Type? type)
 			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
+
+		public FluentMetadataReader(IReadOnlyDictionary<Type, List<MappingAttribute>> typeAttributes, IReadOnlyDictionary<MemberInfo, List<MappingAttribute>> memberAttributes)
+		{
+			_types   = new(typeAttributes  .Select(kvp => new KeyValuePair<Type      , MappingAttribute[]>(kvp.Key, kvp.Value.ToArray())));
+			_members = new(memberAttributes.Select(kvp => new KeyValuePair<MemberInfo, MappingAttribute[]>(kvp.Key, kvp.Value.ToArray())));
+
+			// dynamic columns collection
+			Dictionary<Type,List<MemberInfo>>? dynamicColumns = null;
+			foreach (var mi in memberAttributes.Keys)
+			{
+				if (mi.IsDynamicColumnPropertyEx())
+				{
+					if (!(dynamicColumns ??= new()).TryGetValue(mi.DeclaringType!, out var members))
+						dynamicColumns.Add(mi.DeclaringType!, members = new());
+					members.Add(mi);
+				}
+			}
+
+			if (dynamicColumns != null)
+			{
+				// OrderBy: add stable ordering for same sql generation
+				foreach (var kvp in dynamicColumns)
+					_dynamicColumns.TryAdd(kvp.Key, kvp.Value.OrderBy(m => m.Name).ToArray());
+			}
+		}
 
 		public T[] GetAttributes<T>(Type type)
 			where T : MappingAttribute
@@ -43,14 +74,6 @@ namespace LinqToDB.Metadata
 			}
 
 			return Array<T>.Empty;
-		}
-
-		public void AddAttribute(Type type, MappingAttribute attribute)
-		{
-			var attrs = _types.GetOrAdd(type, static _ => new ());
-
-			lock (attrs)
-				attrs.Add(attribute);
 		}
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
@@ -78,26 +101,11 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		internal void AddAttribute(MemberInfo memberInfo, MappingAttribute attribute)
-		{
-			if (memberInfo.IsDynamicColumnPropertyEx())
-			{
-				var dynamicColumns = _dynamicColumns.GetOrAdd(memberInfo.DeclaringType!, (new HashSet<MemberInfo>(), new List<MemberInfo>()));
-
-				lock (dynamicColumns.Item1)
-					if (dynamicColumns.Item1.Add(memberInfo))
-						dynamicColumns.Item2.Add(memberInfo);
-			}
-
-			_members.GetOrAdd(memberInfo, static _ => new ()).Add(attribute);
-		}
-
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
 			if (_dynamicColumns.TryGetValue(type, out var dynamicColumns))
-				lock (dynamicColumns.Item1)
-					return dynamicColumns.Item2.ToArray();
+					return dynamicColumns;
 
 			return Array<MemberInfo>.Empty;
 		}
@@ -108,46 +116,9 @@ namespace LinqToDB.Metadata
 		/// <returns>
 		/// Returns array with all types, mapped by current fluent mapper.
 		/// </returns>
-		public Type[] GetRegisteredTypes()
+		public IEnumerable<Type> GetRegisteredTypes()
 		{
-			// CD.Keys is probably thread-safe for enumeration (but it is not documented behavior)
-			// https://stackoverflow.com/questions/10479867
-			return _types.Keys.ToArray();
-		}
-
-		public IEnumerable<string> GetObjectIDs()
-		{
-			foreach (var type in _types)
-			{
-				var sb = new StringBuilder(".")
-					.Append(IdentifierBuilder.GetObjectID(type.Key))
-					.Append('.')
-					.Append(type.Value.Count)
-					.Append('.')
-					;
-
-				foreach (var a in type.Value)
-					sb.Append(a.GetObjectID()).Append('.');
-
-				yield return sb.ToString();
-			}
-
-			foreach (var member in _members)
-			{
-				var sb = new StringBuilder(".")
-					.Append(IdentifierBuilder.GetObjectID(member.Key.DeclaringType))
-					.Append('.')
-					.Append(member.Key.Name)
-					.Append('.')
-					.Append(member.Value.Count)
-					.Append('.')
-					;
-
-				foreach (var a in member.Value)
-					sb.Append(a.GetObjectID()).Append('.');
-
-				yield return sb.ToString();
-			}
+			return _types.Keys;
 		}
 	}
 }

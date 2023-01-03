@@ -1000,7 +1000,8 @@ namespace Tests.DataProvider
 						.Entity<LinqDataTypes>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
-						;
+						.Build();
+					;
 
 					if (context.IsAnyOf(TestProvName.AllOracleNative))
 					{
@@ -1008,7 +1009,7 @@ namespace Tests.DataProvider
 							.Entity<LinqDataTypes>()
 								.Property(e => e.BoolValue)
 									.HasDataType(DataType.Int16)
-							;
+							.Build();
 					}
 
 					db.AddMappingSchema(ms);
@@ -1049,7 +1050,7 @@ namespace Tests.DataProvider
 						.Entity<LinqDataTypes>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
-						;
+						.Build();
 
 					if (context.IsAnyOf(TestProvName.AllOracleNative))
 					{
@@ -1057,7 +1058,7 @@ namespace Tests.DataProvider
 							.Entity<LinqDataTypes>()
 								.Property(e => e.BoolValue)
 									.HasDataType(DataType.Int16)
-							;
+							.Build();
 					}
 
 					db.AddMappingSchema(ms);
@@ -1387,7 +1388,7 @@ namespace Tests.DataProvider
 						.Entity<LinqDataTypesBC>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
-						;
+						.Build();
 				}
 
 				try
@@ -1425,7 +1426,7 @@ namespace Tests.DataProvider
 						.Entity<LinqDataTypesBC>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
-						;
+						.Build();
 				}
 
 				try
@@ -1501,7 +1502,7 @@ namespace Tests.DataProvider
 					.Entity<LinqDataTypes2>()
 						.Property(e => e.GuidValue)
 							.IsNotColumn()
-					;
+					.Build();
 
 				try
 				{
@@ -1536,7 +1537,7 @@ namespace Tests.DataProvider
 					.Entity<LinqDataTypes2>()
 						.Property(e => e.GuidValue)
 							.IsNotColumn()
-					;
+					.Build();
 
 				try
 				{
@@ -2419,7 +2420,8 @@ namespace Tests.DataProvider
 
 						db.MappingSchema.GetFluentMappingBuilder()
 							.Entity<Issue723Table>()
-							.HasSchemaName("C##ISSUE723SCHEMA");
+							.HasSchemaName("C##ISSUE723SCHEMA")
+							.Build();
 
 						for (var i = 1; i < 3; i++)
 						{
@@ -3846,7 +3848,8 @@ CREATE TABLE ""TABLE_A""(
 				ms.GetFluentMappingBuilder().Entity<NativeIdentity>()
 					.HasColumn(e => e.Id)
 					.HasColumn(e => e.Field)
-					.HasIdentity(e => e.Id);
+					.HasIdentity(e => e.Id)
+					.Build();
 				db.AddMappingSchema(ms);
 
 				var initialData = new []

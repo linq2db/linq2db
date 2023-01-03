@@ -91,5 +91,17 @@ namespace LinqToDB.Metadata
 
 			return cols.Flatten();
 		}
+
+		/// <summary>
+		/// Enumerates types, registered by FluentMetadataBuilder.
+		/// </summary>
+		/// <returns>
+		/// Returns array with all types, mapped by fluent mappings.
+		/// </returns>
+		public IEnumerable<Type> GetRegisteredTypes()
+		{
+			return      Readers.OfType<FluentMetadataReader>().SelectMany(fr => fr.GetRegisteredTypes())
+				.Concat(Readers.OfType<MetadataReader      >().SelectMany(mr => mr.GetRegisteredTypes()));
+		}
 	}
 }

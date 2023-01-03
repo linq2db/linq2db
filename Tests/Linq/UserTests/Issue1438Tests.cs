@@ -27,7 +27,8 @@ namespace Tests.UserTests
 						.HasTableName("Issue1438")
 						.Property(x => x.Id)
 							.IsPrimaryKey()
-							.IsIdentity();
+							.IsIdentity()
+					.Build();
 
 				using (var tbl = db.CreateLocalTable<Client>())
 				{
@@ -58,7 +59,8 @@ namespace Tests.UserTests
 						.HasTableName("Issue1438")
 						.Property(x => x.Id)
 							.IsPrimaryKey()
-							.IsIdentity();
+							.IsIdentity()
+					.Build();
 
 				using (var tbl = db.CreateLocalTable<Client>())
 				{

@@ -502,7 +502,8 @@ namespace Tests.DataProvider
 
 				ms.GetFluentMappingBuilder()
 					.Entity<AllType>()
-						.HasTableName("AllTypeCreateTest");
+						.HasTableName("AllTypeCreateTest")
+					.Build();
 
 				try
 				{

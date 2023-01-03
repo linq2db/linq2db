@@ -505,5 +505,13 @@ namespace LinqToDB.Mapping
 		{
 			return HasAttribute(new SequenceNameAttribute(configuration ?? _entity.Configuration, sequenceName) { Schema = schema });
 		}
+
+		/// <summary>
+		/// Adds configured mappings to builder's mapping schema.
+		/// </summary>
+		public void Build()
+		{
+			_entity.Build();
+		}
 	}
 }

@@ -282,7 +282,8 @@ namespace Tests.Linq
 			db.MappingSchema.GetFluentMappingBuilder()
 				.Entity<TestTable>()
 				.HasIsTemporary()
-				.HasTableOptions(TableOptions.DropIfExists);
+				.HasTableOptions(TableOptions.DropIfExists)
+				.Build();
 
 			db.DropTable<TestTable>();
 

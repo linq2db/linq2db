@@ -164,7 +164,8 @@ namespace Tests.Linq
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AsyncDataTable>()
-						.HasTableName(lt.TableName);
+						.HasTableName(lt.TableName)
+					.Build();
 
 				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection>>(
 				(bd, id, token) =>
@@ -213,7 +214,8 @@ namespace Tests.Linq
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AsyncDataTable>()
-						.HasTableName(lt.TableName);
+						.HasTableName(lt.TableName)
+					.Build();
 
 				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<AsyncDataProjection?>>(
 					(bd, id, token) =>
@@ -328,7 +330,8 @@ namespace Tests.Linq
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AsyncDataTable>()
-						.HasTableName(lt.TableName);
+						.HasTableName(lt.TableName)
+					.Build();
 
 				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
 					(bd, id, token) =>
@@ -347,7 +350,8 @@ namespace Tests.Linq
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
 					.Entity<AsyncDataTable>()
-						.HasTableName(lt.TableName);
+						.HasTableName(lt.TableName)
+					.Build();
 
 				var query = CompiledQuery.Compile<IDataContext,int,CancellationToken,Task<int>>(
 					(bd, id, token) =>

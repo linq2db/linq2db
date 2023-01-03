@@ -241,6 +241,9 @@ builder.Entity<Product>()
     ;
 
 //... other mapping configurations
+
+// add configured mappings to mapping schema
+builder.Build();
 ```
 
 In this example we configured only three properties and one association. We let linq2db to infer all other properties which have to match with column names. However, other associations will not get configured automatically.

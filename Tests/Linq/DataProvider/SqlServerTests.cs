@@ -1282,7 +1282,8 @@ namespace Tests.DataProvider
 
 			ms.GetFluentMappingBuilder()
 				.Entity<AllTypes>()
-					.HasTableName("AllTypeCreateTest");
+					.HasTableName("AllTypeCreateTest")
+				.Build();
 
 			db.DropTable<AllTypes>(tableOptions:TableOptions.DropIfExists);
 
@@ -1303,7 +1304,8 @@ namespace Tests.DataProvider
 
 				ms.GetFluentMappingBuilder()
 					.Entity<AllTypes2>()
-					.HasTableName("AllType2CreateTest");
+						.HasTableName("AllType2CreateTest")
+					.Build();
 
 				try
 				{

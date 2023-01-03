@@ -106,7 +106,8 @@ namespace Tests.UserTests
 					.Property(t => t.EffectiveStart).HasOrder(2)
 					.Property(t => t.Key).HasOrder(4)
 					.Property(t => t.Unordered1)
-					.Property(t => t.Unordered2);
+					.Property(t => t.Unordered2)
+					.Build();
 
 				using (var tbl = db.CreateLocalTable<FluentMapping>())
 				{

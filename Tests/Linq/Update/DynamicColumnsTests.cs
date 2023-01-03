@@ -141,7 +141,8 @@ namespace Tests.xUpdate
 				.Property(x => Sql.Property<string>(x, "LastName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "MiddleName"))
 				.Property(x => Sql.Property<Gender>(x, "Gender")).IsNullable(false)
-				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID);
+				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID)
+				.Build();
 
 			return ms;
 		}

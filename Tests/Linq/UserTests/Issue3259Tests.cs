@@ -81,6 +81,8 @@ namespace Tests.UserTests
 			builder.Entity<LeaveRequestDateEntry>()
 				.HasPrimaryKey(x => x.Id);
 
+			builder.Build();
+
 			var timeOffBalances = new EmployeeTimeOffBalance[]{new()
 				{
 					Id               = 1,

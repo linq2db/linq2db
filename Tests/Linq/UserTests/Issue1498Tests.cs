@@ -125,7 +125,8 @@ namespace Tests.UserTests
 					.Entity<Message>()
 						.Property(e => e.Id)
 						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+						.Property(e => e.Text)
+					.Build();
 
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
@@ -158,7 +159,8 @@ namespace Tests.UserTests
 					.Entity<Message>()
 						.Property(e => e.Id)
 						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+						.Property(e => e.Text)
+					.Build();
 
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
@@ -191,7 +193,8 @@ namespace Tests.UserTests
 					.Entity<Message>()
 						.Property(e => e.Id)
 						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+						.Property(e => e.Text)
+					.Build();
 
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
@@ -229,7 +232,8 @@ namespace Tests.UserTests
 					.Entity<Message>()
 						.Property(e => e.Id).IsPrimaryKey()
 						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+						.Property(e => e.Text)
+					.Build();
 
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())

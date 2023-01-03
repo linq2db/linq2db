@@ -64,6 +64,8 @@ namespace Tests.Linq
 
 			builder.Entity<MasterClass>().HasQueryFilter((q, dc) => q.Where(e => !((DcParams)((MyDataContext)dc).Params).IsSoftDeleteFilterEnabled || !e.IsDeleted));
 
+			builder.Build();
+
 			_filterMappingSchema = builder.MappingSchema;
 		}
 
@@ -131,6 +133,8 @@ namespace Tests.Linq
 
 			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
+
+			builder.Build();
 
 			var ms = builder.MappingSchema;
 
@@ -218,6 +222,8 @@ namespace Tests.Linq
 			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
 
+			builder.Build();
+
 			var ms = builder.MappingSchema;
 
 			using (var db = new MyDataContext(context, ms))
@@ -244,6 +250,8 @@ namespace Tests.Linq
 
 			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => softDeleteCheck.Compile()(e, dc)));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => softDeleteCheck.Compile()(e, dc)));
+
+			builder.Build();
 
 			var ms = builder.MappingSchema;
 
@@ -286,6 +294,8 @@ namespace Tests.Linq
 
 			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
+
+			builder.Build();
 
 			var ms = builder.MappingSchema;
 

@@ -1716,11 +1716,11 @@ namespace LinqToDB.Mapping
 		/// Enumerates types registered by FluentMetadataBuilder.
 		/// </summary>
 		/// <returns>
-		/// Returns array with all types, mapped by fluent mappings.
+		/// Returns all types, mapped by fluent mappings.
 		/// </returns>
-		public Type[] GetDefinedTypes()
+		public IEnumerable<Type> GetDefinedTypes()
 		{
-			return Schemas.SelectMany(static s => s.GetRegisteredTypes()).ToArray();
+			return Schemas.SelectMany(static s => s.GetRegisteredTypes()).Distinct();
 		}
 
 		/// <summary>
