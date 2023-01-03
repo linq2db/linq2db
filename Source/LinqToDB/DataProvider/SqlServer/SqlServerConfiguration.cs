@@ -4,7 +4,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	public static class SqlServerConfiguration
 	{
-		[Obsolete("Use SqlServerOptions.Default.BulkCopyType instead.")]
+		[Obsolete("Use SqlServerOptions.Default.GenerateScopeIdentity instead.")]
 		public static bool GenerateScopeIdentity
 		{
 			get => SqlServerOptions.Default.GenerateScopeIdentity;
