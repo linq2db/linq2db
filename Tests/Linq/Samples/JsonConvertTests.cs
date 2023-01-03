@@ -14,9 +14,8 @@ using NUnit.Framework;
 
 namespace Tests.Samples
 {
-
 	[AttributeUsage(AttributeTargets.Property)]
-	public class JSonContentAttribute : Attribute
+	public class JsonContentAttribute : Attribute
 	{
 	}
 
@@ -47,7 +46,7 @@ namespace Tests.Samples
 
 		public static void GenerateConvertors(Type entityType, MappingSchema ms)
 		{
-			foreach (var propertyInfo in entityType.GetProperties().Where(p => p.GetCustomAttribute(typeof(JSonContentAttribute)) != null))
+			foreach (var propertyInfo in entityType.GetProperties().Where(p => p.HasAttribute<JsonContentAttribute>()))
 			{
 				// emulating inParam => JsonConvert.DeserializeObject(inParam, propertyInfo.PropertyType)
 
@@ -100,7 +99,7 @@ namespace Tests.Samples
 	{
 		[Column] public int Id    { get; set; }
 
-		[Column(DataType = DataType.VarChar, Length = 4000), JSonContent]
+		[Column(DataType = DataType.VarChar, Length = 4000), JsonContent]
 		public DataClass? Data { get; set; }
 	}
 

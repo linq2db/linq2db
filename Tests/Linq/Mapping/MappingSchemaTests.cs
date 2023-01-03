@@ -156,8 +156,7 @@ namespace Tests.Mapping
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(2));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -171,8 +170,7 @@ namespace Tests.Mapping
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(3));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -187,8 +185,7 @@ namespace Tests.Mapping
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(3));
 			Assert.That(attrs[0].Value, Is.EqualTo(3));
@@ -211,8 +208,7 @@ namespace Tests.Mapping
 		{
 			var attrs = MappingSchema.Default.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(1));
 			Assert.That(attrs[0].Value, Is.EqualTo(1));
@@ -242,8 +238,7 @@ namespace Tests.Mapping
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(4));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -266,8 +261,7 @@ namespace Tests.Mapping
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(4));
 			Assert.That(attrs[0].Value, Is.EqualTo(2));
@@ -286,8 +280,7 @@ namespace Tests.Mapping
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(
 				typeof(AttrTest),
-				MemberHelper.FieldOf<AttrTest>(a => a.Field1),
-				a => a.Configuration);
+				MemberHelper.FieldOf<AttrTest>(a => a.Field1));
 
 			Assert.That(attrs.Length,   Is.EqualTo(4));
 			Assert.That(attrs[0].Value, Is.EqualTo(30));

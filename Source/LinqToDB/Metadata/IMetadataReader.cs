@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Reflection;
-using JetBrains.Annotations;
+using System.Collections.Generic;
 
 namespace LinqToDB.Metadata
 {
+	using Mapping;
+
 	public interface IMetadataReader
 	{
-		T[] GetAttributes<T>(Type type,                        bool inherit = true) where T : Attribute;
-		T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true) where T : Attribute;
+		T[] GetAttributes<T>(Type type                       ) where T : MappingAttribute;
+		T[] GetAttributes<T>(Type type, MemberInfo memberInfo) where T : MappingAttribute;
 
 		/// <summary>
 		/// Gets the dynamic columns defined on given type.

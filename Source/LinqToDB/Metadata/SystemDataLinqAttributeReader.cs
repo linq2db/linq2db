@@ -1,27 +1,33 @@
 ﻿#if NETFRAMEWORK
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
 	using Common;
+	using Extensions;
 	using Mapping;
 
+	/// <summary>
+	/// Metadata provider using mapping attributes from <see cref="System.Data.Linq.Mapping"/> namespace:
+	/// <list type="bullet">
+	/// <item><see cref="System.Data.Linq.Mapping.TableAttribute"/></item>
+	/// <item><see cref="System.Data.Linq.Mapping.DatabaseAttribute"/></item>
+	/// <item><see cref="System.Data.Linq.Mapping.ColumnAttribute"/></item>
+	/// <item><see cref="System.Data.Linq.Mapping.AssociationAttribute"/></item>
+	/// </list>
+	/// </summary>
 	public class SystemDataLinqAttributeReader : IMetadataReader
 	{
-		readonly AttributeReader _reader = new AttributeReader();
-
-		public T[] GetAttributes<T>(Type type, bool inherit)
-			where T : Attribute
+		public T[] GetAttributes<T>(Type type)
+			where T : MappingAttribute
 		{
 			if (typeof(T) == typeof(TableAttribute))
 			{
-				var ta = _reader.GetAttributes<System.Data.Linq.Mapping.TableAttribute>   (type, inherit);
-				var da = _reader.GetAttributes<System.Data.Linq.Mapping.DatabaseAttribute>(type, inherit);
-
-				var t = ta.Length == 1 ? ta[0] : null;
-				var d = da.Length == 1 ? da[0] : null;
+				var t = type.GetAttribute<System.Data.Linq.Mapping.TableAttribute>   ();
+				var d = type.GetAttribute<System.Data.Linq.Mapping.DatabaseAttribute>();
 
 				if (t != null || d != null)
 				{
@@ -44,9 +50,7 @@ namespace LinqToDB.Metadata
 									attr.Schema = names[0];
 									break;
 								default :
-									throw new MetadataException(string.Format(
-										"Invalid table name '{0}' of type '{1}'",
-										name, type.FullName));
+									throw new MetadataException($"Invalid table name '{name}' of type '{type.FullName}'");
 							}
 						}
 					}
@@ -61,18 +65,16 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
-			where T : Attribute
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
 			if (typeof(T) == typeof(ColumnAttribute))
 			{
-				var attrs = _reader.GetAttributes<System.Data.Linq.Mapping.ColumnAttribute>(type, memberInfo, inherit);
+				var c = memberInfo.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();
 
-				if (attrs.Length == 1)
+				if (c != null)
 				{
-					var c = attrs[0];
-
-					var attr = new ColumnAttribute
+					var attr = new ColumnAttribute()
 					{
 						Name            = c.Name,
 						DbType          = c.DbType,
@@ -88,14 +90,18 @@ namespace LinqToDB.Metadata
 			}
 			else if (typeof(T) == typeof(AssociationAttribute))
 			{
-				var ta = _reader.GetAttributes<System.Data.Linq.Mapping.TableAttribute>(type, memberInfo.DeclaringType, inherit);
-
-				if (ta.Length == 1)
+				if (memberInfo.DeclaringType.HasAttribute<System.Data.Linq.Mapping.TableAttribute>())
 				{
-					return _reader
-						.GetAttributes<System.Data.Linq.Mapping.AssociationAttribute>(type, memberInfo, inherit)
-						.Select(a => (T)(Attribute)new AssociationAttribute { ThisKey = a.ThisKey, OtherKey = a.OtherKey, Storage = a.Storage })
-						.ToArray();
+					var attrs = memberInfo.GetAttributes<System.Data.Linq.Mapping.AssociationAttribute>();
+					if (attrs.Length > 0)
+					{
+						var associations = new T[attrs.Length];
+
+						for (var i = 0; i < attrs.Length; i++)
+							associations[i] = (T)(Attribute)new AssociationAttribute { ThisKey = attrs[i].ThisKey, OtherKey = attrs[i].OtherKey, Storage = attrs[i].Storage };
+
+						return associations;
+					}
 				}
 			}
 
@@ -103,8 +109,7 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type)
-			=> _reader.GetDynamicColumns(type);
+		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
 	}
 }
 #endif

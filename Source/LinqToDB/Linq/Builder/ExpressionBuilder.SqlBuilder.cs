@@ -2382,7 +2382,7 @@ namespace LinqToDB.Linq.Builder
 		public ISqlPredicate MakeIsPredicate<TContext>(
 			TContext                              getSqlContext,
 			IBuildContext                         context,
-			List<InheritanceMapping>              inheritanceMapping,
+			IReadOnlyList<InheritanceMapping>     inheritanceMapping,
 			Type                                  toType,
 			Func<TContext,string, ISqlExpression> getSql)
 		{

@@ -38,25 +38,25 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets attributes of type <typeparamref name="T"/>, applied to specified type.
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type.</typeparam>
 		/// <param name="type">Type with attributes.</param>
 		/// <returns>Returns attributes of specified type, applied to <paramref name="type"/>.</returns>
 		public T[] GetAttributes<T>(Type type)
-			where T : Attribute
+			where T : MappingAttribute
 		{
-			return _reader.GetAttributes<T>(type, false);
+			return _reader.GetAttributes<T>(type);
 		}
 
 		/// <summary>
 		/// Gets attributes of type <typeparamref name="T"/>, applied to specified member. Search for member in specified
 		/// type or it's parents.
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type.</typeparam>
 		/// <param name="type">Member owner type.</param>
 		/// <param name="memberInfo">Member descriptor.</param>
 		/// <returns>Returns attributes of specified type, applied to <paramref name="memberInfo"/>.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : Attribute
+			where T : MappingAttribute
 		{
 			return _reader.GetAttributes<T>(type, memberInfo);
 		}

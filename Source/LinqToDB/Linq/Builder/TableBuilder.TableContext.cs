@@ -149,7 +149,7 @@ namespace LinqToDB.Linq.Builder
 				return OriginalType;
 			}
 
-			public List<InheritanceMapping> InheritanceMapping = null!;
+			public IReadOnlyList<InheritanceMapping> InheritanceMapping = null!;
 
 			protected void Init(bool applyFilters)
 			{
@@ -422,10 +422,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(typeAccessor.Type, member.MemberInfo).FirstOrDefault();
-						var isAssociation = assocAttr != null;
-
-						if (isAssociation)
+						if (Builder.MappingSchema.HasAttribute<AssociationAttribute>(typeAccessor.Type, member.MemberInfo))
 						{
 							foreach (var item in loadWithItems)
 							{
@@ -1704,7 +1701,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
 				{
-					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo, static a => a.Configuration);
+					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo);
 
 					if (attribute != null)
 						descriptor = new AssociationDescriptor

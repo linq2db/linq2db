@@ -1,9 +1,8 @@
-﻿#if NET472
-using System.Data.Linq.Mapping;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
@@ -89,4 +88,3 @@ namespace Tests.Metadata
 		}
 	}
 }
-#endif

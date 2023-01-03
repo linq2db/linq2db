@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (arg is NewArrayExpression ae)
 				{
-					var attr = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>().FirstOrDefault();
+					var evaluateElements = ae.Expressions.Count > 0 && p.HasAttribute<SqlQueryDependentAttribute>();
 
 					list.Add(new($"{name}.Count", arg, p)
 					{
@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ex = ae.Expressions[j];
 
-						if (attr != null)
+						if (evaluateElements)
 							ex = Expression.Constant(ex.EvaluateExpression());
 
 						list.Add(new($"{name}.{j}", ex, p, j));
@@ -60,9 +60,8 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					var ex   = methodCall.Arguments[i];
-					var attr = p.GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>().FirstOrDefault();
 
-					if (attr != null)
+					if (p.HasAttribute<SqlQueryDependentAttribute>())
 						ex = Expression.Constant(ex.EvaluateExpression());
 
 					list.Add(new(name, ex, p));

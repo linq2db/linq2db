@@ -1,7 +1,5 @@
-﻿#if NET472
-using System.Data.Linq.Mapping;
-
-using LinqToDB.Expressions;
+﻿using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
@@ -11,15 +9,22 @@ namespace Tests.Metadata
 	[TestFixture]
 	public class AttributeReaderTests : TestBase
 	{
+		[Table("TestTable")]
+		public sealed class TestEntity
+		{
+			[Column                   ] public int Id;
+			[Column(Name = "TestName")] public int Property1 { get; set; }
+
+		}
 		[Test]
 		public void TypeAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<TestFixtureAttribute>(typeof(AttributeReaderTests));
+			var attrs = rd.GetAttributes<TableAttribute>(typeof(TestEntity));
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual(null, attrs[0].Description);
+			Assert.AreEqual("TestTable", attrs[0].Name);
 		}
 
 		public int Field1;
@@ -28,19 +33,18 @@ namespace Tests.Metadata
 		public void FieldAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(AttributeReaderTests), MemberHelper.MemberOf<AttributeReaderTests>(a => a.Field1));
+			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Id));
 
 			Assert.AreEqual(0, attrs.Length);
+			Assert.IsNull(attrs[0].Name);
 		}
 
-		[Column(Name = "TestName")]
-		public int Property1 { get; set; }
 
 		[Test]
 		public void PropertyAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(AttributeReaderTests), MemberHelper.MemberOf<AttributeReaderTests>(a => a.Property1));
+			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Property1));
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
@@ -48,4 +52,3 @@ namespace Tests.Metadata
 		}
 	}
 }
-#endif

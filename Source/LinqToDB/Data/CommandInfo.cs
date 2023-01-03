@@ -611,20 +611,25 @@ namespace LinqToDB.Data
 
 		Dictionary<int, MemberAccessor> GetMultipleQueryIndexMap<T>(TypeAccessor<T> typeAccessor)
 		{
-			var members = typeAccessor.Members.Where(m => m.HasSetter).ToArray();
+			var indexMap = new Dictionary<int, MemberAccessor>();
 
 			// Use attribute labels if any exist.
-			var indexMap = (from m in members
-				let a = m.GetAttributes<ResultSetIndexAttribute>()
-				where a != null
-				select new { Member = m, a[0].Index }).ToDictionary(e => e.Index, e => e.Member);
+			foreach (var m in typeAccessor.Members.Where(m => m.HasSetter))
+			{
+				var attr = m.MemberInfo.GetAttribute<ResultSetIndexAttribute>();
+
+				if (attr != null)
+					indexMap.Add(attr.Index, m);
+			}
 
 			if (indexMap.Count == 0)
 			{
 				// Use ordering of properties according to reflection.
-				for (var i = 0; i < members.Length; i++)
+				var i = 0;
+				foreach (var m in typeAccessor.Members.Where(m => m.HasSetter))
 				{
-					indexMap[i] = members[i];
+					indexMap[i] = m;
+					i++;
 				}
 			}
 

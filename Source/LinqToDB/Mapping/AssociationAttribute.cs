@@ -35,13 +35,6 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string?      Configuration       { get; set; }
-
-		/// <summary>
 		/// Gets or sets comma-separated list of association key members on this side of association.
 		/// Those keys will be used for join predicate generation and must be compatible with <see cref="OtherKey"/> keys.
 		/// You must specify keys it you do not use custom predicate (see <see cref="ExpressionPredicate"/>).

@@ -24,15 +24,12 @@ namespace LinqToDB.Metadata
 		static bool IsSystemOrNullType(Type? type)
 			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
 
-		public T[] GetAttributes<T>(Type type, bool inherit = true)
-			where T : Attribute
+		public T[] GetAttributes<T>(Type type)
+			where T : MappingAttribute
 		{
 			if (_types.TryGetValue(type, out var attrs))
 				lock (attrs)
 					return attrs.OfType<T>().ToArray();
-
-			if (!inherit)
-				return Array<T>.Empty;
 
 			var parents = new [] { type.BaseType }
 				.Where(_ => !IsSystemOrNullType(_))
@@ -40,7 +37,7 @@ namespace LinqToDB.Metadata
 
 			foreach(var p in parents)
 			{
-				var pattrs = GetAttributes<T>(p!, inherit);
+				var pattrs = GetAttributes<T>(p!);
 				if (pattrs.Length > 0)
 					return pattrs;
 			}
@@ -56,17 +53,14 @@ namespace LinqToDB.Metadata
 				attrs.Add(attribute);
 		}
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
-			where T : Attribute
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
 			if (memberInfo.DeclaringType != type)
 				memberInfo = type.GetMemberEx(memberInfo) ?? memberInfo;
 
 			if (_members.TryGetValue(memberInfo, out var attrs))
 				return attrs.OfType<T>().ToArray();
-
-			if (inherit == false)
-				return Array<T>.Empty;
 
 			var parents = new [] { type.BaseType }
 				.Where(_ => !IsSystemOrNullType(_))
@@ -76,7 +70,7 @@ namespace LinqToDB.Metadata
 
 			foreach(var p in parents)
 			{
-				var pattrs = GetAttributes<T>(p!.Type, p.Member!, inherit);
+				var pattrs = GetAttributes<T>(p!.Type, p.Member!);
 				if (pattrs.Length > 0)
 					return pattrs;
 			}
@@ -84,7 +78,7 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		public void AddAttribute(MemberInfo memberInfo, MappingAttribute attribute)
+		internal void AddAttribute(MemberInfo memberInfo, MappingAttribute attribute)
 		{
 			if (memberInfo.IsDynamicColumnPropertyEx())
 			{

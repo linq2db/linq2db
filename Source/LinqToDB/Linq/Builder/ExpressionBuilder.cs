@@ -1480,8 +1480,7 @@ namespace LinqToDB.Linq.Builder
 					var parameters = call.Method.GetParameters();
 					for (int i = 0; i < parameters.Length; i++)
 					{
-						var attr = parameters[i].GetCustomAttributes(typeof(SqlQueryDependentAttribute), false).Cast<SqlQueryDependentAttribute>()
-							.FirstOrDefault();
+						var attr = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
 						if (attr != null)
 							query.AddQueryDependedObject(call.Arguments[i], attr);
 					}

@@ -1018,147 +1018,70 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type.
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Attributes owner type.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, bool inherit = true)
-			where T : Attribute
-			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
-			//where T : MappingAttribute
+		private T[] GetAllAttributes<T>(Type type)
+			where T : MappingAttribute
 		{
 			if (MetadataReaders.Length == 0)
 				return Array<T>.Empty;
 			if (MetadataReaders.Length == 1)
-				return MetadataReaders[0].GetAttributes<T>(type, inherit);
+				return MetadataReaders[0].GetAttributes<T>(type);
 
-			var length = 0;
 			var attrs = new T[MetadataReaders.Length][];
 
 			for (var i = 0; i < MetadataReaders.Length; i++)
-			{
-				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, inherit);
-				length += attrs[i].Length;
-			}
+				attrs[i] = MetadataReaders[i].GetAttributes<T>(type);
 
-			var attributes = new T[length];
-			length = 0;
-			for (var i = 0; i < attrs.Length; i++)
-			{
-				if (attrs[i].Length > 0)
-				{
-					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
-					length += attrs[i].Length;
-				}
-			}
-
-			return attributes;
+			return attrs.Flatten();
 		}
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type member.
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
-			where T : Attribute
-			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
-			//where T : MappingAttribute
+		private T[] GetAllAttributes<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
 			if (MetadataReaders.Length == 0)
 				return Array<T>.Empty;
 			if (MetadataReaders.Length == 1)
-				return MetadataReaders[0].GetAttributes<T>(type, memberInfo, inherit);
+				return MetadataReaders[0].GetAttributes<T>(type, memberInfo);
 
 			var attrs = new T[MetadataReaders.Length][];
-			var length = 0;
 
 			for (var i = 0; i < MetadataReaders.Length; i++)
-			{
-				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, memberInfo, inherit);
-				length += attrs[i].Length;
-			}
+				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, memberInfo);
 
-			var attributes = new T[length];
-			length = 0;
-			for (var i = 0; i < attrs.Length; i++)
-			{
-				if (attrs[i].Length > 0)
-				{
-					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
-					length += attrs[i].Length;
-				}
-			}
-
-			return attributes;
-		}
-
-		/// <summary>
-		/// Gets attribute of specified type, associated with specified type.
-		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
-		/// <param name="type">Attribute owner type.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
-		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		public T? GetAttribute<T>(Type type, bool inherit = true)
-			where T : Attribute
-			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
-			//where T : MappingAttribute
-		{
-			var attrs = GetAttributes<T>(type, inherit);
-			return attrs.Length == 0 ? null : attrs[0];
-		}
-
-		/// <summary>
-		/// Gets attribute of specified type, associated with specified type member.
-		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
-		/// <param name="type">Member's owner type.</param>
-		/// <param name="memberInfo">Attribute owner member.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
-		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, bool inherit = true)
-			where T : Attribute
-			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
-			//where T : MappingAttribute
-		{
-			var attrs = GetAttributes<T>(type, memberInfo, inherit);
-			return attrs.Length == 0 ? null : attrs[0];
+			return attrs.Flatten();
 		}
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type.
-		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Attributes owner type.</param>
-		/// <param name="configGetter">Attribute configuration name provider.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
-		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, Func<T,string?> configGetter, bool inherit = true,
-			bool exactForConfiguration = false)
-			where T : Attribute
-			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
-			//where T : MappingAttribute
+		public T[] GetAttributes<T>(Type type)
+			where T : MappingAttribute
 		{
 			var list  = new List<T>();
-			var attrs = GetAttributes<T>(type, inherit);
+			var attrs = GetAllAttributes<T>(type);
 
 			foreach (var c in ConfigurationList)
 			{
 				foreach (var a in attrs)
-					if (configGetter(a) == c)
+					if (a.Configuration == c)
 						list.Add(a);
-				if (exactForConfiguration && list.Count > 0)
-					return list.ToArray();
 			}
 
 			foreach (var attribute in attrs)
-				if (string.IsNullOrEmpty(configGetter(attribute)))
+				if (string.IsNullOrEmpty(attribute.Configuration))
 					list.Add(attribute);
 
 			return list.ToArray();
@@ -1166,35 +1089,30 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type member.
-		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <param name="configGetter">Attribute configuration name provider.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
-		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
+		/// <param name="forFirstConfiguration">If <c>true</c> - returns only atributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true,
-			bool exactForConfiguration = false)
-			where T : Attribute
-			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
-			//where T : MappingAttribute
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool forFirstConfiguration = false)
+			where T : MappingAttribute
 		{
 			var list  = new List<T>();
-			var attrs = GetAttributes<T>(type, memberInfo, inherit);
+			var attrs = GetAllAttributes<T>(type, memberInfo);
 
 			foreach (var c in ConfigurationList)
 			{
 				foreach (var a in attrs)
-					if (configGetter(a) == c)
+					if (a.Configuration == c)
 						list.Add(a);
-				if (exactForConfiguration && list.Count > 0)
+				if (forFirstConfiguration && list.Count > 0)
 					return list.ToArray();
 			}
 
 			foreach (var attribute in attrs)
-				if (string.IsNullOrEmpty(configGetter(attribute)))
+				if (string.IsNullOrEmpty(attribute.Configuration))
 					list.Add(attribute);
 
 			return list.ToArray();
@@ -1202,39 +1120,58 @@ namespace LinqToDB.Mapping
 
 		/// <summary>
 		/// Gets attribute of specified type, associated with specified type.
-		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Attribute owner type.</param>
-		/// <param name="configGetter">Attribute configuration name provider.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		public T? GetAttribute<T>(Type type, Func<T,string?> configGetter, bool inherit = true)
-			where T : Attribute
-			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
-			//where T : MappingAttribute
+		public T? GetAttribute<T>(Type type)
+			where T : MappingAttribute
 		{
-			var attrs = GetAttributes(type, configGetter, inherit);
+			var attrs = GetAttributes<T>(type);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
 		/// <summary>
 		/// Gets attribute of specified type, associated with specified type member.
-		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attribute owner member.</param>
-		/// <param name="configGetter">Attribute configuration name provider.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true)
-			where T : Attribute
-			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
-			//where T : MappingAttribute
+		public T? GetAttribute<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
-			var attrs = GetAttributes(type, memberInfo, configGetter, inherit);
+			var attrs = GetAttributes<T>(type, memberInfo);
 			return attrs.Length == 0 ? null : attrs[0];
+		}
+
+		/// <summary>
+		/// Returns <c>true</c> if attribute of specified type, associated with specified type.
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
+		/// <param name="type">Attribute owner type.</param>
+		/// <returns>Returns <c>true</c> if attribute of specified type, associated with specified type.</returns>
+		public bool HasAttribute<T>(Type type)
+			where T : MappingAttribute
+		{
+			return GetAttributes<T>(type).Length > 0;
+		}
+
+		/// <summary>
+		/// Returns <c>true</c> if attribute of specified type, associated with specified type member.
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
+		/// <param name="type">Member's owner type.</param>
+		/// <param name="memberInfo">Attribute owner member.</param>
+		/// <returns>Returns <c>true</c> if attribute of specified type, associated with specified type member.</returns>
+		public bool HasAttribute<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
+		{
+			return GetAttributes<T>(type, memberInfo).Length > 0;
 		}
 
 		/// <summary>
@@ -1432,7 +1369,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			var attr = GetAttribute<ScalarTypeAttribute>(type, static a => a.Configuration);
+			var attr = GetAttribute<ScalarTypeAttribute>(type);
 			var ret  = false;
 
 			if (attr != null)
@@ -1601,7 +1538,7 @@ namespace LinqToDB.Mapping
 
 				foreach (var f in underlyingType.GetFields())
 					if ((f.Attributes & EnumField) == EnumField)
-						attrs.AddRange(GetAttributes<MapValueAttribute>(underlyingType, f, static a => a.Configuration));
+						attrs.AddRange(GetAttributes<MapValueAttribute>(underlyingType, f));
 
 				if (attrs.Count == 0)
 				{
@@ -1691,7 +1628,7 @@ namespace LinqToDB.Mapping
 				foreach (var f in underlyingType.GetFields())
 					if ((f.Attributes & EnumField) == EnumField)
 					{
-						var attrs = GetAttributes<MapValueAttribute>(underlyingType, f, static a => a.Configuration);
+						var attrs = GetAttributes<MapValueAttribute>(underlyingType, f);
 						fields.Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
 					}
 
@@ -1831,21 +1768,19 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
-		internal IEnumerable<T> SortByConfiguration<T>(Func<T, string?> configGetter, IEnumerable<T> values)
+		internal IEnumerable<T> SortByConfiguration<T>(IEnumerable<T> attributes)
+			where T : MappingAttribute
 		{
-			var orderedValues = new List<Tuple<T, int>>();
-
-			foreach (var value in values)
-			{
-				var config = configGetter(value);
-				var index  = Array.IndexOf(ConfigurationList, config);
-				var order  = index == -1 ? ConfigurationList.Length : index;
-				orderedValues.Add(Tuple.Create(value, order));
-			}
-
-			return orderedValues
-				.OrderBy(static _ => _.Item2)
-				.Select (static _ => _.Item1);
+			return attributes
+				.Select(attr =>
+				{
+					var config = attr.Configuration;
+					var index  = Array.IndexOf(ConfigurationList, config);
+					var order  = index == -1 ? ConfigurationList.Length : index;
+					return (attr, order);
+				})
+				.OrderBy(static _ => _.order)
+				.Select (static _ => _.attr);
 		}
 
 		public virtual bool IsLockable => false;

@@ -238,15 +238,17 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.MemberAccess :
 						{
-							var mexpr  = (MemberExpression)expression;
-							var member = lastMember = mexpr.Member;
-							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType!, member);
-							if (attr == null)
+							var mexpr         = (MemberExpression)expression;
+							var member        = lastMember = mexpr.Member;
+							var isAssociation = builder.MappingSchema.HasAttribute<AssociationAttribute>(member.ReflectedType!, member);
+
+							if (!isAssociation)
 							{
-								member = mexpr.Expression!.Type.GetMemberEx(member)!;
-								attr = builder.MappingSchema.GetAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
+								member        = mexpr.Expression!.Type.GetMemberEx(member)!;
+								isAssociation = builder.MappingSchema.HasAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
 							}
-							if (attr == null)
+
+							if (!isAssociation)
 								throw new LinqToDBException($"Member '{expression}' is not an association.");
 
 							yield return member;

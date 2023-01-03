@@ -25,7 +25,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static Func<T,T,bool> GetEqualsFunc<T>()
-			=> GetEqualsFunc<T>(TypeAccessor.GetAccessor<T>().Members.Where(m => m.GetAttribute<IgnoreComparisonAttribute>() == null));
+			=> GetEqualsFunc<T>(TypeAccessor.GetAccessor<T>().Members.Where(static m => !m.MemberInfo.HasAttribute<IgnoreComparisonAttribute>()));
 
 		/// <summary>
 		/// Returns GetEqualsFunc function for provided members for type T to compare.
@@ -54,7 +54,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static Func<T,int> GetGetHashCodeFunc<T>()
-			=> GetGetHashCodeFunc<T>(TypeAccessor.GetAccessor<T>().Members.Where(m => m.GetAttribute<IgnoreComparisonAttribute>() == null));
+			=> GetGetHashCodeFunc<T>(TypeAccessor.GetAccessor<T>().Members.Where(static m => !m.MemberInfo.HasAttribute<IgnoreComparisonAttribute>()));
 
 		static readonly int _randomSeed = new Random(unchecked((int)DateTime.Now.Ticks)).Next();
 

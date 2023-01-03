@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
-using LinqToDB.Common;
 
 namespace LinqToDB.Metadata
 {
+	using Common;
+	using Extensions;
+	using Mapping;
+
 	/// <summary>
 	/// Aggregation metadata reader, that just delegates all calls to nested readers.
 	/// </summary>
@@ -38,70 +41,38 @@ namespace LinqToDB.Metadata
 			Volatile.Write(ref _readers, newReaders);
 		}
 
-		public T[] GetAttributes<T>(Type type, bool inherit)
-			where T : Attribute
+		public T[] GetAttributes<T>(Type type)
+			where T : MappingAttribute
 		{
 			var readers = _readers;
 			if (readers.Count == 0)
 				return Array<T>.Empty;
 			if (readers.Count == 1)
-				return readers[0].GetAttributes<T>(type, inherit);
+				return readers[0].GetAttributes<T>(type);
 
-			var length = 0;
 			var attrs = new T[readers.Count][];
 
 			for (var i = 0; i < readers.Count; i++)
-			{
-				attrs[i] = readers[i].GetAttributes<T>(type, inherit);
-				length += attrs[i].Length;
-			}
+				attrs[i] = readers[i].GetAttributes<T>(type);
 
-			var attributes = length == 0 ? Array<T>.Empty : new T[length];
-			length = 0;
-
-			for (var i = 0; i < attrs.Length; i++)
-			{
-				if (attrs[i].Length > 0)
-				{
-					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
-					length += attrs[i].Length;
-				}
-			}
-
-			return attributes;
+			return attrs.Flatten();
 		}
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
-			where T : Attribute
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
 			var readers = _readers;
 			if (readers.Count == 0)
 				return Array<T>.Empty;
 			if (readers.Count == 1)
-				return readers[0].GetAttributes<T>(type, memberInfo, inherit);
+				return readers[0].GetAttributes<T>(type, memberInfo);
 
 			var attrs = new T[readers.Count][];
-			var length = 0;
 
 			for (var i = 0; i < readers.Count; i++)
-			{
-				attrs[i] = readers[i].GetAttributes<T>(type, memberInfo, inherit);
-				length += attrs[i].Length;
-			}
+				attrs[i] = readers[i].GetAttributes<T>(type, memberInfo);
 
-			var attributes = length == 0 ? Array<T>.Empty : new T[length];
-			length = 0;
-
-			for (var i = 0; i < attrs.Length; i++)
-			{
-				if (attrs[i].Length > 0)
-				{
-					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
-					length += attrs[i].Length;
-				}
-			}
-
-			return attributes;
+			return attrs.Flatten();
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
@@ -114,26 +85,11 @@ namespace LinqToDB.Metadata
 				return readers[0].GetDynamicColumns(type);
 
 			var cols = new MemberInfo[readers.Count][];
-			var length = 0;
 
 			for (var i = 0; i < readers.Count; i++)
-			{
 				cols[i] = readers[i].GetDynamicColumns(type);
-				length  += cols[i].Length;
-			}
 
-			var columns = length == 0 ? Array<MemberInfo>.Empty : new MemberInfo[length];
-			length = 0;
-			for (var i = 0; i < cols.Length; i++)
-			{
-				if (cols[i].Length > 0)
-				{
-					Array.Copy(cols[i], 0, columns, length, cols[i].Length);
-					length += cols[i].Length;
-				}
-			}
-
-			return columns;
+			return cols.Flatten();
 		}
 	}
 }
