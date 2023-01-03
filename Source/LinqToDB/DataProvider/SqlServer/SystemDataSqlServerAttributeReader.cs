@@ -3,6 +3,10 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Reflection;
 
+#if NETFRAMEWORK
+using Microsoft.SqlServer.Server;
+#endif
+
 namespace LinqToDB.Metadata
 {
 	using Common;
