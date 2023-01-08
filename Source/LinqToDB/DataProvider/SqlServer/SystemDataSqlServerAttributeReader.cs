@@ -64,7 +64,7 @@ namespace LinqToDB.Metadata
 		{
 			_sqlMethodAttribute          = sqlMethodAttribute;
 			_sqlUserDefinedTypeAttribute = sqlUserDefinedTypeAttribute;
-			_objectId                    = $".{_sqlMethodAttribute.FullName}.{_sqlUserDefinedTypeAttribute.FullName}.";
+			_objectId                    = $".{_sqlMethodAttribute.AssemblyQualifiedName}.{_sqlUserDefinedTypeAttribute.AssemblyQualifiedName}.";
 		}
 
 		static SystemDataSqlServerAttributeReader? TryCreate(string sqlMethodAttributeType, string sqlUserDefinedTypeAttributeType)
