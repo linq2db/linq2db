@@ -17,5 +17,7 @@ namespace LinqToDB.Metadata
 		/// <param name="type">The type.</param>
 		/// <returns>All dynamic columns defined on given type.</returns>
 		MemberInfo[] GetDynamicColumns(Type type);
+
+		string GetObjectID();
 	}
 }

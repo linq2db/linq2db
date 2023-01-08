@@ -58,28 +58,17 @@ namespace LinqToDB.Mapping
 			DbType            = columnAttribute != null ? columnAttribute.DbType   : dataType.Type.DbType;
 			CreateFormat      = columnAttribute?.CreateFormat;
 
-			if (columnAttribute == null)
+			if (columnAttribute == null || (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType))
 			{
-				Length    = dataType.Type.Length;
-				Precision = dataType.Type.Precision;
-				Scale     = dataType.Type.Scale;
+				Length    = columnAttribute?.HasLength()    != true ? dataType.Type.Length    : columnAttribute.Length;
+				Precision = columnAttribute?.HasPrecision() != true ? dataType.Type.Precision : columnAttribute.Precision;
+				Scale     = columnAttribute?.HasScale()     != true ? dataType.Type.Scale     : columnAttribute.Scale;
 			}
-			else if (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType)
+			else
 			{
-				if (columnAttribute.HasLength())
-					Length = columnAttribute.Length;
-				else if (dataType.Type.Length != null)
-					Length    = dataType.Type.Length.Value;
-
-				if (columnAttribute.HasPrecision())
-					Precision = columnAttribute.Precision;
-				else if (dataType.Type.Precision != null)
-					Precision = dataType.Type.Precision.Value;
-
-				if (columnAttribute.HasScale())
-					Scale = columnAttribute.Scale;
-				else if (dataType.Type.Scale != null)
-					Scale = dataType.Type.Scale.Value;
+				if (columnAttribute.HasLength())    Length    = columnAttribute.Length;
+				if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
+				if (columnAttribute.HasScale())     Scale     = columnAttribute.Scale;
 			}
 
 			if (columnAttribute?.HasOrder() == true)

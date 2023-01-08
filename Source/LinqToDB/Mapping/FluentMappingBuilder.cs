@@ -8,6 +8,7 @@ namespace LinqToDB.Mapping
 {
 	using Common;
 	using Expressions;
+	using Extensions;
 	using Metadata;
 
 	/// <summary>
@@ -15,8 +16,8 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	public class FluentMappingBuilder
 	{
-		private static Dictionary<Type, List<MappingAttribute>>       _typeAttributes   = new();
-		private static Dictionary<MemberInfo, List<MappingAttribute>> _memberAttributes = new();
+		private Dictionary<Type, List<MappingAttribute>>       _typeAttributes   = new();
+		private Dictionary<MemberInfo, List<MappingAttribute>> _memberAttributes = new();
 
 		#region Init
 

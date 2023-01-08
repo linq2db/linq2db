@@ -57,65 +57,66 @@ namespace LinqToDB.Metadata
 		{
 			var attrs = GetNoInheritMappingAttributes(source);
 
-			if (source is not Type type || type.IsInterface)
-				return attrs;
-
-			var interfaces               = type.GetInterfaces();
-			var nBaseInterfaces          = type.BaseType != null ? type.BaseType.GetInterfaces().Length : 0;
-			List<MappingAttribute>? list = null;
-
-			for (var i = 0; i < interfaces.Length; i++)
+			Type? type = null;
+			Func<Type, ICustomAttributeProvider, ICustomAttributeProvider?>? getSource = null;
+			if (source is Type t && !t.IsInterface)
 			{
-				var intf = interfaces[i];
+				type = t;
+				getSource = static (t, s) => t;
+			}
+			else if (source is MemberInfo m)
+			{
+				type      = m.ReflectedType;
+				getSource = static (t, s) => t.GetMemberEx((MemberInfo)s);
+			}
 
-				if (i < nBaseInterfaces)
+			if (type != null)
+			{
+				List<MappingAttribute>? list = null;
+
+				foreach (var intf in type.GetInterfaces())
 				{
-					var getAttr = false;
-
-					foreach (var mi in type.GetInterfaceMapEx(intf).TargetMethods)
+					var src = getSource!(intf, source);
+					if (src != null)
 					{
-						// Check if the interface is reimplemented.
-						if (mi.DeclaringType == type)
+						var ifaceAttrs = GetMappingAttributesTreeInternal(src);
+						if (ifaceAttrs.Length > 0)
 						{
-							getAttr = true;
-							break;
+							if (list != null)
+								list.AddRange(ifaceAttrs);
+							else if (attrs.Length == 0)
+								attrs = ifaceAttrs;
+							else
+								(list ??= new(attrs)).AddRange(ifaceAttrs);
 						}
 					}
-
-					if (getAttr == false)
-						continue;
 				}
 
-				var ifaceAttrs = GetMappingAttributesTreeInternal(intf);
-				if (ifaceAttrs.Length > 0)
+				if (type.BaseType != null && type.BaseType != typeof(object))
 				{
-					if (list != null)
-						list.AddRange(ifaceAttrs);
-					else if (attrs.Length == 0)
-						attrs = ifaceAttrs;
-					else
-						(list ??= new(attrs)).AddRange(ifaceAttrs);
+					var src = getSource!(type.BaseType, source);
+					if (src != null)
+					{
+						var baseAttrs = GetMappingAttributesTreeInternal(src);
+						if (baseAttrs.Length > 0)
+						{
+							if (list != null)
+								list.AddRange(baseAttrs);
+							else if (attrs.Length == 0)
+								attrs = baseAttrs;
+							else
+								(list ??= new(attrs)).AddRange(baseAttrs);
+						}
+					}
 				}
+
+				if (list != null) return list.ToArray();
+				if (attrs.Length > 0) return attrs;
+
+				return Array<MappingAttribute>.Empty;
 			}
 
-			if (type.BaseType != null && type.BaseType != typeof(object))
-			{
-				var baseAttrs = GetMappingAttributesTreeInternal(type.BaseType);
-				if (baseAttrs.Length > 0)
-				{
-					if (list != null)
-						list.AddRange(baseAttrs);
-					else if (attrs.Length == 0)
-						attrs = baseAttrs;
-					else
-						(list ??= new(attrs)).AddRange(baseAttrs);
-				}
-			}
-
-			if (list != null) return list.ToArray();
-			if (attrs.Length > 0) return attrs;
-
-			return Array<MappingAttribute>.Empty;
+			return attrs;
 		}
 
 		/// <summary>

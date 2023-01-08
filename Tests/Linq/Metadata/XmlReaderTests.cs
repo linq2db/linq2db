@@ -37,9 +37,9 @@ namespace Tests.Metadata
 						</ColumnAttribute>
 					</Member>
 					<Member Name='Property1'>
-						<System.Data.Linq.Mapping.ColumnAttribute>
+						<LinqToDB.Mapping.ColumnAttribute>
 							<Name Value='TestName' />
-						</System.Data.Linq.Mapping.ColumnAttribute>
+						</LinqToDB.Mapping.ColumnAttribute>
 					</Member>
 				</Type>
 			</Types>";

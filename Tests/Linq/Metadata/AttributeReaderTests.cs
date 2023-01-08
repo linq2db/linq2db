@@ -12,8 +12,9 @@ namespace Tests.Metadata
 		[Table("TestTable")]
 		public sealed class TestEntity
 		{
-			[Column                   ] public int Id;
-			[Column(Name = "TestName")] public int Property1 { get; set; }
+			public int Field1;
+			[Column(Name = "TestName")]
+			public int Property1 { get; set; }
 
 		}
 		[Test]
@@ -27,18 +28,14 @@ namespace Tests.Metadata
 			Assert.AreEqual("TestTable", attrs[0].Name);
 		}
 
-		public int Field1;
-
 		[Test]
 		public void FieldAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Id));
+			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Field1));
 
 			Assert.AreEqual(0, attrs.Length);
-			Assert.IsNull(attrs[0].Name);
 		}
-
 
 		[Test]
 		public void PropertyAttribute()

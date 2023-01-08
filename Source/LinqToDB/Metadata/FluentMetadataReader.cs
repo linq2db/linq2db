@@ -14,25 +14,17 @@ namespace LinqToDB.Metadata
 
 	public class FluentMetadataReader : IMetadataReader
 	{
+		private readonly string _objectId;
+
 		readonly ConcurrentDictionary<Type,MappingAttribute[]>       _types          = new();
 		readonly ConcurrentDictionary<MemberInfo,MappingAttribute[]> _members        = new();
 		readonly ConcurrentDictionary<Type, MemberInfo[]>            _dynamicColumns = new();
 
-		readonly MappingAttributesCache _cache = new (static source => (MappingAttribute[])source.GetCustomAttributes(typeof(MappingAttribute), inherit: false));
-
-		private MappingAttribute[] GetAllAttributes(ICustomAttributeProvider attributeProvider)
-		{
-			if (attributeProvider is Type       type) return _types  .TryGetValue(type, out var typeAttributes  ) ? typeAttributes   : Array<MappingAttribute>.Empty;
-			if (attributeProvider is MemberInfo mi  ) return _members.TryGetValue(mi  , out var memberAttributes) ? memberAttributes : Array<MappingAttribute>.Empty;
-			return Array<MappingAttribute>.Empty;
-		}
-
-		static bool IsSystemOrNullType(Type? type)
-			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
+		readonly MappingAttributesCache _cache;
 
 		public FluentMetadataReader(IReadOnlyDictionary<Type, List<MappingAttribute>> typeAttributes, IReadOnlyDictionary<MemberInfo, List<MappingAttribute>> memberAttributes)
 		{
-			_types   = new(typeAttributes  .Select(kvp => new KeyValuePair<Type      , MappingAttribute[]>(kvp.Key, kvp.Value.ToArray())));
+			_types   = new(typeAttributes  .Select(kvp => new KeyValuePair<Type, MappingAttribute[]>      (kvp.Key, kvp.Value.ToArray())));
 			_members = new(memberAttributes.Select(kvp => new KeyValuePair<MemberInfo, MappingAttribute[]>(kvp.Key, kvp.Value.ToArray())));
 
 			// dynamic columns collection
@@ -53,52 +45,29 @@ namespace LinqToDB.Metadata
 				foreach (var kvp in dynamicColumns)
 					_dynamicColumns.TryAdd(kvp.Key, kvp.Value.OrderBy(m => m.Name).ToArray());
 			}
+
+			_objectId = CalculateObjectID();
+			_cache    = new(GetAllAttributes);
+		}
+
+		private MappingAttribute[] GetAllAttributes(ICustomAttributeProvider attributeProvider)
+		{
+			if (attributeProvider is Type       type) return _types  .TryGetValue(type, out var typeAttributes  ) ? typeAttributes   : Array<MappingAttribute>.Empty;
+			if (attributeProvider is MemberInfo mi  ) return _members.TryGetValue(mi  , out var memberAttributes) ? memberAttributes : Array<MappingAttribute>.Empty;
+			return Array<MappingAttribute>.Empty;
 		}
 
 		public T[] GetAttributes<T>(Type type)
 			where T : MappingAttribute
-		{
-			if (_types.TryGetValue(type, out var attrs))
-				lock (attrs)
-					return attrs.OfType<T>().ToArray();
-
-			var parents = new [] { type.BaseType }
-				.Where(_ => !IsSystemOrNullType(_))
-				.Concat(type.GetInterfaces())!;
-
-			foreach(var p in parents)
-			{
-				var pattrs = GetAttributes<T>(p!);
-				if (pattrs.Length > 0)
-					return pattrs;
-			}
-
-			return Array<T>.Empty;
-		}
+			=> _cache.GetMappingAttributes<T>(type);
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
 		{
-			if (memberInfo.DeclaringType != type)
+			if (memberInfo.ReflectedType != type)
 				memberInfo = type.GetMemberEx(memberInfo) ?? memberInfo;
 
-			if (_members.TryGetValue(memberInfo, out var attrs))
-				return attrs.OfType<T>().ToArray();
-
-			var parents = new [] { type.BaseType }
-				.Where(_ => !IsSystemOrNullType(_))
-				.Concat(type.GetInterfaces())!
-				.Select(_ => new { Type = _!, Member = _!.GetMemberEx(memberInfo) })
-				.Where(_ => _.Member != null)!;
-
-			foreach(var p in parents)
-			{
-				var pattrs = GetAttributes<T>(p!.Type, p.Member!);
-				if (pattrs.Length > 0)
-					return pattrs;
-			}
-
-			return Array<T>.Empty;
+			return _cache.GetMappingAttributes<T>(memberInfo);
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
@@ -119,6 +88,58 @@ namespace LinqToDB.Metadata
 		public IEnumerable<Type> GetRegisteredTypes()
 		{
 			return _types.Keys;
+		}
+
+		public string GetObjectID() => _objectId;
+
+		private string CalculateObjectID()
+		{
+			var sb = new StringBuilder();
+
+			foreach (var type in _types)
+			{
+				sb.Append('.')
+					.Append(IdentifierBuilder.GetObjectID(type.Key))
+					.Append('.')
+					.Append(type.Value.Length)
+					.Append('.')
+					;
+
+				foreach (var a in type.Value)
+					sb.Append(a.GetObjectID()).Append('.');
+			}
+
+			foreach (var member in _members)
+			{
+				sb.Append('.')
+					.Append(IdentifierBuilder.GetObjectID(member.Key.DeclaringType))
+					.Append('.')
+					.Append(member.Key.Name)
+					.Append('.')
+					.Append(member.Value.Length)
+					.Append('.')
+					;
+
+				foreach (var a in member.Value)
+					sb.Append(a.GetObjectID()).Append('.');
+			}
+
+			foreach (var column in _dynamicColumns)
+			{
+				sb.Append('.')
+					.Append(IdentifierBuilder.GetObjectID(column.Key.DeclaringType))
+					.Append('.')
+					.Append(column.Key.Name)
+					.Append('.')
+					.Append(column.Value.Length)
+					.Append('.')
+					;
+
+				foreach (var mi in column.Value)
+					sb.Append(IdentifierBuilder.GetObjectID(mi)).Append('.');
+			}
+
+			return sb.ToString();
 		}
 	}
 }

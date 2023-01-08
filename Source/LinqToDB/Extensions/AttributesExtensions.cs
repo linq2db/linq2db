@@ -36,9 +36,10 @@ namespace LinqToDB.Extensions
 			var attrs = _noInheritAttributes.GetOrAdd(source, static source =>
 			{
 #pragma warning disable RS0030 // Do not used banned APIs
-				var res = (Attribute[])source.GetCustomAttributes(typeof(Attribute), inherit: false);
+				var res = source.GetCustomAttributes(typeof(Attribute), inherit: false);
 #pragma warning restore RS0030 // Do not used banned APIs
-				return res.Length == 0 ? Array<Attribute>.Empty : res;
+				// API returns object[] for old frameworks and typed array for new
+				return res.Length == 0 ? Array<Attribute>.Empty : res is Attribute[] attrRes ? attrRes : res.Cast<Attribute>().ToArray();
 			});
 			return attrs;
 		}
@@ -48,9 +49,10 @@ namespace LinqToDB.Extensions
 			var attrs = _inheritAttributes.GetOrAdd(source, static source =>
 			{
 #pragma warning disable RS0030 // Do not used banned APIs
-				var res = (Attribute[])source.GetCustomAttributes(typeof(Attribute), inherit: true);
+				var res = source.GetCustomAttributes(typeof(Attribute), inherit: true);
 #pragma warning restore RS0030 // Do not used banned APIs
-				return res.Length == 0 ? Array<Attribute>.Empty : res;
+				// API returns object[] for old frameworks and typed array for new
+				return res.Length == 0 ? Array<Attribute>.Empty : res is Attribute[] attrRes ? attrRes : res.Cast<Attribute>().ToArray();
 			});
 			return attrs;
 		}

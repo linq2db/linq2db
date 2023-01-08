@@ -54,6 +54,8 @@ namespace LinqToDB.Metadata
 	/// </example>
 	public class XmlAttributeReader : IMetadataReader
 	{
+		private readonly string _objectId;
+
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
 		/// <summary>
@@ -96,22 +98,34 @@ namespace LinqToDB.Metadata
 
 			StreamReader? streamReader = null;
 			Stream?       stream       = null;
+			var objectID               = xmlFile;
 			try
 			{
 				if (File.Exists(xmlFile))
 				{
 					streamReader = File.OpenText(xmlFile);
+					objectID    += "." + Directory.GetCurrentDirectory();
 				}
 				else
 				{
 					var combinePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory!, xmlFile);
 
 					if (File.Exists(combinePath))
+					{
 						streamReader = File.OpenText(combinePath);
+						objectID    += "." + combinePath;
+					}
 				}
 
 				var embedded   = streamReader == null;
-				stream = embedded ? assembly.GetManifestResourceStream(xmlFile) : streamReader!.BaseStream;
+				if (embedded)
+				{
+					stream = assembly.GetManifestResourceStream(xmlFile);
+				}
+				else
+				{
+					stream = streamReader!.BaseStream;
+				}
 
 				if (embedded && stream == null)
 				{
@@ -123,14 +137,17 @@ namespace LinqToDB.Metadata
 
 				if (stream == null)
 					throw new MetadataException($"Could not find file '{xmlFile}'.");
-				else
-					_types = LoadStream(stream, xmlFile);
+
+				_types    = LoadStream(stream, xmlFile);
+				objectID += "." + assembly.FullName;
 			}
 			finally
 			{
 				stream      ?.Dispose();
 				streamReader?.Dispose();
 			}
+
+			_objectId = objectID;
 		}
 
 		/// <summary>
@@ -141,7 +158,8 @@ namespace LinqToDB.Metadata
 		{
 			if (xmlDocStream == null) throw new ArgumentNullException(nameof(xmlDocStream));
 
-			_types = LoadStream(xmlDocStream, null);
+			_types    = LoadStream(xmlDocStream, null);
+			_objectId = xmlDocStream.GetHashCode().ToString();
 		}
 
 		static AttributeInfo[] GetAttrs(string? fileName, XElement el, string? exclude, string typeName, string? memberName)
@@ -233,5 +251,7 @@ namespace LinqToDB.Metadata
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+
+		public string GetObjectID() => _objectId;
 	}
 }

@@ -51,8 +51,9 @@ namespace LinqToDB.Metadata
 			"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, Microsoft.SqlServer.Server");
 
 		readonly ConcurrentDictionary<(MemberInfo memberInfo,Type attributeType),object> _cache = new ();
-		readonly Type _sqlMethodAttribute;
-		readonly Type _sqlUserDefinedTypeAttribute;
+		readonly Type   _sqlMethodAttribute;
+		readonly Type   _sqlUserDefinedTypeAttribute;
+		readonly string _objectId;
 
 		/// <summary>
 		/// Creates new instance of <see cref="SystemDataSqlServerAttributeReader"/>.
@@ -63,6 +64,7 @@ namespace LinqToDB.Metadata
 		{
 			_sqlMethodAttribute          = sqlMethodAttribute;
 			_sqlUserDefinedTypeAttribute = sqlUserDefinedTypeAttribute;
+			_objectId                    = $".{_sqlMethodAttribute.FullName}.{_sqlUserDefinedTypeAttribute.FullName}.";
 		}
 
 		static SystemDataSqlServerAttributeReader? TryCreate(string sqlMethodAttributeType, string sqlUserDefinedTypeAttributeType)
@@ -190,5 +192,7 @@ namespace LinqToDB.Metadata
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+
+		public string GetObjectID() => _objectId;
 	}
 }

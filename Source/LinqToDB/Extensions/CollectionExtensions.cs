@@ -10,7 +10,7 @@ namespace LinqToDB.Extensions
 		{
 			var size = 0;
 			foreach (var col in items)
-				size += items.Length;
+				size += col.Length;
 
 			if (size == 0)
 				return Array<T>.Empty;
@@ -20,8 +20,11 @@ namespace LinqToDB.Extensions
 			size = 0;
 			foreach (var col in items)
 			{
-				Array.Copy(col, 0, res, size, col.Length);
-				size += col.Length;
+				if (col.Length > 0)
+				{
+					Array.Copy(col, 0, res, size, col.Length);
+					size += col.Length;
+				}
 			}
 
 			return res;

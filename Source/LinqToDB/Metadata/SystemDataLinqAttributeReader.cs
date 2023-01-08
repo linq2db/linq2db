@@ -110,6 +110,8 @@ namespace LinqToDB.Metadata
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+
+		public string GetObjectID() => $".{nameof(SystemDataLinqAttributeReader)}.";
 	}
 }
 #endif

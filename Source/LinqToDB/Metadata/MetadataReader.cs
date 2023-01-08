@@ -15,6 +15,8 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class MetadataReader : IMetadataReader
 	{
+		private string _objectId;
+
 		public static MetadataReader Default = new (
 			new AttributeReader()
 			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
@@ -27,8 +29,12 @@ namespace LinqToDB.Metadata
 		{
 			if (readers == null)
 				throw new ArgumentNullException(nameof(readers));
-			_readers = readers.ToList();
+
+			_readers  = readers.ToList();
+			_objectId = CalculateObjectId();
 		}
+
+		private string CalculateObjectId() => $"[{string.Join(",", _readers.Select(r => r.GetObjectID()))}]";
 
 		private List<IMetadataReader>          _readers;
 		public  IReadOnlyList<IMetadataReader>  Readers => _readers;
@@ -39,6 +45,7 @@ namespace LinqToDB.Metadata
 			var newReaders = new List<IMetadataReader>(_readers.Count + 1) { reader };
 			newReaders.AddRange(_readers);
 			Volatile.Write(ref _readers, newReaders);
+			_objectId = CalculateObjectId();
 		}
 
 		public T[] GetAttributes<T>(Type type)
@@ -103,5 +110,7 @@ namespace LinqToDB.Metadata
 			return      Readers.OfType<FluentMetadataReader>().SelectMany(fr => fr.GetRegisteredTypes())
 				.Concat(Readers.OfType<MetadataReader      >().SelectMany(mr => mr.GetRegisteredTypes()));
 		}
+
+		public string GetObjectID() => _objectId;
 	}
 }

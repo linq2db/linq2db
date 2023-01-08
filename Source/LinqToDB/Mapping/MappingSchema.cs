@@ -136,6 +136,8 @@ namespace LinqToDB.Mapping
 				Schemas             = schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray();
 				ValueToSqlConverter = new (baseConverters.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray());
 			}
+
+			InitMetadataReaders();
 		}
 
 		object _syncRoot = new();
@@ -927,57 +929,30 @@ namespace LinqToDB.Mapping
 
 		void InitMetadataReaders()
 		{
-			if (Schemas.Length > 0)
+			if (Schemas.Length > 1)
 			{
-				var list = new List   <IMetadataReader>(Schemas.Length);
-				var hash = new HashSet<IMetadataReader>();
+				var hash = new HashSet<string>();
 
-				for (var i = 0; i < Schemas.Length; i++)
+				for (var i = 1; i < Schemas.Length; i++)
 				{
 					var s = Schemas[i];
-					if (s.MetadataReader != null && hash.Add(s.MetadataReader))
-						list.Add(s.MetadataReader);
+					if (s.MetadataReader != null)
+						AddMetadataReaderInternal(hash, s.MetadataReader);
 				}
-
-				_metadataReaders = list.ToArray();
 			}
-			else
-				_metadataReaders = Array<IMetadataReader>.Empty;
-		}
 
-#if NETFRAMEWORK
-		/// <summary>
-		/// Gets or sets metadata attributes provider for current schema.
-		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
-		/// - <see cref="AttributeReader"/> - .NET attributes provider;
-		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
-		/// - <see cref="SystemDataLinqAttributeReader"/> - metadata provider that converts <see cref="System.Data.Linq.Mapping"/> attributes to LINQ to DB mapping attributes;
-		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts <see cref="Microsoft.SqlServer.Server"/> attributes to LINQ to DB mapping attributes;
-		/// - <see cref="XmlAttributeReader"/> - XML-based mappings metadata provider.
-		/// </summary>
-#else
-		/// <summary>
-		/// Gets or sets metadata attributes provider for current schema.
-		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
-		/// - <see cref="AttributeReader"/> - .NET attributes provider;
-		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
-		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts Microsoft.SqlServer.Server attributes to LINQ to DB mapping attributes;
-		/// - <see cref="XmlAttributeReader"/> - XML-based mappings metadata provider.
-		/// </summary>
-#endif
-		public IMetadataReader? MetadataReader
-		{
-			get => Schemas[0].MetadataReader;
-			set
+			void AddMetadataReaderInternal(HashSet<string> hash, IMetadataReader reader)
 			{
-				lock (_syncRoot)
+				if (!hash.Add(reader.GetObjectID()))
+					return;
+
+				if (reader is MetadataReader metadataReader)
 				{
-					Schemas[0].MetadataReader = value;
-					InitMetadataReaders();
-					ResetID();
+					foreach (var mr in metadataReader.Readers)
+						AddMetadataReaderInternal(hash, mr);
 				}
+				else
+					AddMetadataReader(reader);
 			}
 		}
 
@@ -989,29 +964,13 @@ namespace LinqToDB.Mapping
 		{
 			lock (_syncRoot)
 			{
-				var currentReader = MetadataReader;
-
+				var currentReader = Schemas[0].MetadataReader;
 				if (currentReader is MetadataReader metadataReader)
-				{
 					metadataReader.AddReader(reader);
-					return;
-				}
+				else
+					Schemas[0].MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
 
-				MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
-			}
-		}
-
-		IMetadataReader[]? _metadataReaders;
-		IMetadataReader[]   MetadataReaders
-		{
-			get
-			{
-				if (_metadataReaders == null)
-					lock (_syncRoot)
-						if (_metadataReaders == null)
-							InitMetadataReaders();
-
-				return _metadataReaders!;
+				ResetID();
 			}
 		}
 
@@ -1024,17 +983,11 @@ namespace LinqToDB.Mapping
 		private T[] GetAllAttributes<T>(Type type)
 			where T : MappingAttribute
 		{
-			if (MetadataReaders.Length == 0)
+			var reader = Schemas[0].MetadataReader;
+			if (reader == null)
 				return Array<T>.Empty;
-			if (MetadataReaders.Length == 1)
-				return MetadataReaders[0].GetAttributes<T>(type);
 
-			var attrs = new T[MetadataReaders.Length][];
-
-			for (var i = 0; i < MetadataReaders.Length; i++)
-				attrs[i] = MetadataReaders[i].GetAttributes<T>(type);
-
-			return attrs.Flatten();
+			return reader.GetAttributes<T>(type);
 		}
 
 		/// <summary>
@@ -1047,17 +1000,11 @@ namespace LinqToDB.Mapping
 		private T[] GetAllAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
 		{
-			if (MetadataReaders.Length == 0)
+			var reader = Schemas[0].MetadataReader;
+			if (reader == null)
 				return Array<T>.Empty;
-			if (MetadataReaders.Length == 1)
-				return MetadataReaders[0].GetAttributes<T>(type, memberInfo);
 
-			var attrs = new T[MetadataReaders.Length][];
-
-			for (var i = 0; i < MetadataReaders.Length; i++)
-				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, memberInfo);
-
-			return attrs.Flatten();
+			return reader.GetAttributes<T>(type, memberInfo);
 		}
 
 		/// <summary>
@@ -1183,12 +1130,9 @@ namespace LinqToDB.Mapping
 		{
 			List<MemberInfo>? result = null;
 
-			foreach (var reader in MetadataReaders)
-			{
-				var columns = reader.GetDynamicColumns(type);
-				if (columns.Length > 0)
-					(result ??= new()).AddRange(columns);
-			}
+			var columns = Schemas[0].MetadataReader?.GetDynamicColumns(type);
+			if (columns?.Length > 0)
+				(result ??= new()).AddRange(columns);
 
 			return result == null ? Array<MemberInfo>.Empty : result.ToArray();
 		}
@@ -1219,8 +1163,14 @@ namespace LinqToDB.Mapping
 			var idBuilder = new IdentifierBuilder();
 
 			lock (_syncRoot)
+			{
 				foreach (var s in Schemas)
 					idBuilder.Add(s.ConfigurationID);
+
+				var reader = Schemas[0].MetadataReader;
+				if (reader != null)
+					idBuilder.Add(reader.GetObjectID());
+			}
 
 			return idBuilder.CreateID();
 		}
@@ -1280,6 +1230,8 @@ namespace LinqToDB.Mapping
 			Schemas = new[] { mappingSchemaInfo };
 
 			ValueToSqlConverter = new ();
+
+			InitMetadataReaders();
 		}
 
 		/// <summary>

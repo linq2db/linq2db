@@ -33,7 +33,6 @@ namespace LinqToDB.Mapping
 			Columns       = new ();
 
 			Init();
-			InitInheritanceMapping();
 		}
 
 		internal MappingSchema MappingSchema { get; }
@@ -105,7 +104,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets list of column descriptors for current entity.
 		/// </summary>
-		public List<ColumnDescriptor> Columns { get; private set; }
+		public List<ColumnDescriptor> Columns { get; }
 
 		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => Columns;
 
@@ -130,7 +129,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool HasCalculatedMembers => CalculatedMembers != null && CalculatedMembers.Count > 0;
 
-		private InheritanceMapping[] _inheritanceMappings = null!;
+		private InheritanceMapping[] _inheritanceMappings = Array<InheritanceMapping>.Empty;
 		/// <summary>
 		/// Gets list of inheritance mapping descriptors for current entity.
 		/// </summary>
@@ -267,6 +266,9 @@ namespace LinqToDB.Mapping
 					SetColumn(attr, hasInheritanceMapping);
 
 			SkipModificationFlags = Columns.Aggregate(SkipModification.None, (s, c) => s | c.SkipModificationFlags);
+
+			if (!hasInheritanceMapping)
+				InitInheritanceMapping();
 		}
 
 		void SetColumn(ColumnAttribute attr, bool hasInheritanceMapping)
@@ -319,16 +321,14 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		internal void InitInheritanceMapping()
+		void InitInheritanceMapping()
 		{
 			var mappingAttrs = MappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType);
 
 			if (mappingAttrs.Length == 0)
-			{
-				_inheritanceMappings = Array<InheritanceMapping>.Empty;
-			}
+				return;
 
-			var result = new InheritanceMapping[mappingAttrs.Length];
+			_inheritanceMappings = new InheritanceMapping[mappingAttrs.Length];
 
 			for (var i = 0; i < mappingAttrs.Length; i++)
 			{
@@ -341,42 +341,32 @@ namespace LinqToDB.Mapping
 					Type      = m.Type,
 				};
 
-				var ed = mapping.Type.Equals(ObjectType)
-						? this
-						: MappingSchema.GetEntityDescriptor(mapping.Type);
-
-				//foreach (var column in this.Columns)
-				//{
-				//	if (ed.Columns.All(f => f.MemberName != column.MemberName))
-				//		ed.AddColumn(column);
-				//}
-
-				foreach (var column in ed.Columns)
-				{
-					if (Columns.All(f => f.MemberName != column.MemberName))
-						AddColumn(column);
-
-					if (column.IsDiscriminator)
-						mapping.Discriminator = column;
-				}
-
-				mapping.Discriminator ??= Columns.FirstOrDefault(x => x.IsDiscriminator)!;
-
-				result[i] = mapping;
+				_inheritanceMappings[i] = mapping;
 			}
 
-			var discriminator = result.Select(static m => m.Discriminator).FirstOrDefault(d => d != null);
+			var allColumnMemberNames = new HashSet<string>();
 
-			if (discriminator == null)
-				throw new LinqException("Inheritance Discriminator is not defined for the '{0}' hierarchy.", ObjectType);
+			foreach (var cd in Columns)
+				allColumnMemberNames.Add(cd.MemberName);
 
-			foreach (var mapping in result)
-				mapping.Discriminator ??= discriminator;
+			foreach (var m in _inheritanceMappings)
+			{
+				if (m.Type == ObjectType)
+					continue;
 
-			_inheritanceMappings = result;
+				foreach (var cd in MappingSchema.GetEntityDescriptor(m.Type).Columns)
+					if (allColumnMemberNames.Add(cd.MemberName))
+						AddColumn(cd);
+			}
+
+			var discriminator = Columns.FirstOrDefault(x => x.IsDiscriminator)
+				?? throw new LinqException($"Inheritance Discriminator is not defined for the '{ObjectType}' hierarchy.");
+
+			foreach (var m in _inheritanceMappings)
+				m.Discriminator = discriminator;
 		}
 
-		internal void AddColumn(ColumnDescriptor columnDescriptor)
+		void AddColumn(ColumnDescriptor columnDescriptor)
 		{
 			Columns.Add(columnDescriptor);
 
