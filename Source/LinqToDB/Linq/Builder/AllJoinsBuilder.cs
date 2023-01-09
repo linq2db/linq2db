@@ -59,15 +59,24 @@ namespace LinqToDB.Linq.Builder
 
 			buildInfo.JoinType = joinType;
 
+			DefaultIfEmptyBuilder.DefaultIfEmptyContext? sequenceDefaultIfEmpty = null;
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
+				sequence = sequenceDefaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
+			
 			sequence = new SubQueryContext(sequence);
 
 			if (methodCall.Arguments[conditionIndex] != null)
 			{
 				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
 
-				var result = builder.BuildWhere(buildInfo.Parent, sequence, condition, checkForSubQuery: false, enforceHaving: false, isTest: buildInfo.AggregationTest);
+				sequenceDefaultIfEmpty?.DisableNullability();
+
+				var result = builder.BuildWhere(buildInfo.Parent, sequence,
+					condition: condition, checkForSubQuery: false, enforceHaving: false,
+					isTest: buildInfo.AggregationTest, 
+					disableCache: sequenceDefaultIfEmpty != null);
+
+				sequenceDefaultIfEmpty?.EnableNullability();
 
 				result.SetAlias(condition.Parameters[0].Name);
 				return result;

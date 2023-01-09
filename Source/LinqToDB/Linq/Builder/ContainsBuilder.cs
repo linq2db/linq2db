@@ -173,7 +173,10 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					var condition = Expression.Lambda(ExpressionBuilder.Equal(Builder.MappingSchema, param, expr), param);
-					var sequence  = Builder.BuildWhere(Parent, InnerSequence, condition, checkForSubQuery: true, enforceHaving: false, isTest: flags.IsTest());
+					var sequence = Builder.BuildWhere(Parent, InnerSequence,
+						condition: condition, checkForSubQuery: true, enforceHaving: false, isTest: flags.IsTest(),
+						disableCache: false);
+
 					cond = new SqlCondition(false, new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery)));
 				}
 

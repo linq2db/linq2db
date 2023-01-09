@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -29,6 +30,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				_allowNullField = allowNullField;
 				DefaultValue    = defaultValue;
+
+				Sequence.SelectQuery.IsNullable = true;
 			}
 
 			public Expression? DefaultValue { get; }
@@ -38,22 +41,6 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			static Expression ApplyNullability(Expression expr)
-			{
-				return expr.Transform(e =>
-				{
-					if (e.NodeType == ExpressionType.Extension && e is SqlPlaceholderExpression placeholder)
-					{
-						if (!placeholder.Sql.CanBeNull)
-						{
-							return placeholder.WithSql(new SqlNullabilityExpression(placeholder.Sql));
-						}
-					}
-
-					return e;
-				});
-			}
-
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)) || flags.HasFlag(ProjectFlags.Expand))
@@ -61,12 +48,11 @@ namespace LinqToDB.Linq.Builder
 
 				var expr = base.MakeExpression(path, flags);
 				expr = Builder.BuildSqlExpression(this, expr, flags);
+				expr = Builder.UpdateNesting(this, expr);
 
 				if (flags.HasFlag(ProjectFlags.Expression) && expr is not SqlPlaceholderExpression)
 				{
 					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
-
-					expr = ApplyNullability(expr);
 
 					var notNull = placeholders
 						.FirstOrDefault(placeholder => !placeholder.Sql.CanBeNull);
@@ -76,22 +62,34 @@ namespace LinqToDB.Linq.Builder
 						if (notNull == null)
 						{
 							notNull = ExpressionBuilder.CreatePlaceholder(this,
-								new SqlValue(1), Expression.Constant(1), alias: "not_null");
+								new SqlNullabilityExpression (new SqlValue(1)), Expression.Constant(1), alias: "not_null");
+						}
+
+						if (notNull.Type.IsValueType && !notNull.Type.IsNullable())
+						{
+							notNull = notNull.MakeNullable();
 						}
 
 						var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
 						var notNullExpression = new SqlReaderIsNullExpression(notNull, true);
-						expr = Expression.Condition(notNullExpression, expr, defaultValue);
+						if (expr is ContextConstructionExpression construct)
+							expr = construct.InnerExpression;
+						expr = new ContextConstructionExpression(this, Expression.Condition(notNullExpression, expr, defaultValue));
 					}
-				}
-				else
-				{
-					if (!flags.HasFlag(ProjectFlags.Keys))
-						expr = ApplyNullability(expr);
 				}
 
 				return expr;
+			}
+
+			public void DisableNullability()
+			{
+				SelectQuery.IsNullable = false;
+			}
+
+			public void EnableNullability()
+			{
+				SelectQuery.IsNullable = true;
 			}
 
 			public override IBuildContext Clone(CloningContext context)

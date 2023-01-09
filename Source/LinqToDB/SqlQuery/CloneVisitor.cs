@@ -159,7 +159,8 @@ namespace LinqToDB.SqlQuery
 						DoNotRemove          = selectQuery.DoNotRemove,
 						QueryName            = selectQuery.QueryName,
 						SqlQueryExtensions   = selectQuery.SqlQueryExtensions,
-						DoNotSetAliases      = selectQuery.DoNotSetAliases
+						DoNotSetAliases      = selectQuery.DoNotSetAliases,
+						IsNullable           = selectQuery.IsNullable
 					};
 
 					_objectTree.Add(element, clone = newSelectQuery);

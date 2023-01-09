@@ -129,17 +129,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull
-		{
-			get
-			{
-				foreach (var c in Conditions)
-					if (c.CanBeNull)
-						return true;
-
-				return false;
-			}
-		}
+		public bool CanBeNull => false;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{

@@ -62,14 +62,14 @@ namespace LinqToDB.SqlQuery
 
 		public ISqlExpression UnderlyingExpression()
 		{
-			var current = QueryHelper.UnwrapExpression(Expression, false);
+			var current = QueryHelper.UnwrapExpression(Expression, true);
 			while (current.ElementType == QueryElementType.Column)
 			{
 				var column      = (SqlColumn)current;
 				var columnQuery = column.Parent;
 				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
 					break;
-				current = QueryHelper.UnwrapExpression(column.Expression, false);
+				current = QueryHelper.UnwrapExpression(column.Expression, true);
 			}
 
 			return current;
@@ -163,6 +163,11 @@ namespace LinqToDB.SqlQuery
 				writer
 					.Append(" := ")
 					.Append(underlying, dic);
+			}
+			else
+			{
+				if (CanBeNull)
+					writer.Append('?');
 			}
 
 			return writer.ToString();
@@ -261,6 +266,9 @@ namespace LinqToDB.SqlQuery
 #endif
 				.Append('.')
 				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
+
+				if (CanBeNull)
+					sb.Append('?');
 
 			return sb;
 		}

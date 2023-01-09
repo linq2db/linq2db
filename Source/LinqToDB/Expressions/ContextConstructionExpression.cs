@@ -6,16 +6,14 @@ namespace LinqToDB.Expressions
 
 	class ContextConstructionExpression : Expression
 	{
-		public ContextConstructionExpression(IBuildContext buildContext, Expression innerExpression, List<LambdaExpression>? postProcess = null)
+		public ContextConstructionExpression(IBuildContext buildContext, Expression innerExpression)
 		{
 			BuildContext    = buildContext;
 			InnerExpression = innerExpression;
-			PostProcess     = postProcess;
 		}
 		 
 		public IBuildContext           BuildContext    { get; private set; }
 		public Expression              InnerExpression { get; private set; }
-		public List<LambdaExpression>? PostProcess     { get; private set; }
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      => InnerExpression.Type;
@@ -27,15 +25,14 @@ namespace LinqToDB.Expressions
 			return $"Ctx({BuildContextDebuggingHelper.GetContextInfo(BuildContext)}): {InnerExpression}";
 		}
 
-		public Expression Update(IBuildContext buildContext, Expression inner, List<LambdaExpression>? postProcess)
+		public Expression Update(IBuildContext buildContext, Expression inner)
 		{
-			if (buildContext!= BuildContext || inner != InnerExpression || !ReferenceEquals(PostProcess, postProcess))
+			if (buildContext!= BuildContext || inner != InnerExpression)
 			{
 				// this expression is mutable, so just update properties
 				//return new ContextConstructionExpression(buildContext, inner, postProcess);
 				BuildContext    = buildContext;
 				InnerExpression = inner;
-				PostProcess     = postProcess;
 			}
 
 			return this;

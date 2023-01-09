@@ -207,6 +207,11 @@ namespace LinqToDB.SqlQuery
 					var binary = (SqlBinaryExpression)expr;
 					return GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
 				}
+				case QueryElementType.SqlNullabilityExpression:
+				{
+					var nullability = (SqlNullabilityExpression)expr;
+					return GetColumnDescriptor(nullability.SqlExpression);
+				}
 				case QueryElementType.SqlFunction:
 				{
 					var function = (SqlFunction)expr;
@@ -386,7 +391,7 @@ namespace LinqToDB.SqlQuery
 				if (!ReferenceEquals(expr, underlying))
 					return UnwrapExpression(underlying, checkNullability);
 			}
-			else if (expr.ElementType == QueryElementType.SqlNullabilityExpression)
+			else if (!checkNullability && expr.ElementType == QueryElementType.SqlNullabilityExpression)
 				return UnwrapExpression(((SqlNullabilityExpression)expr).SqlExpression, checkNullability);
 
 			return expr;

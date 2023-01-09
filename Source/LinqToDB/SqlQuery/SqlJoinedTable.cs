@@ -29,7 +29,7 @@ namespace LinqToDB.SqlQuery
 
 		public JoinType                 JoinType           { get; set; }
 		public SqlTableSource           Table              { get; set; }
-		public SqlSearchCondition       Condition          { get; private set; }
+		public SqlSearchCondition       Condition          { get; internal set; }
 		public bool                     IsWeak             { get; set; }
 		public bool                     CanConvertApply    { get; set; }
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
@@ -82,6 +82,8 @@ namespace LinqToDB.SqlQuery
 				case JoinType.OuterApply : sb.Append("OUTER APPLY "); break;
 				case JoinType.Right      : sb.Append("RIGHT JOIN ");  break;
 				case JoinType.Full       : sb.Append("FULL JOIN ");   break;
+				case JoinType.FullApply  : sb.Append("FULL APPLY ");  break;
+				case JoinType.RightApply : sb.Append("RIGHT APPLY "); break;
 				default                  : sb.Append("SOME JOIN ");   break;
 			}
 

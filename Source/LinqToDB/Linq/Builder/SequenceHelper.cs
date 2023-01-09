@@ -110,6 +110,32 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
+		public static Expression MoveAllToDefaultIfEmptyContext(Expression expression)
+		{
+			if (expression is ContextRefExpression)
+				return expression;
+
+			var newExpression = expression.Transform((expression), (ctx, e) =>
+			{
+				if (e.NodeType == ExpressionType.Extension)
+				{
+					if (e is ContextRefExpression contextRef)
+					{
+						if (contextRef.BuildContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext)
+						{
+							return e;
+						}
+
+						return contextRef.WithContext(new DefaultIfEmptyBuilder.DefaultIfEmptyContext(null, contextRef.BuildContext, null, false));
+					}
+				}
+
+				return e;
+			});
+
+			return newExpression;
+		}
+
 		public static Expression MoveAllToScopedContext(Expression expression, IBuildContext upTo)
 		{
 			if (expression is ContextRefExpression)
@@ -121,7 +147,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (e is ContextRefExpression contextRef)
 					{
-						if (contextRef.BuildContext == upTo)
+						if (contextRef.BuildContext == upTo || contextRef.BuildContext.SelectQuery == upTo.SelectQuery)
 						{
 							return e;
 						}

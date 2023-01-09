@@ -92,10 +92,7 @@ namespace LinqToDB.Linq.Builder
 			if (flags.HasFlag(ProjectFlags.Table))
 				return result;
 
-			if (flags.HasFlag(ProjectFlags.SQL))
-			{
-				result = Builder.ConvertToSqlExpr(SubQuery, result, flags);
-			}
+			result = Builder.ConvertToSqlExpr(SubQuery, result, flags);
 
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{

@@ -163,7 +163,9 @@ namespace LinqToDB.Linq.Builder
 
 			var generic = new SqlGenericConstructorExpression(
 				purpose == FullEntityPurpose.Default
-					? SqlGenericConstructorExpression.CreateType.Full
+					? checkForKey
+						? SqlGenericConstructorExpression.CreateType.Keys
+						: SqlGenericConstructorExpression.CreateType.Full
 					: SqlGenericConstructorExpression.CreateType.Auto,
 				currentPath.Type,
 				null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members));

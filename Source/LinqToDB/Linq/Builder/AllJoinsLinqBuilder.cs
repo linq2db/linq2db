@@ -59,12 +59,15 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
+
+			DefaultIfEmptyBuilder.DefaultIfEmptyContext? outerDefaultIfEmpty = null;
 			if (joinType == JoinType.Right || joinType == JoinType.Full)
-				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null, false);
+				outerContext = outerDefaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null, false);
 			outerContext = new SubQueryContext(outerContext);
 
+			DefaultIfEmptyBuilder.DefaultIfEmptyContext? innerDefaultIfEmpty = null;
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null, false);
+				innerContext = innerDefaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null, false);
 			innerContext = new SubQueryContext(innerContext);
 
 			var selector = methodCall.Arguments[^1].UnwrapLambda();
@@ -83,6 +86,10 @@ namespace LinqToDB.Linq.Builder
 			if (conditionIndex != -1)
 			{
 				var condition     = methodCall.Arguments[conditionIndex].UnwrapLambda();
+				
+				// Comparison should be provided without DefaultIfEmptyBuilder, so we left original contexts for comparison
+				// ScopeContext ensures that comparison will placed on needed level.
+				//
 				var conditionExpr = SequenceHelper.PrepareBody(condition, outerContext, innerContext);
 
 				conditionExpr = builder.ConvertExpression(conditionExpr);
@@ -95,11 +102,20 @@ namespace LinqToDB.Linq.Builder
 				if (extensions != null)
 					join.JoinedTable.SqlQueryExtensions = extensions;
 
+				innerDefaultIfEmpty?.DisableNullability();
+				outerDefaultIfEmpty?.DisableNullability();
+
+				var flags = ProjectFlags.SQL;
+				if (innerDefaultIfEmpty != null)
+					flags |= ProjectFlags.DoNotCache;
+
 				builder.BuildSearchCondition(
 					joinContext, 
-					conditionExpr, ProjectFlags.SQL,
+					conditionExpr, flags,
 					join.JoinedTable.Condition.Conditions);
 
+				innerDefaultIfEmpty?.EnableNullability();
+				outerDefaultIfEmpty?.EnableNullability();
 			}
 			else
 			{

@@ -6,13 +6,19 @@ namespace LinqToDB.Linq.Builder
 {
 	class ScopeContext : BuildContextBase
 	{
-		public IBuildContext Context { get; }
-		public IBuildContext UpTo    { get; }
+		public IBuildContext Context    { get; }
+		public IBuildContext UpTo       { get; }
+		public bool          OnlyForSql { get; }
 
 		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context.Builder, upTo.SelectQuery)
 		{
 			Context = context;
 			UpTo    = upTo;
+		}
+
+		public ScopeContext(IBuildContext context, IBuildContext upTo, bool onlyForSql) : this(context, upTo)
+		{
+			OnlyForSql = onlyForSql;
 		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -26,7 +32,10 @@ namespace LinqToDB.Linq.Builder
 
 			if (!flags.IsTest())
 			{
-				newExpr = SequenceHelper.MoveAllToScopedContext(newExpr, UpTo);
+				if (!OnlyForSql)
+				{
+					newExpr = SequenceHelper.MoveAllToScopedContext(newExpr, UpTo);
+				}
 				newExpr = Builder.UpdateNesting(UpTo, newExpr);
 			}
 

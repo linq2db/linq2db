@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -10,8 +8,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlQuery;
-	using Common;
-	using Mapping;
 
 	// This class implements double functionality (scalar and member type selects)
 	// and could be implemented as two different classes.
@@ -28,7 +24,6 @@ namespace LinqToDB.Linq.Builder
 		public MethodCallExpression? Debug_MethodCall;
 #endif
 
-		public IBuildContext? Sequence   { [DebuggerStepThrough] get; }
 		public Expression     Body       { [DebuggerStepThrough] get; set; }
 		public bool           IsSubQuery { get; }
 
@@ -52,7 +47,6 @@ namespace LinqToDB.Linq.Builder
 		public SelectContext(IBuildContext? parent, Expression body, IBuildContext sequence, bool isSubQuery)
 			: this(parent, sequence.Builder, body, sequence.SelectQuery, isSubQuery)
 		{
-			Sequence   = sequence;
 		}
 
 		#endregion
@@ -127,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			return new SelectContext(null, context.CloneExpression(Body), context.CloneContext(Sequence), IsSubQuery);
+			return new SelectContext(null, Builder, context.CloneExpression(Body), context.CloneElement(SelectQuery), IsSubQuery);
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -142,26 +136,12 @@ namespace LinqToDB.Linq.Builder
 			return Builder.GetSequenceExpression(this);
 		}
 
-		#region GetContext
-
-		public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-		{
-			return null;
-		}
-
-		#endregion
-
 		public virtual void SetAlias(string? alias)
 		{
 			if (!string.IsNullOrEmpty(alias) && !alias!.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
 			{
 				SelectQuery.Select.From.Tables[0].Alias = alias;
 			}
-		}
-
-		public ISqlExpression? GetSubQuery(IBuildContext context)
-		{
-			return null;
 		}
 
 		public override SqlStatement GetResultStatement()
@@ -172,8 +152,6 @@ namespace LinqToDB.Linq.Builder
 		public override void CompleteColumns()
 		{
 			ExpressionBuilder.EnsureAggregateColumns(this, SelectQuery);
-
-			Sequence.CompleteColumns();
 		}
 	}
 }

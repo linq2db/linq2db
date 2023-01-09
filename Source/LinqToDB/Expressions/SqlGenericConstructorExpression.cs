@@ -366,6 +366,7 @@ namespace LinqToDB.Expressions
 			Incompatible,
 			Auto,
 			Full,
+			Keys,
 			New,
 			MemberInit,
 			MethodCall

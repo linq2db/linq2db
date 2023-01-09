@@ -1010,7 +1010,7 @@ namespace LinqToDB.SqlQuery
 			if (!isColumnsOK)
 				return childSource;
 
-			_selectQuery.QueryName ??= query.QueryName;
+			_selectQuery.QueryName  ??= query.QueryName;
 
 			var map = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 			var aliasesMap = new Dictionary<ISqlExpression,string>(query.Select.Columns.Count, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
@@ -1019,7 +1019,12 @@ namespace LinqToDB.SqlQuery
 			{
 				if (!map.ContainsKey(c))
 				{
-					map.Add(c, c.Expression);
+					var expr = c.Expression;
+					// Apply nullability to column expressions
+					if (!parentQuery.IsNullable && query.IsNullable && !expr.CanBeNull)
+						expr = new SqlNullabilityExpression(expr);
+
+					map.Add(c, expr);
 					if (c.RawAlias != null)
 						aliasesMap[c.Expression] = c.RawAlias;
 				}			
@@ -1338,7 +1343,7 @@ namespace LinqToDB.SqlQuery
 							{
 								if (e is not SqlColumn clm || clm.Parent != visitor.Context.sql)
 								{
-									var newExpr = visitor.Context.sql.Select.AddColumn((ISqlExpression)e);
+									var newExpr = visitor.Context.sql.Select.AddNewColumn((ISqlExpression)e);
 
 									if (visitor.Context.isAgg)
 									{

@@ -77,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 
 					// possible we have to extend this list
 					//
-					isComplex = null != placeholder.Sql.Find(QueryElementType.SqlQuery);
+					isComplex = null != placeholder.Sql.Find(e => e.ElementType == QueryElementType.SqlQuery || e.ElementType == QueryElementType.SqlFunction);
 					if (isComplex)
 						break;
 				}

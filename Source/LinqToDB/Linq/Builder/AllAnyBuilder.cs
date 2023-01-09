@@ -37,12 +37,15 @@ namespace LinqToDB.Linq.Builder
 				if (methodCall.Method.Name.StartsWith("All"))
 					condition = Expression.Lambda(Expression.Not(condition.Body), condition.Name, condition.Parameters);
 
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence, condition, checkForSubQuery: true, enforceHaving: false, isTest: buildInfo.AggregationTest);
+				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
+					condition: condition, checkForSubQuery: true, enforceHaving: false,
+					isTest: buildInfo.AggregationTest, disableCache: false);
+
 				sequence.SetAlias(condition.Parameters[0].Name);
 			}
 
 			// finalizing context
-			_ = builder.MakeExpression(sequence, new ContextRefExpression(buildInfo.Expression.Type, sequence),
+			_ = builder.MakeExpression(sequence, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence),
 				ProjectFlags.Expand);
 
 			return new AllAnyContext(buildInfo.Parent, buildInfo.SelectQuery, methodCall, sequence);

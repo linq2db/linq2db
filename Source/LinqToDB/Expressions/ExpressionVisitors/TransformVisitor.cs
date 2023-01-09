@@ -195,9 +195,8 @@ namespace LinqToDB.Expressions
 			if (expr is ContextConstructionExpression construct)
 			{
 				var inner       = Transform(construct.InnerExpression);
-				var postProcess = construct.PostProcess == null ? null : Transform(construct.PostProcess);
 
-				return construct.Update(construct.BuildContext, inner, postProcess as List<LambdaExpression>);
+				return construct.Update(construct.BuildContext, inner);
 			}
 
 			if (expr is SqlGenericConstructorExpression generic)

@@ -28,5 +28,9 @@
 		/// Specify that we associations should not filter out recordset
 		/// </summary>
 		ForceOuterAssociation = 0x200,	
+		/// <summary>
+		/// Disables caching of translated expressions.
+		/// </summary>
+		DoNotCache = 0x400,	
 	}
 }

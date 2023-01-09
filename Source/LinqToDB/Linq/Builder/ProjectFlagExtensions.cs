@@ -30,6 +30,12 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ProjectFlags TestFlag(this ProjectFlags flags)
+		{
+			return flags | ProjectFlags.Test;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ProjectFlags AssociationRootFlag(this ProjectFlags flags)
 		{
 			return (flags & FlagsToPreserve) | ProjectFlags.AssociationRoot;

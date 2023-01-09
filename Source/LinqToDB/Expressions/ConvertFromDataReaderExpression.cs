@@ -338,7 +338,10 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
-			return $"ConvertFromDataReaderExpression<{_type.Name}>({_idx})";
+			var result = $"ConvertFromDataReaderExpression<{_type.Name}>({_idx})";
+			if (CanBeNull == true || Type.IsNullable())
+				result += "?";
+			return result;
 		}
 
 		public ConvertFromDataReaderExpression MakeNullable()

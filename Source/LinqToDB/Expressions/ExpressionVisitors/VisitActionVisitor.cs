@@ -303,8 +303,6 @@ namespace LinqToDB.Expressions
 			if (expr is ContextConstructionExpression construct)
 			{
 				Visit(construct.InnerExpression);
-				if (construct.PostProcess != null) 
-					Visit(construct.PostProcess);
 			}
 			else if (expr is SqlGenericConstructorExpression generic)
 			{

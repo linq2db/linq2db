@@ -272,10 +272,12 @@ namespace LinqToDB.Linq.Builder
 			public ElementContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence, bool isSubQuery) : 
 				base(parent, SequenceHelper.PrepareBody(lambda, sequence), sequence, isSubQuery)
 			{
-				Lambda = lambda;
+				Lambda   = lambda;
+				Sequence = sequence;
 			}
 
-			public LambdaExpression Lambda { get; set; }
+			public LambdaExpression Lambda   { get; set; }
+			public IBuildContext    Sequence { get; }
 
 			public GroupByContext GroupByContext { get; set; } = null!;
 
@@ -297,7 +299,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new ElementContext(null, context.CloneExpression(Lambda), context.CloneContext(Sequence!), IsSubQuery);
+				return new ElementContext(null, context.CloneExpression(Lambda), context.CloneContext(Sequence), IsSubQuery);
 			}
 		}
 
@@ -310,10 +312,12 @@ namespace LinqToDB.Linq.Builder
 			public KeyContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence, bool isSubQuery) : 
 				base(parent, SequenceHelper.PrepareBody(lambda, sequence), sequence, isSubQuery)
 			{
-				Lambda = lambda;
+				Lambda   = lambda;
+				Sequence = sequence;
 			}
 
 			public LambdaExpression Lambda         { get; }
+			public IBuildContext    Sequence       { get; }
 			public GroupByContext   GroupByContext { get; set; } = null!;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)

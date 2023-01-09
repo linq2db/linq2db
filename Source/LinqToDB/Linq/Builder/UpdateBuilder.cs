@@ -104,7 +104,11 @@ namespace LinqToDB.Linq.Builder
 					var setterExpr = methodCall.Arguments[1].Unwrap();
 					if (setterExpr is LambdaExpression && methodCall.Arguments.Count == 3 && updateType == UpdateTypeEnum.Update)
 					{
-						sequence = builder.BuildWhere(buildInfo.Parent, sequence, methodCall.Arguments[1].UnwrapLambda(), false, false, buildInfo.AggregationTest);
+						sequence = builder.BuildWhere(buildInfo.Parent, sequence,
+							condition: methodCall.Arguments[1].UnwrapLambda(), checkForSubQuery: false,
+							enforceHaving: false, isTest: buildInfo.AggregationTest,
+							disableCache: false);
+
 						setterExpr = methodCall.Arguments[2].Unwrap();
 					}
 

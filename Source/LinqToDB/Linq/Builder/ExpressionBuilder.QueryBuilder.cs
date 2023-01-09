@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
@@ -41,16 +42,49 @@ namespace LinqToDB.Linq.Builder
 			_convertedExpressions.Remove(ex);
 		}
 
-		Expression Deduplicate(Expression expression)
+		Expression Deduplicate(Expression expression, bool onlyConstructRef)
 		{
-			var visited    = new HashSet<Expression>();
+			var visited    = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 			var duplicates = new Dictionary<Expression, Expression?>(ExpressionEqualityComparer.Instance);
 
 			expression.Visit(
-				(builder: this, duplicates, visited),
+				(builder: this, duplicates, visited, onlyConstructRef),
 				static (ctx, e) =>
 				{
-					if (e is SqlGenericConstructorExpression || /*e is SqlPlaceholderExpression ||*/ e is SqlAdjustTypeExpression || e is SqlReaderIsNullExpression)
+
+					bool checkForDuplicate;
+
+					if (ctx.onlyConstructRef)
+					{
+						checkForDuplicate = e is ContextConstructionExpression;
+					}
+					else
+					{
+						checkForDuplicate = e is SqlGenericConstructorExpression || e is SqlAdjustTypeExpression ||
+						                    e is SqlReaderIsNullExpression       || e is ContextConstructionExpression;
+					}
+					/*else
+					{
+						if (e is MemberExpression me)
+						{
+							var current = me;
+							do
+							{
+								if (current.Expression is ContextRefExpression)
+								{
+									checkForDuplicate = true;
+									break;
+								}
+
+								if (current.Expression is MemberExpression me2)
+									current = me2;
+								else
+									break;
+							} while (true);
+						}
+					}*/
+
+					if (checkForDuplicate)
 					{
 						if (!ctx.visited.Add(e))
 						{
@@ -74,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 				(builder: this, duplicates),
 				static (ctx, e) =>
 				{
-					if (e.NodeType == ExpressionType.Extension && ctx.duplicates.TryGetValue(e, out var replacement))
+					if ((e.NodeType == ExpressionType.Extension || e.NodeType == ExpressionType.MemberAccess) && ctx.duplicates.TryGetValue(e, out var replacement))
 					{
 						return replacement!;
 					}
@@ -118,33 +152,64 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		public Expression ToColumns(IBuildContext rootContext, Expression expression)
+		static void BuildParentsInfo(SelectQuery selectQuery, Dictionary<SelectQuery, SelectQuery> parentInfo)
 		{
-			var info         = new QueryInformation(rootContext.SelectQuery);
-			var processedMap = new Dictionary<Expression, Expression>();
+			foreach (var ts in selectQuery.From.Tables)
+			{
+				if (ts.Source is SelectQuery sc)
+				{
+					parentInfo[sc] = selectQuery;
+					BuildParentsInfo(sc, parentInfo);
+				}
+
+				foreach (var join in ts.Joins)
+				{
+					if (join.Table.Source is SelectQuery jc)
+					{
+						parentInfo[jc] = selectQuery;
+						BuildParentsInfo(jc, parentInfo);
+					}
+				}
+			}
+		}
+
+		static bool GetParentQuery(Dictionary<SelectQuery, SelectQuery> parentInfo, SelectQuery currentQuery, [MaybeNullWhen(false)] out SelectQuery? parentQuery)
+		{
+			return parentInfo.TryGetValue(currentQuery, out parentQuery);
+		}
+
+		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
+		{
+			// short path
+			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToContext.SelectQuery)
+				return expression;
+
+			var parentInfo = new Dictionary<SelectQuery, SelectQuery>();
+			BuildParentsInfo(upToContext.SelectQuery, parentInfo);
 
 			var withColumns =
 				expression.Transform(
-					(builder: this, map: processedMap, info),
+					(builder: this, upToContext, parentInfo),
 					static (context, expr) =>
-									{
-						if (context.map.TryGetValue(expr, out var mapped))
-							return mapped;
-
-						if (expr is SqlPlaceholderExpression placeholder && placeholder.SelectQuery != null)
+					{
+						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToContext.SelectQuery, placeholder.SelectQuery))
 						{
 							do
 							{
-								var parent = context.info.GetParentQuery(placeholder.SelectQuery!);
-
-								placeholder = context.builder.MakeColumn(parent, placeholder);
-
-								if (parent == null)
+								if (placeholder.SelectQuery == null)
 									break;
+
+								if (ReferenceEquals(context.upToContext.SelectQuery, placeholder.SelectQuery))
+									break;
+
+								if (!GetParentQuery(context.parentInfo, placeholder.SelectQuery, out var parentQuery))
+									break;
+
+								placeholder = context.builder.MakeColumn(parentQuery, placeholder);
+
 
 							} while (true);
 
-							context.map[expr] = placeholder;
 							return placeholder;
 						}
 
@@ -154,54 +219,37 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		static bool IsSameParentTree(QueryInformation info, SelectQuery testedQuery)
+		public Expression ToColumns(IBuildContext rootContext, Expression expression)
 		{
-			var parent = info.GetParentQuery(testedQuery);
-
-			while (parent != null)
-			{
-				if (ReferenceEquals(parent, info.RootQuery))
-					return true;
-
-				parent = info.GetParentQuery(parent);
-			}
-
-			return false;
-		}
-
-		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
-		{
-			// short path
-			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToContext.SelectQuery)
-				return expression;
-
-			var info = new QueryInformation(upToContext.SelectQuery);
+			var parentInfo = new Dictionary<SelectQuery, SelectQuery>();
+			BuildParentsInfo(rootContext.SelectQuery, parentInfo);
 
 			var withColumns =
 				expression.Transform(
-					(builder: this, upToContext, info),
+					(builder: this, parentInfo, rootQuery: rootContext.SelectQuery),
 					static (context, expr) =>
 					{
-						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToContext.SelectQuery, placeholder.SelectQuery))
+						if (expr is SqlPlaceholderExpression { SelectQuery: { } } placeholder)
 						{
-							if (placeholder.SelectQuery != null && IsSameParentTree(context.info, placeholder.SelectQuery))
+							do
 							{
-								do
+								if (placeholder.SelectQuery == null)
+									break;
+
+								if (ReferenceEquals(placeholder.SelectQuery, context.rootQuery))
 								{
-									if (placeholder.SelectQuery == null)
-										break;
+									placeholder = context.builder.MakeColumn(null, placeholder);
+									break;
+								}
 
-									var parentQuery = context.info.GetParentQuery(placeholder.SelectQuery);
+								if (!GetParentQuery(context.parentInfo, placeholder.SelectQuery, out var parentQuery))
+								{
+									throw new InvalidOperationException("Invalid query nesting.");
+								}
 
-									if (parentQuery == null)
-										break;
+								placeholder = context.builder.MakeColumn(parentQuery, placeholder);
 
-									placeholder = context.builder.MakeColumn(parentQuery, placeholder);
-
-									if (ReferenceEquals(context.upToContext.SelectQuery, parentQuery))
-										break;
-								} while (true);
-							}
+							} while (true);
 
 							return placeholder;
 						}
@@ -379,14 +427,6 @@ namespace LinqToDB.Linq.Builder
 								var buildExpr = context.builder.MakeExpression(contextRef.BuildContext, contextRef,
 									context.flags);
 
-								if (!ReferenceEquals(buildExpr, contextRef))
-								{
-									buildExpr = context.builder.BuildSqlExpression(
-										contextRef.BuildContext,
-										buildExpr,
-										context.flags, context.alias);
-								}
-
 								return new TransformInfo(buildExpr, false, true);
 							}
 
@@ -402,13 +442,16 @@ namespace LinqToDB.Linq.Builder
 
 						case ExpressionType.Conditional:
 						{
-							// Try to convert condition to the SQL
-							var asSQL = context.builder.TryConvertToSqlPlaceholder(context.context, expr,
-								context.flags);
-
-							if (asSQL != null)
+							if (context.flags.IsExpression())
 							{
-								return new TransformInfo(asSQL);
+								// Try to convert condition to the SQL
+								var asSQL = context.builder.ConvertToSqlExpr(context.context, expr,
+									context.flags);
+
+								if (asSQL is SqlPlaceholderExpression)
+								{
+									return new TransformInfo(asSQL);
+								}
 							}
 
 							break;
@@ -421,10 +464,49 @@ namespace LinqToDB.Linq.Builder
 
 					}
 
+					expr = context.builder.HandleExtension(context.context, expr, context.flags);
 					return new TransformInfo(expr);
 				});
 
 			return result;
+		}
+
+		public Expression HandleExtension(IBuildContext context, Expression expr, ProjectFlags flags)
+		{
+
+			// Handling ExpressionAttribute
+			//
+			if (expr.NodeType == ExpressionType.Call || expr.NodeType == ExpressionType.MemberAccess)
+			{
+				MemberInfo memberInfo;
+				if (expr.NodeType == ExpressionType.Call)
+				{
+					memberInfo = ((MethodCallExpression)expr).Method;
+				}
+				else
+				{
+					memberInfo = ((MemberExpression)expr).Member;
+				}
+
+				var attr = memberInfo.GetExpressionAttribute(MappingSchema);
+
+				if (attr != null && (flags.HasFlag(ProjectFlags.Expression) || attr.ServerSideOnly))
+				{
+					var converted = attr.GetExpression((builder: this, context),
+						DataContext,
+						context.SelectQuery, expr,
+						static (context, e, descriptor) =>
+							context.builder.ConvertToExtensionSql(context.context, e, descriptor));
+
+					if (converted != null)
+					{
+						var newExpr = CreatePlaceholder(context.SelectQuery, converted, expr);
+						return newExpr;
+					}
+				}
+			}
+
+			return expr;
 		}
 
 		public Expression FinalizeConstructors(IBuildContext context, Expression expression)
@@ -432,9 +514,10 @@ namespace LinqToDB.Linq.Builder
 			do
 			{
 				expression = BuildSqlExpression(context, expression, ProjectFlags.Expression);
-				expression = OptimizationContext.OptimizeExpressionTree(expression, true);
+				
+				var deduplicated = Deduplicate(expression, true);
+				deduplicated = Deduplicate(deduplicated, false);
 
-				var deduplicated = Deduplicate(expression);
 				var reconstructed = deduplicated.Transform((builder: this, context), (ctx, e) =>
 				{
 					if (e is SqlGenericConstructorExpression generic)
@@ -472,7 +555,14 @@ namespace LinqToDB.Linq.Builder
 					args[0] = firstArg;
 					return mc.Update(null, args);
 				}
-
+			}
+			else if (expr is ContextRefExpression { BuildContext: ScopeContext sc })
+			{
+				return CorrectRoot(sc.Context, new ContextRefExpression(expr.Type, sc.Context));
+			}
+			else if (expr is ContextRefExpression { BuildContext: DefaultIfEmptyBuilder.DefaultIfEmptyContext di })
+			{
+				return CorrectRoot(di.Sequence, new ContextRefExpression(expr.Type, di.Sequence));
 			}
 			else
 				expr = MakeExpression(currentContext, expr, ProjectFlags.Root);
@@ -733,10 +823,24 @@ namespace LinqToDB.Linq.Builder
 					if (placeholder.Index == null)
 						throw new InvalidOperationException();
 
-					var valueType = placeholder.Type;
+					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
+
+					var valueType = columnDescriptor?.GetDbDataType(true).SystemType 
+					                ?? placeholder.Sql.SystemType 
+					                ?? placeholder.Type;
+
+					if (placeholder.Sql.CanBeNull && valueType != placeholder.Type && valueType.IsValueType && !valueType.IsNullable())
+					{
+						valueType = valueType.AsNullable();
+					}
 
 					var readerExpression = (Expression)new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
-						QueryHelper.GetColumnDescriptor(placeholder.Sql)?.ValueConverter, DataReaderParam, placeholder.Sql.CanBeNull);
+						columnDescriptor?.ValueConverter, DataReaderParam, placeholder.Sql.CanBeNull);
+
+					if (placeholder.Type != readerExpression.Type)
+					{
+						readerExpression = Expression.Convert(readerExpression, placeholder.Type);
+					}
 
 					return readerExpression;
 				}

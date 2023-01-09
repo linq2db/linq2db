@@ -3,10 +3,10 @@
 namespace LinqToDB.Expressions
 {
 	using Common.Internal;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using SqlQuery;
 
-	class SqlPlaceholderExpression : Expression
+	sealed class SqlPlaceholderExpression : Expression
 	{
 		public SqlPlaceholderExpression(SelectQuery? selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
@@ -107,19 +107,26 @@ namespace LinqToDB.Expressions
 		{
 			var pathStr = "#" + ExpressionEqualityComparer.Instance.GetHashCode(Path)/* + " " + Path*/;
 
+			string result;
 			if (SelectQuery == null)
 			{
 				if (Sql is SqlColumn column)
 				{
 					var sourceId = column.Parent!.SourceID;
-					return $"SQL[{Index}]({sourceId}): {{{Sql}}} ({pathStr})";
+					result = $"SQL[{Index}]({sourceId})";
 				}
-
-				return $"SQL: {{{Sql}}} ({pathStr})";
-
+				else
+					result = $"SQL";
 			}
+			else
+				result = $"SQL({SelectQuery.SourceID})";
 
-			return $"SQL({SelectQuery.SourceID}): {{{Sql}}} ({pathStr})";
+			var sqlStr = $"{{{Sql}}}";
+			if (Sql.CanBeNull && Sql is not SqlColumn)
+				sqlStr += "?";
+			result += $": {sqlStr} ({pathStr})";
+
+			return result;
 		}
 
 		protected bool Equals(SqlPlaceholderExpression other)
@@ -160,6 +167,13 @@ namespace LinqToDB.Expressions
 				hashCode = (hashCode * 397) ^ ConvertType.GetHashCode();
 				return hashCode;
 			}
+		}
+
+		public SqlPlaceholderExpression WithType(Type type)
+		{
+			if (Type != type)
+				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
+			return this;
 		}
 	}
 
