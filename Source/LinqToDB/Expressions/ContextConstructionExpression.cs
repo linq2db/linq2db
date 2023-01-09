@@ -27,12 +27,9 @@ namespace LinqToDB.Expressions
 
 		public Expression Update(IBuildContext buildContext, Expression inner)
 		{
-			if (buildContext!= BuildContext || inner != InnerExpression)
+			if (buildContext != BuildContext || inner != InnerExpression)
 			{
-				// this expression is mutable, so just update properties
-				//return new ContextConstructionExpression(buildContext, inner, postProcess);
-				BuildContext    = buildContext;
-				InnerExpression = inner;
+				return new ContextConstructionExpression(buildContext, inner);
 			}
 
 			return this;
