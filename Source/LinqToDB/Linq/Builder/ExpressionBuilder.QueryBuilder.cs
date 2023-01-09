@@ -244,7 +244,10 @@ namespace LinqToDB.Linq.Builder
 
 								if (!GetParentQuery(context.parentInfo, placeholder.SelectQuery, out var parentQuery))
 								{
-									throw new InvalidOperationException("Invalid query nesting.");
+									// Handling OUTPUT cases
+									//
+									placeholder = context.builder.MakeColumn(null, placeholder);
+									break;
 								}
 
 								placeholder = context.builder.MakeColumn(parentQuery, placeholder);
