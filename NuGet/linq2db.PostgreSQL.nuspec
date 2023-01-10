@@ -14,16 +14,16 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework="net45">
-				<dependency id="linq2db" version="4.0.0"  />
+				<dependency id="linq2db" version="5.0.0"  />
 				<dependency id="Npgsql"  version="4.0.13" />
 			</group>
 			<group targetFramework="net461">
-				<dependency id="linq2db" version="4.0.0"  />
+				<dependency id="linq2db" version="5.0.0"  />
 				<dependency id="Npgsql"  version="4.1.12" />
 			</group>
 			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db" version="4.0.0"  />
-				<dependency id="Npgsql"  version="7.0.0"  />
+				<dependency id="linq2db" version="5.0.0"  />
+				<dependency id="Npgsql"  version="7.0.1"  />
 			</group>
 		</dependencies>
 		<contentFiles>
