@@ -12,6 +12,10 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// methods, if mode is not specified explicitly.
 	/// Default value: <see cref="BulkCopyType.ProviderSpecific"/>.
 	/// </param>
+	/// <param name="GenerateScopeIdentity">
+	/// Enables identity selection using SCOPE_IDENTITY function for insert with identity APIs.
+	/// Default value: <c>true</c>.
+	/// </param>
 	public sealed record SqlServerOptions
 	(
 		BulkCopyType BulkCopyType          = BulkCopyType.ProviderSpecific,

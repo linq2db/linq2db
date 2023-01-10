@@ -312,70 +312,25 @@ namespace LinqToDB.DataProvider.MySql
 				base.BuildFromClause(statement, selectQuery);
 		}
 
-		[Obsolete("Use MySqlOptions.Default.ParameterSymbol instead.")]
-		public static char ParameterSymbol
-		{
-			get => MySqlOptions.Default.ParameterSymbol;
-			set => MySqlOptions.Default = MySqlOptions.Default with { ParameterSymbol = value };
-		}
-
-		[Obsolete("Use MySqlOptions.Default.TryConvertParameterSymbol instead.")]
-		public static bool TryConvertParameterSymbol
-		{
-			get => MySqlOptions.Default.TryConvertParameterSymbol;
-			set => MySqlOptions.Default = MySqlOptions.Default with { TryConvertParameterSymbol = value };
-		}
-
-		[Obsolete("Use MySqlOptions.Default.CommandParameterPrefix instead.")]
-		public static string CommandParameterPrefix
-		{
-			get => MySqlOptions.Default.CommandParameterPrefix ?? string.Empty;
-			set => MySqlOptions.Default = MySqlOptions.Default with { CommandParameterPrefix = value ?? string.Empty };
-		}
-
-		[Obsolete("Use MySqlOptions.Default.SprocParameterPrefix instead.")]
-		public static string SprocParameterPrefix
-		{
-			get => MySqlOptions.Default.SprocParameterPrefix ?? string.Empty;
-			set => MySqlOptions.Default = MySqlOptions.Default with { SprocParameterPrefix = value ?? string.Empty };
-		}
-
-		static readonly IReadOnlyList<char> _readOnlyList = new List<char>().AsReadOnly();
-
-		[Obsolete("Use MySqlOptions.Default.ConvertParameterSymbols instead.")]
-		public static IReadOnlyList<char> ConvertParameterSymbols
-		{
-			get => MySqlOptions.Default.ConvertParameterSymbols ?? _readOnlyList;
-			set => MySqlOptions.Default = MySqlOptions.Default with { ConvertParameterSymbols = value ?? _readOnlyList };
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
-				case ConvertType.NameToQueryParameter:
-					return sb.Append(ProviderOptions.ParameterSymbol).Append(value);
-
+				case ConvertType.NameToQueryParameter  :
 				case ConvertType.NameToCommandParameter:
-					return sb.Append(ProviderOptions.ParameterSymbol).Append(ProviderOptions.CommandParameterPrefix ?? string.Empty).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
 							throw new ArgumentException("Argument 'value' must represent parameter name.");
 
-					if (value[0] == ProviderOptions.ParameterSymbol)
+					if (value[0] == '@')
 						value = value.Substring(1);
 
-					if (value.StartsWith(ProviderOptions.SprocParameterPrefix ?? string.Empty, StringComparison.Ordinal))
-						value = value.Substring(ProviderOptions.SprocParameterPrefix?.Length ?? 0);
-
-					return sb.Append(ProviderOptions.ParameterSymbol).Append(ProviderOptions.SprocParameterPrefix ?? string.Empty).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.SprocParameterToName:
-					value = value.Length > 0 && (value[0] == ProviderOptions.ParameterSymbol || (ProviderOptions.TryConvertParameterSymbol && (ProviderOptions.ConvertParameterSymbols ?? _readOnlyList).Contains(value[0]))) ? value.Substring(1) : value;
-
-					if (!string.IsNullOrEmpty(ProviderOptions.SprocParameterPrefix) && value.StartsWith(ProviderOptions.SprocParameterPrefix))
-						value = value.Substring(ProviderOptions.SprocParameterPrefix?.Length ?? 0);
+					value = value.Length > 0 && value[0] == '@' ? value.Substring(1) : value;
 
 					return sb.Append(value);
 

@@ -12,6 +12,11 @@ namespace LinqToDB.DataProvider.SQLite
 	/// methods, if mode is not specified explicitly.
 	/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 	/// </param>
+	/// <param name="AlwaysCheckDbNull">
+	/// Enables null-value checks during database data mapping even if SQLite reports that column cannot be <c>NULL</c> to
+	/// avoid <see cref="NullReferenceException"/> on mapping when database reports nullability incorrectly.
+	/// Default value: <c>true</c>.
+	/// </param>
 	public sealed record SQLiteOptions
 	(
 		BulkCopyType BulkCopyType      = BulkCopyType.MultipleRows,

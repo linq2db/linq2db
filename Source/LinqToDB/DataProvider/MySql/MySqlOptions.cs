@@ -14,12 +14,7 @@ namespace LinqToDB.DataProvider.MySql
 	/// </param>
 	public sealed record MySqlOptions
 	(
-		BulkCopyType         BulkCopyType              = BulkCopyType.MultipleRows,
-		char                 ParameterSymbol           = '@',
-		bool                 TryConvertParameterSymbol = default,
-		string?              CommandParameterPrefix    = default,
-		string?              SprocParameterPrefix      = default,
-		IReadOnlyList<char>? ConvertParameterSymbols   = default
+		BulkCopyType         BulkCopyType              = BulkCopyType.MultipleRows
 	)
 		: DataProviderOptions<MySqlOptions>(BulkCopyType)
 	{
@@ -29,19 +24,9 @@ namespace LinqToDB.DataProvider.MySql
 
 		MySqlOptions(MySqlOptions original) : base(original)
 		{
-			ParameterSymbol           = original.ParameterSymbol;
-			TryConvertParameterSymbol = original.TryConvertParameterSymbol;
-			CommandParameterPrefix    = original.CommandParameterPrefix;
-			SprocParameterPrefix      = original.SprocParameterPrefix;
-			ConvertParameterSymbols   = original.ConvertParameterSymbols;
 		}
 
 		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
-			.Add(ParameterSymbol)
-			.Add(TryConvertParameterSymbol)
-			.Add(CommandParameterPrefix)
-			.Add(SprocParameterPrefix)
-			.Add(ConvertParameterSymbols)
 			;
 
 		#region IEquatable implementation

@@ -12,6 +12,10 @@ namespace LinqToDB.DataProvider.DB2
 	/// methods, if mode is not specified explicitly.
 	/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 	/// </param>
+	/// <param name="IdentifierQuoteMode">
+	/// Identifier quotation logic for SQL generation.
+	/// Default value: <see cref="DB2IdentifierQuoteMode.Auto"/>.
+	/// </param>
 	public sealed record DB2Options
 	(
 		BulkCopyType           BulkCopyType        = BulkCopyType.MultipleRows,

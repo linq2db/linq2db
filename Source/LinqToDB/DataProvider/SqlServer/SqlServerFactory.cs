@@ -12,13 +12,17 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			var provider     = SqlServerProvider.SystemDataSqlClient;
+			var provider     = SqlServerProvider.AutoDetect;
 			var version      = attributes.FirstOrDefault(_ => _.Name == "version")?.Value;
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
 
 			if (assemblyName == SqlServerProviderAdapter.MicrosoftAssemblyName)
 			{
 				provider = SqlServerProvider.MicrosoftDataSqlClient;
+			}
+			else if (assemblyName == SqlServerProviderAdapter.SystemAssemblyName)
+			{
+				provider = SqlServerProvider.SystemDataSqlClient;
 			}
 
 			return version switch

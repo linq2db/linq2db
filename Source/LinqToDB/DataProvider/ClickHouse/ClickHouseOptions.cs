@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 	/// <param name="BulkCopyType">
 	/// Default bulk copy mode.
-	/// Default value: <c>BulkCopyType.ProviderSpecific</c>.
+	/// Default value: <c><see cref="BulkCopyType.ProviderSpecific"/></c>.
 	/// </param>
 	/// <param name="UseStandardCompatibleAggregates">
 	/// Enables -OrNull combinator for Min, Max, Sum and Avg aggregation functions to support SQL standard-compatible behavior.

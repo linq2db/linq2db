@@ -149,6 +149,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
+			// TODO: implement better quotation logic
+			// E.g. we currently don't handle quotes inside identifier
+			// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField     :
@@ -165,8 +168,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							return sb.Append(value);
 
 						if (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
-						    || IsReserved(value)
-						    || value.Any(c => char.IsWhiteSpace(c) || ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
+							|| IsReserved(value)
+							|| value.Any(c => char.IsWhiteSpace(c)
+							|| ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
 

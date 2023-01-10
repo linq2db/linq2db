@@ -23,6 +23,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	/// </list>
 	/// Default value: <c>true</c>.
 	/// </param>
+	/// <param name="IdentifierQuoteMode">
+	/// Specify identifiers quotation logic for SQL generation.
+	/// Default value: <see cref="PostgreSQLIdentifierQuoteMode.Auto"/>.
+	/// </param>
 	public sealed record PostgreSQLOptions
 	(
 		BulkCopyType                  BulkCopyType           = BulkCopyType.MultipleRows,

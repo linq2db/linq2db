@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -6,6 +7,11 @@ namespace LinqToDB.DataProvider.Oracle
 	using Common.Internal;
 	using Data;
 
+	/// <param name="BulkCopyType">
+	/// Default bulk copy mode, used for oracle by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
+	/// methods, if mode is not specified explicitly.
+	/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
+	/// </param>
 	/// <param name="AlternativeBulkCopy">
 	/// Defines type of multi-row INSERT operation to generate for <see cref="BulkCopyType.RowByRow"/> bulk copy mode.
 	/// </param>
