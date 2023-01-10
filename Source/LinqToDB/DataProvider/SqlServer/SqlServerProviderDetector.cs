@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Reflection;
+
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -9,11 +12,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>
 	{
-		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2008)
+		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2012)
 		{
 		}
-
-		public static SqlServerProvider DefaultProvider = SqlServerProvider.MicrosoftDataSqlClient;
 
 		static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
 
@@ -45,8 +46,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var provider = new T();
 
-				if (DefaultProvider == provider.Provider)
-					DataConnection.AddDataProvider(provider);
+				DataConnection.AddDataProvider(provider);
 
 				_providers.Enqueue(provider);
 
@@ -88,7 +88,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				SqlServerProviderAdapter.MicrosoftClientNamespace => SqlServerProvider.MicrosoftDataSqlClient,
 				SqlServerProviderAdapter.SystemClientNamespace    => SqlServerProvider.SystemDataSqlClient,
-				_                                                 => DefaultProvider
+				_                                                 => DetectProvider()
 			};
 
 			switch (css.ProviderName)
@@ -133,6 +133,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override IDataProvider GetDataProvider(SqlServerProvider provider, SqlServerVersion version, string? connectionString)
 		{
+			if (provider == SqlServerProvider.AutoDetect)
+				provider = DetectProvider();
+
 			return (provider, version) switch
 			{
 				(_,                                        SqlServerVersion.AutoDetect) => AutoDetectProvider(),
@@ -162,6 +165,16 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				return GetDataProvider(provider, DetectServerVersion(provider, connectionString) ?? DefaultVersion, null);
 			}
+		}
+
+		public static SqlServerProvider DetectProvider()
+		{
+			var fileName = typeof(SqlServerProviderDetector).Assembly.GetFileName();
+			var dirName  = Path.GetDirectoryName(fileName);
+
+			return File.Exists(Path.Combine(dirName ?? ".", SqlServerProviderAdapter.MicrosoftAssemblyName + ".dll"))
+				? SqlServerProvider.MicrosoftDataSqlClient
+				: SqlServerProvider.SystemDataSqlClient;
 		}
 
 		public override SqlServerVersion? DetectServerVersion(SqlServerProviderAdapter.SqlConnection connection)

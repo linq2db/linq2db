@@ -182,10 +182,6 @@ namespace LinqToDB.CommandLine
 				case ProviderName.SQLite            :
 					provider = ProviderName.SQLiteClassic;
 					break;
-				case ProviderName.SqlServer         :
-					SqlServerTools.AutoDetectProvider = true;
-					SqlServerTools.DefaultProvider = SqlServerProvider.MicrosoftDataSqlClient;
-					break;
 				case ProviderName.Firebird          :
 					// TODO                         : don't forget to add versioning here after Firebird versioning feature merged
 					break;

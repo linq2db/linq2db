@@ -2,6 +2,7 @@
 {
 	public enum SqlServerProvider
 	{
+		AutoDetect,
 		SystemDataSqlClient,
 		MicrosoftDataSqlClient
 	}

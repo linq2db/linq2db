@@ -19,64 +19,21 @@ namespace LinqToDB
 		#region UseSqlServer
 
 		/// <summary>
-		/// Configure connection to use SQL Server default provider, dialect and connection string.
+		/// Configure connection to use specific SQL Server provider, dialect and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
 		/// <param name="connectionString">SQL Server connection string.</param>
+		/// <param name="provider">SQL Server provider to use.</param>
+		/// <param name="dialect">SQL Server dialect support level.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		/// <remarks>
-		/// <para>
-		/// Default provider configured using <see cref="SqlServerTools.DefaultProvider"/> option and set to <see cref="SqlServerProvider.SystemDataSqlClient"/> by default.
-		/// </para>
-		/// <para>
-		/// SQL Server dialect will be chosen automatically:
-		/// <list type="bullet">
-		/// <item>if <see cref="SqlServerTools.AutoDetectProvider"/> (default: <c>true</c>) enabled, LinqToDB will query server for version</item>
-		/// <item>otherwise <see cref="SqlServerVersion.v2008"/> will be used as default dialect.</item>
-		/// </list>
-		/// </para>
 		/// For more fine-grained configuration see <see cref="UseSqlServer(DataOptions, string, SqlServerVersion, SqlServerProvider)"/> overload.
 		/// </remarks>
-		public static DataOptions UseSqlServer(this DataOptions options, string connectionString)
-		{
-			return options.UseConnectionString(ProviderName.SqlServer, connectionString);
-		}
-
-		/// <summary>
-		/// Configure connection to use specific SQL Server provider, dialect and connection string.
-		/// </summary>
-		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
-		/// <param name="connectionString">SQL Server connection string.</param>
-		/// <param name="provider">SQL Server provider to use.</param>
-		/// <param name="dialect">SQL Server dialect support level.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerVersion dialect, SqlServerProvider provider)
+		public static DataOptions UseSqlServer(this DataOptions options, string connectionString,
+			SqlServerVersion  dialect  = SqlServerVersion. AutoDetect,
+			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
 			return SqlServerTools.ProviderDetector.CreateOptions(options, connectionString, dialect, provider);
-		}
-
-		/// <summary>
-		/// Configure connection to use specific SQL Server provider, dialect and connection string.
-		/// </summary>
-		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
-		/// <param name="connectionString">SQL Server connection string.</param>
-		/// <param name="provider">SQL Server provider to use.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerProvider provider)
-		{
-			return SqlServerTools.ProviderDetector.CreateOptions(options, connectionString, SqlServerVersion.AutoDetect, provider);
-		}
-
-		/// <summary>
-		/// Configure connection to use specific SQL Server provider, dialect and connection string.
-		/// </summary>
-		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
-		/// <param name="connectionString">SQL Server connection string.</param>
-		/// <param name="dialect">SQL Server dialect support level.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		public static DataOptions UseSqlServer(this DataOptions options, string connectionString, SqlServerVersion dialect)
-		{
-			return SqlServerTools.ProviderDetector.CreateOptions(options, connectionString, dialect, SqlServerTools.DefaultProvider);
 		}
 
 		#endregion

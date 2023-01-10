@@ -38,7 +38,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		#region Init
 
 		protected SqlServerDataProvider(string name, SqlServerVersion version)
-			: this(name, version, SqlServerProvider.MicrosoftDataSqlClient)
+			: this(name, version, SqlServerProvider.AutoDetect)
 		{
 		}
 
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			: base(
 				name,
 				MappingSchemaInstance.Get(version),
-				SqlServerProviderAdapter.GetInstance(provider))
+				SqlServerProviderAdapter.GetInstance(provider == SqlServerProvider.AutoDetect ? provider = SqlServerProviderDetector.DetectProvider() : provider))
 		{
 			Version  = version;
 			Provider = provider;

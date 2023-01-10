@@ -121,8 +121,7 @@ namespace Tests.Common
 			var provider = !context.EndsWith(".MS") ? SqlServerProvider.SystemDataSqlClient : SqlServerProvider.MicrosoftDataSqlClient;
 			var cs = DataConnection.GetConnectionString(context);
 
-			var builder =
-				new DataOptions().UseSqlServer(cs, provider);
+			var builder = new DataOptions().UseSqlServer(cs, provider : provider);
 
 			using var dc = new DataConnection(builder);
 			_ = dc.GetTable<Parent>().First();

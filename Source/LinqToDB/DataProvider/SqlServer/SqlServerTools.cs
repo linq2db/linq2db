@@ -17,18 +17,6 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		internal static SqlServerProviderDetector ProviderDetector = new();
 
-		public static SqlServerProvider DefaultProvider
-		{
-			get => SqlServerProviderDetector.DefaultProvider;
-			set => SqlServerProviderDetector.DefaultProvider = value;
-		}
-
-		public static bool AutoDetectProvider
-		{
-			get => ProviderDetector.AutoDetectProvider;
-			set => ProviderDetector.AutoDetectProvider = value;
-		}
-
 		public static string QuoteIdentifier(string identifier)
 		{
 			return QuoteIdentifier(new StringBuilder(), identifier).ToString();
@@ -65,7 +53,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static IDataProvider GetDataProvider(
 			SqlServerVersion  version          = SqlServerVersion.AutoDetect,
-			SqlServerProvider provider         = SqlServerProvider.SystemDataSqlClient,
+			SqlServerProvider provider         = SqlServerProvider.AutoDetect,
 			string?           connectionString = null)
 		{
 			return ProviderDetector.GetDataProvider(provider, version, connectionString);
@@ -98,7 +86,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static DataConnection CreateDataConnection(
 			string            connectionString,
 			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
-			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
+			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version, provider, connectionString), connectionString);
 		}
@@ -106,7 +94,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static DataConnection CreateDataConnection(
 			DbConnection      connection,
 			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
-			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
+			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
 			if (version is SqlServerVersion.AutoDetect)
 				version = ProviderDetector.DetectServerVersion((SqlServerProviderAdapter.SqlConnection)(IDbConnection)connection) ?? ProviderDetector.DefaultVersion;
@@ -117,7 +105,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static DataConnection CreateDataConnection(
 			DbTransaction     transaction,
 			SqlServerVersion  version  = SqlServerVersion.AutoDetect,
-			SqlServerProvider provider = SqlServerProvider.SystemDataSqlClient)
+			SqlServerProvider provider = SqlServerProvider.AutoDetect)
 		{
 			if (version is SqlServerVersion.AutoDetect)
 			{

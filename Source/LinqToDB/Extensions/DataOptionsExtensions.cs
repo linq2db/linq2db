@@ -539,6 +539,23 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Defines configuration sting to use with DataOptions.
+		/// </summary>
+		public static DataOptions UseConfiguration(this DataOptions options, string? configurationString)
+		{
+			return options.WithOptions<ConnectionOptions>(o => o with { ConfigurationString = configurationString });
+		}
+
+		/// <summary>
+		/// Defines configuration sting and MappingSchema to use with DataOptions.
+		/// </summary>
+		public static DataOptions UseConfiguration(this DataOptions options, string configurationString, MappingSchema mappingSchema)
+		{
+			return options
+				.WithOptions<ConnectionOptions> (o => o with { ConfigurationString = configurationString, MappingSchema = mappingSchema });
+		}
+
+		/// <summary>
 		/// Defines DbConnection to use with DataOptions.
 		/// </summary>
 		public static DataOptions UseConnection(this DataOptions options, DbConnection connection)
