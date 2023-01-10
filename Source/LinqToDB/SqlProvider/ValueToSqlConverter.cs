@@ -11,7 +11,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using SqlQuery;
 
-	using ConverterType = Action<StringBuilder,SqlQuery.SqlDataType,object>;
+	using ConverterType = Action<StringBuilder, SqlQuery.SqlDataType, object>;
 
 	public class ValueToSqlConverter
 	{
@@ -167,24 +167,6 @@ namespace LinqToDB.SqlProvider
 		}
 #endif
 
-		[Obsolete($"Use overload with MappingSchema parameter")]
-		public bool TryConvert(StringBuilder stringBuilder, object? value)
-		{
-			return TryConvert(stringBuilder, (SqlDataType?)null, value);
-		}
-
-		[Obsolete($"Use overload with MappingSchema parameter")]
-		public bool TryConvert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
-		{
-			if (value == null || value is INullable nullable && nullable.IsNull)
-			{
-				stringBuilder.Append("NULL");
-				return true;
-			}
-
-			return TryConvertImpl(stringBuilder, dataType ?? new SqlDataType(value.GetType()), value, true);
-		}
-
 		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, object? value)
 		{
 			return TryConvert(stringBuilder, mappingSchema, null, value);
@@ -259,18 +241,9 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, object? value)
+		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, object? value)
 		{
-			return Convert(stringBuilder, null, value);
-		}
-
-		[Obsolete($"Use overload with MappingSchema parameter")]
-		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
-		{
-			if (!TryConvert(stringBuilder, dataType, value))
-				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
-
-			return stringBuilder;
+			return Convert(stringBuilder, mappingSchema, null, value);
 		}
 
 		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, SqlDataType? dataType, object? value)

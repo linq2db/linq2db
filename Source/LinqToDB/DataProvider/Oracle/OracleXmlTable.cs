@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (value is string && c.MemberType == typeof(string))
 						{
-							var str = conv.Convert(new StringBuilder(), value).ToString();
+							var str = conv.Convert(new StringBuilder(), mappingSchema, value).ToString();
 
 							if (str.Length > 2)
 							{
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.Oracle
 							}
 						}
 						else
-							conv.Convert(sb, value);
+							conv.Convert(sb, mappingSchema, value);
 					};
 				}
 
