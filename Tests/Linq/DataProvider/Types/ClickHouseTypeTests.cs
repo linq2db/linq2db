@@ -268,15 +268,15 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/69", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async ValueTask TestBoolType([ClickHouseDataSources(false)] string context)
 		{
 			// https://clickhouse.com/docs/en/sql-reference/data-types/boolean/
 
 			// Bool
-			// https://github.com/Octonica/ClickHouseClient/issues/56
 			// https://github.com/ClickHouse/ClickHouse/issues/37999
-			if (!context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseMySql))
+			if (!context.IsAnyOf(ProviderName.ClickHouseMySql))
 			{
 				await TestType<bool, bool?>(context, new(typeof(bool)), default, default);
 				await TestType<bool, bool?>(context, new(typeof(bool)), true, false);

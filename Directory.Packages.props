@@ -39,7 +39,7 @@
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="6.0.0.300"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="6.0.0.300"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="6.0.0.300"     />
-		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="2.2.9"         />
+		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="2.2.10"        />
 		<PackageVersion Include="Npgsql"                                                Version="7.0.1"         />
 		<PackageVersion Include="ClickHouse.Client"                                     Version="6.3.0"         />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="7.0.1"         />
@@ -68,7 +68,7 @@
 		<!--remote targets + remote examples targets-->
 		<!--source-->
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.179"       />
-		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.50.0"        />
+		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.51.0"        />
 		<!--examples-->
 		<PackageVersion Include="linq2db.t4models"                                      Version="4.3.0"         />
 		<!--tests-->
@@ -120,7 +120,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
-		<PackageVersion Include="MySqlConnector"                                        Version="2.2.4"         />
+		<PackageVersion Include="MySqlConnector"                                        Version="2.2.5"         />
 	</ItemGroup>
 
 </Project>

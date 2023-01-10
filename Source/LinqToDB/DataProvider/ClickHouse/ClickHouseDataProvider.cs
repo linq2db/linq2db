@@ -86,38 +86,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#region Overrides
 
-		// https://github.com/Octonica/ClickHouseClient/issues/54
-		// after fix released we will remove this workaround (there is no reason to support older provider versions due to other bugs anyway)
-		protected override DbConnection CreateConnectionInternal(string connectionString)
-		{
-			if (Name == ProviderName.ClickHouseOctonica)
-			{
-				if (_createOctonicaConnection == null)
-				{
-					var l = CreateOctonicaConnectionExpression(Adapter.ConnectionType);
-					_createOctonicaConnection = l.CompileExpression();
-				}
-
-				return _createOctonicaConnection(connectionString);
-			}
-
-			return base.CreateConnectionInternal(connectionString);
-		}
-
-		Func<string, DbConnection>? _createOctonicaConnection;
-		private static Expression<Func<string, DbConnection>> CreateOctonicaConnectionExpression(Type connectionType)
-		{
-			var p = Expression.Parameter(typeof(string));
-			var l = Expression.Lambda<Func<string, DbConnection>>(
-				Expression.Convert(
-					Expression.MemberInit(
-						Expression.New(connectionType.GetConstructor(Array<Type>.Empty) ?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)")),
-						Expression.Bind(Methods.ADONet.ConnectionString, p)),
-					typeof(DbConnection)),
-				p);
-			return l;
-		}
-
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
 			TableOptions.IsLocalTemporaryStructure |

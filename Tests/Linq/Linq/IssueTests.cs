@@ -400,7 +400,6 @@ namespace Tests.Linq
 			Client
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue535Test2([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -426,7 +425,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue535Test3([DataSources(TestProvName.AllSybase)] string context)
 		{
