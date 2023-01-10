@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using JetBrains.Annotations;
@@ -12,31 +13,30 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			var provider     = SqlServerProvider.AutoDetect;
-			var version      = attributes.FirstOrDefault(_ => _.Name == "version")?.Value;
+			var versionName  = attributes.FirstOrDefault(_ => _.Name == "version")?.Value;
 			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
 
-			if (assemblyName == SqlServerProviderAdapter.MicrosoftAssemblyName)
+			var provider = assemblyName switch
 			{
-				provider = SqlServerProvider.MicrosoftDataSqlClient;
-			}
-			else if (assemblyName == SqlServerProviderAdapter.SystemAssemblyName)
-			{
-				provider = SqlServerProvider.SystemDataSqlClient;
-			}
-
-			return version switch
-			{
-				"2005" => SqlServerTools.GetDataProvider(SqlServerVersion.v2005, provider, null),
-				"2008" => SqlServerTools.GetDataProvider(SqlServerVersion.v2008, provider, null),
-				"2012" => SqlServerTools.GetDataProvider(SqlServerVersion.v2012, provider, null),
-				"2014" => SqlServerTools.GetDataProvider(SqlServerVersion.v2014, provider, null),
-				"2016" => SqlServerTools.GetDataProvider(SqlServerVersion.v2016, provider, null),
-				"2017" => SqlServerTools.GetDataProvider(SqlServerVersion.v2017, provider, null),
-				"2019" => SqlServerTools.GetDataProvider(SqlServerVersion.v2019, provider, null),
-				"2022" => SqlServerTools.GetDataProvider(SqlServerVersion.v2022, provider, null),
-				_      => SqlServerTools.GetDataProvider(SqlServerVersion.AutoDetect, provider, null),
+				SqlServerProviderAdapter.MicrosoftAssemblyName => SqlServerProvider.MicrosoftDataSqlClient,
+				SqlServerProviderAdapter.SystemAssemblyName    => SqlServerProvider.SystemDataSqlClient,
+				_                                              => SqlServerProvider.AutoDetect
 			};
+
+			var version = versionName switch
+			{
+				"2005" => SqlServerVersion.v2005,
+				"2008" => SqlServerVersion.v2008,
+				"2012" => SqlServerVersion.v2012,
+				"2014" => SqlServerVersion.v2014,
+				"2016" => SqlServerVersion.v2016,
+				"2017" => SqlServerVersion.v2017,
+				"2019" => SqlServerVersion.v2019,
+				"2022" => SqlServerVersion.v2022,
+				_      => SqlServerVersion.AutoDetect,
+			};
+
+			return SqlServerTools.GetDataProvider(version, provider, null);
 		}
 	}
 }
