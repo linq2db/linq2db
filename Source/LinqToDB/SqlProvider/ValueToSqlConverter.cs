@@ -166,12 +166,12 @@ namespace LinqToDB.SqlProvider
 		}
 #endif
 
-		public bool TryConvert(StringBuilder stringBuilder, DataOptions options, object? value)
+		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, DataOptions options, object? value)
 		{
-			return TryConvert(stringBuilder, null, options, value);
+			return TryConvert(stringBuilder, mappingSchema, null, options, value);
 		}
 
-		public bool TryConvert(StringBuilder stringBuilder, SqlDataType? dataType, DataOptions options, object? value)
+		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, SqlDataType? dataType, DataOptions options, object? value)
 		{
 			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
@@ -179,7 +179,7 @@ namespace LinqToDB.SqlProvider
 				return true;
 			}
 
-			return TryConvertImpl(stringBuilder, dataType ?? new SqlDataType(value.GetType()), options, value, true);
+			return TryConvertImpl(stringBuilder, dataType ?? mappingSchema.GetDataType(value.GetType()), options, value, true);
 		}
 
 		public bool CanConvert(SqlDataType dataType, DataOptions options, object? value)
@@ -240,14 +240,14 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, DataOptions options, object? value)
+		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, DataOptions options, object? value)
 		{
-			return Convert(stringBuilder, null, options, value);
+			return Convert(stringBuilder, mappingSchema, null, options, value);
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType? dataType, DataOptions options, object? value)
+		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, SqlDataType? dataType, DataOptions options, object? value)
 		{
-			if (!TryConvert(stringBuilder, dataType, options, value))
+			if (!TryConvert(stringBuilder, mappingSchema, dataType, options, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 
 			return stringBuilder;

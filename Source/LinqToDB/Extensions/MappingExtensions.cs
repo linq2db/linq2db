@@ -50,7 +50,7 @@ namespace LinqToDB.Extensions
 
 			if (value is null)
 			{
-				return sqlConverter.TryConvert(stringBuilder, dataType, options, value);
+				return sqlConverter.TryConvert(stringBuilder, mappingSchema, dataType, options, value);
 			}
 
 			var systemType     = value.GetType();
@@ -73,7 +73,7 @@ namespace LinqToDB.Extensions
 				}
 			}
 
-			return sqlConverter.TryConvert(stringBuilder, dataType, options, value);
+			return sqlConverter.TryConvert(stringBuilder, mappingSchema, dataType, options, value);
 		}
 
 		public static void ConvertToSqlValue(this MappingSchema mappingSchema, StringBuilder stringBuilder,

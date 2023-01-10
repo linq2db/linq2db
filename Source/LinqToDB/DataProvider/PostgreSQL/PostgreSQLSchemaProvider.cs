@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var defaultSchema = ToDatabaseLiteral(dataConnection, options?.DefaultSchema ?? "public");
-
+			
 			var sql = $@"
 				SELECT
 					t.table_catalog || '.' || t.table_schema || '.' || t.table_name            as TableID,
@@ -195,7 +195,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static string ToDatabaseLiteral(DataConnection dataConnection, string? str)
 		{
 			var sb = new StringBuilder();
-			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb, SqlDataType.DbText, dataConnection.Options, str);
+			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb, dataConnection.MappingSchema, SqlDataType.DbText, dataConnection.Options, str);
 			return sb.ToString();
 		}
 
@@ -205,20 +205,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new HashSet<string?>(
 					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(new[] { "pg_catalog", "information_schema" }),
 					StringComparer.OrdinalIgnoreCase);
-
+			
 			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !string.IsNullOrEmpty(s)), StringComparer.OrdinalIgnoreCase);
-
+			
 			if (includeSchemas.Count > 0)
 			{
 				foreach (var toInclude in IncludedSchemas)
-				{
+		{
 					excludeSchemas.Remove(toInclude);
 				}
 			}
-
+			
 			if (excludeSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				return "1 = 1";
-
+			
 			var schemaFilter = "";
 
 			if (excludeSchemas.Count > 0)
@@ -654,7 +654,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			return typInfo;
 		}
-
+		
 		static string SimplifyDataType(string dataType)
 		{
 			var typeMatch = _matchType.Match(dataType);

@@ -19,19 +19,12 @@ namespace Tests.Data
 	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
-		private Action<TraceInfo>                    OriginalOnTrace    { get; set; } = null!;
 		private Action<string?, string?, TraceLevel> OriginalWrite      { get; set; } = null!;
 
 
 		[OneTimeSetUp]
 		public void SetTraceInfoLevel()
 		{
-			using (var db = new DataConnection())
-			{
-				//gets the default static on trace so it'll be reset after the tests are done
-				OriginalOnTrace = db.OnTraceConnection;
-			}
-
 			OriginalTraceLevel               = DataConnection.TraceSwitch.Level;
 			OriginalWrite                    = DataConnection.WriteTraceLine;
 			DataConnection.TraceSwitch.Level = TraceLevel.Info;
@@ -41,9 +34,6 @@ namespace Tests.Data
 		public void RestoreOriginalTraceLevel()
 		{
 			DataConnection.TraceSwitch.Level = OriginalTraceLevel;
-#pragma warning disable CS0618 // Type or member is obsolete
-			DataConnection.OnTrace           = OriginalOnTrace;
-#pragma warning restore CS0618 // Type or member is obsolete
 			DataConnection.WriteTraceLine    = OriginalWrite;
 		}
 
@@ -728,28 +718,8 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void OnTraceConnectionShouldUseStatic()
-		{
-			bool traceCalled = false;
-#pragma warning disable CS0618 // Type or member is obsolete
-			DataConnection.OnTrace = info => traceCalled = true;
-#pragma warning restore CS0618 // Type or member is obsolete
-
-			using (var db = new DataConnection())
-			{
-				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute, TraceOperation.BuildMapping, false));
-			}
-			Assert.True(traceCalled);
-		}
-
-		[Test]
 		public void OnTraceConnectionShouldUseFromBuilder()
 		{
-			bool defaultTraceCalled = false;
-#pragma warning disable CS0618 // Type or member is obsolete
-			DataConnection.OnTrace = info => defaultTraceCalled = true;
-#pragma warning restore CS0618 // Type or member is obsolete
-
 			bool builderTraceCalled = false;
 			var builder = new DataOptions().UseTracing(info => builderTraceCalled = true);
 
@@ -759,7 +729,6 @@ namespace Tests.Data
 			}
 
 			Assert.True(builderTraceCalled, "because the builder trace should have been called");
-			Assert.False(defaultTraceCalled, "because the static trace should not have been called");
 		}
 
 		[Test]

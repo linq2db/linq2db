@@ -495,7 +495,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql.Length != 1)
 					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
 
-				return table != null && field != null ? table[field.Name]! : sql[0].Sql;
+				return table != null && field != null ? table.FindFieldByMemberName(field.Name)! : sql[0].Sql;
 			}
 		}
 

@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.Oracle
 				var converters = new Action<StringBuilder,object>[ed.Columns.Count];
 				for (var i = 0; i < ed.Columns.Count; i++)
 				{
-					var c    = ed.Columns[i];
+					var c = ed.Columns[i];
 					var conv = mappingSchema.ValueToSqlConverter;
 
 					converters[i] = (sb, obj) =>
@@ -91,7 +91,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (value is string && c.MemberType == typeof(string))
 						{
-							var str = conv.Convert(new StringBuilder(), null!, value).ToString();
+							var str = conv.Convert(new StringBuilder(), mappingSchema, null!, value).ToString();
 
 							if (str.Length > 2)
 							{
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.Oracle
 							}
 						}
 						else
-							conv.Convert(sb, null!, value);
+							conv.Convert(sb, mappingSchema, null!, value);
 					};
 				}
 

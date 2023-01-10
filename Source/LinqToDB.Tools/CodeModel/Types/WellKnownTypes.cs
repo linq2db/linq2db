@@ -562,25 +562,6 @@ namespace LinqToDB.CodeModel
 				/// <see cref="AssociationAttribute.Storage"/> property reference.
 				/// </summary>
 				public static CodeIdentifier AssociationAttribute_Storage               { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.Storage), true);
-#pragma warning disable CS0618 // Type or member is obsolete
-				/// <summary>
-				/// <see cref="AssociationAttribute.KeyName"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_KeyName               { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.KeyName), true);
-				/// <summary>
-				/// <see cref="AssociationAttribute.BackReferenceName"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_BackReferenceName     { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.BackReferenceName), true);
-				/// <summary>
-				/// <see cref="AssociationAttribute.IsBackReference"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_IsBackReference       { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.IsBackReference), true);
-				/// <summary>
-				/// <see cref="AssociationAttribute.Relationship"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_Relationship          { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.Relationship), true);
-#pragma warning restore CS0618 // Type or member is obsolete
-
 				/// <summary>
 				/// <see cref="TableAttribute.Schema"/> property reference.
 				/// </summary>
