@@ -8,6 +8,7 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Extensions;
+	using Mapping;
 	using SqlQuery;
 
 	using ConverterType = Action<StringBuilder,SqlQuery.SqlDataType,DataOptions,object>;

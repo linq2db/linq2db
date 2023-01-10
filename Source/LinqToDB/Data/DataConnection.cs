@@ -474,7 +474,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
-		/// Configured on the connection builder using <see cref="LinqToDBConnectionOptionsBuilder.WithTracing(Action{TraceInfo})"/>.
+		/// Configured on the connection builder using <see cref="DataOptionsExtensions.UseTracing(DataOptions,Action{TraceInfo})"/>.
 		/// defaults to <see cref="WriteTraceLineConnection"/> calls.
 		/// </summary>
 		public Action<TraceInfo> OnTraceConnection { get; set; } = DefaultTrace;
