@@ -832,45 +832,6 @@ namespace Tests.Data
 		}
 
 		[Test]
-		[Obsolete("DataConnection.OnTrace")]
-		public void TestCloneOnTraceConnection([DataSources(false)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				// to enable MARS-enabled cloning branch
-				var _ = db.Connection;
-				Action<TraceInfo> onTrace = OnTrace;
-
-				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(DataConnection.OnTrace, cdb.OnTraceConnection);
-				}
-
-				db.OnTraceConnection = onTrace;
-
-				Assert.AreEqual(onTrace, db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(onTrace, cdb.OnTraceConnection);
-				}
-
-				db.OnTraceConnection = DataConnection.OnTrace;
-
-				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(DataConnection.OnTrace, cdb.OnTraceConnection);
-				}
-			}
-
-			void OnTrace(TraceInfo ti) { };
-		}
-
-		[Test]
 		public void TestCloneOnClosingOnClosed([DataSources(false)] string context)
 		{
 			var interceptor = new TestDataContextInterceptor();

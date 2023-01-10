@@ -2026,7 +2026,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				case PseudoFunctions.CONVERT:
-					return ConvertConvertion(func);
+					return ConvertConversion(func);
 
 				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "Lower",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
 				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "Upper",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
@@ -2543,11 +2543,10 @@ namespace LinqToDB.SqlProvider
 		protected virtual int? GetMaxScale      (SqlDataType type) { return SqlDataType.GetMaxScale      (type.Type.DataType); }
 		protected virtual int? GetMaxDisplaySize(SqlDataType type) { return SqlDataType.GetMaxDisplaySize(type.Type.DataType); }
 
-		// TODO v5: rename to ConvertConversion
 		/// <summary>
 		/// Implements <see cref="PseudoFunctions.CONVERT"/> function converter.
 		/// </summary>
-		protected virtual ISqlExpression ConvertConvertion(SqlFunction func)
+		protected virtual ISqlExpression ConvertConversion(SqlFunction func)
 		{
 			var from = (SqlDataType)func.Parameters[1];
 			var to   = (SqlDataType)func.Parameters[0];
@@ -2852,7 +2851,7 @@ namespace LinqToDB.SqlProvider
 									? newValue
 									: expr);
 
-							var newColumn = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
+							var newColumn = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
 							                ?? throw new LinqException(
 								                $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 
@@ -2959,7 +2958,7 @@ namespace LinqToDB.SqlProvider
 						ex = innerQuery;
 					}
 
-						item.Column = tableToUpdate[QueryHelper.GetUnderlyingField(item.Column)!.Name]
+						item.Column = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
 						              ?? throw new LinqException(
 							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
 						item.Expression = ex;
@@ -3008,7 +3007,7 @@ namespace LinqToDB.SqlProvider
 			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
 			{
 				if (e is SqlField field && field.Table == ctx.replacing)
-					return ctx.withTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.withTable}");
+					return ctx.withTable.FindFieldByMemberName(field.Name) ?? throw new LinqException($"Field {field.Name} not found in table {ctx.withTable}");
 
 				return e;
 			});
@@ -3168,14 +3167,14 @@ namespace LinqToDB.SqlProvider
 						var newItem = item.Convert((tableToCompare, tableToUpdate), static (v, e) =>
 						{
 							if (e is SqlField field && field.Table == v.Context.tableToCompare)
-								return v.Context.tableToUpdate[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
+								return v.Context.tableToUpdate.FindFieldByMemberName(field.Name) ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.tableToUpdate}");
 
 							return e;
 						});
 
 						var updateField = QueryHelper.GetUnderlyingField(newItem.Column);
 						if (updateField != null)
-							newItem.Column = tableToUpdate[updateField.Name] ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
+							newItem.Column = tableToUpdate.FindFieldByMemberName(updateField.Name) ?? throw new LinqException($"Field {updateField.Name} not found in table {tableToUpdate}");
 
 						statement.Update.Items[i] = newItem;
 					}
@@ -3236,7 +3235,7 @@ namespace LinqToDB.SqlProvider
 							{
 								if (exp is SqlField field && field.Table == ctx.updateTable)
 								{
-									return ctx.jt[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {ctx.jt}");
+									return ctx.jt.FindFieldByMemberName(field.Name) ?? throw new LinqException($"Field {field.Name} not found in table {ctx.jt}");
 								}
 								return exp;
 							});
@@ -3251,7 +3250,7 @@ namespace LinqToDB.SqlProvider
 					statement.Update = statement.Update.Convert((updateTable, newUpdateTable), static (v, e) =>
 					{
 						if (e is SqlField field && field.Table == v.Context.updateTable)
-							return v.Context.newUpdateTable[field.Name] ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
+							return v.Context.newUpdateTable.FindFieldByMemberName(field.Name) ?? throw new LinqException($"Field {field.Name} not found in table {v.Context.newUpdateTable}");
 
 						return e;
 					});

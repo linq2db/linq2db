@@ -1641,7 +1641,7 @@ namespace LinqToDB.Mapping
 					}
 
 					if (valueType == null)
-						return SqlDataType.GetDataType(type);
+						return GetDataType(type);
 
 					var dt = GetDataType(valueType);
 

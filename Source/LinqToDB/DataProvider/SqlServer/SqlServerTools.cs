@@ -265,11 +265,5 @@ namespace LinqToDB.DataProvider.SqlServer
 		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
 
 		#endregion
-
-		[Obsolete("Use 'QueryHint(Hints.Option.Recompile)' instead.")]
-		public static class Sql
-		{
-			public const string OptionRecompile = "OPTION(RECOMPILE)";
-		}
 	}
 }

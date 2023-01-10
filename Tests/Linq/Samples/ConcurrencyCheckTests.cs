@@ -77,7 +77,7 @@ namespace Tests.Samples
 					var newStatment = Clone(statement);
 					updateTable = GetUpdateTable(newStatment) ?? throw new InvalidOperationException();
 
-					var field = updateTable[rowVersion.ColumnName] ?? throw new InvalidOperationException();
+					var field = updateTable.FindFieldByMemberName(rowVersion.ColumnName) ?? throw new InvalidOperationException();
 
 					// get real value of RowVersion
 					var updateColumn = newStatment.RequireUpdateClause().Items.FirstOrDefault(ui => ui.Column is SqlField fld && fld.Equals(field));
@@ -109,7 +109,7 @@ namespace Tests.Samples
 
 					var newInsertStatement = Clone(statement);
 					var insertClause       = newInsertStatement.RequireInsertClause();
-					var field              = insertClause.Into![rowVersion.ColumnName]!;
+					var field              = insertClause.Into!.FindFieldByMemberName(rowVersion.ColumnName)!;
 
 					var versionColumn = (from i in insertClause.Items
 										 let f = i.Column as SqlField

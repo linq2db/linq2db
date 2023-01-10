@@ -82,44 +82,6 @@ namespace LinqToDB.Configuration
 		}
 
 		/// <summary>
-		/// Configure connection to use Oracle default provider, specific dialect and connection string.
-		/// </summary>
-		/// <param name="builder">Instance of <see cref="LinqToDBConnectionOptionsBuilder"/>.</param>
-		/// <param name="connectionString">Oracle connection string.</param>
-		/// <param name="dialect">Oracle dialect support level.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		/// <remarks>
-		/// <para>
-		/// By default Linq To DB tries to load managed version of Oracle provider.
-		/// </para>
-		/// </remarks>
-		[Obsolete("Use UseOracle(this LinqToDBConnectionOptionsBuilder builder, string connectionString, OracleVersion dialect, OracleProvider provider) overload")]
-		public static LinqToDBConnectionOptionsBuilder UseOracle(this LinqToDBConnectionOptionsBuilder builder, string connectionString, OracleVersion dialect)
-		{
-			return builder.UseConnectionString(OracleTools.GetDataProvider(ProviderName.Oracle, null, dialect), connectionString);
-		}
-
-#if NETFRAMEWORK
-		/// <summary>
-		/// Configure connection to use specific Oracle provider, dialect and connection string.
-		/// </summary>
-		/// <param name="builder">Instance of <see cref="LinqToDBConnectionOptionsBuilder"/>.</param>
-		/// <param name="connectionString">Oracle connection string.</param>
-		/// <param name="dialect">Oracle dialect support level.</param>
-		/// <param name="useNativeProvider">if <c>true</c>, <c>Oracle.DataAccess</c> provider will be used; othwerwise managed <c>Oracle.ManagedDataAccess</c>.</param>
-		/// <returns>The builder instance so calls can be chained.</returns>
-		[Obsolete("Use UseOracle(this LinqToDBConnectionOptionsBuilder builder, string connectionString, OracleVersion dialect, OracleProvider provider) overload")]
-		public static LinqToDBConnectionOptionsBuilder UseOracle(this LinqToDBConnectionOptionsBuilder builder, string connectionString, OracleVersion dialect, bool useNativeProvider)
-		{
-			return builder.UseConnectionString(
-				OracleTools.GetDataProvider(
-					dialect,
-					useNativeProvider ? OracleProvider.Native : OracleProvider.Managed),
-				connectionString);
-		}
-#endif
-
-		/// <summary>
 		/// Configure connection to use specific Oracle provider, dialect and connection string.
 		/// </summary>
 		/// <param name="builder">Instance of <see cref="LinqToDBConnectionOptionsBuilder"/>.</param>

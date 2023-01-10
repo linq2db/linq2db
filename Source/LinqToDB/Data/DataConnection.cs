@@ -464,18 +464,6 @@ namespace LinqToDB.Data
 			set => _defaultDataProvider = value;
 		}
 
-		private static Action<TraceInfo> _onTrace = DefaultTrace;
-		/// <summary>
-		/// Sets trace handler, used for all new connections unless overriden in <see cref="LinqToDBConnectionOptions"/>
-		/// defaults to calling <see cref="OnTraceInternal"/>.
-		/// </summary>
-		[Obsolete("Use OnTraceConnection instance property or LinqToDbConnectionOptions.OnTrace setting.")]
-		public  static Action<TraceInfo>  OnTrace
-		{
-			get => _onTrace;
-			set => _onTrace = value ?? DefaultTrace;
-		}
-
 		static void DefaultTrace(TraceInfo info)
 		{
 			info.DataConnection.OnTraceInternal(info);
@@ -484,9 +472,9 @@ namespace LinqToDB.Data
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
 		/// Configured on the connection builder using <see cref="LinqToDBConnectionOptionsBuilder.WithTracing(Action{TraceInfo})"/>.
-		/// defaults to <see cref="OnTrace"/>.
+		/// defaults to <see cref="WriteTraceLineConnection"/> calls.
 		/// </summary>
-		public Action<TraceInfo> OnTraceConnection { get; set; } = _onTrace;
+		public Action<TraceInfo> OnTraceConnection { get; set; } = DefaultTrace;
 
 		/// <summary>
 		/// Writes the trace out using <see cref="WriteTraceLineConnection"/>.

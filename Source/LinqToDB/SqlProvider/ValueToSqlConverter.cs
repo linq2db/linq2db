@@ -8,9 +8,10 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Extensions;
+	using Mapping;
 	using SqlQuery;
 
-	using ConverterType = Action<StringBuilder,SqlQuery.SqlDataType,object>;
+	using ConverterType = Action<StringBuilder, SqlQuery.SqlDataType, object>;
 
 	public class ValueToSqlConverter
 	{
@@ -166,12 +167,12 @@ namespace LinqToDB.SqlProvider
 		}
 #endif
 
-		public bool TryConvert(StringBuilder stringBuilder, object? value)
+		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, object? value)
 		{
-			return TryConvert(stringBuilder, null, value);
+			return TryConvert(stringBuilder, mappingSchema, null, value);
 		}
 
-		public bool TryConvert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
+		public bool TryConvert(StringBuilder stringBuilder, MappingSchema mappingSchema, SqlDataType? dataType, object? value)
 		{
 			if (value == null || value is INullable nullable && nullable.IsNull)
 			{
@@ -179,7 +180,7 @@ namespace LinqToDB.SqlProvider
 				return true;
 			}
 
-			return TryConvertImpl(stringBuilder, dataType ?? new SqlDataType(value.GetType()), value, true);
+			return TryConvertImpl(stringBuilder, dataType ?? mappingSchema.GetDataType(value.GetType()), value, true);
 		}
 
 		public bool CanConvert(SqlDataType dataType, object? value)
@@ -240,14 +241,14 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, object? value)
+		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, object? value)
 		{
-			return Convert(stringBuilder, null, value);
+			return Convert(stringBuilder, mappingSchema, null, value);
 		}
 
-		public StringBuilder Convert(StringBuilder stringBuilder, SqlDataType? dataType, object? value)
+		public StringBuilder Convert(StringBuilder stringBuilder, MappingSchema mappingSchema, SqlDataType? dataType, object? value)
 		{
-			if (!TryConvert(stringBuilder, dataType, value))
+			if (!TryConvert(stringBuilder, mappingSchema, dataType, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 
 			return stringBuilder;

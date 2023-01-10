@@ -688,7 +688,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var field           = SqlTable[InheritanceMapping[0].DiscriminatorName] ?? throw new LinqException($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
+					var field           = SqlTable.FindFieldByMemberName(InheritanceMapping[0].DiscriminatorName) ?? throw new LinqException($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
 					var dindex          = ConvertToParentIndex(_indexes[field].Index, this);
 
 					expr = Expression.Convert(
@@ -703,7 +703,7 @@ namespace LinqToDB.Linq.Builder
 					if (mapping.m == defaultMapping)
 						continue;
 
-					var field  = SqlTable[InheritanceMapping[mapping.i].DiscriminatorName] ?? throw new LinqException($"Field {InheritanceMapping[mapping.i].DiscriminatorName} not found in table {SqlTable}");
+					var field  = SqlTable.FindFieldByMemberName(InheritanceMapping[mapping.i].DiscriminatorName) ?? throw new LinqException($"Field {InheritanceMapping[mapping.i].DiscriminatorName} not found in table {SqlTable}");
 					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
 
 					Expression testExpr;
@@ -1454,7 +1454,7 @@ namespace LinqToDB.Linq.Builder
 												name = me.Member.Name + '.' + name;
 											}
 
-											var fld = SqlTable[name];
+											var fld = SqlTable.FindFieldByMemberName(name);
 
 											if (fld != null)
 												return fld;
@@ -1514,7 +1514,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (flag)
 									{
-										var newField = SqlTable[fieldName];
+										var newField = SqlTable.FindFieldByMemberName(fieldName);
 										if (newField == null)
 										{
 											newField = new SqlField(
