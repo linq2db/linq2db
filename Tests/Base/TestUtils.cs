@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Diagnostics;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-
 
 namespace Tests
 {
@@ -37,7 +35,7 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
-		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
+		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 

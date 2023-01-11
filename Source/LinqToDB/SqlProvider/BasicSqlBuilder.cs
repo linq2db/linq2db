@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
@@ -12,21 +13,21 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
-	using System.Data.Common;
 	using Common;
 	using DataProvider;
+	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using Extensions;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
 		#region Init
 
-		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
 			DataProvider     = provider;
 			MappingSchema    = mappingSchema;
+			DataOptions      = dataOptions;
 			SqlOptimizer     = sqlOptimizer;
 			SqlProviderFlags = sqlProviderFlags;
 		}
@@ -35,6 +36,7 @@ namespace LinqToDB.SqlProvider
 		{
 			DataProvider     = parentBuilder.DataProvider;
 			MappingSchema    = parentBuilder.MappingSchema;
+			DataOptions      = parentBuilder.DataOptions;
 			SqlOptimizer     = parentBuilder.SqlOptimizer;
 			SqlProviderFlags = parentBuilder.SqlProviderFlags;
 			TablePath        = parentBuilder.TablePath;
@@ -46,6 +48,7 @@ namespace LinqToDB.SqlProvider
 		public MappingSchema       MappingSchema       { get;                }
 		public StringBuilder       StringBuilder       { get; set;           } = null!;
 		public SqlProviderFlags    SqlProviderFlags    { get;                }
+		public DataOptions         DataOptions         { get;                }
 
 		protected IDataProvider?      DataProvider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
@@ -119,7 +122,7 @@ namespace LinqToDB.SqlProvider
 		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{
-			return (T?)SqlOptimizer.ConvertElement(MappingSchema, element, OptimizationContext);
+			return (T?)SqlOptimizer.ConvertElement(MappingSchema, DataOptions, element, OptimizationContext);
 		}
 
 		#endregion
@@ -200,7 +203,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSqlBuilder(SelectQuery selectQuery, int indent, bool skipAlias)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr, skipExpr)
 				&& skipExpr != null)
@@ -709,7 +712,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildAlterDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 		}
-		
+
 		protected virtual void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			AppendIndent();
@@ -2162,7 +2165,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			if (SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
@@ -2195,7 +2198,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			var doSkip = NeedSkip(takeExpr, skipExpr) && OffsetFormat(selectQuery) != null;
 			var doTake = NeedTake(takeExpr)           && LimitFormat(selectQuery)  != null;
@@ -2212,7 +2215,7 @@ namespace LinqToDB.SqlProvider
 					if (doTake)
 						StringBuilder.Append(' ');
 		}
-		
+
 				if (doTake)
 		{
 					StringBuilder.AppendFormat(
@@ -2482,7 +2485,7 @@ namespace LinqToDB.SqlProvider
 			return;
 
 			void TableSourceIn(ISqlTableSource table, IEnumerable items)
-			{				
+			{
 				var keys = table.GetKeys(true);
 				if (keys is null or { Count: 0 })
 					throw new SqlException("Cannot create IN expression.");
@@ -2649,7 +2652,7 @@ namespace LinqToDB.SqlProvider
 	 					BuildPredicate(new SqlPredicate.IsNull(p.Expr1, false));
 		 				multipleParts = true;
 			 		}
-				} 
+				}
 
 				if (multipleParts && !hasNull)
 					StringBuilder.Insert(len, "(").Append(')');
@@ -2865,7 +2868,7 @@ namespace LinqToDB.SqlProvider
 						if (inlining)
 						{
 							var paramValue = parm.GetParameterValue(OptimizationContext.Context.ParameterValues);
-							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.ProviderValue))
+							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), DataOptions, paramValue.ProviderValue))
 								inlining = false;
 						}
 
@@ -3035,7 +3038,7 @@ namespace LinqToDB.SqlProvider
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);
 			else
-			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, value);
+			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, DataOptions, value);
 		}
 
 		#endregion
@@ -3628,7 +3631,7 @@ namespace LinqToDB.SqlProvider
 							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(bytes, 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
-						MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, trimmed);
+						MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {bytes.Length}");
@@ -3644,7 +3647,7 @@ namespace LinqToDB.SqlProvider
 							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
-						MappingSchema.TryConvertToSql(sb, null, trimmed);
+						MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {binaryData.Length}");
@@ -3657,12 +3660,12 @@ namespace LinqToDB.SqlProvider
 						var trimmed =
 							s.Substring(0,
 								Configuration.MaxStringParameterLengthLogging);
-						MappingSchema.TryConvertToSql(sb, null, trimmed);
+						MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {s.Length}");
 					}
-					else if (!MappingSchema.TryConvertToSql(sb, null, p.Value))
+					else if (!MappingSchema.TryConvertToSql(sb, null, DataOptions, p.Value))
 						FormatParameterValue(sb, p.Value);
 					sb.AppendLine();
 				}

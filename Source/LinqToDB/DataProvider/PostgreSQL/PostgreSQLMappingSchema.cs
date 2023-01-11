@@ -23,16 +23,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
-			SetValueToSqlConverter(typeof(bool),     (sb,dt,v) => sb.Append(v));
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => sb.AppendFormat("'{0:D}'::uuid", (Guid)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(bool),     (sb, _,_,v) => sb.Append(v));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql(sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),     (sb, _,_,v) => sb.AppendFormat("'{0:D}'::uuid", (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
 
 			// adds floating point special values support
-			SetValueToSqlConverter(typeof(float) , (sb, dt, v) =>
+			SetValueToSqlConverter(typeof(float) , (sb,_,_,v) =>
 			{
 				var f = (float)v;
 				var quote = float.IsNaN(f) || float.IsInfinity(f);
@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
 				if (quote) sb.Append("'::float4");
 			});
-			SetValueToSqlConverter(typeof(double), (sb, dt, v) =>
+			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
 			{
 				var d = (double)v;
 				var quote = double.IsNaN(d) || double.IsInfinity(d);
@@ -53,7 +53,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			AddScalarType(typeof(TimeSpan),  DataType.Interval);
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, v) => BuildDate(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDate(sb, dt, (DateOnly)v));
 #endif
 
 			// npgsql doesn't support unsigned types except byte (and sbyte)

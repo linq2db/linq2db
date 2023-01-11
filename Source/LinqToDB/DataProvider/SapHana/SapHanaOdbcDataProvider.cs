@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 	using Extensions;
@@ -52,14 +52,14 @@ namespace LinqToDB.DataProvider.SapHana
 			TableOptions.IsLocalTemporaryStructure  |
 			TableOptions.IsLocalTemporaryData;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new SapHanaOdbcSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SapHanaOdbcSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions)
 		{
 			return _sqlOptimizer;
 		}
@@ -119,11 +119,11 @@ namespace LinqToDB.DataProvider.SapHana
 
 		private static readonly MappingSchema MappingSchemaInstance = new SapHanaMappingSchema.OdbcMappingSchema();
 
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			try
 			{
-				return base.IsDBNullAllowed(reader, idx);
+				return base.IsDBNullAllowed(options, reader, idx);
 			}
 			catch (OverflowException)
 			{

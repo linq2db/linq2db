@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			// This function mutates statement which is allowed only in this place
 			CorrectSkipAndColumns(statement);
@@ -20,19 +20,19 @@ namespace LinqToDB.DataProvider.SqlCe
 			// This function mutates statement which is allowed only in this place
 			CorrectInsertParameters(statement);
 
-			CorrectFunctionParameters(statement);
+			CorrectFunctionParameters(statement, dataOptions);
 
 			statement = CorrectBooleanComparison(statement);
 
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
+					statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions);
 					break;
 			}
 
@@ -191,9 +191,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			});
 		}
 
-		void CorrectFunctionParameters(SqlStatement statement)
+		void CorrectFunctionParameters(SqlStatement statement, DataOptions options)
 		{
-			if (!SqlCeConfiguration.InlineFunctionParameters)
+			if (!options.FindOrDefault(SqlCeOptions.Default).InlineFunctionParameters)
 				return;
 
 			statement.Visit(static e =>

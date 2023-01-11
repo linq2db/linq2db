@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Linq;
-	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -1976,6 +1979,22 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void GroupByGuardCheckOptions([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool guard)
+		{
+			using (var db = GetDataContext(context, b => b.WithOptions<LinqOptions>(o => o with { GuardGrouping = guard })))
+			{
+				// group on client
+				var query = db.Person
+					.GroupBy(_ => _.Gender);
+
+				if (guard)
+					query.Invoking(q => q.ToList()).Should().Throw<LinqToDBException>();
+				else
+					query.Invoking(q => q.ToList()).Should().NotThrow();
+			}
+		}
+
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		private static int Noop(int value)
 		{
@@ -2229,22 +2248,22 @@ namespace Tests.Linq
 		public void Issue2306Test1([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
@@ -2256,23 +2275,25 @@ namespace Tests.Linq
 		public void Issue2306Test2([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
+
 			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
+
 			Query.ClearCaches();
 		}
 
@@ -2280,20 +2301,20 @@ namespace Tests.Linq
 		public void Issue2306Test3([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
@@ -2443,7 +2464,7 @@ namespace Tests.Linq
 
 			var query2 = db.Person.Select(r => r.ID);
 			var query  = query1.Concat(query2);
-			
+
 			query.ToList();
 
 			var ast = query.GetSelectQuery();

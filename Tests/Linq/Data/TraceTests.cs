@@ -484,14 +484,14 @@ namespace Tests.Data
 					// Begin transaction command is reported on each step
 					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
 					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
-					
+
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					db.CommitTransaction();
 
 					// Commit transaction command is reported on each step
 					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
 					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
-					
+
 					// steps called once for BeginTransaction once for Update and once for CommitTransaction
 					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
 					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
@@ -504,7 +504,7 @@ namespace Tests.Data
 					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
 				}
 			}
-			
+
 		}
 
 		[Test]
@@ -721,9 +721,9 @@ namespace Tests.Data
 		public void OnTraceConnectionShouldUseFromBuilder()
 		{
 			bool builderTraceCalled = false;
-			var builder = new LinqToDBConnectionOptionsBuilder().WithTracing(info => builderTraceCalled = true);
+			var builder = new DataOptions().UseTracing(info => builderTraceCalled = true);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute, TraceOperation.BuildMapping, false));
 			}
@@ -747,9 +747,9 @@ namespace Tests.Data
 		{
 			var staticTraceLevel = DataConnection.TraceSwitch.Level;
 			var builderTraceLevel = staticTraceLevel + 1;
-			var builder = new LinqToDBConnectionOptionsBuilder().WithTraceLevel(builderTraceLevel);
+			var builder = new DataOptions().UseTraceLevel(builderTraceLevel);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				Assert.AreEqual(builderTraceLevel, db.TraceSwitchConnection.Level);
 				Assert.AreNotEqual(staticTraceLevel, db.TraceSwitchConnection.Level);
@@ -777,10 +777,10 @@ namespace Tests.Data
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
 			var builderWriteCalled = false;
-			var builder = new LinqToDBConnectionOptionsBuilder()
-				.WriteTraceWith((s, s1, a3) => builderWriteCalled = true);
+			var builder = new DataOptions()
+				.UseTraceWith((s, s1, a3) => builderWriteCalled = true);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				db.WriteTraceLineConnection(null, null, TraceLevel.Info);
 			}

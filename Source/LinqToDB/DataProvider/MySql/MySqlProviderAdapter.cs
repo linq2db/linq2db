@@ -168,7 +168,9 @@ namespace LinqToDB.DataProvider.MySql
 					mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
 					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
 					mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(double), toDoubleConverter);
-					mappingSchema.SetValueToSqlConverter(mySqlDecimalType, typeMapper.BuildAction<StringBuilder, SqlDataType, object>(typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
+					mappingSchema.SetValueToSqlConverter(mySqlDecimalType,
+						typeMapper.BuildAction<StringBuilder,SqlDataType,DataOptions,object>(
+							typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, DataOptions options, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
 
 					mappingSchema.SetDataType(mySqlDateTimeType, DataType.DateTime2);
 					mappingSchema.SetConvertExpression(mySqlDateTimeType, typeof(DateTime), dateTimeConverter);
@@ -356,7 +358,9 @@ namespace LinqToDB.DataProvider.MySql
 
 						mappingSchema.SetDataType(mySqlDecimalType, DataType.Decimal);
 						mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(decimal), toDecimalConverter);
-						mappingSchema.SetValueToSqlConverter(mySqlDecimalType, typeMapper.BuildAction<StringBuilder, SqlDataType, object>(typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
+						mappingSchema.SetValueToSqlConverter(mySqlDecimalType,
+							typeMapper.BuildAction<StringBuilder,SqlDataType,DataOptions,object>(
+								typeMapper.MapActionLambda((StringBuilder sb, SqlDataType type, DataOptions options, object value) => AppendAction(sb, ((MySqlDecimal)value).ToString()))));
 
 						mappingSchema.SetConvertExpression(mySqlDecimalType, typeof(double) , toDoubleConverter);
 					}

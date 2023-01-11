@@ -10,7 +10,6 @@ using System.Transactions;
 
 using LinqToDB;
 using LinqToDB.AspNet;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -31,10 +30,10 @@ namespace Tests.Data
 	public class DataConnectionTests : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void UsingDataProvider([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
-			var dataProvider = DataConnection.GetDataProvider(context);
+			var dataProvider     = DataConnection.GetDataProvider(context);
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
@@ -44,7 +43,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test2()
+		public void UsingDefaultConfiguration()
 		{
 			using (var conn = new DataConnection())
 			{
@@ -361,14 +360,14 @@ namespace Tests.Data
 
 		public class DbConnection1 : DataConnection
 		{
-			public DbConnection1(LinqToDBConnectionOptions options) : base(options)
+			public DbConnection1(DataOptions<DbConnection1> options) : base(options.Options)
 			{
 			}
 		}
 
 		public class DbConnection2 : DataConnection
 		{
-			public DbConnection2(LinqToDBConnectionOptions<DbConnection2> options) : base(options)
+			public DbConnection2(DataOptions<DbConnection2> options) : base(options.Options)
 			{
 			}
 		}
@@ -377,7 +376,7 @@ namespace Tests.Data
 
 		public class DbConnection3 : DataConnection
 		{
-			public DbConnection3(DummyService service, LinqToDBConnectionOptions<DbConnection3> options) : base(options)
+			public DbConnection3(DummyService service, DataOptions options) : base(options)
 			{
 			}
 		}
@@ -387,19 +386,13 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
-			collection.AddLinqToDBContext<DbConnection2>((provider, options) => {});
+			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options);
 
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetService<DbConnection1>()!;
 			var c2 = serviceProvider.GetService<DbConnection2>()!;
 			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
 			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
-		}
-
-		[Test]
-		public void TestConstructorThrowsWhenGivenInvalidSettings()
-		{
-			Assert.Throws<LinqToDBException>(() => new DbConnection1(new LinqToDBConnectionOptionsBuilder().Build<DbConnection2>()));
 		}
 
 		// informix connection limits interfere with test
