@@ -2031,5 +2031,34 @@ namespace LinqToDB.SqlQuery
 			return sqlExpression;
 		}
 
+		public static SqlSearchCondition CorrectComparisonForJoin(SqlSearchCondition sc)
+		{
+			var newSc = new SqlSearchCondition();
+			for (var index = 0; index < sc.Conditions.Count; index++)
+			{
+				var condition = sc.Conditions[index];
+				if (condition.Predicate is SqlPredicate.ExprExpr exprExpr)
+				{
+					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
+					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
+					    && exprExpr.WithNull != null && (!exprExpr.Expr1.CanBeNull || !exprExpr.Expr2.CanBeNull))
+					{
+						condition = new SqlCondition(condition.IsNot,
+							new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, exprExpr.Expr2, null),
+							condition.IsOr);
+					}
+				}
+				else if (condition.Predicate is SqlSearchCondition subSc)
+				{
+					condition = new SqlCondition(condition.IsNot,
+						CorrectComparisonForJoin(subSc),
+						condition.IsOr);
+				}
+
+				newSc.Conditions.Add(condition);
+			}
+
+			return newSc;
+		}
 	}
 }

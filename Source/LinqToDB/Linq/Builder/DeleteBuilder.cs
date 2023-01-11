@@ -36,8 +36,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition: (LambdaExpression)methodCall.Arguments[1].Unwrap(), checkForSubQuery: false,
-					enforceHaving: false, isTest: buildInfo.AggregationTest,
-					disableCache: false);
+					enforceHaving: false, isTest: buildInfo.AggregationTest);
 			}
 
 			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);

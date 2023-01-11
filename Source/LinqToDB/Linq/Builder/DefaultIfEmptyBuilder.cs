@@ -30,8 +30,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				_allowNullField = allowNullField;
 				DefaultValue    = defaultValue;
-
-				Sequence.SelectQuery.IsNullable = true;
 			}
 
 			public Expression? DefaultValue { get; }
@@ -80,16 +78,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return expr;
-			}
-
-			public void DisableNullability()
-			{
-				SelectQuery.IsNullable = false;
-			}
-
-			public void EnableNullability()
-			{
-				SelectQuery.IsNullable = true;
 			}
 
 			public override IBuildContext Clone(CloningContext context)

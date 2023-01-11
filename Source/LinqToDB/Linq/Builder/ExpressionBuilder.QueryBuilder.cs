@@ -440,9 +440,94 @@ namespace LinqToDB.Linq.Builder
 										context.flags), false, true);
 							}
 
+							/*if (expr is SqlGenericConstructorExpression genericConstructor)
+							{
+								// trying to convert all properties to the SQL
+								if (context.flags.IsExpression())
+								{
+									if (genericConstructor.Assignments.Count > 0)
+									{
+										var ed = context.builder.MappingSchema.GetEntityDescriptor(genericConstructor.Type);
+										
+										List<SqlGenericConstructorExpression.Assignment>? newAssignments = null;
+
+										for (var index = 0; index < genericConstructor.Assignments.Count; index++)
+										{
+											var assignment = genericConstructor.Assignments[index];
+
+											if (assignment.Expression is not SqlPlaceholderExpression 
+											    && context.builder.MappingSchema.IsScalarType(assignment.MemberInfo.GetMemberType()))
+											{
+												var columnDescriptor = ed.Columns.FirstOrDefault(c =>
+													MemberInfoComparer.Instance.Equals(c.MemberInfo,
+														assignment.MemberInfo));
+												if (columnDescriptor != null)
+												{
+													var translated =
+														context.builder.ConvertToSqlExpr(context.context,
+															assignment.Expression,
+															context.flags, columnDescriptor: columnDescriptor,
+															alias: assignment.MemberInfo.Name);
+
+													if (translated is SqlPlaceholderExpression)
+													{
+														if (newAssignments == null)
+														{
+															newAssignments = new List<SqlGenericConstructorExpression.Assignment>(genericConstructor.Assignments.Take(index));
+														}
+
+														newAssignments.Add(assignment.WithExpression(translated));
+														continue;
+													}
+												}
+											}
+
+											newAssignments?.Add(assignment);
+										}
+
+										if (newAssignments != null)
+										{
+											var newConstructor = genericConstructor.ReplaceAssignments(newAssignments);
+											return new TransformInfo(newConstructor, false, true);
+										}
+									}
+									/*
+									var newParameters = new List<SqlGenericConstructorExpression.Assignment>();
+
+									newConstructor = newConstructor.ReplaceParameters(genericConstructor.Parameters.Select(p =>
+										p.WithExpression(ConvertToSqlExpr(context, p.Expression, flags, unwrap, columnDescriptor,
+											isPureExpression, p.MemberInfo?.Name ?? alias))).ToList());
+											#1#
+								}
+
+							}*/
+
 							return new TransformInfo(expr);
 						}
 
+						case ExpressionType.TypeIs:
+						{
+							if (context.flags.IsExpression())
+							{
+								var test = context.builder.MakeExpression(context.context, expr,
+									context.flags);
+
+								if (!HasError(test))
+								{
+									return new TransformInfo(test, false, true);
+								}
+							}
+
+							break;
+						}
+
+						case ExpressionType.Conditional:
+						{
+							break;
+						}
+
+
+						/*
 						case ExpressionType.Conditional:
 						{
 							if (context.flags.IsExpression())
@@ -459,6 +544,7 @@ namespace LinqToDB.Linq.Builder
 
 							break;
 						}
+						*/
 
 						case ExpressionType.Parameter:
 						{
@@ -472,6 +558,11 @@ namespace LinqToDB.Linq.Builder
 				});
 
 			return result;
+		}
+
+		public static bool HasError(Expression expression)
+		{
+			return null != expression.Find(0, (_, e) => e is SqlErrorExpression);
 		}
 
 		public Expression HandleExtension(IBuildContext context, Expression expr, ProjectFlags flags)
@@ -517,7 +608,9 @@ namespace LinqToDB.Linq.Builder
 			do
 			{
 				expression = BuildSqlExpression(context, expression, ProjectFlags.Expression);
-				
+
+				expression = OptimizationContext.OptimizeExpressionTree(expression, true);
+
 				var deduplicated = Deduplicate(expression, true);
 				deduplicated = Deduplicate(deduplicated, false);
 

@@ -138,8 +138,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (associationDescriptor.IsList)
 			{
-				if (_isOuterAssociations?.Contains(rootContext) == true)
-					isOuter = true;
+				/*if (_isOuterAssociations?.Contains(rootContext) == true)
+					isOuter = true;*/
 			}
 			else
 			{

@@ -1124,7 +1124,6 @@ namespace LinqToDB.Remote
 							Append(elem.OrderBy);
 							Append(elem.ParentSelect?.SourceID ?? 0);
 							Append(elem.IsParameterDependent);
-							Append(elem.IsNullable);
 							Append(elem.QueryName);
 							Append(elem.DoNotSetAliases);
 
@@ -1997,7 +1996,6 @@ namespace LinqToDB.Remote
 							var orderBy            = Read<SqlOrderByClause>()!;
 							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
-							var isNullable         = ReadBool();
 							var queryName          = ReadString();
 							var doNotSetAliases    = ReadBool();
 							var unions             = ReadArray<SqlSetOperator>();
@@ -2017,7 +2015,6 @@ namespace LinqToDB.Remote
 								null, // we do not serialize unique keys
 								null,
 								parameterDependent,
-								isNullable,
 								queryName,
 								doNotSetAliases);
 

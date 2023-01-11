@@ -102,20 +102,12 @@ namespace LinqToDB.Linq.Builder
 				if (extensions != null)
 					join.JoinedTable.SqlQueryExtensions = extensions;
 
-				innerDefaultIfEmpty?.DisableNullability();
-				outerDefaultIfEmpty?.DisableNullability();
-
 				var flags = ProjectFlags.SQL;
-				if (innerDefaultIfEmpty != null)
-					flags |= ProjectFlags.DoNotCache;
 
 				builder.BuildSearchCondition(
 					joinContext, 
 					conditionExpr, flags,
 					join.JoinedTable.Condition.Conditions);
-
-				innerDefaultIfEmpty?.EnableNullability();
-				outerDefaultIfEmpty?.EnableNullability();
 			}
 			else
 			{

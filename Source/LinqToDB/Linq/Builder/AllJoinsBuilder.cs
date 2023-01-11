@@ -69,14 +69,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
 
-				sequenceDefaultIfEmpty?.DisableNullability();
-
 				var result = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition: condition, checkForSubQuery: false, enforceHaving: false,
-					isTest: buildInfo.AggregationTest, 
-					disableCache: sequenceDefaultIfEmpty != null);
-
-				sequenceDefaultIfEmpty?.EnableNullability();
+					isTest: buildInfo.AggregationTest);
 
 				result.SetAlias(condition.Parameters[0].Name);
 				return result;

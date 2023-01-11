@@ -4,7 +4,7 @@ namespace LinqToDB.Expressions
 {
 	using Linq.Builder;
 
-	class ContextConstructionExpression : Expression
+	class ContextConstructionExpression : Expression, IEquatable<ContextConstructionExpression>
 	{
 		public ContextConstructionExpression(IBuildContext buildContext, Expression innerExpression)
 		{
@@ -33,6 +33,59 @@ namespace LinqToDB.Expressions
 			}
 
 			return this;
+		}
+
+		public bool Equals(ContextConstructionExpression? other)
+		{
+			if (ReferenceEquals(null, other))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, other))
+			{
+				return true;
+			}
+
+			return BuildContext.Equals(other.BuildContext) && ExpressionEqualityComparer.Instance.Equals(InnerExpression, other.InnerExpression);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((ContextConstructionExpression)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return (BuildContext.GetHashCode() * 397) ^  ExpressionEqualityComparer.Instance.GetHashCode(InnerExpression);
+			}
+		}
+
+		public static bool operator ==(ContextConstructionExpression? left, ContextConstructionExpression? right)
+		{
+			return Equals(left, right);
+		}
+
+		public static bool operator !=(ContextConstructionExpression? left, ContextConstructionExpression? right)
+		{
+			return !Equals(left, right);
 		}
 	}
 }

@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
-			bool checkForSubQuery, bool enforceHaving, bool isTest, bool disableCache)
+			bool checkForSubQuery, bool enforceHaving, bool isTest)
 		{
 			if (sequence is not SubQueryContext)
 			{
@@ -77,8 +77,7 @@ namespace LinqToDB.Linq.Builder
 			var flags = ProjectFlags.SQL;
 			if (isTest)
 				flags |= ProjectFlags.Test;
-			if (disableCache)
-				flags |= ProjectFlags.DoNotCache;
+
 			BuildSearchCondition(sequence, expr, flags, sc.Conditions);
 
 			if (!isTest)
@@ -764,7 +763,7 @@ namespace LinqToDB.Linq.Builder
 				return sqlExpr;
 			}
 
-			var cache = !flags.HasFlag(ProjectFlags.DoNotCache) && expression is SqlPlaceholderExpression ||
+			var cache = expression is SqlPlaceholderExpression ||
 			            null != expression.Find(1, (_, e) => e is ContextRefExpression);
 
 			ISqlExpression? sql = null;
@@ -1392,13 +1391,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expr is SqlPlaceholderExpression placheolder && placheolder.Sql is SqlSearchCondition sc)
 					return sc;
-				if (flags.IsTest())
-					return null;
 
-				if (expr is SqlErrorExpression error)
-					throw error.CreateError();
-
-				throw CreateSqlError(context, expression).CreateError();
+				return null;
 			}
 
 			ISqlExpression IsCaseSensitive(MethodCallExpression mc)
@@ -1992,8 +1986,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			var compareNullsAsValues = CompareNullsAsValues;
+
 			predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-				CompareNullsAsValues && lOriginal.CanBeNull && rOriginal.CanBeNull
+				compareNullsAsValues
 					? true
 					: null);
 
@@ -2656,11 +2652,23 @@ namespace LinqToDB.Linq.Builder
 					}
 
 				case 1 :
-					return new SqlPredicate.ExprExpr(
-							getSql(getSqlContext, mapping[0].DiscriminatorName),
-							SqlPredicate.Operator.Equal,
-							MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code), Configuration.Linq.CompareNullsAsValues ? true : null);
+				{
+					var discriminatorSql = getSql(getSqlContext, mapping[0].DiscriminatorName);
+					var sqlValue = MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code);
 
+					if (QueryHelper.IsNullValue(sqlValue))
+					{
+						if (!discriminatorSql.CanBeNull)
+							discriminatorSql = new SqlNullabilityExpression(discriminatorSql);
+						return new SqlPredicate.IsNull(discriminatorSql, false);
+					}
+
+					return new SqlPredicate.ExprExpr(
+						discriminatorSql,
+						SqlPredicate.Operator.Equal,
+						sqlValue,
+						Configuration.Linq.CompareNullsAsValues ? true : null);
+				}
 				default:
 					{
 						var cond = new SqlSearchCondition();
@@ -3489,19 +3497,17 @@ namespace LinqToDB.Linq.Builder
 					var ma = (MemberExpression)body;
 					if (member != null)
 					{
-//						var neMember = Expression.MakeMemberAccess(ma.Expression, member);
 
+						var nextMember = nextPath[nextIndex] as MemberExpression;
+						if (nextMember != null && nextMember.Expression.Type.IsSameOrParentOf(body.Type))
+						{
+							var newMember = nextMember.Update(body);
 
-						//var newExpr = Project(context, nextPath[nextIndex], null, -1, flags, ma.Expression);
-
-						var newMember = ((MemberExpression)nextPath[nextIndex]).Update(body);
-
-						return Project(context, null, nextPath, nextIndex - 1, flags, newMember, strict);
-
-						//					return Project(context, null, nextPath, nextIndex - 1, flags, neMember);
+							return Project(context, null, nextPath, nextIndex - 1, flags, newMember, strict);
+						}
 					}
 
-					throw new NotImplementedException();
+					break;
 				}
 
 				case ExpressionType.New:
@@ -3512,7 +3518,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (member == null)
 						{
-							throw new NotImplementedException();
+							break;
 						}
 
 						for (var i = 0; i < ne.Members.Count; i++)
@@ -3641,6 +3647,11 @@ namespace LinqToDB.Linq.Builder
 						falseExpr = Project(context, null, nextPath, nextIndex, flags, cond.IfFalse, false);
 					}
 
+					if (trueExpr is SqlErrorExpression || falseExpr is SqlErrorExpression)
+					{
+						break;
+					}
+
 					var newExpr = (Expression)Expression.Condition(cond.Test, trueExpr, falseExpr);
 
 					return newExpr;
@@ -3653,11 +3664,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr = (path ?? next)!;
 
+						/*
 						if (expr.Type.IsValueType)
 						{
 							var placeholder = CreatePlaceholder(context, new SqlValue(expr.Type, null), expr);
 							return placeholder;
 						}
+						*/
 
 						return Expression.Default(expr.Type);
 					}
@@ -3669,11 +3682,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					var expr = (path ?? next)!;
 
+					/*
 					if (expr.Type.IsValueType)
 					{
 						var placeholder = CreatePlaceholder(context, new SqlValue(expr.Type, null), expr);
 						return placeholder;
 					}
+					*/
 
 					return Expression.Default(expr.Type);
 				}
@@ -3754,7 +3769,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			throw new NotImplementedException();
+			return CreateSqlError(context, next);
 		}
 
 
@@ -4108,7 +4123,7 @@ namespace LinqToDB.Linq.Builder
 
 			_expressionCache[key] = expression;
 
-			if (!flags.HasFlag(ProjectFlags.Test) && !flags.HasFlag(ProjectFlags.DoNotCache))
+			if (!flags.HasFlag(ProjectFlags.Test))
 			{
 				if ((flags.HasFlag(ProjectFlags.SQL) ||
 				     flags.HasFlag(ProjectFlags.Keys)) && expression is SqlPlaceholderExpression)
@@ -4151,13 +4166,14 @@ namespace LinqToDB.Linq.Builder
 				alias = me.Member.Name;
 
 
-			// Right now, handling nullability in that way
+			var sql = sqlPlaceholder.Sql;
+			/*// Right now, handling nullability in that way
 			//
 			var sql = sqlPlaceholder.Sql;
 			if (sqlPlaceholder.SelectQuery.IsNullable && !sql.CanBeNull)
 			{
 				sql = new SqlNullabilityExpression(sql);
-			}
+			}*/
 
 			//TODO: correct
 			var idx = asNew

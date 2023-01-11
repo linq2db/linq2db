@@ -1020,9 +1020,10 @@ namespace LinqToDB.SqlQuery
 				if (!map.ContainsKey(c))
 				{
 					var expr = c.Expression;
-					// Apply nullability to column expressions
+					
+					/*// Apply nullability to column expressions
 					if (!parentQuery.IsNullable && query.IsNullable && !expr.CanBeNull)
-						expr = new SqlNullabilityExpression(expr);
+						expr = new SqlNullabilityExpression(expr);*/
 
 					map.Add(c, expr);
 					if (c.RawAlias != null)

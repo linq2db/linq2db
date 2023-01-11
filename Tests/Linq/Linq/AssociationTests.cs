@@ -184,9 +184,6 @@ namespace Tests.Linq
 			{
 				using var db = GetDataContext(context);
 
-				var xx = (from ch in db.Child group ch by ch.Parent1).ToList();
-
-
 				AreEqual(
 					(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
 					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));

@@ -160,7 +160,6 @@ namespace LinqToDB.SqlQuery
 						QueryName            = selectQuery.QueryName,
 						SqlQueryExtensions   = selectQuery.SqlQueryExtensions,
 						DoNotSetAliases      = selectQuery.DoNotSetAliases,
-						IsNullable           = selectQuery.IsNullable
 					};
 
 					_objectTree.Add(element, clone = newSelectQuery);

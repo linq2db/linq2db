@@ -164,11 +164,9 @@ namespace LinqToDB.SqlQuery
 					.Append(" := ")
 					.Append(underlying, dic);
 			}
-			else
-			{
-				if (CanBeNull)
-					writer.Append('?');
-			}
+
+			if (CanBeNull)
+				writer.Append('?');
 
 			return writer.ToString();
 
@@ -182,7 +180,47 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull => Expression.CanBeNull;
+		public bool CanBeNull
+		{
+			get
+			{
+				if (Expression.CanBeNull)
+					return true;
+
+				if (Parent == null) 
+					return false;
+
+				ISqlTableSource? source = null;
+
+				if (Expression is SqlColumn column)
+					source = column.Parent;
+				else if (Expression is SqlField field)
+					source = field.Table;
+
+				if (source == null) return false;
+
+				foreach (var table in Parent.From.Tables)
+				{
+					if (table.Source == source)
+					{
+						return table.Joins.Any(join =>
+							join.JoinType == JoinType.Right || join.JoinType == JoinType.RightApply);
+					}
+
+					foreach (var join in table.Joins)
+					{
+						if (join.Table.Source == source)
+						{
+							return join.JoinType == JoinType.Full || join.JoinType == JoinType.FullApply ||
+							       join.JoinType == JoinType.Left ||
+							       join.JoinType == JoinType.OuterApply;
+						}
+					}
+				}
+
+				return false;
+			}
+		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

@@ -410,9 +410,12 @@ namespace LinqToDB.SqlQuery
 						expressionText = expressionText.Replace("\n", "\n" + ident);
 					}
 
-					sb
-						.Append(expressionText)
-						.Append(", \n");
+					sb.Append(expressionText);
+
+					if (c.CanBeNull)
+						sb.Append('?');
+
+					sb.Append(", \n");
 				}
 			}
 

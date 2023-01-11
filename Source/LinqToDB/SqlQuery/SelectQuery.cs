@@ -45,7 +45,6 @@ namespace LinqToDB.SqlQuery
 			List<ISqlExpression[]>? uniqueKeys,
 			SelectQuery?            parentSelect,
 			bool                    parameterDependent,
-			bool                    isNullable,
 			string?                 queryName,
 			bool                    doNotSetAliases)
 		{
@@ -58,7 +57,6 @@ namespace LinqToDB.SqlQuery
 			_setOperators        = setOperators;
 			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
-			IsNullable           = isNullable;
 			QueryName            = queryName;
 			DoNotSetAliases      = doNotSetAliases;
 
@@ -99,7 +97,6 @@ namespace LinqToDB.SqlQuery
 		public string?                  QueryName          { get; set; }
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 		public bool                     DoNotSetAliases    { get; set; }
-		public bool                     IsNullable         { get; set; }
 
 		List<ISqlExpression[]>? _uniqueKeys;
 
@@ -311,9 +308,6 @@ namespace LinqToDB.SqlQuery
 				.Append('(')
 				.Append(SourceID)
 				.Append(')');
-
-			if (IsNullable)
-				sb.Append('?');
 
 			sb.Append(' ');
 

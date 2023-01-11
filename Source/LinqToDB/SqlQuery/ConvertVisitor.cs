@@ -975,7 +975,7 @@ namespace LinqToDB.SqlQuery
 							|| uk != null && !ReferenceEquals(uk, q.UniqueKeys)
 						)
 						{
-							var nq = new SelectQuery() { IsNullable = q.IsNullable };
+							var nq = new SelectQuery();
 
 							Dictionary<IQueryElement, IQueryElement>? objTree = null;
 
@@ -1041,7 +1041,6 @@ namespace LinqToDB.SqlQuery
 							nq.Init(sc, fc, wc, gc, hc, oc, us, uk,
 								q.ParentSelect,
 								q.IsParameterDependent,
-								q.IsNullable,
 								q.QueryName,
 								q.DoNotSetAliases);
 

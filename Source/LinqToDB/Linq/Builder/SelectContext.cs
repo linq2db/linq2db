@@ -70,6 +70,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						return Body;
 					}
+
 					if (Body.NodeType == ExpressionType.TypeAs)
 					{
 						result = Builder.Project(this, path, null, 0, flags, Body, true);

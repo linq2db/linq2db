@@ -25,8 +25,7 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 
 			var result = builder.BuildWhere(buildInfo.Parent, sequence, condition: condition,
-				checkForSubQuery: !isHaving, enforceHaving: isHaving, isTest: buildInfo.IsTest,
-				disableCache: false);
+				checkForSubQuery: !isHaving, enforceHaving: isHaving, isTest: buildInfo.IsTest);
 
 			result.SetAlias(condition.Parameters[0].Name);
 

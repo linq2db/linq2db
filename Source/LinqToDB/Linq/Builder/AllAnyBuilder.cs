@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition: condition, checkForSubQuery: true, enforceHaving: false,
-					isTest: buildInfo.AggregationTest, disableCache: false);
+					isTest: buildInfo.AggregationTest);
 
 				sequence.SetAlias(condition.Parameters[0].Name);
 			}
