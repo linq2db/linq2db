@@ -693,7 +693,30 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table("#Issue33902")]
+		class Issue3902
+		{
+			[PrimaryKey, NotNull] public char    TPPSLT_TYPE                 { get; set; }
+			[PrimaryKey, NotNull] public string  TPPSLT_KIND_ID              { get; set; } = null!;
+			[Column]              public decimal TPPSLT_QUOTE_DURATION_MULTI { get; set; }
+			[Column]              public string  TPPSLT_USER_ID              { get; set; } = null!;
+		}
+
+		[Test]
+		public void Issue3902Test([IncludeDataSources(true, TestProvName.AllSybase)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateTempTable<Issue3902>();
+
+			table
+				.Where(c => c.TPPSLT_TYPE == '4' && c.TPPSLT_KIND_ID == "AAA")
+				.Set(c => c.TPPSLT_QUOTE_DURATION_MULTI, 10)
+				.Set(c => c.TPPSLT_USER_ID,              "IamHandsome")
+				.Update();
+		}
+
 		#region BulkCopy
+
 		[Table("AllTypes")]
 		public partial class AllType
 		{
@@ -732,7 +755,8 @@ namespace Tests.DataProvider
 
 		static readonly AllType[] _allTypeses =
 		{
-#region data
+			#region data
+
 			new AllType
 			{
 				ID                       = 700,
@@ -770,7 +794,8 @@ namespace Tests.DataProvider
 			{
 				ID                       = 701,
 			},
-#endregion
+
+			#endregion
 		};
 
 		[Table("LinqDataTypes")]
@@ -1094,6 +1119,7 @@ namespace Tests.DataProvider
 				db.DropTable<AllType>();
 			}
 		}
+
 		#endregion
 	}
 }
