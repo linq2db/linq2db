@@ -694,7 +694,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("#Issue33902")]
-		class Issue3902
+		sealed class Issue3902
 		{
 			[PrimaryKey, NotNull] public char    TPPSLT_TYPE                 { get; set; }
 			[PrimaryKey, NotNull] public string  TPPSLT_KIND_ID              { get; set; } = null!;
