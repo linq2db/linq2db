@@ -693,7 +693,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table("Issue3902")]
+		[Table]
 		sealed class Issue3902
 		{
 			[PrimaryKey, NotNull] public char    TPPSLT_TYPE                 { get; set; }
@@ -706,7 +706,7 @@ namespace Tests.DataProvider
 		public void Issue3902Test([IncludeDataSources(true, TestProvName.AllSybase)] string context)
 		{
 			using var db    = GetDataContext(context);
-			using var table = db.CreateTempTable<Issue3902>();
+			using var table = db.CreateLocalTable<Issue3902>();
 
 			table
 				.Where(c => c.TPPSLT_TYPE == '4' && c.TPPSLT_KIND_ID == "AAA")
