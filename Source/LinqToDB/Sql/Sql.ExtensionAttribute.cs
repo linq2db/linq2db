@@ -150,6 +150,9 @@ namespace LinqToDB
 			string          Expression       { get; set; }
 			Expression[]    Arguments        { get; }
 
+			IsNullableType  IsNullable       { get; }
+			bool?           CanBeNull        { get; }
+
 			T      GetValue<T>   (int    index);
 			T      GetValue<T>   (string argName);
 			object GetObjectValue(int    index);
@@ -175,6 +178,7 @@ namespace LinqToDB
 				bool isWindowFunction,
 				bool isPure,
 				bool isPredicate,
+				IsNullableType isNullable,
 				bool? canBeNull,
 				params SqlExtensionParam[] parameters)
 			{
@@ -191,23 +195,20 @@ namespace LinqToDB
 				IsWindowFunction = isWindowFunction;
 				IsPure           = isPure;
 				IsPredicate      = isPredicate;
+				IsNullable       = isNullable;
 				CanBeNull        = canBeNull;
 				NamedParameters  = parameters.ToLookup(static p => p.Name ?? string.Empty).ToDictionary(static p => p.Key, static p => p.ToList());
 			}
 
-			public SqlExtension(string expr, params SqlExtensionParam[] parameters)
-				: this(null, expr, SqlQuery.Precedence.Unknown, 0, false, false, true, true, false, parameters)
-			{
-			}
-
-			public Type?  SystemType       { get; set; }
-			public string Expr             { get; set; }
-			public int    Precedence       { get; set; }
-			public bool   IsAggregate      { get; set; }
-			public bool   IsWindowFunction { get; set; }
-			public bool   IsPure           { get; set; }
-			public bool   IsPredicate      { get; set; }
-			public bool?  CanBeNull        { get; set; }
+			public Type?          SystemType       { get; set; }
+			public string         Expr             { get; set; }
+			public int            Precedence       { get; set; }
+			public bool           IsAggregate      { get; set; }
+			public bool           IsWindowFunction { get; set; }
+			public bool           IsPure           { get; set; }
+			public bool           IsPredicate      { get; set; }
+			public IsNullableType IsNullable       { get; set; }
+			public bool?          CanBeNull        { get; set; }
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
 			{
@@ -312,15 +313,17 @@ namespace LinqToDB
 				readonly Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> _convert;
 
 				public ExtensionBuilder(
-					TContext      context,
-					string?       configuration,
-					object?       builderValue,
-					IDataContext  dataContext,
-					SelectQuery   query,
-					SqlExtension  extension,
+					TContext       context,
+					string?        configuration,
+					object?        builderValue,
+					IDataContext   dataContext,
+					SelectQuery    query,
+					SqlExtension   extension,
 					Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter,
-					MemberInfo    member,
-					Expression[]  arguments)
+					MemberInfo     member,
+					Expression[]   arguments,
+					IsNullableType isNullable,
+					bool?          canBeNull)
 				{
 					_context      = context;
 					Configuration = configuration;
@@ -332,6 +335,8 @@ namespace LinqToDB
 					Member        = member;
 					Method        = member as MethodInfo;
 					Arguments     = arguments    ?? throw new ArgumentNullException(nameof(arguments));
+					IsNullable    = isNullable;
+					CanBeNull     = canBeNull;
 				}
 
 				public MethodInfo?  Method { get; }
@@ -355,6 +360,8 @@ namespace LinqToDB
 				public SqlExtension    Extension        { get; }
 				public ISqlExpression? ResultExpression { get; set; }
 				public Expression[]    Arguments        { get; }
+				public IsNullableType  IsNullable       { get; }
+				public bool?           CanBeNull        { get; }
 
 				public string Expression
 				{
@@ -639,7 +646,7 @@ namespace LinqToDB
 				else if (member is PropertyInfo)
 					type = ((PropertyInfo)member).PropertyType;
 
-				var extension = new SqlExtension(type, Expression!, Precedence, ChainPrecedence, IsAggregate, IsWindowFunction, IsPure, IsPredicate, _canBeNull);
+				var extension = new SqlExtension(type, Expression!, Precedence, ChainPrecedence, IsAggregate, IsWindowFunction, IsPure, IsPredicate, IsNullable, _canBeNull);
 
 				SqlExtensionParam? result = null;
 
@@ -740,17 +747,15 @@ namespace LinqToDB
 						}
 					);
 
-					var builder = new ExtensionBuilder<TContext>(context, Configuration, BuilderValue, dataContext, query, extension, converter, member, arguments);
+					var builder = new ExtensionBuilder<TContext>(context, Configuration, BuilderValue, dataContext,
+						query, extension, converter, member, arguments, IsNullable, _canBeNull);
+
 					callBuilder.Build(builder);
 
 					result = builder.ResultExpression != null ?
 						new SqlExtensionParam(TokenName, builder.ResultExpression) :
 						new SqlExtensionParam(TokenName, builder.Extension);
 				}
-
-				if (!extension.CanBeNull.HasValue)
-					extension.CanBeNull = CalcCanBeNull(IsNullable,
-						extension.GetParameters().Select(static p => p.Expression?.CanBeNull ?? p.Extension?.CanBeNull ?? true));
 
 				result ??= new SqlExtensionParam(TokenName, extension);
 
@@ -828,15 +833,8 @@ namespace LinqToDB
 				};
 
 				var expr          = ResolveExpressionValues(null, root.Expr, valueProvider);
-				var sqlExpression = new SqlExpression(systemType, expr, precedence, flags, newParams.ToArray());
-				if (!canBeNull.HasValue)
-					canBeNull = root.CanBeNull;
-
-				if (!canBeNull.HasValue)
-					canBeNull = CalcCanBeNull(isNullable, sqlExpression.Parameters.Select(static p => p.CanBeNull));
-
-				if (canBeNull.HasValue)
-					sqlExpression.CanBeNull = canBeNull.Value;
+				var sqlExpression = new SqlExpression(systemType, expr, precedence, flags,
+					ToParametersNullabilityType(isNullable), canBeNull, newParams.ToArray());
 
 				return sqlExpression;
 			}

@@ -73,10 +73,8 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(name))
 					throw new LinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
 
-				return new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary)
-				{
-					CanBeNull = GetCanBeNull(Array<ISqlExpression>.Empty)
-				};
+				return new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary, SqlFlags.IsPure,
+					ToParametersNullabilityType(IsNullable), _canBeNull);
 			}
 
 			public override string GetObjectID()

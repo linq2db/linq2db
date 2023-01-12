@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
-using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -206,6 +204,8 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region ISqlExpression Members
+
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
 		public bool  CanBeNull  => Source.CanBeNull;
 		public int   Precedence => Source.Precedence;

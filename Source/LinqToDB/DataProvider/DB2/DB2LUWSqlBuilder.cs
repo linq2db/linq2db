@@ -25,9 +25,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override DB2Version Version => DB2Version.LUW;
 
-		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
+		protected override string GetPhysicalTableName(NullabilityContext nullability, ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
 		{
-			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression, defaultDatabaseName);
+			var name = base.GetPhysicalTableName(nullability, table, alias, ignoreTableExpression, defaultDatabaseName);
 
 			if (table.SqlTableType == SqlTableType.Function)
 				return $"TABLE({name})";

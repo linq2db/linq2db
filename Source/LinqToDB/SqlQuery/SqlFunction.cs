@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -7,26 +6,26 @@ namespace LinqToDB.SqlQuery
 	public class SqlFunction : ISqlExpression//ISqlTableSource
 	{
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
-			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, parameters)
+			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.Undefined, null, parameters)
 		{
 		}
 
 		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, parameters)
+			: this(systemType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, ParametersNullabilityType.Undefined, null, parameters)
 		{
 		}
 
 		public SqlFunction(Type systemType, string name, bool isAggregate, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, true, SqlQuery.Precedence.Primary, parameters)
+			: this(systemType, name, isAggregate, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.Undefined, null, parameters)
 		{
 		}
 
 		public SqlFunction(Type systemType, string name, bool isAggregate, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, true, precedence, parameters)
+			: this(systemType, name, isAggregate, true, precedence, ParametersNullabilityType.Undefined, null, parameters)
 		{
 		}
 
-		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, params ISqlExpression[] parameters)
+		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
 
@@ -36,20 +35,24 @@ namespace LinqToDB.SqlQuery
 			foreach (var p in parameters)
 				if (p == null) throw new ArgumentNullException(nameof(parameters));
 
-			SystemType  = systemType;
-			Name        = name;
-			Precedence  = precedence;
-			IsAggregate = isAggregate;
-			IsPure      = isPure;
-			Parameters  = parameters;
+			SystemType      = systemType;
+			Name            = name;
+			Precedence      = precedence;
+			NullabilityType = nullabilityType;
+			_canBeNull      = canBeNull;
+			IsAggregate     = isAggregate;
+			IsPure          = isPure;
+			Parameters      = parameters;
 		}
 
-		public Type             SystemType   { get; }
-		public string           Name         { get; }
-		public int              Precedence   { get; }
-		public bool             IsAggregate  { get; }
-		public bool             IsPure       { get; }
-		public ISqlExpression[] Parameters   { get; }
+		public Type                      SystemType        { get; }
+		public string                    Name              { get; }
+		public int                       Precedence        { get; }
+		public bool                      IsAggregate       { get; }
+		public bool                      IsPure            { get; }
+		public ISqlExpression[]          Parameters        { get; }
+		public bool?                     CanBeNullNullable => _canBeNull;
+		public ParametersNullabilityType NullabilityType   { get; }
 
 		public bool DoNotOptimize { get; set; }
 
@@ -59,6 +62,13 @@ namespace LinqToDB.SqlQuery
 		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   false, SqlQuery.Precedence.Comparison, subQuery); }
 		public static SqlFunction CreateAny   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ANY",    false, SqlQuery.Precedence.Comparison, subQuery); }
 		public static SqlFunction CreateExists(SelectQuery subQuery) { return new SqlFunction(typeof(bool), "EXISTS", false, SqlQuery.Precedence.Comparison, subQuery); }
+
+		public SqlFunction WithName(string name)
+		{
+			if (name == Name)
+				return this;
+			return new SqlFunction(SystemType, name, IsAggregate, IsPure, Precedence, NullabilityType, _canBeNull, Parameters);
+		}
 
 		#region Overrides
 
@@ -96,7 +106,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		private bool? _canBeNull;
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
+		bool? _canBeNull;
 		public  bool   CanBeNull
 		{
 			get => _canBeNull ?? true;

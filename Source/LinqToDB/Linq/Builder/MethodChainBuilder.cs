@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var builtExpr = BuildExpression();
-				var mapper    = Builder.BuildMapper<object>(builtExpr);
+				var mapper    = Builder.BuildMapper<object>(SelectQuery, builtExpr);
 
 				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);

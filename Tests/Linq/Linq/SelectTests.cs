@@ -1399,31 +1399,50 @@ namespace Tests.Linq
 			}
 		}
 
-		[Table("Parent")]
-		public class Parent1788
+		public class Table1788
 		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
 			[Column]
-			public int Value1 { get; }
+			public int Value1 { get; set; }
+
+			public static Table1788[] Seed()
+			{
+				return new Table1788[]
+				{
+					new () { Id = 1, Value1 = 11 }, 
+					new () { Id = 2, Value1 = 22 }, 
+					new () { Id = 3, Value1 = 33 }
+				};
+			}
 		}
 
 		[Test]
 		public void Issue1788Test1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Table1788.Seed()))
 			{
-				var results = from p in db.GetTable<Parent1788>()
-							   select new
-							   {
-								   f1 = Sql.ToNullable(p.Value1).HasValue,
-								   f2 = Sql.ToNullable(p.Value1)
-							   };
-
-				AreEqual(
-					from p in db.Parent.AsEnumerable()
+				var results =
+					from p in table
+					from l in table.LeftJoin(l => l.Id == p.Id + 1)
 					select new
 					{
-						f1 = p.Value1.HasValue,
-						f2 = p.Value1
+						f1 = Sql.ToNullable(l.Value1).HasValue, 
+						f2 = Sql.ToNullable(l.Value1)
+					};
+
+				var tableEnumerable = table.ToList();
+
+				AreEqual(
+					from p in tableEnumerable
+					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+					from l in gj.DefaultIfEmpty()
+					select new
+					{
+						f1 = (l?.Value1).HasValue,
+						f2 = l?.Value1
 					},
 					results);
 			}
@@ -1433,45 +1452,60 @@ namespace Tests.Linq
 		public void Issue1788Test2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Table1788.Seed()))
 			{
-				var results = from p in db.GetTable<Parent1788>()
-							  select new
-							  {
-								  f1 = Sql.ToNullable(p.Value1) != null,
-								  f2 = Sql.ToNullable(p.Value1)
-							  };
+				var results =
+					from p in table
+					from l in table.LeftJoin(l => l.Id == p.Id + 1)
+					select new 
+					{ 
+						f1 = Sql.ToNullable(l.Value1) != null, 
+						f2 = Sql.ToNullable(l.Value1)
+					};
+
+				var tableEnumerable = table.ToList();
 
 				AreEqual(
-					from p in db.Parent.AsEnumerable()
+					from p in tableEnumerable
+					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+					from l in gj.DefaultIfEmpty()
 					select new
 					{
-						f1 = p.Value1 != null,
-						f2 = p.Value1
+						f1 = l?.Value1 != null,
+						f2 = l?.Value1
 					},
 					results);
 			}
 		}
 
+		
 		[Test]
 		public void Issue1788Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Table1788.Seed()))
 			{
-				var results = from p in db.GetTable<Parent1788>()
-							  select new
-							  {
+				var results =
+					from p in table
+					from l in table.LeftJoin(l => l.Id == p.Id + 1)
+					select new 
+					{ 
 #pragma warning disable CS0472 // comparison of non-null int? with null
-								  f1 = ((int?)p.Value1) != null,
+						f1 = ((int?)l.Value1) != null,
 #pragma warning restore CS0472
-								  f2 = (int?)p.Value1
-							  };
+						f2 = (int?)l.Value1
+					};
+
+				var tableEnumerable = table.ToList();
 
 				AreEqual(
-					from p in db.Parent.AsEnumerable()
+					from p in tableEnumerable
+					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+					from l in gj.DefaultIfEmpty()
 					select new
 					{
-						f1 = p.Value1 != null,
-						f2 = p.Value1
+						f1 = l?.Value1 != null,
+						f2 = l?.Value1
 					},
 					results);
 			}
@@ -1481,24 +1515,32 @@ namespace Tests.Linq
 		public void Issue1788Test4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(Table1788.Seed()))
 			{
-				var results = from p in db.GetTable<Parent1788>()
-							  select new
-							  {
-								  f1 = ((int?)p.Value1).HasValue,
-								  f2 = (int?)p.Value1
-							  };
+				var results =
+					from p in table
+					from l in table.LeftJoin(l => l.Id == p.Id + 1)
+					select new 
+					{ 
+						f1 = ((int?)l.Value1).HasValue,
+						f2 = (int?)l.Value1
+					};
+
+				var tableEnumerable = table.ToList();
 
 				AreEqual(
-					from p in db.Parent.AsEnumerable()
+					from p in tableEnumerable
+					join l in tableEnumerable on p.Id + 1 equals l.Id into gj
+					from l in gj.DefaultIfEmpty()
 					select new
 					{
-						f1 = p.Value1 != null,
-						f2 = p.Value1
+						f1 = l?.Value1 != null,
+						f2 = l?.Value1
 					},
 					results);
 			}
 		}
+		
 
 		[Test]
 		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12Plus)] string context)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -127,6 +126,8 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region ISqlExpression Members
+
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
 		public bool CanBeNull => SqlDataType.TypeCanBeNull(Type.SystemType);
 

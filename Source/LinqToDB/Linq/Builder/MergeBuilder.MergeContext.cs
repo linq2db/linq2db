@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 					}	
 					case MergeKind.MergeWithOutput:
 					{
-						var mapper = Builder.BuildMapper<T>(expr);
+						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 						QueryRunner.SetRunQuery(query, mapper);
 						break;
 					}	

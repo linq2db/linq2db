@@ -2031,34 +2031,40 @@ namespace LinqToDB.SqlQuery
 			return sqlExpression;
 		}
 
-		public static SqlSearchCondition CorrectComparisonForJoin(SqlSearchCondition sc)
+		public static bool CalcCanBeNull(bool? canBeNull, ParametersNullabilityType isNullable, IEnumerable<bool> nullInfo)
 		{
-			var newSc = new SqlSearchCondition();
-			for (var index = 0; index < sc.Conditions.Count; index++)
-			{
-				var condition = sc.Conditions[index];
-				if (condition.Predicate is SqlPredicate.ExprExpr exprExpr)
-				{
-					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
-					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
-					    && exprExpr.WithNull != null && (!exprExpr.Expr1.CanBeNull || !exprExpr.Expr2.CanBeNull))
-					{
-						condition = new SqlCondition(condition.IsNot,
-							new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, exprExpr.Expr2, null),
-							condition.IsOr);
-					}
-				}
-				else if (condition.Predicate is SqlSearchCondition subSc)
-				{
-					condition = new SqlCondition(condition.IsNot,
-						CorrectComparisonForJoin(subSc),
-						condition.IsOr);
-				}
+			if (canBeNull != null)
+				return canBeNull.Value;
 
-				newSc.Conditions.Add(condition);
+			switch (isNullable)
+			{
+				case ParametersNullabilityType.Undefined              : return true;
+				case ParametersNullabilityType.Nullable               : return true;
+				case ParametersNullabilityType.NotNullable            : return false;
 			}
 
-			return newSc;
+			var parameters = nullInfo.ToArray();
+
+			bool? isNullableParameters = isNullable switch
+			{
+				ParametersNullabilityType.SameAsFirstParameter     => SameAs(0),
+				ParametersNullabilityType.SameAsSecondParameter    => SameAs(1),
+				ParametersNullabilityType.SameAsThirdParameter     => SameAs(2),
+				ParametersNullabilityType.SameAsLastParameter      => SameAs(parameters.Length - 1),
+				ParametersNullabilityType.IfAnyParameterNullable   => parameters.Any(static p => p),
+				ParametersNullabilityType.IfAllParametersNullable  => parameters.All(static p => p),
+				_ => null
+			};
+
+			bool SameAs(int parameterNumber)
+			{
+				if (parameterNumber >= 0 && parameters.Length > parameterNumber)
+					return parameters[parameterNumber];
+				return true;
+			}
+
+			return isNullableParameters ?? true;
 		}
+		
 	}
 }

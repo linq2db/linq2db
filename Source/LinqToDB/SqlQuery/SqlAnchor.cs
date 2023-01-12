@@ -34,7 +34,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull => true;
+		public bool CanBeNullable(NullabilityContext nullability) => true;
+
+		public bool         CanBeNull => true;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{

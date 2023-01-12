@@ -156,7 +156,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
-				var value = (SqlValue)      sqlQueryExtension.Arguments["indexName"];
+				var nullability = NullabilityContext.NonQuery;
+
+				var value = (SqlValue)sqlQueryExtension.Arguments["indexName"];
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["columns.Count"]).Value!;
 
 				if (count == 0)
@@ -177,7 +179,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					for (var i = 0; i < count; i++)
 					{
-						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[$"columns.{i}"], false);
+						sqlBuilder.BuildExpression(nullability, sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[$"columns.{i}"], false);
 						stringBuilder.Append(", ");
 					}
 

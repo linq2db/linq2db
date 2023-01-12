@@ -634,6 +634,8 @@ namespace LinqToDB
 					format,
 					Precedence.Primary,
 					memberType == typeof(bool) ? SqlFlags.IsPredicate | SqlFlags.IsPure : SqlFlags.IsPure,
+					ExpressionAttribute.ToParametersNullabilityType(builder.IsNullable),
+					builder.CanBeNull,
 					sqlArguments);
 			}
 		}

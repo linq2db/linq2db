@@ -66,18 +66,24 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			var table = truncateTable.Table!;
 
 			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
-			BuildPhysicalTable(table, null);
+			BuildPhysicalTable(nullability, table, null);
 			StringBuilder.Append(" IMMEDIATE");
 			StringBuilder.AppendLine();
 		}
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
+			var nullability = statement.SelectQuery == null
+				? NullabilityContext.NonQuery
+				: new (statement.SelectQuery);
+
 			Statement           = statement;
 			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
@@ -90,7 +96,7 @@ namespace LinqToDB.DataProvider.DB2
 
 				AppendIndent().AppendLine("SELECT");
 				AppendIndent().Append('\t');
-				BuildExpression(_identityField, false, true);
+				BuildExpression(nullability, _identityField, false, true);
 				sb.AppendLine();
 				AppendIndent().AppendLine("FROM");
 				AppendIndent().AppendLine("\tNEW TABLE");
@@ -103,7 +109,7 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine("\t)");
 		}
 
-		protected override void BuildGetIdentity(SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
 		{
 			if (Version == DB2Version.zOS)
 			{
@@ -113,16 +119,16 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override void BuildSelectClause(SelectQuery selectQuery)
+		protected override void BuildSelectClause(NullabilityContext nullability, SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().AppendLine("SELECT");
-				BuildColumns(selectQuery);
+				BuildColumns(nullability, selectQuery);
 				AppendIndent().AppendLine("FROM SYSIBM.SYSDUMMY1");
 			}
 			else
-				base.BuildSelectClause(selectQuery);
+				base.BuildSelectClause(nullability, selectQuery);
 		}
 
 		protected override string? LimitFormat(SelectQuery selectQuery)
@@ -275,7 +281,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table!;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = dropTable.Table!;
 
 			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
@@ -283,7 +290,7 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent().Append(@"BEGIN
 	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
 	EXECUTE IMMEDIATE 'DROP TABLE ");
-				BuildPhysicalTable(table, null);
+				BuildPhysicalTable(nullability, table, null);
 				StringBuilder.AppendLine(
 				@"';
 END");
@@ -291,7 +298,7 @@ END");
 			else
 			{
 				AppendIndent().Append("DROP TABLE ");
-				BuildPhysicalTable(table, null);
+				BuildPhysicalTable(nullability, table, null);
 				StringBuilder.AppendLine();
 			}
 		}

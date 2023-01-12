@@ -187,7 +187,7 @@ namespace LinqToDB.SqlQuery
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
 
-			public ISqlPredicate Reduce(EvaluationContext context)
+			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context)
 			{
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
@@ -205,9 +205,12 @@ namespace LinqToDB.SqlQuery
 
 				if (WithNull == null)
 					return this;
-
+				/*
 				var canBeNull_1 = Expr1.ShouldCheckForNull();
 				var canBeNull_2 = Expr2.ShouldCheckForNull();
+				*/
+				var canBeNull_1 = nullability.CanBeNull(Expr1);
+				var canBeNull_2 = nullability.CanBeNull(Expr2);
 
 				var isInverted = !WithNull.Value;
 

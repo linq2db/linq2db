@@ -22,11 +22,11 @@
 
 		public override string Name => ProviderName.SqlServer2022;
 
-		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr)
 		{
-			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			BuildExpression(nullability, GetPrecedence(expr), expr.Expr1);
 			StringBuilder.Append(expr.IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
-			BuildExpression(GetPrecedence(expr), expr.Expr2);
+			BuildExpression(nullability, GetPrecedence(expr), expr.Expr2);
 		}
 	}
 }

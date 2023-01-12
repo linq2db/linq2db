@@ -79,7 +79,20 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
+		public bool CanBeNullable(NullabilityContext nullability)
+		{
+			if (_canBeNull.HasValue)
+				return _canBeNull.Value;
+
+			foreach (var parameter in _infoParameters)
+				if (parameter.Sql.CanBeNullable(nullability))
+					return true;
+
+			return false;
+		}
+
 		private bool? _canBeNull;
+
 		public bool CanBeNull
 		{
 			get

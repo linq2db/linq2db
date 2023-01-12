@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSqlBuilder(this) { _skipAliases = _isSelect };
 		}
 
-		protected override void BuildGetIdentity(SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
 		{
 			StringBuilder
 				.AppendLine()
@@ -43,16 +43,16 @@ namespace LinqToDB.DataProvider.Sybase
 		bool _isSelect;
 		bool _skipAliases;
 
-		protected override void BuildSelectClause(SelectQuery selectQuery)
+		protected override void BuildSelectClause(NullabilityContext nullability, SelectQuery selectQuery)
 		{
 			_isSelect = true;
-			base.BuildSelectClause(selectQuery);
+			base.BuildSelectClause(nullability, selectQuery);
 			_isSelect = false;
 		}
 
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected override void BuildColumnExpression(NullabilityContext nullability, SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
 		{
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
+			base.BuildColumnExpression(nullability, selectQuery, expr, alias, ref addAlias);
 
 			if (_skipAliases) addAlias = false;
 		}
@@ -87,13 +87,13 @@ namespace LinqToDB.DataProvider.Sybase
 			base.BuildCreateTableNullAttribute(field, defaultNullable);
 		}
 
-		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
+		protected override void BuildDeleteClause(NullabilityContext nullability, SqlDeleteStatement deleteStatement)
 		{
 			var selectQuery = deleteStatement.SelectQuery;
 
 			AppendIndent();
 			StringBuilder.Append("DELETE");
-			BuildSkipFirst(selectQuery);
+			BuildSkipFirst(nullability, selectQuery);
 			StringBuilder.Append(" FROM ");
 
 			ISqlTableSource table;
@@ -108,17 +108,18 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 
 			var alias = GetTableAlias(table);
-			BuildPhysicalTable(source, alias);
+			BuildPhysicalTable(nullability, source, alias);
 
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateTableName(NullabilityContext nullability, SelectQuery selectQuery,
+			SqlUpdateClause                                             updateClause)
 		{
 			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
-				BuildPhysicalTable(updateClause.Table, null);
+				BuildPhysicalTable(nullability, updateClause.Table, null);
 			else
-				BuildTableName(selectQuery.From.Tables[0], true, false);
+				BuildTableName(nullability, selectQuery.From.Tables[0], true, false);
 		}
 
 		bool _skipBrackets;
@@ -230,10 +231,10 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		private void BuildIdentityInsert(SqlTableSource table, bool enable)
+		private void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
-			BuildTableName(table, true, false);
+			BuildTableName(nullability, table, true, false);
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 
@@ -272,7 +273,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table!;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = dropTable.Table!;
 
 			BuildTag(dropTable);
 
@@ -280,7 +282,7 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null);
+				BuildPhysicalTable(nullability, table, null);
 				StringBuilder.AppendLine("') IS NOT NULL)");
 				_skipBrackets = false;
 
@@ -288,7 +290,7 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 
 			AppendIndent().Append("DROP TABLE ");
-			BuildPhysicalTable(table, null);
+			BuildPhysicalTable(nullability, table, null);
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 				Indent--;
@@ -296,6 +298,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				var table = createTable.Table;
@@ -304,7 +308,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null);
+				BuildPhysicalTable(nullability, table, null);
 				StringBuilder.AppendLine("') IS NULL)");
 				_skipBrackets = false;
 
@@ -341,6 +345,6 @@ namespace LinqToDB.DataProvider.Sybase
 			return tableOptions.IsTemporaryOptionSet() || tableName.StartsWith("#");
 		}
 
-		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(nullability, expr);
 	}
 }

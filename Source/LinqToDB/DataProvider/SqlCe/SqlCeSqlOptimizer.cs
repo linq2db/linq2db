@@ -270,8 +270,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					{
 						case "Length":
 						{
-							return new SqlFunction(func.SystemType, "LEN", func.IsAggregate, func.IsPure,
-								func.Precedence, func.Parameters);
+							return func.WithName("LEN");
 						}
 						case "Convert" :
 							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))

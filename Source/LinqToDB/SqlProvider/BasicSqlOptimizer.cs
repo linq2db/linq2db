@@ -764,7 +764,7 @@ namespace LinqToDB.SqlProvider
 						var changed = ctx.WriteableValue || newExpr != expr.Expr;
 
 						if (changed)
-							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.Flags, newExpressions.ToArray());
+							newExpression = new SqlExpression(expr.SystemType, newExpr, expr.Precedence, expr.Flags, expr.NullabilityType, null, newExpressions.ToArray());
 
 						return newExpression;
 					}
@@ -1875,9 +1875,9 @@ namespace LinqToDB.SqlProvider
 		#region Conversion
 
 		[return: NotNullIfNotNull(nameof(element))]
-		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context)
+		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context, NullabilityContext nullability)
 		{
-			return OptimizeElement(mappingSchema, element, context, true);
+			return OptimizeElement(mappingSchema, element, context, true, nullability);
 		}
 
 		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
@@ -1973,10 +1973,10 @@ namespace LinqToDB.SqlProvider
 				case PseudoFunctions.CONVERT:
 					return ConvertConvertion(func);
 
-				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "Lower",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
-				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "Upper",    func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
-				case PseudoFunctions.REPLACE : return new SqlFunction(func.SystemType, "Replace",  func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
-				case PseudoFunctions.COALESCE: return new SqlFunction(func.SystemType, "Coalesce", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
+				case PseudoFunctions.TO_UPPER: return func.WithName("Upper");
+				case PseudoFunctions.REPLACE : return func.WithName("Replace");
+				case PseudoFunctions.COALESCE: return func.WithName("Coalesce");
 			}
 
 			return func;
@@ -1988,18 +1988,21 @@ namespace LinqToDB.SqlProvider
 				OptimizationContext optimizationContext,
 				BasicSqlOptimizer   optimizer,
 				MappingSchema       mappingSchema,
+				NullabilityContext  nullability,
 				bool                register,
 				Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
 			{
 				OptimizationContext = optimizationContext;
 				Optimizer           = optimizer;
 				MappingSchema       = mappingSchema;
+				Nullability         = nullability;
 				Register            = register;
 				Func                = func;
 			}
 
 			public readonly OptimizationContext OptimizationContext;
 			public readonly BasicSqlOptimizer   Optimizer;
+			public readonly NullabilityContext  Nullability;
 			public readonly bool                Register;
 			public readonly MappingSchema       MappingSchema;
 
@@ -2011,10 +2014,11 @@ namespace LinqToDB.SqlProvider
 			OptimizationContext optimizationContext,
 			BasicSqlOptimizer   optimizer,
 			MappingSchema       mappingSchema,
+			NullabilityContext  nullability,
 			bool                register,
 			Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
 		{
-			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, register, func);
+			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, nullability, register, func);
 
 			for (;;)
 			{
@@ -2057,7 +2061,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		public IQueryElement? OptimizeElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion)
+		public IQueryElement? OptimizeElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion, NullabilityContext nullability)
 		{
 			if (element == null)
 				return null;
@@ -2065,7 +2069,7 @@ namespace LinqToDB.SqlProvider
 			if (optimizationContext.IsOptimized(element, out var newElement))
 				return newElement!;
 
-			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, !withConversion,
+			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, nullability, !withConversion,
 				static (visitor, e) =>
 				{
 					var ne = e;
@@ -2088,7 +2092,7 @@ namespace LinqToDB.SqlProvider
 				if (mappingSchema == null)
 					throw new InvalidOperationException("MappingSchema is required for conversion");
 
-				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, true,
+				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, nullability, true,
 					static(visitor, e) =>
 					{
 						var ne = e;
@@ -2119,7 +2123,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.ExprExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)predicate;
-					var reduced  = exprExpr.Reduce(visitor.Context.OptimizationContext.Context);
+					var reduced  = exprExpr.Reduce(visitor.Context.Nullability, visitor.Context.OptimizationContext.Context);
 
 					if (!ReferenceEquals(reduced, exprExpr))
 					{
@@ -2144,7 +2148,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.IsTruePredicate:
 					return ((SqlPredicate.IsTrue)predicate).Reduce();
 				case QueryElementType.IsNullPredicate:
-					return ConvertIsNullPredicate(((SqlPredicate.IsNull)predicate));
+					return ConvertIsNullPredicate(visitor.Context.Nullability, ((SqlPredicate.IsNull)predicate));
 				case QueryElementType.LikePredicate:
 					return ConvertLikePredicate(visitor.Context.MappingSchema, (SqlPredicate.Like)predicate, visitor.Context.OptimizationContext.Context);
 				case QueryElementType.SearchStringPredicate:
@@ -2240,9 +2244,9 @@ namespace LinqToDB.SqlProvider
 			return newExpr;
 		}
 
-		public virtual ISqlPredicate ConvertIsNullPredicate(SqlPredicate.IsNull isNull)
+		public virtual ISqlPredicate ConvertIsNullPredicate(NullabilityContext nullability, SqlPredicate.IsNull isNull)
 		{
-			if (!isNull.Expr1.CanBeNull)
+			if (!nullability.CanBeNull(isNull.Expr1))
 				return new SqlPredicate.Expr(new SqlValue(isNull.IsNot));
 			return isNull;
 		}
@@ -2632,9 +2636,7 @@ namespace LinqToDB.SqlProvider
 		{
 			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0))
 			{
-				var table = deleteStatement.Table;
-				if (table == null)
-					table = deleteStatement.SelectQuery.From.Tables[0].Source as SqlTable;
+				var table = deleteStatement.Table ?? deleteStatement.SelectQuery.From.Tables[0].Source as SqlTable;
 
 				//TODO: probably we can improve this part
 				if (table == null)
@@ -3574,12 +3576,14 @@ namespace LinqToDB.SqlProvider
 			return newStatement;
 		}
 
-		public virtual void ConvertSkipTake(MappingSchema mappingSchema, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr)
+		public virtual void ConvertSkipTake(NullabilityContext nullability, MappingSchema mappingSchema,
+			SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr,
+			out ISqlExpression? skipExpr)
 		{
 			// make skip take as parameters or evaluate otherwise
 
-			takeExpr = ConvertElement(mappingSchema, selectQuery.Select.TakeValue, optimizationContext) as ISqlExpression;
-			skipExpr = ConvertElement(mappingSchema, selectQuery.Select.SkipValue, optimizationContext) as ISqlExpression;
+			takeExpr = ConvertElement(mappingSchema, selectQuery.Select.TakeValue, optimizationContext, nullability) as ISqlExpression;
+			skipExpr = ConvertElement(mappingSchema, selectQuery.Select.SkipValue, optimizationContext, nullability) as ISqlExpression;
 
 			if (takeExpr != null)
 			{
@@ -3728,8 +3732,8 @@ namespace LinqToDB.SqlProvider
 					query.OrderBy.Items.Clear();
 
 					var rowNumberExpression = parameters.Length == 0
-						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction)
-						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, parameters);
+						? new SqlExpression(typeof(long), "ROW_NUMBER() OVER ()", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null)
+						: new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters);
 
 					var rowNumberColumn = query.Select.AddNewColumn(rowNumberExpression);
 					rowNumberColumn.Alias = "RN";
@@ -3802,7 +3806,7 @@ namespace LinqToDB.SqlProvider
 
 						var rnExpr = new SqlExpression(typeof(long),
 							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
-							SqlFlags.IsWindowFunction, parameters);
+							SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters);
 
 						var additionalProjection = orderItems.Except(columnItems);
 						foreach (var expr in additionalProjection)

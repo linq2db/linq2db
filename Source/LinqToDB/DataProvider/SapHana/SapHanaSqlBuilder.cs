@@ -58,10 +58,12 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			if (createTable.StatementHeader == null)
 			{
 				AppendIndent().Append("CREATE COLUMN TABLE ");
-				BuildPhysicalTable(createTable.Table!, null);
+				BuildPhysicalTable(nullability, createTable.Table!, null);
 			}
 			else
 			{
@@ -69,7 +71,7 @@ namespace LinqToDB.DataProvider.SapHana
 					new StringBuilder(),
 					() =>
 					{
-						BuildPhysicalTable(createTable.Table!, null);
+						BuildPhysicalTable(nullability, createTable.Table!, null);
 						return StringBuilder.ToString();
 					});
 
@@ -123,12 +125,12 @@ namespace LinqToDB.DataProvider.SapHana
 			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
+		protected override void BuildFromClause(NullabilityContext nullability, SqlStatement statement, SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
 				StringBuilder.Append("FROM DUMMY").AppendLine();
 			else
-				base.BuildFromClause(statement, selectQuery);
+				base.BuildFromClause(nullability, statement, selectQuery);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -241,6 +243,6 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(command);
 		}
 
-		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
+		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(nullability, expr);
 	}
 }

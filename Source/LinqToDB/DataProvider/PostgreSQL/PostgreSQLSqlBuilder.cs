@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override bool IsRecursiveCteKeywordRequired => true;
 		protected override bool SupportsNullInColumn          => false;
 
-		protected override void BuildGetIdentity(SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');
-			BuildExpression(identityField, false, true);
+			BuildExpression(nullability, identityField, false, true);
 			StringBuilder.AppendLine();
 		}
 
@@ -184,6 +184,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			var nullability = new NullabilityContext(insertOrUpdate.SelectQuery);
+
 			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, true);
 
 			AppendIndent();
@@ -196,7 +198,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					StringBuilder.Append(InlineComma);
 				firstKey = false;
 
-				BuildExpression(expr.Column, false, true);
+				BuildExpression(nullability, expr.Column, false, true);
 			}
 
 			if (insertOrUpdate.Update.Items.Count > 0)
@@ -214,9 +216,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					first = false;
 
 					AppendIndent();
-					BuildExpression(expr.Column, false, true);
+					BuildExpression(nullability, expr.Column, false, true);
 					StringBuilder.Append(" = ");
-					BuildExpression(expr.Expression!, true, true);
+					BuildExpression(nullability, expr.Expression!, true, true);
 				}
 
 				Indent--;
@@ -336,12 +338,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
-			var table = truncateTable.Table;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = truncateTable.Table;
 
 			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
-			BuildPhysicalTable(table!, null);
+			BuildPhysicalTable(nullability, table!, null);
 
 			if (truncateTable.Table!.IdentityFields.Count > 0)
 			{

@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider.Oracle
 		// dual table owner
 		protected override string FakeTableSchema => "sys";
 
-		protected override void BuildMergeInto(SqlMergeStatement merge)
+		protected override void BuildMergeInto(NullabilityContext nullability, SqlMergeStatement merge)
 		{
 			StringBuilder.Append("MERGE");
 
@@ -38,11 +38,11 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			StringBuilder.Append("INTO ");
-			BuildTableName(merge.Target, true, true);
+			BuildTableName(nullability, merge.Target, true, true);
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildMergeOperationInsert(SqlMergeOperationClause operation)
+		protected override void BuildMergeOperationInsert(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			StringBuilder
 				.AppendLine()
@@ -52,16 +52,16 @@ namespace LinqToDB.DataProvider.Oracle
 			var insertClause = new SqlInsertClause();
 			insertClause.Items.AddRange(operation.Items);
 
-			BuildInsertClause(new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
+			BuildInsertClause(nullability, new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
 
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" WHERE ");
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(nullability, Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 		}
 
-		protected override void BuildMergeOperationUpdate(SqlMergeOperationClause operation)
+		protected override void BuildMergeOperationUpdate(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
 			StringBuilder
 				.AppendLine()
@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var update = new SqlUpdateClause();
 			update.Items.AddRange(operation.Items);
-			BuildUpdateSet(null, update);
+			BuildUpdateSet(nullability, null, update);
 
 			if (operation.Where != null)
 			{
@@ -78,20 +78,20 @@ namespace LinqToDB.DataProvider.Oracle
 					.AppendLine("WHERE")
 					.Append('\t');
 
-				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(nullability, Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
 		}
 
-		protected override void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
+		protected override void BuildMergeOperationUpdateWithDelete(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
-			BuildMergeOperationUpdate(operation);
+			BuildMergeOperationUpdate(nullability, operation);
 
 			StringBuilder
 				.AppendLine()
 				.AppendLine("DELETE WHERE")
 				.Append('\t');
 
-			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!, wrapCondition: true);
+			BuildSearchCondition(nullability, Precedence.Unknown, operation.WhereDelete!, wrapCondition: true);
 		}
 	}
 }

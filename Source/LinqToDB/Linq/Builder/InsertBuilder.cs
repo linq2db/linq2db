@@ -349,7 +349,7 @@ namespace LinqToDB.Linq.Builder
 					}	
 					case InsertTypeEnum.InsertOutput:
 					{
-						var mapper = Builder.BuildMapper<T>(expr);
+						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 						QueryRunner.SetRunQuery(query, mapper);
 						break;
 					}					

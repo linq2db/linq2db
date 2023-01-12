@@ -32,13 +32,13 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdSqlBuilder(this);
 		}
 
-		protected override void BuildSelectClause(SelectQuery selectQuery)
+		protected override void BuildSelectClause(NullabilityContext nullability, SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT").AppendLine();
-				BuildColumns(selectQuery);
+				BuildColumns(nullability, selectQuery);
 				AppendIndent();
 				StringBuilder.Append("FROM rdb$database").AppendLine();
 			}
@@ -46,13 +46,13 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT");
-				BuildSkipFirst(selectQuery);
+				BuildSkipFirst(nullability, selectQuery);
 				StringBuilder.Append(" DISTINCT");
 				StringBuilder.AppendLine();
-				BuildColumns(selectQuery);
+				BuildColumns(nullability, selectQuery);
 			}
 			else
-				base.BuildSelectClause(selectQuery);
+				base.BuildSelectClause(nullability, selectQuery);
 		}
 
 		protected override bool   SkipFirst                     => false;
@@ -64,7 +64,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return "FIRST {0}";
 		}
 
-		protected override void BuildGetIdentity(SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append('\t');
-			BuildExpression(identityField, false, true);
+			BuildExpression(nullability, identityField, false, true);
 		}
 
 		public override ISqlExpression? GetIdentityExpression(SqlTable table)

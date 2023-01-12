@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -28,6 +27,7 @@ namespace LinqToDB.SqlQuery
 			return comparer(this, other);
 		}
 
+		public bool CanBeNullable(NullabilityContext nullability) => false;
 		public bool CanBeNull => false;
 		public int Precedence => SqlQuery.Precedence.Primary;
 		public Type SystemType => typeof(object);

@@ -6,22 +6,24 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlExpression : ISqlExpression
 	{
-		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)
 				if (value == null) throw new ArgumentNullException(nameof(parameters));
 
-			SystemType  = systemType;
-			Expr        = expr;
-			Precedence  = precedence;
-			Parameters  = parameters;
-			Flags       = flags;
+			SystemType      = systemType;
+			Expr            = expr;
+			Precedence      = precedence;
+			Parameters      = parameters;
+			Flags           = flags;
+			NullabilityType = nullabilityType;
+			_canBeNull      = canBeNull;
 		}
 
 		public SqlExpression(Type? systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, expr, precedence, SqlFlags.IsPure, parameters)
+			: this(systemType, expr, precedence, SqlFlags.IsPure, ParametersNullabilityType.Undefined, null, parameters)
 		{
 		}
 
@@ -40,11 +42,13 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public Type?            SystemType  { get; }
-		public string           Expr        { get; }
-		public int              Precedence  { get; }
-		public ISqlExpression[] Parameters  { get; }
-		public SqlFlags         Flags       { get; }
+		public Type?                     SystemType        { get; }
+		public string                    Expr              { get; }
+		public int                       Precedence        { get; }
+		public ISqlExpression[]          Parameters        { get; }
+		public SqlFlags                  Flags             { get; }
+		public bool?                     CanBeNullNullable => _canBeNull;
+		public ParametersNullabilityType NullabilityType   { get; }
 
 		public bool             IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
 		public bool             IsPure           => (Flags & SqlFlags.IsPure)           != 0;
@@ -87,20 +91,18 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		private bool? _canBeNull;
+		public bool CanBeNullable(NullabilityContext nullability)
+		{
+			return QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
+				Parameters.Select(p => p.CanBeNullable(nullability)));
+		}
+
+		bool? _canBeNull;
 		public  bool   CanBeNull
 		{
-			get
-			{
-				if (_canBeNull.HasValue)
-					return _canBeNull.Value;
-
-				foreach (var value in Parameters)
-					if (value.CanBeNull)
-						return true;
-
-				return false;
-			}
+			get =>
+				QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
+					Parameters.Select(p => p.CanBeNull));
 
 			set => _canBeNull = value;
 		}

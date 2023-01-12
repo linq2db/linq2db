@@ -1268,7 +1268,7 @@ namespace LinqToDB.SqlQuery
 					rnBuilder.Append(')');
 
 					rnExpression = new SqlExpression(typeof(long), rnBuilder.ToString(), Precedence.Primary,
-						SqlFlags.IsWindowFunction, parameters.ToArray());
+						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters.ToArray());
 				}
 
 				var whereToIgnore = new HashSet<IQueryElement> { sql.Where, sql.Select };

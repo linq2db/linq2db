@@ -22,13 +22,13 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// Corrects skip/take for specific DataProvider
 		/// </summary>
-		void ConvertSkipTake(MappingSchema mappingSchema, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
+		void ConvertSkipTake(NullabilityContext nullability, MappingSchema mappingSchema, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
 
 		/// <summary>
 		/// Converts query element to specific provider dialect. 
 		/// </summary>
 		[return: NotNullIfNotNull(nameof(element))]
-		IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context);
+		IQueryElement? ConvertElement(MappingSchema mappingSchema, IQueryElement? element, OptimizationContext context, NullabilityContext nullability);
 
 	}
 }

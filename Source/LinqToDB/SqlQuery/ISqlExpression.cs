@@ -4,7 +4,9 @@ namespace LinqToDB.SqlQuery
 {
 	public interface ISqlExpression : IQueryElement, IEquatable<ISqlExpression>, ISqlExpressionWalkable
 	{
-		bool Equals   (ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer);
+		bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer);
+
+		bool CanBeNullable(NullabilityContext nullability);
 
 		bool  CanBeNull  { get; }
 		int   Precedence { get; }

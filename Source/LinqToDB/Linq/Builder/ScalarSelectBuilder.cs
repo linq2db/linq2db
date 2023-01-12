@@ -101,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 
 			public void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				var mapper = Builder.BuildMapper<T>(expr);
+				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}

@@ -185,8 +185,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull => true;
-		public int Precedence => SqlQuery.Precedence.Unknown;
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public bool CanBeNull                                     => true;
+		public int  Precedence                                    => SqlQuery.Precedence.Unknown;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{

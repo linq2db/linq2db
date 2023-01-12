@@ -108,9 +108,11 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.ExprExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)expr;
-					var reduced = exprExpr.Reduce(context);
+					/*
+					var reduced = exprExpr.Reduce(context, TODO);
 					if (!ReferenceEquals(reduced, expr))
 						return TryEvaluateExpression(reduced, context, out result, out errorMessage);
+					*/
 
 					if (!exprExpr.Expr1.TryEvaluateExpression(context, out var value1, out errorMessage) ||
 					    !exprExpr.Expr2.TryEvaluateExpression(context, out var value2, out errorMessage))

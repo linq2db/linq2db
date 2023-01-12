@@ -782,7 +782,8 @@ namespace LinqToDB.Remote
 							Append(elem.IsPure);
 							Append(elem.Precedence);
 							Append(elem.Parameters);
-							Append(elem.CanBeNull);
+							Append((int)elem.NullabilityType);
+							Append(elem.CanBeNullNullable);
 							Append(elem.DoNotOptimize);
 
 							break;
@@ -824,6 +825,8 @@ namespace LinqToDB.Remote
 							Append(elem.Expr);
 							Append(elem.Precedence);
 							Append((int)elem.Flags);
+							Append((int)elem.NullabilityType);
+							Append(elem.CanBeNullNullable);
 							Append(elem.Parameters);
 
 							break;
@@ -1665,12 +1668,12 @@ namespace LinqToDB.Remote
 							var isPure        = ReadBool();
 							var precedence    = ReadInt();
 							var parameters    = ReadArray<ISqlExpression>()!;
-							var canBeNull     = ReadBool();
+							var nullability   = (ParametersNullabilityType)ReadInt();
+							var canBeNull     = ReadNullableBool();
 							var doNotOptimize = ReadBool();
 
-							obj = new SqlFunction(systemType, name, isAggregate, isPure, precedence, parameters)
+							obj = new SqlFunction(systemType, name, isAggregate, isPure, precedence, nullability, canBeNull, parameters)
 							{
-								CanBeNull = canBeNull, 
 								DoNotOptimize = doNotOptimize
 							};
 
@@ -1699,9 +1702,11 @@ namespace LinqToDB.Remote
 							var expr        = ReadString()!;
 							var precedence  = ReadInt();
 							var flags       = (SqlFlags)ReadInt();
+							var nullability = (ParametersNullabilityType)ReadInt();
+							var canBeNull   = ReadNullableBool();
 							var parameters  = ReadArray<ISqlExpression>()!;
 
-							obj = new SqlExpression(systemType, expr, precedence, flags, parameters);
+							obj = new SqlExpression(systemType, expr, precedence, flags, nullability, canBeNull, parameters);
 
 							break;
 						}

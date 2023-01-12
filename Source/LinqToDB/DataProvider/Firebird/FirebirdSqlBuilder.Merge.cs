@@ -23,9 +23,9 @@
 
 		private readonly ISet<Tuple<SqlValuesTable, int>> _typedColumns = new HashSet<Tuple<SqlValuesTable, int>>();
 
-		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
+		protected override bool IsSqlValuesTableValueTypeRequired(NullabilityContext nullability, SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
 		{
-			if (row >= 0 && ConvertElement(rows[row][column]) is SqlParameter parameter && parameter.IsQueryParameter)
+			if (row >= 0 && ConvertElement(rows[row][column], nullability) is SqlParameter parameter && parameter.IsQueryParameter)
 			{
 				return true;
 			}
@@ -34,7 +34,7 @@
 			{
 				// without type Firebird with convert string values in column to CHAR(LENGTH_OF_BIGGEST_VALUE_IN_COLUMN) with
 				// padding shorter values with spaces
-				if (rows.Any(r => ConvertElement(r[column]) is SqlValue value && value.Value is string))
+				if (rows.Any(r => ConvertElement(r[column], nullability) is SqlValue value && value.Value is string))
 				{
 					_typedColumns.Add(Tuple.Create(source, column));
 					return rows[0][column] is SqlValue val && val.Value != null;
@@ -44,10 +44,10 @@
 			}
 
 			return _typedColumns.Contains(Tuple.Create(source, column))
-				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
+				&& ConvertElement(rows[row][column], nullability) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
-		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(NullabilityContext nullability, SqlDataType dataType, ISqlExpression value)
 		{
 			if (dataType.Type.DbType == null && dataType.Type.DataType == DataType.NVarChar)
 			{
@@ -64,13 +64,13 @@
 				if (typeRequired)
 					StringBuilder.Append("CAST(");
 
-				BuildExpression(value);
+				BuildExpression(nullability, value);
 
 				if (typeRequired)
 					StringBuilder.Append($" AS VARCHAR({length.ToString(CultureInfo.InvariantCulture)}))");
 			}
 			else
-				base.BuildTypedExpression(dataType, value);
+				base.BuildTypedExpression(nullability, dataType, value);
 		}
 	}
 }

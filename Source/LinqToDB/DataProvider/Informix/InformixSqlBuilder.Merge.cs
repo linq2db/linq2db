@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace LinqToDB.DataProvider.Informix
+﻿namespace LinqToDB.DataProvider.Informix
 {
 	using System.Collections.Generic;
 	using SqlQuery;
@@ -15,9 +13,9 @@ namespace LinqToDB.DataProvider.Informix
 		protected override string FakeTable => "table(set{1})";
 
 		// Informix is too lazy to infer types itself from context
-		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => true;
+		protected override bool IsSqlValuesTableValueTypeRequired(NullabilityContext nullability, SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column) => true;
 
-		protected override void BuildMergeInto(SqlMergeStatement merge)
+		protected override void BuildMergeInto(NullabilityContext nullability, SqlMergeStatement merge)
 		{
 			StringBuilder.Append("MERGE ");
 
@@ -30,7 +28,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			StringBuilder.Append("INTO ");
-			BuildTableName(merge.Target, true, true);
+			BuildTableName(nullability, merge.Target, true, true);
 			StringBuilder.AppendLine();
 		}
 	}

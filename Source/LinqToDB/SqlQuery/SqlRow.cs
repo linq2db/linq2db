@@ -15,7 +15,9 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public ISqlExpression[] Values { get; }
-		
+
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
 		public bool CanBeNull { get; }
 
 		public int Precedence => SqlQuery.Precedence.Primary;

@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 using System.Text;
 using System.Data.Common;
 
@@ -53,18 +50,18 @@ namespace LinqToDB.DataProvider.MySql
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildSelectClause(SelectQuery selectQuery)
+		protected override void BuildSelectClause(NullabilityContext nullability, SelectQuery selectQuery)
 		{
 			// mysql <= 5.5 doesn't support WHERE without FROM
 			// https://docs.oracle.com/cd/E19957-01/mysql-refman-5.5/sql-syntax.html#select
 			if (selectQuery.From.Tables.Count == 0 && !selectQuery.Where.IsEmpty)
 			{
 				AppendIndent().Append("SELECT").AppendLine();
-				BuildColumns(selectQuery);
+				BuildColumns(nullability, selectQuery);
 				AppendIndent().Append("FROM DUAL").AppendLine();
 			}
 			else
-				base.BuildSelectClause(selectQuery);
+				base.BuildSelectClause(nullability, selectQuery);
 		}
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
@@ -77,19 +74,19 @@ namespace LinqToDB.DataProvider.MySql
 			return "LIMIT {0}";
 		}
 
-		protected override void BuildOffsetLimit(SelectQuery selectQuery)
+		protected override void BuildOffsetLimit(NullabilityContext nullability, SelectQuery selectQuery)
 		{
 			if (selectQuery.Select.SkipValue == null)
-				base.BuildOffsetLimit(selectQuery);
+				base.BuildOffsetLimit(nullability, selectQuery);
 			else
 			{
 				AppendIndent()
 					.AppendFormat(
 						"LIMIT {0}, {1}",
-						WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue)),
+						WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, selectQuery.Select.SkipValue)),
 						selectQuery.Select.TakeValue == null ?
 							long.MaxValue.ToString() :
-							WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue).ToString()))
+							WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, selectQuery.Select.TakeValue).ToString()))
 					.AppendLine();
 			}
 		}
@@ -255,7 +252,7 @@ namespace LinqToDB.DataProvider.MySql
 			};
 		}
 
-		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
+		protected override void BuildDeleteClause(NullabilityContext nullability, SqlDeleteStatement deleteStatement)
 		{
 			var table = deleteStatement.Table != null ?
 				(deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table) ?? deleteStatement.Table) :
@@ -276,46 +273,50 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateClause(NullabilityContext nullability, SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			var pos = StringBuilder.Length;
 
-			base.BuildFromClause(statement, selectQuery);
+			base.BuildFromClause(nullability, statement, selectQuery);
 
 			StringBuilder.Remove(pos, 4).Insert(pos, "UPDATE");
 
-			base.BuildUpdateSet(selectQuery, updateClause);
+			BuildUpdateSet(nullability, selectQuery, updateClause);
 		}
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			var nullability = statement.SelectQuery == null
+				? NullabilityContext.NonQuery
+				: new (statement.SelectQuery);
+
 			BuildStep = Step.Tag;          BuildTag(statement);
-			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
+			BuildStep = Step.InsertClause; BuildInsertClause(nullability, statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
 				BuildStep = Step.WithClause;    BuildWithClause(statement.GetWithClause());
-				BuildStep = Step.SelectClause;  BuildSelectClause(statement.SelectQuery);
-				BuildStep = Step.FromClause;    BuildFromClause(statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause;   BuildWhereClause(statement.SelectQuery);
-				BuildStep = Step.GroupByClause; BuildGroupByClause(statement.SelectQuery);
-				BuildStep = Step.HavingClause;  BuildHavingClause(statement.SelectQuery);
-				BuildStep = Step.OrderByClause; BuildOrderByClause(statement.SelectQuery);
-				BuildStep = Step.OffsetLimit;   BuildOffsetLimit(statement.SelectQuery);
+				BuildStep = Step.SelectClause;  BuildSelectClause(nullability, statement.SelectQuery);
+				BuildStep = Step.FromClause;    BuildFromClause(nullability, statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;   BuildWhereClause(nullability, statement.SelectQuery);
+				BuildStep = Step.GroupByClause; BuildGroupByClause(nullability, statement.SelectQuery);
+				BuildStep = Step.HavingClause;  BuildHavingClause(nullability, statement.SelectQuery);
+				BuildStep = Step.OrderByClause; BuildOrderByClause(nullability, statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;   BuildOffsetLimit(nullability, statement.SelectQuery);
 			}
 
 			if (insertClause.WithIdentity)
-				BuildGetIdentity(insertClause);
+				BuildGetIdentity(nullability, insertClause);
 			else
 			{
-				BuildOutputSubclause(statement.GetOutputClause());
+				BuildOutputSubclause(nullability, statement.GetOutputClause());
 			}
 		}
 
-		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
+		protected override void BuildFromClause(NullabilityContext nullability, SqlStatement statement, SelectQuery selectQuery)
 		{
 			if (!statement.IsUpdate())
-				base.BuildFromClause(statement, selectQuery);
+				base.BuildFromClause(nullability, statement, selectQuery);
 		}
 
 		public static char ParameterSymbol           { get; set; }
@@ -390,14 +391,17 @@ namespace LinqToDB.DataProvider.MySql
 			return sb.Append(value);
 		}
 
-		protected override StringBuilder BuildExpression(ISqlExpression expr,
-			bool buildTableName,
-			bool checkParentheses,
-			string? alias,
-			ref bool addAlias,
-			bool throwExceptionIfTableNotFound = true)
+		protected override StringBuilder BuildExpression(
+			NullabilityContext nullability, 
+			ISqlExpression     expr,
+			bool               buildTableName,
+			bool               checkParentheses,
+			string?            alias,
+			ref bool           addAlias,
+			bool               throwExceptionIfTableNotFound = true)
 		{
 			return base.BuildExpression(
+				nullability,
 				expr,
 				buildTableName && Statement.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
@@ -406,18 +410,20 @@ namespace LinqToDB.DataProvider.MySql
 				throwExceptionIfTableNotFound);
 		}
 
-		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr)
 		{
 			if (!expr.IsNot)
 				StringBuilder.Append("NOT ");
-			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			BuildExpression(nullability, GetPrecedence(expr), expr.Expr1);
 			StringBuilder.Append(" <=> ");
-			BuildExpression(GetPrecedence(expr), expr.Expr2);
+			BuildExpression(nullability, GetPrecedence(expr), expr.Expr2);
 		}
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			var position = StringBuilder.Length;
+			var nullability = new NullabilityContext(insertOrUpdate.SelectQuery);
+
+			var position    = StringBuilder.Length;
 
 			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, false);
 
@@ -436,9 +442,9 @@ namespace LinqToDB.DataProvider.MySql
 					first = false;
 
 					AppendIndent();
-					BuildExpression(expr.Column, false, true);
+					BuildExpression(nullability, expr.Column, false, true);
 					StringBuilder.Append(" = ");
-					BuildExpression(expr.Expression!, false, true);
+					BuildExpression(nullability, expr.Expression!, false, true);
 				}
 
 				Indent--;
@@ -522,11 +528,12 @@ namespace LinqToDB.DataProvider.MySql
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
-		protected override void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
+		protected override void BuildGroupByBody(NullabilityContext nullability, GroupingType groupingType,
+			List<ISqlExpression>                                    items)
 		{
 			if (groupingType == GroupingType.GroupBySets || groupingType == GroupingType.Default)
 			{
-				base.BuildGroupByBody(groupingType, items);
+				base.BuildGroupByBody(nullability, groupingType, items);
 				return;
 			}
 
@@ -540,7 +547,7 @@ namespace LinqToDB.DataProvider.MySql
 				AppendIndent();
 
 				var expr = WrapBooleanExpression(items[i]);
-				BuildExpression(expr);
+				BuildExpression(nullability, expr);
 
 				if (i + 1 < items.Count)
 					StringBuilder.AppendLine(Comma);

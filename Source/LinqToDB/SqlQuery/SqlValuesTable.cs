@@ -155,6 +155,8 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression
 
+		public bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
+
 		bool ISqlExpression.CanBeNull => throw new NotImplementedException();
 
 		int ISqlExpression.Precedence => throw new NotImplementedException();

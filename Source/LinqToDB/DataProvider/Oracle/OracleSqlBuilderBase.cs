@@ -21,21 +21,21 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		protected override void BuildSelectClause(SelectQuery selectQuery)
+		protected override void BuildSelectClause(NullabilityContext nullability, SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().Append("SELECT");
 				StartStatementQueryExtensions(selectQuery);
 				StringBuilder.AppendLine();
-				BuildColumns(selectQuery);
+				BuildColumns(nullability, selectQuery);
 				AppendIndent().Append("FROM SYS.DUAL").AppendLine();
 			}
 			else
-				base.BuildSelectClause(selectQuery);
+				base.BuildSelectClause(nullability, selectQuery);
 		}
 
-		protected override void BuildGetIdentity(SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');
-			BuildExpression(identityField, false, true);
+			BuildExpression(nullability, identityField, false, true);
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
 		}
 
@@ -65,12 +65,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override bool BuildWhere(SelectQuery selectQuery)
+		protected override bool BuildWhere(NullabilityContext nullability, SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			SqlOptimizer.ConvertSkipTake(nullability, MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
-				base.BuildWhere(selectQuery) ||
+				base.BuildWhere(nullability, selectQuery) ||
 				!NeedSkip(takeExpr, skipEpr) &&
 				 NeedTake(takeExpr) &&
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
@@ -224,14 +224,16 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		protected override StringBuilder BuildExpression(
-			ISqlExpression expr,
-			bool buildTableName,
-			bool checkParentheses,
-			string? alias,
-			ref bool addAlias,
-			bool throwExceptionIfTableNotFound = true)
+			NullabilityContext nullability, 
+			ISqlExpression     expr,
+			bool               buildTableName,
+			bool               checkParentheses,
+			string?            alias,
+			ref bool           addAlias,
+			bool               throwExceptionIfTableNotFound = true)
 		{
 			return base.BuildExpression(
+				nullability,
 				expr,
 				buildTableName && Statement.QueryType != QueryType.MultiInsert,
 				checkParentheses,
@@ -240,9 +242,9 @@ namespace LinqToDB.DataProvider.Oracle
 				throwExceptionIfTableNotFound);
 		}
 
-		protected override void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
+		protected override void BuildExprExprPredicate(NullabilityContext nullability, SqlPredicate.ExprExpr expr)
 		{
-			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			BuildExpression(nullability, GetPrecedence(expr), expr.Expr1);
 
 			BuildExprExprPredicateOperator(expr);
 
@@ -256,15 +258,15 @@ namespace LinqToDB.DataProvider.Oracle
 				exprPrecedence = int.MaxValue;
 			}
 
-			BuildExpression(exprPrecedence, expr.Expr2);
+			BuildExpression(nullability, exprPrecedence, expr.Expr2);
 		}
 
-		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr)
 		{
 			StringBuilder.Append("DECODE(");
-			BuildExpression(Precedence.Unknown, expr.Expr1);
+			BuildExpression(nullability, Precedence.Unknown, expr.Expr1);
 			StringBuilder.Append(", ");
-			BuildExpression(Precedence.Unknown, expr.Expr2);
+			BuildExpression(nullability, Precedence.Unknown, expr.Expr2);
 			StringBuilder
 				.Append(", 0, 1) = ")
 				.Append(expr.IsNot ? '0' : '1');
@@ -311,6 +313,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
@@ -328,7 +332,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					StringBuilder
 						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
-					BuildPhysicalTable(dropTable.Table, null);
+					BuildPhysicalTable(nullability, dropTable.Table, null);
 					StringBuilder
 						.AppendLine("';")
 						;
@@ -362,7 +366,7 @@ namespace LinqToDB.DataProvider.Oracle
 					StringBuilder
 						.AppendLine("';")
 						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
-					BuildPhysicalTable(dropTable.Table, null);
+					BuildPhysicalTable(nullability, dropTable.Table, null);
 					StringBuilder
 						.AppendLine("';")
 						;
@@ -402,7 +406,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						.AppendLine("\tBEGIN")
 						.Append("\t\tEXECUTE IMMEDIATE 'DROP TABLE ");
-					BuildPhysicalTable(dropTable.Table, null);
+					BuildPhysicalTable(nullability, dropTable.Table, null);
 					StringBuilder
 						.AppendLine("';")
 						.AppendLine("\tEXCEPTION")
@@ -478,7 +482,7 @@ END;",
 							.AppendLine()
 							.AppendFormat("BEFORE INSERT ON ");
 
-						BuildPhysicalTable(createTable.Table, null);
+						BuildPhysicalTable(NullabilityContext.NonQuery, createTable.Table, null);
 
 						StringBuilder
 							.AppendLine(" FOR EACH ROW")
@@ -644,8 +648,9 @@ END;",
 
 		protected override void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
 		{
+			var nullability = NullabilityContext.NonQuery;
 			BuildMultiInsertClause(statement);
-			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias: false);
+			BuildSqlBuilder(nullability, (SelectQuery)statement.Source.Source, Indent, skipAlias: false);
 		}
 
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
@@ -654,10 +659,12 @@ END;",
 			
 			Indent++;
 
+			var nullability = NullabilityContext.NonQuery;
+
 			if (statement.InsertType == MultiInsertType.Unconditional)
 			{
 				foreach (var insert in statement.Inserts)
-					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(nullability, statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 			}
 			else
 			{
@@ -666,7 +673,7 @@ END;",
 					if (insert.When != null)
 					{
 						int length = StringBuilder.Append("WHEN ").Length;
-						BuildSearchCondition(insert.When, wrapCondition: true);
+						BuildSearchCondition(nullability, insert.When, wrapCondition: true);
 						// If `when` condition is optimized to always `true`,
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
@@ -678,7 +685,7 @@ END;",
 						StringBuilder.AppendLine("ELSE");
 					}
 		
-					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(nullability, statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 				}
 			}
 

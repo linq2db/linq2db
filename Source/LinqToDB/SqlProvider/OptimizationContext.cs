@@ -151,7 +151,7 @@ namespace LinqToDB.SqlProvider
 			where T : class, IQueryElement
 		{
 			if (_visitor == null)
-				_visitor = new ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>(context, convertAction, true, false, false, parentAction);
+				_visitor = new ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>(context, convertAction, true, false, true, parentAction);
 			else
 				_visitor.Reset(context, convertAction, true, false, false, parentAction);
 

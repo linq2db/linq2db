@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -88,6 +87,8 @@ namespace LinqToDB.SqlQuery
 
 			return true;
 		}
+
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
 		public bool  CanBeNull  => true;
 		public int   Precedence => SqlQuery.Precedence.Primary;

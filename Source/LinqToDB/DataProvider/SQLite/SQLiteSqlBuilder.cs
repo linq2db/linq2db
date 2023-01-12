@@ -184,22 +184,22 @@ namespace LinqToDB.DataProvider.SQLite
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr)
 		{
-			BuildExpression(GetPrecedence(expr), expr.Expr1);
+			BuildExpression(nullability, GetPrecedence(expr), expr.Expr1);
 			StringBuilder.Append(expr.IsNot ? " IS " : " IS NOT ");
-			BuildExpression(GetPrecedence(expr), expr.Expr2);
+			BuildExpression(nullability, GetPrecedence(expr), expr.Expr2);
 		}
 
-		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
+		protected override void BuildSqlValuesTable(NullabilityContext nullability, SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
-			valuesTable = ConvertElement(valuesTable);
+			valuesTable = ConvertElement(valuesTable, nullability);
 			var rows = valuesTable.BuildRows(OptimizationContext.Context);
 
 			if (rows.Count == 0)
 			{
 				StringBuilder.Append(OpenParens);
-				BuildEmptyValues(valuesTable);
+				BuildEmptyValues(nullability, valuesTable);
 				StringBuilder.Append(')');
 			}
 			else
@@ -210,7 +210,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 				StringBuilder.AppendLine();
 				AppendIndent();
-				BuildEmptyValues(valuesTable);
+				BuildEmptyValues(nullability, valuesTable);
 				StringBuilder.AppendLine();
 
 				AppendIndent();
@@ -220,7 +220,7 @@ namespace LinqToDB.DataProvider.SQLite
 					StringBuilder.AppendLine("UNION ALL");
 					AppendIndent();
 
-					BuildValues(valuesTable, rows);
+					BuildValues(nullability, valuesTable, rows);
 				}
 
 				StringBuilder.Append(')');
@@ -237,9 +237,9 @@ namespace LinqToDB.DataProvider.SQLite
 				BuildTableExtensions(StringBuilder, table, alias, " ", " ", null);
 		}
 
-		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateTableName(NullabilityContext nullability, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			base.BuildUpdateTableName(selectQuery, updateClause);
+			base.BuildUpdateTableName(nullability, selectQuery, updateClause);
 
 			if (updateClause.Table != null)
 				BuildTableExtensions(updateClause.Table, "");

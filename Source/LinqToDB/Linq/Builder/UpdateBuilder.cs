@@ -612,7 +612,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					case UpdateTypeEnum.UpdateOutput:
 					{
-						var mapper = Builder.BuildMapper<T>(expr);
+						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 						QueryRunner.SetRunQuery(query, mapper);
 						break;
 					}					

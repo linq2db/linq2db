@@ -172,46 +172,6 @@ namespace LinqToDB
 				set => _canBeNull = value;
 			}
 
-			protected bool GetCanBeNull(ISqlExpression[] parameters)
-			{
-				if (_canBeNull != null)
-					return _canBeNull.Value;
-
-				return CalcCanBeNull(IsNullable, parameters.Select(static p => p.CanBeNull)) ?? true;
-			}
-
-			public static bool? CalcCanBeNull(IsNullableType isNullable, IEnumerable<bool> nullInfo)
-			{
-				switch (isNullable)
-				{
-					case IsNullableType.Undefined              : return null;
-					case IsNullableType.Nullable               : return true;
-					case IsNullableType.NotNullable            : return false;
-				}
-
-				var parameters = nullInfo.ToArray();
-
-				bool? isNullabeParameters = isNullable switch
-				{
-					IsNullableType.SameAsFirstParameter => SameAs(0),
-					IsNullableType.SameAsSecondParameter => SameAs(1),
-					IsNullableType.SameAsThirdParameter  => SameAs(2),
-					IsNullableType.SameAsLastParameter  => SameAs(parameters.Length - 1),
-					IsNullableType.IfAnyParameterNullable  => parameters.Any(static p => p),
-					IsNullableType.IfAllParametersNullable  => parameters.All(static p => p),
-					_ => null
-				};
-
-				bool SameAs(int parameterNumber)
-				{
-					if (parameterNumber >= 0 && parameters.Length > parameterNumber)
-						return parameters[parameterNumber];
-					return true;
-				}
-
-				return isNullabeParameters;
-			}
-
 			const  string MatchParamPattern = @"{([0-9a-z_A-Z?]*)(,\s'(.*)')?}";
 			static Regex  _matchParamRegEx  = new (MatchParamPattern, RegexOptions.Compiled);
 
@@ -508,15 +468,24 @@ namespace LinqToDB
 
 				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter);
 
-				return new SqlExpression(expression.Type, expressionStr!, Precedence,
+				var sqlExpression = new SqlExpression(expression.Type, expressionStr, Precedence,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
 					(IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None),
-					parameters)
-				{
-					CanBeNull = GetCanBeNull(parameters)
-				};
+					ToParametersNullabilityType(IsNullable),
+					_canBeNull,
+					parameters);
+
+				if (_canBeNull != null)
+					sqlExpression.CanBeNull = _canBeNull.Value;
+
+				return sqlExpression;
+			}
+
+			public static ParametersNullabilityType ToParametersNullabilityType(IsNullableType nullableType)
+			{
+				return (ParametersNullabilityType)nullableType;
 			}
 
 			public virtual bool GetIsPredicate(Expression expression) => IsPredicate;

@@ -908,7 +908,7 @@ namespace LinqToDB.Linq.Builder
 			return variable;
 		}
 
-		public Expression ToReadExpression(Expression expression)
+		public Expression ToReadExpression(NullabilityContext nullability, Expression expression)
 		{
 			var toRead = expression.Transform(e =>
 			{
@@ -925,13 +925,15 @@ namespace LinqToDB.Linq.Builder
 					                ?? placeholder.Sql.SystemType 
 					                ?? placeholder.Type;
 
-					if (placeholder.Sql.CanBeNull && valueType != placeholder.Type && valueType.IsValueType && !valueType.IsNullable())
+					var canBeNull = nullability.CanBeNull(placeholder.Sql);
+
+					if (canBeNull && valueType != placeholder.Type && valueType.IsValueType && !valueType.IsNullable())
 					{
 						valueType = valueType.AsNullable();
 					}
 
 					var readerExpression = (Expression)new ConvertFromDataReaderExpression(valueType, placeholder.Index.Value,
-						columnDescriptor?.ValueConverter, DataReaderParam, placeholder.Sql.CanBeNull);
+						columnDescriptor?.ValueConverter, DataReaderParam, canBeNull);
 
 					if (placeholder.Type != readerExpression.Type)
 					{
@@ -963,14 +965,14 @@ namespace LinqToDB.Linq.Builder
 			return toRead;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>> BuildMapper<T>(Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>> BuildMapper<T>(SelectQuery query, Expression expr)
 		{
 			var type = typeof(T);
 
 			if (expr.Type != type)
 				expr = Expression.Convert(expr, type);
 
-			var readExpr = ToReadExpression(expr);
+			var readExpr = ToReadExpression(new NullabilityContext(query), expr);
 
 			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>>(
 				BuildBlock(readExpr), new[]

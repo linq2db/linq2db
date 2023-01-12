@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.ClickHouse
+﻿namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Mapping;
@@ -255,7 +252,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					// https://github.com/ClickHouse/ClickHouse/pull/16123
 					if (func.IsAggregate && ClickHouseConfiguration.UseStandardCompatibleAggregates)
 					{
-						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + "OrNull", true, func.IsPure, func.Precedence, func.Parameters)
+						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + "OrNull", true, func.IsPure, func.Precedence, ParametersNullabilityType.Nullable, null, func.Parameters)
 						{
 							DoNotOptimize = func.DoNotOptimize,
 							CanBeNull     = true
@@ -264,8 +261,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 					break;
 				}
-				case PseudoFunctions.TO_LOWER              : return new SqlFunction(func.SystemType, "lowerUTF8", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
-				case PseudoFunctions.TO_UPPER              : return new SqlFunction(func.SystemType, "upperUTF8", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.TO_LOWER              : return func.WithName("lowerUTF8");
+				case PseudoFunctions.TO_UPPER              : return func.WithName("upperUTF8");
 
 				case PseudoFunctions.CONVERT               : // toType
 				case PseudoFunctions.TRY_CONVERT           : // toTypeOrNull

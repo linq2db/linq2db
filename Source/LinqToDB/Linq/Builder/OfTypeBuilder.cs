@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
 			{
 				var expr   = BuildExpression(null, 0, false);
-				var mapper = Builder.BuildMapper<T>(expr);
+				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
@@ -111,6 +110,8 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region ISqlExpression Members
+
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
 		public bool CanBeNull => Value == null;
 

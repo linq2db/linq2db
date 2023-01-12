@@ -1629,7 +1629,9 @@ namespace LinqToDB.Linq.Builder
 				if (placeholders.Count == 0)
 					return GetOriginalExpression();
 
-				var notNull = placeholders.Where(p => !QueryHelper.UnwrapExpression(p.Sql, false).CanBeNull).ToList();
+				var nullability = new NullabilityContext(context.SelectQuery);
+
+				var notNull = placeholders.Where(p => p.Sql.CanBeNullable(nullability)).ToList();
 				if (notNull.Count == 0)
 					notNull = placeholders;
 
@@ -1637,7 +1639,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var placeholder in notNull)
 				{
 					var sql = placeholder.Sql;
-					if (!sql.CanBeNull)
+					if (!sql.CanBeNullable(nullability))
 						sql = new SqlNullabilityExpression(sql);
 					searchCondition.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(sql, isNot), isNot));
 				}

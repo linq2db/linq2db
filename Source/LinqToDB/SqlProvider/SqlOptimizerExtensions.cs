@@ -10,7 +10,11 @@
 		{
 			var optimizationContext = new OptimizationContext(context, aliases, false);
 
-			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext);
+			var nullability = statement.SelectQuery == null
+				? NullabilityContext.NonQuery
+				: new (statement.SelectQuery);
+
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext, nullability);
 
 			return newStatement;
 		}
@@ -18,7 +22,11 @@
 		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
 			MappingSchema mappingSchema, OptimizationContext optimizationContext)
 		{
-			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext);
+			var nullability = statement.SelectQuery == null
+				? NullabilityContext.NonQuery
+				: new (statement.SelectQuery);
+
+			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, statement, optimizationContext, nullability);
 
 			return newStatement;
 		}

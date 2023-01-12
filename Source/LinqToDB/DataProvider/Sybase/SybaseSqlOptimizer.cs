@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			switch (func.Name)
 			{
-				case PseudoFunctions.REPLACE: return new SqlFunction(func.SystemType, "Str_Replace", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
+				case PseudoFunctions.REPLACE: return func.WithName("Str_Replace");
 
 				case "CharIndex":
 				{

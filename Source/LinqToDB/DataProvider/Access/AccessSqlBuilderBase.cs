@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.Access
 			return true;
 		}
 
-		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
+		protected override void BuildBinaryExpression(NullabilityContext nullability, SqlBinaryExpression expr)
 		{
 			switch (expr.Operation[0])
 			{
@@ -148,25 +148,25 @@ namespace LinqToDB.DataProvider.Access
 				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);
 			}
 
-			base.BuildBinaryExpression(expr);
+			base.BuildBinaryExpression(nullability, expr);
 		}
 
-		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
+		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr)
 		{
 			StringBuilder.Append("IIF(");
-			BuildExpression(Precedence.Comparison, expr.Expr1);
+			BuildExpression(nullability, Precedence.Comparison, expr.Expr1);
 			StringBuilder.Append(" = ");
-			BuildExpression(Precedence.Comparison, expr.Expr2);
+			BuildExpression(nullability, Precedence.Comparison, expr.Expr2);
 			StringBuilder.Append(" OR ");
-			BuildExpression(Precedence.Comparison, expr.Expr1);
+			BuildExpression(nullability, Precedence.Comparison, expr.Expr1);
 			StringBuilder.Append(" IS NULL AND ");
-			BuildExpression(Precedence.Comparison, expr.Expr2);
+			BuildExpression(nullability, Precedence.Comparison, expr.Expr2);
 			StringBuilder
 				.Append(" IS NULL, 0, 1) = ")
 				.Append(expr.IsNot ? '0' : '1');
 		}
 
-		protected override void BuildFunction(SqlFunction func)
+		protected override void BuildFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			switch (func.Name)
 			{
@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.Access
 						var parms = new ISqlExpression[func.Parameters.Length - 1];
 
 						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
+						BuildFunction(nullability, new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
 							new SqlFunction(func.SystemType, func.Name, parms)));
 						return;
 					}
@@ -214,7 +214,7 @@ namespace LinqToDB.DataProvider.Access
 							if (func.SystemType == typeof(DateTime))
 								goto case TypeCode.DateTime;
 
-							BuildExpression(func.Parameters[1]);
+							BuildExpression(nullability, func.Parameters[1]);
 
 							return;
 					}
@@ -222,7 +222,7 @@ namespace LinqToDB.DataProvider.Access
 					break;
 			}
 
-			base.BuildFunction(func);
+			base.BuildFunction(nullability, func);
 		}
 
 		SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
@@ -238,11 +238,11 @@ namespace LinqToDB.DataProvider.Access
 			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
 		}
 
-		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateClause(NullabilityContext nullability, SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			base.BuildFromClause(statement, selectQuery);
+			base.BuildFromClause(nullability, statement, selectQuery);
 			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet(selectQuery, updateClause);
+			base.BuildUpdateSet(nullability, selectQuery, updateClause);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)

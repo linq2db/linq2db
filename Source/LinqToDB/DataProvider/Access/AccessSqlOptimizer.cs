@@ -218,9 +218,9 @@ namespace LinqToDB.DataProvider.Access
 		{
 			switch (func.Name)
 			{
-				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "LCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "UCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "Length"                : return new SqlFunction(func.SystemType, "LEN",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
+				case PseudoFunctions.TO_LOWER: return func.WithName("LCase");
+				case PseudoFunctions.TO_UPPER: return func.WithName("UCase");
+				case "Length"                : return func.WithName("LEN");
 			}
 			return base.ConvertFunction(func);
 		}
