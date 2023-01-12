@@ -1,4 +1,4 @@
-﻿using System;
+﻿ï»¿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -12,30 +12,31 @@ using NUnit.Framework;
 
 namespace Tests.UserTests.Test3840
 {
-	public class Test
-	{
-		public virtual DateTime? StartDateTime { get; set; }
-
-		public virtual TimeSpan? PreNotification { get; set; }
-	}
-
 	[TestFixture]
 	public class Test3840Tests : TestBase
 	{
+		public class Test
+		{
+			public virtual DateTime? StartDateTime { get; set; }
+
+			public virtual TimeSpan? PreNotification { get; set; }
+		}
+
 		[Test]
-		public void Test3840([IncludeDataSources(TestProvName.AllSqlServer)] string configuration)
+		public void Test3840([IncludeDataSources(true, TestProvName.AllSqlServer)] string configuration)
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
 			mb.Entity<Test>()
 			   .HasTableName("Common_Topology_Locations")
 			   .Property(e => e.StartDateTime)
-			   .Property(e => e.PreNotification);
+			   .Property(e => e.PreNotification).HasDataType(LinqToDB.DataType.Int64);
 
 			using (var db = GetDataContext(configuration, ms))
 			{
 				using (db.CreateLocalTable<Test>())
 				{
+					db.Insert(new Test() { StartDateTime = DateTime.UtcNow, PreNotification = TimeSpan.FromSeconds(2000) });
 					var qry = from t in db.GetTable<Test>()
 							  select new
 							  {
@@ -44,8 +45,7 @@ namespace Tests.UserTests.Test3840
 								  NotificationDateTime = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification!.Value.Milliseconds, t.StartDateTime)
 							  };
 					var lst = qry.ToList();
-					var sql = ((DataConnection)db).LastQuery;
-				}				
+				}
 			}
 		}
 	}
