@@ -1255,12 +1255,11 @@ namespace Tests.DataProvider
 			// TODO: add aggregate/udf functions test cases
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-
 				var expectedProc = testCase.Schema;
+
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db, context);
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-
+				var schema     = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 
 				Assert.AreEqual(1, procedures.Count);
