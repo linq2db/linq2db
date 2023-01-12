@@ -693,7 +693,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[Table("#Issue33902")]
+		[Table("Issue3902")]
 		sealed class Issue3902
 		{
 			[PrimaryKey, NotNull] public char    TPPSLT_TYPE                 { get; set; }
