@@ -30,6 +30,8 @@ namespace Tests.UserTests
 		public class MlogInfeedAddonsDTO
 		{
 			[Column] public int Id { get; set; }
+
+			[Column] public int Nr { get; set; }
 		}
 
 		[Test]
@@ -42,7 +44,7 @@ namespace Tests.UserTests
 			{
 				db.Insert(new InfeedAdvicePositionDTO() { Id = 1 });
 				db.Insert(new InventoryResourceDTO() { InfeedAdviceID = 1, Quantity = 9 });
-				db.Insert(new MlogInfeedAddonsDTO() { Id = 1 });
+				db.Insert(new MlogInfeedAddonsDTO() { Id = 1, Nr = 77 });
 				var qryA = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
 						   select new
 						   {
