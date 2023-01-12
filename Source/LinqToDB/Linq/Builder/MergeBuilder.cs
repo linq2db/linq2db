@@ -30,7 +30,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var kind = MergeKind.Merge; 
+			var kind = MergeKind.Merge;
 
 			if (methodCall.IsSameGenericMethod(MergeWithOutputInto))
 				kind = MergeKind.MergeWithOutputInto;
@@ -191,7 +191,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (field.Table == visitor.Context.toReplace)
 					{
-						return visitor.Context.replaceBy[field.Name] ?? throw new InvalidOperationException();
+						return visitor.Context.replaceBy.FindFieldByMemberName(field.Name) ?? throw new InvalidOperationException();
 					}
 				}
 

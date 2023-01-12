@@ -124,7 +124,7 @@ namespace Tests.Linq
 					if (result.Item4 != null)
 					{
 						var sb = new StringBuilder();
-						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
+						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
 						TestContext.WriteLine(sb);
 					}
 					TestContext.WriteLine();

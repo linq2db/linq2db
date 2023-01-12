@@ -103,13 +103,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			return like;
 		}
 
-		protected override SqlStatement FinalizeUpdate(SqlStatement statement)
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions)
 		{
-			var newStatement = base.FinalizeUpdate(statement);
+			var newStatement = base.FinalizeUpdate(statement, dataOptions);
 
 			if (newStatement is SqlUpdateStatement updateStatement)
 			{
-				updateStatement = CorrectSqlServerUpdate(updateStatement);
+				updateStatement = CorrectSqlServerUpdate(updateStatement, dataOptions);
 				newStatement    = updateStatement;
 			}
 
@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return QueryHelper.IsSingleTableInQuery(updateStatement.SelectQuery, updateStatement.Update.Table!);
 		}
 
-		SqlUpdateStatement CorrectSqlServerUpdate(SqlUpdateStatement updateStatement)
+		SqlUpdateStatement CorrectSqlServerUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions)
 		{
 			if (updateStatement.Update.Table == null)
 				throw new InvalidOperationException();
@@ -186,7 +186,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 					else
 					{
-						updateStatement = DetachUpdateTableFromUpdateQuery(updateStatement);
+						updateStatement = DetachUpdateTableFromUpdateQuery(updateStatement, dataOptions);
 
 						var sqlTableSource = removedTableSource ??
 						                     new SqlTableSource(updateStatement.Update.Table!,

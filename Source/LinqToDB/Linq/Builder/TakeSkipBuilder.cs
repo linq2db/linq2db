@@ -18,11 +18,12 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
-			var arg = methodCall.Arguments[1].Unwrap();
+			var arg      = methodCall.Arguments[1].Unwrap();
 
 			ISqlExpression expr;
-			var parametrize = !buildInfo.IsSubQuery && Common.Configuration.Linq.ParameterizeTakeSkip;
+
+            var linqOptions = builder.DataContext.Options.LinqOptions;
+			var parametrize = !buildInfo.IsSubQuery && linqOptions.ParameterizeTakeSkip;
 
 			if (arg.NodeType == ExpressionType.Lambda)
 			{

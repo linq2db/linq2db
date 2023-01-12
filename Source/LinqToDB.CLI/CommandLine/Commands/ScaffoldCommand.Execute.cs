@@ -44,7 +44,7 @@ namespace LinqToDB.CommandLine
 			// output folder
 			var output = Directory.GetCurrentDirectory();
 			if (options.Remove(General.Output, out value)) output = (string)value!;
-			
+
 			// overwrite existing files
 			var overwrite = false;
 			if (options.Remove(General.Overwrite, out value)) overwrite = (bool)value!;
@@ -136,7 +136,7 @@ namespace LinqToDB.CommandLine
 
 			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings, interceptors);
 			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
-			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
+			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
 			var files      = generator.GenerateCodeModel(
 				sqlBuilder,
 				dataModel,
@@ -181,10 +181,6 @@ namespace LinqToDB.CommandLine
 					break;
 				case ProviderName.SQLite            :
 					provider = ProviderName.SQLiteClassic;
-					break;
-				case ProviderName.SqlServer         :
-					SqlServerTools.AutoDetectProvider = true;
-					SqlServerTools.Provider = SqlServerProvider.MicrosoftDataSqlClient;
 					break;
 				case ProviderName.Firebird          :
 					// TODO                         : don't forget to add versioning here after Firebird versioning feature merged

@@ -9,10 +9,10 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-	sealed class MySqlSqlBuilder : BasicSqlBuilder
+	sealed class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
-		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -23,11 +23,6 @@ namespace LinqToDB.DataProvider.MySql
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
-		}
-
-		static MySqlSqlBuilder()
-		{
-			ParameterSymbol = '@';
 		}
 
 		protected override bool   IsRecursiveCteKeywordRequired   => true;
@@ -319,57 +314,25 @@ namespace LinqToDB.DataProvider.MySql
 				base.BuildFromClause(nullability, statement, selectQuery);
 		}
 
-		public static char ParameterSymbol           { get; set; }
-		public static bool TryConvertParameterSymbol { get; set; }
-
-		private static string _commandParameterPrefix = string.Empty;
-		public  static string  CommandParameterPrefix
-		{
-			get => _commandParameterPrefix;
-			set => _commandParameterPrefix = value ?? string.Empty;
-		}
-
-		private static string _sprocParameterPrefix = string.Empty;
-		public  static string  SprocParameterPrefix
-		{
-			get => _sprocParameterPrefix;
-			set => _sprocParameterPrefix = value ?? string.Empty;
-		}
-
-		private static List<char>? _convertParameterSymbols;
-		public  static List<char>  ConvertParameterSymbols
-		{
-			get => _convertParameterSymbols ??= new List<char>();
-			set => _convertParameterSymbols = value ?? new List<char>();
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
-				case ConvertType.NameToQueryParameter:
-					return sb.Append(ParameterSymbol).Append(value);
-
+				case ConvertType.NameToQueryParameter  :
 				case ConvertType.NameToCommandParameter:
-					return sb.Append(ParameterSymbol).Append(CommandParameterPrefix).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
 							throw new ArgumentException("Argument 'value' must represent parameter name.");
 
-					if (value[0] == ParameterSymbol)
+					if (value[0] == '@')
 						value = value.Substring(1);
 
-					if (value.StartsWith(SprocParameterPrefix, StringComparison.Ordinal))
-						value = value.Substring(SprocParameterPrefix.Length);
-
-					return sb.Append(ParameterSymbol).Append(SprocParameterPrefix).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.SprocParameterToName:
-					value = (value.Length > 0 && (value[0] == ParameterSymbol || (TryConvertParameterSymbol && ConvertParameterSymbols.Contains(value[0])))) ? value.Substring(1) : value;
-
-					if (!string.IsNullOrEmpty(SprocParameterPrefix) && value.StartsWith(SprocParameterPrefix))
-						value = value.Substring(SprocParameterPrefix.Length);
+					value = value.Length > 0 && value[0] == '@' ? value.Substring(1) : value;
 
 					return sb.Append(value);
 

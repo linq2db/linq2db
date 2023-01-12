@@ -60,14 +60,7 @@ namespace MySqlConnectorDataContext
 			InitMappingSchema();
 		}
 
-		public TestdataconnectorDB(LinqToDBConnectionOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestdataconnectorDB(LinqToDBConnectionOptions<TestdataconnectorDB> options)
+		public TestdataconnectorDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

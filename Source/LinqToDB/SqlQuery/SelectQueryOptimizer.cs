@@ -8,9 +8,10 @@ namespace LinqToDB.SqlQuery
 
 	sealed class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, EvaluationContext evaluationContext, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
+		public SelectQueryOptimizer(SqlProviderFlags flags, DataOptions dataOptions, EvaluationContext evaluationContext, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
 			_flags             = flags;
+            _dataOptions       = dataOptions;
 			_evaluationContext = evaluationContext;
 			_selectQuery       = selectQuery;
 			_rootElement       = rootElement;
@@ -18,12 +19,13 @@ namespace LinqToDB.SqlQuery
 			_dependencies      = dependencies;
 		}
 
-		readonly         SqlProviderFlags  _flags;
-		readonly         EvaluationContext _evaluationContext;
-		readonly         SelectQuery       _selectQuery;
-		readonly         IQueryElement     _rootElement;
-		readonly         int               _level;
-		readonly         IQueryElement[]   _dependencies;
+		readonly SqlProviderFlags  _flags;
+        readonly DataOptions       _dataOptions;
+		readonly EvaluationContext _evaluationContext;
+		readonly SelectQuery       _selectQuery;
+		readonly IQueryElement     _rootElement;
+		readonly int               _level;
+		readonly IQueryElement[]   _dependencies;
 
 		public void FinalizeAndValidate(bool isApplySupported)
 		{
@@ -212,7 +214,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (!_selectQuery.GroupBy.IsEmpty)
 			{
-				// Remove constants. 
+				// Remove constants.
 				//
 				for (int i = _selectQuery.GroupBy.Items.Count - 1; i >= 0; i--)
 				{
@@ -295,7 +297,7 @@ namespace LinqToDB.SqlQuery
 
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
 					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
-					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null 
+					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null
 					    && exprExpr.Expr2 is SqlValue value2 && value2.Value != null
 					    && value1.GetType() == value2.GetType())
 					{
@@ -985,7 +987,7 @@ namespace LinqToDB.SqlQuery
 								isColumnsOK = false;
 								break;
 							}
-						}	
+						}
 					}
 					else
 					{
@@ -1028,7 +1030,7 @@ namespace LinqToDB.SqlQuery
 					map.Add(c, expr);
 					if (c.RawAlias != null)
 						aliasesMap[c.Expression] = c.RawAlias;
-				}			
+				}
 			}
 
 			if (fromTable != null)
@@ -1439,8 +1441,8 @@ namespace LinqToDB.SqlQuery
 			//TODO: Failed SelectQueryTests.JoinScalarTest
 			//Needs optimization refactor for 3.X
 			/*
-			if (_selectQuery.IsSimple 
-			    && _selectQuery.From.Tables.Count == 1 
+			if (_selectQuery.IsSimple
+			    && _selectQuery.From.Tables.Count == 1
 				&& _selectQuery.From.Tables[0].Joins.Count == 0
 			    && _selectQuery.From.Tables[0].Source is SelectQuery selectQuery
 				&& selectQuery.IsSimple
@@ -1573,7 +1575,7 @@ namespace LinqToDB.SqlQuery
 					if (_flags.IsDistinctOrderBySupported)
 						continue;
 
-					if (Configuration.Linq.KeepDistinctOrdered)
+					if (_dataOptions.LinqOptions.KeepDistinctOrdered)
 					{
 						// trying to convert to GROUP BY quivalent
 						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);

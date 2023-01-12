@@ -13,11 +13,11 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 		}
 
-		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			statement = base.Finalize(mappingSchema, statement);
+			statement = base.Finalize(mappingSchema, statement, dataOptions);
 
 			return statement;
 		}
@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider.Firebird
 					}
 
 					return ConvertSearchStringPredicateViaLike(predicate, visitor);
-				}	
+				}
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 				{
 					expr = new SqlExpression(typeof(bool),
@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider.Firebird
 								? PseudoFunctions.MakeToLower(predicate.Expr2)
 								: predicate.Expr2, visitor.Context.OptimizationContext.Context)) {CanBeNull = false};
 					break;
-				}	
+				}
 				case SqlPredicate.SearchString.SearchKind.Contains:
 				{
 					if (caseSensitive == false)
@@ -133,7 +133,7 @@ namespace LinqToDB.DataProvider.Firebird
 						return ConvertSearchStringPredicateViaLike(predicate, visitor);
 					}
 					break;
-				}	
+				}
 				default:
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
@@ -141,12 +141,12 @@ namespace LinqToDB.DataProvider.Firebird
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
-				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions),
 				_                => statement,
 			};
 		}
@@ -167,7 +167,7 @@ namespace LinqToDB.DataProvider.Firebird
 						{
 							if (func.SystemType.ToUnderlying() == typeof(bool))
 							{
-								var ex = AlternativeConvertToBoolean(func, 1);
+								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.DataOptions, 1);
 								if (ex != null)
 									return ex;
 							}
@@ -177,7 +177,7 @@ namespace LinqToDB.DataProvider.Firebird
 						{
 							if (func.SystemType.ToUnderlying() == typeof(bool))
 							{
-								var ex = AlternativeConvertToBoolean(func, 2);
+								var ex = AlternativeConvertToBoolean(func, convertVisitor.Context.DataOptions, 2);
 								if (ex != null)
 									return ex;
 							}
@@ -232,13 +232,13 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override ISqlExpression ConvertFunction(SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
-			
+
 			return base.ConvertFunction(func);
 		}
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
 		{
-			statement = base.FinalizeStatement(statement, context);
+			statement = base.FinalizeStatement(statement, context, dataOptions);
 			statement = WrapParameters(statement, context);
 			return statement;
 		}

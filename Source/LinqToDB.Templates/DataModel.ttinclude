@@ -20,6 +20,7 @@ string   NamespaceName
 
 public static string BaseDataContextClass;
 public static bool   EnforceModelNullability = true;
+public static string GetDataOptionsMethod;
 
 public string   ServerName;
 public string   DatabaseName;
@@ -50,8 +51,8 @@ public bool SingularizeForeignKeyNames          = true;
 public bool NormalizeNames                      = true;
 public bool NormalizeNamesWithoutUnderscores;
 
-private Func<string, bool, string> _toValidName;
-public Func<string, bool, string> ToValidName
+private Func<string,bool,string> _toValidName;
+public  Func<string,bool,string>  ToValidName
 {
 	get { return _toValidName ?? ToValidNameDefault; }
 	set { _toValidName = value;                      }
@@ -113,7 +114,7 @@ static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema =
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
-	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
 
 	var db = LoadDatabaseSchema(dataConnection, GetSchemaOptions);
 

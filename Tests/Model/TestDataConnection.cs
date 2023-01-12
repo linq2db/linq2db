@@ -1,19 +1,24 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace Tests.Model
 {
 	public class TestDataConnection : DataConnection, ITestDataContext
 	{
 		//static int _counter;
+
+		public TestDataConnection(DataOptions options) : base(options)
+		{
+		}
+
+		public TestDataConnection(Func<DataOptions,DataOptions> optionsSetter) : base(optionsSetter)
+		{
+		}
 
 		public TestDataConnection(string configString)
 			: base(configString)
@@ -23,11 +28,6 @@ namespace Tests.Model
 		}
 
 		public TestDataConnection()
-		{
-		}
-
-		public TestDataConnection(LinqToDBConnectionOptions options)
-			:base(options)
 		{
 		}
 

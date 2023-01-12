@@ -229,8 +229,7 @@ namespace Tests.Linq
 		{
 			table.Delete();
 
-			var options          = GetDefaultBulkCopyOptions(context);
-			options.BulkCopyType = bulkCopyType;
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = bulkCopyType };
 
 			db.BulkCopy(options, data);
 			var records = table.OrderBy(r => r.Id).ToArray();

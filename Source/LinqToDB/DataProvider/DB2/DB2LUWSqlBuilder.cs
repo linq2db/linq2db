@@ -1,16 +1,16 @@
 ﻿using System;
+using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Text;
-	using LinqToDB.SqlQuery;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	sealed class DB2LUWSqlBuilder : DB2SqlBuilderBase
 	{
-		public DB2LUWSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public DB2LUWSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

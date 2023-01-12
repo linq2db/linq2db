@@ -179,7 +179,7 @@ namespace LinqToDB.Remote
 
 					foreach (var field in table.Fields)
 					{
-						if (baseType != null && baseInfo!.Table[field.Name] != null)
+						if (baseType != null && baseInfo!.Table.FindFieldByMemberName(field.Name) != null)
 							continue;
 
 						var kind  = ResourcePropertyKind.Primitive;

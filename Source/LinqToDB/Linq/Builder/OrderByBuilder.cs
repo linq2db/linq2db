@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 
-			if (!isContinuousOrder && !Configuration.Linq.DoNotClearOrderBys)
+			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
 			foreach (var expr in placeholders)

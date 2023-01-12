@@ -43,31 +43,31 @@ namespace LinqToDB.DataProvider.ClickHouse
 #endif
 
 			// type to literal converters
-			SetValueToSqlConverter(typeof(string)        , (sb, dt, v) => ConvertString        (sb, dt, (string)v));
-			SetValueToSqlConverter(typeof(char)          , (sb, dt, v) => BuildCharLiteral     (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[])        , (sb, dt, v) => ConvertByteArray     (sb, dt, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary)        , (sb, dt, v) => ConvertByteArray     (sb, dt, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(IPAddress)     , (sb, dt, v) => ConvertIPAddress     (sb, dt, (IPAddress)v));
-			SetValueToSqlConverter(typeof(Guid)          , (sb, dt, v) => ConvertGuid          (sb, dt, (Guid)v));
-			SetValueToSqlConverter(typeof(TimeSpan)      , (sb, dt, v) => ConvertTimeSpan      (sb, dt, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(DateTime)      , (sb, dt, v) => ConvertDateTime      (sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(DateTimeOffset), (sb, dt, v) => ConvertDateTimeOffset(sb, dt, (DateTimeOffset)v));
+			SetValueToSqlConverter(typeof(string)        , (sb,dt,_,v) => ConvertString        (sb, dt, (string)v));
+			SetValueToSqlConverter(typeof(char)          , (sb, _,_,v) => BuildCharLiteral     (sb,     (char)v));
+			SetValueToSqlConverter(typeof(byte[])        , (sb,dt,_,v) => ConvertByteArray     (sb, dt, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary)        , (sb,dt,_,v) => ConvertByteArray     (sb, dt, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(IPAddress)     , (sb,dt,_,v) => ConvertIPAddress     (sb, dt, (IPAddress)v));
+			SetValueToSqlConverter(typeof(Guid)          , (sb,dt,_,v) => ConvertGuid          (sb, dt, (Guid)v));
+			SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpan      (sb, dt, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTime      (sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffset(sb, dt, (DateTimeOffset)v));
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly)      , (sb, dt, v) => ConvertDateOnly      (sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateOnly      (sb, dt, (DateOnly)v));
 #endif
-			SetValueToSqlConverter(typeof(byte)          , (sb, dt, v) => ConvertByte          (sb, dt, (byte)v));
-			SetValueToSqlConverter(typeof(sbyte)         , (sb, dt, v) => ConvertSByte         (sb, dt, (sbyte)v));
-			SetValueToSqlConverter(typeof(short)         , (sb, dt, v) => ConvertInt16         (sb, dt, (short)v));
-			SetValueToSqlConverter(typeof(ushort)        , (sb, dt, v) => ConvertUInt16        (sb, dt, (ushort)v));
-			SetValueToSqlConverter(typeof(int)           , (sb, dt, v) => ConvertInt32         (sb, dt, (int)v));
-			SetValueToSqlConverter(typeof(uint)          , (sb, dt, v) => ConvertUInt32        (sb, dt, (uint)v));
-			SetValueToSqlConverter(typeof(long)          , (sb, dt, v) => ConvertInt64         (sb, dt, (long)v));
-			SetValueToSqlConverter(typeof(ulong)         , (sb, dt, v) => ConvertUInt64        (sb, dt, (ulong)v));
-			SetValueToSqlConverter(typeof(BigInteger)    , (sb, dt, v) => ConvertBigInteger    (sb, dt, (BigInteger)v));
-			SetValueToSqlConverter(typeof(float)         , (sb, dt, v) => ConvertFloat         (sb, dt, (float)v));
-			SetValueToSqlConverter(typeof(double)        , (sb, dt, v) => ConvertDouble        (sb, dt, (double)v));
-			SetValueToSqlConverter(typeof(decimal)       , (sb, dt, v) => ConvertDecimal       (sb, dt, (decimal)v));
-			SetValueToSqlConverter(typeof(bool)          , (sb, dt, v) => ConvertBool          (sb, dt, (bool)v));
+			SetValueToSqlConverter(typeof(byte)          , (sb,dt,_,v) => ConvertByte          (sb, dt, (byte)v));
+			SetValueToSqlConverter(typeof(sbyte)         , (sb,dt,_,v) => ConvertSByte         (sb, dt, (sbyte)v));
+			SetValueToSqlConverter(typeof(short)         , (sb,dt,_,v) => ConvertInt16         (sb, dt, (short)v));
+			SetValueToSqlConverter(typeof(ushort)        , (sb,dt,_,v) => ConvertUInt16        (sb, dt, (ushort)v));
+			SetValueToSqlConverter(typeof(int)           , (sb,dt,_,v) => ConvertInt32         (sb, dt, (int)v));
+			SetValueToSqlConverter(typeof(uint)          , (sb,dt,_,v) => ConvertUInt32        (sb, dt, (uint)v));
+			SetValueToSqlConverter(typeof(long)          , (sb,dt,_,v) => ConvertInt64         (sb, dt, (long)v));
+			SetValueToSqlConverter(typeof(ulong)         , (sb,dt,_,v) => ConvertUInt64        (sb, dt, (ulong)v));
+			SetValueToSqlConverter(typeof(BigInteger)    , (sb,dt,_,v) => ConvertBigInteger    (sb, dt, (BigInteger)v));
+			SetValueToSqlConverter(typeof(float)         , (sb,dt,_,v) => ConvertFloat         (sb, dt, (float)v));
+			SetValueToSqlConverter(typeof(double)        , (sb,dt,_,v) => ConvertDouble        (sb, dt, (double)v));
+			SetValueToSqlConverter(typeof(decimal)       , (sb,dt,_,v) => ConvertDecimal       (sb, dt, (decimal)v));
+			SetValueToSqlConverter(typeof(bool)          , (sb,dt,_,v) => ConvertBool          (sb, dt, (bool)v));
 
 			// some custom type conversions, not suitable for registration in default converter (for all providers)
 
@@ -862,9 +862,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 			public ClientMappingSchema() : base(ProviderName.ClickHouseClient, new MappingSchema?[] { ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseClient).MappingSchema, Instance }.Where(_ => _ != null).ToArray()!)
 			{
 				var adapter = ClickHouseProviderAdapter.GetInstance(ClickHouseProvider.ClickHouseClient);
+
 				if (adapter.ClientDecimalType != null)
 				{
-					SetValueToSqlConverter(adapter.ClientDecimalType, (sb, dt, v) => ConvertClientDecimal(sb, dt, adapter.ClientDecimalToStringConverter!(v)));
+					SetValueToSqlConverter(adapter.ClientDecimalType, (sb,dt,_,v) => ConvertClientDecimal(sb, dt, adapter.ClientDecimalToStringConverter!(v)));
 				}
 			}
 

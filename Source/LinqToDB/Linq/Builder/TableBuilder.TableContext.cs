@@ -403,7 +403,7 @@ namespace LinqToDB.Linq.Builder
 												name = me.Member.Name + '.' + name;
 											}
 
-											var fld = SqlTable[name];
+											var fld = SqlTable.FindFieldByMemberName(name);
 
 											if (fld != null)
 												return fld;
@@ -438,7 +438,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (flag)
 									{
-										var newField = SqlTable[fieldName];
+										var newField = SqlTable.FindFieldByMemberName(fieldName);
 										if (newField == null)
 										{
 											newField = new SqlField(

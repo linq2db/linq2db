@@ -996,11 +996,11 @@ namespace LinqToDB.SqlQuery
 			return current as SqlField;
 		}
 
-		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2)
+		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2, bool compareNullsAsValues)
 		{
 			var compare = new SqlCondition(false,
 				new SqlPredicate.ExprExpr(field1, SqlPredicate.Operator.Equal, field2,
-					Configuration.Linq.CompareNullsAsValues ? true : null));
+					compareNullsAsValues ? true : null));
 
 			return compare;
 		}
@@ -2014,9 +2014,9 @@ namespace LinqToDB.SqlQuery
 			RemoveNotUnusedColumnsInternal(selectQuery, selectQuery);
 		}
 
-		public static void OptimizeSelectQuery(this SelectQuery selectQuery, IQueryElement root, SqlProviderFlags providerFlags)
+		public static void OptimizeSelectQuery(this SelectQuery selectQuery, IQueryElement root, SqlProviderFlags providerFlags, DataOptions dataOptions)
 		{
-			new SelectQueryOptimizer(providerFlags, new EvaluationContext(), root, selectQuery, 0)
+			new SelectQueryOptimizer(providerFlags, dataOptions, new EvaluationContext(), root, selectQuery, 0)
 				.FinalizeAndValidate(providerFlags.IsApplyJoinSupported);
 		}
 

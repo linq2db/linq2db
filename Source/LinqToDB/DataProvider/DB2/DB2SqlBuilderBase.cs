@@ -13,10 +13,10 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
+	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
-		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -171,7 +171,12 @@ namespace LinqToDB.DataProvider.DB2
 			base.BuildCreateTableNullAttribute(field, defaultNullable);
 		}
 
-		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
+		[Obsolete("Use DB2Options.Default.IdentifierQuoteMode instead.")]
+		public static DB2IdentifierQuoteMode IdentifierQuoteMode
+		{
+			get => DB2Options.Default.IdentifierQuoteMode;
+			set => DB2Options.Default = DB2Options.Default with { IdentifierQuoteMode = value };
+		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -197,14 +202,14 @@ namespace LinqToDB.DataProvider.DB2
 				case ConvertType.NameToSchema         :
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToQueryTableAlias:
-					if (IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
+					if (ProviderOptions.IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
-						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
-							value.StartsWith("_") ||
-							value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+						if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
+						    value.StartsWith("_") ||
+						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
 
@@ -282,7 +287,7 @@ namespace LinqToDB.DataProvider.DB2
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var nullability = NullabilityContext.NonQuery;
-			var table       = dropTable.Table!;
+			var table       = dropTable.Table;
 
 			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
@@ -338,7 +343,7 @@ END");
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
 				AppendIndent().AppendLine(@"BEGIN");
 
@@ -357,7 +362,7 @@ END");
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
 				Indent--;
 

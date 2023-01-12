@@ -112,6 +112,8 @@ namespace LinqToDB.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
+		public readonly DataOptions DataOptions;
+
 		public ExpressionBuilder(
 			Query                             query,
 			ExpressionTreeOptimizationContext optimizationContext,
@@ -124,9 +126,10 @@ namespace LinqToDB.Linq.Builder
 
 			CollectQueryDepended(expression);
 
-			CompiledParameters   = compiledParameters;
-			DataContext          = dataContext;
-			OriginalExpression   = expression;
+			CompiledParameters = compiledParameters;
+			DataContext        = dataContext;
+			DataOptions        = dataContext.Options;
+			OriginalExpression = expression;
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
@@ -519,7 +522,7 @@ namespace LinqToDB.Linq.Builder
 
 									mc = mc.Update(mc.Object, args);
 									return new TransformInfo(mc, true);
-								};
+								}
 							}
 						}
 

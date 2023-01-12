@@ -1,8 +1,9 @@
-﻿using LinqToDB.Linq;
-using LinqToDB.Mapping;
+﻿using System;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Linq;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -48,24 +49,24 @@ namespace LinqToDB.DataProvider.Access
 			throw new LinqException("Access does not support `Replace` function which is required for such query.");
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			statement = CorrectInnerJoins(statement);
 
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
-				QueryType.Update => CorrectAccessUpdate((SqlUpdateStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement, dataOptions),
 				_                => statement,
 			};
 		}
 
-		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement)
+		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement, DataOptions dataOptions)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
 				throw new LinqToDBException("Access does not support update query limitation");
 
-			statement = CorrectUpdateTable(statement);
+			statement = CorrectUpdateTable(statement, dataOptions);
 
 			if (!statement.SelectQuery.OrderBy.IsEmpty)
 				statement.SelectQuery.OrderBy.Items.Clear();

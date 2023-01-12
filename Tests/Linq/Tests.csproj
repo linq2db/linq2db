@@ -66,4 +66,7 @@
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
+	<ItemGroup Condition="'$(Language)'=='C#'">
+		<Compile Remove="$(MSBuildThisFileDirectory)/../../Source/Shared/*.cs" />
+	</ItemGroup>
 </Project>

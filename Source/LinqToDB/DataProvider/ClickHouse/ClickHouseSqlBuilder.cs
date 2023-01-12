@@ -11,8 +11,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 	sealed class ClickHouseSqlBuilder : BasicSqlBuilder
 	{
-		public ClickHouseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public ClickHouseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -386,7 +386,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected override void BuildOffsetLimit(NullabilityContext nullability, SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(nullability, MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(nullability, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			if (takeExpr != null || skipExpr != null)
 			{

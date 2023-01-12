@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.PostgreSQL
+﻿using System;
+
+namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Extensions;
 	using Mapping;
@@ -13,26 +15,26 @@
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
-			return base.Finalize(mappingSchema, statement);
+			return base.Finalize(mappingSchema, statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => CorrectPostgreSqlDelete((SqlDeleteStatement)statement),
-				QueryType.Update => GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement),
+				QueryType.Delete => CorrectPostgreSqlDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Update => GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, dataOptions),
 				_                => statement,
 			};
 		}
 
-		SqlStatement CorrectPostgreSqlDelete(SqlDeleteStatement statement)
+		SqlStatement CorrectPostgreSqlDelete(SqlDeleteStatement statement, DataOptions dataOptions)
 		{
-			statement = GetAlternativeDelete(statement);
+			statement = GetAlternativeDelete(statement, dataOptions);
 
 			return statement;
 		}
@@ -68,7 +70,7 @@
 					case "Convert"   :
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}
