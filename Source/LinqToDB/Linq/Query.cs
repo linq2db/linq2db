@@ -37,17 +37,19 @@ namespace LinqToDB.Linq
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
-		internal Query(IDataContext dataContext, Expression? expression)
+		internal Query(IDataContext dataContext, Expression? expression, Expression? originalExpression)
 		{
 			ConfigurationID         = dataContext.ConfigurationID;
 			ContextType             = dataContext.GetType();
-			Expression              = expression;
+			Expression              = _originalExpression; // expression;
 			MappingSchema           = dataContext.MappingSchema;
 			SqlOptimizer            = dataContext.GetSqlOptimizer(dataContext.Options);
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
 			DataOptions             = dataContext.Options;
 			InlineParameters        = dataContext.InlineParameters;
 			IsEntityServiceProvided = dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} };
+
+			_originalExpression = originalExpression;
 		}
 
 		#endregion
@@ -63,6 +65,8 @@ namespace LinqToDB.Linq
 		internal readonly SqlProviderFlags SqlProviderFlags;
 		internal readonly DataOptions      DataOptions;
 		internal readonly bool             IsEntityServiceProvided;
+
+		Expression? _originalExpression;
 
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
@@ -249,8 +253,8 @@ namespace LinqToDB.Linq
 	{
 		#region Init
 
-		internal Query(IDataContext dataContext, Expression? expression)
-			: base(dataContext, expression)
+		internal Query(IDataContext dataContext, Expression? expression = null, Expression? originalExpression = null)
+			: base(dataContext, expression, originalExpression)
 		{
 			DoNotCache = NoLinqCache.IsNoCache;
 		}
@@ -350,7 +354,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Adds query to cache if it is not cached already.
 			/// </summary>
-			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags queryFlags, DataOptions dataOptions)
+			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags queryFlags)
 			{
 				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
@@ -408,7 +412,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
-			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags, DataOptions dataOptions)
+			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags)
 			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;
@@ -472,7 +476,60 @@ namespace LinqToDB.Linq
 
 		public static long CacheMissCount => _queryCache.CacheMissCount;
 
+		bool        _savedDependsOnParameters;
+		Expression? _savedExpression;
+
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
+		{
+			// The query.Find(...) method must be called first.
+			// If you have any query depended code, this method should take care of it.
+			//
+			var flags = dataContext.GetQueryFlags();
+
+			if (Configuration.Linq.DisableQueryCache == false)
+			{
+				var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+				var ex                  = expr;
+
+				//ex = optimizationContext.ExpandExpression(ex);
+				//ex = optimizationContext.ExposeExpression(ex);
+
+				var query = _queryCache.Find(dataContext, ex, flags);
+
+				if (query != null)
+				{
+					expr                = query._savedExpression!;
+					dependsOnParameters = query._savedDependsOnParameters;
+
+					return query;
+				}
+			}
+
+			{
+				var originalExpression  = expr;
+				var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+
+				expr = optimizationContext.ExpandExpression(expr);
+				expr = optimizationContext.ExposeExpression(expr);
+
+				dependsOnParameters = optimizationContext.IsDependsOnParameters();
+
+				if (dataContext is IExpressionPreprocessor preprocessor)
+					expr = preprocessor.ProcessExpression(expr);
+
+				var query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, originalExpression, expr);
+
+				query._savedExpression          = expr;
+				query._savedDependsOnParameters = dependsOnParameters;
+
+				if (!Configuration.Linq.DisableQueryCache && !query.DoNotCache)
+					_queryCache.TryAdd(dataContext, query, flags);
+
+				return query;
+			}
+		}
+
+		public static Query<T> GetQuery1(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
@@ -489,23 +546,28 @@ namespace LinqToDB.Linq
 			var dataOptions = dataContext.Options;
 
 			if (dataOptions.LinqOptions.DisableQueryCache)
-				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
+				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr, expr);
 
 			var queryFlags = dataContext.GetQueryFlags();
-			var query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
+			var query      = _queryCache.Find(dataContext, expr, queryFlags);
 
 			if (query == null)
 			{
-				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
+				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr, expr);
 
 				if (!query.DoNotCache)
-					_queryCache.TryAdd(dataContext, query, queryFlags, dataOptions);
+					_queryCache.TryAdd(dataContext, query, queryFlags);
 			}
 
 			return query;
 		}
 
-		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
+		internal static Query<T> CreateQuery(
+			ExpressionTreeOptimizationContext optimizationContext,
+			ParametersContext                 parametersContext,
+			IDataContext                      dataContext,
+			Expression                        originalExpr,
+			Expression                        expr)
 		{
 			var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
 			if (linqOptions.GenerateExpressionTest)
@@ -519,7 +581,7 @@ namespace LinqToDB.Linq
 						TraceLevel.Info);
 			}
 
-			var query = new Query<T>(dataContext, expr);
+			var query = new Query<T>(dataContext, expr, originalExpr);
 
 			try
 			{
