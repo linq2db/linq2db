@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -28,14 +27,12 @@ namespace LinqToDB.SqlQuery
 				IsOr  ? SqlQuery.Precedence.LogicalDisjunction :
 					SqlQuery.Precedence.LogicalConjunction;
 
-		public bool CanBeNull => Predicate.CanBeNull;
-
 #if OVERRIDETOSTRING
 
-			public override string ToString()
-			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-			}
+		public override string ToString()
+		{
+			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+		}
 
 #endif
 

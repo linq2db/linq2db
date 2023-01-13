@@ -1375,6 +1375,11 @@ namespace LinqToDB.SqlQuery
 
 				joinTable.JoinType = newJoinType;
 				joinTable.Condition.Conditions.AddRange(searchCondition);
+
+				if (newJoinType == JoinType.Full)
+				{
+					joinTable.Condition = QueryHelper.CorrectComparisonForJoin(joinTable.Condition);
+				}
 			}
 		}
 

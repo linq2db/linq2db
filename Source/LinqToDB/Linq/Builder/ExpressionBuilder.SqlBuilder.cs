@@ -1442,12 +1442,17 @@ namespace LinqToDB.Linq.Builder
 
 					var newExpr = e.Update(left, e.Conversion, right);
 
-					if (!ReferenceEquals(e, newExpr))
+					var optimized = OptimizationContext.OptimizeExpressionTree(newExpr, false);
+
+					if (optimized.NodeType != e.NodeType)
 					{
-						return ConvertPredicate(context, newExpr, flags);
+						return ConvertPredicate(context, optimized, flags);
 					}
 
-					return CheckExpression(ConvertCompareExpression(context, expression.NodeType, left, right, flags));
+					left  = ((BinaryExpression)optimized).Left;
+					right = ((BinaryExpression)optimized).Right;
+
+					return CheckExpression(ConvertCompareExpression(context, optimized.NodeType, left, right, flags));
 				}
 
 				case ExpressionType.Call:
@@ -2503,16 +2508,13 @@ namespace LinqToDB.Linq.Builder
 		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, Expression expr, ProjectFlags flags)
 		{
 			expr = expr.Unwrap();
-			if (TryConvertToSql(context, flags | ProjectFlags.Test, expr, null, out var sqlExpr, out _))
-			{
-				var descriptor = QueryHelper.GetColumnDescriptor(sqlExpr);
-				if (descriptor != null)
-				{
-					return descriptor;
-				}
-			}
 
-			return null;
+			var converted = ConvertToSqlExpr(context, expr, ProjectFlags.SQL | ProjectFlags.Test);
+			if (converted is not SqlPlaceholderExpression placeholderTest)
+				return null;
+
+			var descriptor = QueryHelper.GetColumnDescriptor(placeholderTest.Sql);
+			return descriptor;
 		}
 
 		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, Expression expr1, Expression expr2,

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -49,8 +48,6 @@ namespace LinqToDB.SqlQuery
 				if (Expr1 == null)
 					throw new InvalidOperationException();
 			}
-
-			public override bool CanBeNull => Expr1.CanBeNull;
 
 			public override QueryElementType ElementType => QueryElementType.ExprPredicate;
 
@@ -135,8 +132,6 @@ namespace LinqToDB.SqlQuery
 				base.Walk(options, context, func);
 				Expr2 = Expr2.Walk(options, context, func)!;
 			}
-
-			public override bool CanBeNull => base.CanBeNull || Expr2.CanBeNull;
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
 
@@ -808,8 +803,6 @@ namespace LinqToDB.SqlQuery
 				Function = (SqlFunction)((ISqlExpression)Function).Walk(options, context, func)!;
 			}
 
-			public override bool CanBeNull => Function.CanBeNull;
-
 			public override QueryElementType ElementType => QueryElementType.FuncLikePredicate;
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
@@ -838,9 +831,8 @@ namespace LinqToDB.SqlQuery
 
 		#region IPredicate Members
 
-		public int               Precedence { get; }
+		public int  Precedence { get; }
 
-		public    abstract bool  CanBeNull  { get; }
 		public abstract bool     Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer);
 		protected abstract void  Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func);
 

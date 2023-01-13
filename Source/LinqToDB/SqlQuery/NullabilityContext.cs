@@ -61,7 +61,7 @@
 
 			if (_nullableSources == null)
 			{
-				_nullableSources = new Dictionary<ISqlTableSource, bool>();
+				_nullableSources = new ();
 
 				foreach (var table in InQuery.From.Tables)
 				{
