@@ -39,9 +39,14 @@ namespace LinqToDB.Linq
 
 		internal Query(IDataContext dataContext, Expression? expression, Expression? originalExpression)
 		{
+			if (expression != originalExpression)
+			{
+
+			}
+
 			ConfigurationID         = dataContext.ConfigurationID;
 			ContextType             = dataContext.GetType();
-			Expression              = _originalExpression; // expression;
+			Expression              = originalExpression; // expression;
 			MappingSchema           = dataContext.MappingSchema;
 			SqlOptimizer            = dataContext.GetSqlOptimizer(dataContext.Options);
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
@@ -479,7 +484,7 @@ namespace LinqToDB.Linq
 		bool        _savedDependsOnParameters;
 		Expression? _savedExpression;
 
-		public static Query<T> GetQuery1(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
+		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
 			// The query.Find(...) method must be called first.
 			// If you have any query depended code, this method should take care of it.
@@ -491,25 +496,25 @@ namespace LinqToDB.Linq
 				var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 				var ex                  = expr;
 
-				ex = optimizationContext.ExpandExpression(ex);
-
-				if (ex != expr)
-				{
-				}
-
-				ex = optimizationContext.ExposeExpression(ex);
-
-				if (ex != expr)
-				{
-				}
-
-				if (dataContext is IExpressionPreprocessor preprocessor)
-				{
-					ex = preprocessor.ProcessExpression(ex);
-					if (ex != expr)
-					{
-					}
-				}
+//				ex = optimizationContext.ExpandExpression(ex);
+//
+//				if (ex != expr)
+//				{
+//				}
+//
+//				ex = optimizationContext.ExposeExpression(ex);
+//
+//				if (ex != expr)
+//				{
+//				}
+//
+//				if (dataContext is IExpressionPreprocessor preprocessor)
+//				{
+//					ex = preprocessor.ProcessExpression(ex);
+//					if (ex != expr)
+//					{
+//					}
+//				}
 
 				//ex = optimizationContext.ExpandExpression(ex);
 				//ex = optimizationContext.ExposeExpression(ex);
@@ -549,7 +554,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
+		public static Query<T> GetQuery1(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
