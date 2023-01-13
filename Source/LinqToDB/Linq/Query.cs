@@ -75,7 +75,7 @@ namespace LinqToDB.Linq
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
-				Expression!.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
+				Expression.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 
 		readonly Dictionary<Expression, QueryableAccessor>        _queryableAccessorDic  = new();
@@ -479,17 +479,37 @@ namespace LinqToDB.Linq
 		bool        _savedDependsOnParameters;
 		Expression? _savedExpression;
 
-		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
+		public static Query<T> GetQuery1(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
 			// The query.Find(...) method must be called first.
 			// If you have any query depended code, this method should take care of it.
 			//
 			var flags = dataContext.GetQueryFlags();
 
-			if (Configuration.Linq.DisableQueryCache == false)
+			if (dataContext.Options.LinqOptions.DisableQueryCache == false)
 			{
 				var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 				var ex                  = expr;
+
+				ex = optimizationContext.ExpandExpression(ex);
+
+				if (ex != expr)
+				{
+				}
+
+				ex = optimizationContext.ExposeExpression(ex);
+
+				if (ex != expr)
+				{
+				}
+
+				if (dataContext is IExpressionPreprocessor preprocessor)
+				{
+					ex = preprocessor.ProcessExpression(ex);
+					if (ex != expr)
+					{
+					}
+				}
 
 				//ex = optimizationContext.ExpandExpression(ex);
 				//ex = optimizationContext.ExposeExpression(ex);
@@ -529,7 +549,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		public static Query<T> GetQuery1(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
+		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 

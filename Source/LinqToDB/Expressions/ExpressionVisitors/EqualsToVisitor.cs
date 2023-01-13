@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 namespace LinqToDB.Expressions
 {
 	using Common;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Linq;
 	using Reflection;
 
@@ -40,8 +40,8 @@ namespace LinqToDB.Expressions
 		#endregion
 
 		internal static bool EqualsTo(
-			this Expression                                           expr1,
-			Expression                                                expr2,
+			this Expression?                                          expr1,
+			Expression?                                               expr2,
 			IDataContext                                              dataContext,
 			IReadOnlyDictionary<Expression, QueryableAccessor>?       queryableAccessorDic,
 			IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
@@ -113,11 +113,8 @@ namespace LinqToDB.Expressions
 
 		internal static bool EqualsTo(this Expression? expr1, Expression? expr2, EqualsToInfo info)
 		{
-			if (expr1 == expr2)
-			{
-				if (info.QueryableMemberAccessorDic == null || expr1 == null)
-					return true;
-			}
+			if (expr1 == expr2 && (info.QueryableMemberAccessorDic == null || expr1 == null))
+				return true;
 
 			if (expr1 == null || expr2 == null || expr1.NodeType != expr2.NodeType || expr1.Type != expr2.Type)
 				return false;
