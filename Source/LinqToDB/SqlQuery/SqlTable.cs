@@ -169,18 +169,14 @@ namespace LinqToDB.SqlQuery
 
 		#region Public Members
 
-		// TODO: v5 replace with method with proper name
 		/// <summary>
-		/// Search for table field by member name.
+		/// Search for table field by mapping class member name.
 		/// </summary>
-		/// <param name="fieldName">Member name (!), not name in database.</param>
-		public SqlField? this[string fieldName]
+		/// <param name="memberName">Mapping class member name.</param>
+		public SqlField? FindFieldByMemberName(string memberName)
 		{
-			get
-			{
-				_fieldsLookup.TryGetValue(fieldName, out var field);
-				return field;
-			}
+			_fieldsLookup.TryGetValue(memberName, out var field);
+			return field;
 		}
 
 		public         string?           Alias          { get; set; }

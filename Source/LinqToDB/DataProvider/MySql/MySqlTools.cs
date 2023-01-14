@@ -127,7 +127,12 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use MySqlOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => MySqlOptions.Default.BulkCopyType;
+			set => MySqlOptions.Default = MySqlOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

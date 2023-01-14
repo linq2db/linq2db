@@ -1,8 +1,9 @@
-﻿using LinqToDB.Linq;
-using LinqToDB.Mapping;
+﻿using System;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Linq;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -48,12 +49,12 @@ namespace LinqToDB.DataProvider.Access
 			throw new LinqException("Access does not support `Replace` function which is required for such query.");
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
-				QueryType.Update => CorrectAccessUpdate((SqlUpdateStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement),
 				_                => statement,
 			};
 		}

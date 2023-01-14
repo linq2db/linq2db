@@ -14,10 +14,10 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(string), (sb, _, v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char)  , (sb, _, v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb, _, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, _, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char)  , (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
 
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;

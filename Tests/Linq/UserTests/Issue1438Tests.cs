@@ -1,9 +1,13 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
+
 using Npgsql;
+
 using NUnit.Framework;
-using System.Linq;
 
 namespace Tests.UserTests
 {

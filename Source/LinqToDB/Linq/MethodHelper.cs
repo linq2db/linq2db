@@ -7,7 +7,6 @@ namespace LinqToDB.Linq
 	// Methods.*.MakeGenericMethod calls
 	public static class MethodHelper
 	{
-
 		public static MethodInfo GetMethodInfo(this Delegate del)
 		{
 			if ((object)del == null)

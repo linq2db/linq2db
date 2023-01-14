@@ -32,7 +32,7 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	[PublicAPI]
 	[DebuggerDisplay("{DisplayID}")]
-	public class MappingSchema
+	public class MappingSchema : IConfigurationID
 	{
 		#region Init
 
@@ -45,9 +45,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Creates mapping schema, derived from other mapping schemas.
+		/// Creates mapping schema, derived from other mapping schemata.
 		/// </summary>
-		/// <param name="schemas">Base mapping schemas.</param>
+		/// <param name="schemas">Base mapping schemata.</param>
 		public MappingSchema(params MappingSchema[] schemas)
 			: this(null, schemas)
 		{
@@ -78,12 +78,13 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
+			// initialize on schema creation to avoid race conditions later
+			// see https://github.com/linq2db/linq2db/issues/3312
 			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
 
-			if (string.IsNullOrEmpty(configuration))
-				configuration = string.Empty;
+			configuration ??= string.Empty;
 
-			var schemaInfo = CreateMappingSchemaInfo(configuration!, this);
+			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
 
 			if (schemas == null || schemas.Length == 0)
 			{
@@ -114,8 +115,8 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var schemaList     = new Dictionary<MappingSchemaInfo,   int>(schemas.Length);
-				var baseConverters = new Dictionary<ValueToSqlConverter, int>(10);
+				var schemaList     = new Dictionary<MappingSchemaInfo,  int>(schemas.Length);
+				var baseConverters = new Dictionary<ValueToSqlConverter,int>(10);
 
 				var i = 0;
 				var j = 0;
@@ -142,6 +143,7 @@ namespace LinqToDB.Mapping
 
 		object _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
+		readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 
 		#endregion
 
@@ -162,6 +164,20 @@ namespace LinqToDB.Mapping
 		/// - value.
 		/// </param>
 		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
+		{
+			ValueToSqlConverter.SetConverter(type, (sb,dt,_,v) => converter(sb, dt, v));
+		}
+
+		/// <summary>
+		/// Sets value to SQL converter action for specific value type.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <param name="converter">Converter action. Action accepts three parameters:
+		/// - SQL string builder to write generated value SQL to;
+		/// - value SQL type descriptor;
+		/// - value.
+		/// </param>
+		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, converter);
 		}
@@ -840,7 +856,6 @@ namespace LinqToDB.Mapping
 			return _reduceDefaultValueTransformer.Transform(expr);
 		}
 
-		private readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 		private Expression ReduceDefaultValueTransformer(Expression e)
 		{
 			return Converter.IsDefaultValuePlaceHolder(e) ?
@@ -1156,7 +1171,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>
-		internal int ConfigurationID => _configurationID ??= GenerateID();
+		int IConfigurationID.ConfigurationID => _configurationID ??= GenerateID();
 
 		protected internal virtual int GenerateID()
 		{
@@ -1178,6 +1193,10 @@ namespace LinqToDB.Mapping
 		internal void ResetID()
 		{
 #if DEBUG
+			if (!IsLockable)
+			{
+			}
+
 			if (_configurationID != null)
 				Debug.WriteLine($"ResetID => '{DisplayID}'");
 #endif
@@ -1530,7 +1549,7 @@ namespace LinqToDB.Mapping
 					}
 
 					if (valueType == null)
-						return SqlDataType.GetDataType(type);
+						return GetDataType(type);
 
 					var dt = GetDataType(valueType);
 
@@ -1641,7 +1660,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
-		internal static MemoryCache<(Type entityType, int schemaId)> EntityDescriptorsCache { get; } = new (new ());
+		internal static MemoryCache<(Type entityType, int schemaId),EntityDescriptor> EntityDescriptorsCache { get; } = new (new ());
 
 		/// <summary>
 		/// Returns mapped entity descriptor.
@@ -1651,7 +1670,7 @@ namespace LinqToDB.Mapping
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
 			var ed = EntityDescriptorsCache.GetOrCreate(
-				(entityType: type, ConfigurationID),
+				(entityType: type, ((IConfigurationID)this).ConfigurationID),
 				this,
 				static (o, context) =>
 				{

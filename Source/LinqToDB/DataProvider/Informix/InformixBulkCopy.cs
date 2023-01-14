@@ -22,9 +22,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T>       table,
-			BulkCopyOptions options,
-			IEnumerable<T>  source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
@@ -36,7 +34,7 @@ namespace LinqToDB.DataProvider.Informix
 					if (_provider.Adapter.InformixBulkCopy != null)
 						return IDSProviderSpecificCopy(
 							table,
-							options,
+							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
@@ -44,7 +42,7 @@ namespace LinqToDB.DataProvider.Informix
 					else
 						return DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
 							table,
-							options,
+							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
@@ -57,10 +55,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>         table,
-			BulkCopyOptions   options,
-			IEnumerable<T>    source,
-			CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
@@ -73,7 +68,7 @@ namespace LinqToDB.DataProvider.Informix
 					if (_provider.Adapter.InformixBulkCopy != null)
 						return Task.FromResult(IDSProviderSpecificCopy(
 							table,
-							options,
+							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
@@ -81,7 +76,7 @@ namespace LinqToDB.DataProvider.Informix
 					else
 						return Task.FromResult(DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
 							table,
-							options,
+							options.BulkCopyOptions,
 							source,
 							dataConnection,
 							connection,
@@ -95,10 +90,7 @@ namespace LinqToDB.DataProvider.Informix
 
 #if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>           table,
-			BulkCopyOptions     options,
-			IAsyncEnumerable<T> source,
-			CancellationToken   cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if ((_provider.Adapter.InformixBulkCopy != null || _provider.Adapter.DB2BulkCopy != null)
 				&& table.TryGetDataConnection(out var dataConnection) && dataConnection.Transaction == null)
@@ -115,7 +107,7 @@ namespace LinqToDB.DataProvider.Informix
 						if (_provider.Adapter.InformixBulkCopy != null)
 							return IDSProviderSpecificCopy(
 								table,
-								options,
+								options.BulkCopyOptions,
 								syncSource,
 								dataConnection,
 								connection,
@@ -123,7 +115,7 @@ namespace LinqToDB.DataProvider.Informix
 						else
 							return DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
 								table,
-								options,
+								options.BulkCopyOptions,
 								syncSource,
 								dataConnection,
 								connection,
@@ -149,7 +141,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var ed      = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb      = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb      = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rd      = new BulkCopyReader<T>(dataConnection, columns, source);
 			var sqlopt  = InformixProviderAdapter.IfxBulkCopyOptions.Default;
 			var rc      = new BulkCopyRowsCopied();
@@ -202,14 +194,14 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			using ((IDisposable)new InvariantCultureRegion(null))
 				return base.MultipleRowsCopy(table, options, source);
 		}
 
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 #if NATIVE_ASYNC
 			await using (new InvariantCultureRegion(null))
@@ -221,7 +213,7 @@ namespace LinqToDB.DataProvider.Informix
 
 #if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			await using (new InvariantCultureRegion(null))
 				return await base.MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);

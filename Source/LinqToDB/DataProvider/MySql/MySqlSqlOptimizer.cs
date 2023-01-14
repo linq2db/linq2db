@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -18,12 +17,12 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement),
-				QueryType.Delete => PrepareDelete((SqlDeleteStatement)statement),
+				QueryType.Delete => PrepareDelete     ((SqlDeleteStatement)statement),
 				_                => statement,
 			};
 		}
@@ -104,7 +103,7 @@ namespace LinqToDB.DataProvider.MySql
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}

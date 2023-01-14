@@ -272,7 +272,7 @@ namespace LinqToDB.SqlQuery
 							AddVisited(table.All, newTable.All);
 							foreach (var prevField in table.Fields)
 							{
-								var newField = newTable[prevField.Name];
+								var newField = newTable.FindFieldByMemberName(prevField.Name);
 								if (newField != null)
 									AddVisited(prevField, newField);
 							}
@@ -296,7 +296,7 @@ namespace LinqToDB.SqlQuery
 							ReplaceVisited(table.All, newTable.All);
 							foreach (var prevField in table.Fields)
 							{
-								var newField = newTable[prevField.Name];
+								var newField = newTable.FindFieldByMemberName(prevField.Name);
 								if (newField != null)
 								{
 									ReplaceVisited(prevField, newField);

@@ -55,7 +55,7 @@ namespace Tests.Remote.ServerContainer
 				})
 			{ Configuration = configuration };
 
-			Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
+			Debug.WriteLine(((IDataContext)dx).ConfigurationID, "Provider ");
 
 			if (ms != null)
 				dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
