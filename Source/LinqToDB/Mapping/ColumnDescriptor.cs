@@ -43,6 +43,8 @@ namespace LinqToDB.Mapping
 				var propertyInfo = (PropertyInfo)MemberInfo;
 				MemberType       = propertyInfo.PropertyType;
 			}
+			else
+				throw new LinqToDBException($"Column should be mapped to property of field. Was: {MemberInfo.GetType()}.");
 
 			var dataType = mappingSchema.GetDataType(MemberType);
 			if (dataType.Type.DataType == DataType.Undefined)
@@ -200,7 +202,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets type of column mapping member (field or property).
 		/// </summary>
-		public Type           MemberType      { get; } = null!;
+		public Type           MemberType      { get; }
 
 		/// <summary>
 		/// Gets type of column value storage member (field or property).

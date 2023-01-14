@@ -981,7 +981,15 @@ namespace LinqToDB.Mapping
 			{
 				var currentReader = Schemas[0].MetadataReader;
 				if (currentReader is MetadataReader metadataReader)
-					metadataReader.AddReader(reader);
+				{
+					var readers = new IMetadataReader[metadataReader.Readers.Count];
+
+					readers[0] = reader;
+					for (var i = 0; i < metadataReader.Readers.Count; i++)
+						readers[i + 1] = metadataReader.Readers[i];
+
+					Schemas[0].MetadataReader = new MetadataReader(readers);
+				}
 				else
 					Schemas[0].MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
 
@@ -998,11 +1006,7 @@ namespace LinqToDB.Mapping
 		private T[] GetAllAttributes<T>(Type type)
 			where T : MappingAttribute
 		{
-			var reader = Schemas[0].MetadataReader;
-			if (reader == null)
-				return Array<T>.Empty;
-
-			return reader.GetAttributes<T>(type);
+			return Schemas[0].MetadataReader?.GetAttributes<T>(type) ?? Array<T>.Empty;
 		}
 
 		/// <summary>
@@ -1015,12 +1019,11 @@ namespace LinqToDB.Mapping
 		private T[] GetAllAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
 		{
-			var reader = Schemas[0].MetadataReader;
-			if (reader == null)
-				return Array<T>.Empty;
-
-			return reader.GetAttributes<T>(type, memberInfo);
+			return Schemas[0].MetadataReader?.GetAttributes<T>(type, memberInfo) ?? Array<T>.Empty;
 		}
+
+		private ConcurrentDictionary<Type, object>                     _typeAttributesCache   = new ();
+		private ConcurrentDictionary<(Type, MemberInfo, bool), object> _memberAttributesCache = new ();
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type.
@@ -1032,21 +1035,51 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type)
 			where T : MappingAttribute
 		{
-			var list  = new List<T>();
-			var attrs = GetAllAttributes<T>(type);
-
-			foreach (var c in ConfigurationList)
+#if NET45 || NET46 || NETSTANDARD2_0
+			return (T[])_typeAttributesCache.GetOrAdd(type, type =>
 			{
-				foreach (var a in attrs)
-					if (a.Configuration == c)
-						list.Add(a);
-			}
+				var attrs = GetAllAttributes<T>(type);
+				if (attrs.Length == 0)
+					return attrs;
 
-			foreach (var attribute in attrs)
-				if (string.IsNullOrEmpty(attribute.Configuration))
-					list.Add(attribute);
+				List<T>? list = null;
 
-			return list.ToArray();
+				foreach (var c in ConfigurationList)
+				{
+					foreach (var a in attrs)
+						if (a.Configuration == c)
+							(list ??= new()).Add(a);
+				}
+
+				foreach (var attribute in attrs)
+					if (string.IsNullOrEmpty(attribute.Configuration))
+						(list ??= new()).Add(attribute);
+
+				return list == null ? Array<T>.Empty : list.ToArray();
+			});
+#else
+			return (T[])_typeAttributesCache.GetOrAdd(type, static (type, ms) =>
+			{
+				var attrs = ms.GetAllAttributes<T>(type);
+				if (attrs.Length == 0)
+					return attrs;
+
+				List<T>? list = null;
+
+				foreach (var c in ms.ConfigurationList)
+				{
+					foreach (var a in attrs)
+						if (a.Configuration == c)
+							(list ??= new()).Add(a);
+				}
+
+				foreach (var attribute in attrs)
+					if (string.IsNullOrEmpty(attribute.Configuration))
+						(list ??= new()).Add(attribute);
+
+				return list == null ? Array<T>.Empty : list.ToArray();
+			}, this);
+#endif
 		}
 
 		/// <summary>
@@ -1061,23 +1094,56 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool forFirstConfiguration = false)
 			where T : MappingAttribute
 		{
-			var list  = new List<T>();
-			var attrs = GetAllAttributes<T>(type, memberInfo);
-
-			foreach (var c in ConfigurationList)
+#if NET45 || NET46 || NETSTANDARD2_0
+			return (T[])_memberAttributesCache.GetOrAdd((type, memberInfo, forFirstConfiguration), key =>
 			{
-				foreach (var a in attrs)
-					if (a.Configuration == c)
-						list.Add(a);
-				if (forFirstConfiguration && list.Count > 0)
-					return list.ToArray();
-			}
+				var attrs = GetAllAttributes<T>(key.Item1, key.Item2);
+				if (attrs.Length == 0)
+					return attrs;
 
-			foreach (var attribute in attrs)
-				if (string.IsNullOrEmpty(attribute.Configuration))
-					list.Add(attribute);
+				List<T>? list = null;
 
-			return list.ToArray();
+				foreach (var c in ConfigurationList)
+				{
+					foreach (var a in attrs)
+						if (a.Configuration == c)
+							(list ??= new()).Add(a);
+					if (key.Item3 && list != null)
+						return list.ToArray();
+				}
+
+				foreach (var attribute in attrs)
+					if (string.IsNullOrEmpty(attribute.Configuration))
+						(list ??= new()).Add(attribute);
+
+				return list == null ? Array<T>.Empty : list.ToArray();
+			});
+#else
+			return (T[])_memberAttributesCache.GetOrAdd((type, memberInfo, forFirstConfiguration), static (key, ms) =>
+			{
+				var attrs = ms.GetAllAttributes<T>(key.Item1, key.Item2);
+				if (attrs.Length == 0)
+					return attrs;
+
+				List<T>? list = null;
+
+				foreach (var c in ms.ConfigurationList)
+				{
+					foreach (var a in attrs)
+						if (a.Configuration == c)
+							(list ??= new()).Add(a);
+					if (key.Item3 && list != null)
+						return list.ToArray();
+				}
+
+				foreach (var attribute in attrs)
+					if (string.IsNullOrEmpty(attribute.Configuration))
+						(list ??= new()).Add(attribute);
+
+				return list == null ? Array<T>.Empty : list.ToArray();
+			}, this);
+#endif
+
 		}
 
 		/// <summary>
@@ -1143,13 +1209,7 @@ namespace LinqToDB.Mapping
 		/// <returns>All dynamic columns defined on given type.</returns>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			List<MemberInfo>? result = null;
-
-			var columns = Schemas[0].MetadataReader?.GetDynamicColumns(type);
-			if (columns?.Length > 0)
-				(result ??= new()).AddRange(columns);
-
-			return result == null ? Array<MemberInfo>.Empty : result.ToArray();
+			return Schemas[0].MetadataReader?.GetDynamicColumns(type) ?? Array<MemberInfo>.Empty;
 		}
 
 		/// <summary>
@@ -1219,8 +1279,8 @@ namespace LinqToDB.Mapping
 					var list = new List<string>();
 
 					foreach (var s in Schemas)
-						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration!))
-							list.Add(s.Configuration!);
+						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration))
+							list.Add(s.Configuration);
 
 					_configurationList = list.ToArray();
 				}
@@ -1233,7 +1293,7 @@ namespace LinqToDB.Mapping
 		{
 			get
 			{
-				var list = Schemas == null || ConfigurationList == null? "" : ConfigurationList.Aggregate("", (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
+				var list = Schemas == null || ConfigurationList == null ? "" : ConfigurationList.Aggregate("", static (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
 				return $"{GetType().Name} : ({_configurationID}) {list}";
 			}
 		}
@@ -1585,31 +1645,27 @@ namespace LinqToDB.Mapping
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			_mapValues ??= new ConcurrentDictionary<Type,MapValue[]?>();
-
-			if (_mapValues.TryGetValue(type, out var mapValues))
-				return mapValues;
-
-			var underlyingType = type.ToNullableUnderlying();
-
-			if (underlyingType.IsEnum)
+			return (_mapValues ??= new ConcurrentDictionary<Type, MapValue[]?>()).GetOrAdd(type, type =>
 			{
-				var fields = new List<MapValue>();
+				var underlyingType = type.ToNullableUnderlying();
 
-				foreach (var f in underlyingType.GetFields())
-					if ((f.Attributes & EnumField) == EnumField)
-					{
-						var attrs = GetAttributes<MapValueAttribute>(underlyingType, f);
-						fields.Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
-					}
+				if (underlyingType.IsEnum)
+				{
+					List<MapValue>? fields = null;
 
-				if (fields.Any(static f => f.MapValues.Length > 0))
-					mapValues = fields.ToArray();
-			}
+					foreach (var f in underlyingType.GetFields())
+						if ((f.Attributes & EnumField) == EnumField)
+						{
+							var attrs = GetAttributes<MapValueAttribute>(underlyingType, f);
+							(fields ??= new()).Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
+						}
 
-			_mapValues[type] = mapValues;
+					if (fields?.Any(static f => f.MapValues.Length > 0) == true)
+						return fields.ToArray();
+				}
 
-			return mapValues;
+				return null;
+			});
 		}
 
 		#endregion
@@ -1695,7 +1751,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Clears EntityDescriptor cache.
+		/// Clears <see cref="EntityDescriptor"/> cache.
 		/// </summary>
 		public static void ClearCache()
 		{

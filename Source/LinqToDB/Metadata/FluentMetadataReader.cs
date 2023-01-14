@@ -22,14 +22,14 @@ namespace LinqToDB.Metadata
 
 		readonly MappingAttributesCache _cache;
 
-		public FluentMetadataReader(IReadOnlyDictionary<Type, List<MappingAttribute>> typeAttributes, IReadOnlyDictionary<MemberInfo, List<MappingAttribute>> memberAttributes)
+		public FluentMetadataReader(IReadOnlyDictionary<Type, List<MappingAttribute>> typeAttributes, IReadOnlyDictionary<MemberInfo, List<MappingAttribute>> memberAttributes, IReadOnlyList<MemberInfo> orderedMembers)
 		{
 			_types   = new(typeAttributes  .Select(kvp => new KeyValuePair<Type, MappingAttribute[]>      (kvp.Key, kvp.Value.ToArray())));
 			_members = new(memberAttributes.Select(kvp => new KeyValuePair<MemberInfo, MappingAttribute[]>(kvp.Key, kvp.Value.ToArray())));
 
 			// dynamic columns collection
 			Dictionary<Type,List<MemberInfo>>? dynamicColumns = null;
-			foreach (var mi in memberAttributes.Keys)
+			foreach (var mi in orderedMembers)
 			{
 				if (mi.IsDynamicColumnPropertyEx())
 				{
@@ -41,20 +41,20 @@ namespace LinqToDB.Metadata
 
 			if (dynamicColumns != null)
 			{
-				// OrderBy: add stable ordering for same sql generation
 				foreach (var kvp in dynamicColumns)
-					_dynamicColumns.TryAdd(kvp.Key, kvp.Value.OrderBy(m => m.Name).ToArray());
+					_dynamicColumns.TryAdd(kvp.Key, kvp.Value.ToArray());
 			}
 
 			_objectId = CalculateObjectID();
 			_cache    = new(GetAllAttributes);
 		}
 
-		private MappingAttribute[] GetAllAttributes(ICustomAttributeProvider attributeProvider)
+		private MappingAttribute[] GetAllAttributes(Type? sourceType, ICustomAttributeProvider attributeProvider)
 		{
-			if (attributeProvider is Type       type) return _types  .TryGetValue(type, out var typeAttributes  ) ? typeAttributes   : Array<MappingAttribute>.Empty;
-			if (attributeProvider is MemberInfo mi  ) return _members.TryGetValue(mi  , out var memberAttributes) ? memberAttributes : Array<MappingAttribute>.Empty;
-			return Array<MappingAttribute>.Empty;
+			if (sourceType == null)
+				return _types  .TryGetValue((Type      )attributeProvider, out var typeAttributes  ) ? typeAttributes   : Array<MappingAttribute>.Empty;
+			else
+				return _members.TryGetValue((MemberInfo)attributeProvider, out var memberAttributes) ? memberAttributes : Array<MappingAttribute>.Empty;
 		}
 
 		public T[] GetAttributes<T>(Type type)

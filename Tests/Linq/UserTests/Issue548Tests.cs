@@ -99,7 +99,7 @@ namespace Tests.UserTests
 			{
 				semaphore.WaitOne();
 
-				ms.AddMetadataReader(new FluentMetadataReader(new Dictionary<Type, List<MappingAttribute>>(), new Dictionary<MemberInfo, List<MappingAttribute>>()));
+				ms.AddMetadataReader(new FluentMetadataReader(new Dictionary<Type, List<MappingAttribute>>(), new Dictionary<MemberInfo, List<MappingAttribute>>(), new List<MemberInfo>()));
 			}
 			finally
 			{

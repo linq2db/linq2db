@@ -29,8 +29,6 @@ namespace LinqToDB.Mapping
 		{
 			MappingSchema = mappingSchema;
 			TypeAccessor  = TypeAccessor.GetAccessor(type);
-			Associations  = new ();
-			Columns       = new ();
 
 			Init();
 		}
@@ -38,9 +36,9 @@ namespace LinqToDB.Mapping
 		internal MappingSchema MappingSchema { get; }
 
 		/// <summary>
-		/// Gets or sets mapping type accessor.
+		/// Gets mapping type accessor.
 		/// </summary>
-		public TypeAccessor TypeAccessor { get; set; }
+		public TypeAccessor TypeAccessor { get; }
 
 		/// <summary>
 		/// Gets name of table or view in database.
@@ -101,27 +99,31 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public SkipModification SkipModificationFlags { get; private set; }
 
+		readonly List<ColumnDescriptor> _columns = new ();
 		/// <summary>
 		/// Gets list of column descriptors for current entity.
 		/// </summary>
-		public List<ColumnDescriptor> Columns { get; }
+		public IReadOnlyList<ColumnDescriptor> Columns => _columns;
 
-		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => Columns;
+		IEnumerable<IColumnChangeDescriptor> IEntityChangeDescriptor.Columns => _columns;
 
+		readonly List<AssociationDescriptor> _associations = new ();
 		/// <summary>
 		/// Gets list of association descriptors for current entity.
 		/// </summary>
-		public List<AssociationDescriptor> Associations { get; private set; }
+		public IReadOnlyList<AssociationDescriptor> Associations => _associations;
 
+		Dictionary<string, string>? _aliases;
 		/// <summary>
 		/// Gets mapping dictionary to map column aliases to target columns or aliases.
 		/// </summary>
-		public Dictionary<string, string?>? Aliases { get; private set; }
+		public IReadOnlyDictionary<string, string>? Aliases => _aliases;
 
+		List<MemberAccessor>? _calculatedMembers;
 		/// <summary>
 		/// Gets list of calculated column members (properties with <see cref="ExpressionMethodAttribute.IsColumn"/> set to <c>true</c>).
 		/// </summary>
-		public List<MemberAccessor>? CalculatedMembers { get; private set; }
+		public IReadOnlyList<MemberAccessor>? CalculatedMembers => _calculatedMembers;
 
 		/// <summary>
 		/// Returns <c>true</c>, if entity has calculated columns.
@@ -203,7 +205,7 @@ namespace LinqToDB.Mapping
 
 				if (aa != null)
 				{
-					Associations.Add(new AssociationDescriptor(
+					_associations.Add(new AssociationDescriptor(
 						TypeAccessor.Type, member.MemberInfo, aa.GetThisKeys(), aa.GetOtherKeys(),
 						aa.ExpressionPredicate, aa.Predicate, aa.QueryExpressionMethod, aa.QueryExpression, aa.Storage, aa.CanBeNull,
 						aa.AliasName));
@@ -246,16 +248,18 @@ namespace LinqToDB.Mapping
 
 				if (caa != null)
 				{
-					Aliases ??= new Dictionary<string, string?>();
+					_aliases ??= new Dictionary<string, string>();
 
-					Aliases.Add(member.Name, caa.MemberName);
+					_aliases.Add(
+						member.Name,
+						caa.MemberName ?? throw new LinqToDBException($"The {nameof(ColumnAliasAttribute)} attribute of the '{TypeAccessor.Type}.{member.MemberInfo.Name}' must have MemberName."));
 				}
 
 				var ma = MappingSchema.GetAttribute<ExpressionMethodAttribute>(TypeAccessor.Type, member.MemberInfo);
 				if (ma != null && ma.IsColumn)
 				{
-					CalculatedMembers ??= new List<MemberAccessor>();
-					CalculatedMembers.Add(member);
+					_calculatedMembers ??= new List<MemberAccessor>();
+					_calculatedMembers.Add(member);
 				}
 			}
 
@@ -282,7 +286,7 @@ namespace LinqToDB.Mapping
 				var cd = new ColumnDescriptor(MappingSchema, this, attr, ex, hasInheritanceMapping);
 
 				if (_columnNames.Remove(attr.MemberName))
-					Columns.RemoveAll(c => c.MemberName == attr.MemberName);
+					_columns.RemoveAll(c => c.MemberName == attr.MemberName);
 
 				AddColumn(cd);
 				_columnNames.Add(attr.MemberName, cd);
@@ -294,7 +298,7 @@ namespace LinqToDB.Mapping
 				if (!string.IsNullOrWhiteSpace(attr.MemberName))
 				{
 					if (_columnNames.Remove(attr.MemberName))
-						Columns.RemoveAll(c => c.MemberName == attr.MemberName);
+						_columns.RemoveAll(c => c.MemberName == attr.MemberName);
 
 					AddColumn(cd);
 					_columnNames.Add(attr.MemberName, cd);
@@ -315,7 +319,7 @@ namespace LinqToDB.Mapping
 			{
 				if (!_columnNames.TryGetValue(memberName, out var cd))
 					if (Aliases != null && Aliases.TryGetValue(memberName, out var alias) && memberName != alias)
-						return this[alias!];
+						return this[alias];
 
 				return cd;
 			}
@@ -368,7 +372,7 @@ namespace LinqToDB.Mapping
 
 		void AddColumn(ColumnDescriptor columnDescriptor)
 		{
-			Columns.Add(columnDescriptor);
+			_columns.Add(columnDescriptor);
 
 			if (columnDescriptor.MemberAccessor.IsComplex)
 				HasComplexColumns = true;

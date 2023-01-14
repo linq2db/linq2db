@@ -6,6 +6,7 @@ using System.Threading;
 
 namespace LinqToDB.Metadata
 {
+	using System.Collections.Concurrent;
 	using Common;
 	using Extensions;
 	using Mapping;
@@ -15,8 +16,6 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class MetadataReader : IMetadataReader
 	{
-		private string _objectId;
-
 		public static MetadataReader Default = new (
 			new AttributeReader()
 			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
@@ -25,78 +24,90 @@ namespace LinqToDB.Metadata
 #endif
 		);
 
+		         Type[]?                                  _registeredTypes;
+		readonly MappingAttributesCache                   _cache;
+		readonly string                                   _objectId;
+		readonly ConcurrentDictionary<Type, MemberInfo[]> _dynamicColumns = new();
+
+		readonly IMetadataReader[]             _readers;
+		public   IReadOnlyList<IMetadataReader> Readers => _readers;
+
 		public MetadataReader(params IMetadataReader[] readers)
 		{
 			if (readers == null)
 				throw new ArgumentNullException(nameof(readers));
 
-			_readers  = readers.ToList();
-			_objectId = CalculateObjectId();
-		}
+			_readers  = readers;
+			_objectId = $"[{string.Join(",", _readers.Select(r => r.GetObjectID()))}]";
 
-		private string CalculateObjectId() => $"[{string.Join(",", _readers.Select(r => r.GetObjectID()))}]";
+			_cache = new(
+				(type, source) =>
+				{
+					if (_readers.Length == 0)
+						return Array<MappingAttribute>.Empty;
+					if (_readers.Length == 1)
+						if (type != null)
+							return _readers[0].GetAttributes<MappingAttribute>(type, (Type)source);
+						else
+							return _readers[0].GetAttributes<MappingAttribute>((Type)source);
 
-		private List<IMetadataReader>          _readers;
-		public  IReadOnlyList<IMetadataReader>  Readers => _readers;
+					var attrs = new MappingAttribute[_readers.Length][];
 
-		internal void AddReader(IMetadataReader reader)
-		{
-			// creation of new list is cheaper than lock on each method call
-			var newReaders = new List<IMetadataReader>(_readers.Count + 1) { reader };
-			newReaders.AddRange(_readers);
-			Volatile.Write(ref _readers, newReaders);
-			_objectId = CalculateObjectId();
+					for (var i = 0; i < _readers.Length; i++)
+						if (type != null)
+							attrs[i] = _readers[i].GetAttributes<MappingAttribute>(type, (Type)source);
+						else
+							attrs[i] = _readers[i].GetAttributes<MappingAttribute>((Type)source);
+
+					return attrs.Flatten();
+				});
 		}
 
 		public T[] GetAttributes<T>(Type type)
 			where T : MappingAttribute
-		{
-			var readers = _readers;
-			if (readers.Count == 0)
-				return Array<T>.Empty;
-			if (readers.Count == 1)
-				return readers[0].GetAttributes<T>(type);
-
-			var attrs = new T[readers.Count][];
-
-			for (var i = 0; i < readers.Count; i++)
-				attrs[i] = readers[i].GetAttributes<T>(type);
-
-			return attrs.Flatten();
-		}
+			=> _cache.GetMappingAttributes<T>(type);
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
-		{
-			var readers = _readers;
-			if (readers.Count == 0)
-				return Array<T>.Empty;
-			if (readers.Count == 1)
-				return readers[0].GetAttributes<T>(type, memberInfo);
-
-			var attrs = new T[readers.Count][];
-
-			for (var i = 0; i < readers.Count; i++)
-				attrs[i] = readers[i].GetAttributes<T>(type, memberInfo);
-
-			return attrs.Flatten();
-		}
+			=> _cache.GetMappingAttributes<T>(type, memberInfo);
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			var readers = _readers;
-			if (readers.Count == 0)
-				return Array<MemberInfo>.Empty;
-			if (readers.Count == 1)
-				return readers[0].GetDynamicColumns(type);
+			return _dynamicColumns.GetOrAdd(type,
+#if NET45 || NET46 || NETSTANDARD2_0
+			type =>
+			{
+				if (_readers.Length == 0)
+					return Array<MemberInfo>.Empty;
+				if (_readers.Length == 1)
+					return _readers[0].GetDynamicColumns(type);
 
-			var cols = new MemberInfo[readers.Count][];
+				var cols = new MemberInfo[_readers.Length][];
 
-			for (var i = 0; i < readers.Count; i++)
-				cols[i] = readers[i].GetDynamicColumns(type);
+				for (var i = 0; i < _readers.Length; i++)
+					cols[i] = _readers[i].GetDynamicColumns(type);
 
-			return cols.Flatten();
+				return cols.Flatten();
+			}
+#else
+			static (type, readers) =>
+			{
+				if (readers.Length == 0)
+					return Array<MemberInfo>.Empty;
+				if (readers.Length == 1)
+					return readers[0].GetDynamicColumns(type);
+
+				var cols = new MemberInfo[readers.Length][];
+
+				for (var i = 0; i < readers.Length; i++)
+					cols[i] = readers[i].GetDynamicColumns(type);
+
+				return cols.Flatten();
+			}
+			, _readers
+#endif
+			);
 		}
 
 		/// <summary>
@@ -105,10 +116,19 @@ namespace LinqToDB.Metadata
 		/// <returns>
 		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		public IEnumerable<Type> GetRegisteredTypes()
+		public IReadOnlyList<Type> GetRegisteredTypes()
 		{
-			return      Readers.OfType<FluentMetadataReader>().SelectMany(fr => fr.GetRegisteredTypes())
-				.Concat(Readers.OfType<MetadataReader      >().SelectMany(mr => mr.GetRegisteredTypes()));
+			if (_registeredTypes == null)
+			{
+				lock (this)
+				{
+					_registeredTypes ??= Readers.OfType<FluentMetadataReader>().SelectMany(fr => fr.GetRegisteredTypes())
+						.Concat(Readers.OfType<MetadataReader>().SelectMany(mr => mr.GetRegisteredTypes()))
+						.Distinct()
+						.ToArray();
+				}
+			}
+			return _registeredTypes;
 		}
 
 		public string GetObjectID() => _objectId;

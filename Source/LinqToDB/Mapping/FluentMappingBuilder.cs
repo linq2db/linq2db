@@ -18,6 +18,7 @@ namespace LinqToDB.Mapping
 	{
 		private Dictionary<Type, List<MappingAttribute>>       _typeAttributes   = new();
 		private Dictionary<MemberInfo, List<MappingAttribute>> _memberAttributes = new();
+		private List<MemberInfo>                               _orderedMembers   = new();
 
 		#region Init
 
@@ -44,9 +45,10 @@ namespace LinqToDB.Mapping
 		{
 			if (_typeAttributes.Count > 0 || _memberAttributes.Count > 0)
 			{
-				MappingSchema.AddMetadataReader(new FluentMetadataReader(_typeAttributes, _memberAttributes));
+				MappingSchema.AddMetadataReader(new FluentMetadataReader(_typeAttributes, _memberAttributes, _orderedMembers));
 				_typeAttributes.Clear();
 				_memberAttributes.Clear();
+				_orderedMembers.Clear();
 			}
 		}
 
@@ -170,7 +172,10 @@ namespace LinqToDB.Mapping
 		private void AddAttribute(MemberInfo memberInfo, MappingAttribute attribute)
 		{
 			if (!_memberAttributes.TryGetValue(memberInfo, out var attributes))
+			{
 				_memberAttributes.Add(memberInfo, attributes = new());
+				_orderedMembers.Add(memberInfo);
+			}
 
 			attributes.Add(attribute);
 		}

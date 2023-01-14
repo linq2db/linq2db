@@ -10,7 +10,7 @@ namespace LinqToDB.Metadata
 	public class AttributeReader : IMetadataReader
 	{
 		readonly static MappingAttributesCache _cache = new (
-			static source =>
+			static (_, source) =>
 			{
 				var res = source.GetCustomAttributes(typeof(MappingAttribute), inherit: false);
 				// API returns object[] for old frameworks and typed array for new

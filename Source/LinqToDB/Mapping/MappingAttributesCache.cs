@@ -17,45 +17,51 @@ namespace LinqToDB.Metadata
 		readonly ConcurrentDictionary<ICustomAttributeProvider, MappingAttribute[]> _noInheritMappingAttributes      = new ();
 		readonly ConcurrentDictionary<ICustomAttributeProvider, MappingAttribute[]> _orderedInheritMappingAttributes = new ();
 
-		readonly Func<ICustomAttributeProvider, MappingAttribute[]> _attributesGetter;
+		readonly Func<Type?, ICustomAttributeProvider, MappingAttribute[]> _attributesGetter;
 
 		/// <param name="attributesGetter">Raw attribute getter delegate for cache misses.</param>
-		public MappingAttributesCache(Func<ICustomAttributeProvider, MappingAttribute[]> attributesGetter)
+		public MappingAttributesCache(Func<Type?, ICustomAttributeProvider, MappingAttribute[]> attributesGetter)
 		{
 			_attributesGetter = attributesGetter;
 		}
 
-		T[] GetMappingAttributesInternal<T>(ICustomAttributeProvider source)
+		T[] GetMappingAttributesInternal<T>(ICustomAttributeProvider source, Type? sourceOwner)
 			where T : MappingAttribute
 		{
-			var res = _orderedInheritMappingAttributes.GetOrAdd(source, GetMappingAttributesTreeInternal).OfType<T>().ToArray();
+			var res = _orderedInheritMappingAttributes
+#if NET45 || NET46 || NETSTANDARD2_0
+				.GetOrAdd(source, source => GetMappingAttributesTreeInternal(source, sourceOwner))
+#else
+				.GetOrAdd(source, GetMappingAttributesTreeInternal, sourceOwner)
+#endif
+				.OfType<T>().ToArray();
 
 			return res.Length == 0 ? Array<T>.Empty : res;
 		}
 
-		MappingAttribute[] GetNoInheritMappingAttributes(ICustomAttributeProvider source)
+		MappingAttribute[] GetNoInheritMappingAttributes(Type? sourceOwner, ICustomAttributeProvider source)
 		{
 #if NET45 || NET46 || NETSTANDARD2_0
 			var attrs = _noInheritMappingAttributes.GetOrAdd(source, source =>
 			{
-				var res = _attributesGetter(source);
+				var res = _attributesGetter(sourceOwner, source);
 
 				return res.Length == 0 ? Array<MappingAttribute>.Empty : res;
 			});
 #else
-			var attrs = _noInheritMappingAttributes.GetOrAdd(source, static (source, attributesGetter) =>
+			var attrs = _noInheritMappingAttributes.GetOrAdd(source, static (source, context) =>
 			{
-				var res = attributesGetter(source);
+				var res = context.attributesGetter(context.sourceOwner, source);
 
 				return res.Length == 0 ? Array<MappingAttribute>.Empty : res;
-			}, _attributesGetter);
+			}, (attributesGetter: _attributesGetter, sourceOwner));
 #endif
 			return attrs;
 		}
 
-		MappingAttribute[] GetMappingAttributesTreeInternal(ICustomAttributeProvider source)
+		MappingAttribute[] GetMappingAttributesTreeInternal(ICustomAttributeProvider source, Type? sourceOwner)
 		{
-			var attrs = GetNoInheritMappingAttributes(source);
+			var attrs = GetNoInheritMappingAttributes(sourceOwner, source);
 
 			Type? type = null;
 			Func<Type, ICustomAttributeProvider, ICustomAttributeProvider?>? getSource = null;
@@ -79,7 +85,7 @@ namespace LinqToDB.Metadata
 					var src = getSource!(intf, source);
 					if (src != null)
 					{
-						var ifaceAttrs = GetMappingAttributesTreeInternal(src);
+						var ifaceAttrs = GetMappingAttributesTreeInternal(src, sourceOwner);
 						if (ifaceAttrs.Length > 0)
 						{
 							if (list != null)
@@ -97,7 +103,7 @@ namespace LinqToDB.Metadata
 					var src = getSource!(type.BaseType, source);
 					if (src != null)
 					{
-						var baseAttrs = GetMappingAttributesTreeInternal(src);
+						var baseAttrs = GetMappingAttributesTreeInternal(src, sourceOwner);
 						if (baseAttrs.Length > 0)
 						{
 							if (list != null)
@@ -131,9 +137,33 @@ namespace LinqToDB.Metadata
 		public T[] GetMappingAttributes<T>(ICustomAttributeProvider source)
 			where T : MappingAttribute
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			return (T[])_cache.GetOrAdd(typeof(T), t => new())
+#if NET45 || NET46 || NETSTANDARD2_0
+				.GetOrAdd(source, source => GetMappingAttributesInternal<T>(source, null));
+#else
+				.GetOrAdd(source, GetMappingAttributesInternal<T>, (Type?)null);
+#endif
+		}
 
-			return (T[])_cache.GetOrAdd(typeof(T), t => new()).GetOrAdd(source, GetMappingAttributesInternal<T>);
+		/// <summary>
+		/// Returns a list of mapping attributes applied to a type or type member.
+		/// If there are multiple attributes found, attributes ordered from current to base type in inheritance hierarchy.
+		/// </summary>
+		/// <param name="sourceOwner">An attribute owner's owner type.</param>
+		/// <param name="source">An attribute owner.</param>
+		/// <typeparam name="T">The type of attribute to search for.
+		/// Only attributes that are assignable to this type are returned.</typeparam>
+		/// <returns>A list of custom attributes applied to this type,
+		/// or a list with zero (0) elements if no attributes have been applied.</returns>
+		public T[] GetMappingAttributes<T>(Type sourceOwner, ICustomAttributeProvider source)
+			where T : MappingAttribute
+		{
+			return (T[])_cache.GetOrAdd(typeof(T), t => new())
+#if NET45 || NET46 || NETSTANDARD2_0
+				.GetOrAdd(source, source => GetMappingAttributesInternal<T>(source, sourceOwner));
+#else
+				.GetOrAdd(source, GetMappingAttributesInternal<T>, sourceOwner);
+#endif
 		}
 	}
 }
