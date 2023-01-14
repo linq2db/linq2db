@@ -139,6 +139,8 @@ namespace LinqToDB.Mapping
 			}
 
 			InitMetadataReaders();
+
+			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
 
 		object _syncRoot = new();
@@ -982,7 +984,7 @@ namespace LinqToDB.Mapping
 				var currentReader = Schemas[0].MetadataReader;
 				if (currentReader is MetadataReader metadataReader)
 				{
-					var readers = new IMetadataReader[metadataReader.Readers.Count];
+					var readers = new IMetadataReader[metadataReader.Readers.Count + 1];
 
 					readers[0] = reader;
 					for (var i = 0; i < metadataReader.Readers.Count; i++)
@@ -992,6 +994,8 @@ namespace LinqToDB.Mapping
 				}
 				else
 					Schemas[0].MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
+
+				(_cache, _firstOnlyCache) = CreateAttributeCaches();
 
 				ResetID();
 			}
@@ -1022,8 +1026,67 @@ namespace LinqToDB.Mapping
 			return Schemas[0].MetadataReader?.GetAttributes<T>(type, memberInfo) ?? Array<T>.Empty;
 		}
 
-		private ConcurrentDictionary<Type, object>                     _typeAttributesCache   = new ();
-		private ConcurrentDictionary<(Type, MemberInfo, bool), object> _memberAttributesCache = new ();
+		private (MappingAttributesCache cache, MappingAttributesCache firstOnlyCache) CreateAttributeCaches()
+		{
+			var cache = new MappingAttributesCache(
+				(sourceOwner, source) =>
+				{
+					var attrs = sourceOwner != null
+						? GetAllAttributes<MappingAttribute>(sourceOwner, (MemberInfo)source)
+						: GetAllAttributes<MappingAttribute>((Type)source);
+
+					if (attrs.Length == 0)
+						return attrs;
+
+					List<MappingAttribute>? list = null;
+
+					foreach (var c in ConfigurationList)
+					{
+						foreach (var a in attrs)
+							if (a.Configuration == c)
+								(list ??= new()).Add(a);
+					}
+
+					foreach (var attribute in attrs)
+						if (string.IsNullOrEmpty(attribute.Configuration))
+							(list ??= new()).Add(attribute);
+
+					return list == null ? Array<MappingAttribute>.Empty : list.ToArray();
+				});
+
+			var firstOnlyCache = new MappingAttributesCache(
+				(sourceOwner, source) =>
+				{
+					var attrs = sourceOwner != null
+						? GetAllAttributes<MappingAttribute>(sourceOwner, (MemberInfo)source)
+						: GetAllAttributes<MappingAttribute>((Type)source);
+
+					if (attrs.Length == 0)
+						return attrs;
+
+					List<MappingAttribute>? list = null;
+
+					foreach (var c in ConfigurationList)
+					{
+						foreach (var a in attrs)
+							if (a.Configuration == c)
+								(list ??= new()).Add(a);
+						if (list != null)
+							return list.ToArray();
+					}
+
+					foreach (var attribute in attrs)
+						if (string.IsNullOrEmpty(attribute.Configuration))
+							(list ??= new()).Add(attribute);
+
+					return list == null ? Array<MappingAttribute>.Empty : list.ToArray();
+				});
+
+			return (cache, firstOnlyCache);
+		}
+
+		MappingAttributesCache _cache;
+		MappingAttributesCache _firstOnlyCache;
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type.
@@ -1034,53 +1097,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type)
 			where T : MappingAttribute
-		{
-#if NET45 || NET46 || NETSTANDARD2_0
-			return (T[])_typeAttributesCache.GetOrAdd(type, type =>
-			{
-				var attrs = GetAllAttributes<T>(type);
-				if (attrs.Length == 0)
-					return attrs;
-
-				List<T>? list = null;
-
-				foreach (var c in ConfigurationList)
-				{
-					foreach (var a in attrs)
-						if (a.Configuration == c)
-							(list ??= new()).Add(a);
-				}
-
-				foreach (var attribute in attrs)
-					if (string.IsNullOrEmpty(attribute.Configuration))
-						(list ??= new()).Add(attribute);
-
-				return list == null ? Array<T>.Empty : list.ToArray();
-			});
-#else
-			return (T[])_typeAttributesCache.GetOrAdd(type, static (type, ms) =>
-			{
-				var attrs = ms.GetAllAttributes<T>(type);
-				if (attrs.Length == 0)
-					return attrs;
-
-				List<T>? list = null;
-
-				foreach (var c in ms.ConfigurationList)
-				{
-					foreach (var a in attrs)
-						if (a.Configuration == c)
-							(list ??= new()).Add(a);
-				}
-
-				foreach (var attribute in attrs)
-					if (string.IsNullOrEmpty(attribute.Configuration))
-						(list ??= new()).Add(attribute);
-
-				return list == null ? Array<T>.Empty : list.ToArray();
-			}, this);
-#endif
-		}
+			=> _cache.GetMappingAttributes<T>(type);
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type member.
@@ -1093,58 +1110,9 @@ namespace LinqToDB.Mapping
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool forFirstConfiguration = false)
 			where T : MappingAttribute
-		{
-#if NET45 || NET46 || NETSTANDARD2_0
-			return (T[])_memberAttributesCache.GetOrAdd((type, memberInfo, forFirstConfiguration), key =>
-			{
-				var attrs = GetAllAttributes<T>(key.Item1, key.Item2);
-				if (attrs.Length == 0)
-					return attrs;
-
-				List<T>? list = null;
-
-				foreach (var c in ConfigurationList)
-				{
-					foreach (var a in attrs)
-						if (a.Configuration == c)
-							(list ??= new()).Add(a);
-					if (key.Item3 && list != null)
-						return list.ToArray();
-				}
-
-				foreach (var attribute in attrs)
-					if (string.IsNullOrEmpty(attribute.Configuration))
-						(list ??= new()).Add(attribute);
-
-				return list == null ? Array<T>.Empty : list.ToArray();
-			});
-#else
-			return (T[])_memberAttributesCache.GetOrAdd((type, memberInfo, forFirstConfiguration), static (key, ms) =>
-			{
-				var attrs = ms.GetAllAttributes<T>(key.Item1, key.Item2);
-				if (attrs.Length == 0)
-					return attrs;
-
-				List<T>? list = null;
-
-				foreach (var c in ms.ConfigurationList)
-				{
-					foreach (var a in attrs)
-						if (a.Configuration == c)
-							(list ??= new()).Add(a);
-					if (key.Item3 && list != null)
-						return list.ToArray();
-				}
-
-				foreach (var attribute in attrs)
-					if (string.IsNullOrEmpty(attribute.Configuration))
-						(list ??= new()).Add(attribute);
-
-				return list == null ? Array<T>.Empty : list.ToArray();
-			}, this);
-#endif
-
-		}
+		=> forFirstConfiguration
+			? _firstOnlyCache.GetMappingAttributes<T>(type, memberInfo)
+			: _cache         .GetMappingAttributes<T>(type, memberInfo);
 
 		/// <summary>
 		/// Gets attribute of specified type, associated with specified type.
@@ -1311,6 +1279,8 @@ namespace LinqToDB.Mapping
 			ValueToSqlConverter = new ();
 
 			InitMetadataReaders();
+
+			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
 
 		/// <summary>

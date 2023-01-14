@@ -23,7 +23,7 @@ namespace LinqToDB.Metadata
 
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
-			=> _cache.GetMappingAttributes<T>(memberInfo);
+			=> _cache.GetMappingAttributes<T>(type, memberInfo);
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;

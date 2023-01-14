@@ -58,6 +58,31 @@ namespace LinqToDB.Metadata
 
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
+		readonly static IReadOnlyDictionary<string,Type> _mappingAttributes;
+
+		static XmlAttributeReader()
+		{
+			var baseType = typeof(MappingAttribute);
+			var lookup   = new Dictionary<string,Type>();
+
+			// use of mapping attributes, defined only in linq2db assembly could look like
+			// regression if user use XML provider with custom mapping attribute type, derived from one of our mapping attributes
+			// but custom attributes/inheritance was never supported for this provider
+			foreach (var type in typeof(XmlAttributeReader).Assembly.GetTypes())
+			{
+				if (baseType.IsAssignableFrom(type))
+				{
+					lookup[type.FullName!] = type;
+					lookup[type.Name]      = type;
+
+					if (type.Name.EndsWith("Attribute"))
+						lookup[type.Name.Substring(0, type.Name.Length - 9)] = type;
+				}
+			}
+
+			_mappingAttributes = lookup;
+		}
+
 		/// <summary>
 		/// Creates metadata provider instance.
 		/// </summary>
@@ -187,10 +212,13 @@ namespace LinqToDB.Metadata
 					return (name, val);
 				});
 
-				return new AttributeInfo(aname, values.ToDictionary(v => v.name, v => v.val));
+				if (!_mappingAttributes.TryGetValue(aname, out var atype))
+					return null;//throw new MetadataException($"Unknown mapping attribute type name in XML metadata: '{aname}'");
+
+				return new AttributeInfo(atype, values.ToDictionary(v => v.name, v => v.val));
 			});
 
-			return attrs.ToArray();
+			return attrs.Where(_ => _ != null).ToArray()!;
 		}
 
 		static Dictionary<string,MetaTypeInfo> LoadStream(Stream xmlDocStream, string? fileName)
@@ -230,7 +258,7 @@ namespace LinqToDB.Metadata
 			where T : MappingAttribute
 		{
 			if (_types.TryGetValue(type.FullName!, out var t) || _types.TryGetValue(type.Name, out t))
-				return t.GetAttribute(typeof(T)).Select(a => (T)a.MakeAttribute(typeof(T))).ToArray();
+				return t.GetAttribute(typeof(T)).Select(a => (T)a.MakeAttribute()).ToArray();
 
 			return Array<T>.Empty;
 		}
@@ -242,7 +270,7 @@ namespace LinqToDB.Metadata
 			{
 				if (t.Members.TryGetValue(memberInfo.Name, out var m))
 				{
-					return m.GetAttribute(typeof(T)).Select(a => (T)a.MakeAttribute(typeof(T))).ToArray();
+					return m.GetAttribute(typeof(T)).Select(a => (T)a.MakeAttribute()).ToArray();
 				}
 			}
 

@@ -67,7 +67,7 @@ namespace LinqToDB.Metadata
 			if (memberInfo.ReflectedType != type)
 				memberInfo = type.GetMemberEx(memberInfo) ?? memberInfo;
 
-			return _cache.GetMappingAttributes<T>(memberInfo);
+			return _cache.GetMappingAttributes<T>(type, memberInfo);
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>

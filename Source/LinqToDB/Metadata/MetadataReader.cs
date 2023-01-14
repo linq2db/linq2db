@@ -47,7 +47,7 @@ namespace LinqToDB.Metadata
 						return Array<MappingAttribute>.Empty;
 					if (_readers.Length == 1)
 						if (type != null)
-							return _readers[0].GetAttributes<MappingAttribute>(type, (Type)source);
+							return _readers[0].GetAttributes<MappingAttribute>(type, (MemberInfo)source);
 						else
 							return _readers[0].GetAttributes<MappingAttribute>((Type)source);
 
@@ -55,7 +55,7 @@ namespace LinqToDB.Metadata
 
 					for (var i = 0; i < _readers.Length; i++)
 						if (type != null)
-							attrs[i] = _readers[i].GetAttributes<MappingAttribute>(type, (Type)source);
+							attrs[i] = _readers[i].GetAttributes<MappingAttribute>(type, (MemberInfo)source);
 						else
 							attrs[i] = _readers[i].GetAttributes<MappingAttribute>((Type)source);
 

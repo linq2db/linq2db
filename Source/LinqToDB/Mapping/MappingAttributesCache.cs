@@ -85,7 +85,7 @@ namespace LinqToDB.Metadata
 					var src = getSource!(intf, source);
 					if (src != null)
 					{
-						var ifaceAttrs = GetMappingAttributesTreeInternal(src, sourceOwner);
+						var ifaceAttrs = GetMappingAttributesTreeInternal(src, sourceOwner == null ? null : intf);
 						if (ifaceAttrs.Length > 0)
 						{
 							if (list != null)
@@ -103,7 +103,7 @@ namespace LinqToDB.Metadata
 					var src = getSource!(type.BaseType, source);
 					if (src != null)
 					{
-						var baseAttrs = GetMappingAttributesTreeInternal(src, sourceOwner);
+						var baseAttrs = GetMappingAttributesTreeInternal(src, sourceOwner == null ? null : type.BaseType);
 						if (baseAttrs.Length > 0)
 						{
 							if (list != null)

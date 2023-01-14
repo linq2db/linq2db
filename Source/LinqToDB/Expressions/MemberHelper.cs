@@ -51,6 +51,7 @@ namespace LinqToDB.Expressions
 		/// <exception cref="ArgumentException">Only simple, non-navigational, member names are supported in this context (e.g.: x =&gt; Sql.Property(x, \"SomeProperty\")).</exception>
 		public static MemberInfo GetMemberInfo(LambdaExpression func)
 		{
+
 			return GetMemberInfo(func.Body);
 		}
 

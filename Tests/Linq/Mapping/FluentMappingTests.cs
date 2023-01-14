@@ -114,7 +114,7 @@ namespace Tests.Mapping
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
 			Assert.That(ed.Name.Name, Is.EqualTo("newname"));
-			Assert.That(ed.Columns.First().ColumnName, Is.EqualTo("id1"));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
 		}
 
 		[Test]
