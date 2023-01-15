@@ -1643,13 +1643,13 @@ namespace Tests.DataProvider
 				{
 					var ms = new MappingSchema();
 
-					db.AddMappingSchema(ms);
-
 					ms.GetFluentMappingBuilder()
 						.Entity<LinqDataTypesBC>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
 						.Build();
+
+					db.AddMappingSchema(ms);
 				}
 
 				try
@@ -1681,13 +1681,13 @@ namespace Tests.DataProvider
 				{
 					var ms = new MappingSchema();
 
-					db.AddMappingSchema(ms);
-
 					ms.GetFluentMappingBuilder()
 						.Entity<LinqDataTypesBC>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
 						.Build();
+
+					db.AddMappingSchema(ms);
 				}
 
 				try
@@ -1757,13 +1757,13 @@ namespace Tests.DataProvider
 
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
 				ms.GetFluentMappingBuilder()
 					.Entity<LinqDataTypes2>()
 						.Property(e => e.GuidValue)
 							.IsNotColumn()
 					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{
@@ -1792,13 +1792,13 @@ namespace Tests.DataProvider
 
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
 				ms.GetFluentMappingBuilder()
 					.Entity<LinqDataTypes2>()
 						.Property(e => e.GuidValue)
 							.IsNotColumn()
 					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{

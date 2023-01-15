@@ -498,12 +498,12 @@ namespace Tests.DataProvider
 			{
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
 				ms.GetFluentMappingBuilder()
 					.Entity<AllType>()
 						.HasTableName("AllTypeCreateTest")
 					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{
