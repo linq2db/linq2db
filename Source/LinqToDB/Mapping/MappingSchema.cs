@@ -948,28 +948,37 @@ namespace LinqToDB.Mapping
 		{
 			if (Schemas.Length > 1)
 			{
-				var hash = new HashSet<string>();
+				List<IMetadataReader>? readers = null;
+				HashSet<string>?       hash    = null;
 
-				for (var i = 1; i < Schemas.Length; i++)
+				for (var i = 0; i < Schemas.Length; i++)
 				{
 					var s = Schemas[i];
 					if (s.MetadataReader != null)
-						AddMetadataReaderInternal(hash, s.MetadataReader);
+						AddMetadataReaderInternal(s.MetadataReader);
 				}
-			}
 
-			void AddMetadataReaderInternal(HashSet<string> hash, IMetadataReader reader)
-			{
-				if (!hash.Add(reader.GetObjectID()))
-					return;
-
-				if (reader is MetadataReader metadataReader)
+				if (readers != null)
 				{
-					foreach (var mr in metadataReader.Readers)
-						AddMetadataReaderInternal(hash, mr);
+					if (readers.Count == 1)
+						Schemas[0].MetadataReader = readers[0];
+					else
+						Schemas[0].MetadataReader = new MetadataReader(readers.ToArray());
 				}
-				else
-					AddMetadataReader(reader);
+
+				void AddMetadataReaderInternal(IMetadataReader reader)
+				{
+					if (!(hash ??= new()).Add(reader.GetObjectID()))
+						return;
+
+					if (reader is MetadataReader metadataReader)
+					{
+						foreach (var mr in metadataReader.Readers)
+							AddMetadataReaderInternal(mr);
+					}
+					else
+						(readers ??= new()).Add(reader);
+				}
 			}
 		}
 

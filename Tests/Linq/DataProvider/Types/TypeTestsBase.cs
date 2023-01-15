@@ -19,8 +19,8 @@ namespace Tests.DataProvider
 		// Mapping for single type configuration testing for both nullable and non-nullable database columns
 		private sealed class TypeTable<TType, TNullableType>
 		{
-			[Column(CanBeNull = false)] public TType          Column         { get; set; } = default!;
-			[Column(CanBeNull = true )] public TNullableType? ColumnNullable { get; set; }
+			public TType          Column         { get; set; } = default!;
+			public TNullableType? ColumnNullable { get; set; }
 		}
 
 		/// <summary>
@@ -86,7 +86,7 @@ namespace Tests.DataProvider
 
 			var ent = ms.GetFluentMappingBuilder().Entity<TypeTable<TType, TNullableType>>();
 
-			var prop = ent.Property(e => e.Column);
+			var prop = ent.Property(e => e.Column).IsNullable(false);
 
 			if (dbType.DataType  != DataType.Undefined) prop.HasDataType (dbType.DataType       );
 			if (dbType.DbType    != null              ) prop.HasDbType   (dbType.DbType         );
@@ -96,7 +96,7 @@ namespace Tests.DataProvider
 
 			if (!skipNullable)
 			{
-				var propN = ent.Property(e => e.ColumnNullable);
+				var propN = ent.Property(e => e.ColumnNullable).IsNullable(true);
 
 				if (dbType.DataType  != DataType.Undefined) propN.HasDataType (dbType.DataType             );
 				if (dbType.DbType    != null              ) propN.HasDbType   ($"Nullable({dbType.DbType})");
