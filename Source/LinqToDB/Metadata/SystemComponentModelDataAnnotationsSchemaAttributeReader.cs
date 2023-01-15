@@ -19,7 +19,7 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type)
 			where T : MappingAttribute
 		{
-			if (typeof(T) == typeof(TableAttribute))
+			if (typeof(T).IsAssignableFrom(typeof(TableAttribute)))
 			{
 				var t = type.GetAttribute<System.ComponentModel.DataAnnotations.Schema.TableAttribute>();
 
@@ -56,7 +56,7 @@ namespace LinqToDB.Metadata
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
 		{
-			if (typeof(T) == typeof(ColumnAttribute))
+			if (typeof(T).IsAssignableFrom(typeof(ColumnAttribute)))
 			{
 				var c = memberInfo.GetAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>();
 

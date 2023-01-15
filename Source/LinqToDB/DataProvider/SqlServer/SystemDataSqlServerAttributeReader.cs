@@ -96,7 +96,7 @@ namespace LinqToDB.Metadata
 			// HACK: we use _sqlMethodAttribute/_sqlUserDefinedTypeAttribute as cache key part instead of typeof(T) to avoid closure generation for lambda
 			// this is valid approach for current code but if we will add more attributes support we will need to add typeof(T) to key too
 			// (which probably will never happen anyways)
-			if (typeof(T) == typeof(Sql.ExpressionAttribute) && (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx()))
+			if (typeof(T).IsAssignableFrom(typeof(Sql.ExpressionAttribute)) && (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx()))
 			{
 				return (T[])_cache.GetOrAdd((memberInfo, _sqlMethodAttribute), static key =>
 				{
@@ -154,7 +154,7 @@ namespace LinqToDB.Metadata
 				});
 			}
 
-			if (typeof(T) == typeof(DataTypeAttribute))
+			if (typeof(T).IsAssignableFrom(typeof(DataTypeAttribute)))
 			{
 				return (T[])_cache.GetOrAdd((memberInfo, _sqlUserDefinedTypeAttribute), static key =>
 				{
