@@ -20,83 +20,28 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region Sequence
 
-		static readonly object _sync = new ();
-
-		static IReadOnlyList<ISequenceBuilder> _sequenceBuilders = new ISequenceBuilder[]
+		public bool TryFindBuilder(BuildInfo info, [NotNullWhen(true)] out ISequenceBuilder builder)
 		{
-			new TableBuilder               (),
-			new IgnoreFiltersBuilder       (),
-			new ContextRefBuilder          (),
-			new SelectBuilder              (),
-			new SelectManyBuilder          (),
-			new WhereBuilder               (),
-			new OrderByBuilder             (),
-			new RemoveOrderByBuilder       (),
-			new GroupByBuilder             (),
-			new JoinBuilder                (),
-			new GroupJoinBuilder           (),
-			new AllJoinsBuilder            (),
-			new AllJoinsLinqBuilder        (),
-			new TakeSkipBuilder            (),
-			new DefaultIfEmptyBuilder      (),
-			new DistinctBuilder            (),
-			new FirstSingleBuilder         (),
-			new AggregationBuilder         (),
-			new MethodChainBuilder         (),
-			new ScalarSelectBuilder        (),
-			new SelectQueryBuilder         (),
-			new PassThroughBuilder         (),
-			new TableAttributeBuilder      (),
-			new InsertBuilder              (),
-			new InsertBuilder.Into         (),
-			new InsertBuilder.Value        (),
-			new InsertOrUpdateBuilder      (),
-			new UpdateBuilder              (),
-			new UpdateBuilder.Set          (),
-			new DeleteBuilder              (),
-			new ContainsBuilder            (),
-			new AllAnyBuilder              (),
-			new SetOperationBuilder        (),
-			new CastBuilder                (),
-			new OfTypeBuilder              (),
-			new AsUpdatableBuilder         (),
-			new AsValueInsertableBuilder   (),
-			new LoadWithBuilder            (),
-			new DropBuilder                (),
-			new TruncateBuilder            (),
-			new ChangeTypeExpressionBuilder(),
-			new WithTableExpressionBuilder (),
-			new MergeBuilder                             (),
-			new MergeBuilder.InsertWhenNotMatched        (),
-			new MergeBuilder.UpdateWhenMatched           (),
-			new MergeBuilder.UpdateWhenMatchedThenDelete (),
-			new MergeBuilder.UpdateWhenNotMatchedBySource(),
-			new MergeBuilder.DeleteWhenMatched           (),
-			new MergeBuilder.DeleteWhenNotMatchedBySource(),
-			new MergeBuilder.On                          (),
-			new MergeBuilder.Merge                       (),
-			new MergeBuilder.MergeInto                   (),
-			new MergeBuilder.Using                       (),
-			new MergeBuilder.UsingTarget                 (),
-			new ContextParser              (),
-			new AsSubQueryBuilder          (),
-			new DisableGroupingGuardBuilder(),
-			new InlineParametersBuilder    (),
-			new HasUniqueKeyBuilder        (),
-			new MultiInsertBuilder         (),
-			new TagQueryBuilder            (),
-			new EnumerableBuilder          (),
-			new QueryExtensionBuilder      (),
-			new QueryNameBuilder           (),
-		};
+			builder = FindBuilderImpl(info, this);
+			return builder != null;
+		}
+
+		public ISequenceBuilder FindBuilder(BuildInfo info)
+		{
+			return FindBuilderImpl(info, this) is {} builder
+				? builder 
+				: throw new LinqException("Sequence '{0}' cannot be converted to SQL.", info.Expression);
+		}
+
+		// Declaring a partial FindBuilderImpl so that the source generator doesn't change semantics
+		// and can use `RegisterImplementationSourceOutput` which is less taxing for VS / IDE.
+		private static partial ISequenceBuilder? FindBuilderImpl(BuildInfo info, ExpressionBuilder builder);
 
 		#endregion
 
 		#region Init
 
 		readonly Query                             _query;
-		readonly IReadOnlyList<ISequenceBuilder>   _builders = _sequenceBuilders;
-		bool                                       _reorder;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
@@ -168,13 +113,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
-			if (_reorder)
-				lock (_sync)
-				{
-					_reorder = false;
-					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToArray();
-				}
-
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
 			var param = Expression.Parameter(typeof(Query<T>), "info");
@@ -221,69 +159,28 @@ namespace LinqToDB.Linq.Builder
 		{
 			var originalExpression = buildInfo.Expression;
 
-			buildInfo.Expression = buildInfo.Expression.Unwrap();
-
-			var n = _builders[0].BuildCounter;
-
-			foreach (var builder in _builders)
-			{
-				if (builder.CanBuild(this, buildInfo))
-				{
-					var sequence = builder.BuildSequence(this, buildInfo);
-
-					lock (builder)
-						builder.BuildCounter++;
-
-					_reorder = _reorder || n < builder.BuildCounter;
-
-					if (sequence != null)
-						_sequenceExpressions[sequence] = originalExpression;
-
-					return sequence!;
-				}
-
-				n = builder.BuildCounter;
-			}
-
-			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
-		}
-
-		public ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)
-		{
-			buildInfo.Expression = buildInfo.Expression.Unwrap();
-
-			foreach (var builder in _builders)
-				if (builder.CanBuild(this, buildInfo))
-					return builder;
-
-			if (throwIfNotFound)
+			var builder = FindBuilder(buildInfo);
+			if (builder.BuildSequence(this, buildInfo) is not {} sequence)
 				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
-			return null;
+			
+			_sequenceExpressions[sequence] = originalExpression;
+			return sequence;
 		}
 
 		public SequenceConvertInfo? ConvertSequence(BuildInfo buildInfo, ParameterExpression? param, bool throwExceptionIfCantConvert)
 		{
-			buildInfo.Expression = buildInfo.Expression.Unwrap();
-
-			foreach (var builder in _builders)
-				if (builder.CanBuild(this, buildInfo))
-					return builder.Convert(this, buildInfo, param);
-
-			if (throwExceptionIfCantConvert)
-				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
-
-			return null;
+			return TryFindBuilder(buildInfo, out var builder)
+				? builder.Convert(this, buildInfo, param)
+				: throwExceptionIfCantConvert
+				? throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression)
+				: null;
 		}
 
 		public bool IsSequence(BuildInfo buildInfo)
 		{
-			buildInfo.Expression = buildInfo.Expression.Unwrap();
-
-			foreach (var builder in _builders)
-				if (builder.CanBuild(this, buildInfo))
-					return builder.IsSequence(this, buildInfo);
-
-			return false;
+			return TryFindBuilder(buildInfo, out var builder)
+				? builder.IsSequence(this, buildInfo)
+				: false;
 		}
 
 		#endregion

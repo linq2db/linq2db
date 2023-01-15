@@ -5,15 +5,11 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlProvider;
 
+	[BuildsMethodCall("GetContext")]
 	sealed class ContextParser : ISequenceBuilder
 	{
-		public int BuildCounter { get; set; }
-
-		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			return buildInfo.Expression is MethodCallExpression call 
-				&& call.Method.Name == "GetContext";
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> true;
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
@@ -22,13 +18,12 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
+			=> null;
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));
+			var call = (MethodCallExpression)buildInfo.Expression;
+			return builder.IsSequence(new BuildInfo(buildInfo, call.Arguments[0]));
 		}
 
 		public sealed class Context : PassThroughContext

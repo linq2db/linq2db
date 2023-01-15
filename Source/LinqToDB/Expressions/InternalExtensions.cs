@@ -334,7 +334,7 @@ namespace LinqToDB.Expressions
 				type == typeof(TableExtensions);
 		}
 
-		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
+		public static bool IsAsyncExtension(this MethodCallExpression method)
 		{
 			var type = method.Method.DeclaringType;
 
@@ -343,7 +343,7 @@ namespace LinqToDB.Expressions
 
 		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
-			if (methodCall.IsQueryable(AggregationBuilder.MethodNames) || methodCall.IsQueryable(CountBuilder.MethodNames))
+			if (methodCall.IsQueryable(AggregationBuilder.MethodNames))
 				return true;
 
 			if (methodCall.Arguments.Count > 0)

@@ -7,29 +7,24 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending")]
 	sealed class OrderByBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (!methodCall.IsQueryable(MethodNames))
+			if (!call.IsQueryable())
 				return false;
 
-			var body = methodCall.Arguments[1].UnwrapLambda().Body.Unwrap();
-
+			var body = call.Arguments[1].UnwrapLambda().Body.Unwrap();
 			if (body.NodeType == ExpressionType.MemberInit)
 			{
 				var mi = (MemberInitExpression)body;
-				bool throwExpr;
-
-				if (mi.NewExpression.Arguments.Count > 0 || mi.Bindings.Count == 0)
-					throwExpr = true;
-				else
-					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
-
-				if (throwExpr)
+				if (mi.NewExpression.Arguments.Count > 0 || 
+					mi.Bindings.Count == 0 ||
+					mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment))
+				{
 					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in order by is not allowed.");
+				}
 			}
 
 			return true;

@@ -252,7 +252,7 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsGroupJoinSource(IBuildContext context, MethodCallExpression call)
 		{
-			if (!call.IsQueryable() || CountBuilder.MethodNames.Contains(call.Method.Name))
+			if (!call.IsQueryable() || AggregationBuilder.CountMethodNames.Contains(call.Method.Name))
 				return false;
 
 			Expression expr = call;

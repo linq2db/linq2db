@@ -6,31 +6,28 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Join")]
 	sealed class JoinBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (methodCall.Method.DeclaringType == typeof(LinqExtensions) || !methodCall.IsQueryable("Join"))
+			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable())
 				return false;
 
 			// other overload for Join
-			if (methodCall.Arguments[2].Unwrap() is not LambdaExpression lambda)
+			if (call.Arguments[2].Unwrap() is not LambdaExpression lambda)
 				return false;
 
 			var body = lambda.Body.Unwrap();
-
 			if (body.NodeType == ExpressionType.MemberInit)
 			{
 				var mi = (MemberInitExpression)body;
-				bool throwExpr;
-
-				if (mi.NewExpression.Arguments.Count > 0 || mi.Bindings.Count == 0)
-					throwExpr = true;
-				else
-					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
-
-				if (throwExpr)
+				if (mi.NewExpression.Arguments.Count > 0 || 
+					mi.Bindings.Count == 0 ||
+					mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment))
+				{
 					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in join is not allowed.");
+				}
 			}
 
 			return true;

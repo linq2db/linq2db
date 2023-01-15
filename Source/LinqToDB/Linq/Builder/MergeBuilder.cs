@@ -10,14 +10,13 @@ namespace LinqToDB.Linq.Builder
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
+	[BuildsMethodCall(nameof(LinqExtensions.Merge), nameof(LinqExtensions.MergeWithOutput), nameof(LinqExtensions.MergeWithOutputInto))]
 	internal sealed partial class MergeBuilder : MethodCallBuilder
 	{
-		static readonly MethodInfo[] _supportedMethods = {ExecuteMergeMethodInfo, MergeWithOutput, MergeWithOutputInto};
+		static readonly MethodInfo[] _supportedMethods = { ExecuteMergeMethodInfo, MergeWithOutput, MergeWithOutputInto };
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsSameGenericMethod(_supportedMethods);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsSameGenericMethod(_supportedMethods);
 
 		enum MergeKind
 		{

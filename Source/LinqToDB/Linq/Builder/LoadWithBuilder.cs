@@ -7,14 +7,11 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 
+	[BuildsMethodCall("LoadWith", "ThenLoad", "LoadWithAsTable")]
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
-		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(MethodNames);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)
 		{
@@ -37,13 +34,8 @@ namespace LinqToDB.Linq.Builder
 			// reset LoadWith sequence
 			if (methodCall.IsQueryable("LoadWith"))
 			{
-				for(;;)
-				{
-					if (sequence is LoadWithContext lw)
-						sequence = lw.Context;
-					else
-						break;
-				}
+				while (sequence is LoadWithContext lw)
+					sequence = lw.Context;
 			}
 
 			var path = SequenceHelper.PrepareBody(selector, sequence);
@@ -53,15 +45,12 @@ namespace LinqToDB.Linq.Builder
 			if (extractResult == null)
 				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector}'");
 
-			var associations = extractResult.Value.info.Length <= 1
-				? extractResult.Value.info
-				: extractResult.Value.info
-					.Reverse()
-					.ToArray();
-
-			if (associations.Length == 0)
-				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
-
+			var associations = extractResult.Value.info.Length switch
+			{
+				0 => throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'"),
+				1 => extractResult.Value.info,
+				_ => extractResult.Value.info.Reverse().ToArray(),
+			};
 
 			if (methodCall.Arguments.Count == 3)
 			{
@@ -77,9 +66,7 @@ namespace LinqToDB.Linq.Builder
 
 			builder.RegisterLoadWith(registerContext, associations, methodCall.Method.Name == "ThenLoad");
 
-			var loadWithSequence = sequence as LoadWithContext ?? new LoadWithContext(sequence, registerContext);
-
-			return loadWithSequence;
+			return sequence as LoadWithContext ?? new LoadWithContext(sequence, registerContext);
 		}
 
 		static (IBuildContext context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)

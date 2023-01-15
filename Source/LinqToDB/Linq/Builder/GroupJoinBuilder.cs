@@ -7,12 +7,11 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using LinqToDB.Expressions;
 
-	class GroupJoinBuilder : MethodCallBuilder
+	[BuildsMethodCall("GroupJoin")]
+	sealed class GroupJoinBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("GroupJoin");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -35,9 +34,7 @@ namespace LinqToDB.Linq.Builder
 
 			var resultExpression = SequenceHelper.PrepareBody(resultLambda, outerContext, innerContext);
 
-			var context = new SelectContext(buildInfo.Parent, resultExpression, outerContext, buildInfo.IsSubQuery);
-
-			return context;
+			return new SelectContext(buildInfo.Parent, resultExpression, outerContext, buildInfo.IsSubQuery);
 		}
 
 		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,

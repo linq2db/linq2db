@@ -6,6 +6,8 @@
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.xml</DocumentationFile>
 		<TargetFrameworks>net45;net46;net472;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+
+		<!-- <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles> -->
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -22,6 +24,10 @@
 	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
 		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="../CodeGenerators/CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="SqlQuery\ReservedWords.txt" />
