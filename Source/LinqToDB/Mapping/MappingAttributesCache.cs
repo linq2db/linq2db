@@ -12,10 +12,12 @@ namespace LinqToDB.Metadata
 
 	internal sealed class MappingAttributesCache
 	{
-		readonly ConcurrentDictionary<Type, ConcurrentDictionary<ICustomAttributeProvider, MappingAttribute[]>> _cache = new();
+		record struct Key(ICustomAttributeProvider Source, Type? SourceOwner);
 
-		readonly ConcurrentDictionary<ICustomAttributeProvider, MappingAttribute[]> _noInheritMappingAttributes      = new ();
-		readonly ConcurrentDictionary<ICustomAttributeProvider, MappingAttribute[]> _orderedInheritMappingAttributes = new ();
+		readonly ConcurrentDictionary<Type, ConcurrentDictionary<Key, MappingAttribute[]>> _cache = new();
+
+		readonly ConcurrentDictionary<Key, MappingAttribute[]> _noInheritMappingAttributes      = new ();
+		readonly ConcurrentDictionary<Key, MappingAttribute[]> _orderedInheritMappingAttributes = new ();
 
 		readonly Func<Type?, ICustomAttributeProvider, MappingAttribute[]> _attributesGetter;
 
@@ -25,52 +27,48 @@ namespace LinqToDB.Metadata
 			_attributesGetter = attributesGetter;
 		}
 
-		T[] GetMappingAttributesInternal<T>(ICustomAttributeProvider source, Type? sourceOwner)
+		T[] GetMappingAttributesInternal<T>(Key key)
 			where T : MappingAttribute
 		{
 			var res = _orderedInheritMappingAttributes
-#if NET45 || NET46 || NETSTANDARD2_0
-				.GetOrAdd(source, source => GetMappingAttributesTreeInternal(source, sourceOwner))
-#else
-				.GetOrAdd(source, GetMappingAttributesTreeInternal, sourceOwner)
-#endif
+				.GetOrAdd(key, GetMappingAttributesTreeInternal)
 				.OfType<T>().ToArray();
 
 			return res.Length == 0 ? Array<T>.Empty : res;
 		}
 
-		MappingAttribute[] GetNoInheritMappingAttributes(Type? sourceOwner, ICustomAttributeProvider source)
+		MappingAttribute[] GetNoInheritMappingAttributes(Key key)
 		{
 #if NET45 || NET46 || NETSTANDARD2_0
-			var attrs = _noInheritMappingAttributes.GetOrAdd(source, source =>
+			var attrs = _noInheritMappingAttributes.GetOrAdd(key, key =>
 			{
-				var res = _attributesGetter(sourceOwner, source);
+				var res = _attributesGetter(key.SourceOwner, key.Source);
 
 				return res.Length == 0 ? Array<MappingAttribute>.Empty : res;
 			});
 #else
-			var attrs = _noInheritMappingAttributes.GetOrAdd(source, static (source, context) =>
+			var attrs = _noInheritMappingAttributes.GetOrAdd(key, static (key, attributesGetter) =>
 			{
-				var res = context.attributesGetter(context.sourceOwner, source);
+				var res = attributesGetter(key.SourceOwner, key.Source);
 
 				return res.Length == 0 ? Array<MappingAttribute>.Empty : res;
-			}, (attributesGetter: _attributesGetter, sourceOwner));
+			}, _attributesGetter);
 #endif
 			return attrs;
 		}
 
-		MappingAttribute[] GetMappingAttributesTreeInternal(ICustomAttributeProvider source, Type? sourceOwner)
+		MappingAttribute[] GetMappingAttributesTreeInternal(Key key)
 		{
-			var attrs = GetNoInheritMappingAttributes(sourceOwner, source);
+			var attrs = GetNoInheritMappingAttributes(key);
 
 			Type? type = null;
 			Func<Type, ICustomAttributeProvider, ICustomAttributeProvider?>? getSource = null;
-			if (source is Type t && !t.IsInterface)
+			if (key.Source is Type t && !t.IsInterface)
 			{
 				type = t;
 				getSource = static (t, s) => t;
 			}
-			else if (source is MemberInfo m)
+			else if (key.Source is MemberInfo m)
 			{
 				type      = m.ReflectedType;
 				getSource = static (t, s) => t.GetMemberEx((MemberInfo)s);
@@ -82,10 +80,10 @@ namespace LinqToDB.Metadata
 
 				foreach (var intf in type.GetInterfaces())
 				{
-					var src = getSource!(intf, source);
+					var src = getSource!(intf, key.Source);
 					if (src != null)
 					{
-						var ifaceAttrs = GetMappingAttributesTreeInternal(src, sourceOwner == null ? null : intf);
+						var ifaceAttrs = GetMappingAttributesTreeInternal(new(src, key.SourceOwner == null ? null : intf));
 						if (ifaceAttrs.Length > 0)
 						{
 							if (list != null)
@@ -100,10 +98,10 @@ namespace LinqToDB.Metadata
 
 				if (type.BaseType != null && type.BaseType != typeof(object))
 				{
-					var src = getSource!(type.BaseType, source);
+					var src = getSource!(type.BaseType, key.Source);
 					if (src != null)
 					{
-						var baseAttrs = GetMappingAttributesTreeInternal(src, sourceOwner == null ? null : type.BaseType);
+						var baseAttrs = GetMappingAttributesTreeInternal(new(src, key.SourceOwner == null ? null : type.BaseType));
 						if (baseAttrs.Length > 0)
 						{
 							if (list != null)
@@ -138,11 +136,7 @@ namespace LinqToDB.Metadata
 			where T : MappingAttribute
 		{
 			return (T[])_cache.GetOrAdd(typeof(T), t => new())
-#if NET45 || NET46 || NETSTANDARD2_0
-				.GetOrAdd(source, source => GetMappingAttributesInternal<T>(source, null));
-#else
-				.GetOrAdd(source, GetMappingAttributesInternal<T>, (Type?)null);
-#endif
+				.GetOrAdd(new(source, null), GetMappingAttributesInternal<T>);
 		}
 
 		/// <summary>
@@ -159,11 +153,7 @@ namespace LinqToDB.Metadata
 			where T : MappingAttribute
 		{
 			return (T[])_cache.GetOrAdd(typeof(T), t => new())
-#if NET45 || NET46 || NETSTANDARD2_0
-				.GetOrAdd(source, source => GetMappingAttributesInternal<T>(source, sourceOwner));
-#else
-				.GetOrAdd(source, GetMappingAttributesInternal<T>, sourceOwner);
-#endif
+				.GetOrAdd(new(source, sourceOwner), GetMappingAttributesInternal<T>);
 		}
 	}
 }
