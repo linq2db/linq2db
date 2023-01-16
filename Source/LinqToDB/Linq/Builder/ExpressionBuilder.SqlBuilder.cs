@@ -1608,9 +1608,10 @@ namespace LinqToDB.Linq.Builder
 		public SqlSearchCondition GenerateComparison(
 			IBuildContext? context, 
 			Expression     left,
-			Expression     right)
+			Expression     right,
+			ProjectFlags   flags = ProjectFlags.SQL)
 		{
-			var expr = ConvertCompareExpression(context, ExpressionType.Equal, left, right, ProjectFlags.SQL);
+			var expr = ConvertCompareExpression(context, ExpressionType.Equal, left, right, flags);
 			if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
 				return sc;
 			if (expr is SqlErrorExpression error)
@@ -3877,8 +3878,6 @@ namespace LinqToDB.Linq.Builder
 					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) && corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
 						corrected = MakeExpression(rootContext.BuildContext, corrected, flags);
-
-						var pathStr = path.ToString();
 
 						if (corrected is SqlPlaceholderExpression placeholder)
 						{

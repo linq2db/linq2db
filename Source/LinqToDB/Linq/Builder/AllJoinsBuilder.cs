@@ -59,9 +59,8 @@ namespace LinqToDB.Linq.Builder
 
 			buildInfo.JoinType = joinType;
 
-			DefaultIfEmptyBuilder.DefaultIfEmptyContext? sequenceDefaultIfEmpty = null;
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				sequence = sequenceDefaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
 			
 			sequence = new SubQueryContext(sequence);
 

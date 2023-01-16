@@ -68,22 +68,31 @@ namespace LinqToDB.Linq.Builder
 			var outerKeyLambda = methodCall.Arguments[2].UnwrapLambda();
 			var innerKeyLambda = methodCall.Arguments[3].UnwrapLambda();
 
-			var innerKeyContext  = innerContext;
+			var innerKeyContext = innerContext;
 
 			var outerKeySelector = SequenceHelper.PrepareBody(outerKeyLambda, outerContext).Unwrap();
 			var innerKeySelector = SequenceHelper.PrepareBody(innerKeyLambda, innerKeyContext).Unwrap();
 
-			var compareSearchCondition = builder.GenerateComparison(outerContext, outerKeySelector, innerKeySelector);
+			outerKeySelector = builder.ConvertToSqlExpr(outerContext, outerKeySelector, buildInfo.GetFlags());
+			innerKeySelector = builder.ConvertToSqlExpr(innerContext, innerKeySelector, buildInfo.GetFlags());
 
-			join.JoinedTable.Condition.Conditions.AddRange(compareSearchCondition.Conditions);
+			var compareSearchCondition = builder.GenerateComparison(outerContext, outerKeySelector, innerKeySelector, buildInfo.GetFlags());
+
+			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression    ||
+			                           innerKeySelector is SqlGenericConstructorExpression;
+
+			if (!allowNullComparison)
+				compareSearchCondition = QueryHelper.CorrectComparisonForJoin(compareSearchCondition);
+
+			join.JoinedTable.Condition = compareSearchCondition;
 
 			return new SelectContext(buildInfo.Parent, selector, buildInfo.IsSubQuery, outerContext, innerContext)
 #if DEBUG
-			{
-				Debug_MethodCall = methodCall
-			}
+				{
+					Debug_MethodCall = methodCall
+				}
 #endif
-			;
+				;
 		}
 
 	}
