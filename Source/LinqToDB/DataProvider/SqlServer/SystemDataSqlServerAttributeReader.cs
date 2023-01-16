@@ -96,9 +96,11 @@ namespace LinqToDB.Metadata
 			// HACK: we use _sqlMethodAttribute/_sqlUserDefinedTypeAttribute as cache key part instead of typeof(T) to avoid closure generation for lambda
 			// this is valid approach for current code but if we will add more attributes support we will need to add typeof(T) to key too
 			// (which probably will never happen anyways)
+
+			T[]? result = null;
 			if (typeof(T).IsAssignableFrom(typeof(Sql.ExpressionAttribute)) && (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx()))
 			{
-				return (T[])_cache.GetOrAdd((memberInfo, _sqlMethodAttribute), static key =>
+				result = (T[])_cache.GetOrAdd((memberInfo, _sqlMethodAttribute), static key =>
 				{
 					if (key.memberInfo.IsMethodEx())
 					{
@@ -156,7 +158,7 @@ namespace LinqToDB.Metadata
 
 			if (typeof(T).IsAssignableFrom(typeof(DataTypeAttribute)))
 			{
-				return (T[])_cache.GetOrAdd((memberInfo, _sqlUserDefinedTypeAttribute), static key =>
+				var res = (T[])_cache.GetOrAdd((memberInfo, _sqlUserDefinedTypeAttribute), static key =>
 				{
 					var c = FindAttribute(key.memberInfo.GetMemberType(), key.attributeType);
 
@@ -174,9 +176,13 @@ namespace LinqToDB.Metadata
 
 					return Array<T>.Empty;
 				});
+
+				result = result == null || result.Length == 0 || res.Length == 0
+					? res
+					: result.Concat(res).ToArray();
 			}
 
-			return Array<T>.Empty;
+			return result ?? Array<T>.Empty;
 		}
 
 		private static Attribute? FindAttribute(ICustomAttributeProvider source, Type attributeType)
