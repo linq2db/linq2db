@@ -1151,18 +1151,13 @@ namespace Tests.DataProvider
 				{
 					var ms = new MappingSchema();
 
-					ms.GetFluentMappingBuilder()
-						.Entity<LinqDataTypes>()
-						.Property(e => e.GuidValue)
-						.IsNotColumn()
-						;
-
 					if (context.IsAnyOf(TestProvName.AllOracleNative))
 					{
 						ms.GetFluentMappingBuilder()
 							.Entity<LinqDataTypes>()
 							.Property(e => e.BoolValue)
 							.HasDataType(DataType.Int16)
+							.Build()
 							;
 					}
 
