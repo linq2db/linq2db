@@ -72,6 +72,12 @@ namespace LinqToDB.Linq.Builder
 					condition: condition, checkForSubQuery: false, enforceHaving: false,
 					isTest: buildInfo.AggregationTest);
 
+				/*if (joinType == JoinType.Full)
+				{
+					result.SelectQuery.Where.SearchCondition =
+						QueryHelper.CorrectComparisonForJoin(result.SelectQuery.Where.SearchCondition);
+				}*/
+
 				result.SetAlias(condition.Parameters[0].Name);
 				return result;
 			}

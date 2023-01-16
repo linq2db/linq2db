@@ -107,10 +107,10 @@ namespace LinqToDB.Linq.Builder
 					conditionExpr, flags,
 					join.JoinedTable.Condition.Conditions);
 
-				if (joinType == JoinType.Full)
+				/*if (joinType == JoinType.Full)
 				{
 					join.JoinedTable.Condition = QueryHelper.CorrectComparisonForJoin(join.JoinedTable.Condition);
-				}
+				}*/
 			}
 			else
 			{
