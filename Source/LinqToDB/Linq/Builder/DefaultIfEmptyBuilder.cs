@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
 
 					var notNull = placeholders
-						.FirstOrDefault(placeholder => !placeholder.Sql.CanBeNull);
+						.FirstOrDefault(placeholder => !placeholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
 
 					if (notNull != null || _allowNullField)
 					{

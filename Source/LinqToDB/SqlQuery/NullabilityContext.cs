@@ -131,7 +131,7 @@
 			if (expression.CanBeNullable(this))
 				return true;
 
-			return expression.CanBeNull;
+			return false;
 		}
 	}
 }

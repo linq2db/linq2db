@@ -130,7 +130,9 @@ namespace LinqToDB
 				var right = builder.GetExpression(1);
 				var isNot = builder.Expression == "NOT";
 
-				SqlPredicate predicate = left.CanBeNull || right.CanBeNull
+				var nullability = new NullabilityContext(builder.Query);
+
+				SqlPredicate predicate = left.CanBeNullable(nullability) || right.CanBeNullable(nullability)
 					? new SqlPredicate.IsDistinct(left, isNot, right)
 					: new SqlPredicate.ExprExpr(left, isNot ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual, right, withNull: null);
 
@@ -670,7 +672,8 @@ namespace LinqToDB
 						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);
@@ -703,7 +706,8 @@ namespace LinqToDB
 						Precedence.LogicalNegation),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);
@@ -736,7 +740,8 @@ namespace LinqToDB
 						Precedence.LogicalNegation),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);
@@ -762,7 +767,8 @@ namespace LinqToDB
 						null),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);
@@ -788,7 +794,8 @@ namespace LinqToDB
 						null),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);
@@ -812,7 +819,8 @@ namespace LinqToDB
 						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);
@@ -836,7 +844,8 @@ namespace LinqToDB
 						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);
@@ -857,7 +866,8 @@ namespace LinqToDB
 					new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);
@@ -881,7 +891,8 @@ namespace LinqToDB
 						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);
@@ -905,7 +916,8 @@ namespace LinqToDB
 						new SqlValue(typeof(string), string.Empty), false),
 					true);
 
-				if (str.CanBeNull)
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
 					builder.ResultExpression = new SqlSearchCondition(
 						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
 						condition);

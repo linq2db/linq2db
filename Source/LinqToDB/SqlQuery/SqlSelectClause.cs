@@ -412,7 +412,7 @@ namespace LinqToDB.SqlQuery
 
 					sb.Append(expressionText);
 
-					if (c.CanBeNull)
+					if (c.CanBeNullable(NullabilityContext.NonQuery))
 						sb.Append('?');
 
 					sb.Append(", \n");

@@ -624,10 +624,10 @@ namespace LinqToDB.SqlQuery
 
 			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 			{
-				Reduce().ToString(sb, dic);
+				Reduce(NullabilityContext.NonQuery).ToString(sb, dic);
 			}
 
-			public ISqlPredicate Reduce()
+			public ISqlPredicate Reduce(NullabilityContext nullability)
 			{
 				if (Expr1.ElementType == QueryElementType.SearchCondition)
 				{
@@ -637,7 +637,7 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
-				if (WithNull == null || !Expr1.ShouldCheckForNull()) 
+				if (WithNull == null || !Expr1.ShouldCheckForNull(nullability)) 
 					return predicate;
 
 				var search = new SqlSearchCondition();

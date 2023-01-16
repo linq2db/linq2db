@@ -373,7 +373,7 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsTransitiveExpression(SqlExpression sqlExpression, bool checkNullability)
 		{
-			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}" && (!checkNullability || sqlExpression.CanBeNull == sqlExpression.Parameters[0].CanBeNull))
+			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}" && (!checkNullability || sqlExpression.CanBeNull == sqlExpression.Parameters[0].CanBeNullable(NullabilityContext.NonQuery)))
 			{
 				if (sqlExpression.Parameters[0] is SqlExpression argExpression)
 					return IsTransitiveExpression(argExpression, checkNullability);
@@ -1902,9 +1902,9 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public static bool ShouldCheckForNull(this ISqlExpression expr)
+		public static bool ShouldCheckForNull(this ISqlExpression expr, NullabilityContext nullability)
 		{
-			if (!expr.CanBeNull)
+			if (!expr.CanBeNullable(nullability))
 				return false;
 
 			if (expr.ElementType == QueryElementType.SqlBinaryExpression)

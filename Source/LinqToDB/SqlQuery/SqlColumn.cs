@@ -165,7 +165,7 @@ namespace LinqToDB.SqlQuery
 					.Append(underlying, dic);
 			}
 
-			if (CanBeNull)
+			if (CanBeNullable(NullabilityContext.NonQuery))
 				writer.Append('?');
 
 			return writer.ToString();
@@ -184,8 +184,6 @@ namespace LinqToDB.SqlQuery
 		{
 			return nullability.CanBeNull(this);
 		}
-
-		public bool         CanBeNull => Expression.CanBeNull;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
@@ -270,7 +268,7 @@ namespace LinqToDB.SqlQuery
 				.Append('.')
 				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
 
-				if (CanBeNull)
+				if (CanBeNullable(NullabilityContext.NonQuery))
 					sb.Append('?');
 
 			return sb;

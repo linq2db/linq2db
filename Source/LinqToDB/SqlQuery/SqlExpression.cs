@@ -94,16 +94,13 @@ namespace LinqToDB.SqlQuery
 		public bool CanBeNullable(NullabilityContext nullability)
 		{
 			return QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
-				Parameters.Select(p => p.CanBeNullable(nullability)));
+				       Parameters.Select(p => p.CanBeNullable(nullability)));
 		}
 
 		bool? _canBeNull;
 		public  bool   CanBeNull
 		{
-			get =>
-				QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
-					Parameters.Select(p => p.CanBeNull));
-
+			get => _canBeNull ?? true;
 			set => _canBeNull = value;
 		}
 

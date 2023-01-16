@@ -133,10 +133,10 @@ namespace LinqToDB.DataProvider.DB2
 			return expression;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
-			return base.ConvertFunction(func);
+			return base.ConvertFunction(nullability, func);
 		}
 
 	}

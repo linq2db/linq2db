@@ -109,39 +109,31 @@
 				case SqlPredicate.SearchString.SearchKind.StartsWith:
 					if (!caseSensitive)
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "startsWith", false, true, PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr))
-							{
-								CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-							});
+							new SqlFunction(typeof(bool), "startsWith", false, true, Precedence.Primary,
+								ParametersNullabilityType.IfAnyParameterNullable, null,
+								PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr)));
 					else
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "startsWith", false, true, dataExpr, searchExpr)
-							{
-								CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-							});
+							new SqlFunction(typeof(bool), "startsWith", false, true, Precedence.Primary,
+								ParametersNullabilityType.IfAnyParameterNullable, null, dataExpr, searchExpr));
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.EndsWith:
 					if (!caseSensitive)
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "endsWith", false, true, PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr))
-							{
-								CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-							});
+							new SqlFunction(typeof(bool), "endsWith", false, true, Precedence.Primary,
+								ParametersNullabilityType.IfAnyParameterNullable, null,
+								PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr)));
 					else
 						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "endsWith", false, true, dataExpr, searchExpr)
-							{
-								CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-							});
+							new SqlFunction(typeof(bool), "endsWith", false, true, Precedence.Primary,
+								ParametersNullabilityType.IfAnyParameterNullable, null, dataExpr, searchExpr));
 					break;
 
 				case SqlPredicate.SearchString.SearchKind.Contains:
 					subStrPredicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(bool), caseSensitive ? "position" : "positionCaseInsensitive", false, true, dataExpr, searchExpr)
-						{
-							CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-						},
+						new SqlFunction(typeof(bool), caseSensitive ? "position" : "positionCaseInsensitive", false, true, Precedence.Primary,
+							ParametersNullabilityType.IfAnyParameterNullable, null, dataExpr, searchExpr),
 						SqlPredicate.Operator.Greater,
 						new SqlValue(0),
 						null);
@@ -175,7 +167,7 @@
 
 					if (leftType.DataType is DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256)
 					{
-						left = ConvertFunction(PseudoFunctions.MakeConvert(
+						left = ConvertFunction(visitor.Context.Nullability, PseudoFunctions.MakeConvert(
 							new SqlDataType(new DbDataType(typeof(double), DataType.Double)),
 							new SqlDataType(leftType),
 							left));
@@ -184,7 +176,7 @@
 
 					if (rightType.DataType is DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256)
 					{
-						right = ConvertFunction(PseudoFunctions.MakeConvert(
+						right = ConvertFunction(visitor.Context.Nullability, PseudoFunctions.MakeConvert(
 							new SqlDataType(new DbDataType(typeof(double), DataType.Double)),
 							new SqlDataType(rightType),
 							right));
@@ -193,20 +185,20 @@
 
 					return !rewrite
 						? expression
-						: ConvertFunction(PseudoFunctions.MakeConvert(
+						: ConvertFunction(visitor.Context.Nullability, PseudoFunctions.MakeConvert(
 							new SqlDataType(expression.GetExpressionType()),
 							new SqlDataType(new DbDataType(typeof(double), DataType.Double)),
 							new SqlBinaryExpression(typeof(double), left, "%", right)));
 				}
 
-				case SqlBinaryExpression(var type, var left, "|", var right)    : return new SqlFunction(type, "bitOr",  false, true, left, right) { CanBeNull = left.CanBeNull || right.CanBeNull };
-				case SqlBinaryExpression(var type, var left, "&", var right)    : return new SqlFunction(type, "bitAnd", false, true, left, right) { CanBeNull = left.CanBeNull || right.CanBeNull };
-				case SqlBinaryExpression(var type, var left, "^", var right)    : return new SqlFunction(type, "bitXor", false, true, left, right) { CanBeNull = left.CanBeNull || right.CanBeNull };
-				case SqlBinaryExpression(var type, SqlValue(-1), "*", var right): return new SqlFunction(type, "negate", false, true, right      ) { CanBeNull = right.CanBeNull };
+				case SqlBinaryExpression(var type, var left, "|", var right)    : return new SqlFunction(type, "bitOr",  false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, left, right);
+				case SqlBinaryExpression(var type, var left, "&", var right)    : return new SqlFunction(type, "bitAnd", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, left, right);
+				case SqlBinaryExpression(var type, var left, "^", var right)    : return new SqlFunction(type, "bitXor", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, left, right);
+				case SqlBinaryExpression(var type, SqlValue(-1), "*", var right): return new SqlFunction(type, "negate", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, right      );
 
 				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type == typeof(string):
 				{
-					return ConvertFunc(new(type, "concat", false, true, ex1, ex2) { CanBeNull = ex1.CanBeNull || ex2.CanBeNull });
+					return ConvertFunc(new(type, "concat", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, ex1, ex2));
 
 					static SqlFunction ConvertFunc(SqlFunction func)
 					{
@@ -222,7 +214,7 @@
 									ps.Insert(i, e1);
 									ps.Insert(i + 1, e2);
 
-									return ConvertFunc(new(t, func.Name, false, true, ps.ToArray()) { CanBeNull = ps.Any(static p => p.CanBeNull) });
+									return ConvertFunc(new(t, func.Name, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, ps.ToArray()));
 								}
 
 								case SqlFunction(var t, "concat") f when t == typeof(string):
@@ -232,7 +224,7 @@
 									ps.RemoveAt(i);
 									ps.InsertRange(i, f.Parameters);
 
-									return ConvertFunc(new(t, func.Name, false, true, ps.ToArray()) { CanBeNull = ps.Any(static p => p.CanBeNull) });
+									return ConvertFunc(new(t, func.Name, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, ps.ToArray()));
 								}
 							}
 						}
@@ -245,7 +237,7 @@
 			}
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			switch (func.Name)
 			{
@@ -294,16 +286,10 @@
 								if (valueType.DataType is DataType.Char or DataType.NChar or DataType.Binary)
 								{
 									return new SqlFunction(func.SystemType, "trim", false, true,
-										new SqlExpression(func.SystemType, "TRAILING '\x00' FROM {0}", Precedence.Primary, value))
-									{
-										CanBeNull = value.CanBeNull
-									};
+										new SqlExpression(func.SystemType, "TRAILING '\x00' FROM {0}", Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, value));
 								}
 
-								return new SqlFunction(func.SystemType, name, false, true, value)
-								{
-									CanBeNull = value.CanBeNull
-								};
+								return new SqlFunction(func.SystemType, name, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, value);
 							}
 
 							case DataType.Decimal32:
@@ -312,15 +298,13 @@
 							case DataType.Decimal256:
 							{
 								// toDecimalX(S)
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
+								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true, 
+										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
 										value,
-										new SqlValue((byte)(toType.Type.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)))
-								{
-									CanBeNull = value.CanBeNull
-								};
+										new SqlValue((byte)(toType.Type.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
 
 								if (defaultValue != null)
-									newFunc = ConvertFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
+									newFunc = ConvertFunction(nullability, PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
 
 								return newFunc;
 							}
@@ -329,15 +313,13 @@
 							{
 								// toDateTime64(S)
 
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
+								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true, 
+										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
 										value,
-										new SqlValue((byte)(toType.Type.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)))
-								{
-									CanBeNull = value.CanBeNull
-								};
+										new SqlValue((byte)(toType.Type.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));
 
 								if (defaultValue != null)
-									newFunc = ConvertFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
+									newFunc = ConvertFunction(nullability, PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
 
 								return newFunc;
 							}
@@ -345,13 +327,10 @@
 							// default call template
 							default:
 							{
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true, value)
-								{
-									CanBeNull = value.CanBeNull
-								};
+								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, value);
 
 								if (defaultValue != null)
-									newFunc = ConvertFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
+									newFunc = ConvertFunction(nullability, PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
 
 								return newFunc;
 							}
@@ -363,7 +342,7 @@
 				}
 			}
 
-			return base.ConvertFunction(func);
+			return base.ConvertFunction(nullability, func);
 		}
 
 		// ClickHouse provides several ways to specify type:

@@ -100,10 +100,6 @@ namespace LinqToDB.SqlQuery
 				if (_canBeNull.HasValue)
 					return _canBeNull.Value;
 
-				foreach (var parameter in _infoParameters)
-					if (parameter.Sql.CanBeNull)
-						return true;
-
 				return false;
 			}
 

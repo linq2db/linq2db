@@ -13,9 +13,9 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		public override bool IsParameterDependedElement(IQueryElement element)
+		public override bool IsParameterDependedElement(NullabilityContext nulllability, IQueryElement element)
 		{
-			if (base.IsParameterDependedElement(element))
+			if (base.IsParameterDependedElement(nulllability, element))
 				return true;
 
 			switch (element.ElementType)
@@ -217,10 +217,10 @@ namespace LinqToDB.DataProvider.Informix
 			return expression;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
-			return base.ConvertFunction(func);
+			return base.ConvertFunction(nullability, func);
 		}
 	}
 }

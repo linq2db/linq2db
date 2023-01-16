@@ -109,8 +109,6 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNullable(NullabilityContext nullability) => Expr1.CanBeNullable(nullability) || Expr2.CanBeNullable(nullability);
 
-		public bool CanBeNull => Expr1.CanBeNull || Expr2.CanBeNull;
-
 		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)

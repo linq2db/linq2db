@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return statement;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
 
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			return base.ConvertFunction(func);
+			return base.ConvertFunction(nullability, func);
 		}
 
 		static SqlFunction ConvertCase(bool canBeNull, Type systemType, ISqlExpression[] parameters, int start)
@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return new SqlFunction(systemType, name,
 				cond,
-				parameters[start + 1],
+				parameters[start                                     + 1],
 				ConvertCase(canBeNull, systemType, parameters, start + 2)) { CanBeNull = canBeNull };
 		}
 	}

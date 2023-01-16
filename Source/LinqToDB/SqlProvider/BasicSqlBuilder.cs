@@ -1075,7 +1075,7 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				if (key.Column.CanBeNull)
+				if (key.Column.CanBeNullable(nullability))
 				{
 					StringBuilder.Append('(');
 
@@ -1094,7 +1094,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(" = ").Append(sourceAlias).Append('.');
 				BuildExpression(nullability, key.Column, false, false);
 
-				if (key.Column.CanBeNull)
+				if (key.Column.CanBeNullable(nullability))
 					StringBuilder.Append(')');
 
 				if (i + 1 < keys.Count)
@@ -1161,7 +1161,7 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				if (expr.Column.CanBeNull)
+				if (expr.Column.CanBeNullable(nullability))
 				{
 					StringBuilder.Append('(');
 
@@ -1176,7 +1176,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(" = ");
 				BuildExpression(nullability, Precedence.Comparison, expr.Expression!);
 
-				if (expr.Column.CanBeNull)
+				if (expr.Column.CanBeNullable(nullability))
 					StringBuilder.Append(')');
 
 				if (i + 1 < exprs.Count)
@@ -2463,7 +2463,7 @@ namespace LinqToDB.SqlProvider
 			// This is the fallback implementation of IS DISTINCT FROM
 			// for all providers that don't support the standard syntax
 			// nor have a proprietary alternative
-			expr.Expr1.ShouldCheckForNull();
+			expr.Expr1.ShouldCheckForNull(nullability);
 			StringBuilder.Append("CASE WHEN ");
 			BuildExpression(nullability, Precedence.Comparison, expr.Expr1);
 			StringBuilder.Append(" = ");
@@ -2678,7 +2678,7 @@ namespace LinqToDB.SqlProvider
 						BuildPredicate(nullability, new SqlPredicate.IsNull(p.Expr1, p.IsNot));
 						multipleParts = true;
 					}
-					else if (p.WithNull == true && p.Expr1.ShouldCheckForNull())
+					else if (p.WithNull == true && p.Expr1.ShouldCheckForNull(nullability))
 					{
 						StringBuilder.Append(" OR ");
 	 					BuildPredicate(nullability, new SqlPredicate.IsNull(p.Expr1, false));
@@ -3069,7 +3069,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.Append("CAST(");
 			BuildExpression(nullability, value);
 			StringBuilder.Append(" AS ");
-			BuildDataType(dataType, false, value.CanBeNull);
+			BuildDataType(dataType, false, value.CanBeNullable(nullability));
 			StringBuilder.Append(')');
 		}
 

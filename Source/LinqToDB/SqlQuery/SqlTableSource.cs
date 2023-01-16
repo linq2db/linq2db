@@ -205,9 +205,8 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public bool CanBeNullable(NullabilityContext nullability) => false;
 
-		public bool  CanBeNull  => Source.CanBeNull;
 		public int   Precedence => Source.Precedence;
 		public Type? SystemType => Source.SystemType;
 
