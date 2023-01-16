@@ -55,6 +55,9 @@ namespace LinqToDB.Metadata
 		readonly Type   _sqlUserDefinedTypeAttribute;
 		readonly string _objectId;
 
+		readonly Func<object, string?> _methodNameGetter;
+		readonly Func<object, string?> _typeNameGetter;
+
 		/// <summary>
 		/// Creates new instance of <see cref="SystemDataSqlServerAttributeReader"/>.
 		/// </summary>
@@ -65,6 +68,12 @@ namespace LinqToDB.Metadata
 			_sqlMethodAttribute          = sqlMethodAttribute;
 			_sqlUserDefinedTypeAttribute = sqlUserDefinedTypeAttribute;
 			_objectId                    = $".{_sqlMethodAttribute.AssemblyQualifiedName}.{_sqlUserDefinedTypeAttribute.AssemblyQualifiedName}.";
+
+			var methodNameGetter = _sqlMethodAttribute.GetProperty("Name")!.GetMethod!;
+			_methodNameGetter    = attr => (string?)methodNameGetter.Invoke(attr, null);
+
+			var udtNameGetter = _sqlUserDefinedTypeAttribute.GetProperty("Name")!.GetMethod!;
+			_typeNameGetter   = attr => (string?)udtNameGetter.Invoke(attr, null);
 		}
 
 		static SystemDataSqlServerAttributeReader? TryCreate(string sqlMethodAttributeType, string sqlUserDefinedTypeAttributeType)
@@ -100,82 +109,109 @@ namespace LinqToDB.Metadata
 			T[]? result = null;
 			if (typeof(T).IsAssignableFrom(typeof(Sql.ExpressionAttribute)) && (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx()))
 			{
-				result = (T[])_cache.GetOrAdd((memberInfo, _sqlMethodAttribute), static key =>
-				{
-					if (key.memberInfo.IsMethodEx())
+#if NET45 || NET46 || NETSTANDARD2_0
+#else
+#endif
+				result = (T[])_cache.GetOrAdd(
+					(memberInfo, _sqlMethodAttribute),
+#if NET45 || NET46 || NETSTANDARD2_0
+					key =>
 					{
-						var attr = FindAttribute(key.memberInfo, key.attributeType);
-
-						if (attr != null)
-						{
-							var mi = (MethodInfo)key.memberInfo;
-							var ps = mi.GetParameters();
-
-							string ex;
-							if (mi.IsStatic)
-							{
-								var name = key.memberInfo.DeclaringType!.Name.ToLowerInvariant();
-								name = name.StartsWith("sql") ? name.Substring(3) : name;
-
-								ex = string.Format(
-									"{0}::{1}({2})",
-									name,
-									((dynamic)attr).Name ?? key.memberInfo.Name,
-									string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}')));
-							}
-							else
-							{
-								ex = string.Format(
-									"{{0}}.{0}({1})",
-									((dynamic)attr).Name ?? key.memberInfo.Name,
-									string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString() + '}')));
-							}
-
-							return new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
-						}
-					}
-					else
+						var nameGetter = _methodNameGetter;
+#else
+					static (key, nameGetter) =>
 					{
-						var pi = (PropertyInfo)key.memberInfo;
-						var gm = pi.GetGetMethod();
-
-						if (gm != null)
+#endif
+						if (key.memberInfo.IsMethodEx())
 						{
-							var attr = FindAttribute(gm, key.attributeType);
+							var attr = FindAttribute(key.memberInfo, key.attributeType);
 
 							if (attr != null)
 							{
-								var ex = $"{{0}}.{((dynamic)attr).Name ?? key.memberInfo.Name}";
+								var mi = (MethodInfo)key.memberInfo;
+								var ps = mi.GetParameters();
 
-								return new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true, ExpectExpression = true } };
+								string ex;
+								if (mi.IsStatic)
+								{
+									var name = key.memberInfo.DeclaringType!.Name.ToLowerInvariant();
+									name = name.StartsWith("sql") ? name.Substring(3) : name;
+
+									ex = string.Format(
+										"{0}::{1}({2})",
+										name,
+										nameGetter(attr) ?? key.memberInfo.Name,
+										string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}')));
+								}
+								else
+								{
+									ex = string.Format(
+										"{{0}}.{0}({1})",
+										nameGetter(attr) ?? key.memberInfo.Name,
+										string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString() + '}')));
+								}
+
+								return new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
 							}
 						}
-					}
+						else
+						{
+							var pi = (PropertyInfo)key.memberInfo;
+							var gm = pi.GetGetMethod();
 
-					return Array<T>.Empty;
-				});
+							if (gm != null)
+							{
+								var attr = FindAttribute(gm, key.attributeType);
+
+								if (attr != null)
+								{
+									var ex = $"{{0}}.{nameGetter(attr) ?? key.memberInfo.Name}";
+
+									return new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true, ExpectExpression = true } };
+								}
+							}
+						}
+
+						return Array<T>.Empty;
+#if NET45 || NET46 || NETSTANDARD2_0
+					});
+#else
+					}, _methodNameGetter);
+#endif
 			}
 
 			if (typeof(T).IsAssignableFrom(typeof(DataTypeAttribute)))
 			{
-				var res = (T[])_cache.GetOrAdd((memberInfo, _sqlUserDefinedTypeAttribute), static key =>
-				{
-					var c = FindAttribute(key.memberInfo.GetMemberType(), key.attributeType);
-
-					if (c != null)
+				var res = (T[])_cache.GetOrAdd(
+					(memberInfo, _sqlUserDefinedTypeAttribute),
+#if NET45 || NET46 || NETSTANDARD2_0
+					key =>
 					{
-						var n = ((dynamic)c).Name ?? key.memberInfo.GetMemberType().Name;
+						var nameGetter = _typeNameGetter;
+#else
+					static (key, nameGetter) =>
+					{
+#endif
+						var c = FindAttribute(key.memberInfo.GetMemberType(), key.attributeType);
 
-						if (n.ToLower().StartsWith("sql"))
-							n = n.Substring(3);
+						if (c != null)
+						{
+							var n = nameGetter(c) ?? key.memberInfo.GetMemberType().Name;
 
-						var attr = new DataTypeAttribute(DataType.Udt, n);
+							if (n.ToLowerInvariant().StartsWith("sql"))
+								n = n.Substring(3);
 
-						return new[] { (T)(Attribute)attr };
-					}
+							var attr = new DataTypeAttribute(DataType.Udt, n);
 
-					return Array<T>.Empty;
-				});
+							return new[] { (T)(Attribute)attr };
+						}
+
+						return Array<T>.Empty;
+#if NET45 || NET46 || NETSTANDARD2_0
+					});
+#else
+					}, _typeNameGetter);
+#endif
 
 				result = result == null || result.Length == 0 || res.Length == 0
 					? res

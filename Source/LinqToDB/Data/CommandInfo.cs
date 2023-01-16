@@ -615,8 +615,11 @@ namespace LinqToDB.Data
 			var indexMap = new Dictionary<int, MemberAccessor>();
 
 			// Use attribute labels if any exist.
-			foreach (var m in typeAccessor.Members.Where(m => m.HasSetter))
+			foreach (var m in typeAccessor.Members)
 			{
+				if (!m.HasGetter)
+					continue;
+
 				var attr = m.MemberInfo.GetAttribute<ResultSetIndexAttribute>();
 
 				if (attr != null)
@@ -627,10 +630,13 @@ namespace LinqToDB.Data
 			{
 				// Use ordering of properties according to reflection.
 				var i = 0;
-				foreach (var m in typeAccessor.Members.Where(m => m.HasSetter))
+				foreach (var m in typeAccessor.Members)
 				{
-					indexMap[i] = m;
-					i++;
+					if (m.HasGetter)
+					{
+						indexMap[i] = m;
+						i++;
+					}
 				}
 			}
 

@@ -151,9 +151,7 @@ namespace LinqToDB.Mapping
 
 		bool HasInheritanceMapping()
 		{
-			return TypeAccessor.Type.BaseType != null
-				? MappingSchema.HasAttribute<InheritanceMappingAttribute>(TypeAccessor.Type.BaseType)
-				: false;
+			return TypeAccessor.Type.BaseType != null && MappingSchema.HasAttribute<InheritanceMappingAttribute>(TypeAccessor.Type.BaseType);
 		}
 
 		void Init()

@@ -324,7 +324,7 @@ namespace LinqToDB.Mapping
 				func,
 				false,
 				 _    => new IdentityAttribute(Configuration),
-				(_,a) => {});
+				(_,_) => {});
 		}
 
 		/// <summary>
@@ -369,7 +369,7 @@ namespace LinqToDB.Mapping
 				func,
 				true,
 				_ => new SkipValuesOnInsertAttribute(values) { Configuration = Configuration },
-				(_, a) => { });
+				(_,_) => { });
 		}
 
 		/// <summary>
@@ -384,7 +384,7 @@ namespace LinqToDB.Mapping
 				func,
 				true,
 				_ => new SkipValuesOnUpdateAttribute(values) { Configuration = Configuration },
-				(_, a) => { });
+				(_,_) => { });
 		}
 
 		/// <summary>

@@ -1719,7 +1719,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Enumerates types registered by FluentMetadataBuilder.
+		/// Enumerates types registered by <see cref="FluentMappingBuilder"/>.
 		/// </summary>
 		/// <returns>
 		/// Returns all types, mapped by fluent mappings.
