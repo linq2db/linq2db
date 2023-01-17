@@ -27,23 +27,18 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.Statement = new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset };
 
-			return new TruncateContext(buildInfo.Parent, sequence);
+			return new TruncateContext(sequence);
 		}
 
 		#endregion
 
 		#region TruncateContext
 
-		sealed class TruncateContext : SequenceContextBase
+		sealed class TruncateContext : PassThroughContext
 		{
-			public TruncateContext(IBuildContext? parent, IBuildContext sequence)
-				: base(parent, sequence, null)
+			public TruncateContext(IBuildContext sequence)
+				: base(sequence, sequence.SelectQuery)
 			{
-			}
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -51,39 +46,9 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new TruncateContext(null, context.CloneContext(Sequence));
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlStatement GetResultStatement()
-			{
-				return Sequence.GetResultStatement();
+				return new TruncateContext(context.CloneContext(Context));
 			}
 		}
 

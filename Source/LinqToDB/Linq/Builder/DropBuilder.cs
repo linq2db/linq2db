@@ -46,26 +46,6 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				QueryRunner.SetNonQueryQuery(query);
-			}
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new DropContext(null, context.CloneContext(Sequence));
@@ -76,12 +56,7 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}

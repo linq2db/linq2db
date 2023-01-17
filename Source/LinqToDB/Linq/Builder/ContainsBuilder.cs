@@ -74,47 +74,12 @@ namespace LinqToDB.Linq.Builder
 			}
 
 
-			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-			}
-
-			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				return this;
 			}
 
-			public int  ConvertToParentIndex(int index, IBuildContext context)
-			{
-				throw new NotImplementedException();
-			}
-
 			public void SetAlias(string?         alias)
-			{
-				throw new NotImplementedException();
-			}
-
-			public ISqlExpression GetSubQuery(IBuildContext? context)
 			{
 				throw new NotImplementedException();
 			}

@@ -89,21 +89,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			static readonly ParameterExpression _counterParam = Expression.Parameter(typeof(int), "counter");
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
 		}
 
 		#endregion

@@ -23,32 +23,12 @@ namespace LinqToDB.Linq.Builder
 			SelectQuery = selectQuery;
 		}
 
-		public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-		{
-			throw new InvalidOperationException();
-		}
-
-		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new InvalidOperationException();
-		}
-
 		public override IBuildContext Clone(CloningContext context)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-		{
-			throw new NotImplementedException();
-		}
-
-		public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
 			return null;
 		}

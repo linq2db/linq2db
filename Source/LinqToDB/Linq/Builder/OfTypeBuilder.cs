@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -100,24 +99,6 @@ namespace LinqToDB.Linq.Builder
 				EntityType = entityType;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				var expr   = BuildExpression(null, 0, false);
-				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
-
-				QueryRunner.SetRunQuery(query, mapper);
-			}
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				var expr = base.BuildExpression(expression, level, enforceServerSide);
-
-				if (expr.Type != EntityType)
-					expr = Expression.Convert(expr, EntityType);
-
-				return expr;
-			}
-
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				var corrected = base.MakeExpression(path, flags);
@@ -137,7 +118,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				return new OfTypeContext(context.CloneContext(Context), EntityType);
 			}
-
 		}
 
 		#endregion

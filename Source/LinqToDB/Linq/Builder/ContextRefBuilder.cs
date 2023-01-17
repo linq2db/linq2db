@@ -54,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 			if (!buildInfo.CreateSubQuery)
 				return context;
 
-			var elementContext = context.GetContext(buildInfo.Expression, 0, buildInfo);
+			var elementContext = context.GetContext(buildInfo.Expression, buildInfo);
 			if (elementContext != null)
 				return elementContext;
 
@@ -73,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 			if (root is not ContextRefExpression contextRef)
 				return builder.IsSequence(new BuildInfo(buildInfo, root));
 
-			return contextRef.BuildContext.GetContext(buildInfo.Expression, 0, buildInfo) != null;
+			return contextRef.BuildContext.GetContext(buildInfo.Expression, buildInfo) != null;
 		}
 	}
 }

@@ -116,11 +116,6 @@ namespace LinqToDB.Linq.Builder
 			public bool IsAssociation { get; }
 			public bool IsOuter       { get; }
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-			}
-
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
@@ -196,11 +191,6 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if ((flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Root)) && SequenceHelper.IsSameContext(path, this))
@@ -245,22 +235,7 @@ namespace LinqToDB.Linq.Builder
 				return new FirstSingleContext(null, context.CloneContext(Sequence), context.CloneExpression(_methodCall), IsSubQuery, IsAssociation, IsOuter);
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				return null;
 			}

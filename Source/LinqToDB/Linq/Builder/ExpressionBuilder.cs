@@ -147,7 +147,6 @@ namespace LinqToDB.Linq.Builder
 		public readonly Expression             OriginalExpression;
 		public readonly Expression             Expression;
 		public readonly ParameterExpression[]? CompiledParameters;
-		public readonly List<IBuildContext>    Contexts = new ();
 
 		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");

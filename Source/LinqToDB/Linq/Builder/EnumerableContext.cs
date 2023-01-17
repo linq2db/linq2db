@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -15,50 +12,37 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using Reflection;
 
-	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	sealed class EnumerableContext : IBuildContext
+	//TODO: review
+	sealed class EnumerableContext : BuildContextBase
 	{
 		readonly Type _elementType;
 
-#if DEBUG
-		public string SqlQueryText => SelectQuery.ToString();
-		public string Path         => this.GetPath();
-		public int    ContextId    { get; }
-#endif
-		public  ExpressionBuilder    Builder       { get; }
-		public  Expression           Expression    { get; }
-		public  SelectQuery          SelectQuery   { get; set; }
-		public  SqlStatement?        Statement     { get; set; }
-		public  IBuildContext?       Parent        { get; set; }
-
 		readonly EntityDescriptor _entityDescriptor;
 
-		public SqlValuesTable Table { get; }
+		public override Expression?    Expression { get; }
+		public          SqlValuesTable Table      { get; }
 
 		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType)
+			: base(builder, query)
 		{
 			Parent            = buildInfo.Parent;
-			Builder           = builder;
-			Expression        = buildInfo.Expression;
-			SelectQuery       = query;
 			_elementType      = elementType;
 			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType);
 			Table             = BuildValuesTable();
+			Expression        = buildInfo.Expression;
 
 			foreach (var field in Table.Fields)
 			{
 				SelectQuery.Select.AddNew(field);
 			}
 
-			SelectQuery.From.Table(Table);
-#if DEBUG
-			ContextId = builder.GenerateContextId();
-#endif
+			if (!buildInfo.IsTest)
+				SelectQuery.From.Table(Table);
 		}
 
 		SqlValuesTable BuildValuesTable()
 		{
-			if (Expression.NodeType == ExpressionType.NewArrayInit)
+			if (Expression!.NodeType == ExpressionType.NewArrayInit)
 				return BuildValuesTableFromArray((NewArrayExpression)Expression);
 
 			return new SqlValuesTable(Builder.ConvertToSql(this, Expression));
@@ -132,21 +116,6 @@ namespace LinqToDB.Linq.Builder
 			return new SqlValuesTable(fields, columnsInfo.Select(ci => ci.Member).ToArray(), builtRows);
 		}
 
-		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
 		static ConstructorInfo _parameterConstructor =
 			MemberHelper.ConstructorOf(() => new SqlParameter(new DbDataType(typeof(object)), "", null));
 
@@ -211,12 +180,7 @@ namespace LinqToDB.Linq.Builder
 			return newField;
 		}
 
-		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Expression MakeExpression(Expression path, ProjectFlags flags)
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			if (SequenceHelper.IsSameContext(path, this))
 			{
@@ -228,9 +192,9 @@ namespace LinqToDB.Linq.Builder
 					return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
 				if (flags.HasFlag(ProjectFlags.Expression))
-					return Expression; // do nothing
+					return Expression!; // do nothing
 
-				var result = Builder.BuildSqlExpression(this, Expression, flags.SqlFlag());
+				var result = Builder.BuildSqlExpression(this, Expression!, flags.SqlFlag());
 
 				return result;
 				//return Builder.BuildEntityExpression(this, _elementType, flags);
@@ -248,52 +212,28 @@ namespace LinqToDB.Linq.Builder
 			return placeholder;
 		}
 
-		public IBuildContext Clone(CloningContext context)
+		public override IBuildContext Clone(CloningContext context)
 		{
 			//TODO: Clone
 			throw new NotImplementedException();
 		}
 
-		public void SetRunQuery<T>(Query<T> query, Expression expr)
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
 			var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
 		}
 
-		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-		{
-			return null;
-		}
-
-		public int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void SetAlias(string? alias)
+		public override void SetAlias(string? alias)
 		{
 			if (SelectQuery.Select.Columns.Count == 1)
 				SelectQuery.Select.Columns[0].Alias = alias;
 		}
 
-		public ISqlExpression GetSubQuery(IBuildContext context)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlStatement GetResultStatement()
+		public override SqlStatement GetResultStatement()
 		{
 			return new SqlSelectStatement(SelectQuery);
-		}
-
-		public void CompleteColumns()
-		{
 		}
 	}
 }

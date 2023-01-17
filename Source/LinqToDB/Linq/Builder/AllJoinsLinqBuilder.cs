@@ -126,11 +126,6 @@ namespace LinqToDB.Linq.Builder
 			public JoinContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, isSubQuery, outerContext, innerContext)
 			{
 			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
 		}
 	}
 }

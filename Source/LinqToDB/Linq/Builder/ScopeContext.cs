@@ -57,10 +57,10 @@ namespace LinqToDB.Linq.Builder
 			return Context.GetResultStatement();
 		}
 
-		public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
 			expression = SequenceHelper.CorrectExpression(expression, this, Context);
-			return Context.GetContext(expression, level, buildInfo);
+			return Context.GetContext(expression, buildInfo);
 		}
 	}
 }

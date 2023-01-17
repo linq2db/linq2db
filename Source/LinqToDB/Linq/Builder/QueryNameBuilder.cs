@@ -24,12 +24,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				// It is special case when we are trying to make subquery from GroupBy
 
-				sequence.ConvertToIndex(null, 0, ConvertFlags.Key);
+				//TODO: Probably not needed
+				throw new NotImplementedException();
+				/*sequence.ConvertToIndex(null, 0, ConvertFlags.Key);
 				var param  = Expression.Parameter(elementType);
 				var lambda = Expression.Lambda(Expression.PropertyOrField(param, "Key"), param);
 
 				sequence = new SubQueryContext(sequence);
-				sequence = new SelectContext(buildInfo.Parent, lambda, buildInfo.IsSubQuery, sequence);
+				sequence = new SelectContext(buildInfo.Parent, lambda, buildInfo.IsSubQuery, sequence);*/
 			}
 			else
 			{

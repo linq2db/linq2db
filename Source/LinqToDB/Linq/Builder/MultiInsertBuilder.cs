@@ -201,56 +201,13 @@ namespace LinqToDB.Linq.Builder
 				Statement = insert;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-				=> QueryRunner.SetNonQueryQuery(query);
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-				=> throw new NotImplementedException();
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-				=> throw new NotImplementedException();
-
 			public override IBuildContext Clone(CloningContext context)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				if (expression != null)
-				{
-					switch (flags)
-					{
-						case ConvertFlags.Field:
-							{
-								var root = Builder.GetRootObject(expression);
-
-								if (root.NodeType == ExpressionType.Parameter)
-								{
-									if (_sourceParameters.Contains(root))
-										return _source.ConvertToSql(expression, level, flags);
-
-									return _target!.ConvertToSql(expression, level, flags);
-								}
-
-								if (root is ContextRefExpression contextRef)
-								{
-									return contextRef.BuildContext.ConvertToSql(expression, level, flags);
-								}
-
-								break;
-							}
-					}
-				}
-
-				throw new LinqException("'{0}' cannot be converted to SQL.", expression);
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-				=> _source.IsExpression(expression, level, requestFlag);
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-				=> throw new NotImplementedException();
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
+				=> null;
 		}
 
 		#endregion

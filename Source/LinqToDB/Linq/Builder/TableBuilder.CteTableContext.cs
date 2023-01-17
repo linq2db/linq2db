@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				if (!buildInfo.CreateSubQuery)
 					return this;

@@ -28,39 +28,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Where
 
-		bool? IsHavingSql(bool forGroup, ISqlExpression expr, SelectQuery parentSql)
-		{
-			var isHaving = (bool?)null;
-			expr.VisitParentFirst(e =>
-		{
-				if (isHaving == false)
-					return false;
-
-				if (e is SqlFunction func)
-				{
-					if (forGroup)
-						isHaving = func.IsAggregate;
-					else
-						isHaving = false;
-				}
-				else if (e is SqlColumn column && column.Parent == parentSql)
-				{
-					isHaving = IsHavingSql(forGroup, column.Expression, parentSql);
-					return false;
-				} else if (e is SelectQuery)
-				{
-					isHaving = false;
-				} else  if (e is SqlExpression sqlExpr)
-				{
-					isHaving = !sqlExpr.IsWindowFunction;
-				}
-
-				return isHaving != false;
-			});
-
-			return isHaving;
-		}
-
 		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
 			bool checkForSubQuery, bool enforceHaving, bool isTest)
 		{
@@ -87,49 +54,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return sequence;
-		}
-
-		sealed class CheckSubQueryForWhereContext
-		{
-			public CheckSubQueryForWhereContext(ExpressionBuilder builder, IBuildContext buildContext)
-			{
-				Builder = builder;
-				BuildContext = buildContext;
-			}
-
-			public bool MakeSubQuery;
-			public bool IsHaving;
-			public bool IsWhere;
-
-			public readonly ExpressionBuilder Builder;
-			public readonly IBuildContext     BuildContext;
-		}
-
-		bool IsGrouping(Expression expression, MappingSchema mappingSchema)
-		{
-			switch (expression.NodeType)
-			{
-				case ExpressionType.MemberAccess:
-				{
-					var ma = (MemberExpression)expression;
-					return ma.Expression != null && typeof(IGrouping<,>).IsSameOrParentOf(ma.Expression.Type);
-				}
-
-				case ExpressionType.Call:
-				{
-					var mce = (MethodCallExpression)expression;
-
-					if (mce.Object != null && typeof(IGrouping<,>).IsSameOrParentOf(mce.Object.Type))
-						return true;
-
-					if (mce.Method == Methods.LinqToDB.GroupBy.Grouping)
-						return true;
-
-					return mce.Arguments.Any(static a => typeof(IGrouping<,>).IsSameOrParentOf(a.Type));
-				}
-			}
-
-			return false;
 		}
 
 		#endregion
@@ -170,100 +94,6 @@ namespace LinqToDB.Linq.Builder
 			var ctx = BuildSequence(info);
 
 			return ctx;
-		}
-
-		#endregion
-
-		#region IsSubQuery
-
-		public bool IsSubQuery(IBuildContext context, MethodCallExpression call)
-		{
-			var isAggregate = call.IsAggregate(MappingSchema);
-
-			if (isAggregate || call.IsQueryable())
-			{
-				/*
-				var infoOnAggregation = new BuildInfo(context, call, new SelectQuery { ParentSelect = context.SelectQuery }) { InAggregation = true };
-				if (IsSequence(infoOnAggregation))
-					return false;
-					*/
-
-				var info = new BuildInfo(context, call, new SelectQuery { ParentSelect = context.SelectQuery });
-
-				if (!IsSequence(info))
-					return false;
-
-				var arg = call.Arguments[0];
-
-				if (isAggregate)
-					while (arg.NodeType == ExpressionType.Call && ((MethodCallExpression)arg).Method.Name == "Select")
-						arg = ((MethodCallExpression)arg).Arguments[0];
-
-				arg = arg.SkipPathThrough();
-				arg = arg.SkipMethodChain(MappingSchema);
-
-				var mc = arg as MethodCallExpression;
-
-				while (mc != null)
-				{
-					if (!mc.IsQueryable())
-					{
-						if (mc.IsAssociation(MappingSchema))
-							return true;
-
-						return mc.Method.GetTableFunctionAttribute(MappingSchema) != null;
-					}
-
-					mc = mc.Arguments[0] as MethodCallExpression;
-				}
-
-				return arg.NodeType == ExpressionType.Call || IsSubQuerySource(context, arg);
-			}
-
-			return false;
-		}
-
-		bool IsSubQuerySource(IBuildContext context, Expression? expr)
-		{
-			if (expr == null)
-				return false;
-
-			var ctx = GetContext(context, expr);
-
-			if (ctx != null && ctx.IsExpression(expr, 0, RequestFor.Object).Result)
-				return true;
-
-			while (expr != null)
-			{
-				switch (expr)
-				{
-					case MemberExpression me:
-						expr = me.Expression;
-						continue;
-					case MethodCallExpression mc when mc.IsQueryable("AsQueryable"):
-						expr = mc.Arguments[0];
-						continue;
-				}
-
-				break;
-			}
-
-			return expr != null && expr.NodeType == ExpressionType.Constant;
-		}
-
-		bool IsGroupJoinSource(IBuildContext context, MethodCallExpression call)
-		{
-			if (!call.IsQueryable() || CountBuilder.MethodNames.Contains(call.Method.Name))
-				return false;
-
-			Expression expr = call;
-
-			while (expr.NodeType == ExpressionType.Call)
-				expr = ((MethodCallExpression)expr).Arguments[0];
-
-			var ctx = GetContext(context, expr);
-
-			return ctx != null && ctx.IsExpression(expr, 0, RequestFor.GroupJoin).Result;
 		}
 
 		#endregion
@@ -567,6 +397,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (unwrapped is LambdaExpression lambda)
 			{
+				throw new NotImplementedException();
+
 				IBuildContext valueSequence = context;
 
 				/*
@@ -587,8 +419,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (!(result is SqlField field) || field.Table!.All != field)
 					return result;
-				result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
-				return result;
+				/*result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
+				return result;*/
 			}
 
 			/*if (context is SelectContext selectContext)
@@ -604,8 +436,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (context is MethodChainBuilder.ChainContext chainContext)
 			{
+				throw new NotImplementedException();
+				/*
 				if (expression is MethodCallExpression mc && IsSubQuery(context, mc))
 					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
+			*/
 			}
 
 			return ConvertToSql(context, expression, unwrap: false, columnDescriptor: columnDescriptor);
@@ -3114,15 +2949,6 @@ namespace LinqToDB.Linq.Builder
 				default                        :
 					return false;
 			}
-		}
-
-		public void ReplaceParent(IBuildContext oldParent, IBuildContext? newParent)
-		{
-			foreach (var context in Contexts)
-				if (context != newParent)
-					if (context.Parent == oldParent)
-						if (newParent != null && newParent.Parent != context)
-							context.Parent = newParent;
 		}
 
 		public static void EnsureAggregateColumns(IBuildContext context, SelectQuery query)

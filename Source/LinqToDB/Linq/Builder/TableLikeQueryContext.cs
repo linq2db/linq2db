@@ -6,25 +6,8 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-    sealed class TableLikeQueryContext : IBuildContext
+    sealed class TableLikeQueryContext : BuildContextBase
 	{
-#if DEBUG
-		public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-		public string Path         => this.GetPath();
-		public int    ContextId    { get; }
-#endif
-		public SelectQuery SelectQuery
-		{
-			get => InnerQueryContext.SelectQuery;
-			set { }
-		}
-
-		public SqlStatement?  Statement { get; set; }
-		public IBuildContext? Parent    { get; set; }
-
-		public ExpressionBuilder  Builder           { get; }
-		public Expression?        Expression        { get; }
-
 		public ContextRefExpression  TargetContextRef         { get; }
 		public ContextRefExpression  SourceContextRef         { get; }
 		public IBuildContext         InnerQueryContext        { get; }
@@ -42,11 +25,11 @@ namespace LinqToDB.Linq.Builder
 		Expression ProjectionBody       { get; }
 		Expression SelfTargetPropAccess { get; }
 
-		public TableLikeQueryContext(ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef)
+		public TableLikeQueryContext(ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef) 
+			: base(sourceContextRef.BuildContext.Builder, sourceContextRef.BuildContext.SelectQuery)
 		{
 			TargetContextRef  = targetContextRef;
 			SourceContextRef  = sourceContextRef;
-			Builder           = targetContextRef.BuildContext.Builder;
 			InnerQueryContext = sourceContextRef.BuildContext;
 			SubqueryContext   = new SubQueryContext(sourceContextRef.BuildContext);
 
@@ -129,26 +112,6 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<SqlPlaceholderExpression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
 
-		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
 		public bool IsTargetAssociation(Expression pathExpression)
 		{
 			var result = null != pathExpression.Find(this, static (ctx, e) =>
@@ -202,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public Expression MakeExpression(Expression path, ProjectFlags flags)
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			if (flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
 				return path;
@@ -292,47 +255,19 @@ namespace LinqToDB.Linq.Builder
 			return correctedPath;
 		}
 
-		public IBuildContext Clone(CloningContext context)
+		public override IBuildContext Clone(CloningContext context)
 		{
 			throw new NotImplementedException();
 		}
 
-		public void SetRunQuery<T>(Query<T> query, Expression expr)
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-		{
-			return null;
-		}
-
-		public int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void SetAlias(string? alias)
-		{
-		}
-
-		public ISqlExpression? GetSubQuery(IBuildContext context)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlStatement GetResultStatement()
+		public override SqlStatement GetResultStatement()
 		{
 			return SubqueryContext.GetResultStatement();
-		}
-
-		public void CompleteColumns()
-		{
 		}
 
 		public static bool HasAssociation(ExpressionBuilder builder, Expression expression)

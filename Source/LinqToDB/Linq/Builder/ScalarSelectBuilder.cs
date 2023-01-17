@@ -20,12 +20,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return new ScalarSelectContext(builder)
-			{
-				Parent      = buildInfo.Parent,
-				Expression  = buildInfo.Expression,
-				SelectQuery = buildInfo.SelectQuery
-			};
+			return new ScalarSelectContext(builder, buildInfo.SelectQuery);
 		}
 
 		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
@@ -39,51 +34,13 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-		sealed class ScalarSelectContext : IBuildContext
+		sealed class ScalarSelectContext : BuildContextBase
 		{
-			public ScalarSelectContext(ExpressionBuilder builder)
+			public ScalarSelectContext(ExpressionBuilder builder, SelectQuery selectQuery) : base(builder, selectQuery)
 			{
-				Builder = builder;
-
-				builder.Contexts.Add(this);
-#if DEBUG
-				ContextId = builder.GenerateContextId();
-#endif
 			}
 
-#if DEBUG
-			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-			public string Path          => this.GetPath();
-			public int    ContextId     { get; }
-#endif
-
-			public ExpressionBuilder Builder     { get; }
-			public Expression?       Expression  { get; set; }
-			public SelectQuery       SelectQuery { get; set; } = null!;
-			public SqlStatement?     Statement   { get; set; }
-			public IBuildContext?    Parent      { get; set; }
-
-			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-			}
-
-			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public Expression MakeExpression(Expression path, ProjectFlags flags)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this))
 				{
@@ -94,49 +51,21 @@ namespace LinqToDB.Linq.Builder
 				return path;
 			}
 
-			public IBuildContext Clone(CloningContext context)
+			public override IBuildContext Clone(CloningContext context)
 			{
-				return new ScalarSelectContext(Builder);
+				return new ScalarSelectContext(Builder, context.CloneElement(SelectQuery));
 			}
 
-			public void SetRunQuery<T>(Query<T> query, Expression expr)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
+			public override SqlStatement GetResultStatement()
 			{
-				throw new NotImplementedException();
-			}
-
-			public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				return null;
-			}
-
-			public int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				throw new NotImplementedException();
-			}
-
-			public void SetAlias(string? alias)
-			{
-			}
-
-			public ISqlExpression? GetSubQuery(IBuildContext context)
-			{
-				return null;
-			}
-
-			public SqlStatement GetResultStatement()
-			{
-				return Statement ??= new SqlSelectStatement(SelectQuery);
-			}
-
-			public void CompleteColumns()
-			{
+				return new SqlSelectStatement(SelectQuery);
 			}
 		}
 	}

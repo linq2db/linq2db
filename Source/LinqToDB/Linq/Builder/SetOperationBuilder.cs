@@ -64,6 +64,9 @@ namespace LinqToDB.Linq.Builder
 				else
 					sql.Where.Exists(except);
 
+				throw new NotImplementedException();
+				/*builder.ConvertCompareExpression(query, ExpressionType.Equal, ...)
+
 				var keys1 = sequence.ConvertToSql(null, 0, ConvertFlags.All);
 				var keys2 = query.   ConvertToSql(null, 0, ConvertFlags.All);
 
@@ -78,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 						.Expr(keys2[i].Sql);
 				}
 
-				return sequence;
+				return sequence;*/
 			}
 
 			var set1 = new SubQueryContext(sequence1);
@@ -690,33 +693,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
 			// For Set we have to ensure hat columns are not optimized
 			protected override bool OptimizeColumns => false;
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
 
 			static bool IsIncompatible(Expression expression)
 			{

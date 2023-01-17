@@ -34,11 +34,6 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression? DefaultValue { get; }
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)) || flags.HasFlag(ProjectFlags.Expand))
@@ -85,25 +80,10 @@ namespace LinqToDB.Linq.Builder
 				return new DefaultIfEmptyContext(null, context.CloneContext(Sequence), context.CloneExpression(DefaultValue), _allowNullField);
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return Sequence.GetContext(expression, level, buildInfo);
+				return Sequence.GetContext(expression, buildInfo);
 			}
 		}
 	}

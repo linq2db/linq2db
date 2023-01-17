@@ -743,56 +743,6 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region IsNonSqlMember
-
-		bool HasNoneSqlMember(Expression expr)
-		{
-			var ctx = new WritableContext<bool, ExpressionBuilder>(this);
-
-			var found = expr.Find(ctx, static (ctx, e) => ctx.StaticValue.HasNoneSqlMemberFind(ctx, e));
-
-			return found != null && !ctx.WriteableValue;
-		}
-
-		private bool HasNoneSqlMemberFind(WritableContext<bool, ExpressionBuilder> context, Expression e)
-		{
-			switch (e.NodeType)
-			{
-				case ExpressionType.MemberAccess:
-				{
-					var me = (MemberExpression)e;
-
-					var om = (
-								from c in Contexts.OfType<TableBuilder.TableContext>()
-								where c.ObjectType == me.Member.DeclaringType
-								select c.EntityDescriptor
-							).FirstOrDefault();
-
-					if (om != null && om[me.Member.Name] == null)
-					{
-						foreach (var a in om.Associations)
-							if (a.MemberInfo.EqualsTo(me.Member))
-								return false;
-
-						return true;
-					}
-
-					return false;
-				}
-				case ExpressionType.Call:
-				{
-					var mc = (MethodCallExpression)e;
-					if (mc.IsCte(MappingSchema))
-						context.WriteableValue = true;
-					break;
-				}
-			}
-
-			return context.WriteableValue;
-		}
-
-		#endregion
-
 		#region PreferServerSide
 
 		private FindVisitor<ExpressionBuilder>? _enforceServerSideVisitorTrue;

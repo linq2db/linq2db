@@ -42,46 +42,11 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		public virtual ISqlExpression? GetSubQuery(IBuildContext context)
-		{
-			return null;
-		}
-		
 		#region Obsolete
 
-		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-		{
-			throw new NotImplementedException();
-		}
-
-		public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-		{
-			throw new NotImplementedException();
-		}
-
-		public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-		{
-			throw new NotImplementedException();
-		}
-
-		public virtual IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+		public virtual IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
 			return null;
-		}
-
-		public virtual int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			throw new NotImplementedException();
 		}
 
 		public virtual void CompleteColumns()

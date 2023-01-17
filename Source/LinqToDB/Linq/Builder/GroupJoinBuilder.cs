@@ -47,66 +47,27 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-		class GroupJoinInnerContext : IBuildContext
+		class GroupJoinInnerContext : BuildContextBase
 		{
 			public GroupJoinInnerContext(IBuildContext? parent, SelectQuery outerQuery, ExpressionBuilder builder, Type elementType,
 				Expression outerKey, LambdaExpression innerKeyLambda,
 				Expression innerExpression)
+			:base(builder, outerQuery)
 			{
 				_elementType = elementType;
 				Parent            = parent;
-				Builder           = builder;
 				OuterKey          = outerKey;
 				InnerKeyLambda    = innerKeyLambda;
 				InnerExpression   = innerExpression;
-
-				SelectQuery = outerQuery;
-
-				Builder.Contexts.Add(this);
-	#if DEBUG
-				ContextId = builder.GenerateContextId();
-	#endif
 			}
 
-	#if DEBUG
-			public string SqlQueryText => SelectQuery?.SqlText ?? "";
-			public string Path         => this.GetPath();
-			public int    ContextId    { get; }
-	#endif
-
-			public IBuildContext?    Parent          { get; set; }
-			public ExpressionBuilder Builder         { get; }
-			public Expression        OuterKey        { get; }
-			public LambdaExpression  InnerKeyLambda  { get; }
-			public Expression        InnerExpression { get; }
-			public SelectQuery       SelectQuery     { get; set; }
-			public SqlStatement?     Statement       { get; set; }
+			Expression       OuterKey        { get; }
+			LambdaExpression InnerKeyLambda  { get; }
+			Expression       InnerExpression { get; }
 
 			readonly Type _elementType;
 
-			Expression? IBuildContext.Expression    => null;
-
-			public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-			}
-
-			public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlInfo[] ConvertToIndex (Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public Expression MakeExpression(Expression path, ProjectFlags flags)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
 				{
@@ -123,55 +84,32 @@ namespace LinqToDB.Linq.Builder
 				return path;
 			}
 
-			public IBuildContext Clone(CloningContext context)
+			public override IBuildContext Clone(CloningContext context)
 			{
 				return new GroupJoinInnerContext(null, context.CloneElement(SelectQuery), Builder, _elementType,
 					context.CloneExpression(OuterKey), context.CloneExpression(InnerKeyLambda), context.CloneExpression(InnerExpression));
 			}
 
-			public void SetRunQuery<T>(Query<T> query, Expression expr)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public IBuildContext GetContext (Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				var expr = GetGroupJoinCall();
 				var sequence = Builder.BuildSequence(new BuildInfo(Parent, expr, new SelectQuery()));
 				return sequence;
 			}
 
-			public SqlStatement GetResultStatement()
+			public override SqlStatement GetResultStatement()
 			{
 				throw new NotImplementedException();
 			}
 
-			public void CompleteColumns()
-			{
-			}
-
-			public int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				throw new NotImplementedException();
-			}
-
-			public void SetAlias(string? alias)
-			{
-			}
-
-			public ISqlExpression? GetSubQuery(IBuildContext context)
-			{
-				return null;
-			}
-
-			public Expression GetGroupJoinCall()
+			Expression GetGroupJoinCall()
 			{
 				// Generating the following
 				// innerExpression.Where(o => o.Key == innerKey)

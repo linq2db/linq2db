@@ -21,8 +21,6 @@ namespace LinqToDB.Expressions
 		public Expression     Expression   { get; }
 		public Type           ResultType   { get; }
 
-		internal SqlInfo? Sql { get; set; }
-
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      => ResultType;
 		public override bool           CanReduce => true;

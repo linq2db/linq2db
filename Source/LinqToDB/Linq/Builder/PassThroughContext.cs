@@ -37,11 +37,6 @@ namespace LinqToDB.Linq.Builder
 			Context.SetAlias(alias);
 		}
 
-		public override ISqlExpression? GetSubQuery(IBuildContext context)
-		{
-			return Context.GetSubQuery(context);
-		}
-
 		public override SqlStatement GetResultStatement()
 		{
 			return Context.GetResultStatement();

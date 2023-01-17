@@ -248,11 +248,6 @@ namespace LinqToDB.Linq.Builder
 			public TableBuilder.TableContext? OutputContext    { get; set; }
 			public bool                       RequiresSetters  { get; set; }
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-			}
-
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))

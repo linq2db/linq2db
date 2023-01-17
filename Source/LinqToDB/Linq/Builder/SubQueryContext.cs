@@ -37,11 +37,6 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		public override int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			throw new NotImplementedException();
-		}
-
 		public override void SetAlias(string? alias)
 		{
 			if (alias == null)
@@ -54,15 +49,10 @@ namespace LinqToDB.Linq.Builder
 				SelectQuery.From.Tables[0].Alias = alias;
 		}
 
-		public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
 			expression = SequenceHelper.CorrectExpression(expression, this, SubQuery);
-			return SubQuery.GetContext(expression, level, buildInfo);
-		}
-
-		public override ISqlExpression? GetSubQuery(IBuildContext context)
-		{
-			return null;
+			return SubQuery.GetContext(expression, buildInfo);
 		}
 
 		public override SqlStatement GetResultStatement()

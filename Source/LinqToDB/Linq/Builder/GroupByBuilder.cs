@@ -531,31 +531,6 @@ namespace LinqToDB.Linq.Builder
 				return clone;
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				throw new NotImplementedException();
-			}
-
 			static Expression MakeSubQueryExpression(MappingSchema mappingSchema, Expression sequence,
 				ParameterExpression                                param,         Expression expr1, Expression expr2)
 			{
@@ -581,7 +556,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				if (buildInfo.AggregationTest)
 					return new AggregationRoot(Element);

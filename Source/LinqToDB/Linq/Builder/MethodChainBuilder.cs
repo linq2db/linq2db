@@ -82,11 +82,6 @@ namespace LinqToDB.Linq.Builder
 				return 0;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-			}
-
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var builtExpr = BuildExpression();
@@ -94,11 +89,6 @@ namespace LinqToDB.Linq.Builder
 
 				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
-			}
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
 			}
 
 			Expression BuildExpression()
@@ -120,27 +110,7 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				return null;
 			}

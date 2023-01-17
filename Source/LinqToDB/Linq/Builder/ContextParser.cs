@@ -39,15 +39,16 @@ namespace LinqToDB.Linq.Builder
 
 			public ISqlOptimizer? SqlOptimizer;
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				query.DoNotCache = true;
 
 				QueryRunner.SetNonQueryQuery(query);
 
-				SqlOptimizer  = query.SqlOptimizer;
+				SqlOptimizer = query.SqlOptimizer;
 
 				query.GetElement = (db, expr, ps, preambles) => this;
+				base.SetRunQuery(query, expr);
 			}
 
 			public override IBuildContext Clone(CloningContext context)

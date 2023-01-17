@@ -250,7 +250,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region GetContext
 
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				if (!buildInfo.CreateSubQuery)
 					return this;

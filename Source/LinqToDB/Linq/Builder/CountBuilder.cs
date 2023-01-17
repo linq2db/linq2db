@@ -6,6 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	//TODO: remove
 	sealed class CountBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "Count"     , "LongCount"      };
@@ -132,59 +133,15 @@ namespace LinqToDB.Linq.Builder
 			public CountContext(IBuildContext? parent, IBuildContext sequence, Type returnType)
 				: base(parent, sequence, null)
 			{
-				_returnType = returnType;
 			}
-
-			readonly Type       _returnType;
 
 			public int             FieldIndex;
 			public ISqlExpression? Sql;
 			public SqlPlaceholderExpression Placeholder = null!;
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
-				throw new NotImplementedException();
-			}
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				return Sequence.GetContext(expression, level, buildInfo);
-			}
-
-			public override ISqlExpression? GetSubQuery(IBuildContext context)
-			{
-				var query = context.SelectQuery;
-
-				if (query == SelectQuery)
-				{
-					var col = query.Select.Columns[query.Select.Columns.Count - 1];
-
-					query.Select.Columns.RemoveAt(query.Select.Columns.Count - 1);
-
-					return col.Expression;
-				}
-
-				return null;
+				return Sequence.GetContext(expression, buildInfo);
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)

@@ -197,11 +197,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					//TODO: Temporary workaround
 					if (parentContext is GroupByBuilder.GroupByContext)
-						return parentContext!.GetContext(null, 0, buildInfo);
+						return parentContext!.GetContext(null, buildInfo);
 
 					var ctx = builder.GetContext(parentContext, buildInfo.Expression);
 
-					return ctx!.GetContext(buildInfo.Expression, 0, buildInfo);
+					return ctx!.GetContext(buildInfo.Expression, buildInfo);
 				}
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);

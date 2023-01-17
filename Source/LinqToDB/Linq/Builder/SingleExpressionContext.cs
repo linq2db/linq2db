@@ -5,55 +5,16 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-	sealed class SingleExpressionContext : IBuildContext
+	sealed class SingleExpressionContext : BuildContextBase
 	{
-		public SingleExpressionContext(IBuildContext? parent, ExpressionBuilder builder, ISqlExpression sqlExpression, SelectQuery selectQuery)
+		public SingleExpressionContext(ExpressionBuilder builder, ISqlExpression sqlExpression, SelectQuery selectQuery) : base(builder, selectQuery)
 		{
-			Parent        = parent;
-			Builder       = builder;
 			SqlExpression = sqlExpression;
-			SelectQuery   = selectQuery;
-
-			Builder.Contexts.Add(this);
-#if DEBUG
-			ContextId = builder.GenerateContextId();
-#endif
 		}
 
-#if DEBUG
-		public string SqlQueryText => SelectQuery?.SqlText ?? "";
-		public string Path         => this.GetPath();
-		public int    ContextId    { get; }
-#endif
+		public ISqlExpression SqlExpression { get; }
 
-		public IBuildContext?     Parent        { get; set; }
-		public ExpressionBuilder  Builder       { get; set; }
-		public ISqlExpression     SqlExpression { get; }
-		public SelectQuery        SelectQuery   { get; set; }
-		public SqlStatement?      Statement     { get; set; }
-		Expression? IBuildContext.Expression    => null;
-
-		public void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public SqlInfo[] ConvertToIndex (Expression? expression, int level, ConvertFlags flags)
-		{
-			throw new NotImplementedException();
-		}
-
-		public Expression MakeExpression(Expression path, ProjectFlags flags)
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			if (SequenceHelper.IsSameContext(path, this))
 			{
@@ -63,50 +24,21 @@ namespace LinqToDB.Linq.Builder
 			throw new NotImplementedException();
 		}
 
-		public IBuildContext Clone(CloningContext context)
+		public override IBuildContext Clone(CloningContext context)
 		{
-			return new SingleExpressionContext(Parent, Builder, context.CloneElement(SqlExpression),
-				context.CloneElement(SelectQuery));
+			return new SingleExpressionContext(Builder, context.CloneElement(SqlExpression), context.CloneElement(SelectQuery));
 		}
 
-		public void SetRunQuery<T>(Query<T> query, Expression expr)
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
 		{
 			var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
 		}
 
-		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IBuildContext? GetContext     (Expression? expression, int level, BuildInfo buildInfo)
-		{
-			return null;
-		}
-
-		public SqlStatement GetResultStatement()
+		public override SqlStatement GetResultStatement()
 		{
 			throw new InvalidOperationException();
-		}
-
-		public void CompleteColumns()
-		{
-		}
-
-		public int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void SetAlias(string? alias)
-		{
-		}
-
-		public ISqlExpression? GetSubQuery(IBuildContext context)
-		{
-			return null;
 		}
 	}
 }
