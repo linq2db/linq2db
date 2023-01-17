@@ -9,16 +9,16 @@ namespace LinqToDB.SqlQuery
 		public SqlRow(ISqlExpression[] values)
 		{
 			Values = values;
-			// SqlRow doesn't exactly have its own type and nullability, being a collection of values.
-			// But it can be null in the sense that `(1, 2) IS NULL` can be true (when all values are null).
-			CanBeNull = values.All(x => x.CanBeNull);
 		}
 
 		public ISqlExpression[] Values { get; }
 
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
-
-		public bool CanBeNull { get; }
+		public bool CanBeNullable(NullabilityContext nullability)
+		{
+			// SqlRow doesn't exactly have its own type and nullability, being a collection of values.
+			// But it can be null in the sense that `(1, 2) IS NULL` can be true (when all values are null).
+			return QueryHelper.CalcCanBeNull(null, ParametersNullabilityType.IfAllParametersNullable, Values.Select(v => v.CanBeNullable(nullability)));
+		}
 
 		public int Precedence => SqlQuery.Precedence.Primary;
 

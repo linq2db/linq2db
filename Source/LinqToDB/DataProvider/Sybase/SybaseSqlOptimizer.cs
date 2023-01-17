@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
 
@@ -92,7 +92,7 @@ namespace LinqToDB.DataProvider.Sybase
 				}
 			}
 
-			return base.ConvertFunction(func);
+			return base.ConvertFunction(nullability, func);
 		}
 
 		SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)

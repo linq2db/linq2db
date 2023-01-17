@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Text;
 
 using JetBrains.Annotations;
+using LinqToDB.SqlQuery;
 
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
@@ -1718,7 +1719,7 @@ namespace LinqToDB.Linq
 				{
 					builder.ResultExpression = new SqlQuery.SqlFunction(
 						typeof(string),
-						"LTRIM",
+						(string)"LTRIM",
 						stringExpression);
 					return;
 				}

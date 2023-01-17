@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 
 namespace LinqToDB.SqlQuery
 {
@@ -15,10 +13,8 @@ namespace LinqToDB.SqlQuery
 		public const string TO_LOWER = "$ToLower$";
 		public static SqlFunction MakeToLower(ISqlExpression value)
 		{
-			return new SqlFunction(typeof(string), TO_LOWER, false, true, value)
-			{
-				CanBeNull = value.CanBeNull
-			};
+			return new SqlFunction(typeof(string), TO_LOWER, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, value);
 		}
 
 		/// <summary>
@@ -27,10 +23,8 @@ namespace LinqToDB.SqlQuery
 		public const string TO_UPPER = "$ToUpper$";
 		public static SqlFunction MakeToUpper(ISqlExpression value)
 		{
-			return new SqlFunction(typeof(string), TO_UPPER, false, true, value)
-			{
-				CanBeNull = value.CanBeNull
-			};
+			return new SqlFunction(typeof(string), TO_UPPER, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, value);
 		}
 
 		/// <summary>
@@ -39,10 +33,8 @@ namespace LinqToDB.SqlQuery
 		public const string CONVERT = "$Convert$";
 		public static SqlFunction MakeConvert(SqlDataType toType, SqlDataType fromType, ISqlExpression value)
 		{
-			return new SqlFunction(toType.SystemType, CONVERT, false, true, toType, fromType, value)
-			{
-				CanBeNull = value.CanBeNull
-			};
+			return new SqlFunction(toType.SystemType, CONVERT, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, toType, fromType, value);
 		}
 
 		/// <summary>
@@ -65,10 +57,8 @@ namespace LinqToDB.SqlQuery
 		public const string TRY_CONVERT_OR_DEFAULT = "$TryConvertOrDefault$";
 		public static SqlFunction MakeTryConvertOrDefault(SqlDataType toType, SqlDataType fromType, ISqlExpression value, ISqlExpression defaultValue)
 		{
-			return new SqlFunction(toType.SystemType, TRY_CONVERT_OR_DEFAULT, false, true, toType, fromType, value, defaultValue)
-			{
-				CanBeNull = value.CanBeNull || defaultValue.CanBeNull
-			};
+			return new SqlFunction(toType.SystemType, TRY_CONVERT_OR_DEFAULT, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, toType, fromType, value, defaultValue);
 		}
 
 		/// <summary>
@@ -77,10 +67,8 @@ namespace LinqToDB.SqlQuery
 		public const string REPLACE = "$Replace$";
 		public static SqlFunction MakeReplace(ISqlExpression value, ISqlExpression oldSubstring, ISqlExpression newSubstring)
 		{
-			return new SqlFunction(typeof(string), REPLACE, false, true, value, oldSubstring, newSubstring)
-			{
-				CanBeNull = value.CanBeNull || oldSubstring.CanBeNull || newSubstring.CanBeNull
-			};
+			return new SqlFunction(typeof(string), REPLACE, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, value, oldSubstring, newSubstring);
 		}
 
 		/// <summary>
@@ -89,10 +77,8 @@ namespace LinqToDB.SqlQuery
 		public const string REMOVE_CONVERT = "$Convert_Remover$";
 		public static SqlFunction MakeRemoveConvert(ISqlExpression value, SqlDataType resultType)
 		{
-			return new SqlFunction(resultType.SystemType, REMOVE_CONVERT, false, true, value, resultType)
-			{
-				CanBeNull = value.CanBeNull
-			};
+			return new SqlFunction(resultType.SystemType, REMOVE_CONVERT, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, value, resultType);
 		}
 
 		/// <summary>
@@ -101,16 +87,8 @@ namespace LinqToDB.SqlQuery
 		public const string COALESCE = "$Coalesce$";
 		public static SqlFunction MakeCoalesce(Type systemType, params ISqlExpression[] values)
 		{
-			var canBeNull = true;
-
-			foreach (var value in values)
-				if (!value.CanBeNull)
-					canBeNull = false;
-
-			return new SqlFunction(systemType, COALESCE, false, true, values)
-			{
-				CanBeNull = canBeNull
-			};
+			return new SqlFunction(systemType, COALESCE, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAllParametersNullable, null, values);
 		}
 	}
 }

@@ -64,14 +64,12 @@ namespace LinqToDB.Linq.Builder
 			}
 
 
-			DefaultIfEmptyBuilder.DefaultIfEmptyContext? outerDefaultIfEmpty = null;
 			if (joinType == JoinType.Right || joinType == JoinType.Full)
-				outerContext = outerDefaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null, false);
+				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null, false);
 			outerContext = new SubQueryContext(outerContext);
 
-			DefaultIfEmptyBuilder.DefaultIfEmptyContext? innerDefaultIfEmpty = null;
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				innerContext = innerDefaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null, false);
+				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, null, false);
 			innerContext = new SubQueryContext(innerContext);
 
 			var selector = methodCall.Arguments[^1].UnwrapLambda();
@@ -113,10 +111,10 @@ namespace LinqToDB.Linq.Builder
 					conditionExpr, flags,
 					join.JoinedTable.Condition.Conditions);
 
-				if (joinType == JoinType.Full)
+				/*if (joinType == JoinType.Full)
 				{
 					join.JoinedTable.Condition = QueryHelper.CorrectComparisonForJoin(join.JoinedTable.Condition);
-				}
+				}*/
 			}
 			else
 			{

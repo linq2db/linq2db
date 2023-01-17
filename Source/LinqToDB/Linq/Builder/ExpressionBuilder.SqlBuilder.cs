@@ -1068,10 +1068,14 @@ namespace LinqToDB.Linq.Builder
 							parms[1] = trueSql.Sql;
 							c.Parameters.CopyTo(parms, 2);
 
-							return CreatePlaceholder(context, new SqlFunction(e.Type, "CASE", parms) { CanBeNull = trueSql.Sql.CanBeNull || falseSql.Sql.CanBeNull || c.CanBeNull}, expression, alias: alias);
+							return CreatePlaceholder(context,
+								new SqlFunction(e.Type, "CASE",
+									parms), expression, alias : alias);
 						}
 
-						return CreatePlaceholder(context, new SqlFunction(e.Type, "CASE", testSql.Sql, trueSql.Sql, falseSql.Sql) { CanBeNull = trueSql.Sql.CanBeNull || falseSql.Sql.CanBeNull }, expression, alias: alias);
+						return CreatePlaceholder(context,
+							new SqlFunction(e.Type, "CASE",
+								testSql.Sql, trueSql.Sql, falseSql.Sql), expression, alias : alias);
 					}
 
 					return e;
@@ -1608,9 +1612,10 @@ namespace LinqToDB.Linq.Builder
 		public SqlSearchCondition GenerateComparison(
 			IBuildContext? context, 
 			Expression     left,
-			Expression     right)
+			Expression     right,
+			ProjectFlags   flags = ProjectFlags.SQL)
 		{
-			var expr = ConvertCompareExpression(context, ExpressionType.Equal, left, right, ProjectFlags.SQL);
+			var expr = ConvertCompareExpression(context, ExpressionType.Equal, left, right, flags);
 			if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
 				return sc;
 			if (expr is SqlErrorExpression error)
@@ -1770,6 +1775,8 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression? l = null;
 			ISqlExpression? r = null;
 
+			var nullability = new NullabilityContext(context.SelectQuery);
+
 			var columnDescriptor = SuggestColumnDescriptor(context, left, right, flags);
 			var leftExpr         = ConvertToSqlExpr(context, left,  flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
@@ -1907,7 +1914,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.NotEqual:
 
 					if (!context!.SelectQuery.IsParameterDependent &&
-						(l is SqlParameter && lOriginal.CanBeNull || r is SqlParameter && r.CanBeNull))
+						(l is SqlParameter && lOriginal.CanBeNullable(nullability) || r is SqlParameter && r.CanBeNullable(nullability)))
 					{
 						context.SelectQuery.IsParameterDependent = true;
 					}
@@ -1961,12 +1968,12 @@ namespace LinqToDB.Linq.Builder
 				var             isNullable = false;
 				if (IsBooleanConstant(left, out value))
 				{
-					isNullable = typeof(bool?) == left.Type || rOriginal.CanBeNull;
+					isNullable = typeof(bool?) == left.Type || rOriginal.CanBeNullable(nullability);
 					expression = rOriginal;
 				}
 				else if (IsBooleanConstant(right, out value))
 				{
-					isNullable = typeof(bool?) == right.Type || lOriginal.CanBeNull;
+					isNullable = typeof(bool?) == right.Type || lOriginal.CanBeNullable(nullability);
 					expression = lOriginal;
 				}
 
@@ -2662,7 +2669,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (QueryHelper.IsNullValue(sqlValue))
 					{
-						if (!discriminatorSql.CanBeNull)
+						if (!discriminatorSql.CanBeNullable(NullabilityContext.NonQuery))
 							discriminatorSql = new SqlNullabilityExpression(discriminatorSql);
 						return new SqlPredicate.IsNull(discriminatorSql, false);
 					}
@@ -2851,9 +2858,6 @@ namespace LinqToDB.Linq.Builder
 
 		static bool NeedNullCheck(ISqlExpression expr)
 		{
-			if (!expr.CanBeNull)
-				return false;
-
 			if (null != expr.Find(QueryElementType.SelectClause))
 				return false;
 			return true;
@@ -3877,8 +3881,6 @@ namespace LinqToDB.Linq.Builder
 					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) && corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
 						corrected = MakeExpression(rootContext.BuildContext, corrected, flags);
-
-						var pathStr = path.ToString();
 
 						if (corrected is SqlPlaceholderExpression placeholder)
 						{

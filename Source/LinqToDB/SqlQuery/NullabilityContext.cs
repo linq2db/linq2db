@@ -113,11 +113,8 @@
 				if (canBeNullQuery == true)
 					return true;
 
-				if (canBeNullQuery == null)
-				{
-					if (CanBeNull(column.Expression))
-						return true;
-				}
+				if (CanBeNull(column.Expression))
+					return true;
 
 				return false;
 			}
@@ -134,7 +131,7 @@
 			if (expression.CanBeNullable(this))
 				return true;
 
-			return expression.CanBeNull;
+			return false;
 		}
 	}
 }

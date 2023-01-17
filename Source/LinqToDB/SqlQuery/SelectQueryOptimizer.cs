@@ -695,7 +695,7 @@ namespace LinqToDB.SqlQuery
 						// We can not remove subquery that is left side for FULL and RIGHT joins and there is filter
 						var join = source.Joins[0];
 						if ((join.JoinType == JoinType.Full || join.JoinType == JoinType.Right)
-							&& !select.Where.IsEmpty)
+							&& !select.IsSimple)
 						{
 							canRemove = false;
 						}
@@ -1376,10 +1376,12 @@ namespace LinqToDB.SqlQuery
 				joinTable.JoinType = newJoinType;
 				joinTable.Condition.Conditions.AddRange(searchCondition);
 
+				/*
 				if (newJoinType == JoinType.Full)
 				{
 					joinTable.Condition = QueryHelper.CorrectComparisonForJoin(joinTable.Condition);
 				}
+				*/
 			}
 		}
 

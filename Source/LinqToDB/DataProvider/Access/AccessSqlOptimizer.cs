@@ -215,7 +215,7 @@ namespace LinqToDB.DataProvider.Access
 			return like;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			switch (func.Name)
 			{
@@ -223,7 +223,7 @@ namespace LinqToDB.DataProvider.Access
 				case PseudoFunctions.TO_UPPER: return func.WithName("UCase");
 				case "Length"                : return func.WithName("LEN");
 			}
-			return base.ConvertFunction(func);
+			return base.ConvertFunction(nullability, func);
 		}
 	}
 }

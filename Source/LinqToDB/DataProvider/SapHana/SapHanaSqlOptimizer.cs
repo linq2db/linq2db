@@ -98,12 +98,12 @@ namespace LinqToDB.DataProvider.SapHana
 
 			return new SqlFunction(systemType, name,
 				cond,
-				parameters[start + 1],
+				parameters[start                                + 1],
 				ConvertCase(null, systemType, parameters, start + 2));
 		}
 
 		//this is for Tests.Linq.Common.CoalesceLike test
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
 			switch (func.Name)
@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case "CASE": func = ConvertCase(func, func.SystemType, func.Parameters, 0);
 					break;
 			}
-			return base.ConvertFunction(func);
+			return base.ConvertFunction(nullability, func);
 		}
 
 		// https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.01/en-US/20fa17f375191014a4d8d8cbfddfe340.html

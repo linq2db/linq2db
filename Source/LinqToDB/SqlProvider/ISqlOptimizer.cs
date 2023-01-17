@@ -12,13 +12,13 @@ namespace LinqToDB.SqlProvider
 		/// Finalizes query.
 		/// </summary>
 		/// <returns>Query which is ready for optimization.</returns>
-		SqlStatement Finalize          (MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions);
+		SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions);
 
 		/// <summary>
 		/// Examine query for parameter dependency.
 		/// </summary>
 		/// <returns></returns>
-		bool IsParameterDependent(SqlStatement statement);
+		bool IsParameterDependent(NullabilityContext nullability, SqlStatement statement);
 
 		/// <summary>
 		/// Corrects skip/take for specific DataProvider

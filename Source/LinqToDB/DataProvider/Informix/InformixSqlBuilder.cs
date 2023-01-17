@@ -283,7 +283,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			BuildExpression(nullability, value);
 			StringBuilder.Append("::");
-			BuildDataType(dataType, false, value.CanBeNull);
+			BuildDataType(dataType, false, value.CanBeNullable(nullability));
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)

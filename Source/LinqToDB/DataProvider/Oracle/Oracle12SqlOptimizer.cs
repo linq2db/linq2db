@@ -25,7 +25,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return statement;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
 
@@ -40,11 +40,11 @@ namespace LinqToDB.DataProvider.Oracle
 				case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
 					return new SqlExpression(func.SystemType, "CAST({0} AS {1} DEFAULT {2} ON CONVERSION ERROR)", Precedence.Primary, func.Parameters[2], func.Parameters[0], func.Parameters[3])
 					{
-						CanBeNull = func.Parameters[2].CanBeNull || func.Parameters[3].CanBeNull
+						CanBeNull = func.Parameters[2].CanBeNullable(nullability) || func.Parameters[3].CanBeNullable(nullability)
 					};
 			}
 
-			return base.ConvertFunction(func);
+			return base.ConvertFunction(nullability, func);
 		}
 	}
 }

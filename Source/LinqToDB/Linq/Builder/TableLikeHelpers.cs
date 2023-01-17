@@ -103,7 +103,7 @@ namespace LinqToDB.Linq.Builder
 					var field = RegisterFieldMapping(fields, placeholder.Index!.Value, () =>
 					{
 						var alias = (path.Length > 0 ? GenerateColumnAlias(path) : GenerateColumnAlias(placeholder.Path)) ?? GenerateColumnAlias(placeholder.Sql);
-						var newField = new SqlField(QueryHelper.GetDbDataType(placeholder.Sql), alias, placeholder.Sql.CanBeNull);
+						var newField = new SqlField(QueryHelper.GetDbDataType(placeholder.Sql), alias, placeholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
 
 						newField.Table = parentTable;
 						return newField;

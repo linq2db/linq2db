@@ -16,8 +16,9 @@ namespace LinqToDB.SqlProvider
 		Dictionary<int,List<VirtualField[]>?>?                                  _keysCache;
 		HashSet<int>?                                                           _removedSources;
 		Dictionary<VirtualField,VirtualField>?                                  _replaceMap;
-		SelectQuery                                                              _selectQuery = null!;
-		SqlStatement                                                            _statement = null!;
+		SelectQuery                                                             _selectQuery  = null!;
+		SqlStatement                                                            _statement    = null!;
+		NullabilityContext                                                      _nullablility = null!;
 
 		void FlattenJoins(SqlTableSource table)
 		{
@@ -756,8 +757,9 @@ namespace LinqToDB.SqlProvider
 
 		public void OptimizeJoins(SqlStatement statement, SelectQuery selectQuery)
 		{
-			_selectQuery = selectQuery;
-			_statement   = statement;
+			_selectQuery  = selectQuery;
+			_nullablility = new NullabilityContext(selectQuery);
+			_statement    = statement;
 
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
@@ -1024,7 +1026,7 @@ namespace LinqToDB.SqlProvider
 
 				// add check that previously joined fields is not null
 				foreach (var item in found)
-					if (item.ManyField.CanBeNull)
+					if (item.ManyField.CanBeNullable(_nullablility))
 					{
 						var newField = MapToSource(fromTable, item.ManyField, fromTable.SourceID);
 						AddSearchCondition(_selectQuery.Where.SearchCondition,
@@ -1210,7 +1212,7 @@ namespace LinqToDB.SqlProvider
 
 					// add filer for nullable fileds because after INNER JOIN records with nulls disappear
 					foreach (var item in found)
-						if (item.ManyField.CanBeNull)
+						if (item.ManyField.CanBeNullable(_nullablility))
 							AddSearchCondition(_selectQuery.Where.SearchCondition,
 								new SqlCondition(false, new SqlPredicate.IsNull(item.ManyField.Element, true)));
 				}
@@ -1300,7 +1302,7 @@ namespace LinqToDB.SqlProvider
 
 			public string Name      => Field == null    ?  Column!.Alias! : Field.Name!;
 			public int    SourceID  => Field == null    ?  Column!.Parent!.SourceID : Field.Table?.SourceID ?? -1;
-			public bool   CanBeNull => Element.CanBeNull;
+			public bool   CanBeNullable(NullabilityContext nullability) => Element.CanBeNullable(nullability);
 
 			private ISqlExpression? _expression;
 			private ISqlExpression Expression =>

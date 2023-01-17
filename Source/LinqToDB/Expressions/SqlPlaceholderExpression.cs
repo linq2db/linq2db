@@ -122,7 +122,7 @@ namespace LinqToDB.Expressions
 				result = $"SQL({SelectQuery.SourceID})";
 
 			var sqlStr = $"{{{Sql}}}";
-			if (Sql.CanBeNull && Sql is not SqlColumn)
+			if (Sql.CanBeNullable(NullabilityContext.NonQuery) && Sql is not SqlColumn)
 				sqlStr += "?";
 			result += $": {sqlStr} ({pathStr})";
 

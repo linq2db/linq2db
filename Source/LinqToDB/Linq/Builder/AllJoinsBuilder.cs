@@ -51,9 +51,8 @@ namespace LinqToDB.Linq.Builder
 
 			buildInfo.JoinType = joinType;
 
-			DefaultIfEmptyBuilder.DefaultIfEmptyContext? sequenceDefaultIfEmpty = null;
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				sequence = sequenceDefaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
 			
 			sequence = new SubQueryContext(sequence);
 
@@ -64,6 +63,12 @@ namespace LinqToDB.Linq.Builder
 				var result = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition: condition, checkForSubQuery: false, enforceHaving: false,
 					isTest: buildInfo.AggregationTest);
+
+				/*if (joinType == JoinType.Full)
+				{
+					result.SelectQuery.Where.SearchCondition =
+						QueryHelper.CorrectComparisonForJoin(result.SelectQuery.Where.SearchCondition);
+				}*/
 
 				result.SetAlias(condition.Parameters[0].Name);
 				return result;

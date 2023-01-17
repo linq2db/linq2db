@@ -829,14 +829,14 @@ namespace LinqToDB.SqlProvider
 					if (func.DoNotOptimize)
 						break;
 
-					return OptimizeFunction(func, convertVisitor.Context.OptimizationContext.Context);
+					return OptimizeFunction(convertVisitor.Context.Nullability, func, convertVisitor.Context.OptimizationContext.Context);
 				}
 
 				case QueryElementType.SqlExpression   :
 				{
 					var se = (SqlExpression)expression;
 
-					if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNull)
+					if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNullable(convertVisitor.Context.Nullability))
 						return se.Parameters[0];
 
 					break;
@@ -846,7 +846,7 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
-		public virtual ISqlExpression OptimizeFunction(SqlFunction func, EvaluationContext context)
+		public virtual ISqlExpression OptimizeFunction(NullabilityContext nullability, SqlFunction func, EvaluationContext context)
 		{
 			if (func.TryEvaluateExpression(context, out var value))
 			{
@@ -920,7 +920,7 @@ namespace LinqToDB.SqlProvider
 						return new SqlFunction(func.SystemType, func.Name, func.IsAggregate, func.Precedence, parms);
 
 					if (!func.DoNotOptimize && parms.Length == 3
-						&& !parms[0].ShouldCheckForNull()
+						&& !parms[0].ShouldCheckForNull(nullability)
 						&& (parms[0].ElementType == QueryElementType.SqlFunction || parms[0].ElementType == QueryElementType.SearchCondition))
 					{
 						var boolValue1 = QueryHelper.GetBoolValue(parms[1], context);
@@ -1041,7 +1041,7 @@ namespace LinqToDB.SqlProvider
 			return isTrue;
 		}
 
-		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
+		ISqlPredicate OptimizeCase(NullabilityContext nullability, SqlPredicate.ExprExpr expr, EvaluationContext context)
 		{
 			SqlFunction? func;
 			var valueFirst = expr.Expr1.TryEvaluateExpression(context, out var value);
@@ -1158,7 +1158,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 
-			if (!expr.Expr1.CanBeNull && !expr.Expr2.CanBeNull && expr.Expr1.SystemType.IsSignedType() && expr.Expr2.SystemType.IsSignedType())
+			if (!expr.Expr1.CanBeNullable(nullability) && !expr.Expr2.CanBeNullable(nullability) && expr.Expr1.SystemType.IsSignedType() && expr.Expr2.SystemType.IsSignedType())
 			{
 				var newExpr = expr switch
 				{
@@ -1226,7 +1226,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 
-		public virtual ISqlPredicate OptimizePredicate(ISqlPredicate predicate, EvaluationContext context, DataOptions dataOptions)
+		public virtual ISqlPredicate OptimizePredicate(NullabilityContext nullability, ISqlPredicate predicate, EvaluationContext context, DataOptions dataOptions)
 		{
 			// Avoiding infinite recursion
 			//
@@ -1318,7 +1318,7 @@ namespace LinqToDB.SqlProvider
 						case SqlPredicate.Operator.GreaterOrEqual :
 						case SqlPredicate.Operator.Less           :
 						case SqlPredicate.Operator.LessOrEqual    :
-							predicate = OptimizeCase(expr, context);
+							predicate = OptimizeCase(nullability, expr, context);
 							break;
 					}
 
@@ -1372,13 +1372,13 @@ namespace LinqToDB.SqlProvider
 					// The only remaining case that we'd like to simplify is when one expression is the constant null.
 					if (expr.Expr1.TryEvaluateExpression(context, out var value1) && value1 == null)
 					{
-						return expr.Expr2.CanBeNull
+						return expr.Expr2.CanBeNullable(nullability)
 							? new SqlPredicate.IsNull(expr.Expr2, !expr.IsNot)
 							: new SqlPredicate.Expr(new SqlValue(!expr.IsNot));
 					}
 					if (expr.Expr2.TryEvaluateExpression(context, out var value2) && value2 == null)
 					{
-						return expr.Expr1.CanBeNull
+						return expr.Expr1.CanBeNullable(nullability)
 							? new SqlPredicate.IsNull(expr.Expr1, !expr.IsNot)
 							: new SqlPredicate.Expr(new SqlValue(!expr.IsNot));
 					}
@@ -1936,7 +1936,7 @@ namespace LinqToDB.SqlProvider
 				#region SqlFunction
 
 				{
-					return ConvertFunction((SqlFunction)expression);
+					return ConvertFunction(visitor.Context.Nullability, (SqlFunction)expression);
 				}
 				#endregion
 
@@ -1944,7 +1944,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var se = (SqlExpression)expression;
 
-					if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNull)
+					if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNullable(visitor.Context.Nullability))
 						return se.Parameters[0];
 
 					break;
@@ -1954,7 +1954,7 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
-		protected virtual ISqlExpression ConvertFunction(SqlFunction func)
+		protected virtual ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			switch (func.Name)
 			{
@@ -2082,7 +2082,7 @@ namespace LinqToDB.SqlProvider
 						ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
 
 					if (ne is ISqlPredicate pred1)
-						ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
+						ne = visitor.Context.Optimizer.OptimizePredicate(visitor.Context.Nullability, pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
 
 					if (!ReferenceEquals(ne, e))
 						return ne;
@@ -2151,7 +2151,7 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 				case QueryElementType.IsTruePredicate:
-					return ((SqlPredicate.IsTrue)predicate).Reduce();
+					return ((SqlPredicate.IsTrue)predicate).Reduce(visitor.Context.Nullability);
 				case QueryElementType.IsNullPredicate:
 					return ConvertIsNullPredicate(visitor.Context.Nullability, ((SqlPredicate.IsNull)predicate));
 				case QueryElementType.LikePredicate:
@@ -2528,10 +2528,7 @@ namespace LinqToDB.SqlProvider
 			else if (!func.DoNotOptimize && from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
 				return func.Parameters[2];
 
-			return new SqlFunction(func.SystemType, "Convert", false, true, to, func.Parameters[2])
-			{
-				CanBeNull = func.Parameters[2].CanBeNull,
-			};
+			return new SqlFunction(func.SystemType, "Convert", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, to, func.Parameters[2]);
 		}
 
 		#endregion
@@ -3418,7 +3415,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public virtual bool IsParameterDependedElement(IQueryElement element)
+		public virtual bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
 		{
 			switch (element.ElementType)
 			{
@@ -3477,10 +3474,10 @@ namespace LinqToDB.SqlProvider
 					if (isMutable2 && exprExpr.Expr1.CanBeEvaluated(false))
 						return true;
 
-					if (isMutable1 && exprExpr.Expr1.ShouldCheckForNull())
+					if (isMutable1 && exprExpr.Expr1.ShouldCheckForNull(nullability))
 						return true;
 
-					if (isMutable2 && exprExpr.Expr2.ShouldCheckForNull())
+					if (isMutable2 && exprExpr.Expr2.ShouldCheckForNull(nullability))
 						return true;
 
 					return false;
@@ -3508,7 +3505,7 @@ namespace LinqToDB.SqlProvider
 					if (searchString.Expr2.ElementType != QueryElementType.SqlValue)
 						return true;
 
-					return IsParameterDependedElement(searchString.CaseSensitive);
+					return IsParameterDependedElement(nullability, searchString.CaseSensitive);
 				}
 				case QueryElementType.SqlFunction:
 				{
@@ -3539,9 +3536,10 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public bool IsParameterDependent(SqlStatement statement)
+		public bool IsParameterDependent(NullabilityContext nullability, SqlStatement statement)
 		{
-			return null != statement.Find(this, static (ctx, e) => ctx.IsParameterDependedElement(e));
+			return null != statement.Find((optimizer : this, nullability),
+				static (ctx, e) => ctx.optimizer.IsParameterDependedElement(ctx.nullability, e));
 		}
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)

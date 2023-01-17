@@ -6,22 +6,22 @@ namespace LinqToDB.SqlQuery
 	public class SqlFunction : ISqlExpression//ISqlTableSource
 	{
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
-			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.Undefined, null, parameters)
+			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
 		}
 
 		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, ParametersNullabilityType.Undefined, null, parameters)
+			: this(systemType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
 		}
 
 		public SqlFunction(Type systemType, string name, bool isAggregate, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.Undefined, null, parameters)
+			: this(systemType, name, isAggregate, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
 		}
 
 		public SqlFunction(Type systemType, string name, bool isAggregate, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, true, precedence, ParametersNullabilityType.Undefined, null, parameters)
+			: this(systemType, name, isAggregate, true, precedence, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
 		}
 

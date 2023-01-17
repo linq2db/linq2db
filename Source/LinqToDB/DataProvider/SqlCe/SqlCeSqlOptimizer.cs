@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.SqlCe
 									new SqlFunction(typeof(string), "SUBSTRING",
 										predicate.Expr1,
 										new SqlValue(1),
-									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+										new SqlFunction(typeof(int), "Length", predicate.Expr2))),
 								SqlPredicate.Operator.Equal,
 								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
 								null
@@ -322,10 +322,10 @@ namespace LinqToDB.DataProvider.SqlCe
 			return expression;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
 			func = ConvertFunctionParameters(func, false);
-			return base.ConvertFunction(func);
+			return base.ConvertFunction(nullability, func);
 		}
 
 	}

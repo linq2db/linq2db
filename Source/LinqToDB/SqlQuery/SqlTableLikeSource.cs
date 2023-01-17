@@ -87,8 +87,6 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
 
-		bool ISqlExpression.CanBeNull => throw new NotImplementedException();
-
 		int ISqlExpression.Precedence => throw new NotImplementedException();
 
 		Type ISqlExpression.SystemType => throw new NotImplementedException();

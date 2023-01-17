@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 										func.Parameters[2],
 										Sub<int>(
 											ConvertExpressionImpl(
-													new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor), func.Parameters[2])),
+												new SqlFunction(typeof(int), "Length", func.Parameters[1]), visitor), func.Parameters[2])),
 										visitor)),
 								Sub(func.Parameters[2], 1));
 				}
