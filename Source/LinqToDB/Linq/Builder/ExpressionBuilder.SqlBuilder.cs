@@ -78,7 +78,8 @@ namespace LinqToDB.Linq.Builder
 			if (isTest)
 				flags |= ProjectFlags.Test;
 
-			BuildSearchCondition(sequence, expr, flags, sc.Conditions);
+			if (!BuildSearchCondition(sequence, expr, flags, sc.Conditions))
+				throw CreateSqlError(sequence, expr).CreateError();
 
 			if (!isTest)
 			{
@@ -1444,6 +1445,9 @@ namespace LinqToDB.Linq.Builder
 					var left  = MakeExpression(context, e.Left, flags.ExpandFlag());
 					var right = MakeExpression(context, e.Right, flags.ExpandFlag());
 
+					if (left is SqlErrorExpression || right is SqlErrorExpression)
+						return null;
+
 					var newExpr = e.Update(left, e.Conversion, right);
 
 					var optimized = OptimizationContext.OptimizeExpressionTree(newExpr, false);
@@ -2803,8 +2807,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (BinaryExpression)expression;
 
-						BuildSearchCondition(context, e.Left, flags,  conditions);
-						BuildSearchCondition(context, e.Right, flags, conditions);
+						if (!BuildSearchCondition(context, e.Left, flags, conditions) ||
+						    !BuildSearchCondition(context, e.Right, flags, conditions))
+							return false;
 
 						break;
 					}
@@ -2820,9 +2825,11 @@ namespace LinqToDB.Linq.Builder
 						var e           = (BinaryExpression)expression;
 						var orCondition = new SqlSearchCondition();
 
-						BuildSearchCondition(context, e.Left, flags,  orCondition.Conditions);
+						if (!BuildSearchCondition(context, e.Left, flags, orCondition.Conditions))
+							return false;
 						orCondition.Conditions[orCondition.Conditions.Count - 1].IsOr = true;
-						BuildSearchCondition(context, e.Right, flags, orCondition.Conditions);
+						if (!BuildSearchCondition(context, e.Right, flags, orCondition.Conditions))
+							return false;
 
 						conditions.Add(new SqlCondition(false, orCondition));
 
@@ -2834,7 +2841,8 @@ namespace LinqToDB.Linq.Builder
 						var e            = (UnaryExpression)expression;
 						var notCondition = new SqlSearchCondition();
 
-						BuildSearchCondition(context, e.Operand, flags, notCondition.Conditions);
+						if (!BuildSearchCondition(context, e.Operand, flags, notCondition.Conditions))
+							return false;
 
 						conditions.Add(new SqlCondition(true, notCondition));
 
