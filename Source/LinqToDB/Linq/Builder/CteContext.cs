@@ -6,11 +6,8 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using LinqToDB.Expressions;
 
-	internal class CteContext : BuildContextBase, IBuildContext
+	internal class CteContext : BuildContextBase
 	{
-		public SqlStatement?  Statement { get; set; }
-		public IBuildContext? Parent    { get; set; }
-
 		public override Expression? Expression { get; }
 
 		public IBuildContext?   CteInnerQueryContext { get; private set; }

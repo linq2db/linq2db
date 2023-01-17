@@ -39,63 +39,41 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(false) == false;
 		}
 
-		sealed class ContainsContext : IBuildContext
+		sealed class ContainsContext : BuildContextBase
 		{
-#if DEBUG
-			public string SqlQueryText => SelectQuery.SqlText;
-			public string Path         => this.GetPath();
-			public int    ContextId    { get; }
-#endif
-			public Expression Expression => _methodCall;
+			public override Expression Expression { get; }
 
-			public SelectQuery SelectQuery
-			{
-				get => OuterQuery;
-				set { }
-			}
-
-			public SqlStatement?  Statement { get; set; }
-			public IBuildContext? Parent    { get; set; }
-
-			public   SelectQuery          OuterQuery    { get; }
-			public   IBuildContext        InnerSequence { get; }
-			public   ExpressionBuilder    Builder       => InnerSequence.Builder;
+			SelectQuery   OuterQuery    { get; }
+			IBuildContext InnerSequence { get; }
 
 			readonly MethodCallExpression _methodCall;
 			readonly bool                 _buildInStatement;
 
 			public ContainsContext(IBuildContext? parent, MethodCallExpression methodCall, SelectQuery outerQuery, IBuildContext innerSequence, bool buildInStatement)
+				:base(innerSequence.Builder, outerQuery)
 			{
 				Parent            = parent;
 				OuterQuery        = outerQuery;
+				Expression        = methodCall;
 				_methodCall       = methodCall;
 				_buildInStatement = buildInStatement;
 				InnerSequence     = innerSequence;
 			}
 
 
-			public IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				return this;
 			}
 
-			public void SetAlias(string?         alias)
-			{
-				throw new NotImplementedException();
-			}
-
-			public SqlStatement GetResultStatement()
+			public override SqlStatement GetResultStatement()
 			{
 				return new SqlSelectStatement(OuterQuery);
 			}
 
-			public void CompleteColumns()
-			{
-			}
-
 			SqlPlaceholderExpression? _cachedPlaceholder;
 
-			public Expression MakeExpression(Expression path, ProjectFlags flags)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (_cachedPlaceholder != null)
 					return _cachedPlaceholder;
@@ -108,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 				return placeholder;
 			}
 
-			public IBuildContext Clone(CloningContext context)
+			public override IBuildContext Clone(CloningContext context)
 			{
 				var result = new ContainsContext(null, _methodCall, context.CloneElement(OuterQuery), context.CloneContext(InnerSequence), _buildInStatement);
 				if (_cachedPlaceholder != null)
@@ -149,7 +127,7 @@ namespace LinqToDB.Linq.Builder
 				return ExpressionBuilder.CreatePlaceholder(OuterQuery, subQuerySql, _methodCall);
 			}
 
-			public void SetRunQuery<T>(Query<T> query, Expression expr)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				var mapper = Builder.BuildMapper<object>(SelectQuery, expr);
 				QueryRunner.SetRunQuery(query, mapper);
