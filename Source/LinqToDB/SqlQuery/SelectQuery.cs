@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -185,9 +182,20 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
-		public bool CanBeNull                                     => true;
-		public int  Precedence                                    => SqlQuery.Precedence.Unknown;
+		public bool CanBeNullable(NullabilityContext nullability)
+		{
+			foreach(var column in Select.Columns)
+				if (column.CanBeNullable(nullability))
+					return true;
+
+			var allAggregation = Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression));
+			if (allAggregation)
+				return false;
+
+			return true;
+		}
+
+		public int Precedence => SqlQuery.Precedence.Unknown;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
@@ -276,7 +284,7 @@ namespace LinqToDB.SqlQuery
 					var q =
 						from key in ((ISqlTableSource) From.Tables[0]).GetKeys(allIfEmpty)
 						from col in Select.Columns
-						where  col.Expression == key
+						where  col.Expression.Equals(key)
 						select col as ISqlExpression;
 
 					_keys = q.ToList();
