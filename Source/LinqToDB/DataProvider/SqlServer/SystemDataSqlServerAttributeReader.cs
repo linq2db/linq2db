@@ -213,9 +213,11 @@ namespace LinqToDB.Metadata
 					}, _typeNameGetter);
 #endif
 
-				result = result == null || result.Length == 0 || res.Length == 0
+				result = result == null || result.Length == 0
 					? res
-					: result.Concat(res).ToArray();
+					: res.Length == 0
+						? result
+						: result.Concat(res).ToArray();
 			}
 
 			return result ?? Array<T>.Empty;
