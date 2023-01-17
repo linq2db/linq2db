@@ -10,21 +10,16 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall(
+		nameof(LinqExtensions.Update), 
+		nameof(LinqExtensions.UpdateWithOutput), 
+		nameof(LinqExtensions.UpdateWithOutputInto))]
 	sealed class UpdateBuilder : MethodCallBuilder
 	{
-		static readonly string[] _methods =
-		{
-			nameof(LinqExtensions.Update),
-			nameof(LinqExtensions.UpdateWithOutput),
-			nameof(LinqExtensions.UpdateWithOutputInto)
-		};
-
 		#region Update
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(_methods);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out UpdateContext updateContext)
 		{
@@ -754,12 +749,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region Set
 
+		[BuildsMethodCall(nameof(LinqExtensions.Set))]
 		internal sealed class Set : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsQueryable(nameof(LinqExtensions.Set));
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsQueryable();
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{

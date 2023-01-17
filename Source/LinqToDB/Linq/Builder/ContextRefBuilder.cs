@@ -4,76 +4,59 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsAny]
 	sealed class ContextRefBuilder : ISequenceBuilder
 	{
-		public int BuildCounter { get; set; }
-
-		static ProjectFlags GetRootProjectFlags(BuildInfo buildInfo)
+		public static bool CanBuild(BuildInfo info, ExpressionBuilder builder)
 		{
-			return buildInfo.GetFlags(buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
+			var root = CalcBuildContext(builder, info);
+
+			if (!ReferenceEquals(root, info.Expression))
+				return builder.IsSequence(new BuildInfo(info, root) { IsTest = true });
+
+			return root is ContextRefExpression;
 		}
 
-		Expression CalcBuildContext(ExpressionBuilder builder, BuildInfo buildInfo)
+		static ProjectFlags GetRootProjectFlags(BuildInfo info)
+			=> info.GetFlags(info.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
+
+		static Expression CalcBuildContext(ExpressionBuilder builder, BuildInfo info)
 		{
-			if (buildInfo.Parent == null || buildInfo.Expression is ContextRefExpression)
-				return buildInfo.Expression;
+			if (info.Parent == null || info.Expression is ContextRefExpression)
+				return info.Expression;
 
-			var root = builder.MakeExpression(buildInfo.Parent, buildInfo.Expression, GetRootProjectFlags(buildInfo));
-			if (ExpressionEqualityComparer.Instance.Equals(root, buildInfo.Expression))
+			var root = builder.MakeExpression(info.Parent, info.Expression, GetRootProjectFlags(info));
+			if (ExpressionEqualityComparer.Instance.Equals(root, info.Expression))
 			{
-				if (root is ContextRefExpression)
-					return root;
-
-				var newExpression = builder.MakeExpression(buildInfo.Parent, root, ProjectFlags.Expand);
-
-				return newExpression;
+				return root is ContextRefExpression
+					? root
+					: builder.MakeExpression(info.Parent, root, ProjectFlags.Expand);
 			}
 
 			return root;
 		}
 
-		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
+		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo info)
 		{
-			var root = CalcBuildContext(builder, buildInfo);
+			var root = CalcBuildContext(builder, info);
 
-			if (!ReferenceEquals(root, buildInfo.Expression))
-				return builder.IsSequence(new BuildInfo(buildInfo, root) {IsTest = true});
-
-			return root is ContextRefExpression;
+			return root is not ContextRefExpression { BuildContext: var context }
+				? builder.BuildSequence(new BuildInfo(info, root))
+				: info.CreateSubQuery && context.GetContext(info.Expression, 0, info) is {} exprContext
+				? exprContext
+				: context;
 		}
 
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo info, ParameterExpression? param)
+			=> null;
+
+		public bool IsSequence(ExpressionBuilder builder, BuildInfo info)
 		{
-			var root = CalcBuildContext(builder, buildInfo);
+			var root = CalcBuildContext(builder, info);
 
-			if (root is not ContextRefExpression contextRef)
-				return builder.BuildSequence(new BuildInfo(buildInfo, root));
-
-			var context = contextRef.BuildContext;
-
-			if (!buildInfo.CreateSubQuery)
-				return context;
-
-			var elementContext = context.GetContext(buildInfo.Expression, 0, buildInfo);
-			if (elementContext != null)
-				return elementContext;
-
-			return context;
-		}
-
-		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
-		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			var root = CalcBuildContext(builder, buildInfo);
-
-			if (root is not ContextRefExpression contextRef)
-				return builder.IsSequence(new BuildInfo(buildInfo, root));
-
-			return contextRef.BuildContext.GetContext(buildInfo.Expression, 0, buildInfo) != null;
+			return root is not ContextRefExpression contextRef
+				? builder.IsSequence(new BuildInfo(info, root))
+				: contextRef.BuildContext.GetContext(info.Expression, 0, info) != null;
 		}
 	}
 }

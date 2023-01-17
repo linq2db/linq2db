@@ -9,30 +9,16 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	[BuildsExpression(ExpressionType.Constant, ExpressionType.MemberAccess, ExpressionType.NewArrayInit)]
 	sealed class EnumerableBuilder : ISequenceBuilder
 	{
-		public int BuildCounter { get; set; }
-
-		private static MethodInfo[] _containsMethodInfos = { Methods.Enumerable.Contains, Methods.Queryable.Contains };
-
-		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
+		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (buildInfo.IsSubQuery)
+			if (info.IsSubQuery)
 				return false;
 
-			var expr = buildInfo.Expression;
-
 			if (expr.NodeType == ExpressionType.NewArrayInit)
-			{
 				return true;
-			}
-
-			if (expr.NodeType == ExpressionType.Call)
-			{
-				var mc = (MethodCallExpression)expr;
-				if (mc.IsSameGenericMethod(_containsMethodInfos))
-					return false;
-			}
 
 			if (!typeof(IEnumerable<>).IsSameOrParentOf(expr.Type))
 				return false;
@@ -41,31 +27,20 @@ namespace LinqToDB.Linq.Builder
 			if (collectionType == null)
 				return false;
 
-			if (!builder.CanBeCompiled(expr, buildInfo.CreateSubQuery))
+			if (!builder.CanBeCompiled(expr, info.CreateSubQuery))
 				return false;
 
 			switch (expr.NodeType)
 			{
 				case ExpressionType.MemberAccess:
-				{
-					var ma = (MemberExpression)expr;
-					if (ma.Expression == null)
-						break;
+					return ((MemberExpression)expr).Expression is null or { NodeType: ExpressionType.Constant };
 
-					if (ma.Expression.NodeType != ExpressionType.Constant)
-						return false;
-					break;
-				}
 				case ExpressionType.Constant:
-					if (((ConstantExpression)expr).Value is not IEnumerable)
-						return false;
-					break;
+					return ((ConstantExpression)expr).Value is IEnumerable;
+
 				default:
 					return false;
 			}
-
-			return true;
-
 		}
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -73,20 +48,17 @@ namespace LinqToDB.Linq.Builder
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
 
-			var enumerableContext = new EnumerableContext(builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
-
-			return enumerableContext;
+			return new EnumerableContext(
+				builder, 
+				buildInfo, 
+				buildInfo.SelectQuery, 
+				collectionType.GetGenericArguments()[0]);
 		}
 
 		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
+			=> null;
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			return true;
-		}
-
+			=> true;
 	}
 }

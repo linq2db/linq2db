@@ -4,12 +4,11 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall(nameof(LinqExtensions.AsSubQuery))]
 	sealed class AsSubQueryBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(nameof(LinqExtensions.AsSubQuery));
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -20,9 +19,7 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.Arguments.Count > 1)
 				sequence.SelectQuery.QueryName = (string?)methodCall.Arguments[1].EvaluateExpression();
 
-			sequence = new SubQueryContext(sequence);
-			
-			return sequence;
+			return new SubQueryContext(sequence);
 		}
 	}
 }

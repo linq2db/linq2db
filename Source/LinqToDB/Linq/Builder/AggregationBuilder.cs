@@ -8,10 +8,19 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
+	[BuildsMethodCall("Average", "Min", "Max", "Sum", "Count", "LongCount")]
+	[BuildsMethodCall("AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync", 
+		CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
-		public static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
-		       static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
+		public static readonly string[] MethodNames      = { "Average", "Min", "Max", "Sum", "Count", "LongCount" };
+		public static readonly string[] CountMethodNames = { "Count", "LongCount" };
+
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
+
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsAsyncExtension();
 
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
@@ -19,18 +28,8 @@ namespace LinqToDB.Linq.Builder
 			return function != null && (function.IsAggregate || function.IsWindowFunction) ? function : null;
 		}
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			if (methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNamesAsync))
-				return true;
-
-			return false;
-		}
-
 		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			return true;
-		}
+			=> true;
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

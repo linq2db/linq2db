@@ -6,17 +6,15 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Contains")]
+	[BuildsMethodCall("ContainsAsync", CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class ContainsBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames      = { "Contains"      };
-		static readonly string[] MethodNamesAsync = { "ContainsAsync" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable() && call.Arguments.Count == 2;
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return
-				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 2 ||
-				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 3;
-		}
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsAsyncExtension() && call.Arguments.Count == 3;
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -29,14 +27,6 @@ namespace LinqToDB.Linq.Builder
 			buildInStatement = true;
 
 			return new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence, buildInStatement);
-		}
-
-		public static bool IsConstant(MethodCallExpression methodCall)
-		{
-			if (!methodCall.IsQueryable("Contains"))
-				return false;
-
-			return methodCall.IsQueryable(false) == false;
 		}
 
 		sealed class ContainsContext : IBuildContext

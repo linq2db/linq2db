@@ -573,7 +573,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (e.Method.DeclaringType == typeof(Enumerable))
 						{
-							if (CountBuilder.MethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
+							if (AggregationBuilder.CountMethodNames.Contains(e.Method.Name) || e.IsAggregate(MappingSchema))
 								result = IsQueryMember(e.Arguments[0]);
 						}
 						else if (e.IsAggregate(MappingSchema) || e.IsAssociation(MappingSchema))

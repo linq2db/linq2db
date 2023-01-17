@@ -7,12 +7,14 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 
+	[BuildsExpression(ExpressionType.Call)]
 	sealed class MethodChainBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
 		{
-			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
-			return functions.Any();
+			return Sql.ExtensionAttribute
+				.GetExtensionAttributes(expr, builder.MappingSchema)
+				.Length > 0;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

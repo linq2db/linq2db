@@ -4,14 +4,11 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall("Where", "Having")]
 	sealed class WhereBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = { "Where", "Having" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(MethodNames);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -30,11 +27,6 @@ namespace LinqToDB.Linq.Builder
 			result.SetAlias(condition.Parameters[0].Name);
 
 			return result;
-		}
-
-		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			return base.IsSequence(builder, buildInfo);
 		}
 
 		protected override SequenceConvertInfo? Convert(

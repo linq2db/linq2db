@@ -8,26 +8,21 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall(
+		nameof(LinqExtensions.Insert), 
+		nameof(LinqExtensions.InsertWithIdentity), 
+		nameof(LinqExtensions.InsertWithOutput), 
+		nameof(LinqExtensions.InsertWithOutputInto))]
 	sealed class InsertBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames = 
-		{
-			nameof(LinqExtensions.Insert),
-			nameof(LinqExtensions.InsertWithIdentity),
-			nameof(LinqExtensions.InsertWithOutput),
-			nameof(LinqExtensions.InsertWithOutputInto)
-		};
-
 		#region InsertBuilder
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(MethodNames);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out InsertContext insertContext)
 		{
-			insertContext   = sequence as InsertContext;
+			insertContext = sequence as InsertContext;
 			if (insertContext != null)
 			{
 				sequence = insertContext.Sequence;
@@ -403,12 +398,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region Into
 
+		[BuildsMethodCall("Into")]
 		internal sealed class Into : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsQueryable("Into");
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsQueryable();
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -449,12 +443,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region Value
 
+		[BuildsMethodCall("Value")]
 		internal sealed class Value : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsQueryable("Value");
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsQueryable();
 
 			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{

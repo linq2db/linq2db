@@ -5,28 +5,27 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall("AsValueInsertable")]
 	sealed class AsValueInsertableBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
+
+		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression call, BuildInfo info)
 		{
-			return methodCall.IsQueryable("AsValueInsertable");
+			var sequence = builder.BuildSequence(new BuildInfo(info, call.Arguments[0]));
+
+			return new InsertBuilder.InsertContext(
+				info.Parent,
+				sequence,
+				InsertBuilder.InsertContext.InsertTypeEnum.Insert,
+				new SqlInsertStatement(sequence.SelectQuery), null)
+			{
+				RequiresSetters = true,
+			};
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
-			var insertContext = new InsertBuilder.InsertContext(buildInfo.Parent, sequence,
-				InsertBuilder.InsertContext.InsertTypeEnum.Insert, new SqlInsertStatement(sequence.SelectQuery), null);
-			insertContext.RequiresSetters = true;
-
-			return insertContext;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
+		protected override SequenceConvertInfo? Convert(ExpressionBuilder builder, MethodCallExpression call, BuildInfo info, ParameterExpression? param)
+			=> null;
 	}
 }

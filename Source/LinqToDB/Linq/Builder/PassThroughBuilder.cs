@@ -7,18 +7,15 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 
+	[BuildsMethodCall("AsQueryable", nameof(Sql.Alias))]
 	sealed class PassThroughBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] _supportedMethods = { Methods.Enumerable.AsQueryable, Methods.LinqToDB.AsQueryable, Methods.LinqToDB.SqlExt.Alias };
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsSameGenericMethod(_supportedMethods);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsSameGenericMethod(_supportedMethods);
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-		}
+		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression call, BuildInfo info)
+			=> builder.BuildSequence(new BuildInfo(info, call.Arguments[0]));
 	}
 }

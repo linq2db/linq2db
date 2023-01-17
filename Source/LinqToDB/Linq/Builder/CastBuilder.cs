@@ -4,18 +4,17 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall("Cast")]
 	sealed class CastBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("Cast");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression call, BuildInfo info)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
-			return new CastContext(sequence, methodCall);
+			return new CastContext(
+				builder.BuildSequence(new BuildInfo(info, call.Arguments[0])), 
+				call);
 		}
 
 		sealed class CastContext : PassThroughContext

@@ -6,28 +6,29 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Truncate")]
 	sealed class TruncateBuilder : MethodCallBuilder
 	{
 		#region TruncateBuilder
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
+
+		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression call, BuildInfo info)
 		{
-			return methodCall.IsQueryable("Truncate");
-		}
+			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(info, call.Arguments[0]));
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var arg   = call.Arguments[1].Unwrap();
 
-			var reset = true;
-			var arg   = methodCall.Arguments[1].Unwrap();
+			sequence.Statement = new SqlTruncateTableStatement 
+			{ 
+				Table = sequence.SqlTable, 				
+				ResetIdentity = arg.Type == typeof(bool)
+					? (bool)arg.EvaluateExpression()!
+					: true
+			};
 
-			if (arg.Type == typeof(bool))
-				reset = (bool)arg.EvaluateExpression()!;
-
-			sequence.Statement = new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset };
-
-			return new TruncateContext(buildInfo.Parent, sequence);
+			return new TruncateContext(info.Parent, sequence);
 		}
 
 		#endregion
