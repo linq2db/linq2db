@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -11,7 +9,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
-	using SqlQuery;
 
 	static class AssociationHelper
 	{
@@ -295,30 +292,6 @@ namespace LinqToDB.Linq.Builder
 			return definedQueryMethod;
 		}
 
-		public static IBuildContext BuildAssociationInline(ExpressionBuilder builder, BuildInfo buildInfo, IBuildContext tableContext, 
-			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, ref bool isOuter)
-		{
-			var elementType     = descriptor.GetElementType(builder.MappingSchema);
-			var parentExactType = descriptor.GetParentElementType();
-
-			var queryMethod = CreateAssociationQueryLambda(
-				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
-				inline, isOuter, null /*tableContext.LoadWith*/, out isOuter);
-
-			var parentRef   = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
-			var body = queryMethod.GetBody(parentRef);
-
-			var context = builder.BuildSequence(new BuildInfo((IBuildContext?)null, body, new SelectQuery()));
-
-			var tableSource = tableContext.SelectQuery.From.Tables.First();
-			var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
-				descriptor.GenerateAlias(), true, null);
-
-			tableSource.Joins.Add(join.JoinedTable);
-			
-			return new AssociationContext(builder, descriptor, tableContext, context, join.JoinedTable);
-		}
-
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext, 
 			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, List<LoadWithInfo[]>? loadwith, ref bool isOuter)
 		{
@@ -332,27 +305,6 @@ namespace LinqToDB.Linq.Builder
 			var body = queryMethod.GetBody(tableContext);
 
 			return body;
-		}
-
-		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, IBuildContext tableContext, 
-			AccessorMember onMember, AssociationDescriptor descriptor, ref bool isOuter)
-		{
-			var elementType = descriptor.GetElementType(builder.MappingSchema);
-			var parentExactType = descriptor.GetParentElementType();
-
-			var queryMethod = CreateAssociationQueryLambda(
-				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType /*tableContext.ObjectType*/, elementType,
-				false, isOuter, null /*tableContext.LoadWith*/, out isOuter);
-
-			var parentRef   = new ContextRefExpression(queryMethod.Parameters[0].Type, tableContext);
-			var body = queryMethod.GetBody(parentRef);
-
-			IBuildContext context;
-
-			context = builder.BuildSequence(new BuildInfo(buildInfo, body));
-			context.SelectQuery.From.Tables[0].Alias = descriptor.GenerateAlias();
-
-			return context;
 		}
 
 		public static Expression EnrichTablesWithLoadWith(IDataContext dataContext, Expression expression, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
