@@ -1,25 +1,38 @@
 ``` ini
 
-BenchmarkDotNet=v0.13.1, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
-Intel Core i7-3770K CPU 3.50GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
-Frequency=3417994 Hz, Resolution=292.5693 ns, Timer=TSC
-.NET SDK=5.0.402
-  [Host]     : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
-  Job-ODZCDL : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
-  Job-PCJJBI : .NET Core 3.1.20 (CoreCLR 4.700.21.47003, CoreFX 4.700.21.47101), X64 RyuJIT
-  Job-HHEMGO : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
+BenchmarkDotNet=v0.13.3, OS=Windows 10 (10.0.17763.3650/1809/October2018Update/Redstone5), VM=Hyper-V
+AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
+.NET SDK=7.0.102
+  [Host] : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
 
 Jit=RyuJit  Platform=X64  
 
 ```
-|    Method |              Runtime |       Mean |     Median |  Ratio | Allocated |
-|---------- |--------------------- |-----------:|-----------:|-------:|----------:|
-|      Linq |             .NET 5.0 |  48.113 μs |  47.680 μs |  32.51 |  11,412 B |
-|  Compiled |             .NET 5.0 |   5.292 μs |   5.289 μs |   3.58 |   2,480 B |
-| RawAdoNet |             .NET 5.0 |   1.059 μs |   1.044 μs |   0.70 |   1,520 B |
-|      Linq |        .NET Core 3.1 |  51.841 μs |  51.640 μs |  35.11 |  11,380 B |
-|  Compiled |        .NET Core 3.1 |   6.229 μs |   6.218 μs |   4.21 |   2,464 B |
-| RawAdoNet |        .NET Core 3.1 |   1.160 μs |   1.156 μs |   0.79 |   1,520 B |
-|      Linq | .NET Framework 4.7.2 | 188.303 μs | 165.887 μs | 122.37 |  16,384 B |
-|  Compiled | .NET Framework 4.7.2 |  41.005 μs |  31.890 μs |  28.72 |         - |
-| RawAdoNet | .NET Framework 4.7.2 |   1.479 μs |   1.478 μs |   1.00 |   1,581 B |
+|    Method |              Runtime | Mean | Ratio | Alloc Ratio |
+|---------- |--------------------- |-----:|------:|------------:|
+|      Linq |             .NET 6.0 |   NA |     ? |           ? |
+|  Compiled |             .NET 6.0 |   NA |     ? |           ? |
+| RawAdoNet |             .NET 6.0 |   NA |     ? |           ? |
+|      Linq |             .NET 7.0 |   NA |     ? |           ? |
+|  Compiled |             .NET 7.0 |   NA |     ? |           ? |
+| RawAdoNet |             .NET 7.0 |   NA |     ? |           ? |
+|      Linq |        .NET Core 3.1 |   NA |     ? |           ? |
+|  Compiled |        .NET Core 3.1 |   NA |     ? |           ? |
+| RawAdoNet |        .NET Core 3.1 |   NA |     ? |           ? |
+|      Linq | .NET Framework 4.7.2 |   NA |     ? |           ? |
+|  Compiled | .NET Framework 4.7.2 |   NA |     ? |           ? |
+| RawAdoNet | .NET Framework 4.7.2 |   NA |     ? |           ? |
+
+Benchmarks with issues:
+  FetchIndividualBenchmark.Linq: Job-WUZRIO(Jit=RyuJit, Platform=X64, Runtime=.NET 6.0)
+  FetchIndividualBenchmark.Compiled: Job-WUZRIO(Jit=RyuJit, Platform=X64, Runtime=.NET 6.0)
+  FetchIndividualBenchmark.RawAdoNet: Job-WUZRIO(Jit=RyuJit, Platform=X64, Runtime=.NET 6.0)
+  FetchIndividualBenchmark.Linq: Job-EMBONI(Jit=RyuJit, Platform=X64, Runtime=.NET 7.0)
+  FetchIndividualBenchmark.Compiled: Job-EMBONI(Jit=RyuJit, Platform=X64, Runtime=.NET 7.0)
+  FetchIndividualBenchmark.RawAdoNet: Job-EMBONI(Jit=RyuJit, Platform=X64, Runtime=.NET 7.0)
+  FetchIndividualBenchmark.Linq: Job-HZWTXS(Jit=RyuJit, Platform=X64, Runtime=.NET Core 3.1)
+  FetchIndividualBenchmark.Compiled: Job-HZWTXS(Jit=RyuJit, Platform=X64, Runtime=.NET Core 3.1)
+  FetchIndividualBenchmark.RawAdoNet: Job-HZWTXS(Jit=RyuJit, Platform=X64, Runtime=.NET Core 3.1)
+  FetchIndividualBenchmark.Linq: Job-VIGHHX(Jit=RyuJit, Platform=X64, Runtime=.NET Framework 4.7.2)
+  FetchIndividualBenchmark.Compiled: Job-VIGHHX(Jit=RyuJit, Platform=X64, Runtime=.NET Framework 4.7.2)
+  FetchIndividualBenchmark.RawAdoNet: Job-VIGHHX(Jit=RyuJit, Platform=X64, Runtime=.NET Framework 4.7.2)

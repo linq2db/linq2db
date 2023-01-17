@@ -17,7 +17,7 @@ namespace LinqToDB.Benchmarks.Queries
 		readonly int            _batchSize = 100;
 		IEnumerable<CreditCard> _data      = null!;
 		QueryResult             _result    = null!;
-		IDataProvider           _provider  = SqlServerTools.GetDataProvider();
+		IDataProvider           _provider  = SqlServerTools.GetDataProvider(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient);
 
 		[GlobalSetup]
 		public void Setup()

@@ -1,88 +1,112 @@
 ``` ini
 
-BenchmarkDotNet=v0.13.1, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
-Intel Core i7-3770K CPU 3.50GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
-Frequency=3417994 Hz, Resolution=292.5693 ns, Timer=TSC
-.NET SDK=5.0.402
-  [Host]     : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
-  Job-ODZCDL : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
-  Job-PCJJBI : .NET Core 3.1.20 (CoreCLR 4.700.21.47003, CoreFX 4.700.21.47101), X64 RyuJIT
-  Job-HHEMGO : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
+BenchmarkDotNet=v0.13.3, OS=Windows 10 (10.0.17763.3650/1809/October2018Update/Redstone5), VM=Hyper-V
+AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
+.NET SDK=7.0.102
+  [Host]     : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
+  Job-WUZRIO : .NET 6.0.13 (6.0.1322.58009), X64 RyuJIT AVX2
+  Job-EMBONI : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
+  Job-HZWTXS : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-VIGHHX : .NET Framework 4.8 (4.8.4515.0), X64 RyuJIT VectorSize=256
 
 Jit=RyuJit  Platform=X64  
 
 ```
-|                                                                         Method |              Runtime |            Mean |          Median |      Ratio |   Allocated |
-|------------------------------------------------------------------------------- |--------------------- |----------------:|----------------:|-----------:|------------:|
-|                                 Small_UpdateStatement_With_Variable_Parameters |             .NET 5.0 |    191,055.4 ns |    190,822.2 ns |     578.28 |    54,445 B |
-|                           Small_UpdateStatement_With_Variable_Parameters_Async |             .NET 5.0 |    206,597.8 ns |    205,011.5 ns |     627.17 |    56,951 B |
-|                                   Small_UpdateStatement_With_Static_Parameters |             .NET 5.0 |    413,095.5 ns |    392,920.5 ns |   1,255.18 |    56,792 B |
-|                             Small_UpdateStatement_With_Static_Parameters_Async |             .NET 5.0 |    203,412.7 ns |    203,093.1 ns |     615.48 |    56,951 B |
-|                                 Large_UpdateStatement_With_Variable_Parameters |             .NET 5.0 |    427,061.8 ns |    426,507.4 ns |   1,292.57 |   131,686 B |
-|                           Large_UpdateStatement_With_Variable_Parameters_Async |             .NET 5.0 |    454,879.2 ns |    454,126.8 ns |   1,376.35 |   133,936 B |
-|                                   Large_UpdateStatement_With_Static_Parameters |             .NET 5.0 |    452,365.1 ns |    452,602.5 ns |   1,371.17 |   131,686 B |
-|                             Large_UpdateStatement_With_Static_Parameters_Async |             .NET 5.0 |    449,845.6 ns |    449,384.5 ns |   1,359.22 |   133,936 B |
-|                Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches |             .NET 5.0 | 41,312,084.1 ns | 41,330,112.6 ns | 125,043.28 |   886,452 B |
-|          Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches_Async |             .NET 5.0 | 41,432,278.1 ns | 41,362,227.7 ns | 125,406.52 |   889,068 B |
-|                                                                      RawAdoNet |             .NET 5.0 |        162.2 ns |        162.3 ns |       0.49 |       360 B |
-|                                 Small_InsertStatement_With_Variable_Parameters |             .NET 5.0 |    412,652.4 ns |    394,968.5 ns |   1,262.89 |    57,232 B |
-|                           Small_InsertStatement_With_Variable_Parameters_Async |             .NET 5.0 |    431,463.5 ns |    412,522.7 ns |   1,349.45 |    57,496 B |
-|                                   Small_InsertStatement_With_Static_Parameters |             .NET 5.0 |    421,647.2 ns |    399,795.9 ns |   1,292.97 |    57,424 B |
-|                             Small_InsertStatement_With_Static_Parameters_Async |             .NET 5.0 |    410,677.0 ns |    385,898.9 ns |   1,281.39 |    57,496 B |
-|                                 Large_InsertStatement_With_Variable_Parameters |             .NET 5.0 |    869,793.7 ns |    847,865.7 ns |   2,623.28 |   136,464 B |
-|                           Large_InsertStatement_With_Variable_Parameters_Async |             .NET 5.0 |    868,981.0 ns |    826,215.6 ns |   2,681.40 |   136,536 B |
-|                                   Large_InsertStatement_With_Static_Parameters |             .NET 5.0 |    859,139.0 ns |    827,093.3 ns |   2,626.08 |   136,464 B |
-|                             Large_InsertStatement_With_Static_Parameters_Async |             .NET 5.0 |    888,846.5 ns |    863,371.9 ns |   2,617.59 |   136,536 B |
-|                Large_InsertStatement_With_Variable_Parameters_With_ClearCaches |             .NET 5.0 | 46,186,908.4 ns | 46,177,643.7 ns | 139,754.60 |   935,860 B |
-|          Large_InsertStatement_With_Variable_Parameters_With_ClearCaches_Async |             .NET 5.0 | 47,698,386.8 ns | 47,463,804.8 ns | 144,340.33 |   935,504 B |
-|                        Large_Compiled_InsertStatement_With_Variable_Parameters |             .NET 5.0 |     38,275.8 ns |     33,791.8 ns |     117.08 |     4,784 B |
-|       Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload |             .NET 5.0 |    997,751.9 ns |    966,648.9 ns |   3,004.96 |   149,048 B |
-| Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload_Async |             .NET 5.0 |  1,013,493.5 ns |  1,001,610.9 ns |   3,132.29 |   152,992 B |
-|                                 Small_UpdateStatement_With_Variable_Parameters |        .NET Core 3.1 |    215,370.5 ns |    215,970.8 ns |     651.69 |    56,046 B |
-|                           Small_UpdateStatement_With_Variable_Parameters_Async |        .NET Core 3.1 |    218,295.5 ns |    216,571.8 ns |     662.67 |    55,238 B |
-|                                   Small_UpdateStatement_With_Static_Parameters |        .NET Core 3.1 |    211,667.1 ns |    210,576.7 ns |     642.75 |    55,342 B |
-|                             Small_UpdateStatement_With_Static_Parameters_Async |        .NET Core 3.1 |    223,174.1 ns |    221,740.6 ns |     676.40 |    55,238 B |
-|                                 Large_UpdateStatement_With_Variable_Parameters |        .NET Core 3.1 |    486,769.1 ns |    487,116.1 ns |   1,475.49 |   132,185 B |
-|                           Large_UpdateStatement_With_Variable_Parameters_Async |        .NET Core 3.1 |    496,261.0 ns |    493,989.2 ns |   1,501.74 |   131,826 B |
-|                                   Large_UpdateStatement_With_Static_Parameters |        .NET Core 3.1 |    489,438.9 ns |    490,257.5 ns |   1,480.87 |   132,185 B |
-|                             Large_UpdateStatement_With_Static_Parameters_Async |        .NET Core 3.1 |    497,249.2 ns |    497,363.8 ns |   1,502.49 |   131,826 B |
-|                Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches |        .NET Core 3.1 | 43,515,537.0 ns | 43,512,071.7 ns | 131,665.43 |   872,976 B |
-|          Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches_Async |        .NET Core 3.1 | 45,107,782.6 ns | 45,424,109.4 ns | 136,702.30 |   870,968 B |
-|                                                                      RawAdoNet |        .NET Core 3.1 |        160.6 ns |        160.9 ns |       0.49 |       360 B |
-|                                 Small_InsertStatement_With_Variable_Parameters |        .NET Core 3.1 |    470,799.4 ns |    433,002.5 ns |   1,464.96 |    56,944 B |
-|                           Small_InsertStatement_With_Variable_Parameters_Async |        .NET Core 3.1 |    489,776.0 ns |    471,914.2 ns |   1,485.87 |    60,040 B |
-|                                   Small_InsertStatement_With_Static_Parameters |        .NET Core 3.1 |    463,214.3 ns |    449,386.4 ns |   1,414.47 |    56,752 B |
-|                             Small_InsertStatement_With_Static_Parameters_Async |        .NET Core 3.1 |    489,252.7 ns |    464,014.9 ns |   1,504.01 |    59,848 B |
-|                                 Large_InsertStatement_With_Variable_Parameters |        .NET Core 3.1 |    991,755.0 ns |    984,641.9 ns |   3,012.32 |   135,904 B |
-|                           Large_InsertStatement_With_Variable_Parameters_Async |        .NET Core 3.1 |    994,162.6 ns |    964,454.6 ns |   3,088.49 |   139,000 B |
-|                                   Large_InsertStatement_With_Static_Parameters |        .NET Core 3.1 |    991,182.5 ns |    954,946.1 ns |   3,030.61 |   135,904 B |
-|                             Large_InsertStatement_With_Static_Parameters_Async |        .NET Core 3.1 |    984,718.1 ns |    944,706.2 ns |   3,075.41 |   139,000 B |
-|                Large_InsertStatement_With_Variable_Parameters_With_ClearCaches |        .NET Core 3.1 | 50,213,100.7 ns | 49,755,499.9 ns | 151,986.26 |   919,000 B |
-|          Large_InsertStatement_With_Variable_Parameters_With_ClearCaches_Async |        .NET Core 3.1 | 48,997,444.5 ns | 48,987,900.5 ns | 148,522.02 |   918,950 B |
-|                        Large_Compiled_InsertStatement_With_Variable_Parameters |        .NET Core 3.1 |     44,402.3 ns |     37,156.3 ns |     146.21 |     4,752 B |
-|       Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload |        .NET Core 3.1 |  1,107,271.1 ns |  1,091,137.1 ns |   3,351.64 |   148,856 B |
-| Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload_Async |        .NET Core 3.1 |  1,133,752.1 ns |  1,113,518.6 ns |   3,526.36 |   159,016 B |
-|                                 Small_UpdateStatement_With_Variable_Parameters | .NET Framework 4.7.2 |    269,977.6 ns |    265,926.0 ns |     820.07 |    61,542 B |
-|                           Small_UpdateStatement_With_Variable_Parameters_Async | .NET Framework 4.7.2 |    433,242.4 ns |    396,577.6 ns |   1,341.46 |    73,728 B |
-|                                   Small_UpdateStatement_With_Static_Parameters | .NET Framework 4.7.2 |    264,488.4 ns |    264,504.3 ns |     800.28 |    59,994 B |
-|                             Small_UpdateStatement_With_Static_Parameters_Async | .NET Framework 4.7.2 |    432,399.6 ns |    415,448.4 ns |   1,376.78 |    73,728 B |
-|                                 Large_UpdateStatement_With_Variable_Parameters | .NET Framework 4.7.2 |    785,285.5 ns |    754,243.6 ns |   2,434.28 |   155,648 B |
-|                           Large_UpdateStatement_With_Variable_Parameters_Async | .NET Framework 4.7.2 |    825,832.8 ns |    803,980.4 ns |   2,479.92 |   155,648 B |
-|                                   Large_UpdateStatement_With_Static_Parameters | .NET Framework 4.7.2 |    849,086.3 ns |    840,551.5 ns |   2,609.70 |   155,648 B |
-|                             Large_UpdateStatement_With_Static_Parameters_Async | .NET Framework 4.7.2 |    804,694.2 ns |    761,850.4 ns |   2,464.09 |   155,648 B |
-|                Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches | .NET Framework 4.7.2 | 57,761,014.2 ns | 57,647,555.9 ns | 174,761.97 |   991,232 B |
-|          Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches_Async | .NET Framework 4.7.2 | 57,292,922.9 ns | 57,393,605.7 ns | 173,333.00 |   999,424 B |
-|                                                                      RawAdoNet | .NET Framework 4.7.2 |        329.1 ns |        327.6 ns |       1.00 |       417 B |
-|                                 Small_InsertStatement_With_Variable_Parameters | .NET Framework 4.7.2 |    253,394.1 ns |    253,008.1 ns |     766.71 |    60,874 B |
-|                           Small_InsertStatement_With_Variable_Parameters_Async | .NET Framework 4.7.2 |    258,218.0 ns |    257,791.8 ns |     785.38 |    60,614 B |
-|                                   Small_InsertStatement_With_Static_Parameters | .NET Framework 4.7.2 |    256,403.4 ns |    253,257.4 ns |     778.62 |    61,873 B |
-|                             Small_InsertStatement_With_Static_Parameters_Async | .NET Framework 4.7.2 |    258,228.0 ns |    258,288.1 ns |     781.57 |    61,210 B |
-|                                 Large_InsertStatement_With_Variable_Parameters | .NET Framework 4.7.2 |    629,794.8 ns |    622,135.4 ns |   1,916.95 |   155,782 B |
-|                           Large_InsertStatement_With_Variable_Parameters_Async | .NET Framework 4.7.2 |    635,938.6 ns |    630,515.3 ns |   1,928.22 |   151,714 B |
-|                                   Large_InsertStatement_With_Static_Parameters | .NET Framework 4.7.2 |    592,914.6 ns |    593,038.5 ns |   1,794.00 |   155,782 B |
-|                             Large_InsertStatement_With_Static_Parameters_Async | .NET Framework 4.7.2 |    595,881.9 ns |    594,931.0 ns |   1,803.65 |   151,714 B |
-|                Large_InsertStatement_With_Variable_Parameters_With_ClearCaches | .NET Framework 4.7.2 | 64,980,498.0 ns | 64,219,575.9 ns | 197,262.53 | 1,051,683 B |
-|          Large_InsertStatement_With_Variable_Parameters_With_ClearCaches_Async | .NET Framework 4.7.2 | 62,805,115.6 ns | 62,794,178.4 ns | 190,029.55 | 1,039,370 B |
-|                        Large_Compiled_InsertStatement_With_Variable_Parameters | .NET Framework 4.7.2 |      8,405.4 ns |      8,367.6 ns |      25.56 |     4,959 B |
-|       Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload | .NET Framework 4.7.2 |    683,034.6 ns |    678,372.0 ns |   2,075.36 |   158,549 B |
-| Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload_Async | .NET Framework 4.7.2 |    657,315.1 ns |    656,610.4 ns |   1,989.15 |   163,678 B |
+|                                                                         Method |              Runtime |            Mean |          Median |      Ratio |     Gen0 |    Gen1 | Allocated | Alloc Ratio |
+|------------------------------------------------------------------------------- |--------------------- |----------------:|----------------:|-----------:|---------:|--------:|----------:|------------:|
+|                                 Small_UpdateStatement_With_Variable_Parameters |             .NET 6.0 |    165,250.8 ns |    161,825.0 ns |     398.74 |   2.1973 |       - |   38625 B |       92.63 |
+|                           Small_UpdateStatement_With_Variable_Parameters_Async |             .NET 6.0 |    193,873.7 ns |    195,197.2 ns |     466.27 |   2.1973 |       - |   39033 B |       93.60 |
+|                                   Small_UpdateStatement_With_Static_Parameters |             .NET 6.0 |    156,737.3 ns |    181,128.2 ns |     314.94 |   2.1973 |       - |   38625 B |       92.63 |
+|                             Small_UpdateStatement_With_Static_Parameters_Async |             .NET 6.0 |    193,904.5 ns |    194,854.3 ns |     466.22 |   2.1973 |       - |   39033 B |       93.60 |
+|                                 Large_UpdateStatement_With_Variable_Parameters |             .NET 6.0 |    388,002.2 ns |    383,392.5 ns |     930.77 |   5.3711 |       - |   91731 B |      219.98 |
+|                           Large_UpdateStatement_With_Variable_Parameters_Async |             .NET 6.0 |    399,078.8 ns |    399,844.3 ns |     961.25 |   5.3711 |       - |   96347 B |      231.05 |
+|                                   Large_UpdateStatement_With_Static_Parameters |             .NET 6.0 |    422,444.7 ns |    423,147.6 ns |   1,016.54 |   5.3711 |       - |   91731 B |      219.98 |
+|                             Large_UpdateStatement_With_Static_Parameters_Async |             .NET 6.0 |    444,940.2 ns |    444,621.3 ns |   1,069.96 |   5.3711 |       - |   96347 B |      231.05 |
+|                Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches |             .NET 6.0 | 62,461,593.3 ns | 62,458,437.5 ns | 150,416.73 |        - |       - |  810677 B |    1,944.07 |
+|          Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches_Async |             .NET 6.0 | 64,137,362.5 ns | 64,450,787.5 ns | 154,206.85 |        - |       - |  814217 B |    1,952.56 |
+|                                                                      RawAdoNet |             .NET 6.0 |        162.5 ns |        162.0 ns |       0.39 |   0.0215 |       - |     360 B |        0.86 |
+|                                 Small_InsertStatement_With_Variable_Parameters |             .NET 6.0 |    145,702.7 ns |    145,245.3 ns |     350.30 |   1.9531 |       - |   33921 B |       81.35 |
+|                           Small_InsertStatement_With_Variable_Parameters_Async |             .NET 6.0 |    166,473.0 ns |    165,020.6 ns |     400.28 |   1.9531 |       - |   34393 B |       82.48 |
+|                                   Small_InsertStatement_With_Static_Parameters |             .NET 6.0 |    158,764.2 ns |    159,915.2 ns |     381.81 |   1.9531 |       - |   34113 B |       81.81 |
+|                             Small_InsertStatement_With_Static_Parameters_Async |             .NET 6.0 |    168,492.6 ns |    169,133.8 ns |     405.21 |   1.9531 |       - |   34393 B |       82.48 |
+|                                 Large_InsertStatement_With_Variable_Parameters |             .NET 6.0 |    289,492.3 ns |    362,758.5 ns |     775.75 |   4.6387 |       - |   78579 B |      188.44 |
+|                           Large_InsertStatement_With_Variable_Parameters_Async |             .NET 6.0 |    356,777.1 ns |    347,968.5 ns |     854.64 |   4.3945 |       - |   79220 B |      189.98 |
+|                                   Large_InsertStatement_With_Static_Parameters |             .NET 6.0 |    345,866.9 ns |    335,456.1 ns |     830.42 |   4.3945 |       - |   78579 B |      188.44 |
+|                             Large_InsertStatement_With_Static_Parameters_Async |             .NET 6.0 |    385,989.7 ns |    386,062.3 ns |     928.24 |   4.3945 |       - |   79211 B |      189.95 |
+|                Large_InsertStatement_With_Variable_Parameters_With_ClearCaches |             .NET 6.0 | 71,109,708.6 ns | 70,379,085.7 ns | 170,985.00 |        - |       - |  843037 B |    2,021.67 |
+|          Large_InsertStatement_With_Variable_Parameters_With_ClearCaches_Async |             .NET 6.0 | 70,678,492.4 ns | 69,989,400.0 ns | 169,987.02 |        - |       - |  844247 B |    2,024.57 |
+|                        Large_Compiled_InsertStatement_With_Variable_Parameters |             .NET 6.0 |      5,498.1 ns |      5,497.7 ns |      13.24 |   0.2594 |       - |    4368 B |       10.47 |
+|       Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload |             .NET 6.0 |    394,370.4 ns |    394,251.0 ns |     950.73 |   4.3945 |       - |   76141 B |      182.59 |
+| Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload_Async |             .NET 6.0 |    403,417.4 ns |    404,659.5 ns |     972.59 |   4.3945 |       - |   76405 B |      183.23 |
+|                                 Small_UpdateStatement_With_Variable_Parameters |             .NET 7.0 |    115,747.7 ns |    123,958.8 ns |     259.08 |   1.5869 |       - |   27201 B |       65.23 |
+|                           Small_UpdateStatement_With_Variable_Parameters_Async |             .NET 7.0 |    134,166.9 ns |    133,017.6 ns |     322.68 |   1.4648 |       - |   27897 B |       66.90 |
+|                                   Small_UpdateStatement_With_Static_Parameters |             .NET 7.0 |    126,220.4 ns |    126,639.0 ns |     303.53 |   1.4648 |       - |   26977 B |       64.69 |
+|                             Small_UpdateStatement_With_Static_Parameters_Async |             .NET 7.0 |    133,313.0 ns |    134,022.3 ns |     320.54 |   1.4648 |       - |   27577 B |       66.13 |
+|                                 Large_UpdateStatement_With_Variable_Parameters |             .NET 7.0 |    259,408.1 ns |    300,587.1 ns |     672.89 |   3.6621 |       - |   63666 B |      152.68 |
+|                           Large_UpdateStatement_With_Variable_Parameters_Async |             .NET 7.0 |    303,173.0 ns |    303,179.6 ns |     729.50 |   3.4180 |       - |   64410 B |      154.46 |
+|                                   Large_UpdateStatement_With_Static_Parameters |             .NET 7.0 |    303,349.1 ns |    303,308.6 ns |     729.93 |   3.4180 |       - |   64114 B |      153.75 |
+|                             Large_UpdateStatement_With_Static_Parameters_Async |             .NET 7.0 |    295,912.9 ns |    311,728.7 ns |     632.01 |   3.4180 |       - |   65034 B |      155.96 |
+|                Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches |             .NET 7.0 | 67,274,187.8 ns | 67,246,964.3 ns | 161,876.97 |        - |       - |  800465 B |    1,919.58 |
+|          Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches_Async |             .NET 7.0 | 67,135,047.3 ns | 67,101,487.5 ns | 161,549.55 |        - |       - |  797255 B |    1,911.88 |
+|                                                                      RawAdoNet |             .NET 7.0 |        144.0 ns |        144.0 ns |       0.35 |   0.0215 |       - |     360 B |        0.86 |
+|                                 Small_InsertStatement_With_Variable_Parameters |             .NET 7.0 |    107,157.1 ns |    107,148.1 ns |     257.84 |   1.4648 |       - |   24721 B |       59.28 |
+|                           Small_InsertStatement_With_Variable_Parameters_Async |             .NET 7.0 |    116,044.7 ns |    116,319.8 ns |     279.23 |   1.4648 |       - |   25257 B |       60.57 |
+|                                   Small_InsertStatement_With_Static_Parameters |             .NET 7.0 |    110,060.3 ns |    109,883.2 ns |     264.83 |   1.4648 |       - |   24977 B |       59.90 |
+|                             Small_InsertStatement_With_Static_Parameters_Async |             .NET 7.0 |    112,971.4 ns |    112,263.5 ns |     271.65 |   1.4648 |       - |   25001 B |       59.95 |
+|                                 Large_InsertStatement_With_Variable_Parameters |             .NET 7.0 |    272,794.9 ns |    272,306.5 ns |     655.93 |   3.4180 |       - |   57858 B |      138.75 |
+|                           Large_InsertStatement_With_Variable_Parameters_Async |             .NET 7.0 |    276,274.6 ns |    276,191.9 ns |     664.77 |   3.4180 |       - |   58522 B |      140.34 |
+|                                   Large_InsertStatement_With_Static_Parameters |             .NET 7.0 |    269,344.0 ns |    269,180.5 ns |     649.34 |   3.4180 |       - |   57858 B |      138.75 |
+|                             Large_InsertStatement_With_Static_Parameters_Async |             .NET 7.0 |    277,869.6 ns |    277,892.0 ns |     668.62 |   3.4180 |       - |   57658 B |      138.27 |
+|                Large_InsertStatement_With_Variable_Parameters_With_ClearCaches |             .NET 7.0 | 75,225,596.9 ns | 75,150,157.1 ns | 181,010.91 |        - |       - |  837625 B |    2,008.69 |
+|          Large_InsertStatement_With_Variable_Parameters_With_ClearCaches_Async |             .NET 7.0 | 69,743,777.9 ns | 75,031,985.7 ns | 158,264.14 |        - |       - |  841569 B |    2,018.15 |
+|                        Large_Compiled_InsertStatement_With_Variable_Parameters |             .NET 7.0 |      5,123.9 ns |      5,122.7 ns |      12.34 |   0.2594 |       - |    4368 B |       10.47 |
+|       Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload |             .NET 7.0 |    292,087.6 ns |    293,739.5 ns |     702.27 |   2.9297 |       - |   55451 B |      132.98 |
+| Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload_Async |             .NET 7.0 |    297,804.5 ns |    297,618.6 ns |     717.17 |   2.9297 |       - |   56371 B |      135.18 |
+|                                 Small_UpdateStatement_With_Variable_Parameters |        .NET Core 3.1 |    210,885.4 ns |    209,735.4 ns |     507.48 |   2.1973 |       - |   38900 B |       93.29 |
+|                           Small_UpdateStatement_With_Variable_Parameters_Async |        .NET Core 3.1 |    228,537.6 ns |    227,342.2 ns |     550.92 |   2.4414 |       - |   42379 B |      101.63 |
+|                                   Small_UpdateStatement_With_Static_Parameters |        .NET Core 3.1 |    223,988.7 ns |    225,525.7 ns |     534.74 |   1.9531 |       - |   38897 B |       93.28 |
+|                             Small_UpdateStatement_With_Static_Parameters_Async |        .NET Core 3.1 |    246,085.9 ns |    245,769.6 ns |     592.25 |   2.4414 |       - |   42380 B |      101.63 |
+|                                 Large_UpdateStatement_With_Variable_Parameters |        .NET Core 3.1 |    510,338.9 ns |    510,403.6 ns |   1,227.98 |   4.8828 |       - |   91747 B |      220.02 |
+|                           Large_UpdateStatement_With_Variable_Parameters_Async |        .NET Core 3.1 |    535,331.4 ns |    534,527.0 ns |   1,288.08 |   4.8828 |       - |   95228 B |      228.36 |
+|                                   Large_UpdateStatement_With_Static_Parameters |        .NET Core 3.1 |    520,633.3 ns |    520,616.2 ns |   1,253.74 |   4.8828 |       - |   91751 B |      220.03 |
+|                             Large_UpdateStatement_With_Static_Parameters_Async |        .NET Core 3.1 |    536,210.2 ns |    536,718.7 ns |   1,289.40 |   4.8828 |       - |   95228 B |      228.36 |
+|                Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches |        .NET Core 3.1 | 41,929,917.6 ns | 50,119,350.0 ns |  94,972.78 |        - |       - |  802156 B |    1,923.64 |
+|          Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches_Async |        .NET Core 3.1 | 40,319,671.2 ns | 50,614,523.4 ns |  90,842.25 |  31.2500 |       - |  806686 B |    1,934.50 |
+|                                                                      RawAdoNet |        .NET Core 3.1 |        162.2 ns |        161.1 ns |       0.39 |   0.0215 |       - |     360 B |        0.86 |
+|                                 Small_InsertStatement_With_Variable_Parameters |        .NET Core 3.1 |    177,661.3 ns |    177,853.1 ns |     427.82 |   1.9531 |       - |   34321 B |       82.30 |
+|                           Small_InsertStatement_With_Variable_Parameters_Async |        .NET Core 3.1 |    212,182.9 ns |    212,293.3 ns |     510.24 |   1.9531 |       - |   34747 B |       83.33 |
+|                                   Small_InsertStatement_With_Static_Parameters |        .NET Core 3.1 |    200,149.3 ns |    199,462.5 ns |     481.67 |   1.9531 |       - |   34322 B |       82.31 |
+|                             Small_InsertStatement_With_Static_Parameters_Async |        .NET Core 3.1 |    215,544.2 ns |    215,601.1 ns |     518.31 |   1.9531 |       - |   35097 B |       84.17 |
+|                                 Large_InsertStatement_With_Variable_Parameters |        .NET Core 3.1 |    456,590.2 ns |    456,553.0 ns |   1,097.98 |   4.3945 |       - |   78789 B |      188.94 |
+|                           Large_InsertStatement_With_Variable_Parameters_Async |        .NET Core 3.1 |    488,888.7 ns |    488,385.7 ns |   1,175.80 |   3.9063 |       - |   79567 B |      190.81 |
+|                                   Large_InsertStatement_With_Static_Parameters |        .NET Core 3.1 |    429,077.4 ns |    429,992.1 ns |   1,029.21 |   3.9063 |       - |   78787 B |      188.94 |
+|                             Large_InsertStatement_With_Static_Parameters_Async |        .NET Core 3.1 |    433,637.7 ns |    442,305.4 ns |   1,033.87 |   3.9063 |       - |   79563 B |      190.80 |
+|                Large_InsertStatement_With_Variable_Parameters_With_ClearCaches |        .NET Core 3.1 | 56,311,844.4 ns | 56,287,588.9 ns | 135,391.23 |        - |       - |  839268 B |    2,012.63 |
+|          Large_InsertStatement_With_Variable_Parameters_With_ClearCaches_Async |        .NET Core 3.1 | 57,014,224.4 ns | 56,955,222.2 ns | 137,079.57 |        - |       - |  839788 B |    2,013.88 |
+|                        Large_Compiled_InsertStatement_With_Variable_Parameters |        .NET Core 3.1 |      5,413.9 ns |      3,831.2 ns |      11.73 |   0.2556 |       - |    4336 B |       10.40 |
+|       Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload |        .NET Core 3.1 |    498,683.3 ns |    499,142.8 ns |   1,199.03 |   3.9063 |       - |   76480 B |      183.41 |
+| Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload_Async |        .NET Core 3.1 |    459,844.1 ns |    463,058.9 ns |   1,104.35 |   4.3945 |       - |   77104 B |      184.90 |
+|                                 Small_UpdateStatement_With_Variable_Parameters | .NET Framework 4.7.2 |    328,484.7 ns |    321,471.0 ns |     785.33 |   7.8125 |       - |   50393 B |      120.85 |
+|                           Small_UpdateStatement_With_Variable_Parameters_Async | .NET Framework 4.7.2 |    374,700.9 ns |    373,279.5 ns |     900.98 |   8.3008 |       - |   53597 B |      128.53 |
+|                                   Small_UpdateStatement_With_Static_Parameters | .NET Framework 4.7.2 |    356,693.7 ns |    361,506.7 ns |     850.28 |   7.8125 |       - |   50397 B |      120.86 |
+|                             Small_UpdateStatement_With_Static_Parameters_Async | .NET Framework 4.7.2 |    381,717.4 ns |    383,321.7 ns |     917.97 |   8.3008 |       - |   54369 B |      130.38 |
+|                                 Large_UpdateStatement_With_Variable_Parameters | .NET Framework 4.7.2 |    797,405.9 ns |    812,938.3 ns |   1,830.81 |  17.5781 |       - |  116683 B |      279.82 |
+|                           Large_UpdateStatement_With_Variable_Parameters_Async | .NET Framework 4.7.2 |    756,158.7 ns |    742,062.4 ns |   1,804.75 |  19.5313 |       - |  123346 B |      295.79 |
+|                                   Large_UpdateStatement_With_Static_Parameters | .NET Framework 4.7.2 |    812,741.6 ns |    816,869.3 ns |   1,955.42 |  17.5781 |       - |  116683 B |      279.82 |
+|                             Large_UpdateStatement_With_Static_Parameters_Async | .NET Framework 4.7.2 |    827,766.4 ns |    833,041.3 ns |   1,990.69 |  19.5313 |       - |  123346 B |      295.79 |
+|                Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches | .NET Framework 4.7.2 | 67,265,667.0 ns | 67,294,643.8 ns | 161,857.02 | 125.0000 |       - |  923670 B |    2,215.04 |
+|          Large_UpdateStatement_With_Variable_Parameters_With_ClearCaches_Async | .NET Framework 4.7.2 | 58,938,349.9 ns | 67,299,118.8 ns | 159,586.66 | 125.0000 | 62.5000 |  929803 B |    2,229.74 |
+|                                                                      RawAdoNet | .NET Framework 4.7.2 |        417.5 ns |        419.6 ns |       1.00 |   0.0663 |       - |     417 B |        1.00 |
+|                                 Small_InsertStatement_With_Variable_Parameters | .NET Framework 4.7.2 |    267,333.4 ns |    296,910.0 ns |     594.78 |   6.8359 |       - |   43917 B |      105.32 |
+|                           Small_InsertStatement_With_Variable_Parameters_Async | .NET Framework 4.7.2 |    315,128.5 ns |    317,993.3 ns |     757.77 |   6.8359 |       - |   44425 B |      106.53 |
+|                                   Small_InsertStatement_With_Static_Parameters | .NET Framework 4.7.2 |    294,500.5 ns |    297,300.4 ns |     705.41 |   6.8359 |       - |   43149 B |      103.47 |
+|                             Small_InsertStatement_With_Static_Parameters_Async | .NET Framework 4.7.2 |    310,877.0 ns |    310,888.0 ns |     748.63 |   6.8359 |       - |   44553 B |      106.84 |
+|                                 Large_InsertStatement_With_Variable_Parameters | .NET Framework 4.7.2 |    675,807.3 ns |    675,709.2 ns |   1,627.43 |  15.6250 |       - |  100315 B |      240.56 |
+|                           Large_InsertStatement_With_Variable_Parameters_Async | .NET Framework 4.7.2 |    693,547.7 ns |    693,713.0 ns |   1,670.17 |  15.6250 |       - |  101730 B |      243.96 |
+|                                   Large_InsertStatement_With_Static_Parameters | .NET Framework 4.7.2 |    674,438.0 ns |    674,410.8 ns |   1,622.82 |  15.6250 |       - |  100315 B |      240.56 |
+|                             Large_InsertStatement_With_Static_Parameters_Async | .NET Framework 4.7.2 |    692,291.5 ns |    692,287.6 ns |   1,668.94 |  15.6250 |       - |  101730 B |      243.96 |
+|                Large_InsertStatement_With_Variable_Parameters_With_ClearCaches | .NET Framework 4.7.2 | 74,766,400.0 ns | 74,895,385.7 ns | 179,096.19 | 142.8571 |       - |  954997 B |    2,290.16 |
+|          Large_InsertStatement_With_Variable_Parameters_With_ClearCaches_Async | .NET Framework 4.7.2 | 74,013,725.0 ns | 74,407,387.5 ns | 177,286.40 | 125.0000 |       - |  956422 B |    2,293.58 |
+|                        Large_Compiled_InsertStatement_With_Variable_Parameters | .NET Framework 4.7.2 |      9,049.8 ns |      9,048.2 ns |      21.76 |   0.7019 |       - |    4461 B |       10.70 |
+|       Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload | .NET Framework 4.7.2 |    745,682.3 ns |    745,393.7 ns |   1,797.68 |  15.6250 |       - |  101921 B |      244.41 |
+| Large_InsertStatement_With_Variable_Parameters_Using_Expression_Overload_Async | .NET Framework 4.7.2 |    762,860.8 ns |    763,228.8 ns |   1,834.48 |  15.6250 |       - |  102435 B |      245.65 |
