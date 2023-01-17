@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 
 		public         ExpressionBuilder Builder     { get; }
 		public virtual Expression?       Expression  => null;
-		public         SelectQuery       SelectQuery { get; set; }
+		public         SelectQuery       SelectQuery { get; protected set; }
 		public virtual SqlStatement?     Statement   { get; set; }
 		public         IBuildContext?    Parent      { get; set; }
 

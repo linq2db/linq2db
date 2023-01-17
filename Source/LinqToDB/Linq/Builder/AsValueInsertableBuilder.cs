@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var insertContext = new InsertBuilder.InsertContext(buildInfo.Parent, sequence,
+			var insertContext = new InsertBuilder.InsertContext(sequence,
 				InsertBuilder.InsertContext.InsertTypeEnum.Insert, new SqlInsertStatement(sequence.SelectQuery), null);
 			insertContext.RequiresSetters = true;
 

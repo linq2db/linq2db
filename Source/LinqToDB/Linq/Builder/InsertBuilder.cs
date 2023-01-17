@@ -30,11 +30,11 @@ namespace LinqToDB.Linq.Builder
 			insertContext   = sequence as InsertContext;
 			if (insertContext != null)
 			{
-				sequence = insertContext.Sequence;
+				sequence = insertContext.QuerySequence;
 			}
 			else
 			{
-				insertContext = new InsertContext(buildInfo.Parent, sequence, InsertContext.InsertTypeEnum.Insert,
+				insertContext = new InsertContext(sequence, InsertContext.InsertTypeEnum.Insert,
 					new SqlInsertStatement(sequence.SelectQuery), null);
 			}
 		}
@@ -217,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region InsertContext
 
-		public sealed class InsertContext : SequenceContextBase
+		public sealed class InsertContext : PassThroughContext
 		{
 			public SqlInsertStatement InsertStatement { get; }
 
@@ -229,8 +229,8 @@ namespace LinqToDB.Linq.Builder
 				InsertOutputInto
 			}
 
-			public InsertContext(IBuildContext? parent, IBuildContext sequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression)
-				: base(parent, sequence, outputExpression)
+			public InsertContext(IBuildContext querySequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression)
+				: base(querySequence, querySequence.SelectQuery)
 			{
 				InsertType       = insertType;
 				InsertStatement  = insertStatement;
@@ -241,6 +241,7 @@ namespace LinqToDB.Linq.Builder
 
 			public List<UpdateBuilder.SetExpressionEnvelope> SetExpressions { get; } = new ();
 
+			public IBuildContext              QuerySequence    => Context;
 			public IBuildContext?             Into             { get; set; }
 			public BuildInfo?                 LastBuildInfo    { get; set; }
 			public LambdaExpression?          OutputExpression { get; set; }
@@ -311,7 +312,7 @@ namespace LinqToDB.Linq.Builder
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
 					ExpressionEqualityComparer.Instance.Equals(s1.FieldExpression, s2.FieldExpression));
 
-				UpdateBuilder.InitializeSetExpressions(Builder, tableContext, Sequence, SetExpressions, insert.Items, true);
+				UpdateBuilder.InitializeSetExpressions(Builder, tableContext, QuerySequence, SetExpressions, insert.Items, true);
 
 				var q = insert.Into.IdentityFields
 					.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
@@ -368,34 +369,9 @@ namespace LinqToDB.Linq.Builder
 				return InsertStatement;
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new InsertContext(null, context.CloneContext(Sequence), InsertType, context.CloneElement(InsertStatement), context.CloneExpression(OutputExpression));
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				throw new NotImplementedException();
+				return new InsertContext(context.CloneContext(QuerySequence), InsertType, context.CloneElement(InsertStatement), context.CloneExpression(OutputExpression));
 			}
 		}
 
@@ -437,7 +413,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				insertStatement = new SqlInsertStatement(sequence.SelectQuery);
-				insertContext = new InsertContext(buildInfo.Parent, sequence, InsertContext.InsertTypeEnum.Insert, insertStatement, null);
+				insertContext = new InsertContext(sequence, InsertContext.InsertTypeEnum.Insert, insertStatement, null);
 				insertContext.Into = destinationSequence;
 				insertContext.LastBuildInfo = buildInfo;
 

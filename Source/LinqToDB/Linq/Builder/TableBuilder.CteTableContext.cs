@@ -70,10 +70,9 @@ namespace LinqToDB.Linq.Builder
 
 			public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest) : base(builder, selectQuery)
 			{
-				Parent      = parent;
+				Parent     = parent;
 				CteContext = cteContext;
-				SelectQuery = selectQuery;
-				CteTable    = new SqlCteTable(objectType, CteContext.CteClause);
+				CteTable   = new SqlCteTable(objectType, CteContext.CteClause);
 
 				if (!isTest)
 					SelectQuery.From.Table(CteTable);

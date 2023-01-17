@@ -102,10 +102,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return new DeleteContext(buildInfo.Parent, sequence, deleteType, outputExpression, deleteStatement, deletedContext);
+			return new DeleteContext(sequence, deleteType, outputExpression, deleteStatement, deletedContext);
 		}
 
-		sealed class DeleteContext : SequenceContextBase
+		sealed class DeleteContext : PassThroughContext
 		{
 
 			public enum DeleteTypeEnum
@@ -115,16 +115,16 @@ namespace LinqToDB.Linq.Builder
 				DeleteOutputInto,
 			}
 
-			public IBuildContext QuerySequence { get => Sequences[0]; set => Sequences[0] = value; }
+			public IBuildContext QuerySequence => Context;
 
 			public DeleteTypeEnum     DeleteType       { get; }
 			public IBuildContext?     DeletedContext   { get; }
 			public LambdaExpression?  OutputExpression { get; }
 			public SqlDeleteStatement DeleteStatement  { get; }
 
-			public DeleteContext(IBuildContext? parent, IBuildContext sequence, DeleteTypeEnum deleteType,
+			public DeleteContext(IBuildContext querySequence, DeleteTypeEnum deleteType,
 				LambdaExpression? outputExpression, SqlDeleteStatement deleteStatement, IBuildContext? deletedContext)
-				: base(parent, sequence, null)
+				: base(querySequence, querySequence.SelectQuery)
 			{
 				DeleteType       = deleteType;
 				OutputExpression = outputExpression;
@@ -134,8 +134,8 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new DeleteContext(null, 
-					context.CloneContext(Sequence), 
+				return new DeleteContext( 
+					context.CloneContext(QuerySequence), 
 					DeleteType,
 					context.CloneExpression(OutputExpression), 
 					context.CloneElement(DeleteStatement),
@@ -165,11 +165,6 @@ namespace LinqToDB.Linq.Builder
 					default:
 						throw new InvalidOperationException($"Unexpected delete type: {DeleteType}");
 				}
-			}
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				QueryRunner.SetNonQueryQuery(query);
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -211,31 +206,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return base.MakeExpression(path, flags);
-			}
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				throw new NotImplementedException();
 			}
 
 			public override SqlStatement GetResultStatement()

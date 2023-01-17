@@ -72,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 
 		ExpressionBuilder  Builder     { get; }
 		Expression?        Expression  { get; }
-		SelectQuery        SelectQuery { get; set; }
+		SelectQuery        SelectQuery { get; }
 		SqlStatement?      Statement   { get; set; }
 		IBuildContext?     Parent      { get; set; }
 

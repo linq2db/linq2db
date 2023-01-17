@@ -30,12 +30,12 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (sequence is UpdateContext current)
 			{
-				sequence      = current.Sequence;
+				sequence      = current.QuerySequence;
 				updateContext = current;
 			}
 			else
 			{
-				updateContext = new UpdateContext(buildInfo.Parent, sequence, UpdateTypeEnum.Update, new SqlUpdateStatement(sequence.SelectQuery));
+				updateContext = new UpdateContext(sequence, UpdateTypeEnum.Update, new SqlUpdateStatement(sequence.SelectQuery));
 			}
 
 			updateContext.LastBuildInfo = buildInfo;
@@ -531,11 +531,12 @@ namespace LinqToDB.Linq.Builder
 
 		#region UpdateContext
 
-		public sealed class UpdateContext : SequenceContextBase
+		public sealed class UpdateContext : PassThroughContext
 		{
 			ITableContext? _targetTable;
 
-			public UpdateContext(IBuildContext? parent, IBuildContext sequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement) : base(parent, sequence, null)
+			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement) 
+				: base(querySequence, querySequence.SelectQuery)
 			{
 				UpdateStatement = updateStatement;
 				UpdateType      = updateType;
@@ -555,28 +556,22 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			public IBuildContext               QuerySequence    { get => Sequences[0]; set => Sequences[0] = value; }
-			public BuildInfo?                  LastBuildInfo    { get;                 set; }
-			public List<SetExpressionEnvelope> SetExpressions   { get; } = new ();
+			public IBuildContext QuerySequence
+			{
+				get => Context;
+				set
+				{
+					Context     = value;
+					SelectQuery = Context.SelectQuery;
+				}
+			}
+
+			public BuildInfo?                  LastBuildInfo  { get; set; }
+			public List<SetExpressionEnvelope> SetExpressions { get; } = new ();
 
 			public LambdaExpression? OutputExpression { get; set; }
 			public IBuildContext?    DeletedContext   { get; set; }
 			public IBuildContext?    InsertedContext  { get; set; }
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
 
 			public void FinalizeSetters()
 			{
@@ -598,7 +593,7 @@ namespace LinqToDB.Linq.Builder
 				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
 					ExpressionEqualityComparer.Instance.Equals(s1.FieldExpression, s2.FieldExpression));
 
-				InitializeSetExpressions(Builder, TargetTable, Sequence, SetExpressions, update.Items, true);
+				InitializeSetExpressions(Builder, TargetTable, QuerySequence, SetExpressions, update.Items, true);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -732,16 +727,6 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				return null;
 			}
 
 			public override SqlStatement GetResultStatement()
