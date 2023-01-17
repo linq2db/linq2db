@@ -1,10 +1,14 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Globalization;
+using System.Threading;
+
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using System.Globalization;
+
 using Tests.Model;
 
 namespace Tests
@@ -66,17 +70,17 @@ namespace Tests
 
 	public class FirebirdQuoteMode : IDisposable
 	{
-		private readonly FirebirdIdentifierQuoteMode _oldMode;
+		readonly FirebirdOptions _options;
 
 		public FirebirdQuoteMode(FirebirdIdentifierQuoteMode mode)
 		{
-			_oldMode = FirebirdConfiguration.IdentifierQuoteMode;
-			FirebirdConfiguration.IdentifierQuoteMode = mode;
+			_options                = FirebirdOptions.Default;
+			FirebirdOptions.Default = FirebirdOptions.Default with { IdentifierQuoteMode = mode };
 		}
 
 		void IDisposable.Dispose()
 		{
-			FirebirdConfiguration.IdentifierQuoteMode = _oldMode;
+			FirebirdOptions.Default = _options;
 		}
 	}
 
@@ -300,16 +304,16 @@ namespace Tests
 
 	public class OracleAlternativeBulkCopyMode : IDisposable
 	{
-		private readonly AlternativeBulkCopy _oldValue = OracleTools.UseAlternativeBulkCopy;
+		private readonly AlternativeBulkCopy _oldValue = OracleOptions.Default.AlternativeBulkCopy;
 
 		public OracleAlternativeBulkCopyMode(AlternativeBulkCopy mode)
 		{
-			OracleTools.UseAlternativeBulkCopy = mode;
+			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = mode };
 		}
 
 		void IDisposable.Dispose()
 		{
-			OracleTools.UseAlternativeBulkCopy = _oldValue;
+			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = _oldValue };
 		}
 	}
 

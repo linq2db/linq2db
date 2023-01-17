@@ -1,6 +1,11 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -8,7 +13,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class DropTableTests : TestBase
 	{
-		class DropTableTest
+		sealed class DropTableTest
 		{
 			public int ID { get; set; }
 		}
@@ -39,7 +44,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class DropTableTestID
+		sealed class DropTableTestID
 		{
 			[Identity, PrimaryKey]
 			public int ID  { get; set; }

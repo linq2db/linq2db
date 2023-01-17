@@ -23,13 +23,13 @@ namespace Cli.Default.PostgreSQL
 		/// same_name backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Id), OtherKey = nameof(SameName1.SameName))]
-		public IEnumerable<SameName1> Samenames { get; set; } = null!;
+		public IEnumerable<SameName1> SameNames1 { get; set; } = null!;
 
 		/// <summary>
 		/// same_name backreference
 		/// </summary>
 		[Association(ThisKey = nameof(Id), OtherKey = nameof(SameName2.SameName))]
-		public IEnumerable<SameName2> Samenames1 { get; set; } = null!;
+		public IEnumerable<SameName2> SameNames2 { get; set; } = null!;
 		#endregion
 	}
 }

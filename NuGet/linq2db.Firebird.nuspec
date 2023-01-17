@@ -13,17 +13,17 @@
 		<tags>linq linq2db Firebird LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework=".NETFramework4.5">
-				<dependency id="linq2db" version="4.0.0"                          />
+			<group targetFramework="net45">
+				<dependency id="linq2db" version="5.0.0"                          />
 				<dependency id="FirebirdSql.Data.FirebirdClient" version="5.12.1" />
 			</group>
-			<group targetFramework=".NETFramework4.5.2">
-				<dependency id="linq2db" version="4.0.0"                          />
+			<group targetFramework="net452">
+				<dependency id="linq2db" version="5.0.0"                          />
 				<dependency id="FirebirdSql.Data.FirebirdClient" version="7.10.1" />
 			</group>
-			<group targetFramework=".NETStandard2.0">
-				<dependency id="linq2db" version="4.0.0"                          />
-				<dependency id="FirebirdSql.Data.FirebirdClient" version="9.0.2"  />
+			<group targetFramework="netstandard2.0">
+				<dependency id="linq2db" version="5.0.0"                          />
+				<dependency id="FirebirdSql.Data.FirebirdClient" version="9.1.0"  />
 			</group>
 		</dependencies>
 		<contentFiles>

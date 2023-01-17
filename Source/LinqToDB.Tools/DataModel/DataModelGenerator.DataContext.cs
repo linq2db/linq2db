@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataModel
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.DataModel
 {
 	using CodeModel;
 
@@ -21,13 +24,14 @@
 			// based on selected constructors set we generate (or not) following constructors:
 			// .ctor() // default constructor
 			// .ctor(string configuration) // constructor with connection configuration name parameter
-			// .ctor(LinqToDBConnectionOptions options) // options constructor
-			// .ctor(LinqToDBConnectionOptions<T> options) // typed options constructor
+			// .ctor(DataOptions options) // options constructor
+			// .ctor(DataOptions<T> options) // typed options constructor
 
 			// first we generate empty constructors and then add body to all of them as they will have same code for body
 
 			if (_dataModel.DataContext.HasDefaultConstructor)
 				ctors.Add(constructors.New().SetModifiers(Modifiers.Public).Body());
+
 			if (_dataModel.DataContext.HasConfigurationConstructor)
 			{
 				var configurationParam = AST.Parameter(
@@ -42,10 +46,11 @@
 						.Base(configurationParam.Reference)
 						.Body());
 			}
+
 			if (_dataModel.DataContext.HasUntypedOptionsConstructor)
 			{
 				var optionsParam = AST.Parameter(
-					WellKnownTypes.LinqToDB.Configuration.LinqToDBConnectionOptions,
+					WellKnownTypes.LinqToDB.Configuration.DataOptions,
 					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
 					CodeParameterDirection.In);
 
@@ -56,10 +61,11 @@
 						.Base(optionsParam.Reference)
 						.Body());
 			}
+
 			if (_dataModel.DataContext.HasTypedOptionsConstructor)
 			{
 				var typedOptionsParam = AST.Parameter(
-					WellKnownTypes.LinqToDB.Configuration.LinqToDBConnectionOptionsWithType(contextBuilder.Type.Type),
+					WellKnownTypes.LinqToDB.Configuration.DataOptionsWithType(contextBuilder.Type.Type),
 					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
 					CodeParameterDirection.In);
 
@@ -67,7 +73,7 @@
 					.New()
 						.Parameter(typedOptionsParam)
 						.SetModifiers(Modifiers.Public)
-						.Base(typedOptionsParam.Reference)
+						.Base(AST.Member(typedOptionsParam.Reference, WellKnownTypes.LinqToDB.Configuration.DataOptions_Options))
 						.Body());
 			}
 

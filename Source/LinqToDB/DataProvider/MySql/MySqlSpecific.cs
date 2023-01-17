@@ -1,4 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -10,7 +14,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 	}
 
-	class MySqlSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IMySqlSpecificTable<TSource>, ITable
+	sealed class MySqlSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IMySqlSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public MySqlSpecificTable(ITable<TSource> table) : base(table)
@@ -22,7 +26,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 	}
 
-	class MySqlSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IMySqlSpecificQueryable<TSource>, ITable
+	sealed class MySqlSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IMySqlSpecificQueryable<TSource>, ITable
 	{
 		public MySqlSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

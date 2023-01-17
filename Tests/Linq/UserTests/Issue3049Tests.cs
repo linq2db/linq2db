@@ -1,5 +1,8 @@
-﻿using FluentAssertions;
+﻿using System.Collections.Generic;
+using System.Linq;
+using FluentAssertions;
 using LinqToDB;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -8,7 +11,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3049Tests : TestBase
 	{
-		class AdminContext : DataContext
+		sealed class AdminContext : DataContext
 		{
 			public AdminContext(string configuration) : base(configuration)
 			{
@@ -19,7 +22,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column]              public int     Id    { get; set; }
 			[Column(Length = 50)] public string? Value { get; set; }

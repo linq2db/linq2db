@@ -1,9 +1,14 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -17,7 +22,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class MasterClass : ISoftDelete
+		sealed class MasterClass : ISoftDelete
 		{
 			[Column] public int     Id        { get; set; }
 			[Column] public string? Value     { get; set; }
@@ -33,23 +38,23 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class InfoClass
+		sealed class InfoClass
 		{
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }
 			[Column] public bool    IsDeleted { get; set; }
-			
+
 			[Column] public int? MasterId { get; set; }
 		}
 
 
 		[Table]
-		class DetailClass: ISoftDelete
+		sealed class DetailClass : ISoftDelete
 		{
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }
 			[Column] public bool    IsDeleted { get; set; }
-			
+
 			[Column] public int? MasterId { get; set; }
 		}
 
@@ -102,11 +107,11 @@ namespace Tests.Linq
 			return Tuple.Create(masterRecords, infoRecords, detailRecords);
 		}
 
-		class MyDataContext : DataConnection
+		sealed class MyDataContext : DataConnection
 		{
 			public MyDataContext(string configuration, MappingSchema mappingSchema) : base(configuration, mappingSchema)
 			{
-				
+
 			}
 
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
@@ -114,7 +119,7 @@ namespace Tests.Linq
 			public object Params { get; } = new DcParams();
 		}
 
-		class DcParams
+		sealed class DcParams
 		{
 			public bool IsSoftDeleteFilterEnabled { get; set; } = true;
 		}
@@ -171,7 +176,6 @@ namespace Tests.Linq
 			AreEqualWithComparer(resultNotFiltered1, resultNotFiltered2);
 
 			Assert.That(currentMissCount, Is.EqualTo(Query<T>.CacheMissCount), () => "Caching is wrong.");
-
 		}
 
 		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
@@ -183,10 +187,10 @@ namespace Tests.Linq
 			using (var db = new MyDataContext(context, _filterMappingSchema))
 			using (db.CreateLocalTable(testData.Item1))
 			{
-
 				var currentMissCount = Query<MasterClass>.CacheMissCount;
 
-				var query = from m in db.GetTable<MasterClass>()
+				var query =
+					from m in db.GetTable<MasterClass>()
 					select m;
 
 				((DcParams)db.Params).IsSoftDeleteFilterEnabled = filtered;

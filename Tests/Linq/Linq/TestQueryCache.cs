@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -15,7 +18,7 @@ namespace Tests.Linq
 	public class TestQueryCache : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			public int Id         { get; set; }
 			public string? StrKey { get; set; }
@@ -23,7 +26,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClassWithIdentity
+		sealed class SampleClassWithIdentity
 		{
 			[Identity]
 			public int Id         { get; set; }
@@ -31,7 +34,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class ManyFields
+		sealed class ManyFields
 		{
 			[PrimaryKey]
 			public int  Id     { get; set; }

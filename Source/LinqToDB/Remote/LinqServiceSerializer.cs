@@ -1,6 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace LinqToDB.Remote
@@ -258,7 +262,7 @@ namespace LinqToDB.Remote
 
 		public class DeserializerBase
 		{
-			private   readonly MappingSchema _ms;
+			protected readonly MappingSchema _ms;
 			protected readonly Dictionary<int,object>         ObjectIndices  = new ();
 			protected readonly Dictionary<int,Action<object>> DelayedObjects = new ();
 
@@ -467,7 +471,7 @@ namespace LinqToDB.Remote
 					{
 						TypeIndex      => ResolveType(ReadString())!,
 						TypeArrayIndex => GetArrayType(Read<Type>()!),
-						_              => ThrowHelper.ThrowSerializationException<Type>(
+						_              => throw new SerializationException(
 							$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}"),
 					};
 					ObjectIndices.Add(idx, type);
@@ -476,7 +480,7 @@ namespace LinqToDB.Remote
 
 					var idx2 = ReadInt();
 					if (idx2 != idx)
-						ThrowHelper.ThrowSerializationException($"Wrong type reading, expected index is {idx} but was {idx2}");
+						throw new SerializationException($"Wrong type reading, expected index is {idx} but was {idx2}");
 				}
 
 				return (Type?) type;
@@ -525,7 +529,7 @@ namespace LinqToDB.Remote
 				object? GetArray(DeserializerBase deserializer);
 			}
 
-			class DeserializerHelper<T> : IDeserializerHelper
+			sealed class DeserializerHelper<T> : IDeserializerHelper
 			{
 				public object? GetArray(DeserializerBase deserializer)
 				{
@@ -609,7 +613,7 @@ namespace LinqToDB.Remote
 						if (type == null)
 						{
 							if (Configuration.LinqService.ThrowUnresolvedTypeException)
-								ThrowHelper.ThrowLinqToDBException(
+								throw new LinqToDBException(
 									$"Type '{str}' cannot be resolved. Use LinqService.TypeResolver to resolve unknown types.");
 
 							UnresolvedTypes.Add(str);
@@ -629,7 +633,7 @@ namespace LinqToDB.Remote
 
 		#region QuerySerializer
 
-		class QuerySerializer : SerializerBase
+		sealed class QuerySerializer : SerializerBase
 		{
 			public QuerySerializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -650,7 +654,7 @@ namespace LinqToDB.Remote
 					static (context, e) => context.serializer.Visit(e, context.evaluationContext));
 
 				if (DelayedObjects.Count > 0)
-					ThrowHelper.ThrowLinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
+					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
 
 				Builder.AppendLine();
 
@@ -1109,8 +1113,8 @@ namespace LinqToDB.Remote
 							else
 								Append(elem.SetOperators);
 
-							if (ObjectIndices.ContainsKey(elem.All))
-								Append(ObjectIndices[elem.All]);
+							if (ObjectIndices.TryGetValue(elem.All, out var index))
+								Append(index);
 							else
 								Builder.Append(" -");
 
@@ -1476,8 +1480,7 @@ namespace LinqToDB.Remote
 						}
 
 					default:
-						ThrowHelper.ThrowInvalidOperationException($"Serialize not implemented for element {e.ElementType}");
-						break;
+						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
 
 				if (e is IQueryExtendible qe)
@@ -1528,7 +1531,7 @@ namespace LinqToDB.Remote
 
 		#region QueryDeserializer
 
-		public class QueryDeserializer : DeserializerBase
+		public sealed class QueryDeserializer : DeserializerBase
 		{
 			SqlStatement   _statement  = null!;
 
@@ -1624,6 +1627,11 @@ namespace LinqToDB.Remote
 							ReadDelayedObject(table =>
 							{
 								field.Table = table as ISqlTableSource;
+								if (table is SqlTable sqlTable && sqlTable.ObjectType != null)
+								{
+									var ed = _ms.GetEntityDescriptor(sqlTable.ObjectType);
+									field.ColumnDescriptor = ed[field.Name]!;
+								}
 							});
 
 							break;
@@ -2408,8 +2416,7 @@ namespace LinqToDB.Remote
 						}
 
 					default:
-						ThrowHelper.ThrowInvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
-						break;
+						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
 
 				if (obj is IQueryExtendible qe)
@@ -2459,7 +2466,7 @@ namespace LinqToDB.Remote
 
 		#region ResultSerializer
 
-		class ResultSerializer : SerializerBase
+		sealed class ResultSerializer : SerializerBase
 		{
 			public ResultSerializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -2502,7 +2509,7 @@ namespace LinqToDB.Remote
 
 		#region ResultDeserializer
 
-		class ResultDeserializer : DeserializerBase
+		sealed class ResultDeserializer : DeserializerBase
 		{
 			public ResultDeserializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -2550,7 +2557,7 @@ namespace LinqToDB.Remote
 
 		#region StringArraySerializer
 
-		class StringArraySerializer : SerializerBase
+		sealed class StringArraySerializer : SerializerBase
 		{
 			public StringArraySerializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -2574,7 +2581,7 @@ namespace LinqToDB.Remote
 
 		#region StringArrayDeserializer
 
-		class StringArrayDeserializer : DeserializerBase
+		sealed class StringArrayDeserializer : DeserializerBase
 		{
 			public StringArrayDeserializer(MappingSchema serializationMappingSchema)
 				: base(serializationMappingSchema)
@@ -2604,7 +2611,7 @@ namespace LinqToDB.Remote
 			object ConvertToArray(object list);
 		}
 
-		class ArrayHelper<T> : IArrayHelper
+		sealed class ArrayHelper<T> : IArrayHelper
 		{
 			public Type GetArrayType()
 			{

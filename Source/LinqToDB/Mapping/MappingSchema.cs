@@ -1,13 +1,20 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
@@ -25,7 +32,7 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	[PublicAPI]
 	[DebuggerDisplay("{DisplayID}")]
-	public class MappingSchema
+	public class MappingSchema : IConfigurationID
 	{
 		#region Init
 
@@ -38,9 +45,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Creates mapping schema, derived from other mapping schemas.
+		/// Creates mapping schema, derived from other mapping schemata.
 		/// </summary>
-		/// <param name="schemas">Base mapping schemas.</param>
+		/// <param name="schemas">Base mapping schemata.</param>
 		public MappingSchema(params MappingSchema[] schemas)
 			: this(null, schemas)
 		{
@@ -71,12 +78,13 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
+			// initialize on schema creation to avoid race conditions later
+			// see https://github.com/linq2db/linq2db/issues/3312
 			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
 
-			if (string.IsNullOrEmpty(configuration))
-				configuration = string.Empty;
+			configuration ??= string.Empty;
 
-			var schemaInfo = CreateMappingSchemaInfo(configuration!, this);
+			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
 
 			if (schemas == null || schemas.Length == 0)
 			{
@@ -107,8 +115,8 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var schemaList     = new Dictionary<MappingSchemaInfo,   int>(schemas.Length);
-				var baseConverters = new Dictionary<ValueToSqlConverter, int>(10);
+				var schemaList     = new Dictionary<MappingSchemaInfo,  int>(schemas.Length);
+				var baseConverters = new Dictionary<ValueToSqlConverter,int>(10);
 
 				var i = 0;
 				var j = 0;
@@ -133,6 +141,7 @@ namespace LinqToDB.Mapping
 
 		object _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
+		readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 
 		#endregion
 
@@ -153,6 +162,20 @@ namespace LinqToDB.Mapping
 		/// - value.
 		/// </param>
 		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
+		{
+			ValueToSqlConverter.SetConverter(type, (sb,dt,_,v) => converter(sb, dt, v));
+		}
+
+		/// <summary>
+		/// Sets value to SQL converter action for specific value type.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <param name="converter">Converter action. Action accepts three parameters:
+		/// - SQL string builder to write generated value SQL to;
+		/// - value SQL type descriptor;
+		/// - value.
+		/// </param>
+		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, converter);
 		}
@@ -307,10 +330,10 @@ namespace LinqToDB.Mapping
 		public void SetGenericConvertProvider(Type type)
 		{
 			if (!type.IsGenericTypeDefinition)
-				ThrowHelper.ThrowLinqToDBException($"'{type}' must be a generic type.");
+				throw new LinqToDBException($"'{type}' must be a generic type.");
 
 			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
-				ThrowHelper.ThrowLinqToDBException($"'{type}' must inherit from '{nameof(IGenericInfoProvider)}'.");
+				throw new LinqToDBException($"'{type}' must inherit from '{nameof(IGenericInfoProvider)}'.");
 
 			Schemas[0].SetGenericConvertProvider(type);
 		}
@@ -462,9 +485,9 @@ namespace LinqToDB.Mapping
 			LambdaExpression expr,
 			bool             addNullCheck = true)
 		{
-			if (fromType == null) ThrowHelper.ThrowArgumentNullException(nameof(fromType));
-			if (toType   == null) ThrowHelper.ThrowArgumentNullException(nameof(toType));
-			if (expr     == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
+			if (fromType == null) throw new ArgumentNullException(nameof(fromType));
+			if (toType   == null) throw new ArgumentNullException(nameof(toType));
+			if (expr     == null) throw new ArgumentNullException(nameof(expr));
 
 			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
@@ -494,7 +517,7 @@ namespace LinqToDB.Mapping
 			LambdaExpression expr,
 			bool             addNullCheck = true)
 		{
-			if (expr == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
+			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
@@ -522,7 +545,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TFrom,TTo>> expr,
 			bool addNullCheck = true)
 		{
-			if (expr == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
+			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
@@ -546,7 +569,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TFrom,TTo>> checkNullExpr,
 			Expression<Func<TFrom,TTo>> expr)
 		{
-			if (expr == null) ThrowHelper.ThrowArgumentNullException(nameof(expr));
+			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			lock (_syncRoot)
 			{
@@ -563,7 +586,7 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Conversion delegate.</param>
 		public void SetConverter<TFrom,TTo>(Func<TFrom,TTo> func)
 		{
-			if (func == null) ThrowHelper.ThrowArgumentNullException(nameof(func));
+			if (func == null) throw new ArgumentNullException(nameof(func));
 
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
@@ -585,13 +608,13 @@ namespace LinqToDB.Mapping
 		/// <param name="to">Target type detalization</param>
 		public void SetConverter<TFrom,TTo>(Func<TFrom,TTo> func, DbDataType from, DbDataType to)
 		{
-			if (func == null) ThrowHelper.ThrowArgumentNullException(nameof(func));
+			if (func == null) throw new ArgumentNullException(nameof(func));
 
 			if (from.SystemType != typeof(TFrom))
-				ThrowHelper.ThrowArgumentException(nameof(from), $"'{nameof(from)}' parameter expects the same SystemType as in generic definition.");
+				throw new ArgumentException($"'{nameof(from)}' parameter expects the same SystemType as in generic definition.", nameof(from));
 
 			if (to.SystemType != typeof(TTo))
-				ThrowHelper.ThrowArgumentException(nameof(to), $"'{nameof(to)}' parameter expects the same SystemType as in generic definition.");
+				throw new ArgumentException($"'{nameof(to)}' parameter expects the same SystemType as in generic definition.", nameof(to));
 
 			var p  = Expression.Parameter(typeof(TFrom), "p");
 			var ex = Expression.Lambda<Func<TFrom,TTo>>(Expression.Invoke(Expression.Constant(func), p), p);
@@ -831,7 +854,6 @@ namespace LinqToDB.Mapping
 			return _reduceDefaultValueTransformer.Transform(expr);
 		}
 
-		private readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 		private Expression ReduceDefaultValueTransformer(Expression e)
 		{
 			return Converter.IsDefaultValuePlaceHolder(e) ?
@@ -1017,6 +1039,8 @@ namespace LinqToDB.Mapping
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			if (MetadataReaders.Length == 0)
 				return Array<T>.Empty;
@@ -1056,6 +1080,8 @@ namespace LinqToDB.Mapping
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			if (MetadataReaders.Length == 0)
 				return Array<T>.Empty;
@@ -1094,6 +1120,8 @@ namespace LinqToDB.Mapping
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T? GetAttribute<T>(Type type, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var attrs = GetAttributes<T>(type, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
@@ -1109,6 +1137,8 @@ namespace LinqToDB.Mapping
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var attrs = GetAttributes<T>(type, memberInfo, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
@@ -1127,6 +1157,8 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, Func<T,string?> configGetter, bool inherit = true,
 			bool exactForConfiguration = false)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var list  = new List<T>();
 			var attrs = GetAttributes<T>(type, inherit);
@@ -1161,6 +1193,8 @@ namespace LinqToDB.Mapping
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true,
 			bool exactForConfiguration = false)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var list  = new List<T>();
 			var attrs = GetAttributes<T>(type, memberInfo, inherit);
@@ -1192,6 +1226,8 @@ namespace LinqToDB.Mapping
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T? GetAttribute<T>(Type type, Func<T,string?> configGetter, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var attrs = GetAttributes(type, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
@@ -1209,6 +1245,8 @@ namespace LinqToDB.Mapping
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
 		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true)
 			where T : Attribute
+			// TODO: v5: enforce MappingAttribute here and on MetadataReaders
+			//where T : MappingAttribute
 		{
 			var attrs = GetAttributes(type, memberInfo, configGetter, inherit);
 			return attrs.Length == 0 ? null : attrs[0];
@@ -1241,7 +1279,7 @@ namespace LinqToDB.Mapping
 		{
 			if (!IsLocked)
 				return new (this);
-			return ThrowHelper.ThrowLinqToDBException<FluentMappingBuilder>("MappingSchema is locked. Fluent Mapping is not supported.");
+			throw new LinqToDBException("MappingSchema is locked. Fluent Mapping is not supported.");
 		}
 
 		#endregion
@@ -1252,7 +1290,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>
-		internal int ConfigurationID => _configurationID ??= GenerateID();
+		int IConfigurationID.ConfigurationID => _configurationID ??= GenerateID();
 
 		protected internal virtual int GenerateID()
 		{
@@ -1268,6 +1306,10 @@ namespace LinqToDB.Mapping
 		internal void ResetID()
 		{
 #if DEBUG
+			if (!IsLockable)
+			{
+			}
+
 			if (_configurationID != null)
 				Debug.WriteLine($"ResetID => '{DisplayID}'");
 #endif
@@ -1327,7 +1369,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public static MappingSchema Default = new DefaultMappingSchema();
 
-		class DefaultMappingSchema : LockedMappingSchema
+		sealed class DefaultMappingSchema : LockedMappingSchema
 		{
 			public DefaultMappingSchema() : base(new DefaultMappingSchemaInfo())
 			{
@@ -1373,7 +1415,7 @@ namespace LinqToDB.Mapping
 
 			protected internal override int GenerateID() => 0;
 
-			class DefaultMappingSchemaInfo : MappingSchemaInfo
+			sealed class DefaultMappingSchemaInfo : MappingSchemaInfo
 			{
 				public DefaultMappingSchemaInfo() : base("")
 				{
@@ -1618,7 +1660,7 @@ namespace LinqToDB.Mapping
 					}
 
 					if (valueType == null)
-						return SqlDataType.GetDataType(type);
+						return GetDataType(type);
 
 					var dt = GetDataType(valueType);
 
@@ -1652,7 +1694,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Mapping values for enum type and <c>null</c> for non-enum types.</returns>
 		public virtual MapValue[]? GetMapValues(Type type)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			_mapValues ??= new ConcurrentDictionary<Type,MapValue[]?>();
 
@@ -1729,7 +1771,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
-		internal static MemoryCache<(Type entityType, int schemaId)> EntityDescriptorsCache { get; } = new (new ());
+		internal static MemoryCache<(Type entityType, int schemaId),EntityDescriptor> EntityDescriptorsCache { get; } = new (new ());
 
 		/// <summary>
 		/// Returns mapped entity descriptor.
@@ -1739,7 +1781,7 @@ namespace LinqToDB.Mapping
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
 			var ed = EntityDescriptorsCache.GetOrCreate(
-				(entityType: type, ConfigurationID),
+				(entityType: type, ((IConfigurationID)this).ConfigurationID),
 				this,
 				static (o, context) =>
 				{

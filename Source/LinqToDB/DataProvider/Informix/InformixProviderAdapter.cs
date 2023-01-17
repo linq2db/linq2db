@@ -1,11 +1,14 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Data;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using DataProvider.DB2;
-	using Expressions;
-	using Mapping;
+	using System.Data.Common;
+	using System.Linq.Expressions;
+	using LinqToDB.Common;
+	using LinqToDB.DataProvider.DB2;
+	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 
 	// Note on informix providers: there are actually 3 providers:
 	// - SQLI Provider(IBM.Data.Informix) : netfx only, no bulk copy
@@ -184,7 +187,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var assembly = Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
-				ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
+				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 
 			var connectionType  = assembly.GetType($"{IfxClientNamespace}.IfxConnection" , true)!;
 			var parameterType   = assembly.GetType($"{IfxClientNamespace}.IfxParameter"  , true)!;
@@ -289,7 +292,7 @@ namespace LinqToDB.DataProvider.Informix
 		#region Wrappers
 
 		[Wrapper]
-		private class IfxParameter
+		private sealed class IfxParameter
 		{
 			public IfxType IfxType { get; set; }
 		}
@@ -404,7 +407,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 			}
 
-			public IfxBulkCopy(IfxConnection connection, IfxBulkCopyOptions options) => ThrowHelper.ThrowNotImplementedException();
+			public IfxBulkCopy(IfxConnection connection, IfxBulkCopyOptions options) => throw new NotImplementedException();
 
 			void IDisposable.Dispose ()                       => ((Action<IfxBulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -506,17 +509,17 @@ namespace LinqToDB.DataProvider.Informix
 			{
 			}
 
-			public IfxBulkCopyColumnMapping(int source, string destination) => ThrowHelper.ThrowNotImplementedException();
+			public IfxBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		internal class IfxTimeSpan : TypeWrapper
+		internal sealed class IfxTimeSpan : TypeWrapper
 		{
 			public IfxTimeSpan(object instance) : base(instance, null)
 			{
 			}
 
-			public IfxTimeSpan(TimeSpan timeSpan) => ThrowHelper.ThrowNotImplementedException();
+			public IfxTimeSpan(TimeSpan timeSpan) => throw new NotImplementedException();
 		}
 
 		#endregion

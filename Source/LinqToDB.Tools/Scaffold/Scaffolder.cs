@@ -1,13 +1,16 @@
-﻿namespace LinqToDB.Scaffold
-{
-	using CodeModel;
-	using Common;
-	using DataModel;
-	using Metadata;
-	using Naming;
-	using Schema;
-	using SqlProvider;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.CodeModel;
+using LinqToDB.Common;
+using LinqToDB.DataModel;
+using LinqToDB.Metadata;
+using LinqToDB.Naming;
+using LinqToDB.Schema;
+using LinqToDB.SqlProvider;
 
+namespace LinqToDB.Scaffold
+{
 	/// <summary>
 	/// Helper class to simplify common scenario of data model generation from database.
 	/// </summary>
@@ -48,12 +51,12 @@
 			ITypeMappingProvider typeMappingsProvider)
 		{
 			return new DataModelLoader(
-				_namingServices,
-				Language,
-				schemaProvider,
-				typeMappingsProvider,
-				_options,
-				_interceptors)
+					_namingServices,
+					Language,
+					schemaProvider,
+					typeMappingsProvider,
+					_options,
+					_interceptors)
 				.LoadSchema();
 		}
 
@@ -93,9 +96,10 @@
 		/// <summary>
 		/// Converts per-file code models (AST) to source code using current language (used by current instance).
 		/// </summary>
+		/// <param name="dataModel">Data model, used for code generation.</param>
 		/// <param name="files">Code models.</param>
 		/// <returns>Source code with file names.</returns>
-		public SourceCodeFile[] GenerateSourceCode(params CodeFile[] files)
+		public SourceCodeFile[] GenerateSourceCode(DatabaseModel dataModel, params CodeFile[] files)
 		{
 			var sources = new string[files.Length];
 
@@ -160,7 +164,29 @@
 			for (var i = 0; i < results.Length; i++)
 				results[i] = new SourceCodeFile($"{files[i].FileName}{(_options.CodeGeneration.AddGeneratedFileSuffix ? ".generated" : null)}.{Language.FileExtension}", sources[i]);
 
+			if (_interceptors != null)
+			{
+				var model = new FinalDataModel();
+
+				model.Associations.AddRange(dataModel.DataContext.Associations);
+
+				PopulateSchema(model, dataModel.DataContext);
+				foreach (var schema in dataModel.DataContext.AdditionalSchemas.Values)
+					PopulateSchema(model, schema);
+
+				_interceptors.AfterSourceCodeGenerated(model);
+			}
+
 			return results;
+
+			static void PopulateSchema(FinalDataModel model, SchemaModelBase schema)
+			{
+				model.Entities          .AddRange(schema.Entities);
+				model.StoredProcedures  .AddRange(schema.StoredProcedures);
+				model.ScalarFunctions   .AddRange(schema.ScalarFunctions);
+				model.TableFunctions    .AddRange(schema.TableFunctions);
+				model.AggregateFunctions.AddRange(schema.AggregateFunctions);
+			}
 		}
 	}
 }

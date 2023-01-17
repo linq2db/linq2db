@@ -1,4 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -30,8 +37,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			IQueryable<TTarget> query = target;
 
@@ -68,8 +75,8 @@ namespace LinqToDB
 							CancellationToken         token = default)
 			where TTarget : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			IQueryable<TTarget> query = target;
 
@@ -105,8 +112,8 @@ namespace LinqToDB
 			[InstantHandle] TTarget              obj)
 			where TTarget : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (obj    == null) ThrowHelper.ThrowArgumentNullException(nameof(obj));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
 			IQueryable<TTarget> query = target;
 
@@ -143,8 +150,8 @@ namespace LinqToDB
 			                CancellationToken token = default)
 			where TTarget : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (obj    == null) ThrowHelper.ThrowArgumentNullException(nameof(obj));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
 			IQueryable<TTarget> query = target;
 
@@ -183,9 +190,9 @@ namespace LinqToDB
 			                Expression<Func<TTarget,TOutput>> outputExpression)
 			where TTarget : notnull
 		{
-			if (target           == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter           == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			IQueryable<TTarget> query = target;
 
@@ -227,9 +234,9 @@ namespace LinqToDB
 			where TTarget : notnull
 
 		{
-			if (target           == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter           == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			IQueryable<TTarget> query = target;
 
@@ -262,9 +269,9 @@ namespace LinqToDB
 			                ITable<TTarget>           outputTable)
 			where TTarget : notnull
 		{
-			if (target      == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter      == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputTable == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
+			if (target      == null) throw new ArgumentNullException(nameof(target));
+			if (setter      == null) throw new ArgumentNullException(nameof(setter));
+			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
 			IQueryable<TTarget> query = target;
 
@@ -297,9 +304,9 @@ namespace LinqToDB
 							CancellationToken         token = default)
 			where TTarget : notnull
 		{
-			if (target      == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter      == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputTable == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
+			if (target      == null) throw new ArgumentNullException(nameof(target));
+			if (setter      == null) throw new ArgumentNullException(nameof(setter));
+			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
 			IQueryable<TTarget> query = target;
 
@@ -340,10 +347,10 @@ namespace LinqToDB
 			where TOutput : notnull
 			where TTarget : notnull
 		{
-			if (target           == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter           == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputTable      == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
+			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			IQueryable<TTarget> query = target;
 
@@ -382,10 +389,10 @@ namespace LinqToDB
 			where TOutput : notnull
 			where TTarget : notnull
 		{
-			if (target           == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter           == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputTable      == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
+			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			IQueryable<TTarget> query = target;
 
@@ -431,9 +438,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source           == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target           == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter           == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -473,9 +480,9 @@ namespace LinqToDB
 							CancellationToken                  token = default)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -518,10 +525,10 @@ namespace LinqToDB
 			                Expression<Func<TTarget,TOutput>> outputExpression)
 			where TTarget : notnull
 		{
-			if (source           == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target           == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter           == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -566,10 +573,10 @@ namespace LinqToDB
 							CancellationToken                 token = default)
 			where TTarget : notnull
 		{
-			if (source           == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target           == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter           == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -606,10 +613,10 @@ namespace LinqToDB
 			                ITable<TTarget>                   outputTable)
 			where TTarget : notnull
 		{
-			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target      == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter      == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputTable == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (target      == null) throw new ArgumentNullException(nameof(target));
+			if (setter      == null) throw new ArgumentNullException(nameof(setter));
+			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -646,10 +653,10 @@ namespace LinqToDB
 							CancellationToken                 token = default)
 			where TTarget : notnull
 		{
-			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target      == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter      == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputTable == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (target      == null) throw new ArgumentNullException(nameof(target));
+			if (setter      == null) throw new ArgumentNullException(nameof(setter));
+			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -694,11 +701,11 @@ namespace LinqToDB
 			where TOutput : notnull
 			where TTarget : notnull
 		{
-			if (source           == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target           == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter           == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputTable      == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
+			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -741,11 +748,11 @@ namespace LinqToDB
 			where TOutput : notnull
 			where TTarget : notnull
 		{
-			if (source           == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target           == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter           == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
-			if (outputTable      == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
-			if (outputExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(outputExpression));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
+			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -781,7 +788,7 @@ namespace LinqToDB
 		/// </remarks>
 		public static TTarget InsertWithOutput<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -816,7 +823,7 @@ namespace LinqToDB
 			this ISelectInsertable<TSource,TTarget> source,
 			     CancellationToken                  token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -848,8 +855,8 @@ namespace LinqToDB
 			     ITable<TTarget>                    outputTable)
 			where TTarget : notnull
 		{
-			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (outputTable == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -882,8 +889,8 @@ namespace LinqToDB
 			where TTarget : notnull
 
 		{
-			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (outputTable == null) ThrowHelper.ThrowArgumentNullException(nameof(outputTable));
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -899,6 +906,140 @@ namespace LinqToDB
 			return Task.Run(() => query.Provider.Execute<int>(expr), token);
 		}
 
+		#endregion
+
+		#region IValueInsertable
+		/// <summary>
+		/// Inserts single record into target table and returns inserted record.
+		/// </summary>
+		/// <typeparam name="T">Target table record type.</typeparam>
+		/// <param name="source">Insert query.</param>
+		/// <returns>Inserted record.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+</item>
+		/// <item>PostgreSQL</item>
+		/// <item>SQLite 3.35+</item>
+		/// <item>MariaDB 10.5+</item>
+		/// </list>
+		/// </remarks>
+		public static T InsertWithOutput<T>(this IValueInsertable<T> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var query         = ((ValueInsertable<T>)source).Query;
+			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
+
+			return currentSource.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(InsertWithOutput, source),
+					currentSource.Expression)).AsEnumerable().First();
+		}
+
+		/// <summary>
+		/// Inserts single record into target table asynchronously and returns inserted record.
+		/// </summary>
+		/// <typeparam name="T">Target table record type.</typeparam>
+		/// <param name="source">Insert query.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Inserted record.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+</item>
+		/// <item>PostgreSQL</item>
+		/// <item>SQLite 3.35+</item>
+		/// <item>MariaDB 10.5+</item>
+		/// </list>
+		/// </remarks>
+		public static Task<T> InsertWithOutputAsync<T>(this IValueInsertable<T> source, CancellationToken token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var query         = ((ValueInsertable<T>)source).Query;
+			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
+
+			return currentSource.Provider.CreateQuery<T>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(InsertWithOutput, source),
+					currentSource.Expression)).AsAsyncEnumerable().FirstAsync(token);
+		}
+
+		/// <summary>
+		/// Inserts single record into target table and returns inserted record.
+		/// </summary>
+		/// <typeparam name="T">Target table record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="source">Insert query.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <returns>Inserted record.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+</item>
+		/// <item>PostgreSQL</item>
+		/// <item>SQLite 3.35+</item>
+		/// <item>MariaDB 10.5+</item>
+		/// </list>
+		/// </remarks>
+		public static TOutput InsertWithOutput<T, TOutput>(this IValueInsertable<T> source, Expression<Func<T, TOutput>> outputExpression)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+
+			var query         = ((ValueInsertable<T>)source).Query;
+			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
+
+			return currentSource.Provider.CreateQuery<TOutput>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(InsertWithOutput, source, outputExpression),
+					currentSource.Expression,
+					Expression.Quote(outputExpression))).AsEnumerable().First();
+		}
+
+		/// <summary>
+		/// Inserts single record into target table asynchronously and returns inserted record.
+		/// </summary>
+		/// <typeparam name="T">Target table record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="source">Insert query.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Inserted record.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+</item>
+		/// <item>PostgreSQL</item>
+		/// <item>SQLite 3.35+</item>
+		/// <item>MariaDB 10.5+</item>
+		/// </list>
+		/// </remarks>
+		public static Task<TOutput> InsertWithOutputAsync<T, TOutput>(this IValueInsertable<T> source, Expression<Func<T, TOutput>> outputExpression, CancellationToken token = default)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
+
+			var query         = ((ValueInsertable<T>)source).Query;
+			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
+
+			return currentSource.Provider.CreateQuery<TOutput>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(InsertWithOutput, source, outputExpression),
+					currentSource.Expression,
+					Expression.Quote(outputExpression))).AsAsyncEnumerable().FirstAsync(token);
+		}
 		#endregion
 	}
 }

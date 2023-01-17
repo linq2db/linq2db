@@ -1,9 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
-	using Common;
-
 	public class ValueTaskToTaskMapper : ICustomMapper
 	{
 		bool ICustomMapper.CanMap(Expression expression)
@@ -21,7 +22,7 @@ namespace LinqToDB.Expressions
 	/// <summary>
 	/// Converts <see cref="Task{T}"/> or ValueTask&lt;TResult&gt; to <see cref="Task"/>.
 	/// </summary>
-	internal class GenericTaskToTaskMapper : ICustomMapper
+	internal sealed class GenericTaskToTaskMapper : ICustomMapper
 	{
 		bool ICustomMapper.CanMap(Expression expression)
 		{

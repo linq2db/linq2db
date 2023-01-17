@@ -1,11 +1,12 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 
-	class AsSubQueryBuilder : MethodCallBuilder
+	sealed class AsSubQueryBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

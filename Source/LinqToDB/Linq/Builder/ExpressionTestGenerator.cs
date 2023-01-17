@@ -1,15 +1,19 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using Mapping;
+	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 
-	class ExpressionTestGenerator
+	sealed class ExpressionTestGenerator
 	{
 		readonly bool          _mangleNames;
 		readonly StringBuilder _exprBuilder = new ();
@@ -562,7 +566,7 @@ namespace LinqToDB.Linq.Builder
 				return string.Format(@"{0}
 		public {1}({2})
 		{{
-			// ThrowHelper.ThrowNotImplementedException();
+			// throw new NotImplementedException();
 		}}",
 					attr,
 					name,
@@ -634,7 +638,7 @@ namespace LinqToDB.Linq.Builder
 					return string.Format(@"{0}
 		{5}{4}{1} {2}({3})
 		{{
-			ThrowHelper.ThrowNotImplementedException();
+			throw new NotImplementedException();
 		}}",
 						string.Concat(attrs.Select(a => "\r\n\t\t" + a.ToString())),
 						GetTypeName(m.ReturnType),

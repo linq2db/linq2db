@@ -1,13 +1,16 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Extensions;
 	using SqlQuery;
+	using LinqToDB.Expressions;
 
-	class InsertBuilder : MethodCallBuilder
+	sealed class InsertBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = new []
 		{
@@ -153,12 +156,8 @@ namespace LinqToDB.Linq.Builder
 
 								foreach (var c in ed.Columns.Where(c => !c.SkipOnInsert))
 								{
-									var field = table[c.ColumnName];
-									if (field == null)
-										continue;
-
-									var pe = Expression.MakeMemberAccess(arg, c.MemberInfo);
-
+									var field     = table.FindFieldByMemberName(c.MemberName) ?? throw new InvalidOperationException($"Cannot find column {c.MemberName}({c.ColumnName})");
+									var pe        = Expression.MakeMemberAccess(arg, c.MemberInfo);
 									var column    = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 									var parameter = builder.ParametersContext.BuildParameterFromArgumentProperty(methodCall, argIndex, field.ColumnDescriptor);
 
@@ -184,7 +183,7 @@ namespace LinqToDB.Linq.Builder
 					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable ? SqlTable.Inserted(outputExpression.Parameters[0].Type) : insertStatement.Insert.Into;
 
 					if (insertedTable == null)
-						ThrowHelper.ThrowInvalidOperationException("Cannot find target table for INSERT statement");
+						throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
 					outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable);
 
@@ -212,7 +211,7 @@ namespace LinqToDB.Linq.Builder
 			var insert = insertStatement.Insert;
 
 			if (insert.Into == null)
-				ThrowHelper.ThrowLinqToDBException("Insert query has no setters defined.");
+				throw new LinqToDBException("Insert query has no setters defined.");
 
 			var q = insert.Into.IdentityFields
 				.Except(insert.Items.Select(e => e.Column).OfType<SqlField>());
@@ -245,7 +244,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region InsertContext
 
-		class InsertContext : SequenceContextBase
+		sealed class InsertContext : SequenceContextBase
 		{
 			public enum InsertType
 			{
@@ -284,34 +283,33 @@ namespace LinqToDB.Linq.Builder
 						QueryRunner.SetNonQueryQuery(query);
 						break;
 					default:
-						ThrowHelper.ThrowInvalidOperationException($"Unexpected insert type: {_insertType}");
-						break;
+						throw new InvalidOperationException($"Unexpected insert type: {_insertType}");
 				}
 			}
 
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				return ThrowHelper.ThrowNotImplementedException<Expression>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
 			{
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 			{
-				return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+				throw new NotImplementedException();
 			}
 
 			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IsExpressionResult>();
+				throw new NotImplementedException();
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowNotImplementedException<IBuildContext>();
+				throw new NotImplementedException();
 			}
 		}
 
@@ -319,7 +317,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region InsertWithOutputContext
 
-		class InsertWithOutputContext : SelectContext
+		sealed class InsertWithOutputContext : SelectContext
 		{
 			public InsertWithOutputContext(IBuildContext? parent, IBuildContext sequence, IBuildContext outputContext, LambdaExpression outputExpression)
 				: base(parent, outputExpression, outputContext)
@@ -345,7 +343,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Into
 
-		internal class Into : MethodCallBuilder
+		internal sealed class Into : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -364,7 +362,7 @@ namespace LinqToDB.Linq.Builder
 					if (info.MemberChain.Length == 0)
 						continue;
 
-					var destInfo = destInfos.FirstOrDefault(di => info.CompareMembers(di));
+					var destInfo = destInfos.FirstOrDefault(info.CompareMembers);
 
 					if (destInfo != null)
 						result.Add(Tuple.Create(info, destInfo));
@@ -433,7 +431,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Value
 
-		internal class Value : MethodCallBuilder
+		internal sealed class Value : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{

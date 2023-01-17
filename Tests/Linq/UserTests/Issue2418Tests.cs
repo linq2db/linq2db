@@ -1,6 +1,9 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
@@ -10,7 +13,7 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	internal class DbObjectSetExtensionCallBuilder : Sql.IExtensionCallBuilder
+	internal sealed class DbObjectSetExtensionCallBuilder : Sql.IExtensionCallBuilder
 	{
 		public void Build(Sql.ISqExtensionBuilder builder)
 		{

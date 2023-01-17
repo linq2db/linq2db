@@ -1,10 +1,13 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.DB2
 {
 	using Common;
 	using Data;
 	using SchemaProvider;
 
-	class DB2zOSSchemaProvider : DB2LUWSchemaProvider
+	sealed class DB2zOSSchemaProvider : DB2LUWSchemaProvider
 	{
 		public DB2zOSSchemaProvider(DB2DataProvider provider) : base(provider)
 		{

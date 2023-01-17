@@ -1,11 +1,14 @@
-﻿namespace LinqToDB.Schema
-{
-	using CodeModel;
-	using Data;
-	using Scaffold;
-	using SchemaProvider;
-	using SqlQuery;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.CodeModel;
+using LinqToDB.Data;
+using LinqToDB.Scaffold;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Schema
+{
 	// Because linq2db schema API is quite an abomination, created to leverage T4 functionality and includes not
 	// only schema but also names generation for generated code and type mapping of database types to .net types.
 	// To not work with this API directly, we introduced schema provider interface and perform conversion of data
@@ -484,7 +487,8 @@
 				type,
 				column.IsNullable,
 				!column.SkipOnInsert,
-				!column.SkipOnUpdate);
+				!column.SkipOnUpdate,
+				column.Ordinal);
 		}
 
 		/// <summary>
@@ -698,8 +702,9 @@
 				throw new InvalidOperationException($"{nameof(GetSchemaOptions)}.{nameof(GetSchemaOptions.LoadProcedure)} called for non-table returning object {p.ProcedureName}");
 			};
 
-			legacyOptions.LoadTable     = t => options.LoadTableOrView(new SqlObjectName(t.Name, Schema: t.Schema), t.IsView);
-			legacyOptions.UseSchemaOnly = options.UseSafeSchemaLoad;
+			legacyOptions.LoadTable                 = t => options.LoadTableOrView(new SqlObjectName(t.Name, Schema: t.Schema), t.IsView);
+			legacyOptions.UseSchemaOnly             = options.UseSafeSchemaLoad;
+			legacyOptions.IgnoreSystemHistoryTables = options.IgnoreSystemHistoryTables;
 
 			return legacyOptions;
 		}
@@ -715,9 +720,10 @@
 
 		ISet<string> ISchemaProvider.GetDefaultSchemas() => _options.DefaultSchemas ??  _defaultSchemas;
 
-		string? ISchemaProvider.DatabaseName  => _databaseName;
-		string? ISchemaProvider.ServerVersion => _serverVersion;
-		string? ISchemaProvider.DataSource    => _dataSource;
+		string?         ISchemaProvider.DatabaseName    => _databaseName;
+		string?         ISchemaProvider.ServerVersion   => _serverVersion;
+		string?         ISchemaProvider.DataSource      => _dataSource;
+		DatabaseOptions ISchemaProvider.DatabaseOptions => _isSqlServer ? SqlServerDatabaseOptions.Instance : DatabaseOptions.Default;
 		#endregion
 
 		#region ITypeMappingProvider

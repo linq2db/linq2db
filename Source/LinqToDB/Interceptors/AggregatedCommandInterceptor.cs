@@ -1,8 +1,14 @@
-﻿namespace LinqToDB.Interceptors
+﻿using System;
+using System.Data;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Interceptors
 {
 	using Common;
 
-	class AggregatedCommandInterceptor : AggregatedInterceptor<ICommandInterceptor>, ICommandInterceptor
+	sealed class AggregatedCommandInterceptor : AggregatedInterceptor<ICommandInterceptor>, ICommandInterceptor
 	{
 		protected override AggregatedInterceptor<ICommandInterceptor> Create()
 		{

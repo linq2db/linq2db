@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -49,7 +51,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		private class ExpressionTestClass
+		private sealed class ExpressionTestClass
 		{
 			[Column]
 			public int Id { get; set; }
@@ -86,7 +88,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MyContext : DataConnection
+		sealed class MyContext : DataConnection
 		{
 			public MyContext(string configurationString) : base(configurationString)
 			{

@@ -1,11 +1,11 @@
 ﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Reflection;
 
-	class InlineParametersBuilder : MethodCallBuilder
+	sealed class InlineParametersBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

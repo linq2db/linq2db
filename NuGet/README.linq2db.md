@@ -84,17 +84,17 @@ var db = new LinqToDB.Data.DataConnection(
 
 ### Using Connection Options Builder
 
-You can configure connection options from code using [`LinqToDBConnectionOptionsBuilder`](https://linq2db.github.io/api/LinqToDB.Configuration.LinqToDBConnectionOptionsBuilder.html) class (check class for available options):
+You can configure connection options from code using [`DataOptions`](https://linq2db.github.io/api/LinqToDB.DataOptions.html) class (check class for available options):
 
 ```cs
 // create options builder
-var builder = new LinqToDBConnectionOptionsBuilder();
+var options = new DataOptions();
 
 // configure connection string
-builder.UseSqlServer(connectionString);
+options.UseSqlServer(connectionString);
 
 // or using custom connection factory
-b.UseConnectionFactory(
+options.UseConnectionFactory(
     SqlServerTools.GetDataProvider(
         SqlServerVersion.v2017,
         SqlServerProvider.MicrosoftDataSqlClient),
@@ -106,7 +106,7 @@ b.UseConnectionFactory(
     });
 
 // pass configured options to data connection constructor
-var dc = new DataConnection(builder.Build());
+var dc = new DataConnection(options);
 ```
 
 ### Using Config File (.NET Framework)

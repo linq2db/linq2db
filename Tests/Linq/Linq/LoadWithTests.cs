@@ -1,5 +1,9 @@
-﻿using System.Collections.Immutable;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using System.Transactions;
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -135,7 +139,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class EnumerableToImmutableListConvertProvider<T> : IGenericInfoProvider
+		sealed class EnumerableToImmutableListConvertProvider<T> : IGenericInfoProvider
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
@@ -380,7 +384,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class MainItem
+		sealed class MainItem
 		{
 			[Column]
 			public int Id { get; set; }
@@ -394,7 +398,7 @@ namespace Tests.Linq
 			public SubItem2[] SubItems2 { get; set; } = null!;
 		}
 
-		class MainItem2
+		sealed class MainItem2
 		{
 			[Column]
 			public int Id { get; set; }
@@ -408,7 +412,7 @@ namespace Tests.Linq
 			public MainItem? MainItem { get;set; }
 		}
 
-		class SubItem1
+		sealed class SubItem1
 		{
 			[Column]
 			public int Id { get; set; }
@@ -424,7 +428,7 @@ namespace Tests.Linq
 			public SubItem1_Sub[] SubSubItems { get; set; } = null!;
 		}
 
-		class SubItem1_Sub
+		sealed class SubItem1_Sub
 		{
 			[Column]
 			public int Id { get; set; }
@@ -438,7 +442,7 @@ namespace Tests.Linq
 		}
 
 
-		class SubItem2
+		sealed class SubItem2
 		{
 			[Column]
 			public int Id { get; set; }
@@ -729,7 +733,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class ParentRecord
+		sealed class ParentRecord
 		{
 			[Column] public int Id { get; set; }
 
@@ -748,7 +752,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class ChildRecord
+		sealed class ChildRecord
 		{
 			[Column] public int Id        { get; set; }
 			[Column] public int ParentId  { get; set; }

@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Expressions
+﻿using System;
+
+namespace LinqToDB.Expressions
 {
 	using Mapping;
 

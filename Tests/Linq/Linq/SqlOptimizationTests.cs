@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -8,7 +9,7 @@ namespace Tests.Linq
 	public class SqlOptimizationTests : TestBase
 	{
 		[Table]
-		class DataClass
+		sealed class DataClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int IntValue { get; set; }

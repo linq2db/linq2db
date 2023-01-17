@@ -1,10 +1,15 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Reflection;
@@ -899,7 +904,7 @@ namespace Tests.DataProvider
 							where a.datetimeDataType == date
 							select a;
 
-				query.FirstOrDefault();
+				_ = query.FirstOrDefault();
 
 				Assert.That(parameters.Length, Is.EqualTo(2));
 
@@ -929,7 +934,7 @@ namespace Tests.DataProvider
 							where a.datetimeDataType == date
 							select a;
 
-				query.FirstOrDefault();
+				_ = query.FirstOrDefault();
 
 				Assert.That(parameters.Length, Is.EqualTo(2));
 
@@ -1032,6 +1037,59 @@ namespace Tests.DataProvider
 			}
 		}
 
+		void BulkCopyLinqTypes(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
+		{
+			var cs = DataConnection.GetConnectionString(context);
+			var builder = new DataOptions()
+				.UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
+
+			using (var db = new TestDataConnection(builder))
+			{
+				if (bulkCopyType == BulkCopyType.ProviderSpecific)
+				{
+					var ms = new MappingSchema();
+
+					ms.GetFluentMappingBuilder()
+						.Entity<LinqDataTypes>()
+							.Property(e => e.GuidValue)
+								.IsNotColumn()
+						;
+
+					if (context.IsAnyOf(TestProvName.AllOracleNative))
+					{
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes>()
+								.Property(e => e.BoolValue)
+									.HasDataType(DataType.Int16)
+							;
+					}
+
+					db.AddMappingSchema(ms);
+				}
+
+				try
+				{
+					db.BulkCopy(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000 + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = TestData.SequentialGuid(n),
+								SmallIntValue = (short)n
+							}
+						));
+				}
+				finally
+				{
+					db.GetTable<LinqDataTypes>().Delete(p => p.ID >= 4000);
+				}
+			}
+		}
+
 		async Task BulkCopyLinqTypesAsync(string context, BulkCopyType bulkCopyType)
 		{
 			using (var db = GetDataConnection(context))
@@ -1081,95 +1139,227 @@ namespace Tests.DataProvider
 			}
 		}
 
+		async Task BulkCopyLinqTypesAsync(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
+		{
+			var cs      = DataConnection.GetConnectionString(context);
+			var builder = new DataOptions().UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
+
+			using (var db = new TestDataConnection(builder))
+			{
+				if (bulkCopyType == BulkCopyType.ProviderSpecific)
+				{
+					var ms = new MappingSchema();
+
+					ms.GetFluentMappingBuilder()
+						.Entity<LinqDataTypes>()
+						.Property(e => e.GuidValue)
+						.IsNotColumn()
+						;
+
+					if (context.IsAnyOf(TestProvName.AllOracleNative))
+					{
+						ms.GetFluentMappingBuilder()
+							.Entity<LinqDataTypes>()
+							.Property(e => e.BoolValue)
+							.HasDataType(DataType.Int16)
+							;
+					}
+
+					db.AddMappingSchema(ms);
+				}
+
+				try
+				{
+					await db.BulkCopyAsync(
+						new BulkCopyOptions { BulkCopyType = bulkCopyType },
+						Enumerable.Range(0, 10).Select(n =>
+							new LinqDataTypes
+							{
+								ID            = 4000  + n,
+								MoneyValue    = 1000m + n,
+								DateTimeValue = new DateTime(2001,  1,  11,  1, 11, 21, 100),
+								BoolValue     = true,
+								GuidValue     = TestData.SequentialGuid(n),
+								SmallIntValue = (short)n
+							}
+						));
+				}
+				finally
+				{
+					await db.GetTable<LinqDataTypes>().DeleteAsync(p => p.ID >= 4000);
+				}
+			}
+		}
+
 		[Test]
 		public void BulkCopyLinqTypesMultipleRows(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				BulkCopyLinqTypes(context, BulkCopyType.MultipleRows);
-			}
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			BulkCopyLinqTypes(context, BulkCopyType.MultipleRows);
+		}
 
 		[Test]
 		public async Task BulkCopyLinqTypesMultipleRowsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
-			{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				await BulkCopyLinqTypesAsync(context, BulkCopyType.MultipleRows);
-			}
+		{
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			await BulkCopyLinqTypesAsync(context, BulkCopyType.MultipleRows);
+		}
 
 		[Test]
 		public void BulkCopyLinqTypesProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
-			{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				BulkCopyLinqTypes(context, BulkCopyType.ProviderSpecific);
-			}
+		{
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			BulkCopyLinqTypes(context, BulkCopyType.ProviderSpecific);
+		}
 
 		[Test]
 		public async Task BulkCopyLinqTypesProviderSpecificAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				await BulkCopyLinqTypesAsync(context, BulkCopyType.ProviderSpecific);
-			}
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			await BulkCopyLinqTypesAsync(context, BulkCopyType.ProviderSpecific);
+		}
 
 		[Test]
 		public void BulkCopyRetrieveSequencesProviderSpecific(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
-			{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
-			}
+		{
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific);
+		}
 
 		[Test]
 		public async Task BulkCopyRetrieveSequencesProviderSpecificAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
-			{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.ProviderSpecific);
-			}
+		{
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.ProviderSpecific);
+		}
 
 		[Test]
 		public void BulkCopyRetrieveSequencesMultipleRows(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
-			{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
-			}
+		{
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows);
+		}
 
 		[Test]
 		public async Task BulkCopyRetrieveSequencesMultipleRowsAsync(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
-			{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.MultipleRows);
-			}
+		{
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.MultipleRows);
+		}
 
 		[Test]
 		public void BulkCopyRetrieveSequencesRowByRow(
-			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
 		{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				BulkCopyRetrieveSequence(context, BulkCopyType.RowByRow);
-			}
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			BulkCopyRetrieveSequence(context, BulkCopyType.RowByRow);
+		}
 
 		[Test]
 		public async Task BulkCopyRetrieveSequencesRowByRowAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			using var mode = new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy);
+			await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.RowByRow);
+		}
+
+		[Test]
+		public void BulkCopyLinqTypesMultipleRowsUsingOptions(
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
-			{
-			using (new OracleAlternativeBulkCopyMode(useAlternativeBulkCopy))
-				await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.RowByRow);
-			}
+		{
+			BulkCopyLinqTypes(context, BulkCopyType.MultipleRows, useAlternativeBulkCopy);
+		}
+
+		[Test]
+		public async Task BulkCopyLinqTypesMultipleRowsAsyncUsingOptions(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			await BulkCopyLinqTypesAsync(context, BulkCopyType.MultipleRows, useAlternativeBulkCopy);
+		}
+
+		[Test]
+		public void BulkCopyLinqTypesProviderSpecificUsingOptions(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			BulkCopyLinqTypes(context, BulkCopyType.ProviderSpecific, useAlternativeBulkCopy);
+		}
+
+		[Test]
+		public async Task BulkCopyLinqTypesProviderSpecificUsingOptionsAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			await BulkCopyLinqTypesAsync(context, BulkCopyType.ProviderSpecific, useAlternativeBulkCopy);
+		}
+
+		[Test]
+		public void BulkCopyRetrieveSequencesProviderSpecificUsingOptions(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			BulkCopyRetrieveSequence(context, BulkCopyType.ProviderSpecific, useAlternativeBulkCopy);
+		}
+
+		[Test]
+		public async Task BulkCopyRetrieveSequencesProviderSpecificUsingOptionsAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.ProviderSpecific, useAlternativeBulkCopy);
+		}
+
+		[Test]
+		public void BulkCopyRetrieveSequencesMultipleRowsUsingOptions(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			BulkCopyRetrieveSequence(context, BulkCopyType.MultipleRows, useAlternativeBulkCopy);
+		}
+
+		[Test]
+		public async Task BulkCopyRetrieveSequencesMultipleRowsUsingOptionsAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.MultipleRows, useAlternativeBulkCopy);
+		}
+
+		[Test]
+		public void BulkCopyRetrieveSequencesRowByRowUsingOptions(
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			BulkCopyRetrieveSequence(context, BulkCopyType.RowByRow, useAlternativeBulkCopy);
+		}
+
+		[Test]
+		public async Task BulkCopyRetrieveSequencesRowByRowUsingOptionsAsync(
+			[IncludeDataSources(TestProvName.AllOracle)] string              context,
+			[Values]                                     AlternativeBulkCopy useAlternativeBulkCopy)
+		{
+			await BulkCopyRetrieveSequenceAsync(context, BulkCopyType.RowByRow, useAlternativeBulkCopy);
+		}
 
 		void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType)
 		{
@@ -1206,6 +1396,44 @@ namespace Tests.DataProvider
 			}
 		}
 
+		void BulkCopyRetrieveSequence(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
+		{
+			var data = new[]
+			{
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+			};
+
+			var cs      = DataConnection.GetConnectionString(context);
+			var builder = new DataOptions().UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
+
+			using (var db = new TestDataConnection(builder))
+			{
+				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+
+				var options = new BulkCopyOptions
+				{
+					MaxBatchSize = 5,
+					//RetrieveSequence   = true,
+					KeepIdentity       = bulkCopyType != BulkCopyType.RowByRow,
+					BulkCopyType       = bulkCopyType,
+					NotifyAfter        = 3,
+					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+				};
+
+				db.BulkCopy(options, data.RetrieveIdentity(db));
+
+				foreach (var d in data)
+				{
+					Assert.That(d.ID, Is.GreaterThan(0));
+				}
+
+				//Assert.That(options.BulkCopyType, Is.EqualTo(bulkCopyType));
+			}
+		}
+
 		async Task BulkCopyRetrieveSequenceAsync(string context, BulkCopyType bulkCopyType)
 		{
 			var data = new[]
@@ -1223,6 +1451,44 @@ namespace Tests.DataProvider
 				var options = new BulkCopyOptions
 				{
 					MaxBatchSize       = 5,
+					//RetrieveSequence   = true,
+					KeepIdentity       = bulkCopyType != BulkCopyType.RowByRow,
+					BulkCopyType       = bulkCopyType,
+					NotifyAfter        = 3,
+					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
+				};
+
+				await db.BulkCopyAsync(options, data.RetrieveIdentity(db));
+
+				foreach (var d in data)
+				{
+					Assert.That(d.ID, Is.GreaterThan(0));
+				}
+
+				//Assert.That(options.BulkCopyType, Is.EqualTo(bulkCopyType));
+			}
+		}
+
+		async Task BulkCopyRetrieveSequenceAsync(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
+		{
+			var data = new[]
+			{
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+				new OracleSpecific.SequenceTest { Value = "Value"},
+			};
+
+			var cs      = DataConnection.GetConnectionString(context);
+			var builder = new DataOptions().UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
+
+			using (var db = new TestDataConnection(builder))
+			{
+				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+
+				var options = new BulkCopyOptions
+				{
+					MaxBatchSize = 5,
 					//RetrieveSequence   = true,
 					KeepIdentity       = bulkCopyType != BulkCopyType.RowByRow,
 					BulkCopyType       = bulkCopyType,
@@ -1593,7 +1859,7 @@ namespace Tests.DataProvider
 #region CreateTest
 
 		[Table]
-		class TempTestTable
+		sealed class TempTestTable
 		{
 			// column name length = 30 char (maximum for Oracle)
 			[Column(Name = "AAAAAAAAAAAAAAAAAAAAAAAAAAAABC")]
@@ -1692,7 +1958,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class XmlData
+		sealed class XmlData
 		{
 			public int     Field1;
 			[Column(Length = 2)]
@@ -1940,14 +2206,14 @@ namespace Tests.DataProvider
 		}
 
 		[Table("DecimalOverflow")]
-		class DecimalOverflow
+		sealed class DecimalOverflow
 		{
 			[Column] public decimal Decimal1;
 			[Column] public decimal Decimal2;
 			[Column] public decimal Decimal3;
 		}
 
-		internal class TestOracleDataProvider : OracleDataProvider
+		internal sealed class TestOracleDataProvider : OracleDataProvider
 		{
 			public TestOracleDataProvider(string providerName, OracleProvider provider, OracleVersion version)
 				: base(providerName, provider, version)
@@ -1999,7 +2265,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("DecimalOverflow")]
-		class DecimalOverflow2
+		sealed class DecimalOverflow2
 		{
 			[Column] public OracleDecimal Decimal1;
 			[Column] public OracleDecimal Decimal2;
@@ -2484,7 +2750,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class MyDate
+		sealed class MyDate
 		{
 			public int    Year;
 			public int    Month;
@@ -2519,7 +2785,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("AllTypes")]
-		class MappingTest
+		sealed class MappingTest
 		{
 			[Column] public int    ID;
 			[Column("datetimeoffsetDataType")] public MyDate? MyDate;
@@ -2675,7 +2941,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class BooleanMapping
+		sealed class BooleanMapping
 		{
 			private sealed class EqualityComparer : IEqualityComparer<BooleanMapping>
 			{
@@ -2783,24 +3049,27 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataContext(context))
 			{
-				var initial = OracleTools.DontEscapeLowercaseIdentifiers;
+				var initial = OracleOptions.Default;
+
 				try
 				{
-					OracleTools.DontEscapeLowercaseIdentifiers = true;
-					db.GetTable<TestIdentifiersTable1>().ToList();
-					db.GetTable<TestIdentifiersTable2>().ToList();
+					OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = true };
+
+					_ = db.GetTable<TestIdentifiersTable1>().ToList();
+					_ = db.GetTable<TestIdentifiersTable2>().ToList();
 
 					Query.ClearCaches();
-					OracleTools.DontEscapeLowercaseIdentifiers = false;
+
+					OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = false };
 
 					// no specific exception type as it differ for managed and native providers
 					Assert.That(() => db.GetTable<TestIdentifiersTable1>().ToList(), Throws.Exception.With.Message.Contains("ORA-00942"));
 
-					db.GetTable<TestIdentifiersTable2>().ToList();
+					_ = db.GetTable<TestIdentifiersTable2>().ToList();
 				}
 				finally
 				{
-					OracleTools.DontEscapeLowercaseIdentifiers = initial;
+					OracleOptions.Default = initial;
 					Query.ClearCaches();
 				}
 			}
@@ -2973,7 +3242,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class MyTestDataConnectionInterceptor : CommandInterceptor
+		sealed class MyTestDataConnectionInterceptor : CommandInterceptor
 		{
 			public override void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader)
 			{
@@ -3053,7 +3322,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class LongRawTable
+		sealed class LongRawTable
 		{
 			[Column(Name =  "ID")] public int Id { get; set; }
 			[Column(Name = "longRawDataType", DataType=DataType.LongRaw), Nullable] public byte[]? LONGRAWDATATYPE { get; set; } // LONG RAW
@@ -3392,13 +3661,13 @@ namespace Tests.DataProvider
 		}
 
 		[Table("BULKCOPYTABLE")]
-		class BulkCopyTable
+		sealed class BulkCopyTable
 		{
 			[Column("ID")] public int Id { get; set; }
 		}
 
 		[Table("BULKCOPYTABLE2")]
-		class BulkCopyTable2
+		sealed class BulkCopyTable2
 		{
 			[Column("id")] public int Id { get; set; }
 		}
@@ -3698,9 +3967,9 @@ CREATE TABLE ""TABLE_A""(
 					).Select(x => x.ID).ToArray();
 			}
 		}
-	
+
 		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
-		class LinqDataTypesBlobs
+		sealed class LinqDataTypesBlobs
 		{
 			public int ID { get; set; }
 			// Implicit OracleBlob support, no attribute
@@ -3709,7 +3978,7 @@ CREATE TABLE ""TABLE_A""(
 			[Column("BinaryValue", DataType = DataType.Blob)]
 			public OracleBlob? Blob { get; set; }
 		}
-		
+
 		[Test]
 		public void TestBlob([IncludeDataSources(TestProvName.AllOracleManaged)] string context)
 		{
@@ -3736,7 +4005,7 @@ CREATE TABLE ""TABLE_A""(
 		}
 
 		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
-		class LinqDataTypesBlobsDevart
+		sealed class LinqDataTypesBlobsDevart
 		{
 			public int ID { get; set; }
 			// Implicit OracleBlob support, no attribute
@@ -3773,7 +4042,7 @@ CREATE TABLE ""TABLE_A""(
 
 #if NETFRAMEWORK
 		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
-		class LinqDataTypesBlobsNative
+		sealed class LinqDataTypesBlobsNative
 		{
 			public int ID { get; set; }
 			// Implicit OracleBlob support, no attribute
@@ -3810,7 +4079,7 @@ CREATE TABLE ""TABLE_A""(
 #endif
 
 		[Table]
-		class NativeIdentity
+		sealed class NativeIdentity
 		{
 			// TODO: we need to add identity support for create table API for oracle12+ dialect
 			[Column(DbType = "NUMBER GENERATED BY DEFAULT AS IDENTITY")]
@@ -3944,7 +4213,7 @@ CREATE TABLE ""TABLE_A""(
 				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
 			}
 
-			public class Record
+			public sealed class Record
 			{
 				public int O { get; set; }
 			}
@@ -4006,6 +4275,6 @@ END convert_bool;");
 		}
 
 		[Sql.Expression("convert_bool({0})", ServerSideOnly = true)]
-		public static bool Issue3742Function(string parameter) => ThrowHelper.ThrowInvalidOperationException<bool>();
+		public static bool Issue3742Function(string parameter) => throw new InvalidOperationException();
 	}
 }

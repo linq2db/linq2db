@@ -1,6 +1,9 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 
 namespace Tests.Model
@@ -8,6 +11,14 @@ namespace Tests.Model
 	public class TestDataConnection : DataConnection, ITestDataContext
 	{
 		//static int _counter;
+
+		public TestDataConnection(DataOptions options) : base(options)
+		{
+		}
+
+		public TestDataConnection(Func<DataOptions,DataOptions> optionsSetter) : base(optionsSetter)
+		{
+		}
 
 		public TestDataConnection(string configString)
 			: base(configString)

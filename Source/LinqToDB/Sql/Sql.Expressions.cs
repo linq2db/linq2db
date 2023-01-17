@@ -1,6 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -14,7 +18,7 @@ namespace LinqToDB
 
 	public partial class Sql
 	{
-		private class FieldsExprBuilderDirect : IExtensionCallBuilder
+		private sealed class FieldsExprBuilderDirect : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -40,7 +44,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class FieldNameBuilderDirect : IExtensionCallBuilder
+		private sealed class FieldNameBuilderDirect : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -68,7 +72,7 @@ namespace LinqToDB
 			}
 		}
 
-		class FieldNameBuilder : IExtensionCallBuilder
+		sealed class FieldNameBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -78,7 +82,7 @@ namespace LinqToDB
 
 				var field = QueryHelper.ExtractField(fieldExpr);
 				if (field == null)
-					ThrowHelper.ThrowLinqToDBException($"Can not convert expression {builder.Arguments[0]} to field.");
+					throw new LinqToDBException($"Can not convert expression {builder.Arguments[0]} to field.");
 
 				if (isExpression)
 				{
@@ -123,7 +127,7 @@ namespace LinqToDB
 			if (qualified)
 			{
 				if (dataContext == null)
-					ThrowHelper.ThrowLinqToDBException("Can not provide information for qualified field name");
+					throw new LinqToDBException("Can not provide information for qualified field name");
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				result         = sqlBuilder.ConvertInline(result, ConvertType.NameToQueryField);
@@ -225,7 +229,7 @@ namespace LinqToDB
 				return new[] { GetColumnFromExpression(entityType, fieldExpr, mappingSchema) };
 
 			if (init.Arguments == null || init.Arguments.Count == 0)
-				ThrowHelper.ThrowLinqToDBException($"Can not extract columns info from expression {fieldExpr.Body}");
+				throw new LinqToDBException($"Can not extract columns info from expression {fieldExpr.Body}");
 
 			var ed = mappingSchema.GetEntityDescriptor(entityType);
 			var columns = new ColumnDescriptor[init.Arguments.Count];
@@ -233,11 +237,11 @@ namespace LinqToDB
 			{
 				var memberInfo = MemberHelper.GetMemberInfo(init.Arguments[i]);
 				if (memberInfo == null)
-					ThrowHelper.ThrowLinqToDBException($"Can not extract member info from expression {init.Arguments[i]}");
+					throw new LinqToDBException($"Can not extract member info from expression {init.Arguments[i]}");
 
 				var column = ed.FindColumnDescriptor(memberInfo);
 
-				columns[i] = column ?? ThrowHelper.ThrowLinqToDBException<ColumnDescriptor>($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
+				columns[i] = column ?? throw new LinqToDBException($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
 			}
 
 			return columns;
@@ -247,13 +251,13 @@ namespace LinqToDB
 		{
 			var memberInfo = MemberHelper.GetMemberInfo(fieldExpr.Body);
 			if (memberInfo == null)
-				ThrowHelper.ThrowLinqToDBException($"Can not extract member info from expression {fieldExpr.Body}");
+				throw new LinqToDBException($"Can not extract member info from expression {fieldExpr.Body}");
 
 			var ed     = mappingSchema.GetEntityDescriptor(entityType);
 			var column = ed.FindColumnDescriptor(memberInfo);
 
 			if (column == null)
-				return ThrowHelper.ThrowLinqToDBException<ColumnDescriptor>($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
+				throw new LinqToDBException($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
 			return column;
 		}
 
@@ -261,28 +265,28 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static string FieldName(object fieldExpr)
 		{
-			return ThrowHelper.ThrowLinqToDBException<string>("'Sql.FieldName' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.FieldName' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Pure]
 		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static string FieldName(object fieldExpr, bool qualified)
 		{
-			return ThrowHelper.ThrowLinqToDBException<string>("'Sql.FieldName' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.FieldName' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Pure]
 		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr(object fieldExpr)
 		{
-			return ThrowHelper.ThrowLinqToDBException<ISqlExpression>("'Sql.FieldExpr' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.FieldExpr' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Pure]
 		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr(object fieldExpr, bool qualified)
 		{
-			return ThrowHelper.ThrowLinqToDBException<ISqlExpression>("'Sql.FieldExpr' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.FieldExpr' is server side only method and used only for generating custom SQL parts");
 		}
 
 		private abstract class TableHelper
@@ -294,7 +298,7 @@ namespace LinqToDB
 			public abstract TableOptions TableOptions { get; }
 		}
 
-		private class TableHelper<T> : TableHelper
+		private sealed class TableHelper<T> : TableHelper
 			where T : notnull
 		{
 			private readonly ITable<T> _table;
@@ -311,7 +315,7 @@ namespace LinqToDB
 			public override TableOptions TableOptions => _table.TableOptions;
 		}
 
-		private class TableNameBuilderDirect : IExtensionCallBuilder
+		private sealed class TableNameBuilderDirect : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -367,7 +371,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableNameBuilder : IExtensionCallBuilder
+		private sealed class TableNameBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -382,7 +386,7 @@ namespace LinqToDB
 
 				//TODO: review, maybe we need here TableSource
 				if (sqlTable == null)
-					ThrowHelper.ThrowLinqToDBException("Can not find Table associated with expression");
+					throw new LinqToDBException("Can not find Table associated with expression");
 
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
 				var isExpression = builder.Member.Name == "TableExpr";
@@ -413,7 +417,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableSourceBuilder : IExtensionCallBuilder
+		private sealed class TableSourceBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -421,7 +425,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableOrColumnAsFieldBuilder : IExtensionCallBuilder
+		private sealed class TableOrColumnAsFieldBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -429,7 +433,7 @@ namespace LinqToDB
 				var sqlField = tableOrColumnExpr as SqlField;
 
 				if (sqlField == null)
-					ThrowHelper.ThrowLinqToDBException("Can not find Table or Column associated with expression");
+					throw new LinqToDBException("Can not find Table or Column associated with expression");
 
 				if (sqlField.Name != "*")
 				{
@@ -443,7 +447,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableAsFieldBuilder : IExtensionCallBuilder
+		private sealed class TableAsFieldBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -451,7 +455,7 @@ namespace LinqToDB
 				var sqlField = tableExpr as SqlField;
 
 				if (sqlField == null)
-					ThrowHelper.ThrowLinqToDBException("Can not find Table associated with expression");
+					throw new LinqToDBException("Can not find Table associated with expression");
 
 				var sqlTable = (SqlTable)sqlField.Table!;
 
@@ -459,7 +463,7 @@ namespace LinqToDB
 			}
 		}
 
-		private class TableFieldBuilder : IExtensionCallBuilder
+		private sealed class TableFieldBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -468,7 +472,7 @@ namespace LinqToDB
 				var sqlField = tableExpr as SqlField;
 
 				if (sqlField == null)
-					ThrowHelper.ThrowLinqToDBException("Can not find Table associated with expression");
+					throw new LinqToDBException("Can not find Table associated with expression");
 
 				builder.ResultExpression = new SqlField(sqlField.Table!, fieldName);
 			}
@@ -477,19 +481,19 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(TableFieldBuilder))]
 		public static TColumn TableField<TEntity, TColumn>([NoEnumeration] TEntity entity, string fieldName)
 		{
-			return ThrowHelper.ThrowLinqToDBException<TColumn>("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
 		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] object? entityOrColumn)
 		{
-			return ThrowHelper.ThrowLinqToDBException<TColumn>("'Sql.TableOrColumnAsField' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.TableOrColumnAsField' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Extension("", BuilderType = typeof(TableAsFieldBuilder))]
 		internal static TColumn TableAsField<TEntity, TColumn>([NoEnumeration] TEntity entity)
 		{
-			return ThrowHelper.ThrowLinqToDBException<TColumn>("'Sql.TableAsField' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.TableAsField' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Extension("", BuilderType = typeof(TableNameBuilderDirect))]
@@ -509,7 +513,7 @@ namespace LinqToDB
 			{
 				var dataContext = GetDataContext(table);
 				if (dataContext == null)
-					ThrowHelper.ThrowLinqToDBException("Can not provide information for qualified table name");
+					throw new LinqToDBException("Can not provide information for qualified table name");
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				var sb = new StringBuilder();
@@ -532,13 +536,13 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static string TableName(object tableExpr)
 		{
-			return ThrowHelper.ThrowLinqToDBException<string>("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static string TableName(object tableExpr, [SqlQueryDependent] TableQualification qualification)
 		{
-			return ThrowHelper.ThrowLinqToDBException<string>("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Extension("", BuilderType = typeof(TableNameBuilderDirect))]
@@ -558,7 +562,7 @@ namespace LinqToDB
 			{
 				var dataContext = GetDataContext(table);
 				if (dataContext == null)
-					ThrowHelper.ThrowLinqToDBException("Can not provide information for qualified table name");
+					throw new LinqToDBException("Can not provide information for qualified table name");
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
 				var sb         = new StringBuilder();
@@ -583,13 +587,13 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression TableExpr(object tableExpr)
 		{
-			return ThrowHelper.ThrowLinqToDBException<ISqlExpression>("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
 		}
 
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression TableExpr(object tableExpr, [SqlQueryDependent] TableQualification qualification)
 		{
-			return ThrowHelper.ThrowLinqToDBException<ISqlExpression>("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
 		}
 
 		/// <summary>
@@ -613,7 +617,7 @@ namespace LinqToDB
 			return new SqlAliasPlaceholder();
 		}
 
-		class ExprBuilder : IExtensionCallBuilder
+		sealed class ExprBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -641,7 +645,7 @@ namespace LinqToDB
 			[DataExtensions.SqlFormattableComparer] FormattableString sql
 			)
 		{
-			return ThrowHelper.ThrowLinqToDBException<T>("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
 		}
 #endif
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
@@ -651,7 +655,7 @@ namespace LinqToDB
 			[SqlQueryDependentParams] params object[]     parameters
 			)
 		{
-			return ThrowHelper.ThrowLinqToDBException<T>("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
+			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
 		}
 
 	}

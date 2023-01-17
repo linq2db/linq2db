@@ -1,4 +1,11 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Data;
@@ -6,26 +13,15 @@
 	using Mapping;
 	using SqlProvider;
 
-	class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleProvider.Native,  OracleVersion.v11) {} }
-	class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleProvider.Native,  OracleVersion.v12) {} }
-	class OracleDataProviderDevart11  : OracleDataProvider { public OracleDataProviderDevart11()  : base(ProviderName.Oracle11Devart , OracleProvider.Devart,  OracleVersion.v11) {} }
-	class OracleDataProviderDevart12  : OracleDataProvider { public OracleDataProviderDevart12()  : base(ProviderName.OracleDevart   , OracleProvider.Devart,  OracleVersion.v12) {} }
-	class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.Oracle11Managed, OracleProvider.Managed, OracleVersion.v11) {} }
-	class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged  , OracleProvider.Managed, OracleVersion.v12) {} }
+	sealed class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleProvider.Native,  OracleVersion.v11) {} }
+	sealed class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleProvider.Native,  OracleVersion.v12) {} }
+	sealed class OracleDataProviderDevart11  : OracleDataProvider { public OracleDataProviderDevart11()  : base(ProviderName.Oracle11Devart , OracleProvider.Devart,  OracleVersion.v11) {} }
+	sealed class OracleDataProviderDevart12  : OracleDataProvider { public OracleDataProviderDevart12()  : base(ProviderName.OracleDevart   , OracleProvider.Devart,  OracleVersion.v12) {} }
+	sealed class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.Oracle11Managed, OracleProvider.Managed, OracleVersion.v11) {} }
+	sealed class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged  , OracleProvider.Managed, OracleVersion.v12) {} }
 
 	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
-		[Obsolete("Use .ctor(string name, OracleProvider provider, OracleVersion version)")]
-		protected OracleDataProvider(string name)
-			: this(name, OracleProvider.Managed, OracleVersion.v12)
-		{ }
-
-		[Obsolete("Use .ctor(string name, OracleProvider provider, OracleVersion version)")]
-		protected OracleDataProvider(string name, OracleVersion version)
-			: this(name, OracleProvider.Managed, version)
-		{
-		}
-
 		protected OracleDataProvider(string name, OracleProvider provider, OracleVersion version)
 			: base(name, GetMappingSchema(provider, version), OracleProviderAdapter.GetInstance(provider))
 		{
@@ -95,12 +91,12 @@
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return Version switch
 			{
-				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
-				_                 => new Oracle12SqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags),
+				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				_                 => new Oracle12SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 			};
 		}
 
@@ -119,7 +115,7 @@
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider() => new OracleSchemaProvider(this);
 
@@ -132,7 +128,7 @@
 				// binding disabled for native provider without parameters to reduce chances to fail when SQL contains
 				// parameter-like token.
 				// This is mostly issue with triggers creation, because they can have record tokens like :NEW
-				// incorectly identified by native provider as parameter
+				// incorrectly identified by native provider as parameter
 				var bind = !Adapter.BindingByNameEnabled || parameters?.Length > 0 || withParameters;
 				Adapter.SetBindByName(rawCommand, bind);
 
@@ -323,28 +319,32 @@
 			}
 		}
 
-#region BulkCopy
+		#region BulkCopy
 
-		OracleBulkCopy? _bulkCopy;
-
-		public override BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-			_bulkCopy ??= new OracleBulkCopy(this);
+			var oracleOptions = options.FindOrDefault(OracleOptions.Default);
+			var bulkCopy      = new OracleBulkCopy(this, oracleOptions.AlternativeBulkCopy);
 
-			return _bulkCopy.BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+			return bulkCopy.BulkCopy(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					oracleOptions.BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			_bulkCopy ??= new OracleBulkCopy(this);
+			var oracleOptions = options.FindOrDefault(OracleOptions.Default);
+			var bulkCopy      = new OracleBulkCopy(this, oracleOptions.AlternativeBulkCopy);
 
-			return _bulkCopy.BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+			return bulkCopy.BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					oracleOptions.BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
@@ -352,13 +352,16 @@
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-			_bulkCopy ??= new OracleBulkCopy(this);
+			var extension = options.FindOrDefault(OracleOptions.Default);
+			var bulkCopy  = new OracleBulkCopy(this, extension.AlternativeBulkCopy);
 
-			return _bulkCopy.BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? OracleTools.DefaultBulkCopyType : options.BulkCopyType,
+			return bulkCopy.BulkCopyAsync(
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					extension.BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
@@ -366,6 +369,6 @@
 		}
 #endif
 
-#endregion
+		#endregion
 	}
 }

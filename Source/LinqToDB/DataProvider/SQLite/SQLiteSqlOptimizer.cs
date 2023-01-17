@@ -1,11 +1,13 @@
-﻿namespace LinqToDB.DataProvider.SQLite
+﻿using System;
+
+namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
 
-	class SQLiteSqlOptimizer : BasicSqlOptimizer
+	sealed class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
 		public SQLiteSqlOptimizer(SqlProviderFlags sqlProviderFlags)
 			: base(sqlProviderFlags)
@@ -14,13 +16,13 @@
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
 				{
-					statement = GetAlternativeDelete((SqlDeleteStatement)statement);
+					statement = GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 				}
@@ -29,11 +31,11 @@
 				{
 					if (SqlProviderFlags.IsUpdateFromSupported)
 					{
-						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement);
+						statement = GetAlternativeUpdatePostgreSqlite((SqlUpdateStatement)statement, dataOptions);
 					}
 					else
 					{
-						statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+						statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions);
 					}
 
 					break;
@@ -133,7 +135,7 @@
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}
@@ -173,7 +175,7 @@
 						var left = PseudoFunctions.MakeConvert(new SqlDataType(leftType), new SqlDataType(leftType), exprExpr.Expr1);
 						exprExpr = new SqlPredicate.ExprExpr(left, exprExpr.Operator, exprExpr.Expr2, null);
 					}
-					
+
 					if (!(exprExpr.Expr2 is SqlFunction func2 && (func2.Name == PseudoFunctions.CONVERT || func2.Name == "DateTime")))
 					{
 						var right = PseudoFunctions.MakeConvert(new SqlDataType(rightType), new SqlDataType(rightType), exprExpr.Expr2);
@@ -214,7 +216,7 @@
 			          || type == typeof(DateTimeOffset?);
 		}
 
-		protected override ISqlExpression ConvertConvertion(SqlFunction func)
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
 		{
 			if (!func.DoNotOptimize)
 			{
@@ -227,7 +229,7 @@
 					func.DoNotOptimize = true;
 			}
 
-			return base.ConvertConvertion(func);
+			return base.ConvertConversion(func);
 		}
 	}
 }

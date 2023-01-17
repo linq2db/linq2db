@@ -1,16 +1,19 @@
-﻿using FluentAssertions;
+﻿using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System.Linq.Dynamic.Core;
 using System.Linq.Dynamic.Core.CustomTypeProviders;
+using System.Collections.Generic;
+using System;
 
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue3475Tests : TestBase
 	{
-		internal class LinqToDBDynamicLinqCustomTypeProvider : DefaultDynamicLinqCustomTypeProvider
+		internal sealed class LinqToDBDynamicLinqCustomTypeProvider : DefaultDynamicLinqCustomTypeProvider
 		{
 			public override HashSet<Type> GetCustomTypes()
 			{

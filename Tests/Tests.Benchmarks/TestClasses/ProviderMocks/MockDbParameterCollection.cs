@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Data.Common;
 
 namespace LinqToDB.Benchmarks.TestProvider

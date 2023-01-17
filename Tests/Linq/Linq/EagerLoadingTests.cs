@@ -1,4 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
@@ -13,7 +17,7 @@ namespace Tests.Linq
 	public class EagerLoadingTests : TestBase
 	{
 		[Table]
-		class MasterClass
+		sealed class MasterClass
 		{
 			[Column] [PrimaryKey] public int Id1    { get; set; }
 			[Column] [PrimaryKey] public int Id2    { get; set; }
@@ -34,7 +38,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class MasterManyId
+		sealed class MasterManyId
 		{
 			[Column] public int Id1    { get; set; }
 			[Column] public int Id2    { get; set; }
@@ -52,7 +56,7 @@ namespace Tests.Linq
 }
 
 		[Table]
-		class DetailClass
+		sealed class DetailClass
 		{
 			[Column] [PrimaryKey] public int DetailId    { get; set; }
 			[Column] public int? MasterId    { get; set; }
@@ -63,7 +67,7 @@ namespace Tests.Linq
 }
 
 		[Table]
-		class SubDetailClass
+		sealed class SubDetailClass
 		{
 			[Column] [PrimaryKey] public int SubDetailId    { get; set; }
 			[Column] public int? DetailId    { get; set; }
@@ -74,7 +78,7 @@ namespace Tests.Linq
 
 		}
 
-		class SubDetailDTO
+		sealed class SubDetailDTO
 		{
 			public int SubDetailId    { get; set; }
 			public int? DetailId    { get; set; }
@@ -1392,7 +1396,7 @@ FROM
 
 #region issue 2307
 		[Table]
-		class AttendanceSheet
+		sealed class AttendanceSheet
 		{
 			[PrimaryKey]
 			[Column] public int Id;
@@ -1406,7 +1410,7 @@ FROM
 		}
 
 		[Table]
-		class AttendanceSheetRow
+		sealed class AttendanceSheetRow
 		{
 			[Column] public int Id;
 			[Column] public int AttendanceSheetId;
@@ -1421,12 +1425,12 @@ FROM
 				};
 		}
 
-		class AttendanceSheetDTO
+		sealed class AttendanceSheetDTO
 		{
 			public List<AttendanceSheetRowListModel> Rows = null!;
 		}
 
-		class AttendanceSheetRowListModel
+		sealed class AttendanceSheetRowListModel
 		{
 			public AttendanceSheetRowListModel(AttendanceSheetRow row)
 			{
@@ -1458,7 +1462,7 @@ FROM
 		#region issue 3128
 
 		[Table]
-		class UserIssue3128
+		sealed class UserIssue3128
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -1468,7 +1472,7 @@ FROM
 		}
 
 		[Table]
-		class UserDetailsIssue3128
+		sealed class UserDetailsIssue3128
 		{
 			[PrimaryKey] public int UserId { get; set; }
 			[Column] public int Age { get; set; }

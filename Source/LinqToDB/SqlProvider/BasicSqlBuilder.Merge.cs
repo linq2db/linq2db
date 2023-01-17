@@ -1,6 +1,9 @@
-﻿namespace LinqToDB.SqlProvider
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.SqlProvider
 {
-	using Common;
+	using LinqToDB.Common;
 	using SqlQuery;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
@@ -90,8 +93,7 @@
 					BuildMergeOperationUpdateBySource(operation);
 					break;
 				default:
-					ThrowHelper.ThrowInvalidOperationException($"Unknown merge operation type: {operation.OperationType}");
-					break;
+					throw new InvalidOperationException($"Unknown merge operation type: {operation.OperationType}");
 			}
 		}
 
@@ -155,19 +157,19 @@
 		protected virtual void BuildMergeOperationUpdateWithDelete(SqlMergeOperationClause operation)
 		{
 			// Oracle-specific operation
-			ThrowHelper.ThrowNotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
+			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
 		protected virtual void BuildMergeOperationDeleteBySource(SqlMergeOperationClause operation)
 		{
 			// SQL Server-specific operation
-			ThrowHelper.ThrowNotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
+			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
 		protected virtual void BuildMergeOperationUpdateBySource(SqlMergeOperationClause operation)
 		{
 			// SQL Server-specific operation
-			ThrowHelper.ThrowNotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
+			throw new NotSupportedException($"Merge operation {operation.OperationType} is not supported by {Name}");
 		}
 
 		protected virtual void BuildMergeOn(SqlMergeStatement mergeStatement)
@@ -239,7 +241,7 @@
 			else if (IsEmptyValuesSourceSupported)
 				BuildMergeEmptySource(merge);
 			else
-				ThrowHelper.ThrowLinqToDBException($"{Name} doesn't support merge with empty source");
+				throw new LinqToDBException($"{Name} doesn't support merge with empty source");
 
 			BuildMergeAsSourceClause(merge.Source);
 		}

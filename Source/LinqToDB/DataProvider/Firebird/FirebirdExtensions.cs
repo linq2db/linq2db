@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+
+namespace LinqToDB.DataProvider.Firebird
 {
 	public interface IFirebirdExtensions
 	{

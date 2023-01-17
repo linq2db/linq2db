@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Remote
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Remote
 {
 	public interface ILinqService
 	{

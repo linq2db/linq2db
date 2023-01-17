@@ -1,3 +1,5 @@
+﻿using System;
+
 namespace LinqToDB.Mapping
 {
 	/// <summary>
@@ -7,7 +9,7 @@ namespace LinqToDB.Mapping
 	/// Using this attribute, you can allow <c>NULL</c> values for identity columns.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=true)]
-	public class NullableAttribute : Attribute
+	public class NullableAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute isntance.
@@ -49,5 +51,10 @@ namespace LinqToDB.Mapping
 		/// Default value: <c>true</c>.
 		/// </summary>
 		public bool   CanBeNull     { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{(CanBeNull ? 1 : 0)}.";
+		}
 	}
 }

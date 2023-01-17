@@ -1,6 +1,9 @@
-﻿namespace LinqToDB.Tools.Comparers
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.Tools.Comparers
 {
-	class ArrayEqualityComparer<T> : EqualityComparer<T[]>
+	sealed class ArrayEqualityComparer<T> : EqualityComparer<T[]>
 	{
 		public new static ArrayEqualityComparer<T> Default { get; } = new ArrayEqualityComparer<T>();
 

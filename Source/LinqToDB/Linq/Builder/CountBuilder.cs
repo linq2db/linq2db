@@ -1,11 +1,12 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class CountBuilder : MethodCallBuilder
+	sealed class CountBuilder : MethodCallBuilder
 	{
 		public  static readonly string[] MethodNames      = { "Count"     , "LongCount"      };
 		private static readonly string[] MethodNamesAsync = { "CountAsync", "LongCountAsync" };
@@ -91,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		internal class CountContext : SequenceContextBase
+		internal sealed class CountContext : SequenceContextBase
 		{
 			public CountContext(IBuildContext? parent, IBuildContext sequence, Type returnType)
 				: base(parent, sequence, null)
@@ -128,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 				return flags switch
 				{
 					ConvertFlags.Field => new[] { new SqlInfo(Sql!, Parent!.SelectQuery) },
-					_                  => ThrowHelper.ThrowNotImplementedException<SqlInfo[]>(),
+					_                  => throw new NotImplementedException(),
 				};
 			}
 
@@ -141,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							new SqlInfo(Sql!, Parent!.SelectQuery, Parent.SelectQuery.Select.Add(Sql!))
 						},
-					_ => ThrowHelper.ThrowNotImplementedException<SqlInfo[]>(),
+					_ => throw new NotImplementedException(),
 				};
 			}
 

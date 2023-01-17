@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
@@ -369,7 +372,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class CustomerBase
+		sealed class CustomerBase
 		{
 			[PrimaryKey, Identity] public int        Id           { get; set; }
 			[Column, NotNull]      public ClientType ClientType   { get; set; }
@@ -644,7 +647,7 @@ namespace Tests.Linq
 
 		[Table("AllTypes")]
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
-		private class InsertIssueTest
+		private sealed class InsertIssueTest
 		{
 			[Column("smallintDataType")]
 			[Column("SMALLINTDATATYPE", Configuration = ProviderName.DB2)]
@@ -728,7 +731,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class TableWithGuid
+		sealed class TableWithGuid
 		{
 			[Column                           ] public Guid Default   { get; set; }
 			[Column(DataType = DataType.Guid) ] public Guid Binary    { get; set; }

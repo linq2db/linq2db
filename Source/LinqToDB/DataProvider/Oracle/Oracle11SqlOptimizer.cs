@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using System;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using Extensions;
 	using Mapping;
@@ -11,21 +13,21 @@
 		{
 		}
 
-		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, 30);
 
-			return base.Finalize(mappingSchema, statement);
+			return base.Finalize(mappingSchema, statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			statement = ReplaceTakeSkipWithRowNum(statement, false);
 
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
-				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
+				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
+				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions); break;
 			}
 
 			return statement;
@@ -152,7 +154,7 @@
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}
@@ -264,7 +266,7 @@
 						query.Select.Take(null, null);
 						return 0;
 					}
-						
+
 					return 1;
 				},
 				static (_, queries) =>

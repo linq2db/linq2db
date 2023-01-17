@@ -1,4 +1,8 @@
-﻿using LinqToDB.Data.RetryPolicy;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System.Data.SQLite;
@@ -9,7 +13,7 @@ namespace Tests.Samples
 	[TestFixture]
 	public class ExceptionInterceptTests : TestBase
 	{
-		private class Retry : IRetryPolicy
+		private sealed class Retry : IRetryPolicy
 		{
 			public int Count { get; private set; }
 

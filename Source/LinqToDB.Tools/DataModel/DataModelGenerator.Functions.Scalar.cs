@@ -1,8 +1,9 @@
-﻿namespace LinqToDB.DataModel
-{
-	using CodeModel;
-	using Common;
+﻿using System;
+using LinqToDB.CodeModel;
+using LinqToDB.Common;
 
+namespace LinqToDB.DataModel
+{
 	// contains generation logic for scalar function mappings
 	partial class DataModelGenerator
 	{
@@ -121,6 +122,11 @@
 				returnType = function.Return!;
 
 			method.Returns(returnType);
+
+			method.Method.ChangeHandler += m =>
+			{
+				function.Return = m.ReturnType!.Type;
+			};
 
 			foreach (var param in function.Parameters)
 				DefineParameter(method, param.Parameter);

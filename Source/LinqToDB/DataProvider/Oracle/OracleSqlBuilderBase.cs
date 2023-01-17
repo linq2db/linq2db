@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Data.Common;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -7,10 +10,10 @@ namespace LinqToDB.DataProvider.Oracle
 	using SqlProvider;
 	using SqlQuery;
 
-	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder
+	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleOptions>
 	{
-		public OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -34,8 +37,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into!.GetIdentityField()
-								?? ThrowHelper.ThrowSqlException<SqlField>($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
+			var identityField = insertClause.Into!.GetIdentityField();
+
+			if (identityField == null)
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');
@@ -62,7 +67,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
 				base.BuildWhere(selectQuery) ||
@@ -180,15 +185,10 @@ namespace LinqToDB.DataProvider.Oracle
 			// now we check only for latin letters
 			// Also we should allow only uppercase letters:
 			// "Nonquoted identifiers are not case sensitive. Oracle interprets them as uppercase"
-			return !IsReserved(name) &&
-				((OracleTools.DontEscapeLowercaseIdentifiers && name[0] >= 'a' && name[0] <= 'z') || (name[0] >= 'A' && name[0] <= 'Z')) &&
+			return !IsReserved(name)                                                                                               &&
+				((ProviderOptions.DontEscapeLowercaseIdentifiers && name[0] is >= 'a' and <= 'z') || name[0] is >= 'A' and <= 'Z') &&
 				name.All(c =>
-					(OracleTools.DontEscapeLowercaseIdentifiers && c >= 'a' && c <= 'z') ||
-					(c >= 'A' && c <= 'Z') ||
-					(c >= '0' && c <= '9') ||
-					c == '$' ||
-					c == '#' ||
-					c == '_');
+					(ProviderOptions.DontEscapeLowercaseIdentifiers && c is >= 'a' and <= 'z') || c is >= 'A' and <= 'Z' or >= '0' and <= '9' or '$' or '#' or '_');
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -382,7 +382,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						.AppendLine("\tBEGIN")
 						.Append("\t\tEXECUTE IMMEDIATE 'DROP SEQUENCE ");
-					
+
 					AppendSchemaPrefix(StringBuilder, dropTable.Table!.TableName.Schema);
 					Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.TableName.Name), ConvertType.SequenceName);
 
@@ -554,23 +554,31 @@ END;",
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				(true, TableOptions.IsTemporary                                                                                    ) or
-				(true, TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData      ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                          ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
-				(true,                                                                      TableOptions.IsLocalTemporaryData      ) or
-				(true,                                                                      TableOptions.IsTransactionTemporaryData) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure                                          ) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData)
-					=> "CREATE GLOBAL TEMPORARY TABLE ",
-				(true, var value)
-					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
-				(false, _)
-					=> "CREATE TABLE ",
-			};
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                                     :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsTransactionTemporaryData :
+					case                            TableOptions.IsGlobalTemporaryStructure                                           :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
 			StringBuilder.Append(command);
 		}
@@ -638,7 +646,7 @@ END;",
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
 		{
 			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
-			
+
 			Indent++;
 
 			if (statement.InsertType == MultiInsertType.Unconditional)
@@ -664,7 +672,7 @@ END;",
 					{
 						StringBuilder.AppendLine("ELSE");
 					}
-		
+
 					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
 				}
 			}

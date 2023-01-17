@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -8,7 +11,7 @@ namespace Tests.UserTests
 	public class Issue2642Tests : TestBase
 	{
 		[Table("mails")]
-		class Email
+		sealed class Email
 		{
 			[Column]
 			public int Id { get; set; }
@@ -19,7 +22,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("EmailAttachments")]
-		class EmailAttachment
+		sealed class EmailAttachment
 		{
 			[Column]
 			public int Id { get; set; }
@@ -30,7 +33,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("IIRs")]
-		class Iir
+		sealed class Iir
 		{
 			[Column]
 			public int Id { get; set; }

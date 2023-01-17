@@ -1,11 +1,12 @@
-﻿using LinqToDB.Common;
+﻿using System.Collections.Generic;
+using LinqToDB.Common;
 using LinqToDB.Configuration;
 
 namespace Tests
 {
 	public class TxtSettings : ILinqToDBSettings
 	{
-		class DataProviderSettings : IDataProviderSettings
+		sealed class DataProviderSettings : IDataProviderSettings
 		{
 			public string                  TypeName   { get; set; } = null!;
 			public string?                 Name       { get; set; }
@@ -13,7 +14,7 @@ namespace Tests
 			public IEnumerable<NamedValue> Attributes => Array<NamedValue>.Empty;
 		}
 
-		class ConnectionStringSettings : IConnectionStringSettings
+		sealed class ConnectionStringSettings : IConnectionStringSettings
 		{
 			public string  ConnectionString { get; set; } = null!;
 			public string  Name             { get; set; } = null!;

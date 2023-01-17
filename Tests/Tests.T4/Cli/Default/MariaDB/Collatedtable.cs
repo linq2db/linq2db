@@ -12,8 +12,8 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MariaDB
 {
-	[Table("collatedtable")]
-	public class Collatedtable
+	[Table("CollatedTable")]
+	public class CollatedTable
 	{
 		[Column("Id"                                )] public int    Id              { get; set; } // int(11)
 		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // varchar(20)

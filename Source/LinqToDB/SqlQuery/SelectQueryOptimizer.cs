@@ -1,13 +1,18 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using SqlProvider;
 
-	class SelectQueryOptimizer
+	sealed class SelectQueryOptimizer
 	{
-		public SelectQueryOptimizer(SqlProviderFlags flags, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
+		public SelectQueryOptimizer(SqlProviderFlags flags, DataOptions dataOptions, IQueryElement rootElement, SelectQuery selectQuery, int level, params IQueryElement[] dependencies)
 		{
 			_flags        = flags;
+			_dataOptions  = dataOptions;
 			_selectQuery  = selectQuery;
 			_rootElement  = rootElement;
 			_level        = level;
@@ -15,6 +20,7 @@
 		}
 
 		readonly SqlProviderFlags _flags;
+		readonly DataOptions      _dataOptions;
 		readonly SelectQuery      _selectQuery;
 		readonly IQueryElement    _rootElement;
 		readonly int              _level;
@@ -33,7 +39,7 @@
 				if (e is SelectQuery sql)
 				{
 					if (dic.ContainsKey(sql))
-						ThrowHelper.ThrowInvalidOperationException("SqlQuery circle reference detected.");
+						throw new InvalidOperationException("SqlQuery circle reference detected.");
 
 					dic.Add(sql, sql);
 				}
@@ -52,7 +58,7 @@
 #endif
 		}
 
-		class QueryData
+		sealed class QueryData
 		{
 			public          SelectQuery          Query   = null!;
 			public readonly List<ISqlExpression> Fields  = new ();
@@ -273,7 +279,7 @@
 								if (context.dic.TryGetValue(expr.FalseValue, out ex)) expr.FalseValue = ex;
 								break;
 							}
-						
+
 						case QueryElementType.LikePredicate :
 							{
 								var expr = (SqlPredicate.Like)e;
@@ -442,7 +448,9 @@
 				if (e is SelectQuery sql && sql != context.optimizer._selectQuery)
 				{
 					sql.ParentSelect = context.optimizer._selectQuery;
-					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._rootElement, sql, context.optimizer._level + 1, context.optimizer._dependencies)
+					new SelectQueryOptimizer(context.optimizer._flags, context.optimizer._dataOptions,
+							context.optimizer._rootElement, sql, context.optimizer._level + 1,
+							context.optimizer._dependencies)
 						.FinalizeAndValidateInternal(context.isApplySupported);
 
 					if (sql.IsParameterDependent)
@@ -468,27 +476,18 @@
 		{
 			if (!_selectQuery.GroupBy.IsEmpty)
 			{
-				// Remove constants. 
+				// Remove constants.
 				//
 				for (int i = _selectQuery.GroupBy.Items.Count - 1; i >= 0; i--)
 				{
-					if (QueryHelper.IsConstant(_selectQuery.GroupBy.Items[i]))
+					if (QueryHelper.IsConstantFast(_selectQuery.GroupBy.Items[i]))
 					{
-						if (i == 0 && _selectQuery.GroupBy.Items.Count == 1)
-						{
-							// we cannot remove all group items if there is at least one aggregation function
-							//
-							var lastShouldStay = _selectQuery.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
-							if (lastShouldStay)
-								break;
-						}
-
 						_selectQuery.GroupBy.Items.RemoveAt(i);
 					}
 				}
 			}
 		}
-		
+
 		private void CorrectColumns()
 		{
 			if (!_selectQuery.GroupBy.IsEmpty && _selectQuery.Select.Columns.Count == 0)
@@ -560,7 +559,7 @@
 
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
 					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
-					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null 
+					    && exprExpr.Expr1 is SqlValue value1 && value1.Value != null
 					    && exprExpr.Expr2 is SqlValue value2 && value2.Value != null
 					    && value1.GetType() == value2.GetType())
 					{
@@ -1008,7 +1007,7 @@
 
 		bool CheckColumn(SelectQuery parentQuery, SqlColumn column, ISqlExpression expr, SelectQuery query, bool optimizeValues, ISet<ISqlTableSource> sources)
 		{
-			expr = QueryHelper.UnwrapExpression(expr);
+			expr = QueryHelper.UnwrapExpression(expr, checkNullability: false);
 
 			if (expr.ElementType == QueryElementType.SqlField     ||
 				expr.ElementType == QueryElementType.Column       ||
@@ -1028,33 +1027,28 @@
 				}
 			}
 
-			if (!QueryHelper.ContainsAggregationOrWindowFunction(expr))
+			var elementsToIgnore = new HashSet<IQueryElement> { query };
+
+			var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
+			if (depends)
+				return true;
+
+			if (!_flags.AcceptsOuterExpressionInAggregate                &&
+			    column.Expression.ElementType != QueryElementType.Column &&
+			    QueryHelper.HasOuterReferences(sources, column))
 			{
-				var elementsToIgnore = new HashSet<IQueryElement> { query };
-
-				var depends = QueryHelper.IsDependsOn(parentQuery.GroupBy, column, elementsToIgnore);
-				if (depends)
-					return true;
-
-				if (!_flags.AcceptsOuterExpressionInAggregate && 
-				    column.Expression.ElementType != QueryElementType.Column &&
-				    QueryHelper.HasOuterReferences(sources, column))
-				{
-					// handle case when aggregate expression has outer references. SQL Server will fail.
-					return true;
-				}
-
-				if (QueryHelper.IsComplexExpression(expr))
-				{
-					var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
-
-					return dependsCount > 1;
-				}
-
-				return false;
+				// handle case when aggregate expression has outer references. SQL Server will fail.
+				return true;
 			}
 
-			return true;
+			if (QueryHelper.IsComplexExpression(expr))
+			{
+				var dependsCount = QueryHelper.DependencyCount(parentQuery, column, elementsToIgnore);
+
+				return dependsCount > 1;
+			}
+
+			return false;
 		}
 
 		SqlTableSource RemoveSubQuery(
@@ -1072,7 +1066,6 @@
 				query.From.Tables.Count  == 1                                &&
 				(concatWhere || query.Where.IsEmpty && query.Having.IsEmpty) &&
 				query.HasSetOperators    == false                            &&
-				query.GroupBy.IsEmpty                                        &&
 				query.Select.HasModifier == false;
 			//isQueryOK = isQueryOK && (_flags.IsDistinctOrderBySupported || query.Select.IsDistinct );
 
@@ -1110,10 +1103,41 @@
 				}
 			}
 
+			if (isQueryOK && !query.GroupBy.IsEmpty)
+			{
+				isQueryOK = parentJoinedTable       == null &&
+				            childSource.Joins.Count == 0    &&
+				            parentQuery.IsSimpleOrSet       &&
+				            !parentQuery.Select.Columns.Any(static c =>
+					            QueryHelper.ContainsAggregationOrWindowFunctionOneLevel(c.Expression));
+			}
+
+			if (isQueryOK && query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunctionOneLevel(c.Expression)))
+			{
+				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet && childSource.Joins.Count == 0;
+			}
+
+			// SELECT MAX(query.c1) { parentQuery}
+			// FROM (
+			//	SELECT {query}
+			//		(SELECT Avg(t.Field)) AS c1
+			//  FROM Table
+			// )
+			if (isQueryOK && query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+			{
+				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet && childSource.Joins.Count == 0;
+				if (isQueryOK)
+				{
+					// check for parent query aggregations
+					//TODO: Actually avoiding problem only with SQL Server
+					isQueryOK = !parentQuery.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunctionOneLevel(c.Expression));
+				}
+			}
+
 			if (!isQueryOK)
 				return childSource;
 
-			var isColumnsOK = (allColumns && !query.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)));
+			var isColumnsOK = allColumns;
 
 			if (!isColumnsOK)
 			{
@@ -1139,20 +1163,17 @@
 
 			if (isColumnsOK && !parentQuery.GroupBy.IsEmpty)
 			{
-				var cntCount = 0;
 				foreach (var item in parentQuery.GroupBy.Items)
 				{
 					if (item is SqlGroupingSet groupingSet && groupingSet.Items.Count > 0)
 					{
-						var constCount = 0;
 						foreach (var column in groupingSet.Items.OfType<SqlColumn>())
-							if (column.Parent == query && QueryHelper.IsConstantFast(column.Expression))
-								constCount++;
-						
-						if (constCount == groupingSet.Items.Count)
 						{
-							isColumnsOK = false;
-							break;
+							if (parentQuery.Select.Columns.Find(c => ReferenceEquals(c.Expression, column)) != null)
+							{
+								isColumnsOK = false;
+								break;
+							}
 						}
 					}
 					else
@@ -1160,13 +1181,19 @@
 						if (item is SqlColumn column && column.Parent == query)
 						{
 							if (QueryHelper.IsConstantFast(column.Expression))
-								++cntCount;
+							{
+								if (parentQuery.GroupBy.Items.Count == 1 && parentQuery.Select.Columns.Find(c => ReferenceEquals(c.Expression, column)) != null)
+								{
+									isColumnsOK = false;
+									break;
+								}
+							}
 						}
 					}
-				}
 
-				if (isColumnsOK && cntCount == parentQuery.GroupBy.Items.Count)
-					isColumnsOK = false;
+					if (!isColumnsOK)
+						break;
+				}
 			}
 
 			if (!isColumnsOK)
@@ -1184,7 +1211,7 @@
 					map.Add(c, c.Expression);
 					if (c.RawAlias != null)
 						aliasesMap[c.Expression] = c.RawAlias;
-				}			
+				}
 			}
 
 			map.Add(query.All, query.From.Tables[0].All);
@@ -1247,6 +1274,13 @@
 
 			query.From.Tables[0].Joins.AddRange(childSource.Joins);
 			query.From.Tables[0].Alias ??= childSource.Alias;
+
+			if (!query.GroupBy.IsEmpty)
+			{
+				if (!_selectQuery.GroupBy.IsEmpty)
+					throw new InvalidOperationException();
+				_selectQuery.GroupBy.Items.AddRange(query.GroupBy.Items);
+			}
 
 			if (!query.Where. IsEmpty) ConcatSearchCondition(_selectQuery.Where,  query.Where);
 			if (!query.Having.IsEmpty) ConcatSearchCondition(_selectQuery.Having, query.Having);
@@ -1344,7 +1378,7 @@
 
 								if (contains)
 								{
-									if (isApplySupported && Configuration.Linq.PreferApply)
+									if (isApplySupported && _dataOptions.LinqOptions.PreferApply)
 										return;
 
 									searchCondition.Insert(0, condition);
@@ -1363,7 +1397,7 @@
 				{
 					if (!(joinTable.JoinType == JoinType.CrossApply && searchCondition.Count == 0) // CROSS JOIN
 						&& sql.Select.HasModifier)
-						ThrowHelper.ThrowLinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
+						throw new LinqToDBException("Database do not support CROSS/OUTER APPLY join required by the query.");
 
 					// correct conditions
 					if (searchCondition.Count > 0 && sql.Select.Columns.Count > 0)
@@ -1484,8 +1518,8 @@
 			//TODO: Failed SelectQueryTests.JoinScalarTest
 			//Needs optimization refactor for 3.X
 			/*
-			if (_selectQuery.IsSimple 
-			    && _selectQuery.From.Tables.Count == 1 
+			if (_selectQuery.IsSimple
+			    && _selectQuery.From.Tables.Count == 1
 				&& _selectQuery.From.Tables[0].Joins.Count == 0
 			    && _selectQuery.From.Tables[0].Source is SelectQuery selectQuery
 				&& selectQuery.IsSimple
@@ -1561,9 +1595,9 @@
 				if (c.Expression.ElementType == QueryElementType.SqlRow)
 				{
 					if (_selectQuery.ParentSelect is null)
-						ThrowHelper.ThrowLinqToDBException("SqlRow can not be returned from main SELECT");
+						throw new LinqToDBException("SqlRow can not be returned from main SELECT");
 					if (columns.Count > 1)
-						ThrowHelper.ThrowLinqToDBException("SqlRow expression must be the only result in a SELECT");
+						throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
 
 					var row = (SqlRow)columns[0].Expression;
 					columns.Clear();
@@ -1632,7 +1666,7 @@
 					if (_flags.IsDistinctOrderBySupported)
 						continue;
 
-					if (Configuration.Linq.KeepDistinctOrdered)
+					if (_dataOptions.LinqOptions.KeepDistinctOrdered)
 					{
 						// trying to convert to GROUP BY quivalent
 						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);

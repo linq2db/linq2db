@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 
 namespace LinqToDB
 {
@@ -39,14 +40,14 @@ namespace LinqToDB
 				DateParts.Minute        => date.Value.Minute,
 				DateParts.Second        => date.Value.Second,
 				DateParts.Millisecond   => date.Value.Millisecond,
-				_                       => ThrowHelper.ThrowInvalidOperationException<int?>(),
+				_                       => throw new InvalidOperationException(),
 			};
 		}
 		#endregion
 
 		#region DateAdd
 
-		class DateOffsetAddBuilder : IExtensionCallBuilder
+		sealed class DateOffsetAddBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -61,7 +62,7 @@ namespace LinqToDB
 			}
 		}
 
-		class DateOffsetAddBuilderPostgreSQL : IExtensionCallBuilder
+		sealed class DateOffsetAddBuilderPostgreSQL : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -69,21 +70,23 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var number = builder.GetExpression("number", true);
 
-				var expStr = part switch
+				string expStr;
+				switch (part)
 				{
-					DateParts.Year        => "{0} * Interval '1 Year'",
-					DateParts.Quarter     => "{0} * Interval '1 Month' * 3",
-					DateParts.Month       => "{0} * Interval '1 Month'",
-					DateParts.DayOfYear   or
-					DateParts.WeekDay     or
-					DateParts.Day         => "{0} * Interval '1 Day'",
-					DateParts.Week        => "{0} * Interval '1 Day' * 7",
-					DateParts.Hour        => "{0} * Interval '1 Hour'",
-					DateParts.Minute      => "{0} * Interval '1 Minute'",
-					DateParts.Second      => "{0} * Interval '1 Second'",
-					DateParts.Millisecond => "{0} * Interval '1 Millisecond'",
-					_ => ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected datepart: {part}"),
-				};
+					case DateParts.Year        : expStr = "{0} * Interval '1 Year'";         break;
+					case DateParts.Quarter     : expStr = "{0} * Interval '1 Month' * 3";    break;
+					case DateParts.Month       : expStr = "{0} * Interval '1 Month'";        break;
+					case DateParts.DayOfYear   :
+					case DateParts.WeekDay     :
+					case DateParts.Day         : expStr = "{0} * Interval '1 Day'";          break;
+					case DateParts.Week        : expStr = "{0} * Interval '1 Day' * 7";      break;
+					case DateParts.Hour        : expStr = "{0} * Interval '1 Hour'";         break;
+					case DateParts.Minute      : expStr = "{0} * Interval '1 Minute'";       break;
+					case DateParts.Second      : expStr = "{0} * Interval '1 Second'";       break;
+					case DateParts.Millisecond : expStr = "{0} * Interval '1 Millisecond'";  break;
+					default:
+						throw new InvalidOperationException($"Unexpected datepart: {part}");
+				}
 
 				builder.ResultExpression = builder.Add(
 					date,
@@ -121,7 +124,7 @@ namespace LinqToDB
 				DateParts.Minute        => date.Value.AddMinutes(number.Value),
 				DateParts.Second        => date.Value.AddSeconds(number.Value),
 				DateParts.Millisecond   => date.Value.AddMilliseconds(number.Value),
-				_                       => ThrowHelper.ThrowInvalidOperationException<DateTimeOffset?>(),
+				_                       => throw new InvalidOperationException(),
 			};
 		}
 
@@ -149,7 +152,7 @@ namespace LinqToDB
 				DateParts.Minute      => (int)(endDate - startDate).Value.TotalMinutes,
 				DateParts.Second      => (int)(endDate - startDate).Value.TotalSeconds,
 				DateParts.Millisecond => (int)(endDate - startDate).Value.TotalMilliseconds,
-				_                     => ThrowHelper.ThrowInvalidOperationException<int?>(),
+				_                     => throw new InvalidOperationException(),
 			};
 		}
 		#endregion

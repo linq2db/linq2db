@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.DataModel
-{
-	using SqlQuery;
+﻿using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Base class for table function and stored procedure descriptors (database methods with table-like results).
 	/// </summary>
@@ -10,13 +11,8 @@
 		protected TableFunctionModelBase(SqlObjectName name, MethodModel method)
 			: base(name, method)
 		{
-			Name   = name;
 		}
 
-		/// <summary>
-		/// Gets or sets database name of function/procedure.
-		/// </summary>
-		public SqlObjectName Name  { get; set; }
 		/// <summary>
 		/// Contains error message, generated when result record type failed to load.
 		/// </summary>

@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
@@ -10,9 +11,8 @@ namespace Tests.UserTests
 	public class Issue2566Tests : TestBase
 	{
 		[Table]
-		class DataClass
+		sealed class DataClass
 		{
-			
 			[Column] [PrimaryKey] public int Id { get; set; }
 
 			private string? _value;

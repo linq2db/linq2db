@@ -1,11 +1,15 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Data.Linq;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
-using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
@@ -22,8 +26,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 	public abstract class ClickHouseDataProvider : DynamicDataProviderBase<ClickHouseProviderAdapter>
 	{
-		readonly ISqlOptimizer _sqlOptimizer;
-
 		protected ClickHouseDataProvider(string name, ClickHouseProvider provider)
 			: base(name, GetMappingSchema(provider), ClickHouseProviderAdapter.GetInstance(provider))
 		{
@@ -52,8 +54,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			//SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
 			// 2. not tested as we don't support parameters currently
 			//SqlProviderFlags.AcceptsTakeAsParameter = true;
-
-			_sqlOptimizer = new ClickHouseSqlOptimizer(SqlProviderFlags);
 
 			if (Adapter.GetSByteReaderMethod          != null) SetProviderField(typeof(sbyte         ), Adapter.GetSByteReaderMethod,          Adapter.DataReaderType);
 			if (Adapter.GetUInt16ReaderMethod         != null) SetProviderField(typeof(ushort        ), Adapter.GetUInt16ReaderMethod,         Adapter.DataReaderType);
@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var l = Expression.Lambda<Func<string, DbConnection>>(
 				Expression.Convert(
 					Expression.MemberInit(
-						Expression.New(connectionType.GetConstructor(Array<Type>.Empty) ?? ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)")),
+						Expression.New(connectionType.GetConstructor(Array<Type>.Empty) ?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)")),
 						Expression.Bind(Methods.ADONet.ConnectionString, p)),
 					typeof(DbConnection)),
 				p);
@@ -125,16 +125,16 @@ namespace LinqToDB.DataProvider.ClickHouse
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new ClickHouseSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new ClickHouseSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
-		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => new ClickHouseSqlOptimizer(SqlProviderFlags, dataOptions);
 
 		public override ISchemaProvider GetSchemaProvider() => new ClickHouseSchemaProvider();
 
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			// https://github.com/Octonica/ClickHouseClient/issues/55
 			if (Provider == ClickHouseProvider.Octonica)
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				value = (Provider, dataType.DataType, value) switch
 				{
 					// OCTONICA provider
-					// https://github.com/Octonica/ClickHouseClient/issues/56
+					// https://github.com/Octonica/ClickHouseClient/issues/69
 					(ClickHouseProvider.Octonica, _, bool val)                                                                                                            => (byte)(val ? 1 : 0),
 					// use ticks to avoid exceptions due to Local kind
 					(ClickHouseProvider.Octonica, DataType.DateTime or DataType.DateTime64/* or DataType.DateTime2*/, DateTime val)                                       => new DateTimeOffset(val.Ticks, default),
@@ -204,23 +204,26 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 #endregion
 
-#region BulkCopy
+		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			return new ClickHouseBulkCopy(this).BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? ClickHouseTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(ClickHouseOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			DataOptions options, ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new ClickHouseBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? ClickHouseTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(ClickHouseOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
@@ -229,17 +232,19 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 #if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			DataOptions options, ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new ClickHouseBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? ClickHouseTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(ClickHouseOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
 #endif
-#endregion
+		#endregion
 
 		private static MappingSchema GetMappingSchema(ClickHouseProvider provider)
 		{

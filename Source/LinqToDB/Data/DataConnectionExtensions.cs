@@ -1,4 +1,13 @@
-﻿namespace LinqToDB.Data
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
+
+using JetBrains.Annotations;
+
+namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
@@ -55,7 +64,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Database command wrapper.</returns>
@@ -138,7 +147,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -161,7 +170,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -199,7 +208,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -338,7 +347,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
@@ -361,7 +370,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -385,7 +394,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -409,7 +418,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -636,7 +645,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -658,7 +667,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -729,7 +738,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>
@@ -831,7 +840,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>
@@ -930,7 +939,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns result.</returns>
@@ -995,7 +1004,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -1179,7 +1188,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
@@ -1202,7 +1211,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
@@ -1224,7 +1233,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -1247,7 +1256,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -1288,7 +1297,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -1354,7 +1363,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns collection of query result records.</returns>
@@ -1377,7 +1386,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
@@ -1463,7 +1472,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
@@ -1487,7 +1496,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with list of query result records.</returns>
@@ -1510,7 +1519,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -1534,7 +1543,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Returns task with array of query result records.</returns>
@@ -1595,7 +1604,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Number of records, affected by command execution.</returns>
@@ -1616,7 +1625,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Number of records, affected by command execution.</returns>
@@ -1685,7 +1694,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1707,7 +1716,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1741,7 +1750,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1776,7 +1785,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with number of records, affected by command execution.</returns>
@@ -1840,7 +1849,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Resulting value.</returns>
@@ -1876,7 +1885,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Resulting value.</returns>
@@ -1980,7 +1989,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with resulting value.</returns>
@@ -2003,7 +2012,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with resulting value.</returns>
@@ -2039,7 +2048,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Task with resulting value.</returns>
@@ -2076,7 +2085,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Resulting value.</returns>
@@ -2136,7 +2145,7 @@
 		/// <para> - mapping class entity.</para>
 		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
 		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
-		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with colum name passed to converter;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
 		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
 		/// </param>
 		/// <returns>Data reader object.</returns>
@@ -2183,8 +2192,12 @@
 		public static BulkCopyRowsCopied BulkCopy<T>(this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source)
 			where T : class
 		{
-			if (dataConnection == null) ThrowHelper.ThrowArgumentNullException(nameof(dataConnection));
-			return dataConnection.DataProvider.BulkCopy(dataConnection.GetTable<T>(), options, source);
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+
+			return dataConnection.DataProvider.BulkCopy(
+				dataConnection.Options.WithOptions(options),
+				dataConnection.GetTable<T>(),
+				source);
 		}
 
 		/// <summary>
@@ -2198,11 +2211,11 @@
 		public static BulkCopyRowsCopied BulkCopy<T>(this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source)
 			where T : class
 		{
-			if (dataConnection == null) ThrowHelper.ThrowArgumentNullException(nameof(dataConnection));
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			return dataConnection.DataProvider.BulkCopy(
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
 				dataConnection.GetTable<T>(),
-				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
 				source);
 		}
 
@@ -2216,11 +2229,11 @@
 		public static BulkCopyRowsCopied BulkCopy<T>(this DataConnection dataConnection, IEnumerable<T> source)
 			where T : class
 		{
-			if (dataConnection == null) ThrowHelper.ThrowArgumentNullException(nameof(dataConnection));
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			return dataConnection.DataProvider.BulkCopy(
+				dataConnection.Options,
 				dataConnection.GetTable<T>(),
-				new BulkCopyOptions(),
 				source);
 		}
 
@@ -2235,9 +2248,14 @@
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
-			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			return table.GetDataProvider().BulkCopy(table, options, source);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopy(
+				dataConnection.Options.WithOptions(options),
+				table,
+				source);
 		}
 
 		/// <summary>
@@ -2251,9 +2269,14 @@
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source)
 			where T : notnull
 		{
-			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			return table.GetDataProvider().BulkCopy(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopy(
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize, }),
+				table,
+				source);
 		}
 
 		/// <summary>
@@ -2266,12 +2289,15 @@
 		public static BulkCopyRowsCopied BulkCopy<T>(this ITable<T> table, IEnumerable<T> source)
 			where T : notnull
 		{
-			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			return table.GetDataProvider().BulkCopy(table, new BulkCopyOptions(), source);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopy(
+				dataConnection.Options,
+				table,
+				source);
 		}
-
-		
 
 		#endregion
 
@@ -2289,10 +2315,14 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataConnection == null) ThrowHelper.ThrowArgumentNullException(nameof(dataConnection));
-			if (source         == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source, cancellationToken);
+			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.Options.WithOptions(options),
+				dataConnection.GetTable<T>(),
+				source,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -2307,12 +2337,12 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, int maxBatchSize, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataConnection == null) ThrowHelper.ThrowArgumentNullException(nameof(dataConnection));
-			if (source         == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
 
 			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
 				dataConnection.GetTable<T>(),
-				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
 				source,
 				cancellationToken);
 		}
@@ -2328,12 +2358,12 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataConnection == null) ThrowHelper.ThrowArgumentNullException(nameof(dataConnection));
-			if (source         == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
 
 			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.Options,
 				dataConnection.GetTable<T>(),
-				new BulkCopyOptions(),
 				source,
 				cancellationToken);
 		}
@@ -2350,10 +2380,16 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : notnull
 		{
-			if (table  == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, options, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(
+				dataConnection.Options.WithOptions(options),
+				table,
+				source,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -2368,10 +2404,16 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : notnull
 		{
-			if (table  == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize, }),
+				table,
+				source,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -2385,10 +2427,16 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : notnull
 		{
-			if (table  == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(
+				dataConnection.Options,
+				table,
+				source,
+				cancellationToken);
 		}
 
 		#endregion
@@ -2408,10 +2456,14 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataConnection == null) ThrowHelper.ThrowArgumentNullException(nameof(dataConnection));
-			if (source         == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
 
-			return dataConnection.DataProvider.BulkCopyAsync(dataConnection.GetTable<T>(), options, source, cancellationToken);
+			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.Options.WithOptions(options),
+				dataConnection.GetTable<T>(),
+				source,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -2426,12 +2478,12 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, int maxBatchSize, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataConnection == null) ThrowHelper.ThrowArgumentNullException(nameof(dataConnection));
-			if (source         == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
 
 			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
 				dataConnection.GetTable<T>(),
-				new BulkCopyOptions { MaxBatchSize = maxBatchSize },
 				source,
 				cancellationToken);
 		}
@@ -2447,12 +2499,12 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this DataConnection dataConnection, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (dataConnection == null) ThrowHelper.ThrowArgumentNullException(nameof(dataConnection));
-			if (source         == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
+			if (source         == null) throw new ArgumentNullException(nameof(source));
 
 			return dataConnection.DataProvider.BulkCopyAsync(
+				dataConnection.Options,
 				dataConnection.GetTable<T>(),
-				new BulkCopyOptions(),
 				source,
 				cancellationToken);
 		}
@@ -2469,10 +2521,16 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 		where T: notnull
 		{
-			if (table  == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, options, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(
+				dataConnection.Options.WithOptions(options),
+				table,
+				source,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -2487,10 +2545,16 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, int maxBatchSize, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 		where T: notnull
 		{
-			if (table  == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions { MaxBatchSize = maxBatchSize, }, source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+				table,
+				source,
+				cancellationToken);
 		}
 
 		/// <summary>
@@ -2504,14 +2568,19 @@
 		public static Task<BulkCopyRowsCopied> BulkCopyAsync<T>(this ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken = default)
 		where T: notnull
 		{
-			if (table  == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (table  == null) throw new ArgumentNullException(nameof(table));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			return table.GetDataProvider().BulkCopyAsync(table, new BulkCopyOptions(), source, cancellationToken);
+			var dataConnection = table.GetDataConnection();
+
+			return table.GetDataProvider().BulkCopyAsync(
+				dataConnection.Options,
+				table,
+				source,
+				cancellationToken);
 		}
 
 #endif
 		#endregion
-
 	}
 }

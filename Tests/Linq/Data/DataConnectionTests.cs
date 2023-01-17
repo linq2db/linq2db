@@ -1,11 +1,15 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
 using LinqToDB.AspNet;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
@@ -26,10 +30,10 @@ namespace Tests.Data
 	public class DataConnectionTests : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void UsingDataProvider([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var connectionString = DataConnection.GetConnectionString(context);
-			var dataProvider = DataConnection.GetDataProvider(context);
+			var dataProvider     = DataConnection.GetDataProvider(context);
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
@@ -39,7 +43,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void Test2()
+		public void UsingDefaultConfiguration()
 		{
 			using (var conn = new DataConnection())
 			{
@@ -213,7 +217,7 @@ namespace Tests.Data
 			}
 		}
 
-		private class TestConnectionInterceptor : ConnectionInterceptor
+		private sealed class TestConnectionInterceptor : ConnectionInterceptor
 		{
 			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpening;
 			private readonly Action<ConnectionEventData, DbConnection>? _onConnectionOpened;
@@ -356,14 +360,14 @@ namespace Tests.Data
 
 		public class DbConnection1 : DataConnection
 		{
-			public DbConnection1(LinqToDBConnectionOptions options) : base(options)
+			public DbConnection1(DataOptions<DbConnection1> options) : base(options.Options)
 			{
 			}
 		}
 
 		public class DbConnection2 : DataConnection
 		{
-			public DbConnection2(LinqToDBConnectionOptions<DbConnection2> options) : base(options)
+			public DbConnection2(DataOptions<DbConnection2> options) : base(options.Options)
 			{
 			}
 		}
@@ -372,7 +376,7 @@ namespace Tests.Data
 
 		public class DbConnection3 : DataConnection
 		{
-			public DbConnection3(DummyService service, LinqToDBConnectionOptions<DbConnection3> options) : base(options)
+			public DbConnection3(DummyService service, DataOptions options) : base(options)
 			{
 			}
 		}
@@ -382,19 +386,13 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 			collection.AddLinqToDBContext<DbConnection1>((provider, options) => options.UseConfigurationString(context));
-			collection.AddLinqToDBContext<DbConnection2>((provider, options) => {});
+			collection.AddLinqToDBContext<DbConnection2>((provider, options) => options);
 
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetService<DbConnection1>()!;
 			var c2 = serviceProvider.GetService<DbConnection2>()!;
 			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
 			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
-		}
-
-		[Test]
-		public void TestConstructorThrowsWhenGivenInvalidSettings()
-		{
-			Assert.Throws<LinqToDBException>(() => new DbConnection1(new LinqToDBConnectionOptionsBuilder().Build<DbConnection2>()));
 		}
 
 		// informix connection limits interfere with test
@@ -616,7 +614,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestEntityServiceInterceptor : EntityServiceInterceptor
+		sealed class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
 			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
@@ -626,7 +624,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestDataContextInterceptor : DataContextInterceptor
+		sealed class TestDataContextInterceptor : DataContextInterceptor
 		{
 			public int OnClosingCallCounter { get; set; }
 			public int OnClosedCallCounter { get; set; }
@@ -658,7 +656,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestRetryPolicy : IRetryPolicy
+		sealed class TestRetryPolicy : IRetryPolicy
 		{
 			TResult       IRetryPolicy.Execute<TResult>     (Func<TResult> operation                                                              ) => operation();
 			void          IRetryPolicy.Execute              (Action operation                                                                     ) => operation();
@@ -824,45 +822,6 @@ namespace Tests.Data
 					Assert.IsNull(cdb.ThrowOnDisposed);
 				}
 			}
-		}
-
-		[Test]
-		[Obsolete("DataConnection.OnTrace")]
-		public void TestCloneOnTraceConnection([DataSources(false)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				// to enable MARS-enabled cloning branch
-				var _ = db.Connection;
-				Action<TraceInfo> onTrace = OnTrace;
-
-				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(DataConnection.OnTrace, cdb.OnTraceConnection);
-				}
-
-				db.OnTraceConnection = onTrace;
-
-				Assert.AreEqual(onTrace, db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(onTrace, cdb.OnTraceConnection);
-				}
-
-				db.OnTraceConnection = DataConnection.OnTrace;
-
-				Assert.AreEqual(DataConnection.OnTrace, db.OnTraceConnection);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(DataConnection.OnTrace, cdb.OnTraceConnection);
-				}
-			}
-
-			void OnTrace(TraceInfo ti) { };
 		}
 
 		[Test]
@@ -1342,7 +1301,7 @@ namespace Tests.Data
 		#endregion
 
 		[Table]
-		class TransactionScopeTable
+		sealed class TransactionScopeTable
 		{
 			[Column] public int Id { get; set; }
 		}
@@ -1477,7 +1436,8 @@ namespace Tests.Data
 			[IncludeDataSources(false,
 				TestProvName.AllOracle,
 				ProviderName.SqlCe,
-				ProviderName.ClickHouseClient,
+				// depends on connection pool size
+				//ProviderName.ClickHouseClient,
 				ProviderName.ClickHouseOctonica,
 				ProviderName.SybaseManaged)] string context)
 		{
@@ -1598,7 +1558,9 @@ namespace Tests.Data
 				TestProvName.AllOracle,
 				TestProvName.AllSapHana,
 				ProviderName.SqlCe,
-				ProviderName.ClickHouseClient,
+				// disabled - depends on connection pool size
+				// which is one for session-aware connection
+				//ProviderName.ClickHouseClient,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSQLite,
 				TestProvName.AllSqlServer,
@@ -1737,7 +1699,8 @@ namespace Tests.Data
 				ProviderName.SqlCe,
 				TestProvName.AllSQLiteClassic,
 				TestProvName.AllSqlServer,
-				ProviderName.ClickHouseClient,
+				// depends on connection pool size
+				//ProviderName.ClickHouseClient,
 				ProviderName.ClickHouseOctonica,
 				TestProvName.AllSybase)] string context)
 		{
@@ -1848,6 +1811,8 @@ namespace Tests.Data
 			[DataSources(false,
 				TestProvName.AllMySql,
 				ProviderName.ClickHouseMySql,
+				// depends on connection pool size
+				ProviderName.ClickHouseClient,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -1934,6 +1899,8 @@ namespace Tests.Data
 			[DataSources(false,
 				TestProvName.AllMySql,
 				ProviderName.ClickHouseMySql,
+				// depends on connection pool size
+				ProviderName.ClickHouseClient,
 				TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))

@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -8,7 +11,7 @@ namespace Tests.UserTests
 	public class Issue2588Tests : TestBase
 	{
 		[Table]
-		class TestClass
+		sealed class TestClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }

@@ -1,4 +1,8 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Data.Common;
+using System.Reflection;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -26,13 +30,13 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public static void ResolveFirebird(string path)
 		{
-			if (path == null) ThrowHelper.ThrowArgumentNullException(nameof(path));
+			if (path == null) throw new ArgumentNullException(nameof(path));
 			_ = new AssemblyResolver(path, FirebirdProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolveFirebird(Assembly assembly)
 		{
-			if (assembly == null) ThrowHelper.ThrowArgumentNullException(nameof(assembly));
+			if (assembly == null) throw new ArgumentNullException(nameof(assembly));
 			_ = new AssemblyResolver(assembly, FirebirdProviderAdapter.AssemblyName);
 		}
 
@@ -57,7 +61,12 @@ namespace LinqToDB.DataProvider.Firebird
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use FirebirdOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => FirebirdOptions.Default.BulkCopyType;
+			set => FirebirdOptions.Default = FirebirdOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 

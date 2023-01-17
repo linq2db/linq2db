@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.DataModel
-{
-	using Configuration;
+﻿using System.Collections.Generic;
+using LinqToDB.Configuration;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Main database context descriptor. Also contains data model for current/default database schema.
 	/// </summary>
@@ -25,11 +26,11 @@
 		/// </summary>
 		public bool                   HasConfigurationConstructor              { get; set; }
 		/// <summary>
-		/// Enables generation of constructor with non-generic configuration options <see cref="LinqToDBConnectionOptions"/> parameter.
+		/// Enables generation of constructor with non-generic configuration options <see cref="DataOptions"/> parameter.
 		/// </summary>
 		public bool                   HasUntypedOptionsConstructor             { get; set; }
 		/// <summary>
-		/// Enables generation of constructor with generic configuration options <see cref="LinqToDBConnectionOptions{T}"/> parameter.
+		/// Enables generation of constructor with generic configuration options <see cref="DataOptions{T}"/> parameter.
 		/// </summary>
 		public bool                   HasTypedOptionsConstructor               { get; set; }
 		/// <summary>

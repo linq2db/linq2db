@@ -1,6 +1,10 @@
-﻿namespace LinqToDB.Tools.Comparers
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.Tools.Comparers
 {
-	class EnumerableEqualityComparer<T> : EqualityComparer<IEnumerable<T>>
+	sealed class EnumerableEqualityComparer<T> : EqualityComparer<IEnumerable<T>>
 	{
 		public new static EnumerableEqualityComparer<T> Default { get; } = new EnumerableEqualityComparer<T>();
 
@@ -12,7 +16,7 @@
 
 		public EnumerableEqualityComparer(IEqualityComparer<T> elementComparer)
 		{
-			_elementComparer = elementComparer ?? ThrowHelper.ThrowArgumentNullException<IEqualityComparer<T>>(nameof(elementComparer));
+			_elementComparer = elementComparer ?? throw new ArgumentNullException(nameof(elementComparer));
 		}
 
 		public override int GetHashCode(IEnumerable<T> obj)

@@ -1,9 +1,10 @@
 ﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class AsUpdatableBuilder : MethodCallBuilder
+	using LinqToDB.Expressions;
+
+	sealed class AsUpdatableBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

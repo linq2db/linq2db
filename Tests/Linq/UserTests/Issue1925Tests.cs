@@ -1,5 +1,7 @@
-﻿using System.Data.Odbc;
+﻿using System;
+using System.Data.Odbc;
 using System.Data.OleDb;
+using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -11,7 +13,7 @@ namespace Tests.UserTests
 	{
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }

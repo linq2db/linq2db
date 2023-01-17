@@ -1,5 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -31,7 +38,7 @@ namespace LinqToDB
 		public static ITable<T> TableID<T>(this ITable<T> table, [SqlQueryDependent] string? id)
 			where T : notnull
 		{
-			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
 			var result = ((ITableMutable<T>)table).ChangeTableID(id);
 			return result;
@@ -49,8 +56,8 @@ namespace LinqToDB
 		public static ITable<T> TableName<T>(this ITable<T> table, [SqlQueryDependent] string name)
 			where T : notnull
 		{
-			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
-			if (name  == null) ThrowHelper.ThrowArgumentNullException(nameof(name));
+			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (name  == null) throw new ArgumentNullException(nameof(name));
 
 			var result = ((ITableMutable<T>)table).ChangeTableName(name);
 			return result;
@@ -72,7 +79,7 @@ namespace LinqToDB
 		public static ITable<T> DatabaseName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
 			where T : notnull
 		{
-			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
 			var result = ((ITableMutable<T>)table).ChangeDatabaseName(name);
 			return result;
@@ -92,7 +99,7 @@ namespace LinqToDB
 		public static ITable<T> ServerName<T>(this ITable<T> table, [SqlQueryDependent] string? name)
 			where T : notnull
 		{
-			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
+			if (table == null) throw new ArgumentNullException(nameof(table));
 
 			var result = ((ITableMutable<T>)table).ChangeServerName(name);
 			return result;
@@ -135,7 +142,7 @@ namespace LinqToDB
 		public static ITable<T> WithTableExpression<T>(this ITable<T> table, [SqlQueryDependent] string expression)
 			where T : notnull
 		{
-			if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 			table.Expression = Expression.Call(
 				null,
@@ -620,15 +627,15 @@ namespace LinqToDB
 			                this IDataContext   dataContext,
 			[InstantHandle] Expression<Func<T>> selector)
 		{
-			if (dataContext == null) ThrowHelper.ThrowArgumentNullException(nameof(dataContext));
-			if (selector    == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (selector    == null) throw new ArgumentNullException(nameof(selector));
 
 			var q = new ExpressionQueryImpl<T>(dataContext, selector);
 
 			foreach (var item in q)
 				return item;
 
-			return ThrowHelper.ThrowInvalidOperationException<T>();
+			throw new InvalidOperationException();
 		}
 
 		/// <summary>
@@ -644,8 +651,8 @@ namespace LinqToDB
 			                this IDataContext   dataContext,
 			[InstantHandle] Expression<Func<T>> selector)
 		{
-			if (dataContext == null) ThrowHelper.ThrowArgumentNullException(nameof(dataContext));
-			if (selector    == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+			if (selector    == null) throw new ArgumentNullException(nameof(selector));
 
 			var q = new ExpressionQueryImpl<T>(dataContext, selector);
 
@@ -662,7 +669,7 @@ namespace LinqToDB
 			if (read)
 				return item;
 
-			return ThrowHelper.ThrowInvalidOperationException<T>();
+			throw new InvalidOperationException();
 		}
 
 		#endregion
@@ -677,7 +684,7 @@ namespace LinqToDB
 		/// <returns>Number of deleted records.</returns>
 		public static int Delete<T>(this IQueryable<T> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -697,7 +704,7 @@ namespace LinqToDB
 		/// <returns>Number of deleted records.</returns>
 		public static async Task<int> DeleteAsync<T>(this IQueryable<T> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -723,8 +730,8 @@ namespace LinqToDB
 			                this IQueryable<T>       source,
 			[InstantHandle] Expression<Func<T,bool>> predicate)
 		{
-			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (predicate == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -748,8 +755,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,bool>> predicate,
 			CancellationToken                        token = default)
 		{
-			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (predicate == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -783,9 +790,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -813,9 +820,9 @@ namespace LinqToDB
 			CancellationToken                                 token = default)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -839,8 +846,8 @@ namespace LinqToDB
 		/// <returns>Number of updated records.</returns>
 		public static int Update<T>(this IQueryable<T> source, [InstantHandle] Expression<Func<T,T>> setter)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -864,8 +871,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,T>> setter,
 			CancellationToken                     token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -893,9 +900,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,bool>> predicate,
 			[InstantHandle] Expression<Func<T,T>>    setter)
 		{
-			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (predicate == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
-			if (setter    == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+			if (setter    == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -921,9 +928,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,T>>    setter,
 			CancellationToken                        token = default)
 		{
-			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (predicate == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
-			if (setter    == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+			if (setter    == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -946,7 +953,7 @@ namespace LinqToDB
 		/// <returns>Number of updated records.</returns>
 		public static int Update<T>(this IUpdatable<T> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var query = ((Updatable<T>)source).Query;
 
@@ -968,7 +975,7 @@ namespace LinqToDB
 		/// <returns>Number of updated records.</returns>
 		public static async Task<int> UpdateAsync<T>(this IUpdatable<T> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var q = ((Updatable<T>)source).Query;
 
@@ -1000,9 +1007,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1030,9 +1037,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
 			CancellationToken                                 token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1047,7 +1054,7 @@ namespace LinqToDB
 			return await Task.Run(() => currentSource.Provider.Execute<int>(expr), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-		internal class Updatable<T> : IUpdatable<T>
+		internal sealed class Updatable<T> : IUpdatable<T>
 		{
 			public Updatable(IQueryable<T> query)
 			{
@@ -1072,7 +1079,7 @@ namespace LinqToDB
 		[Pure]
 		public static IUpdatable<T> AsUpdatable<T>(this IQueryable<T> source)
 		{
-			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1101,9 +1108,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,TV>> extract,
 			[InstantHandle] Expression<Func<T,TV>> update)
 		{
-			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (extract == null) ThrowHelper.ThrowArgumentNullException(nameof(extract));
-			if (update  == null) ThrowHelper.ThrowArgumentNullException(nameof(update));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			if (update  == null) throw new ArgumentNullException(nameof(update));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1132,9 +1139,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,TV>> extract,
 			[InstantHandle] Expression<Func<T,TV>> update)
 		{
-			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (extract == null) ThrowHelper.ThrowArgumentNullException(nameof(extract));
-			if (update  == null) ThrowHelper.ThrowArgumentNullException(nameof(update));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			if (update  == null) throw new ArgumentNullException(nameof(update));
 
 			var query = ((Updatable<T>)source).Query;
 
@@ -1163,9 +1170,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,TV>> extract,
 			[InstantHandle] Expression<Func<TV>>   update)
 		{
-			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (extract == null) ThrowHelper.ThrowArgumentNullException(nameof(extract));
-			if (update  == null) ThrowHelper.ThrowArgumentNullException(nameof(update));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			if (update  == null) throw new ArgumentNullException(nameof(update));
 
 			var query = source.Provider.CreateQuery<T>(
 				Expression.Call(
@@ -1192,9 +1199,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,TV>> extract,
 			[InstantHandle] Expression<Func<TV>>   update)
 		{
-			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (extract == null) ThrowHelper.ThrowArgumentNullException(nameof(extract));
-			if (update  == null) ThrowHelper.ThrowArgumentNullException(nameof(update));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+			if (update  == null) throw new ArgumentNullException(nameof(update));
 
 			var query = ((Updatable<T>)source).Query;
 
@@ -1223,8 +1230,8 @@ namespace LinqToDB
 			[InstantHandle]  Expression<Func<T,TV>> extract,
 			[SkipIfConstant] TV                     value)
 		{
-			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (extract == null) ThrowHelper.ThrowArgumentNullException(nameof(extract));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1253,8 +1260,8 @@ namespace LinqToDB
 			[InstantHandle]  Expression<Func<T,TV>> extract,
 			[SkipIfConstant] TV                     value)
 		{
-			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (extract == null) ThrowHelper.ThrowArgumentNullException(nameof(extract));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
 
 			var query = ((Updatable<T>)source).Query;
 
@@ -1288,8 +1295,8 @@ namespace LinqToDB
 			                this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,string>> setExpression)
 		{
-			if (source        == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (setExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(setExpression));
+			if (source        == null) throw new ArgumentNullException(nameof(source));
+			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1324,8 +1331,8 @@ namespace LinqToDB
 			                this IUpdatable<T>         source,
 			[InstantHandle] Expression<Func<T,string>> setExpression)
 		{
-			if (source        == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (setExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(setExpression));
+			if (source        == null) throw new ArgumentNullException(nameof(source));
+			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
 
 			var query = ((Updatable<T>)source).Query;
 
@@ -1354,8 +1361,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T>> setter)
 			where T : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			IQueryable<T> query = target;
 
@@ -1382,8 +1389,8 @@ namespace LinqToDB
 			CancellationToken                   token = default)
 			where T : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			IQueryable<T> source = target;
 
@@ -1412,8 +1419,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T>> setter)
 			where T : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			IQueryable<T> query = target;
 
@@ -1485,8 +1492,8 @@ namespace LinqToDB
 			CancellationToken                   token = default)
 			where T : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			IQueryable<T> source = target;
 
@@ -1556,7 +1563,7 @@ namespace LinqToDB
 
 		#region ValueInsertable
 
-		internal class ValueInsertable<T> : IValueInsertable<T>
+		internal sealed class ValueInsertable<T> : IValueInsertable<T>
 		{
 			public ValueInsertable(IQueryable<T> query)
 			{
@@ -1583,7 +1590,7 @@ namespace LinqToDB
 		public static IValueInsertable<T> Into<T>(this IDataContext dataContext, ITable<T> target)
 			where T : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
+			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			IQueryable<T> query = target;
 
@@ -1605,7 +1612,7 @@ namespace LinqToDB
 		public static IValueInsertable<T> AsValueInsertable<T>(this ITable<T> source)
 			where T : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1635,9 +1642,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TV>>   value)
 			where T : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (field  == null) ThrowHelper.ThrowArgumentNullException(nameof(field));
-			if (value  == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (field  == null) throw new ArgumentNullException(nameof(field));
+			if (value  == null) throw new ArgumentNullException(nameof(value));
 
 			var query = (IQueryable<T>)source;
 
@@ -1667,8 +1674,8 @@ namespace LinqToDB
 			[SkipIfConstant] TV                     value)
 			where T : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (field  == null) ThrowHelper.ThrowArgumentNullException(nameof(field));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (field  == null) throw new ArgumentNullException(nameof(field));
 
 			var query = (IQueryable<T>)source;
 
@@ -1697,9 +1704,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,TV>>   field,
 			[InstantHandle] Expression<Func<TV>>     value)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (field  == null) ThrowHelper.ThrowArgumentNullException(nameof(field));
-			if (value  == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (field  == null) throw new ArgumentNullException(nameof(field));
+			if (value  == null) throw new ArgumentNullException(nameof(value));
 
 			var query = ((ValueInsertable<T>)source).Query;
 
@@ -1728,8 +1735,8 @@ namespace LinqToDB
 			[InstantHandle]  Expression<Func<T,TV>>   field,
 			[SkipIfConstant] TV                       value)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (field  == null) ThrowHelper.ThrowArgumentNullException(nameof(field));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (field  == null) throw new ArgumentNullException(nameof(field));
 
 			var query = ((ValueInsertable<T>)source).Query;
 
@@ -1750,7 +1757,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static int Insert<T>(this IValueInsertable<T> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var query = ((ValueInsertable<T>)source).Query;
 
@@ -1772,7 +1779,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static async Task<int> InsertAsync<T>( this IValueInsertable<T> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var queryable = ((ValueInsertable<T>)source).Query;
 
@@ -1798,7 +1805,7 @@ namespace LinqToDB
 		[Pure]
 		public static object InsertWithIdentity<T>(this IValueInsertable<T> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var queryable = ((ValueInsertable<T>)source).Query;
 
@@ -1819,7 +1826,7 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static int? InsertWithInt32Identity<T>( this IValueInsertable<T> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(InsertWithIdentity(source));
 		}
@@ -1832,7 +1839,7 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static long? InsertWithInt64Identity<T>( this IValueInsertable<T> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(InsertWithIdentity(source));
 		}
@@ -1845,7 +1852,7 @@ namespace LinqToDB
 		/// <returns>Inserted record's identity value.</returns>
 		public static decimal? InsertWithDecimalIdentity<T>( this IValueInsertable<T> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(InsertWithIdentity(source));
 		}
@@ -1860,7 +1867,7 @@ namespace LinqToDB
 		public static async Task<object> InsertWithIdentityAsync<T>(
 			 this IValueInsertable<T> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var queryable = ((ValueInsertable<T>)source).Query;
 
@@ -1887,7 +1894,7 @@ namespace LinqToDB
 		public static async Task<int?> InsertWithInt32IdentityAsync<T>(
 			 this IValueInsertable<T> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
@@ -1903,7 +1910,7 @@ namespace LinqToDB
 		public static async Task<long?> InsertWithInt64IdentityAsync<T>(
 			 this IValueInsertable<T> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
@@ -1919,7 +1926,7 @@ namespace LinqToDB
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<T>(
 			 this IValueInsertable<T> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<T>)((ValueInsertable<T>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
@@ -1945,9 +1952,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -1976,9 +1983,9 @@ namespace LinqToDB
 			CancellationToken                                 token = default)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -2009,9 +2016,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -2038,9 +2045,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
@@ -2064,9 +2071,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
@@ -2090,9 +2097,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
@@ -2118,9 +2125,9 @@ namespace LinqToDB
 			CancellationToken                                 token = default)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -2154,9 +2161,9 @@ namespace LinqToDB
 			CancellationToken                                 token = default)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
@@ -2182,9 +2189,9 @@ namespace LinqToDB
 			CancellationToken                                 token = default)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
@@ -2210,9 +2217,9 @@ namespace LinqToDB
 			CancellationToken                                 token = default)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
 			var currentSource = (IQueryable<TSource>)(ProcessSourceQueryable?.Invoke(source) ?? source);
 
@@ -2220,7 +2227,7 @@ namespace LinqToDB
 				await InsertWithIdentityAsync(currentSource, target, setter, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
 
-		internal class SelectInsertable<T,TT> : ISelectInsertable<T,TT>
+		internal sealed class SelectInsertable<T,TT> : ISelectInsertable<T,TT>
 		{
 			public SelectInsertable(IQueryable<T> query)
 			{
@@ -2250,8 +2257,8 @@ namespace LinqToDB
 			 ITable<TTarget>          target)
 			where TTarget : notnull
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -2281,9 +2288,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TTarget,TValue>>        field,
 			[InstantHandle] Expression<Func<TSource,TValue>>        value)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (field  == null) ThrowHelper.ThrowArgumentNullException(nameof(field));
-			if (value  == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (field  == null) throw new ArgumentNullException(nameof(field));
+			if (value  == null) throw new ArgumentNullException(nameof(value));
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -2313,9 +2320,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TTarget,TValue>>        field,
 			[InstantHandle] Expression<Func<TValue>>                value)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (field  == null) ThrowHelper.ThrowArgumentNullException(nameof(field));
-			if (value  == null) ThrowHelper.ThrowArgumentNullException(nameof(value));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (field  == null) throw new ArgumentNullException(nameof(field));
+			if (value  == null) throw new ArgumentNullException(nameof(value));
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -2345,8 +2352,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TTarget,TValue>>        field,
 			TValue                                                  value)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (field  == null) ThrowHelper.ThrowArgumentNullException(nameof(field));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (field  == null) throw new ArgumentNullException(nameof(field));
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -2368,7 +2375,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -2392,7 +2399,7 @@ namespace LinqToDB
 		public static async Task<int> InsertAsync<TSource,TTarget>(
 			 this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -2418,7 +2425,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static object InsertWithIdentity<TSource,TTarget>( this ISelectInsertable<TSource,TTarget> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -2440,7 +2447,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static int? InsertWithInt32Identity<TSource,TTarget>( this ISelectInsertable<TSource,TTarget> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
 				InsertWithIdentity(source));
@@ -2455,7 +2462,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static long? InsertWithInt64Identity<TSource,TTarget>( this ISelectInsertable<TSource,TTarget> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
 				InsertWithIdentity(source));
@@ -2470,7 +2477,7 @@ namespace LinqToDB
 		/// <returns>Number of affected records.</returns>
 		public static decimal? InsertWithDecimalIdentity<TSource,TTarget>( this ISelectInsertable<TSource,TTarget> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
 				InsertWithIdentity(source));
@@ -2487,7 +2494,7 @@ namespace LinqToDB
 		public static async Task<object> InsertWithIdentityAsync<TSource,TTarget>(
 			 this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var queryable = ((SelectInsertable<TSource,TTarget>)source).Query;
 
@@ -2515,7 +2522,7 @@ namespace LinqToDB
 		public static async Task<int?> InsertWithInt32IdentityAsync<TSource,TTarget>(
 			 this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<int?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
@@ -2532,7 +2539,7 @@ namespace LinqToDB
 		public static async Task<long?> InsertWithInt64IdentityAsync<TSource,TTarget>(
 			 this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<long?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
@@ -2549,7 +2556,7 @@ namespace LinqToDB
 		public static async Task<decimal?> InsertWithDecimalIdentityAsync<TSource,TTarget>(
 			 this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return ((ExpressionQuery<TSource>)((SelectInsertable<TSource,TTarget>)source).Query).DataContext.MappingSchema.ChangeTypeTo<decimal?>(
 				await InsertWithIdentityAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
@@ -2583,8 +2590,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter)
 			where T : notnull
 		{
-			if (target                     == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (insertSetter               == null) ThrowHelper.ThrowArgumentNullException(nameof(insertSetter));
+			if (target                     == null) throw new ArgumentNullException(nameof(target));
+			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
 
 			IQueryable<T> query = target;
 
@@ -2618,8 +2625,8 @@ namespace LinqToDB
 			CancellationToken                       token = default)
 			where T : notnull
 		{
-			if (target                     == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (insertSetter               == null) ThrowHelper.ThrowArgumentNullException(nameof(insertSetter));
+			if (target                     == null) throw new ArgumentNullException(nameof(target));
+			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
 
 			IQueryable<T> source = target;
 
@@ -2661,9 +2668,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T>>     keySelector)
 			where T : notnull
 		{
-			if (target                     == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (insertSetter               == null) ThrowHelper.ThrowArgumentNullException(nameof(insertSetter));
-			if (keySelector                == null) ThrowHelper.ThrowArgumentNullException(nameof(keySelector));
+			if (target                     == null) throw new ArgumentNullException(nameof(target));
+			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
+			if (keySelector                == null) throw new ArgumentNullException(nameof(keySelector));
 
 			IQueryable<T> query = target;
 
@@ -2703,9 +2710,9 @@ namespace LinqToDB
 			CancellationToken                       token = default)
 			where T : notnull
 		{
-			if (target                     == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
-			if (insertSetter               == null) ThrowHelper.ThrowArgumentNullException(nameof(insertSetter));
-			if (keySelector                == null) ThrowHelper.ThrowArgumentNullException(nameof(keySelector));
+			if (target                     == null) throw new ArgumentNullException(nameof(target));
+			if (insertSetter               == null) throw new ArgumentNullException(nameof(insertSetter));
+			if (keySelector                == null) throw new ArgumentNullException(nameof(keySelector));
 
 			IQueryable<T> source = target;
 
@@ -2744,7 +2751,7 @@ namespace LinqToDB
 		public static int Drop<T>( this ITable<T> target, bool throwExceptionIfNotExists = true)
 			where T : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
+			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			IQueryable<T> query = target;
 
@@ -2788,7 +2795,7 @@ namespace LinqToDB
 			CancellationToken token = default)
 			where T : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
+			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			IQueryable<T> source = target;
 
@@ -2839,7 +2846,7 @@ namespace LinqToDB
 		public static int Truncate<T>( this ITable<T> target, bool resetIdentity = true)
 			where T : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
+			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			IQueryable<T> query = target;
 
@@ -2867,7 +2874,7 @@ namespace LinqToDB
 			CancellationToken token         = default)
 			where T : notnull
 		{
-			if (target == null) ThrowHelper.ThrowArgumentNullException(nameof(target));
+			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			IQueryable<T> source = target;
 
@@ -2903,8 +2910,8 @@ namespace LinqToDB
 			           this IQueryable<TSource>   source,
 			[InstantHandle] Expression<Func<int>> count)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (count  == null) ThrowHelper.ThrowArgumentNullException(nameof(count));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (count  == null) throw new ArgumentNullException(nameof(count));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -2933,8 +2940,8 @@ namespace LinqToDB
 			[InstantHandle]          Expression<Func<int>> count,
 			[SqlQueryDependent]      TakeHints             hints)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (count  == null) ThrowHelper.ThrowArgumentNullException(nameof(count));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (count  == null) throw new ArgumentNullException(nameof(count));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -2963,7 +2970,7 @@ namespace LinqToDB
 			                    int                 count,
 			[SqlQueryDependent] TakeHints           hints)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -2989,8 +2996,8 @@ namespace LinqToDB
 			           this IQueryable<TSource>   source,
 			[InstantHandle] Expression<Func<int>> count)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (count  == null) ThrowHelper.ThrowArgumentNullException(nameof(count));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (count  == null) throw new ArgumentNullException(nameof(count));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3017,8 +3024,8 @@ namespace LinqToDB
 			           this IQueryable<TSource>   source,
 			[InstantHandle] Expression<Func<int>> index)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (index  == null) ThrowHelper.ThrowArgumentNullException(nameof(index));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (index  == null) throw new ArgumentNullException(nameof(index));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3045,8 +3052,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<int>> index,
 			CancellationToken                     token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (index  == null) ThrowHelper.ThrowArgumentNullException(nameof(index));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (index  == null) throw new ArgumentNullException(nameof(index));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3076,8 +3083,8 @@ namespace LinqToDB
 			           this IQueryable<TSource>   source,
 			[InstantHandle] Expression<Func<int>> index)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (index  == null) ThrowHelper.ThrowArgumentNullException(nameof(index));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (index  == null) throw new ArgumentNullException(nameof(index));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3102,8 +3109,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<int>> index,
 			                CancellationToken     token = default)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (index  == null) ThrowHelper.ThrowArgumentNullException(nameof(index));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (index  == null) throw new ArgumentNullException(nameof(index));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3142,8 +3149,8 @@ namespace LinqToDB
 			                this IQueryable<TSource>       source,
 			[InstantHandle] Expression<Func<TSource,bool>> predicate)
 		{
-			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (predicate == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3173,8 +3180,8 @@ namespace LinqToDB
 			           this IQueryable<TSource>            source,
 			[InstantHandle] Expression<Func<TSource,TKey>> keySelector)
 		{
-			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (keySelector == null) ThrowHelper.ThrowArgumentNullException(nameof(keySelector));
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3200,8 +3207,8 @@ namespace LinqToDB
 			           this IQueryable<TSource>             source,
 			[InstantHandle] Expression<Func<TSource, TKey>> keySelector)
 		{
-			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (keySelector == null) ThrowHelper.ThrowArgumentNullException(nameof(keySelector));
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3222,7 +3229,7 @@ namespace LinqToDB
 		[Pure]
 		public static IQueryable<TSource> RemoveOrderBy<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3246,7 +3253,7 @@ namespace LinqToDB
 		/// <returns>Query context object.</returns>
 		internal static ContextParser.Context GetContext<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3263,7 +3270,7 @@ namespace LinqToDB
 
 		internal static TOutput AsQueryable<TOutput,TInput>(TInput source)
 		{
-			return ThrowHelper.ThrowInvalidOperationException<TOutput>();
+			throw new InvalidOperationException();
 		}
 
 		#endregion
@@ -3285,8 +3292,8 @@ namespace LinqToDB
 			[SqlQueryDependent] SqlJoinType                     joinType,
 			[InstantHandle]     Expression<Func<TSource, bool>> predicate)
 		{
-			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (predicate == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3320,10 +3327,10 @@ namespace LinqToDB
 			[InstantHandle]     Expression<Func<TOuter, TInner, bool>>    predicate,
 			[InstantHandle]     Expression<Func<TOuter, TInner, TResult>> resultSelector)
 		{
-			if (outer          == null) ThrowHelper.ThrowArgumentNullException(nameof(outer));
-			if (inner          == null) ThrowHelper.ThrowArgumentNullException(nameof(inner));
-			if (predicate      == null) ThrowHelper.ThrowArgumentNullException(nameof(predicate));
-			if (resultSelector == null) ThrowHelper.ThrowArgumentNullException(nameof(resultSelector));
+			if (outer          == null) throw new ArgumentNullException(nameof(outer));
+			if (inner          == null) throw new ArgumentNullException(nameof(inner));
+			if (predicate      == null) throw new ArgumentNullException(nameof(predicate));
+			if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
 
 			var currentOuter = ProcessSourceQueryable?.Invoke(outer) ?? outer;
 
@@ -3508,9 +3515,9 @@ namespace LinqToDB
 			                IQueryable<TInner>                        inner,
 			[InstantHandle] Expression<Func<TOuter, TInner, TResult>> resultSelector)
 		{
-			if (outer          == null) ThrowHelper.ThrowArgumentNullException(nameof(outer));
-			if (inner          == null) ThrowHelper.ThrowArgumentNullException(nameof(inner));
-			if (resultSelector == null) ThrowHelper.ThrowArgumentNullException(nameof(resultSelector));
+			if (outer          == null) throw new ArgumentNullException(nameof(outer));
+			if (inner          == null) throw new ArgumentNullException(nameof(inner));
+			if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
 
 			var currentOuter = ProcessSourceQueryable?.Invoke(outer) ?? outer;
 
@@ -3529,7 +3536,7 @@ namespace LinqToDB
 
 		internal static IQueryable<T> AsCte<T>(IQueryable<T> cteTable, IQueryable<T> cteBody, string? tableName)
 		{
-			return ThrowHelper.ThrowNotImplementedException<IQueryable<T>>();
+			throw new NotImplementedException();
 		}
 
 		/// <summary>
@@ -3542,7 +3549,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<TSource> AsCte<TSource>( this IQueryable<TSource> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3566,7 +3573,7 @@ namespace LinqToDB
 			this IQueryable<TSource> source,
 			string?                  name)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3592,8 +3599,8 @@ namespace LinqToDB
 			this IEnumerable<TElement> source,
 			IDataContext               dataContext)
 		{
-			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (dataContext == null) ThrowHelper.ThrowArgumentNullException(nameof(dataContext));
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 
 			if (source is IQueryable<TElement> already)
 			{
@@ -3626,7 +3633,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -3645,7 +3652,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping)
 		{
-			if (grouping == null) ThrowHelper.ThrowArgumentNullException(nameof(grouping));
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
 
 			return grouping.Provider.CreateQuery<TKey>(
 				Expression.Call(
@@ -3664,7 +3671,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<TSource> AsSubQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -3684,7 +3691,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<TKey> AsSubQuery<TKey, TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
 		{
-			if (grouping == null) ThrowHelper.ThrowArgumentNullException(nameof(grouping));
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
 
 			return grouping.Provider.CreateQuery<TKey>(
 				Expression.Call(
@@ -3707,7 +3714,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<TSource> QueryName<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string queryName)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -3727,7 +3734,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<TKey> QueryName<TKey,TElement>(this IQueryable<IGrouping<TKey,TElement>> grouping, [SqlQueryDependent] string queryName)
 		{
-			if (grouping == null) ThrowHelper.ThrowArgumentNullException(nameof(grouping));
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
 
 			return grouping.Provider.CreateQuery<TKey>(
 				Expression.Call(
@@ -3749,7 +3756,7 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<TSource> InlineParameters<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3774,14 +3781,13 @@ namespace LinqToDB
 		[LinqTunnel]
 		public static IQueryable<IGrouping<TKey, TElement>> DisableGuard<TKey, TElement>(this IQueryable<IGrouping<TKey, TElement>> grouping)
 		{
-			if (grouping == null) ThrowHelper.ThrowArgumentNullException(nameof(grouping));
+			if (grouping == null) throw new ArgumentNullException(nameof(grouping));
 
 			return grouping.Provider.CreateQuery<IGrouping<TKey, TElement>>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(DisableGuard, grouping), grouping.Expression));
 		}
-
 
 		#endregion
 
@@ -3801,8 +3807,8 @@ namespace LinqToDB
 			 this IQueryable<TSource>             source,
 			      Expression<Func<TSource, TKey>> keySelector)
 		{
-			if (source      == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (keySelector == null) ThrowHelper.ThrowArgumentNullException(nameof(keySelector));
+			if (source      == null) throw new ArgumentNullException(nameof(source));
+			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
 			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -3835,8 +3841,8 @@ namespace LinqToDB
 			 this IQueryable<TSource>  source1,
 			      IEnumerable<TSource> source2)
 		{
-			if (source1 == null) ThrowHelper.ThrowArgumentNullException(nameof(source1));
-			if (source2 == null) ThrowHelper.ThrowArgumentNullException(nameof(source2));
+			if (source1 == null) throw new ArgumentNullException(nameof(source1));
+			if (source2 == null) throw new ArgumentNullException(nameof(source2));
 
 			return source1.Concat(source2);
 		}
@@ -3852,8 +3858,8 @@ namespace LinqToDB
 			 this IQueryable<TSource>  source1,
 			      IEnumerable<TSource> source2)
 		{
-			if (source1 == null) ThrowHelper.ThrowArgumentNullException(nameof(source1));
-			if (source2 == null) ThrowHelper.ThrowArgumentNullException(nameof(source2));
+			if (source1 == null) throw new ArgumentNullException(nameof(source1));
+			if (source2 == null) throw new ArgumentNullException(nameof(source2));
 
 			return source1.Provider.CreateQuery<TSource>(
 				Expression.Call(null, MethodHelper.GetMethodInfo(ExceptAll, source1, source2),
@@ -3873,8 +3879,8 @@ namespace LinqToDB
 			 this IQueryable<TSource>  source1,
 			      IEnumerable<TSource> source2)
 		{
-			if (source1 == null) ThrowHelper.ThrowArgumentNullException(nameof(source1));
-			if (source2 == null) ThrowHelper.ThrowArgumentNullException(nameof(source2));
+			if (source1 == null) throw new ArgumentNullException(nameof(source1));
+			if (source2 == null) throw new ArgumentNullException(nameof(source2));
 
 			return source1.Provider.CreateQuery<TSource>(
 				Expression.Call(null, MethodHelper.GetMethodInfo(IntersectAll, source1, source2),
@@ -3898,7 +3904,7 @@ namespace LinqToDB
 		[Pure]
 		public static IQueryable<TSource> IgnoreFilters<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] params Type[] entityTypes)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3950,7 +3956,7 @@ namespace LinqToDB
 		[Pure]
 		internal static IQueryable<TSource> SelectDistinct<TSource>(this IQueryable<TSource> source)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
@@ -3980,8 +3986,8 @@ namespace LinqToDB
 		[Pure]
 		public static IQueryable<TSource> TagQuery<TSource>(this IQueryable<TSource> source, [SqlQueryDependent] string tagValue)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (tagValue == null) ThrowHelper.ThrowArgumentNullException(nameof(tagValue));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
 
 			return source.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -4006,8 +4012,8 @@ namespace LinqToDB
 		[Pure]
 		public static ITable<T> TagQuery<T>(this ITable<T> table, [SqlQueryDependent] string tagValue) where T : notnull
 		{
-			if (table == null) ThrowHelper.ThrowArgumentNullException(nameof(table));
-			if (tagValue == null) ThrowHelper.ThrowArgumentNullException(nameof(tagValue));
+			if (table == null) throw new ArgumentNullException(nameof(table));
+			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
 
 			table.Expression = Expression.Call(
 				null,

@@ -1,4 +1,10 @@
-﻿/*
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+
+/*
 
 	https://blog.sqlauthority.com/2011/10/02/sql-server-ce-list-of-information_schema-system-tables/
 
@@ -24,15 +30,14 @@ FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
 SELECT *
 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
 */
-using System.Data.SqlTypes;
-
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using System.Data.SqlTypes;
 	using Common;
 	using Data;
 	using SchemaProvider;
 
-	class SqlCeSchemaProvider : SchemaProviderBase
+	sealed class SqlCeSchemaProvider : SchemaProviderBase
 	{
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
@@ -121,7 +126,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			return (dataType?.ToLower()) switch
+			return (dataType?.ToLowerInvariant()) switch
 			{
 				"tinyint" => typeof(byte),
 				_         => base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options),
@@ -130,7 +135,7 @@ INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNI
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			return dataType?.ToLower() switch
+			return dataType?.ToLowerInvariant() switch
 			{
 				"smallint"         => DataType.Int16,
 				"int"              => DataType.Int32,

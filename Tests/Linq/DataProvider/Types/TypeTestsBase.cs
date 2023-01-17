@@ -1,18 +1,23 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Threading.Tasks;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
 	// base fixture for database-specific type tests
-	// privides test method TestType to test specific type configuration
+	// provides test method TestType to test specific type configuration
 	[TestFixture]
 	public abstract class TypeTestsBase : TestBase
 	{
 		// Mapping for single type configuration testing for both nullable and non-nullable database columns
-		private class TypeTable<TType, TNullableType>
+		private sealed class TypeTable<TType, TNullableType>
 		{
 			[Column(CanBeNull = false)] public TType          Column         { get; set; } = default!;
 			[Column(CanBeNull = true )] public TNullableType? ColumnNullable { get; set; }
@@ -34,14 +39,14 @@ namespace Tests.DataProvider
 		/// <item>all bulk copy methods</item>
 		/// <item>test extreme values support (e.g. min/max values allowed by type)</item>
 		/// </list>
-		/// 
+		///
 		/// Passing various values to method allows to test extreme values support. Recommended values to test:
 		/// <list type="bullet">
 		/// <item>default/null values</item>
 		/// <item>min/max values for ranged types</item>
 		/// <item>type specific special values. E.g. Epsilon and NaN/Inf for floating point types</item>
 		/// </list>
-		/// 
+		///
 		/// Parameter <paramref name="dbType"/> allows testing of various mapping configurations and should include:
 		/// <list type="bullet">
 		/// <item>default type mapping for tested .NET type (if exists)</item>
@@ -138,34 +143,29 @@ namespace Tests.DataProvider
 			var options = GetDefaultBulkCopyOptions(context);
 
 			// test bulk copy modes
-			options = GetDefaultBulkCopyOptions(context);
-			options.BulkCopyType = BulkCopyType.RowByRow;
+			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.RowByRow };
 			table.Delete();
 			db.BulkCopy(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
 
-			options = GetDefaultBulkCopyOptions(context);
-			options.BulkCopyType = BulkCopyType.MultipleRows;
+			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 			table.Delete();
 			db.BulkCopy(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
 
-			options = GetDefaultBulkCopyOptions(context);
-			options.BulkCopyType = BulkCopyType.ProviderSpecific;
+			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
 			table.Delete();
 			db.BulkCopy(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
 
 			// test async provider-specific bulk copy as it often has own implementation
-			options = GetDefaultBulkCopyOptions(context);
-			options.BulkCopyType = BulkCopyType.ProviderSpecific;
+			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
 			await table.DeleteAsync();
 			await db.BulkCopyAsync(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
 
 #if NATIVE_ASYNC
-			options = GetDefaultBulkCopyOptions(context);
-			options.BulkCopyType = BulkCopyType.ProviderSpecific;
+			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
 			await table.DeleteAsync();
 			await db.BulkCopyAsync(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);

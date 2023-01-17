@@ -1,11 +1,16 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Remote
 {
+	using System.Data.Common;
 	using Common.Internal;
-	using Data;
 	using Linq;
+	using LinqToDB.Data;
 	using SqlProvider;
 	using SqlQuery;
 #if !NATIVE_ASYNC
@@ -20,7 +25,7 @@ namespace LinqToDB.Remote
 			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
 		}
 
-		class QueryRunner : QueryRunnerBase
+		sealed class QueryRunner : QueryRunnerBase
 		{
 			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
 				: base(query, queryNumber, dataContext, expression, parameters, preambles)
@@ -49,7 +54,7 @@ namespace LinqToDB.Remote
 				var sb               = new StringBuilder();
 				var query            = Query.Queries[QueryNumber];
 				var sqlBuilder       = DataContext.CreateSqlProvider();
-				var sqlOptimizer     = DataContext.GetSqlOptimizer();
+				var sqlOptimizer     = DataContext.GetSqlOptimizer(DataContext.Options);
 				var sqlStringBuilder = new StringBuilder();
 				var cc               = sqlBuilder.CommandCount(query.Statement);
 
@@ -57,7 +62,7 @@ namespace LinqToDB.Remote
 
 				for (var i = 0; i < cc; i++)
 				{
-					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, optimizationContext);
+					var statement = sqlOptimizer.PrepareStatementForSql(query.Statement, DataContext.MappingSchema, DataContext.Options, optimizationContext);
 					sqlBuilder.BuildSql(i, statement, sqlStringBuilder, optimizationContext);
 
 					if (i == 0)
@@ -166,8 +171,8 @@ namespace LinqToDB.Remote
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement,
-					_dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
+				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(
+					queryContext.Statement, _dataContext.MappingSchema, _dataContext.Options, queryContext.Aliases!, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -189,14 +194,14 @@ namespace LinqToDB.Remote
 			public override object? ExecuteScalar()
 			{
 				if (_dataContext._batchCounter > 0)
-					ThrowHelper.ThrowLinqException("Incompatible batch operation.");
+					throw new LinqException("Incompatible batch operation.");
 
 				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var sqlOptimizer = _dataContext.GetSqlOptimizer();
-				var q = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
+				var sqlOptimizer = _dataContext.GetSqlOptimizer(_dataContext.Options);
+				var q            = sqlOptimizer.PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _dataContext.Options, queryContext.Aliases!, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -228,13 +233,13 @@ namespace LinqToDB.Remote
 				_dataContext.ThrowOnDisposed();
 
 				if (_dataContext._batchCounter > 0)
-					ThrowHelper.ThrowLinqException("Incompatible batch operation.");
+					throw new LinqException("Incompatible batch operation.");
 
 				SetCommand(false);
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
+				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _dataContext.Options, queryContext.Aliases!, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -251,7 +256,7 @@ namespace LinqToDB.Remote
 				return new DataReaderWrapper(new RemoteDataReader(_dataContext.SerializationMappingSchema, result));
 			}
 
-			class DataReaderAsync : IDataReaderAsync
+			sealed class DataReaderAsync : IDataReaderAsync
 			{
 				public DataReaderAsync(RemoteDataReader dataReader)
 				{
@@ -308,7 +313,7 @@ namespace LinqToDB.Remote
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 			{
 				if (_dataContext._batchCounter > 0)
-					ThrowHelper.ThrowLinqException("Incompatible batch operation.");
+					throw new LinqException("Incompatible batch operation.");
 
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -317,7 +322,7 @@ namespace LinqToDB.Remote
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
+				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _dataContext.Options, queryContext.Aliases!, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -338,7 +343,7 @@ namespace LinqToDB.Remote
 			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				if (_dataContext._batchCounter > 0)
-					ThrowHelper.ThrowLinqException("Incompatible batch operation.");
+					throw new LinqException("Incompatible batch operation.");
 
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -347,7 +352,7 @@ namespace LinqToDB.Remote
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
+				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _dataContext.Options, queryContext.Aliases!, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,
@@ -380,7 +385,7 @@ namespace LinqToDB.Remote
 
 				var queryContext = Query.Queries[QueryNumber];
 
-				var q = _dataContext.GetSqlOptimizer().PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, queryContext.Aliases!, _evaluationContext);
+				var q = _dataContext.GetSqlOptimizer(_dataContext.Options).PrepareStatementForRemoting(queryContext.Statement, _dataContext.MappingSchema, _dataContext.Options, queryContext.Aliases!, _evaluationContext);
 
 				var data = LinqServiceSerializer.Serialize(
 					_dataContext.SerializationMappingSchema,

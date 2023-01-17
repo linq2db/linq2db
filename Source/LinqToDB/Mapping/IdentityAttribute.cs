@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Marks target column as identity column with value, generated on database side during insert operations.
@@ -32,9 +34,6 @@
 		/// </summary>
 		public string? Configuration { get; set; }
 
-		public override string GetObjectID()
-		{
-			return $"{Configuration}";
-		}
+		public override string GetObjectID() => Configuration ?? string.Empty;
 	}
 }

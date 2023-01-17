@@ -1,8 +1,10 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+
 	abstract class MethodCallBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }

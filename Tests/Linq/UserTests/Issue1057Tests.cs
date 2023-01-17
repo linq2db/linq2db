@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -25,18 +27,18 @@ namespace Tests.UserTests
 				=> (t, ts) => t.Id == ts.TaskId && ts.Actual == true;
 		}
 
-		class BdaTask : Task
+		sealed class BdaTask : Task
 		{
 			public const string Code = "bda.Requests";
 		}
 
-		class NonBdaTask : Task
+		sealed class NonBdaTask : Task
 		{
 			public const string Code = "None";
 		}
 
 		[Table]
-		class TaskStage
+		sealed class TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }

@@ -1,4 +1,5 @@
-﻿using System.ServiceModel;
+﻿using System;
+using System.ServiceModel;
 using System.ServiceModel.Channels;
 
 namespace LinqToDB.Remote.Wcf
@@ -11,31 +12,31 @@ namespace LinqToDB.Remote.Wcf
 		#region Init
 
 		// clone constructor
-		private WcfDataContext()
+		WcfDataContext() : base(new DataOptions())
 		{
 		}
 
-		public WcfDataContext(string endpointConfigurationName)
+		public WcfDataContext(string endpointConfigurationName) : this()
 		{
-			_endpointConfigurationName = endpointConfigurationName ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(endpointConfigurationName));
+			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
 		}
 
-		public WcfDataContext(string endpointConfigurationName, string remoteAddress)
+		public WcfDataContext(string endpointConfigurationName, string remoteAddress) : this()
 		{
-			_endpointConfigurationName = endpointConfigurationName ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(endpointConfigurationName));
-			_remoteAddress             = remoteAddress             ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(remoteAddress));
+			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
+			_remoteAddress             = remoteAddress             ?? throw new ArgumentNullException(nameof(remoteAddress));
 		}
 
-		public WcfDataContext(string endpointConfigurationName, EndpointAddress endpointAddress)
+		public WcfDataContext(string endpointConfigurationName, EndpointAddress endpointAddress) : this()
 		{
-			_endpointConfigurationName = endpointConfigurationName ?? ThrowHelper.ThrowArgumentNullException<string         >(nameof(endpointConfigurationName));
-			_endpointAddress           = endpointAddress           ?? ThrowHelper.ThrowArgumentNullException<EndpointAddress>(nameof(endpointAddress));
+			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
+			_endpointAddress           = endpointAddress           ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
-		public WcfDataContext(Binding binding, EndpointAddress endpointAddress)
+		public WcfDataContext(Binding binding, EndpointAddress endpointAddress) : this()
 		{
-			Binding          = binding         ?? ThrowHelper.ThrowArgumentNullException<Binding        >(nameof(binding));
-			_endpointAddress = endpointAddress ?? ThrowHelper.ThrowArgumentNullException<EndpointAddress>(nameof(endpointAddress));
+			Binding          = binding         ?? throw new ArgumentNullException(nameof(binding));
+			_endpointAddress = endpointAddress ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
 		string?          _endpointConfigurationName;
@@ -44,9 +45,9 @@ namespace LinqToDB.Remote.Wcf
 
 		public Binding? Binding { get; private set; }
 
-#endregion
+		#endregion
 
-#region Overrides
+		#region Overrides
 
 		protected override ILinqService GetClient()
 		{
@@ -77,6 +78,6 @@ namespace LinqToDB.Remote.Wcf
 
 		protected override string ContextIDPrefix => "WcfRemoteLinqService";
 
-#endregion
+		#endregion
 	}
 }

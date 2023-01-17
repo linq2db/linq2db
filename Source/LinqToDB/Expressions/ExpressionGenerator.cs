@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
@@ -21,7 +23,7 @@ namespace LinqToDB.Expressions
 
 		public ParameterExpression DeclareVariable(Type type, string? name = default)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			var variable = Expression.Variable(type, name);
 			_variables.Add(variable);
@@ -30,7 +32,7 @@ namespace LinqToDB.Expressions
 
 		public ParameterExpression AddVariable(ParameterExpression variable)
 		{
-			if (variable == null) ThrowHelper.ThrowArgumentNullException(nameof(variable));
+			if (variable == null) throw new ArgumentNullException(nameof(variable));
 
 			_variables.Add(variable);
 			return variable;
@@ -38,7 +40,7 @@ namespace LinqToDB.Expressions
 
 		public Expression AddExpression(Expression expression)
 		{
-			if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 			_expressions.Add(expression);
 			return expression;
@@ -55,7 +57,7 @@ namespace LinqToDB.Expressions
 
 		public static Expression Build(Action<ExpressionGenerator> buildFunc, TypeMapper? typeMapper = default)
 		{
-			if (buildFunc == null) ThrowHelper.ThrowArgumentNullException(nameof(buildFunc));
+			if (buildFunc == null) throw new ArgumentNullException(nameof(buildFunc));
 
 			var generator = new ExpressionGenerator(typeMapper ?? new TypeMapper());
 			buildFunc(generator);
@@ -64,8 +66,8 @@ namespace LinqToDB.Expressions
 
 		public Expression Assign(Expression left, Expression right)
 		{
-			if (left  == null) ThrowHelper.ThrowArgumentNullException(nameof(left));
-			if (right == null) ThrowHelper.ThrowArgumentNullException(nameof(right));
+			if (left  == null) throw new ArgumentNullException(nameof(left));
+			if (right == null) throw new ArgumentNullException(nameof(right));
 
 			if (left.Type != right.Type)
 				right = Expression.Convert(right, left.Type);
@@ -75,7 +77,7 @@ namespace LinqToDB.Expressions
 
 		public ParameterExpression AssignToVariable(Expression expression, string? name = default)
 		{
-			if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 			var variable = DeclareVariable(expression.Type, name);
 			Assign(variable, expression);
@@ -84,41 +86,41 @@ namespace LinqToDB.Expressions
 
 		public Expression Throw(Expression expression)
 		{
-			if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 			return AddExpression(Expression.Throw(expression));
 		}
 
 		public Expression IfThen(Expression test, Expression ifTrue)
 		{
-			if (test   == null) ThrowHelper.ThrowArgumentNullException(nameof(test));
-			if (ifTrue == null) ThrowHelper.ThrowArgumentNullException(nameof(ifTrue));
+			if (test   == null) throw new ArgumentNullException(nameof(test));
+			if (ifTrue == null) throw new ArgumentNullException(nameof(ifTrue));
 
 			return AddExpression(Expression.IfThen(test, ifTrue));
 		}
 
 		public Expression IfThenElse(Expression test, Expression ifTrue, Expression ifFalse)
 		{
-			if (test    == null) ThrowHelper.ThrowArgumentNullException(nameof(test));
-			if (ifTrue  == null) ThrowHelper.ThrowArgumentNullException(nameof(ifTrue));
-			if (ifFalse == null) ThrowHelper.ThrowArgumentNullException(nameof(ifFalse));
+			if (test    == null) throw new ArgumentNullException(nameof(test));
+			if (ifTrue  == null) throw new ArgumentNullException(nameof(ifTrue));
+			if (ifFalse == null) throw new ArgumentNullException(nameof(ifFalse));
 
 			return AddExpression(Expression.IfThenElse(test, ifTrue, ifFalse));
 		}
 
 		public Expression Condition(Expression test, Expression ifTrue, Expression ifFalse)
 		{
-			if (test    == null) ThrowHelper.ThrowArgumentNullException(nameof(test));
-			if (ifTrue  == null) ThrowHelper.ThrowArgumentNullException(nameof(ifTrue));
-			if (ifFalse == null) ThrowHelper.ThrowArgumentNullException(nameof(ifFalse));
+			if (test    == null) throw new ArgumentNullException(nameof(test));
+			if (ifTrue  == null) throw new ArgumentNullException(nameof(ifTrue));
+			if (ifFalse == null) throw new ArgumentNullException(nameof(ifFalse));
 
 			return AddExpression(Expression.Condition(test, ifTrue, ifFalse));
 		}
 
 		public Expression TryCatch(Expression body, params CatchBlock[] catchBlocks)
 		{
-			if (body        == null) ThrowHelper.ThrowArgumentNullException(nameof(body));
-			if (catchBlocks == null) ThrowHelper.ThrowArgumentNullException(nameof(catchBlocks));
+			if (body        == null) throw new ArgumentNullException(nameof(body));
+			if (catchBlocks == null) throw new ArgumentNullException(nameof(catchBlocks));
 
 			return AddExpression(Expression.TryCatch(body, catchBlocks));
 		}
@@ -126,8 +128,8 @@ namespace LinqToDB.Expressions
 		public MemberExpression MemberAccess<T>(Expression<Func<T, object>> memberExpression,
 			Expression obj)
 		{
-			if (memberExpression == null) ThrowHelper.ThrowArgumentNullException(nameof(memberExpression));
-			if (obj              == null) ThrowHelper.ThrowArgumentNullException(nameof(obj));
+			if (memberExpression == null) throw new ArgumentNullException(nameof(memberExpression));
+			if (obj              == null) throw new ArgumentNullException(nameof(obj));
 
 			var expr = _mapper.MapExpression(memberExpression, obj).Unwrap();
 			return (MemberExpression)expr;

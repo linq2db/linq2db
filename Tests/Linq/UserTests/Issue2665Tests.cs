@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -8,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue2665Tests : TestBase
 	{
 		[Table]
-		class ProductTable
+		sealed class ProductTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -23,7 +24,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class ProductAttributeTable
+		sealed class ProductAttributeTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -39,7 +40,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class ProductAttributeMapping
+		sealed class ProductAttributeMapping
 		{
 			[PrimaryKey]
 			public int ProductId { get; set; }

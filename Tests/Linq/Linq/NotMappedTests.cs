@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -8,7 +10,7 @@ namespace Tests.Linq
 	public class NotMappedTests : TestBase
 	{
 		[Table]
-		class SuperClass
+		sealed class SuperClass
 		{
 			[Column, PrimaryKey] public int Id { get; set; }
 			[Column] public string? Value      { get; set; }
@@ -18,7 +20,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Subclass1
+		sealed class Subclass1
 		{
 			[Column, PrimaryKey] public int Id { get; set; }
 			[Column] public int? ParentId      { get; set; }
@@ -29,7 +31,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Subclass2
+		sealed class Subclass2
 		{
 			[Column, PrimaryKey] public int Id  { get; set; }
 			[Column] public int? ParentId       { get; set; }

@@ -1,10 +1,15 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
-	using Mapping;
 	using Common.Internal.Cache;
+	using Mapping;
+	using SqlQuery;
 
 	static partial class QueryRunner
 	{
@@ -38,11 +43,13 @@ namespace LinqToDB.Linq
 
 				var sqlQuery = new SelectQuery();
 
-				ParameterAccessor? param = null;
+				ParameterAccessor? param;
 
-				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery);
-				insertOrUpdateStatement.Insert.Into  = sqlTable;
-				insertOrUpdateStatement.Update.Table = sqlTable;
+				var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sqlQuery)
+				{
+					Insert = { Into  = sqlTable },
+					Update = { Table = sqlTable }
+				};
 
 				sqlQuery.From.Table(sqlTable);
 
@@ -75,7 +82,7 @@ namespace LinqToDB.Linq
 					}
 					else if (field.IsIdentity)
 					{
-						ThrowHelper.ThrowLinqException($"InsertOrReplace method does not support identity field '{sqlTable.NameForLogging}.{field.Name}'.");
+						throw new LinqException("InsertOrReplace method does not support identity field '{0}.{1}'.", sqlTable.NameForLogging, field.Name);
 					}
 				}
 
@@ -87,7 +94,7 @@ namespace LinqToDB.Linq
 					.Except(keys);
 
 				if (keys.Count == 0)
-					ThrowHelper.ThrowLinqException($"InsertOrReplace method requires the '{sqlTable.NameForLogging}' table to have a primary key.");
+					throw new LinqException("InsertOrReplace method requires the '{0}' table to have a primary key.", sqlTable.NameForLogging);
 
 				var q =
 				(
@@ -99,8 +106,9 @@ namespace LinqToDB.Linq
 				var missedKey = keys.Except(q.Select(i => i.k)).FirstOrDefault();
 
 				if (missedKey != null)
-					ThrowHelper.ThrowLinqException(
-						$"InsertOrReplace method requires the '{sqlTable.NameForLogging}.{missedKey.Name}' field to be included in the insert setter.");
+					throw new LinqException("InsertOrReplace method requires the '{0}.{1}' field to be included in the insert setter.",
+						sqlTable.NameForLogging,
+						missedKey.Name);
 
 				var fieldCount = 0;
 
@@ -124,7 +132,7 @@ namespace LinqToDB.Linq
 				}
 
 				if (fieldCount == 0)
-					ThrowHelper.ThrowLinqException($"There are no fields to update in the type '{sqlTable.NameForLogging}'.");
+					throw new LinqException("There are no fields to update in the type '{0}'.", sqlTable.NameForLogging);
 
 				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 
@@ -151,21 +159,33 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj!, dataContext);
+				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var cacheDisabled = Common.Configuration.Linq.DisableQueryCache
-					|| columnFilter != null
-					|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-					|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
+
+				var cacheDisabled =
+					dataContext.Options.LinqOptions.DisableQueryCache                       ||
+					columnFilter != null                                                    ||
+					entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) ||
+					entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
 
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
-					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type, dataContext.GetQueryFlags()),
-					new { dataContext, entityDescriptor, obj},
+					: Cache<T,int>.QueryCache.GetOrCreate(
+					(
+						operation: "IR",
+						dataContext.ConfigurationID,
+						tableName,
+						schema,
+						databaseName,
+						serverName,
+						tableOptions,
+						type,
+						queryFlags: dataContext.GetQueryFlags()
+					),
+					(dataContext, entityDescriptor, obj),
 					static (entry, key, context) =>
 					{
-						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 					});
 
@@ -186,21 +206,33 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type = GetType<T>(obj!, dataContext);
+				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
-				var cacheDisabled = Common.Configuration.Linq.DisableQueryCache
-					|| columnFilter != null
-					|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert)
-					|| entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
+
+				var cacheDisabled =
+					dataContext.Options.LinqOptions.DisableQueryCache                       ||
+					columnFilter != null                                                    ||
+					entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) ||
+					entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update);
 
 				var ei = cacheDisabled
 					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schema, tableOptions, type)
-					: Cache<T>.QueryCache.GetOrCreate(
-					(operation: "IR", dataContext.MappingSchema.ConfigurationID, dataContext.ContextID, tableName, schema, databaseName, serverName, tableOptions, type, dataContext.GetQueryFlags()),
-					new { dataContext, entityDescriptor, obj },
+					: Cache<T,int>.QueryCache.GetOrCreate(
+					(
+						operation: "IR",
+						dataContext.ConfigurationID,
+						tableName,
+						schema,
+						databaseName,
+						serverName,
+						tableOptions,
+						type,
+						queryFlags: dataContext.GetQueryFlags()
+					),
+					(dataContext, entityDescriptor, obj),
 					static (entry, key, context) =>
 					{
-						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 					});
 
@@ -234,7 +266,7 @@ namespace LinqToDB.Linq
 			foreach (var key in keys)
 				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression!);
 
-			//TODO! looks not working solution
+			// TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)
 			{
 				query.Queries[0].Statement = new SqlUpdateStatement(firstStatement.SelectQuery)

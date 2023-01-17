@@ -1,5 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -25,7 +29,7 @@ namespace Tests.UserTests
 			NoCacheScope
 		}
 
-		class Issue278TestData : TestCaseSourceAttribute
+		sealed class Issue278TestData : TestCaseSourceAttribute
 		{
 			public Issue278TestData(CacheMode mode)
 				: base(typeof(Issue278TestData), nameof(TestData), new object[] { mode })

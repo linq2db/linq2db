@@ -1,4 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -7,10 +10,10 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
 		{
-			if (parameters == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
+			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)
-				if (value == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
+				if (value == null) throw new ArgumentNullException(nameof(parameters));
 
 			SystemType  = systemType;
 			Expr        = expr;
@@ -190,7 +193,7 @@ namespace LinqToDB.SqlQuery
 					var expr = (SqlExpression)ex;
 					if (expr.IsPredicate)
 						return false;
-					if (QueryHelper.IsTransitiveExpression(expr))
+					if (QueryHelper.IsTransitiveExpression(expr, checkNullability: true))
 						return NeedsEqual(expr.Parameters[0]);
 					return true;
 				}

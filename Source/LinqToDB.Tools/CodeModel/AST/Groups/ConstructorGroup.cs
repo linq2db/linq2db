@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Group of constructors.
@@ -19,7 +21,7 @@
 		/// <summary>
 		/// Owner class.
 		/// </summary>
-		public CodeClass Class { get; }
+		public CodeClass Class { get; set; }
 
 		public override CodeElementType ElementType => CodeElementType.ConstructorGroup;
 

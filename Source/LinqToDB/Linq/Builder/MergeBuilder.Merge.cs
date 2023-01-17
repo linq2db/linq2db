@@ -1,9 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 	using Common;
 
@@ -11,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		internal class Merge : MethodCallBuilder
+		internal sealed class Merge : MethodCallBuilder
 		{
 			static readonly MethodInfo[] _supportedMethods = {MergeMethodInfo1, MergeMethodInfo2};
 
@@ -36,8 +37,7 @@ namespace LinqToDB.Linq.Builder
 				if (target is not TableBuilder.TableContext tableContext
 					|| !tableContext.SelectQuery.IsSimple)
 				{
-					return ThrowHelper.ThrowNotImplementedException<IBuildContext>(
-						"Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
+					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
 				}
 
 				var targetTable = tableContext.SqlTable;

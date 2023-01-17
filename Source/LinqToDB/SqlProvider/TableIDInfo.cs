@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlProvider
+﻿using System;
+
+namespace LinqToDB.SqlProvider
 {
 	public class TableIDInfo
 	{

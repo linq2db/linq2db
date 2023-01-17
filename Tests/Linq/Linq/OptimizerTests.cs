@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System.Collections.Generic;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -7,7 +9,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class OptimizerTests : TestBase
 	{
-		class OptimizerData
+		sealed class OptimizerData
 		{
 			[PrimaryKey(1)]
 			public int Key1 { get; set; }
@@ -239,10 +241,10 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var uniqueValues = first.Select(f => new { f.Key1, f.Key2 });
 
@@ -268,10 +270,10 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var allKeys = first.Select(f => new { First = f })
 					.HasUniqueKey(f => new {f.First.DataKey11})
@@ -340,10 +342,10 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var allKeys = first.Select(f => new { First = f })
 					.HasUniqueKey(f => new {f.First.DataKey11})
@@ -381,10 +383,10 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first
@@ -419,10 +421,10 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
+			using (new WithoutJoinOptimization(opimizerSwitch))
 			using (var db = GetDataContext(context))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
-			using (new WithoutJoinOptimization(opimizerSwitch))
 			{
 				var subqueryWhichWillBeOptimized =
 					from f in first

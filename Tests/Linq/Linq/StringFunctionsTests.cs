@@ -1,4 +1,8 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
@@ -25,7 +29,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column]                                                              public int     Id     { get; set; }
 			[Column(Length = 50, CanBeNull = true)]                               public string? Value1 { get; set; }

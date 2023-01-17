@@ -1,16 +1,18 @@
-﻿namespace LinqToDB.DataProvider.SqlCe
+﻿using System;
+
+namespace LinqToDB.DataProvider.SqlCe
 {
 	using Extensions;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
-	class SqlCeSqlOptimizer : BasicSqlOptimizer
+	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
 		public SqlCeSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			// This function mutates statement which is allowed only in this place
 			CorrectSkipAndColumns(statement);
@@ -18,19 +20,19 @@
 			// This function mutates statement which is allowed only in this place
 			CorrectInsertParameters(statement);
 
-			CorrectFunctionParameters(statement);
+			CorrectFunctionParameters(statement, dataOptions);
 
 			statement = CorrectBooleanComparison(statement);
 
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
-					statement = GetAlternativeDelete((SqlDeleteStatement) statement);
+					statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions);
 					statement.SelectQuery!.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update :
-					statement = GetAlternativeUpdate((SqlUpdateStatement) statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions);
 					break;
 			}
 
@@ -41,7 +43,7 @@
 			return statement;
 		}
 
-		protected static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
+		private static string[] LikeSqlCeCharactersToEscape = { "_", "%" };
 
 		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
 
@@ -173,7 +175,7 @@
 
 								if (q.OrderBy.IsEmpty)
 								{
-									ThrowHelper.ThrowLinqToDBException("Order by required for Skip operation.");
+									throw new LinqToDBException("Order by required for Skip operation.");
 								}
 							}
 
@@ -189,9 +191,9 @@
 			});
 		}
 
-		void CorrectFunctionParameters(SqlStatement statement)
+		void CorrectFunctionParameters(SqlStatement statement, DataOptions options)
 		{
-			if (!SqlCeConfiguration.InlineFunctionParameters)
+			if (!options.FindOrDefault(SqlCeOptions.Default).InlineFunctionParameters)
 				return;
 
 			statement.Visit(static e =>
@@ -216,7 +218,7 @@
 			// already fixed by CorrectSkipAndColumns
 		}
 
-		protected SqlStatement CorrectBooleanComparison(SqlStatement statement)
+		private SqlStatement CorrectBooleanComparison(SqlStatement statement)
 		{
 			statement = statement.ConvertAll(this, true, static (_, e) =>
 			{

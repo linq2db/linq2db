@@ -1,11 +1,16 @@
 ﻿extern alias MySqlData;
 extern alias MySqlConnector;
+
+using System;
 using System.Data.Linq;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using System.Reflection;
 
 using LinqToDB;
@@ -18,15 +23,15 @@ using LinqToDB.DataProvider.MySql;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
-using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlDataDateTime      = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal       = MySqlData::MySql.Data.Types.MySqlDecimal;
 #if NETFRAMEWORK
 using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
 #else
 using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
 #endif
 #if NET6_0_OR_GREATER
-using MySqlConnectorDecimal = MySqlConnector::MySqlConnector.MySqlDecimal;
+using MySqlConnectorDecimal  = MySqlConnector::MySqlConnector.MySqlDecimal;
 #endif
 
 namespace Tests.DataProvider
@@ -717,7 +722,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("NeedS.esca Pin`g")]
-		class BinaryTypes
+		sealed class BinaryTypes
 		{
 			[Column("ne.eds `escaPing", IsPrimaryKey = true)] public int Id { get; set; }
 
@@ -1250,24 +1255,23 @@ namespace Tests.DataProvider
 			// TODO: add aggregate/udf functions test cases
 			using (var db = (DataConnection)GetDataContext(context))
 			{
-
 				var expectedProc = testCase.Schema;
+
 				expectedProc.CatalogName = TestUtils.GetDatabaseName(db, context);
 
-				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-
+				var schema     = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				var procedures = schema.Procedures.Where(_ => _.ProcedureName == expectedProc.ProcedureName).ToList();
 
 				Assert.AreEqual(1, procedures.Count);
 
 				var procedure = procedures[0];
 
-				Assert.AreEqual(expectedProc.CatalogName.ToLower(), procedure.CatalogName!.ToLower());
-				Assert.AreEqual(expectedProc.SchemaName,            procedure.SchemaName);
-				Assert.AreEqual(expectedProc.MemberName,            procedure.MemberName);
-				Assert.AreEqual(expectedProc.IsTableFunction,       procedure.IsTableFunction);
-				Assert.AreEqual(expectedProc.IsAggregateFunction,   procedure.IsAggregateFunction);
-				Assert.AreEqual(expectedProc.IsDefaultSchema,       procedure.IsDefaultSchema);
+				Assert.AreEqual(expectedProc.CatalogName.ToLowerInvariant(), procedure.CatalogName!.ToLowerInvariant());
+				Assert.AreEqual(expectedProc.SchemaName,                     procedure.SchemaName);
+				Assert.AreEqual(expectedProc.MemberName,                     procedure.MemberName);
+				Assert.AreEqual(expectedProc.IsTableFunction,                procedure.IsTableFunction);
+				Assert.AreEqual(expectedProc.IsAggregateFunction,            procedure.IsAggregateFunction);
+				Assert.AreEqual(expectedProc.IsDefaultSchema,                procedure.IsDefaultSchema);
 
 				if (context.IsAnyOf(TestProvName.AllMySqlConnector) && procedure.ResultException != null)
 				{
@@ -1363,7 +1367,7 @@ namespace Tests.DataProvider
 					foreach (var table in procedure.SimilarTables!)
 					{
 						var tbl = expectedProc.SimilarTables!
-							.SingleOrDefault(_ => _.TableName!.ToLower() == table.TableName!.ToLower());
+							.SingleOrDefault(_ => _.TableName!.ToLowerInvariant() == table.TableName!.ToLowerInvariant());
 
 						Assert.IsNotNull(tbl);
 					}
@@ -1377,7 +1381,7 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				var res = schema.Tables.FirstOrDefault(c => c.ID!.ToLower().Contains("fulltextindex"));
+				var res = schema.Tables.FirstOrDefault(c => c.ID!.ToLowerInvariant().Contains("fulltextindex"));
 				Assert.AreNotEqual(null, res);
 			}
 		}
@@ -1388,7 +1392,7 @@ namespace Tests.DataProvider
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				DatabaseSchema schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLower().Contains("issue1993"))!;
+				var table = schema.Tables.FirstOrDefault(t => t.ID!.ToLowerInvariant().Contains("issue1993"))!;
 				Assert.IsNotNull(table);
 				Assert.AreEqual(2, table.Columns.Count);
 				Assert.AreEqual("id",          table.Columns[0].ColumnName);
@@ -1838,7 +1842,7 @@ namespace Tests.DataProvider
 				{
 					var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetProcedures = false });
 
-					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLower() == "testschematypestable").SingleOrDefault()!;
+					var tableSchema = schema.Tables.Where(t => t.TableName!.ToLowerInvariant() == "testschematypestable").SingleOrDefault()!;
 					Assert.IsNotNull(tableSchema);
 
 					assertColumn("VarCharDefault"    , "string"  , DataType.VarChar);
@@ -2137,7 +2141,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class Issue3611Table
+		sealed class Issue3611Table
 		{
 			[Column(Length = 2000, DataType = DataType.VarChar)]   public string? VarChar   { get; set; }
 			[Column(Length = 2000, DataType = DataType.VarBinary)] public byte[]? VarBinary { get; set; }
@@ -2196,7 +2200,7 @@ namespace Tests.DataProvider
 			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
 		}
 
-		public class Record
+		public sealed class Record
 		{
 			public int O { get; set; }
 		}

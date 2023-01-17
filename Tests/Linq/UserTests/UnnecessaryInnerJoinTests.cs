@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -9,7 +12,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class UnnecessaryInnerJoinTests : TestBase
 	{
-		class Table1
+		sealed class Table1
 		{
 			[PrimaryKey(1)]
 			[Identity]
@@ -17,7 +20,7 @@ namespace Tests.UserTests
 			public long Field2 { get; set; }
 		}
 
-		class Table2
+		sealed class Table2
 		{
 			[PrimaryKey(1)]
 			[Identity]

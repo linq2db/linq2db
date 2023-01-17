@@ -1,10 +1,11 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.RegularExpressions;
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
-	using Expressions;
-	using SqlQuery;
-
 	public static partial class Sql
 	{
 		/// <summary>
@@ -17,10 +18,11 @@ namespace LinqToDB
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(DB2LUWCollationBuilder)    , Configuration = ProviderName.DB2LUW)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(PostgreSQLCollationBuilder), Configuration = ProviderName.PostgreSQL)]
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
-		public static string Collate(this string expr, [SqlQueryDependent] string collation)
-			=> ThrowHelper.ThrowLinqException<string>($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
+		[return: NotNullIfNotNull(nameof(expr))]
+		public static string? Collate(this string? expr, [SqlQueryDependent] string collation)
+			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
 
-		internal class NamedCollationBuilder : IExtensionCallBuilder
+		internal sealed class NamedCollationBuilder : IExtensionCallBuilder
 		{
 			private static readonly Regex _collationValidator = new Regex(@"^[a-zA-Z0-9_\.-@]+$", RegexOptions.Compiled);
 
@@ -30,9 +32,12 @@ namespace LinqToDB
 				var collation = builder.GetValue<string>("collation");
 
 				if (!ValidateCollation(collation))
-					ThrowHelper.ThrowInvalidOperationException($"Invalid collation: {collation}");
+					throw new InvalidOperationException($"Invalid collation: {collation}");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr);
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr)
+				{
+					CanBeNull = expr.CanBeNull
+				};
 			}
 
 			/// <summary>
@@ -46,18 +51,21 @@ namespace LinqToDB
 			}
 		}
 
-		internal class PostgreSQLCollationBuilder : IExtensionCallBuilder
+		internal sealed class PostgreSQLCollationBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr");
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr);
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr)
+				{
+					CanBeNull = expr.CanBeNull
+				};
 			}
 		}
 
-		internal class DB2LUWCollationBuilder : IExtensionCallBuilder
+		internal sealed class DB2LUWCollationBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -65,7 +73,10 @@ namespace LinqToDB
 				var collation = builder.GetValue<string>("collation");
 
 				// collation cannot be parameter
-				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation));
+				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation))
+				{
+					CanBeNull = expr.CanBeNull
+				};
 			}
 		}
 	}

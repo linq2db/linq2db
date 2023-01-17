@@ -1,9 +1,13 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+﻿using System.Collections.Generic;
+using System.Linq;
+using JetBrains.Annotations;
+
+namespace LinqToDB.DataProvider.Sybase
 {
 	using Configuration;
 
 	[UsedImplicitly]
-	class SybaseFactory : IDataProviderFactory
+	sealed class SybaseFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

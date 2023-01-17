@@ -1,4 +1,7 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.Mapping
 {
@@ -8,7 +11,7 @@ namespace LinqToDB.Mapping
 	using Metadata;
 	using SqlQuery;
 
-	class MappingSchemaInfo
+	class MappingSchemaInfo : IConfigurationID
 	{
 		public MappingSchemaInfo(string configuration)
 		{
@@ -307,10 +310,10 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>
-		internal int ConfigurationID
+		public int ConfigurationID
 		{
-			get => _configurationID ??= GenerateID();
-			set => _configurationID = value;
+			get          => _configurationID ??= GenerateID();
+			internal set => _configurationID = value;
 		}
 
 		protected virtual int GenerateID()

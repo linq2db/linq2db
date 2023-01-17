@@ -1,16 +1,18 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Extensions;
 	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
-		public SQLiteSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SQLiteSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -37,7 +39,7 @@ namespace LinqToDB.DataProvider.SQLite
 			if (statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME=");
-				MappingSchema.ConvertToSqlValue(StringBuilder, null, trun.Table!.TableName.Name);
+				MappingSchema.ConvertToSqlValue(StringBuilder, null, DataOptions, trun.Table!.TableName.Name);
 			}
 			else
 			{
@@ -147,26 +149,34 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			ThrowHelper.ThrowLinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				(true, TableOptions.IsTemporary                                                                             ) or
-				(true, TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                    ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData) or
-				(true,                                                                     TableOptions.IsLocalTemporaryData) or
-				(true,                            TableOptions.IsLocalTemporaryStructure                                    ) or
-				(true,                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData)
-					=> "CREATE TEMPORARY TABLE ",
-				(true, var value)
-					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
-				(false, _)
-					=> "CREATE TABLE ",
-			};
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
 			StringBuilder.Append(command);
 

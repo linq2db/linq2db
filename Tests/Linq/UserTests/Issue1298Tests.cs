@@ -1,13 +1,15 @@
 ﻿using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using System.Linq;
 
 namespace Tests.UserTests
 {
-	class Issue1298Tests : TestBase
+	sealed class Issue1298Tests : TestBase
 	{
 		[Table("qwerty")]
-		public class Qwerty
+		public sealed class Qwerty
 		{
 			[Column]
 			public long Id { get; set; }
@@ -31,15 +33,15 @@ namespace Tests.UserTests
 			[Column]
 			public long? ref1 { get; set; }
 
-			public class mega_composites__y1
+			public sealed class mega_composites__y1
 			{
 				public mega_composites__y1() : base()
 				{
 					q1 = new mega_composites__y1__q1();
 				}
-				public virtual mega_composites__y1__q1 q1 { get; set; }
+				public mega_composites__y1__q1 q1 { get; set; }
 
-				public class mega_composites__y1__q1
+				public sealed class mega_composites__y1__q1
 				{
 					[Column("\"y1.q1.ref1\"")]
 					public long? ref1 { get; set; }
@@ -47,7 +49,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		public class __mega_composites_View : mega_composites
+		public sealed class __mega_composites_View : mega_composites
 		{
 			public string? __face_y1_q1_ref1 { get; set; }
 			public string? __face_ref1 { get; set; }

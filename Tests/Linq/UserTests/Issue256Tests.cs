@@ -1,4 +1,6 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Data.Linq;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -35,7 +37,7 @@ namespace Tests.UserTests
 		}
 
 		[AttributeUsage(AttributeTargets.Parameter)]
-		class Issue256TestSourceAttribute : IncludeDataSourcesAttribute
+		sealed class Issue256TestSourceAttribute : IncludeDataSourcesAttribute
 		{
 			// tests are provider-agnostic
 			public Issue256TestSourceAttribute() : base(TestProvName.AllSQLite, TestProvName.AllClickHouse) {}

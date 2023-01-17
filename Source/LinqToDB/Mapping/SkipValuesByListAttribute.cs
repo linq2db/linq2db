@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace LinqToDB.Mapping
 {
@@ -9,7 +11,7 @@ namespace LinqToDB.Mapping
 	/// custom Attribute derived from this to override <see cref="SkipBaseAttribute.ShouldSkip"/>
 	/// </summary>
 	[CLSCompliant(false)]
-	public abstract class SkipValuesByListAttribute: SkipBaseAttribute
+	public abstract class SkipValuesByListAttribute : SkipBaseAttribute
 	{
 		/// <summary>
 		/// Gets collection with values to skip.
@@ -19,7 +21,7 @@ namespace LinqToDB.Mapping
 		protected SkipValuesByListAttribute(IEnumerable<object?> values)
 		{
 			if (values == null)
-				ThrowHelper.ThrowArgumentNullException(nameof(values));
+				throw new ArgumentNullException(nameof(values));
 
 			Values = new HashSet<object?>(values);
 		}
@@ -38,12 +40,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			var sb = new StringBuilder(base.GetObjectID());
-
-			foreach (var value in Values)
-				sb.Append(value).Append('.');
-
-			return sb.ToString();
+			return $"{base.GetObjectID()}.{string.Join(".", Values)}.";
 		}
 	}
 }

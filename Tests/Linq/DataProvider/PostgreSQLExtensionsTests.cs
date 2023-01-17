@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -9,7 +11,7 @@ namespace Tests.DataProvider
 	public class PostgreSQLExtensionsTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int     Id           { get; set; }
 			[Column] public string  StrValue     { get; set; } = null!;

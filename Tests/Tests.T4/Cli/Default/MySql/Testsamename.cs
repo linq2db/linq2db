@@ -12,8 +12,8 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MySql
 {
-	[Table("testsamename")]
-	public class Testsamename
+	[Table("TestSameName")]
+	public class TestSameName
 	{
 		[Column("ID", IsPrimaryKey = true)] public int Id { get; set; } // int
 	}

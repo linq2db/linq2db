@@ -1,9 +1,13 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using JetBrains.Annotations;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using Configuration;
 
 	[UsedImplicitly]
-	class OracleFactory : IDataProviderFactory
+	sealed class OracleFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
@@ -258,8 +260,7 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant : break;
 
 				default:
-					ThrowHelper.ThrowNotImplementedException($"Unhandled expression type: {expr.NodeType}");
-					break;
+					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
 			}
 
 			if (_staticFunc != null)

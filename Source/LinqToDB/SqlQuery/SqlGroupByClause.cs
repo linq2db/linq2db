@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -97,15 +99,23 @@ namespace LinqToDB.SqlQuery
 				return sb;
 
 			sb.Append(" \nGROUP BY");
-			sb.Append(
-				GroupingType switch
-				{
-					GroupingType.Default     => "\n",
-					GroupingType.GroupBySets => " GROUPING SETS (\n",
-					GroupingType.Rollup      => " ROLLUP (\n",
-					GroupingType.Cube        => " CUBE (\n",
-					_ => ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected grouping type: {GroupingType}"),
-				});
+			switch (GroupingType)
+			{
+				case GroupingType.Default:
+					sb.Append('\n');
+					break;
+				case GroupingType.GroupBySets:
+					sb.Append(" GROUPING SETS (\n");
+					break;
+				case GroupingType.Rollup:
+					sb.Append(" ROLLUP (\n");
+					break;
+				case GroupingType.Cube:
+					sb.Append(" CUBE (\n");
+					break;
+				default:
+					throw new InvalidOperationException($"Unexpected grouping type: {GroupingType}");
+			}
 
 			foreach (var item in Items)
 			{

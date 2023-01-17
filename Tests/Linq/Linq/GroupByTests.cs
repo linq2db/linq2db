@@ -1,11 +1,17 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using FluentAssertions;
+
+using LinqToDB;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Linq;
-	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -252,7 +258,7 @@ namespace Tests.Linq
 					select g.Key);
 		}
 
-		class GroupByInfo
+		sealed class GroupByInfo
 		{
 			public GroupByInfo? Prev;
 			public object?      Field;
@@ -1973,6 +1979,22 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void GroupByGuardCheckOptions([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool guard)
+		{
+			using (var db = GetDataContext(context, b => b.WithOptions<LinqOptions>(o => o with { GuardGrouping = guard })))
+			{
+				// group on client
+				var query = db.Person
+					.GroupBy(_ => _.Gender);
+
+				if (guard)
+					query.Invoking(q => q.ToList()).Should().Throw<LinqToDBException>();
+				else
+					query.Invoking(q => q.ToList()).Should().NotThrow();
+			}
+		}
+
 		[Sql.Expression("{0}", ServerSideOnly = true)]
 		private static int Noop(int value)
 		{
@@ -2030,7 +2052,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue680Table
+		sealed class Issue680Table
 		{
 			[Column] public DateTime TimeStamp;
 		}
@@ -2063,11 +2085,13 @@ namespace Tests.Linq
 
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
 				{
 					Name = re.FirstName,
 					Roles = ri.ToList().Select(p => p.Diagnosis)
 				}).Where(p => p.Name.ToLower().Contains(input.ToLower())).ToList();
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 
@@ -2076,11 +2100,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var result = db.Person.GroupJoin(db.Patient, re => re.ID, ri => ri.PersonID, (re, ri) => new
 				{
 					Name = re.FirstName,
 					Roles = ri.ToList().Select(p => p.Diagnosis)
 				}).Where(p => p.Name.ToLower().Contains("test".ToLower())).ToList();
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 
@@ -2133,7 +2159,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class Issue1078Table
+		sealed class Issue1078Table
 		{
 			[PrimaryKey]
 			public int UserID { get; set; }
@@ -2195,7 +2221,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class Issue1192Table
+		sealed class Issue1192Table
 		{
 			public int IdId { get; internal set; }
 			public int MyOtherId { get; internal set; }
@@ -2222,22 +2248,22 @@ namespace Tests.Linq
 		public void Issue2306Test1([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
@@ -2249,23 +2275,25 @@ namespace Tests.Linq
 		public void Issue2306Test2([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
+
 			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
+
 			Query.ClearCaches();
 		}
 
@@ -2273,20 +2301,20 @@ namespace Tests.Linq
 		public void Issue2306Test3([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(false))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (var db = GetDataContext(context))
 			using (new GuardGrouping(true))
+			using (var db = GetDataContext(context))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
@@ -2347,6 +2375,109 @@ namespace Tests.Linq
 				foreach (var y in x)
 				{
 				}
+			}
+		}
+
+		[Table]
+		public class Issue3761Table
+		{
+			[Column, NotNull, PrimaryKey] public int?      LETO     { get; set; }
+			[Column, NotNull, PrimaryKey] public int?      STEVILKA { get; set; }
+			[Column                     ] public DateTime? DATUM    { get; set; }
+			[Column                     ] public decimal?  SKUPAJ   { get; set; }
+		}
+
+		[Test]
+		public void Issue3761Test1([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Issue3761Table>();
+
+			var query = table.Where(n => n.DATUM < new DateTime(2019, 1, 1))
+				.GroupBy(
+					n => new
+					{
+						n.DATUM.GetValueOrDefault().Year,
+						n.DATUM.GetValueOrDefault().Month
+					},
+					(k, n) => new
+					{
+						k.Year,
+						k.Month,
+						Sum = n.Sum(nal => nal.SKUPAJ)
+					});
+
+			query.ToList();
+			Assert.AreEqual(2, query.GetSelectQuery().GroupBy.Items.Count);
+		}
+
+		[Test]
+		public void Issue3761Test2([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSqlServer2005)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Issue3761Table>();
+
+			var query = table.Where(n => n.DATUM < new DateTime(2019, 1, 1))
+				.GroupBy(
+					n => new
+					{
+						n.DATUM.GetValueOrDefault().Year,
+						n.DATUM.GetValueOrDefault().Month
+					},
+					(k, n) => new
+					{
+						k.Year,
+						k.Month,
+						Sum = n.Sum(nal => nal.SKUPAJ)
+					})
+				.UnionAll(
+					table
+						.Where(n => n.DATUM >= new DateTime(2019, 1, 1))
+						.GroupBy(
+							n => new
+							{
+								n.DATUM.GetValueOrDefault().Year,
+								n.DATUM.GetValueOrDefault().Month
+							},
+							(k, n) => new
+							{
+								k.Year,
+								k.Month,
+								Sum = n.Sum(nal => nal.SKUPAJ)
+							}));
+
+			query.ToList();
+
+			var sql = query.GetSelectQuery();
+
+			Assert.AreEqual(2, sql.GroupBy.Items.Count);
+			Assert.AreEqual(2, sql.SetOperators[0].SelectQuery.GroupBy.Items.Count);
+		}
+
+		[Test]
+		public void Issue3872([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable<Issue3761Table>();
+
+			var query1 = db.Person.GroupBy(_ => 1).Select(r => r.Max(r => r.ID));
+
+			var query2 = db.Person.Select(r => r.ID);
+			var query  = query1.Concat(query2);
+
+			query.ToList();
+
+			var ast = query.GetSelectQuery();
+
+			Assert.AreEqual(0, ast.GroupBy.Items.Count);
+			Assert.AreEqual(1, ast.From.Tables.Count);
+			if (ast.From.Tables[0] is not SqlTableSource source)
+			{
+				Assert.Fail("fail");
+			}
+			else
+			{
+				Assert.AreEqual(QueryElementType.SqlTable, source.Source.ElementType);
 			}
 		}
 	}

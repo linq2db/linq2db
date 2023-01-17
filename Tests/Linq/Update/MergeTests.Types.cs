@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Linq;
+using System.Text;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -11,7 +13,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests : TestBase
 	{
 		[Table("unspecified")]
-		class MergeTypes
+		sealed class MergeTypes
 		{
 			[Column("Id")]
 			[PrimaryKey]
@@ -343,10 +345,6 @@ namespace Tests.xUpdate
 		{
 			TestProvName.Oracle21DevartDirect,
 			ProviderName.SapHanaNative
-#if AZURE
-			,TestProvName.AllSybase
-		//[ActiveIssue("need to configure sybase docker image to use utf8 character set", Configuration = TestProvName.AllSybase)]
-#endif
 		}, Details = "Native provider from SAP HANA 2 SPS04 045 cannot digest null/DBNull/byte[0] binary parameters")]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)

@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -11,7 +14,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests : TestBase
 	{
 		[Table(Name = "AllTypes2")]
-		class AllTypes2
+		sealed class AllTypes2
 		{
 			[Column(DbType = "int"), PrimaryKey, Identity]
 			public int ID { get; set; }
@@ -277,7 +280,7 @@ namespace Tests.xUpdate
 		#region https://github.com/linq2db/linq2db/issues/1007
 
 		[Table("Person")]
-		class Person1007
+		sealed class Person1007
 		{
 			[Column("PersonID"), Identity]
 			public int ID { get; set; }
@@ -717,7 +720,7 @@ namespace Tests.xUpdate
 		#endregion
 
 		#region https://github.com/linq2db/linq2db/issues/2377
-		class CacheTestTable
+		sealed class CacheTestTable
 		{
 			[PrimaryKey] public int Id;
 			[Column    ] public int Value;

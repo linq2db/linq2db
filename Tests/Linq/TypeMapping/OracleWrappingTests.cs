@@ -1,4 +1,6 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data;
+using System.Data.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Expressions;
@@ -45,13 +47,13 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class OracleParameter
+		internal sealed class OracleParameter
 		{
 			public OracleDbType OracleDbType { get; set; }
 		}
 
 		[Wrapper]
-		internal class OracleDataReader
+		internal sealed class OracleDataReader
 		{
 			public OracleDate GetOracleDate(int idx) => throw new NotImplementedException();
 		}

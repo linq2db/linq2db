@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// This attribute allows to override default types, defined in mapping schema, for current column.
@@ -8,7 +10,7 @@
 	[AttributeUsage(
 		AttributeTargets.Field | AttributeTargets.Property,
 		AllowMultiple = true, Inherited = true)]
-	public class DataTypeAttribute : Attribute
+	public class DataTypeAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
@@ -55,5 +57,10 @@
 		/// Gets or sets the name of the database column type.
 		/// </summary>
 		public string? DbType { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{DataType}.{DbType}.";
+		}
 	}
 }

@@ -1,4 +1,7 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Linq;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
@@ -15,7 +18,7 @@ namespace Tests.UserTests
 			Value2
 		}
 
-		class TestIssue358Class
+		sealed class TestIssue358Class
 		{
 			public TestIssue358Enum? MyEnum;
 			public TestIssue358Enum  MyEnum2;

@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
@@ -172,7 +175,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpper()} {hint} JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpperInvariant()} {hint} JOIN"));
 		}
 
 		[Test]
@@ -254,7 +257,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpper()} MERGE JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpperInvariant()} MERGE JOIN"));
 		}
 
 		[Test]

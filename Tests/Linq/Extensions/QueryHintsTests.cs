@@ -1,6 +1,11 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Linq;
 using NUnit.Framework;
 
 namespace Tests.Extensions
@@ -48,64 +53,6 @@ namespace Tests.Extensions
 				{
 					Assert.That(ctx.LastQuery, Contains.Substring("---"));
 					Assert.That(ctx.LastQuery, Is.Not.Contains("----"));
-				}
-			}
-		}
-
-		[Test]
-		public void Option1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-#pragma warning disable CS0618
-				db.QueryHints.Add(SqlServerTools.Sql.OptionRecompile);
-#pragma warning restore CS0618
-
-				var q = db.Parent.Select(p => p);
-
-				var list = q.ToList();
-
-				var ctx = db as DataConnection;
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Contains.Substring("OPTION"));
-				}
-
-				list = q.ToList();
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Contains.Substring("OPTION"));
-				}
-			}
-		}
-
-		[Test]
-		public void Option2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-#pragma warning disable CS0618
-				db.NextQueryHints.Add(SqlServerTools.Sql.OptionRecompile);
-#pragma warning restore CS0618
-
-				var q = db.Parent.Select(p => p);
-
-				var list = q.ToList();
-
-				var ctx = db as DataConnection;
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Contains.Substring("OPTION"));
-				}
-
-				list = q.ToList();
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Is.Not.Contains("OPTION"));
 				}
 			}
 		}

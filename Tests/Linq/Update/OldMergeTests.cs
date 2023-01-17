@@ -1,4 +1,8 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -233,7 +237,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("AllTypes")]
-		class AllType
+		sealed class AllType
 		{
 			[PrimaryKey, Identity] public int ID;
 			[Column(DataType = DataType.Char,  Length = 1)]  public char    charDataType;

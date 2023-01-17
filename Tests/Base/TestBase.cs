@@ -1,10 +1,14 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
@@ -15,11 +19,9 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
-
-using Tests.Remote.ServerContainer;
-
 using NUnit.Framework;
 using NUnit.Framework.Internal;
+using Tests.Remote.ServerContainer;
 
 namespace Tests
 {
@@ -158,6 +160,8 @@ namespace Tests
 			var configName = "CORE31";
 #elif NET6_0
 			var configName = "NET60";
+#elif NET7_0
+			var configName = "NET70";
 #elif NET472
 			var configName = "NET472";
 #else
@@ -401,6 +405,49 @@ namespace Tests
 			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
 		}
 
+		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
+		{
+			if (!configuration.EndsWith(LinqServiceSuffix))
+			{
+				return GetDataConnection(configuration, dbOptionsBuilder);
+			}
+
+			throw new NotImplementedException();
+
+			/*var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);*/
+		}
+
+		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
+		{
+			if (configuration.EndsWith(LinqServiceSuffix))
+			{
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
+			}
+
+			Debug.WriteLine(configuration, "Provider ");
+
+			var builder = new DataOptions().UseConfigurationString(configuration);
+
+			builder = dbOptionsBuilder(builder);
+
+			var res = new TestDataConnection(builder);
+
+			/*
+			// add extra mapping schema to not share mappers with other sql2017/2019 providers
+			// use same schema to use cache within test provider scope
+			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
+			{
+				if (!suppressSequentialAccess)
+					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+
+				res.AddMappingSchema(_sequentialAccessSchema);
+			}
+			*/
+
+			return res;
+		}
+
 		protected TestDataConnection GetDataConnection(
 			string         configuration,
 			MappingSchema? ms                       = null,
@@ -436,6 +483,20 @@ namespace Tests
 
 			if (retryPolicy != null)
 				res.RetryPolicy = retryPolicy;
+
+			return res;
+		}
+
+		protected TestDataConnection GetDataConnection(DataOptions options)
+		{
+			if (options.ConnectionOptions.ConfigurationString?.EndsWith(".LinqService") == true)
+			{
+				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
+			}
+
+			Debug.WriteLine(options.ConnectionOptions.ConfigurationString, "Provider ");
+
+			var res = new TestDataConnection(options);
 
 			return res;
 		}
@@ -1437,10 +1498,6 @@ namespace Tests
 		protected virtual BulkCopyOptions GetDefaultBulkCopyOptions(string configuration)
 		{
 			var options = new BulkCopyOptions();
-
-			// https://github.com/DarkWanderer/ClickHouse.Client/issues/152
-			if (configuration.IsAnyOf(ProviderName.ClickHouseClient))
-				options.WithoutSession = true;
 
 			return options;
 		}

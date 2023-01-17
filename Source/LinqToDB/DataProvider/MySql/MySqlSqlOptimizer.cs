@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.MySql
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider.MySql
 {
 	using Extensions;
 	using SqlProvider;
@@ -6,7 +9,7 @@
 
 	using SqlBinary = SqlQuery.SqlBinaryExpression;
 
-	class MySqlSqlOptimizer : BasicSqlOptimizer
+	sealed class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
 		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -14,12 +17,12 @@
 
 		public override bool CanCompareSearchConditions => true;
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
 				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement),
-				QueryType.Delete => PrepareDelete((SqlDeleteStatement)statement),
+				QueryType.Delete => PrepareDelete     ((SqlDeleteStatement)statement),
 				_                => statement,
 			};
 		}
@@ -37,7 +40,7 @@
 		private SqlUpdateStatement CorrectMySqlUpdate(SqlUpdateStatement statement)
 		{
 			if (statement.SelectQuery.Select.SkipValue != null)
-				ThrowHelper.ThrowLinqToDBException("MySql does not support Skip in update query");
+				throw new LinqToDBException("MySql does not support Skip in update query");
 
 			statement = CorrectUpdateTable(statement);
 
@@ -100,7 +103,7 @@
 
 						if (ftype == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}

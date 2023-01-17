@@ -1,4 +1,6 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.SqlQuery;
@@ -11,7 +13,7 @@ namespace Tests.Linq
 
 	public static class TestedExtensions
 	{
-		class DatePartBuilder: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -35,7 +37,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderMySql: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderMySql : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -68,7 +70,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderPostgre: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderPostgre : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -101,7 +103,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderSqLite: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderSqLite : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -138,7 +140,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderAccess: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderAccess : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -161,8 +163,7 @@ namespace Tests.Linq
 			}
 		}
 
-
-		class DatePartBuilderSapHana: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderSapHana : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -185,7 +186,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderInformix: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderInformix : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -209,7 +210,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderOracle: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderOracle : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -233,7 +234,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderClickHouse : Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderClickHouse : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -267,7 +268,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderDB2: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderDB2 : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -291,7 +292,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class DatePartBuilderFirebird: Sql.IExtensionCallBuilder
+		sealed class DatePartBuilderFirebird : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

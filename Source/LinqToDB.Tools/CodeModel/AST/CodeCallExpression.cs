@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Method call expression.

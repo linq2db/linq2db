@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System;
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -12,7 +13,7 @@ namespace Tests.UserTests
 	public class Issue2560Tests : TestBase
 	{
 		[Table]
-		class DataClass
+		sealed class DataClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public LocalDateTime Value { get; set; }

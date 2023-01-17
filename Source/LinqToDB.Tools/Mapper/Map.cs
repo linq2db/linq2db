@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.Mapper
 {
@@ -33,7 +35,7 @@ namespace LinqToDB.Tools.Mapper
 		public static Mapper<TFrom,TTo> GetMapper<TFrom,TTo>(
 			Func<MapperBuilder<TFrom,TTo>,MapperBuilder<TFrom,TTo>> setter)
 		{
-			if (setter == null) ThrowHelper.ThrowArgumentNullException(nameof(setter));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 			return new Mapper<TFrom,TTo>(setter(new MapperBuilder<TFrom,TTo>()));
 		}
 

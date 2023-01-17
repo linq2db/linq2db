@@ -1,4 +1,8 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -10,14 +14,14 @@ namespace Tests.UserTests
 	public class SQLiteDateTime : TestBase
 	{
 		[Table]
-		class A
+		sealed class A
 		{
 			[PrimaryKey, Identity] public int       ID       { get; set; }
 			[Column,     NotNull ] public string    Value    { get; set; } = null!;
 			[Column,     NotNull ] public DateTime  DateTime { get; set; }
 		}
 
-		class B
+		sealed class B
 		{
 			public int     ID;
 			public string? Name;

@@ -1,10 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
+using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using Mapping;
+	using Common.Internal;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -12,7 +14,7 @@ namespace LinqToDB
 	{
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class TableFunctionAttribute : Attribute
+		public class TableFunctionAttribute : MappingAttribute
 		{
 			public TableFunctionAttribute()
 			{
@@ -58,7 +60,7 @@ namespace LinqToDB
 				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
-					ThrowHelper.ThrowLinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
+					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
 
 				table.TableName = new SqlObjectName(
 					expressionStr!,
@@ -68,6 +70,11 @@ namespace LinqToDB
 					Package : Package  ?? table.TableName.Package);
 
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter);
+			}
+
+			public override string GetObjectID()
+			{
+				return $".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{Package}.{IdentifierBuilder.GetObjectID(ArgIndices)}.";
 			}
 		}
 	}

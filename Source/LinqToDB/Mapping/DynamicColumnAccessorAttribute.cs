@@ -1,7 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Configure setter and getter methods for dynamic columns.
 	/// </summary>
@@ -75,12 +78,12 @@ namespace LinqToDB.Mapping
 			if (GetterExpression       != null) getters++;
 
 			if (setters != 1 || getters != 1)
-				ThrowHelper.ThrowLinqToDBException($"{nameof(DynamicColumnAccessorAttribute)} should have exactly one setter and getter configured.");
+				throw new LinqToDBException($"{nameof(DynamicColumnAccessorAttribute)} should have exactly one setter and getter configured.");
 		}
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.";
+			return $".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.{IdentifierBuilder.GetObjectID(SetterExpression)}.{IdentifierBuilder.GetObjectID(GetterExpression)}.";
 		}
 	}
 }

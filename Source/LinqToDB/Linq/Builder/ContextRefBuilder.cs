@@ -1,9 +1,10 @@
 ﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class ContextRefBuilder : ISequenceBuilder
+	using LinqToDB.Expressions;
+
+	sealed class ContextRefBuilder : ISequenceBuilder
 	{
 		public int BuildCounter { get; set; }
 

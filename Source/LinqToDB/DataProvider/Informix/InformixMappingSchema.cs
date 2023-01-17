@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
@@ -20,19 +21,19 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-			SetValueToSqlConverter(typeof(bool), (sb,dt,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
+			SetValueToSqlConverter(typeof(bool), (sb,_,_,v) => sb.Append('\'').Append((bool)v ? 't' : 'f').Append('\''));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
 			SetDataType(typeof(byte?),  new SqlDataType(DataType.Int16,    typeof(byte)));
 
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,o,v) => ConvertDateTimeToSql(sb, dt, o, (DateTime)v));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => BuildIntervalLiteral(sb, (TimeSpan)v));
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 #endif
 		}
 
@@ -83,20 +84,27 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DataOptions options, DateTime value)
 		{
 			// datetime literal using TO_DATE function used because it works with all kinds of datetime ranges
 			// without generation of range-specific literals
 			// see Issue1307Tests tests
 			string format;
+
 			if ((value.Ticks % 10000000) / 100 != 0)
-				format = InformixConfiguration.ExplicitFractionalSecondsSeparator ?
+			{
+				var ifxo = options.FindOrDefault(InformixOptions.Default);
+
+				format = ifxo.ExplicitFractionalSecondsSeparator ?
 					DATETIME5_EXPLICIT_FORMAT :
 					DATETIME5_FORMAT;
+			}
 			else
+			{
 				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0
 					? DATE_FORMAT
 					: DATETIME_FORMAT;
+			}
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}

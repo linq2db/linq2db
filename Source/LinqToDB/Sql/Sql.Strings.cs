@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 using PN = LinqToDB.ProviderName;
 
@@ -11,7 +14,7 @@ namespace LinqToDB
 	{
 		#region StringAggregate
 
-		class StringAggSql2017Builder : IExtensionCallBuilder
+		sealed class StringAggSql2017Builder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -39,7 +42,7 @@ namespace LinqToDB
 			}
 		}
 
-		class StringAggSapHanaBuilder : IExtensionCallBuilder
+		sealed class StringAggSapHanaBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -69,8 +72,8 @@ namespace LinqToDB
 			[ExprParameter] this IQueryable<string?> source,
 			[ExprParameter] string separator)
 		{
-			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (separator == null) ThrowHelper.ThrowArgumentNullException(nameof(separator));
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (separator == null) throw new ArgumentNullException(nameof(separator));
 
 			var query = source.Provider.CreateQuery<string>(
 				Expression.Call(
@@ -100,7 +103,7 @@ namespace LinqToDB
 			[ExprParameter] string separator,
 			[ExprParameter] Func<T, string?> selector)
 		{
-			return ThrowHelper.ThrowLinqException<IAggregateFunctionNotOrdered<T, string>>($"'{nameof(StringAggregate)}' is server-side method.");
+			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}
 
 		[Extension(PN.SqlServer2022, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
@@ -122,9 +125,9 @@ namespace LinqToDB
 			[ExprParameter] string separator,
 			[ExprParameter] Expression<Func<T, string?>> selector)
 		{
-			if (source    == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (separator == null) ThrowHelper.ThrowArgumentNullException(nameof(separator));
-			if (selector  == null) ThrowHelper.ThrowArgumentNullException(nameof(selector));
+			if (source    == null) throw new ArgumentNullException(nameof(source));
+			if (separator == null) throw new ArgumentNullException(nameof(separator));
+			if (selector  == null) throw new ArgumentNullException(nameof(selector));
 
 			var query = source.Provider.CreateQuery<string>(
 				Expression.Call(
@@ -153,14 +156,14 @@ namespace LinqToDB
 			[ExprParameter] this IEnumerable<string?> source,
 			[ExprParameter] string separator)
 		{
-			return ThrowHelper.ThrowLinqException<IAggregateFunctionNotOrdered<string?, string>>($"'{nameof(StringAggregate)}' is server-side method.");
+			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}
 
 		#endregion
 
 		#region ConcatStrings
 
-		class CommonConcatWsArgumentsBuilder : IExtensionCallBuilder
+		sealed class CommonConcatWsArgumentsBuilder : IExtensionCallBuilder
 		{
 			SqlExpression IsNullExpression(string isNullFormat, ISqlExpression value)
 			{
@@ -221,7 +224,7 @@ namespace LinqToDB
 			}
 		}
 
-		class OldSqlServerConcatWsBuilder : BaseEmulationConcatWsBuilder
+		sealed class OldSqlServerConcatWsBuilder : BaseEmulationConcatWsBuilder
 		{
 			protected override SqlExpression IsNullExpression(ISqlExpression value)
 			{
@@ -242,7 +245,7 @@ namespace LinqToDB
 			}
 		}
 
-		class SqliteConcatWsBuilder : BaseEmulationConcatWsBuilder
+		sealed class SqliteConcatWsBuilder : BaseEmulationConcatWsBuilder
 		{
 			protected override SqlExpression IsNullExpression(ISqlExpression value)
 			{

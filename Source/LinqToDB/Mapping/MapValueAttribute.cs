@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// <para>
@@ -19,7 +21,7 @@
 	/// </para>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field, AllowMultiple=true)]
-	public class MapValueAttribute : Attribute
+	public class MapValueAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Adds <see cref="MapValueAttribute"/> mapping to enum field. If you don't specify <see cref="Value"/> property,
@@ -93,5 +95,10 @@
 		/// database value.
 		/// </summary>
 		public bool   IsDefault     { get; set; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{(IsDefault ? 1 : 0)}.{Value}.";
+		}
 	}
 }

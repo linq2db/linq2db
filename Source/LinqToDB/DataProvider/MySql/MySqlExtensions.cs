@@ -1,7 +1,9 @@
-﻿namespace LinqToDB.DataProvider.MySql
-{
-	using Expressions;
+﻿using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using System;
 
+namespace LinqToDB.DataProvider.MySql
+{
 	public interface IMySqlExtensions
 	{
 	}
@@ -11,7 +13,7 @@
 		public static IMySqlExtensions? MySql(this Sql.ISqlExtension? ext) => null;
 
 		#region FTS
-		class ModifierBuilder : Sql.IExtensionCallBuilder
+		sealed class ModifierBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -30,8 +32,7 @@
 						builder.AddExpression("modifier", " WITH QUERY EXPANSION");
 						break;
 					default:
-						ThrowHelper.ThrowInvalidOperationException($"Unexpected modifier: {modifier}");
-						break;
+						throw new InvalidOperationException($"Unexpected modifier: {modifier}");
 				}
 			}
 		}
@@ -65,7 +66,9 @@
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool Match(this IMySqlExtensions? ext, [ExprParameter] string search, [ExprParameter] params object?[] columns)
-			=> ThrowHelper.ThrowLinqException<bool>($"'{nameof(Match)}' is server-side method.");
+		{
+			throw new LinqException($"'{nameof(Match)}' is server-side method.");
+		}
 
 		/// <summary>
 		/// Calculates relevance of full-text search for current record using MATCH AGAINST predicate against specified full-text columns using default mode (IN NATURAL LANGUAGE MODE).
@@ -77,7 +80,9 @@
 		/// <returns>Returns full-text search relevance value for current record.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search})", ServerSideOnly = true)]
 		public static double MatchRelevance(this IMySqlExtensions? ext, [ExprParameter] string search, [ExprParameter] params object?[] columns)
-			=> ThrowHelper.ThrowLinqException<double>($"'{nameof(MatchRelevance)}' is server-side method.");
+		{
+			throw new LinqException($"'{nameof(MatchRelevance)}' is server-side method.");
+		}
 
 		/// <summary>
 		/// Applies full-text search condition using MATCH AGAINST predicate against specified full-text columns using specified search modifier.
@@ -90,7 +95,9 @@
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search}{modifier?})", IsPredicate = true, ServerSideOnly = true, BuilderType = typeof(ModifierBuilder))]
 		public static bool Match(this IMySqlExtensions? ext, [SqlQueryDependent] MatchModifier modifier, [ExprParameter] string search, [ExprParameter] params object?[] columns)
-			=> ThrowHelper.ThrowLinqException<bool>($"'{nameof(Match)}' is server-side method.");
+		{
+			throw new LinqException($"'{nameof(Match)}' is server-side method.");
+		}
 
 		/// <summary>
 		/// Calculates relevance of full-text search for current record using MATCH AGAINST predicate against specified full-text columns using specified search modifier.
@@ -103,7 +110,9 @@
 		/// <returns>Returns full-text search relevance value for current record.</returns>
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search}{modifier?})", ServerSideOnly = true, BuilderType = typeof(ModifierBuilder))]
 		public static double MatchRelevance(this IMySqlExtensions? ext, [SqlQueryDependent] MatchModifier modifier, [ExprParameter] string search, [ExprParameter] params object?[] columns)
-			=> ThrowHelper.ThrowLinqException<double>($"'{nameof(MatchRelevance)}' is server-side method.");
+		{
+			throw new LinqException($"'{nameof(MatchRelevance)}' is server-side method.");
+		}
 
 		#endregion
 	}

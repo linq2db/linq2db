@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.DataModel
-{
-	using Schema;
+﻿using LinqToDB.Schema;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Function or procedure parameter descriptor (also for return parameter).
 	/// </summary>

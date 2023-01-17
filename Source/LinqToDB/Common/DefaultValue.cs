@@ -1,10 +1,14 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Common
 {
 	using Expressions;
-	using Internal;
+	using Extensions;
+	using JetBrains.Annotations;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 
 	/// <summary>
@@ -46,7 +50,7 @@ namespace LinqToDB.Common
 		/// <returns>Default value for specific type.</returns>
 		public static object? GetValue(Type type, MappingSchema? mappingSchema = null)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			var ms = mappingSchema ?? MappingSchema.Default;
 

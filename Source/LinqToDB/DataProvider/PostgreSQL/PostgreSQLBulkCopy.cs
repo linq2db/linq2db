@@ -1,11 +1,18 @@
-﻿namespace LinqToDB.DataProvider.PostgreSQL
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
 	using Data;
 	using Mapping;
 	using SqlProvider;
 
-	class PostgreSQLBulkCopy : BasicBulkCopy
+	sealed class PostgreSQLBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
@@ -24,24 +31,28 @@
 			_provider = dataProvider;
 		}
 
-		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			return MultipleRowsCopy1(table, options, source);
 		}
 
-		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
 #if NATIVE_ASYNC
-		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 #endif
 
-		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 				return ProviderSpecificCopyImpl(dataConnection, table, options, source);
@@ -50,7 +61,7 @@
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 				return ProviderSpecificCopyImplAsync(dataConnection, table, options, source, cancellationToken);
@@ -60,7 +71,7 @@
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
 				return ProviderSpecificCopyImplAsync(dataConnection, table, options, source, cancellationToken);
@@ -69,7 +80,8 @@
 		}
 #endif
 
-		private BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(
+			DataConnection dataConnection, ITable<T> table, DataOptions options, IEnumerable<T> source)
 			where T : notnull
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
@@ -77,10 +89,10 @@
 			if (connection == null)
 				return MultipleRowsCopy(table, options, source);
 
-			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName  = GetTableName(sqlBuilder, options, table);
-			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
+			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
 
 			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
 
@@ -88,11 +100,11 @@
 			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 
 			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
-			var batchSize = Math.Max(10, options.MaxBatchSize ?? 10000);
+			var batchSize   = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
 
 			var writer      = _provider.Adapter.BeginBinaryImport(connection, copyCommand);
 
-			return ProviderSpecificCopySyncImpl(dataConnection, options, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
+			return ProviderSpecificCopySyncImpl(dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 		}
 
 		private (NpgsqlProviderAdapter.NpgsqlDbType?[] npgsqlTypes, string?[] dbTypes, DbDataType[] columnTypes) BuildTypes(
@@ -118,7 +130,7 @@
 				npgsqlTypes[i] = npgsqlType;
 
 				if (npgsqlType == null && dbTypes[i] == null)
-					ThrowHelper.ThrowLinqToDBException($"Cannot guess PostgreSQL type for column {columns[i].ColumnName}. Specify type explicitly in column mapping.");
+					throw new LinqToDBException($"Cannot guess PostgreSQL type for column {columns[i].ColumnName}. Specify type explicitly in column mapping.");
 			}
 
 			return (npgsqlTypes, dbTypes, columnTypes);
@@ -138,19 +150,22 @@
 			int                                        batchSize,
 			NpgsqlProviderAdapter.NpgsqlBinaryImporter writer)
 		{
+			var pgOptions    = dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default);
 			var currentCount = 0;
 			var rowsCopied   = new BulkCopyRowsCopied();
+
 			try
 			{
 				foreach (var item in source)
 				{
 					writer.StartRow();
+
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
-							writer.Write(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value);
+							writer.Write(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value);
 						else
-							writer.Write(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!);
+							writer.Write(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!);
 					}
 
 					currentCount++;
@@ -216,7 +231,7 @@
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(
 			DataConnection    dataConnection,
 			ITable<T>         table,
-			BulkCopyOptions   options,
+			DataOptions       options,
 			IEnumerable<T>    source,
 			CancellationToken cancellationToken)
 			where T : notnull
@@ -226,16 +241,16 @@
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
-			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName   = GetTableName(sqlBuilder, options, table);
-			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
+			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
+			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
+			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
 
 			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 
 			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
-			var batchSize    = Math.Max(10, options.MaxBatchSize ?? 10000);
+			var batchSize    = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
 
 			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
 
@@ -246,10 +261,11 @@
 			if (!writer.SupportsAsync)
 			{
 				// seems to be missing one of the required async methods; fallback to sync importer
-				return ProviderSpecificCopySyncImpl(dataConnection, options, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
+				return ProviderSpecificCopySyncImpl(dataConnection, options.BulkCopyOptions, source, connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 			}
 
-			var rowsCopied = new BulkCopyRowsCopied();
+			var pgOptions    = dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default);
+			var rowsCopied   = new BulkCopyRowsCopied();
 			var currentCount = 0;
 
 			try
@@ -260,19 +276,21 @@
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
 								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
 							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					}
 
 					currentCount++;
 					rowsCopied.RowsCopied++;
 
-					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
+					if (options.BulkCopyOptions.NotifyAfter        != 0 &&
+					    options.BulkCopyOptions.RowsCopiedCallback != null &&
+					    rowsCopied.RowsCopied % options.BulkCopyOptions.NotifyAfter == 0)
 					{
-						options.RowsCopiedCallback(rowsCopied);
+						options.BulkCopyOptions.RowsCopiedCallback(rowsCopied);
 
 						if (rowsCopied.Abort)
 						{
@@ -307,8 +325,8 @@
 						}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				}
 
-				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-					options.RowsCopiedCallback(rowsCopied);
+				if (options.BulkCopyOptions.NotifyAfter != 0 && options.BulkCopyOptions.RowsCopiedCallback != null)
+					options.BulkCopyOptions.RowsCopiedCallback(rowsCopied);
 			}
 			finally
 			{
@@ -320,7 +338,8 @@
 		}
 
 #if NATIVE_ASYNC
-		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(DataConnection dataConnection, ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		async Task<BulkCopyRowsCopied> ProviderSpecificCopyImplAsync<T>(
+			DataConnection dataConnection, ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		where T: notnull
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
@@ -328,15 +347,15 @@
 			if (connection == null)
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
-			var tableName   = GetTableName(sqlBuilder, options, table);
-			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToArray();
+			var tableName   = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
+			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
 			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));
 			var copyCommand = $"COPY {tableName} ({fields}) FROM STDIN (FORMAT BINARY)";
 
 			// batch size numbers not based on any strong grounds as I didn't found any recommendations for it
-			var batchSize    = Math.Max(10, options.MaxBatchSize ?? 10000);
+			var batchSize    = Math.Max(10, options.BulkCopyOptions.MaxBatchSize ?? 10000);
 
 			var (npgsqlTypes, dbTypes, columnTypes) = BuildTypes(_provider.Adapter, sqlBuilder, columns);
 
@@ -350,34 +369,37 @@
 				var enumerator = source.GetAsyncEnumerator(cancellationToken);
 				await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
-					return ProviderSpecificCopySyncImpl(dataConnection, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator), connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
+					return ProviderSpecificCopySyncImpl(dataConnection, options.BulkCopyOptions, EnumerableHelper.AsyncToSyncEnumerable(enumerator), connection, tableName, columns, columnTypes, npgsqlTypes, dbTypes, copyCommand, batchSize, writer);
 				}
 			}
 
-			var rowsCopied  = new BulkCopyRowsCopied();
+			var pgOptions    = dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default);
+			var rowsCopied   = new BulkCopyRowsCopied();
 			var currentCount = 0;
 
 			try
 			{
-				await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					await writer.StartRowAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await writer.StartRowAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					for (var i = 0; i < columns.Length; i++)
 					{
 						if (npgsqlTypes[i] != null)
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						else
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
+							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
 
 					currentCount++;
 					rowsCopied.RowsCopied++;
 
-					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
+					if (options.BulkCopyOptions.NotifyAfter        != 0 &&
+					    options.BulkCopyOptions.RowsCopiedCallback != null &&
+					    rowsCopied.RowsCopied % options.BulkCopyOptions.NotifyAfter == 0)
 					{
-						options.RowsCopiedCallback(rowsCopied);
+						options.BulkCopyOptions.RowsCopiedCallback(rowsCopied);
 
 						if (rowsCopied.Abort)
 						{
@@ -412,8 +434,8 @@
 						}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 
-				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-					options.RowsCopiedCallback(rowsCopied);
+				if (options.BulkCopyOptions.NotifyAfter != 0 && options.BulkCopyOptions.RowsCopiedCallback != null)
+					options.BulkCopyOptions.RowsCopiedCallback(rowsCopied);
 			}
 			finally
 			{

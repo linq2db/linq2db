@@ -1,10 +1,14 @@
-﻿namespace LinqToDB.DataProvider.Informix
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Informix
 {
 	using Common;
 	using Data;
 	using SchemaProvider;
 
-	class InformixSchemaProvider : SchemaProviderBase
+	sealed class InformixSchemaProvider : SchemaProviderBase
 	{
 		private readonly InformixDataProvider _provider;
 

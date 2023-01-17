@@ -1,14 +1,24 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace LinqToDB.Common.Internal
 {
 	using Expressions;
 	using Linq;
 
-	class IdentifierBuilder
+	/// <summary>
+	/// Internal infrastructure API.
+	/// Provides functionality for <see cref="IConfigurationID.ConfigurationID"/> generation.
+	/// </summary>
+	public sealed class IdentifierBuilder
 	{
 		public IdentifierBuilder()
 		{
@@ -34,6 +44,15 @@ namespace LinqToDB.Common.Internal
 
 		readonly StringBuilder _stringBuilder = new ();
 
+		public IdentifierBuilder Add(IConfigurationID? data)
+		{
+			_stringBuilder
+				.Append('.')
+				.Append(data?.ConfigurationID)
+				;
+			return this;
+		}
+
 		public IdentifierBuilder Add(string? data)
 		{
 			_stringBuilder
@@ -43,12 +62,66 @@ namespace LinqToDB.Common.Internal
 			return this;
 		}
 
+		public IdentifierBuilder Add(bool data)
+		{
+			_stringBuilder
+				.Append('.')
+				.Append(data ? "1" : "0")
+				;
+			return this;
+		}
+
 		public IdentifierBuilder Add(object? data)
 		{
 			_stringBuilder
 				.Append('.')
-				.Append(data)
+				.Append(GetObjectID(data))
 				;
+			return this;
+		}
+
+		public IdentifierBuilder Add(Delegate? data)
+		{
+			_stringBuilder
+				.Append('.')
+				.Append(data?.Method)
+				;
+			return this;
+		}
+
+		public IdentifierBuilder Add(int? data)
+		{
+			_stringBuilder
+				.Append('.')
+				.Append(data == null ? string.Empty : GetIntID(data.Value))
+				;
+			return this;
+		}
+
+		public IdentifierBuilder Add(string format, object? data)
+		{
+			_stringBuilder
+				.Append('.')
+				.AppendFormat(format, data)
+				;
+			return this;
+		}
+
+		public IdentifierBuilder AddRange(IEnumerable items)
+		{
+			foreach (var item in items)
+				Add(GetObjectID(item));
+			return this;
+		}
+
+		public IdentifierBuilder AddTypes(IEnumerable? items)
+		{
+			if (items == null)
+				Add(string.Empty);
+			else
+				foreach (var item in items)
+					Add(GetObjectID(item?.GetType()));
+
 			return this;
 		}
 
@@ -90,6 +163,14 @@ namespace LinqToDB.Common.Internal
 			return _expressions.GetOrAdd(key, static _ => Interlocked.Increment(ref _expressionCounter));
 		}
 
+		static          int                                  _methodCounter;
+		static readonly ConcurrentDictionary<MethodInfo,int> _methods = new ();
+
+		public static string GetObjectID(MethodInfo? m)
+		{
+			return GetIntID(m == null ? 0 : _methods.GetOrAdd(m, static _ => Interlocked.Increment(ref _methodCounter)));
+		}
+
 		static          int                                 _objectCounter;
 		static readonly ConcurrentDictionary<object,string> _objects = new ();
 
@@ -97,9 +178,16 @@ namespace LinqToDB.Common.Internal
 		{
 			return obj switch
 			{
-				Type t => GetObjectID(t),
-				null   => string.Empty,
-				_      => GetOrAddObject(obj)
+				IConfigurationID c => c.ConfigurationID.ToString(),
+				Type t             => GetObjectID(t),
+				Delegate d         => GetObjectID(d.Method),
+				int  i             => GetIntID(i),
+				null               => string.Empty,
+				string str         => str,
+				IEnumerable col    => $"[{string.Join(",", col.Cast<object?>().Select(GetObjectID))}]",
+				Expression ex      => GetObjectID(ex).ToString(),
+				TimeSpan ts        => ts.Ticks.ToString(),
+				_                  => GetOrAddObject(obj)
 			};
 
 			static string GetOrAddObject(object o)
@@ -130,5 +218,19 @@ namespace LinqToDB.Common.Internal
 		}
 
 		static readonly List<(object? obj,object id)> _buggyObjects = new ();
+		static readonly string?[]                     _intToString  = new string?[300];
+
+		static string GetIntID(int id)
+		{
+			if (id >= 0 && id < _intToString.Length)
+			{
+				var value = _intToString[id];
+				if (value == null)
+					_intToString[id] = value = id.ToString();
+				return value;
+			}
+
+			return id.ToString();
+		}
 	}
 }

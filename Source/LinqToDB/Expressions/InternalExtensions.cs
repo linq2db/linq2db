@@ -1,12 +1,16 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
+	using Common;
 	using Common.Internal;
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
@@ -68,7 +72,7 @@ namespace LinqToDB.Expressions
 		public static LambdaExpression UnwrapLambda(this Expression ex)
 			=> (LambdaExpression)((UnaryExpression)ex).Operand.Unwrap();
 
-		[return: NotNullIfNotNull("ex")]
+		[return: NotNullIfNotNull(nameof(ex))]
 		public static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
@@ -85,7 +89,7 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		[return: NotNullIfNotNull("ex")]
+		[return: NotNullIfNotNull(nameof(ex))]
 		public static Expression? UnwrapConvert(this Expression? ex)
 		{
 			if (ex == null)
@@ -105,7 +109,7 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		[return: NotNullIfNotNull("ex")]
+		[return: NotNullIfNotNull(nameof(ex))]
 		public static Expression? UnwrapConvertToObject(this Expression? ex)
 		{
 			if (ex == null)
@@ -126,7 +130,7 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		[return: NotNullIfNotNull("ex")]
+		[return: NotNullIfNotNull(nameof(ex))]
 		public static Expression? UnwrapWithAs(this Expression? ex)
 		{
 			return ex?.NodeType switch
@@ -215,7 +219,7 @@ namespace LinqToDB.Expressions
 			return accessors;
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public static Expression? GetRootObject(Expression? expr, MappingSchema mapping)
 		{
 			if (expr == null)
@@ -473,7 +477,7 @@ namespace LinqToDB.Expressions
 			var expr    = FindLevel(expression, mapping, level, ref current);
 
 			if (expr == null || current != level)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			return expr;
 		}
@@ -570,7 +574,7 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		/// <param name="expression">Expression to optimize.</param>
 		/// <returns>Optimized expression.</returns>
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? OptimizeExpression(this Expression? expression, MappingSchema mappingSchema)
 		{
 			return TransformInfoVisitor<MappingSchema>.Create(mappingSchema, OptimizeExpressionTransformer).Transform(expression);

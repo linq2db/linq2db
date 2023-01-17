@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.Tools
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace LinqToDB.Tools
 {
 	using Common;
 	using Data;
@@ -28,8 +33,8 @@
 			bool                useIdentity     = false)
 			where T: notnull
 		{
-			if (source  == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (context == null) ThrowHelper.ThrowArgumentNullException(nameof(context));
+			if (source  == null) throw new ArgumentNullException(nameof(source));
+			if (context == null) throw new ArgumentNullException(nameof(context));
 
 			IList<T>? sourceList = null;
 
@@ -44,7 +49,7 @@
 					if (sourceList.Count == 0)
 						return sourceList;
 
-					var sqlBuilder = context.DataProvider.CreateSqlBuilder(context.MappingSchema);
+					var sqlBuilder = context.DataProvider.CreateSqlBuilder(context.MappingSchema, context.Options);
 
 					var sequenceName = useSequenceName && column.SequenceName != null ? column.SequenceName.SequenceName : null;
 
@@ -98,7 +103,7 @@
 					TypeCode.UInt64  => (ulong  )maxValue + 1,
 					TypeCode.Single  => (float  )maxValue + 1,
 					TypeCode.Decimal => (decimal)maxValue + 1,
-					_                => ThrowHelper.ThrowNotImplementedException<object>(),
+					_                => throw new NotImplementedException(),
 				};
 				var value = Converter.ChangeType(maxValue, column.MemberType);
 				column.MemberAccessor.SetValue(item!, value);
@@ -124,7 +129,7 @@
 					TypeCode.UInt64  => (ulong  )last + (ulong)(i + 1) * (ulong)step,
 					TypeCode.Single  => (float  )last + (i + 1) * (float  )step,
 					TypeCode.Decimal => (decimal)last + (i + 1) * (decimal)step,
-					_                => ThrowHelper.ThrowNotImplementedException<object>(),
+					_                => throw new NotImplementedException(),
 				};
 
 				var value = Converter.ChangeType(nextValue, column.MemberType);

@@ -1,4 +1,7 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Runtime.Serialization;
 
 namespace LinqToDB.SqlProvider
 {
@@ -142,21 +145,21 @@ namespace LinqToDB.SqlProvider
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 19)]
-		public bool        OutputDeleteUseSpecialTable       { get; set; }
+		public bool        OutputDeleteUseSpecialTable    { get; set; }
 		/// <summary>
 		/// If <c>true</c>, added record fields in OUTPUT clause of INSERT statement should be referenced using
 		/// table with special name (e.g. INSERTED or NEW). Otherwise fields should be referenced using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 20)]
-		public bool        OutputInsertUseSpecialTable       { get; set; }
+		public bool        OutputInsertUseSpecialTable    { get; set; }
 		/// <summary>
 		/// If <c>true</c>, OUTPUT clause supports both OLD and NEW data in UPDATE statement using tables with special names.
 		/// Otherwise only current record fields (after update) available using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 21)]
-		public bool        OutputUpdateUseSpecialTables      { get; set; }
+		public bool        OutputUpdateUseSpecialTables   { get; set; }
 
 		/// <summary>
 		/// Provider requires that selected subquery column must be used in group by even for constant column.

@@ -1,4 +1,6 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Linq;
+using System.Runtime.InteropServices;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
@@ -22,7 +24,7 @@ namespace Tests.Linq
 		}
 
 		[Table("Transactions")]
-		private class Transaction
+		private sealed class Transaction
 		{
 			[PrimaryKey] public int            TransactionId   { get; set; }
 			[Column]     public DateTimeOffset TransactionDate { get; set; }

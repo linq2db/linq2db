@@ -1,15 +1,18 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
+	using Mapping;
 
-	partial class SybaseSqlBuilder : BasicSqlBuilder
+	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -226,7 +229,7 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		private void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
@@ -252,7 +255,7 @@ namespace LinqToDB.DataProvider.Sybase
 				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
 					return $"##{physicalName}";
 				case var value :
-					return ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'");
+					throw new InvalidOperationException($"Incompatible table options '{value}'");
 			}
 		}
 

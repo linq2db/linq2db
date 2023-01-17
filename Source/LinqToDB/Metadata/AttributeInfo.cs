@@ -1,11 +1,14 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Metadata
 {
 	using Common;
 	using Extensions;
 
-	class AttributeInfo
+	sealed class AttributeInfo
 	{
 		public AttributeInfo(string name, Dictionary<string,object?> values)
 		{
@@ -46,7 +49,7 @@ namespace LinqToDB.Metadata
 				}
 				else
 				{
-					ThrowHelper.ThrowNotImplementedException();
+					throw new NotImplementedException();
 				}
 			}
 

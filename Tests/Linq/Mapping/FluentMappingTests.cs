@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Linq;
@@ -15,7 +18,7 @@ namespace Tests.Mapping
 	public class FluentMappingTests : TestBase
 	{
 		[Table]
-		class MyClass
+		sealed class MyClass
 		{
 			public int ID;
 			public int ID1 { get; set; }
@@ -25,7 +28,7 @@ namespace Tests.Mapping
 		}
 
 		[Table(IsColumnAttributeRequired = true)]
-		class MyClass2
+		sealed class MyClass2
 		{
 			public int ID { get; set; }
 
@@ -33,7 +36,7 @@ namespace Tests.Mapping
 		}
 
 		[Table]
-		class MyClass3
+		sealed class MyClass3
 		{
 			public int ID { get; set; }
 		}
@@ -76,7 +79,7 @@ namespace Tests.Mapping
 		{
 		}
 
-		class MyInheritedClass2 : MyInheritedClass
+		sealed class MyInheritedClass2 : MyInheritedClass
 		{
 		}
 
@@ -86,7 +89,7 @@ namespace Tests.Mapping
 			public int     IntValue    { get; set; }
 		}
 
-		class MyInheritedClass4 : MyInheritedClass3, IInterface2
+		sealed class MyInheritedClass4 : MyInheritedClass3, IInterface2
 		{
 			public int MarkedOnType { get; set; }
 		}
@@ -99,10 +102,10 @@ namespace Tests.Mapping
 
 			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
 			{
-				entityDescriptor.TableName = entityDescriptor.TableName.ToLower();
+				entityDescriptor.TableName = entityDescriptor.TableName.ToLowerInvariant();
 				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
 				{
-					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLower();
+					entityDescriptorColumn.ColumnName = entityDescriptorColumn.ColumnName.ToLowerInvariant();
 				}
 			};
 
@@ -388,7 +391,7 @@ namespace Tests.Mapping
 			}
 		}
 
-		class DescendantEntity : BaseEntity
+		sealed class DescendantEntity : BaseEntity
 		{
 		}
 
@@ -433,7 +436,6 @@ namespace Tests.Mapping
 			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
 
 			Assert.AreEqual("Name2", od2.Name.Name);
-
 		}
 
 		[Test]
@@ -738,6 +740,43 @@ namespace Tests.Mapping
 
 			for (var i = 0; i < records.Length; i++)
 				Assert.AreEqual(records[0].Id + i, records[i].Id);
+		}
+
+		[Table("Person")]
+		sealed class EnumPerson
+		{
+			[Column] public int        PersonID;
+			[Column] public GenderEnum Gender;
+		}
+
+		public enum GenderEnum
+		{
+			Male,
+			Female,
+			Unknown,
+			Other,
+		}
+
+		[Test]
+		public void MapValueTest([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			var mb = ms.GetFluentMappingBuilder();
+
+			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Male))!,    new MapValueAttribute("M"));
+			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Female))!,  new MapValueAttribute("F"));
+			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Unknown))!, new MapValueAttribute("U"));
+			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Other))!,   new MapValueAttribute("O"));
+
+			using var db = GetDataContext(context, ms);
+
+			var records = db.GetTable<EnumPerson>().OrderBy(r => r.PersonID).ToArray();
+
+			Assert.AreEqual(4, records.Length);
+			Assert.AreEqual(GenderEnum.Male,   records[0].Gender);
+			Assert.AreEqual(GenderEnum.Male,   records[1].Gender);
+			Assert.AreEqual(GenderEnum.Female, records[2].Gender);
+			Assert.AreEqual(GenderEnum.Male,   records[3].Gender);
 		}
 	}
 }

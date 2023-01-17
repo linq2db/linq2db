@@ -1,5 +1,8 @@
-﻿using System.Data.Common;
+﻿using System;
+using System.Data.Common;
+using System.IO;
 using System.Reflection;
+
 using LinqToDB.DataProvider.ClickHouse;
 using NUnit.Framework;
 using Tests;
@@ -15,7 +18,7 @@ public class TestsInitialization
 	public void TestAssemblySetup()
 	{
 		// required for tests expectations
-		ClickHouseConfiguration.UseStandardCompatibleAggregates = true;
+		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
 
 		// uncomment it to run tests with SeqentialAccess command behavior
 		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
@@ -53,6 +56,9 @@ public class TestsInitialization
 
 		// uncomment to run FEC for all tests and comment reset line in TestBase.OnAfterTest
 		//LinqToDB.Common.Compilation.SetExpressionCompiler(_ => FastExpressionCompiler.ExpressionCompiler.CompileFast(_, true));
+
+		//custom initialization logic
+		CustomizationSupport.Init();
 	}
 
 	// workaround for

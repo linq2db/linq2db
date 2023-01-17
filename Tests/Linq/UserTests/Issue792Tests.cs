@@ -1,7 +1,10 @@
 ﻿using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using NUnit.Framework;
+using System;
+using System.Linq;
 
 namespace Tests.UserTests
 {
@@ -66,7 +69,7 @@ namespace Tests.UserTests
 					Assert.AreEqual(recordsBefore, recordsAfter);
 
 					// schema provider should find our procedure for real
-					Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpper() == "ADDISSUE792RECORD"));
+					Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"));
 				}
 				finally
 				{
@@ -112,7 +115,7 @@ namespace Tests.UserTests
 				Assert.AreEqual(recordsBefore, recordsAfter);
 
 				// schema provider should find our procedure for real
-				Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpper() == "ADDISSUE792RECORD"));
+				Assert.AreEqual(1, schema.Procedures.Count(p => p.ProcedureName.ToUpperInvariant() == "ADDISSUE792RECORD"));
 			}
 		}
 

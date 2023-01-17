@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Commands;
@@ -22,7 +23,7 @@ namespace Tests
 
 		public string? ExpectedMessage;
 
-		class ExpectedExceptionCommand : DelegatingTestCommand
+		sealed class ExpectedExceptionCommand : DelegatingTestCommand
 		{
 			readonly Type    _expectedType;
 			readonly string? _expectedMessage;

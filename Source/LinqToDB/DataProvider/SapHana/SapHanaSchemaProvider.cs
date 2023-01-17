@@ -1,4 +1,10 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.SapHana
 {
 	using Common;
 	using Data;
@@ -763,6 +769,7 @@
 					PrimaryKeyOrder      = -1,
 					IsIdentity           = column.c.IsIdentity,
 					Description          = column.c.Description,
+					Ordinal              = column.c.Ordinal,
 				});
 			}
 

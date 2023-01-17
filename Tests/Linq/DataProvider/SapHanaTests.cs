@@ -1,7 +1,10 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Data.Linq;
+using System.Linq;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -842,7 +845,7 @@ namespace Tests.DataProvider
 				return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
 			}
 
-			public class Record
+			public sealed class Record
 			{
 				public int O { get; set; }
 			}

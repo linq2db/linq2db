@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base AST rewrite visitor class with noop node visit methods implementation with root-to-leaf visit order.
@@ -22,8 +25,8 @@
 			{
 				case CodeElementType.Namespace           : newNode = Visit((CodeNamespace           )node); break;
 				case CodeElementType.Identifier          : newNode = Visit((CodeIdentifier          )node); break;
-				case CodeElementType.Class               : newNode = Visit((CodeClass               )node); break;
-				case CodeElementType.Property            : newNode = Visit((CodeProperty            )node); break;
+				case CodeElementType.Class               : newNode = ConvertClass((CodeClass        )node); break;
+				case CodeElementType.Property            : newNode = ConvertProperty((CodeProperty  )node); break;
 				case CodeElementType.ReturnStatement     : newNode = Visit((CodeReturn              )node); break;
 				case CodeElementType.CallStatement       : newNode = Visit((CodeCallStatement       )node); break;
 				case CodeElementType.CallExpression      : newNode = Visit((CodeCallExpression      )node); break;
@@ -33,8 +36,8 @@
 				case CodeElementType.XmlComment          : newNode = Visit((CodeXmlComment          )node); break;
 				case CodeElementType.TypeReference       : newNode = Visit((CodeTypeReference       )node); break;
 				case CodeElementType.TypeToken           : newNode = Visit((CodeTypeToken           )node); break;
-				case CodeElementType.Parameter           : newNode = Visit((CodeParameter           )node); break;
-				case CodeElementType.Method              : newNode = Visit((CodeMethod              )node); break;
+				case CodeElementType.Parameter           : newNode = ConvertParameter((CodeParameter)node); break;
+				case CodeElementType.Method              : newNode = ConvertMethod((CodeMethod      )node); break;
 				case CodeElementType.EmptyLine           : newNode = Visit((CodeEmptyLine           )node); break;
 				case CodeElementType.Comment             : newNode = Visit((CodeComment             )node); break;
 				case CodeElementType.Attribute           : newNode = Visit((CodeAttribute           )node); break;
@@ -78,6 +81,60 @@
 
 			return newNode;
 		}
+
+		#region change-tracking clone
+		private ICodeElement ConvertClass(CodeClass node)
+		{
+			var converted = Visit(node);
+
+			if (node.ChangeHandler != null && converted != node && converted is CodeClass newNode)
+			{
+				newNode.ChangeHandler = node.ChangeHandler;
+				newNode.ChangeHandler.Invoke(newNode);
+			}
+
+			return converted;
+		}
+
+		private ICodeElement ConvertProperty(CodeProperty node)
+		{
+			var converted = Visit(node);
+
+			if (node.ChangeHandler != null && converted != node && converted is CodeProperty newNode)
+			{
+				newNode.ChangeHandler = node.ChangeHandler;
+				newNode.ChangeHandler.Invoke(newNode);
+			}
+
+			return converted;
+		}
+
+		private ICodeElement ConvertMethod(CodeMethod node)
+		{
+			var converted = Visit(node);
+
+			if (node.ChangeHandler != null && converted != node && converted is CodeMethod newNode)
+			{
+				newNode.ChangeHandler = node.ChangeHandler;
+				newNode.ChangeHandler.Invoke(newNode);
+			}
+
+			return converted;
+		}
+
+		private ICodeElement ConvertParameter(CodeParameter node)
+		{
+			var converted = Visit(node);
+
+			if (node.ChangeHandler != null && converted != node && converted is CodeParameter newNode)
+			{
+				newNode.ChangeHandler = node.ChangeHandler;
+				newNode.ChangeHandler.Invoke(newNode);
+			}
+
+			return converted;
+		}
+		#endregion
 
 		#region Node Visitors
 		protected virtual ICodeElement Visit(PropertyGroup group)

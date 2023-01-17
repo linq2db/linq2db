@@ -1,17 +1,19 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
+	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
 
-	class ParametersContext
+	sealed class ParametersContext
 	{
 		public ParametersContext(Expression parametersExpression, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
 		{
@@ -89,6 +91,9 @@ namespace LinqToDB.Linq.Builder
 
 			var found = newAccessor;
 
+			// constants/default(T) must be excluded from parameter deduplication:
+			// constant value could change for next query execution which will lead to lost parameter
+			// see CharTrimming test inserts for such example
 			if (_parameters != null && expr.NodeType != ExpressionType.Constant && expr.NodeType != ExpressionType.Default)
 			{
 				foreach (var (paramExpr, column, accessor) in _parameters)
@@ -212,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 				// compiled query case
 				//
 				if (null == arg.Find(ExpressionBuilder.ParametersParam))
-					ThrowHelper.ThrowInvalidOperationException($"Method '{methodCall}' does not have accessor.");
+					throw new InvalidOperationException($"Method '{methodCall}' does not have accessor.");
 				return arg;
 			}
 
@@ -303,7 +308,7 @@ namespace LinqToDB.Linq.Builder
 			return p;
 		}
 
-		public class ValueTypeExpression
+		public sealed class ValueTypeExpression
 		{
 			public Expression ValueExpression      = null!;
 			public Expression DbDataTypeExpression = null!;
@@ -330,40 +335,36 @@ namespace LinqToDB.Linq.Builder
 				(forceConstant, (expression as MemberExpression)?.Member, expressionAccessors, result, setName, MappingSchema),
 				static (context, expr) =>
 				{
-					if (expr.NodeType == ExpressionType.Constant)
+					if (expr.NodeType == ExpressionType.Constant
+						&& (context.forceConstant || !expr.Type.IsConstantable(false)))
 					{
-						var c = (ConstantExpression)expr;
-
-						if (context.forceConstant || !expr.Type.IsConstantable(false))
+						if (context.expressionAccessors.TryGetValue(expr, out var val))
 						{
-							if (context.expressionAccessors.TryGetValue(expr, out var val))
+							expr = Expression.Convert(val, expr.Type);
+
+							if (context.Member != null)
 							{
-								expr = Expression.Convert(val, expr.Type);
+								var mt = ExpressionBuilder.GetMemberDataType(context.MappingSchema, context.Member);
 
-								if (context.Member != null)
+								if (mt.DataType != DataType.Undefined)
 								{
-									var mt = ExpressionBuilder.GetMemberDataType(context.MappingSchema, context.Member);
-
-									if (mt.DataType != DataType.Undefined)
-									{
-										context.result.DataType             = context.result.DataType.WithDataType(mt.DataType);
-										context.result.DbDataTypeExpression = Expression.Constant(mt);
-									}
-
-									if (mt.DbType != null)
-									{
-										context.result.DataType             = context.result.DataType.WithDbType(mt.DbType);
-										context.result.DbDataTypeExpression = Expression.Constant(mt);
-									}
-
-									if (mt.Length != null)
-									{
-										context.result.DataType             = context.result.DataType.WithLength(mt.Length);
-										context.result.DbDataTypeExpression = Expression.Constant(mt);
-									}
-
-									context.setName?.Invoke(context.Member.Name);
+									context.result.DataType             = context.result.DataType.WithDataType(mt.DataType);
+									context.result.DbDataTypeExpression = Expression.Constant(mt);
 								}
+
+								if (mt.DbType != null)
+								{
+									context.result.DataType             = context.result.DataType.WithDbType(mt.DbType);
+									context.result.DbDataTypeExpression = Expression.Constant(mt);
+								}
+
+								if (mt.Length != null)
+								{
+									context.result.DataType             = context.result.DataType.WithLength(mt.Length);
+									context.result.DbDataTypeExpression = Expression.Constant(mt);
+								}
+
+								context.setName?.Invoke(context.Member.Name);
 							}
 						}
 					}
@@ -449,7 +450,7 @@ namespace LinqToDB.Linq.Builder
 						// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
 						// So for now decided to throw exception.
 						if (e == context.dataContextParam && !typeof(DataConnection).IsSameOrParentOf(context.dataContext.GetType()))
-							ThrowHelper.ThrowLinqException("Only DataConnection descendants can be used as source of parameters.");
+							throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
 						return e;
 					}
 					case ExpressionType.MemberAccess:

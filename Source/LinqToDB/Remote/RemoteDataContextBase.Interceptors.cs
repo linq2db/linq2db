@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Remote
+﻿using System;
+
+namespace LinqToDB.Remote
 {
 	using Interceptors;
 
@@ -36,6 +38,14 @@
 		public void AddInterceptor(IInterceptor interceptor)
 		{
 			this.AddInterceptorImpl(interceptor);
+		}
+
+		/// <inheritdoc cref="IDataContext.RemoveInterceptor(IInterceptor)"/>
+		public void RemoveInterceptor(IInterceptor interceptor)
+		{
+			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
+			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
+			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
 		}
 	}
 }

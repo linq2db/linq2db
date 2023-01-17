@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Schema
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.Schema
 {
 	/// <summary>
 	/// Implements schema provider for MS Access, that takes schema from OLE DB and ODBC providers and merge it into single schema
@@ -35,9 +38,10 @@
 		// and patch them with ODBC data for two known issues related to counter columns
 
 		// not really of big importance, but ODBC also returns full file path instead of db name
-		string? ISchemaProvider.DatabaseName  => _oleDbSchema.DatabaseName;
-		string? ISchemaProvider.ServerVersion => _oleDbSchema.ServerVersion;
-		string? ISchemaProvider.DataSource    => _oleDbSchema.DataSource;
+		string?         ISchemaProvider.DatabaseName    => _oleDbSchema.DatabaseName;
+		string?         ISchemaProvider.ServerVersion   => _oleDbSchema.ServerVersion;
+		string?         ISchemaProvider.DataSource      => _oleDbSchema.DataSource;
+		DatabaseOptions ISchemaProvider.DatabaseOptions => _oleDbSchema.DatabaseOptions;
 
 		IEnumerable<AggregateFunction> ISchemaProvider.GetAggregateFunctions() => _oleDbSchema.GetAggregateFunctions();
 		ISet<string>                   ISchemaProvider.GetDefaultSchemas    () => _oleDbSchema.GetDefaultSchemas();

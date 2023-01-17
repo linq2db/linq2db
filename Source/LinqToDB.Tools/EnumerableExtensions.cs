@@ -1,16 +1,19 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Tools
 {
-	using Extensions;
-	using Mapping;
-	using Reflection;
-
 	public static class EnumerableExtensions
 	{
-		class ValueHolder<T>
+		sealed class ValueHolder<T>
 		{
 			[UsedImplicitly] public T Value = default!;
 		}
@@ -28,8 +31,8 @@ namespace LinqToDB.Tools
 			StringBuilder stringBuilder,
 			bool addTableHeader = true)
 		{
-			if (source        == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
-			if (stringBuilder == null) ThrowHelper.ThrowArgumentNullException(nameof(stringBuilder));
+			if (source        == null) throw new ArgumentNullException(nameof(source));
+			if (stringBuilder == null) throw new ArgumentNullException(nameof(stringBuilder));
 
 			if (MappingSchema.Default.IsScalarType(typeof(T)))
 				return source.Select(value => new ValueHolder<T> { Value = value }).ToDiagnosticString(stringBuilder);
@@ -161,7 +164,7 @@ namespace LinqToDB.Tools
 			string? header      = null,
 			bool addTableHeader = true)
 		{
-			if (source == null) ThrowHelper.ThrowArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var sb = new StringBuilder();
 

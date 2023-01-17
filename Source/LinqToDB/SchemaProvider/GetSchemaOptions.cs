@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SchemaProvider
+﻿using System;
+
+namespace LinqToDB.SchemaProvider
 {
 	/// <summary>
 	/// Defines schema load options.
@@ -27,6 +29,10 @@
 		/// Should linq2db use <see cref="string"/> for char(1) type or <see cref="char"/>. Default type: <see cref="char"/> (<c>false</c>).
 		/// </summary>
 		public bool     GenerateChar1AsString;
+		/// <summary>
+		/// Only for SQL Server. Doesn't return history table schema for temporal tables.
+		/// </summary>
+		public bool     IgnoreSystemHistoryTables;
 
 		/// <summary>
 		/// Default Schema name.

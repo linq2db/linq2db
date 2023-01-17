@@ -2,8 +2,8 @@
 
 namespace LinqToDB.Linq
 {
-	using Builder;
 	using Common;
+	using LinqToDB.Linq.Builder;
 
 	internal static class BuilderExtensions
 	{

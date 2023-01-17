@@ -1,10 +1,12 @@
-﻿namespace LinqToDB.CommandLine
-{
-	using DataModel;
-	using Naming;
-	using Scaffold;
-	using Schema;
+﻿using System;
+using System.Collections.Generic;
+using LinqToDB.DataModel;
+using LinqToDB.Naming;
+using LinqToDB.Scaffold;
+using LinqToDB.Schema;
 
+namespace LinqToDB.CommandLine
+{
 	partial class ScaffoldCommand : CliCommand
 	{
 		/// <summary>
@@ -253,6 +255,7 @@
 			// simple flags
 			if (options.Remove(SchemaOptions.PreferProviderTypes       , out value)) settings.PreferProviderSpecificTypes = (bool)value!;
 			if (options.Remove(SchemaOptions.IgnoreDuplicateFKs        , out value)) settings.IgnoreDuplicateForeignKeys  = (bool)value!;
+			if (options.Remove(SchemaOptions.IgnoreSystemHistoryTables , out value)) settings.IgnoreSystemHistoryTables   = (bool)value!;
 			if (options.Remove(SchemaOptions.UseSafeSchemaLoadOnly     , out value)) settings.UseSafeSchemaLoad           = (bool)value!;
 			if (options.Remove(SchemaOptions.LoadDatabaseName          , out value)) settings.LoadDatabaseName            = (bool)value!;
 			if (options.Remove(SchemaOptions.LoadProcedureSchema       , out value)) settings.LoadProceduresSchema        = (bool)value!;

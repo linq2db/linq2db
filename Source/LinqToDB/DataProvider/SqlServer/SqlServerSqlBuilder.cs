@@ -1,4 +1,8 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -7,10 +11,10 @@ namespace LinqToDB.DataProvider.SqlServer
 	using SqlProvider;
 	using SqlQuery;
 
-	abstract class SqlServerSqlBuilder : BasicSqlBuilder
+	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
 	{
-		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected SqlServerSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -34,7 +38,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
 				{
 					AppendIndent()
 						.Append("DECLARE ");
@@ -45,8 +49,8 @@ namespace LinqToDB.DataProvider.SqlServer
 						.Append(' ');
 					BuildCreateTableFieldType(identityField);
 					StringBuilder
-							.AppendLine(")")
-							.AppendLine();
+						.AppendLine(")")
+						.AppendLine();
 				}
 			}
 
@@ -59,7 +63,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var identityField = insertClause.Into!.GetIdentityField();
 
-				if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+				if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
 				{
 					StringBuilder
 						.Append("OUTPUT [INSERTED].");
@@ -85,7 +89,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
-			if (identityField != null && (identityField.Type.DataType == DataType.Guid || SqlServerConfiguration.GenerateScopeIdentity == false))
+			if (identityField != null && (identityField.Type.DataType == DataType.Guid || ProviderOptions.GenerateScopeIdentity == false))
 			{
 				StringBuilder
 					.AppendLine();
@@ -168,7 +172,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
 					return $"##{tableName}";
 				case var value :
-					return ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'");
+					throw new InvalidOperationException($"Incompatible table options '{value}'");
 			}
 		}
 
@@ -183,8 +187,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (name.Server != null && (databaseName == null || name.Schema == null))
 				// all components required for linked-server syntax by SQL server
-				ThrowHelper.ThrowLinqToDBException("You must specify both schema and database names explicitly for linked server query");
-			
+				throw new LinqToDBException("You must specify both schema and database names explicitly for linked server query");
+
 			if (name.Server != null)
 			{
 				(escape ? Convert(sb, name.Server, ConvertType.NameToServer) : sb.Append(name.Server))
@@ -446,7 +450,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						case JoinType.Left       : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
 						case JoinType.Right      : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
 						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
-						default                  : return ThrowHelper.ThrowInvalidOperationException<bool>();
+						default                  : throw new InvalidOperationException();
 					}
 				}
 			}

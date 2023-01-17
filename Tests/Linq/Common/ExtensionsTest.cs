@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System;
+using FluentAssertions;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using NUnit.Framework;
@@ -14,7 +15,7 @@ namespace Tests.Common
 			public virtual int PropVirtual    { get; set; }
 		}
 
-		private class DerivedEntity : BaseEntity
+		private sealed class DerivedEntity : BaseEntity
 		{
 			public new Guid PropVirtual    { get; set; }
 			public new Guid PropNonVirtual { get; set; }

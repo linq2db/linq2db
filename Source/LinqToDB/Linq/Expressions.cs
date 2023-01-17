@@ -1,9 +1,13 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using LinqToDB.Expressions;
+
+using JetBrains.Annotations;
 
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
@@ -17,9 +21,10 @@ using LinqToDB.Expressions;
 namespace LinqToDB.Linq
 {
 	using Common;
-	using Common.Internal;
-	using DataProvider.Firebird;
 	using Extensions;
+	using LinqToDB.Common.Internal;
+	using DataProvider.Firebird;
+	using LinqToDB.Expressions;
 	using Mapping;
 
 	[PublicAPI]
@@ -129,7 +134,7 @@ namespace LinqToDB.Linq
 			if (expr is BinaryExpression binary)
 				return binary;
 
-			return ThrowHelper.ThrowArgumentException<BinaryExpression>(nameof(expr), $"Expression '{expr}' is not BinaryExpression node.");
+			throw new ArgumentException($"Expression '{expr}' is not BinaryExpression node.");
 		}
 
 		/// <summary>
@@ -148,10 +153,10 @@ namespace LinqToDB.Linq
 			Type             rightType,
 			LambdaExpression expression)
 		{
-			if (providerName == null) ThrowHelper.ThrowArgumentNullException(nameof(providerName));
-			if (leftType     == null) ThrowHelper.ThrowArgumentNullException(nameof(leftType));
-			if (rightType    == null) ThrowHelper.ThrowArgumentNullException(nameof(rightType));
-			if (expression   == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+			if (providerName == null) throw new ArgumentNullException(nameof(providerName));
+			if (leftType     == null) throw new ArgumentNullException(nameof(leftType));
+			if (rightType    == null) throw new ArgumentNullException(nameof(rightType));
+			if (expression   == null) throw new ArgumentNullException(nameof(expression));
 
 			if (!_binaries.Value.TryGetValue(providerName, out var dic))
 				_binaries.Value.Add(providerName, dic = new Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>());
@@ -255,10 +260,10 @@ namespace LinqToDB.Linq
 		public static void SetGenericInfoProvider(Type type)
 		{
 			if (!type.IsGenericTypeDefinition)
-				ThrowHelper.ThrowLinqToDBException($"'{type}' must be a generic type.");
+				throw new LinqToDBException($"'{type}' must be a generic type.");
 
 			if (!typeof(IGenericInfoProvider).IsSameOrParentOf(type))
-				ThrowHelper.ThrowLinqToDBException($"'{type}' must inherit from 'IGenericInfoProvider'.");
+				throw new LinqToDBException($"'{type}' must inherit from 'IGenericInfoProvider'.");
 
 			if (!_genericConvertProviders.ContainsKey(type))
 				lock (_genericConvertProviders)
@@ -334,7 +339,9 @@ namespace LinqToDB.Linq
 						{
 							expr = new LazyExpressionInfo();
 
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 							((LazyExpressionInfo)expr).SetExpression(L<string,string,bool,int>((s1,s2,b) => b ? string.CompareOrdinal(s1.ToUpper(), s2.ToUpper()) : string.CompareOrdinal(s1, s2)));
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 
 							Members[""].Add(memberKey, expr);
 						}
@@ -490,20 +497,25 @@ namespace LinqToDB.Linq
 			void SetInfo();
 		}
 
-		class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
+		sealed class GetValueOrDefaultExpressionInfo<T1> : IExpressionInfo, ISetInfo
 			where T1 : struct
 		{
 #pragma warning disable CS0649 // Field is never assigned to...
 			static T1? _member;
+			static T1  _default;
 #pragma warning restore CS0649 // Field is never assigned to...
 
 			public LambdaExpression GetExpression(MappingSchema mappingSchema)
 			{
-				var p = Expression.Parameter(typeof(T1?), "p");
+				var p            = Expression.Parameter(typeof(T1?), "p");
+				var defaultValue = mappingSchema.GetDefaultValue(typeof(T1));
 
-				return Expression.Lambda<Func<T1?,T1>>(
-					Expression.Coalesce(p, Expression.Constant(mappingSchema.GetDefaultValue(typeof(T1)))),
-					p);
+				if (!_default.Equals(defaultValue))
+					return Expression.Lambda<Func<T1?, T1>>(Expression.Coalesce(p, Expression.Constant(defaultValue)), p);
+				else
+					// use non-constant value (field) to allow parameter optimization
+					// but only when default value not overriden by user in mapping schema
+					return (Expression<Func<T1?, T1>>)((T1? p) => p ?? _default);
 			}
 
 			public void SetInfo()
@@ -512,7 +524,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class GetValueOrDefaultInfoProvider<T> : IGenericInfoProvider
+		sealed class GetValueOrDefaultInfoProvider<T> : IGenericInfoProvider
 		{
 			public void SetInfo(MappingSchema mappingSchema)
 			{
@@ -608,8 +620,10 @@ namespace LinqToDB.Linq
 #endif
 			{ M(() => "".TrimEnd    ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimRight(obj, ch))) },
 			{ M(() => "".TrimStart  ((char[])null!)), N(() => L<string,char[],string?>     ((string obj,char[] ch)                    => TrimLeft (obj, ch))) },
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			{ M(() => "".ToLower    ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Lower(obj))) },
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Upper(obj))) },
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((string obj,string p0)                    => ConvertToCaseCompareTo(obj, p0)!.Value)) },
 			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((string obj,object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
 
@@ -628,10 +642,12 @@ namespace LinqToDB.Linq
 			{ M(() => string.CompareOrdinal("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((string s1,int i1,string s2,int i2,int l)                     => s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","")),                                          N(() => L<string,string,int>                             ((string s1,string s2)                                         => s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0)),                                    N(() => L<string,int,string,int,int,int>                 ((string s1,int i1,string s2,int i2,int l)                     => s1.Substring(i1,l).CompareTo(s2.Substring(i2,l)))) },
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			{ M(() => string.Compare       ("","",true)),                                     N(() => L<string,string,bool,int>                        ((string s1,string s2,bool b)                                  => b ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
 			{ M(() => string.Compare       ("",0,"",0,0,true)),                               N(() => L<string,int,string,int,int,bool,int>            ((string s1,int i1,string s2,int i2,int l,bool b)              => b ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("",0,"",0,0,StringComparison.OrdinalIgnoreCase)), N(() => L<string,int,string,int,int,StringComparison,int>((string s1,int i1,string s2,int i2,int l,StringComparison sc) => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.Substring(i1,l).ToLower().CompareTo(s2.Substring(i2, l).ToLower()) : s1.Substring(i1, l).CompareTo(s2.Substring(i2, l)))) },
 			{ M(() => string.Compare       ("","",StringComparison.OrdinalIgnoreCase)),       N(() => L<string,string,StringComparison,int>            ((string s1,string s2,StringComparison sc)                     => sc == StringComparison.CurrentCultureIgnoreCase || sc==StringComparison.OrdinalIgnoreCase ? s1.ToLower().CompareTo(s2.ToLower()) : s1.CompareTo(s2))) },
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 
 			{ M(() => AltStuff("",0,0,"")), N(() => L<string,int?,int?,string,string>((string p0,int? p1,int ?p2,string p3) => Sql.Left(p0, p1 - 1) + p3 + Sql.Right(p0, p0.Length - (p1 + p2 - 1)))) },
 
@@ -1595,12 +1611,12 @@ namespace LinqToDB.Linq
 						pCount = field.IsStatic ? 0 : 1;
 					}
 					else
-						pCount = ThrowHelper.ThrowInvalidOperationException<int>($"Unknown member {member.Key}");
+						throw new InvalidOperationException($"Unknown member {member.Key}");
 
 					var lambda = member.Value.GetExpression(MappingSchema.Default);
 
 					if (pCount != lambda.Parameters.Count)
-						ThrowHelper.ThrowInvalidOperationException(
+						throw new InvalidOperationException(
 							$"Invalid number of parameters for '{member.Key}' and '{lambda}'.");
 				}
 			}
@@ -1692,7 +1708,7 @@ namespace LinqToDB.Linq
 			return str?.TrimStart(trimChars);
 		}
 
-		class LTrimCharactersBuilder : Sql.IExtensionCallBuilder
+		sealed class LTrimCharactersBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -1716,7 +1732,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		class RTrimCharactersBuilder : Sql.IExtensionCallBuilder
+		sealed class RTrimCharactersBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -1814,7 +1830,7 @@ namespace LinqToDB.Linq
 
 		// SqlServer
 		//
-		class DateAddBuilder : Sql.IExtensionCallBuilder
+		sealed class DateAddBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
@@ -1887,24 +1903,24 @@ namespace LinqToDB.Linq
 		// ClickHouse
 		//
 		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => ThrowHelper.ThrowLinqException<DateTime?>();
+		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => throw new InvalidOperationException();
 		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTime?       dt) => ThrowHelper.ThrowLinqException<DateTime?>();
+		private static DateTime? ClickHouseGetDate(DateTime?       dt) => throw new InvalidOperationException();
 
 		// :-/
 		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => ThrowHelper.ThrowLinqException<TimeSpan?>();
+		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => throw new InvalidOperationException();
 		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => ThrowHelper.ThrowLinqException<TimeSpan?>();
+		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => throw new InvalidOperationException();
 
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static decimal? ClickHouseRoundToEven(decimal? value) => ThrowHelper.ThrowLinqException<decimal?>();
+		private static decimal? ClickHouseRoundToEven(decimal? value) => throw new InvalidOperationException();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static double? ClickHouseRoundToEven(double? value) => ThrowHelper.ThrowLinqException<double?>();
+		private static double? ClickHouseRoundToEven(double? value) => throw new InvalidOperationException();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => ThrowHelper.ThrowLinqException<decimal?>();
+		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => throw new InvalidOperationException();
 		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static double? ClickHouseRoundToEven(double? value, int? precision) => ThrowHelper.ThrowLinqException<double?>();
+		private static double? ClickHouseRoundToEven(double? value, int? precision) => throw new InvalidOperationException();
 
 		#endregion
 

@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
@@ -53,7 +55,7 @@ namespace Tests
 		}
 	}
 
-	internal class TestNoopDataReader : DbDataReader
+	internal sealed class TestNoopDataReader : DbDataReader
 	{
 		public override object this[int ordinal] => throw new NotImplementedException();
 		public override object this[string name] => throw new NotImplementedException();
@@ -90,7 +92,7 @@ namespace Tests
 		public override bool        Read           ()                                                                           => throw new NotImplementedException();
 	}
 
-	internal class TestNoopDbCommand : DbCommand
+	internal sealed class TestNoopDbCommand : DbCommand
 	{
 		private readonly DbParameterCollection _parameters = new TestNoopDbParameterCollection();
 
@@ -139,7 +141,7 @@ namespace Tests
 		protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => new TestNoopDbDataReader();
 	}
 
-	internal class TestNoopDbParameter : DbParameter
+	internal sealed class TestNoopDbParameter : DbParameter
 	{
 		public override DbType DbType { get; set; }
 
@@ -188,7 +190,7 @@ namespace Tests
 		public override void ResetDbType() => throw new NotImplementedException();
 	}
 
-	internal class TestNoopDbDataReader : DbDataReader
+	internal sealed class TestNoopDbDataReader : DbDataReader
 	{
 		public override int  Depth           => throw new NotImplementedException();
 		public override int  FieldCount      => throw new NotImplementedException();
@@ -228,7 +230,7 @@ namespace Tests
 		public override bool        Read           (                                                                          ) => false;
 	}
 
-	internal class TestNoopDbParameterCollection : DbParameterCollection
+	internal sealed class TestNoopDbParameterCollection : DbParameterCollection
 	{
 		private List<TestNoopDbParameter> _parameters = new ();
 
@@ -294,16 +296,16 @@ namespace Tests
 			// Just for triggering of static constructor
 		}
 
-		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema) => new TestNoopSqlBuilder(this, MappingSchema);
-		public override ISchemaProvider GetSchemaProvider(                           ) => throw new NotImplementedException();
-		public override ISqlOptimizer   GetSqlOptimizer  (                           ) => TestNoopSqlOptimizer.Instance;
+		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema, DataOptions dataOptions) => new TestNoopSqlBuilder(this, MappingSchema, dataOptions);
+		public override ISchemaProvider GetSchemaProvider()   => throw new NotImplementedException();
+		public override ISqlOptimizer   GetSqlOptimizer  (DataOptions dataOptions) => TestNoopSqlOptimizer.Instance;
 		public override TableOptions    SupportedTableOptions => TableOptions.None;
 	}
 
-	internal class TestNoopSqlBuilder : BasicSqlBuilder
+	internal sealed class TestNoopSqlBuilder : BasicSqlBuilder
 	{
-		public TestNoopSqlBuilder(IDataProvider provider, MappingSchema mappingSchema)
-			: base(provider, mappingSchema, TestNoopSqlOptimizer.Instance, new SqlProviderFlags())
+		public TestNoopSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions)
+			: base(provider, mappingSchema, dataOptions, TestNoopSqlOptimizer.Instance, new SqlProviderFlags())
 		{
 		}
 
@@ -315,7 +317,7 @@ namespace Tests
 		}
 	}
 
-	internal class TestNoopSqlOptimizer : BasicSqlOptimizer
+	internal sealed class TestNoopSqlOptimizer : BasicSqlOptimizer
 	{
 		public static ISqlOptimizer Instance = new TestNoopSqlOptimizer();
 

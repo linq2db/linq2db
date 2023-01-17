@@ -1,15 +1,17 @@
-﻿using System.Linq.Expressions;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Extensions;
-	using Mapping;
 	using System;
+	using Extensions;
+	using LinqToDB.Expressions;
+	using Mapping;
+	using Common;
 
-	class LoadWithBuilder : MethodCallBuilder
+	sealed class LoadWithBuilder : MethodCallBuilder
 	{
 		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
 
@@ -27,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0];
 			if (propType != itemType)
-				ThrowHelper.ThrowLinqException("Invalid filter function usage.");
+				throw new LinqException("Invalid filter function usage.");
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -56,12 +58,12 @@ namespace LinqToDB.Linq.Builder
 				.ToArray();
 
 			if (associations.Length == 0)
-				ThrowHelper.ThrowLinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
+				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
 
 			if (methodCall.Method.Name == "ThenLoad")
 			{
 				if (!(table.LoadWith?.Count > 0))
-					ThrowHelper.ThrowLinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{path}'.");
+					throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{path}'.");
 
 				var lastPath = table.LoadWith[table.LoadWith.Count - 1];
 				associations = Array<LoadWithInfo>.Append(lastPath, associations);
@@ -142,7 +144,7 @@ namespace LinqToDB.Linq.Builder
 
 			var expr = path.GetLevelExpression(ctx.Builder.MappingSchema, 0);
 
-			return ThrowHelper.ThrowLinqToDBException<TableBuilder.TableContext>(
+			throw new LinqToDBException(
 				$"Unable to find table information for LoadWith. Consider moving LoadWith closer to GetTable<{expr.Type.Name}>() method.");
 		}
 
@@ -191,104 +193,101 @@ namespace LinqToDB.Linq.Builder
 				switch (expression.NodeType)
 				{
 					case ExpressionType.Parameter :
-					{
 						if (lastMember == null)
 							goto default;
 						yield break;
-					}
 
 					case ExpressionType.Call      :
-					{
-						var cexpr = (MethodCallExpression)expression;
-
-						if (cexpr.Method.IsSqlPropertyMethodEx())
 						{
-							foreach (var assoc in GetAssociations(builder, builder.ConvertExpression(expression), stopExpression))
-								yield return assoc;
+							var cexpr = (MethodCallExpression)expression;
 
-							yield break;
-						}
+							if (cexpr.Method.IsSqlPropertyMethodEx())
+							{
+								foreach (var assoc in GetAssociations(builder, builder.ConvertExpression(expression), stopExpression))
+									yield return assoc;
 
-						if (lastMember == null)
-							goto default;
+								yield break;
+							}
 
-						var expr  = cexpr.Object;
-
-						if (expr == null)
-						{
-							if (cexpr.Arguments.Count == 0)
+							if (lastMember == null)
 								goto default;
 
-							expr = cexpr.Arguments[0];
-						}
+							var expr  = cexpr.Object;
 
-						if (expr.NodeType != ExpressionType.MemberAccess)
-							goto default;
+							if (expr == null)
+							{
+								if (cexpr.Arguments.Count == 0)
+									goto default;
 
-						var member = ((MemberExpression)expr).Member;
-						var mtype  = member.GetMemberType();
+								expr = cexpr.Arguments[0];
+							}
 
-						if (lastMember.ReflectedType != mtype.GetItemType())
-							goto default;
+							if (expr.NodeType != ExpressionType.MemberAccess)
+								goto default;
 
-						expression = expr;
+							var member = ((MemberExpression)expr).Member;
+							var mtype  = member.GetMemberType();
 
-						break;
-					}
+							if (lastMember.ReflectedType != mtype.GetItemType())
+								goto default;
 
-					case ExpressionType.MemberAccess :
-					{
-						var mexpr  = (MemberExpression)expression;
-						var member = lastMember = mexpr.Member;
-						var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType!, member);
-						if (attr == null)
-						{
-							member = mexpr.Expression!.Type.GetMemberEx(member)!;
-							attr = builder.MappingSchema.GetAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
-						}
-						if (attr == null)
-							ThrowHelper.ThrowLinqToDBException($"Member '{expression}' is not an association.");
+							expression = expr;
 
-						yield return member;
-
-						expression = mexpr.Expression!;
-
-						break;
-					}
-
-					case ExpressionType.ArrayIndex   :
-					{
-						expression = ((BinaryExpression)expression).Left;
-						break;
-					}
-
-					case ExpressionType.Extension    :
-					{
-						if (expression is GetItemExpression getItemExpression)
-						{
-							expression = getItemExpression.Expression;
 							break;
 						}
 
-						goto default;
-					}
+					case ExpressionType.MemberAccess :
+						{
+							var mexpr  = (MemberExpression)expression;
+							var member = lastMember = mexpr.Member;
+							var attr   = builder.MappingSchema.GetAttribute<AssociationAttribute>(member.ReflectedType!, member);
+							if (attr == null)
+							{
+								member = mexpr.Expression!.Type.GetMemberEx(member)!;
+								attr = builder.MappingSchema.GetAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
+							}
+							if (attr == null)
+								throw new LinqToDBException($"Member '{expression}' is not an association.");
+
+							yield return member;
+
+							expression = mexpr.Expression!;
+
+							break;
+						}
+
+					case ExpressionType.ArrayIndex   :
+						{
+							expression = ((BinaryExpression)expression).Left;
+							break;
+						}
+
+					case ExpressionType.Extension    :
+						{
+							if (expression is GetItemExpression getItemExpression)
+							{
+								expression = getItemExpression.Expression;
+								break;
+							}
+
+							goto default;
+						}
 
 					case ExpressionType.Convert      :
-					{
-						expression = ((UnaryExpression)expression).Operand;
-						break;
-					}
+						{
+							expression = ((UnaryExpression)expression).Operand;
+							break;
+						}
 
-					default                          :
-					{
-						ThrowHelper.ThrowLinqToDBException($"Expression '{expression}' is not an association.");
-						break;
-					}
+					default :
+						{
+							throw new LinqToDBException($"Expression '{expression}' is not an association.");
+						}
 				}
 			}
 		}
 
-		internal class LoadWithContext : PassThroughContext
+		internal sealed class LoadWithContext : PassThroughContext
 		{
 			private readonly TableBuilder.TableContext _tableContext;
 

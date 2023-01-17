@@ -1,12 +1,13 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Reflection;
 
-	class PassThroughBuilder : MethodCallBuilder
+	sealed class PassThroughBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] _supportedMethods = { Methods.Enumerable.AsQueryable, Methods.LinqToDB.AsQueryable, Methods.LinqToDB.SqlExt.Alias };
 

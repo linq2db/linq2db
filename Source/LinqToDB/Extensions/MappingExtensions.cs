@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace LinqToDB.Extensions
 {
@@ -43,13 +44,13 @@ namespace LinqToDB.Extensions
 			return new SqlValue(systemType, originalValue);
 		}
 
-		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, object? value)
+		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, DataOptions options, object? value)
 		{
 			var sqlConverter = mappingSchema.ValueToSqlConverter;
 
 			if (value is null)
 			{
-				return sqlConverter.TryConvert(stringBuilder, dataType, value);
+				return sqlConverter.TryConvert(stringBuilder, mappingSchema, dataType, options, value);
 			}
 
 			var systemType     = value.GetType();
@@ -72,14 +73,14 @@ namespace LinqToDB.Extensions
 				}
 			}
 
-			return sqlConverter.TryConvert(stringBuilder, dataType, value);
+			return sqlConverter.TryConvert(stringBuilder, mappingSchema, dataType, options, value);
 		}
 
 		public static void ConvertToSqlValue(this MappingSchema mappingSchema, StringBuilder stringBuilder,
-			SqlDataType? dataType, object? value)
+			SqlDataType?                                        dataType,      DataOptions   options, object? value)
 		{
-			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, value))
-				ThrowHelper.ThrowLinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
+			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, options, value))
+				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 		}
 
 		public static Sql.ExpressionAttribute? GetExpressionAttribute(this MemberInfo member, MappingSchema mappingSchema)

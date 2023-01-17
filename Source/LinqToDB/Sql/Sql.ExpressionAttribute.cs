@@ -1,10 +1,15 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
 	using Expressions;
+	using Common.Internal;
 	using Mapping;
 	using SqlQuery;
 
@@ -17,7 +22,7 @@ namespace LinqToDB
 		[PublicAPI]
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class ExpressionAttribute : Attribute
+		public class ExpressionAttribute : MappingAttribute
 		{
 			/// <summary>
 			/// Creates an Expression that will be used in SQL,
@@ -212,8 +217,8 @@ namespace LinqToDB
 
 			public static string ResolveExpressionValues<TContext>(TContext context, string expression, Func<TContext, string, string?, string?> valueProvider)
 			{
-				if (expression    == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
-				if (valueProvider == null) ThrowHelper.ThrowArgumentNullException(nameof(valueProvider));
+				if (expression    == null) throw new ArgumentNullException(nameof(expression));
+				if (valueProvider == null) throw new ArgumentNullException(nameof(valueProvider));
 
 				int  prevMatch         = -1;
 				int  prevNotEmptyMatch = -1;
@@ -237,7 +242,7 @@ namespace LinqToDB
 					var calculated = valueProvider(context, paramName, delimiter);
 
 					if (string.IsNullOrEmpty(calculated) && !canBeOptional)
-						ThrowHelper.ThrowInvalidOperationException($"Non optional parameter '{paramName}' not found");
+						throw new InvalidOperationException($"Non optional parameter '{paramName}' not found");
 
 					var res = calculated;
 					if (spaceNeeded)
@@ -400,13 +405,13 @@ namespace LinqToDB
 						if (ctx.StaticValue.argIndices != null)
 						{
 							if (idx < 0 || idx >= ctx.StaticValue.argIndices.Length)
-								ThrowHelper.ThrowLinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idx}' do not fit in range.");
+								throw new LinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong ArgIndices mapping. Index '{idx}' do not fit in range.");
 
 							idx = ctx.StaticValue.argIndices[idx];
 						}
 
 						if (idx < 0)
-							ThrowHelper.ThrowLinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idx}' do not fit in range.");
+							throw new LinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{idx}' do not fit in range.");
 
 						while (idx >= ctx.StaticValue.parms.Count)
 						{
@@ -421,7 +426,7 @@ namespace LinqToDB
 								var typeIndex = argIdx - ctx.StaticValue.knownExpressions.Count;
 								if (ctx.StaticValue.genericTypes == null || typeIndex >= ctx.StaticValue.genericTypes.Count || typeIndex < 0)
 								{
-									ThrowHelper.ThrowLinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range.");
+									throw new LinqToDBException($"Expression '{ctx.StaticValue.expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range.");
 								}
 
 								paramExpr = ctx.StaticValue.genericTypes[typeIndex];
@@ -461,7 +466,7 @@ namespace LinqToDB
 									var typeIndex = argIdx - knownExpressions.Count;
 									if (genericTypes == null || typeIndex >= genericTypes.Count || typeIndex < 0)
 									{
-										ThrowHelper.ThrowLinqToDBException($"Function '{expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range.");
+										throw new LinqToDBException($"Function '{expressionStr}' has wrong param index mapping. Index '{argIdx}' do not fit in parameters range.");
 									}
 
 									paramExpr = genericTypes[typeIndex];
@@ -499,7 +504,7 @@ namespace LinqToDB
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
-					ThrowHelper.ThrowLinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
+					throw new LinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
 
 				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter);
 
@@ -515,6 +520,11 @@ namespace LinqToDB
 			}
 
 			public virtual bool GetIsPredicate(Expression expression) => IsPredicate;
+
+			public override string GetObjectID()
+			{
+				return $".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(CanBeNull ? 1 : 0)}.";
+			}
 		}
 	}
 }

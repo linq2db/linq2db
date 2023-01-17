@@ -1,4 +1,7 @@
-﻿#if NETFRAMEWORK
+﻿using System;
+using System.Linq;
+
+#if NETFRAMEWORK
 using System.ServiceModel;
 #else
 using Grpc.Core;
@@ -17,7 +20,7 @@ namespace Tests.UserTests
 	public class Issue681Tests : TestBase
 	{
 		[Table("LinqDataTypes")]
-		class TestTable
+		sealed class TestTable
 		{
 			[Column("ID")]
 			public int ID { get; set; }

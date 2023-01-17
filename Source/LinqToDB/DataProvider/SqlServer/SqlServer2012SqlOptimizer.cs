@@ -1,7 +1,9 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using System;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
 	{
@@ -13,7 +15,7 @@
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			// SQL Server 2012 supports OFFSET/FETCH providing there is an ORDER BY
 			// UPDATE queries do not directly support ORDER BY, TOP, OFFSET, or FETCH, but they are supported in subqueries
@@ -88,6 +90,5 @@
 				parameters[start + 1],
 				ConvertCase(canBeNull, systemType, parameters, start + 2)) { CanBeNull = canBeNull };
 		}
-
 	}
 }

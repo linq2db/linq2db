@@ -1,4 +1,7 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -568,14 +571,14 @@ namespace Tests.Linq
 			}
 		}
 
-		class TableToInsert
+		sealed class TableToInsert
 		{
 			[PrimaryKey]
 			public int     Id    { get; set; }
 			[Column]
 			public string? Value { get; set; }
 
-			protected bool Equals(TableToInsert other)
+			private bool Equals(TableToInsert other)
 			{
 				return Id == other.Id && Value == other.Value;
 			}
@@ -874,7 +877,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class PersonListProjection
+		sealed class PersonListProjection
 		{
 			public int        Id      { get; set; }
 			public string?    Name    { get; set; }

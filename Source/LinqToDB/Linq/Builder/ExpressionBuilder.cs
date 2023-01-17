@@ -1,18 +1,24 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Expressions;
 	using Reflection;
+	using SqlQuery;
 
-	partial class ExpressionBuilder
+	sealed partial class ExpressionBuilder
 	{
 		#region Sequence
 
@@ -110,6 +116,8 @@ namespace LinqToDB.Linq.Builder
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
 
+		public readonly DataOptions DataOptions;
+
 		public ExpressionBuilder(
 			Query                             query,
 			ExpressionTreeOptimizationContext optimizationContext,
@@ -122,9 +130,10 @@ namespace LinqToDB.Linq.Builder
 
 			CollectQueryDepended(expression);
 
-			CompiledParameters   = compiledParameters;
-			DataContext          = dataContext;
-			OriginalExpression   = expression;
+			CompiledParameters = compiledParameters;
+			DataContext        = dataContext;
+			DataOptions        = dataContext.Options;
+			OriginalExpression = expression;
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
@@ -168,6 +177,8 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		#region Builder SQL
+
+		internal bool DisableDefaultIfEmpty;
 
 		public Query<T> Build<T>()
 		{
@@ -214,7 +225,7 @@ namespace LinqToDB.Linq.Builder
 				n = builder.BuildCounter;
 			}
 
-			return ThrowHelper.ThrowLinqException<IBuildContext>($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
+			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 		}
 
 		public ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)
@@ -226,7 +237,7 @@ namespace LinqToDB.Linq.Builder
 					return builder;
 
 			if (throwIfNotFound)
-				ThrowHelper.ThrowLinqException($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 			return null;
 		}
 
@@ -239,7 +250,7 @@ namespace LinqToDB.Linq.Builder
 					return builder.Convert(this, buildInfo, param);
 
 			if (throwExceptionIfCantConvert)
-				ThrowHelper.ThrowLinqException($"Sequence '{buildInfo.Expression}' cannot be converted to SQL.");
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
 
 			return null;
 		}
@@ -312,7 +323,7 @@ namespace LinqToDB.Linq.Builder
 							Expression.Lambda(p.Expr, (ParameterExpression)p.Path));
 					}
 
-					ThrowHelper.ThrowInvalidOperationException();
+					throw new InvalidOperationException();
 				}
 
 				return sequence.Expression;
@@ -348,25 +359,17 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertParameters(Expression expression)
 		{
+			if (CompiledParameters == null) return expression;
+
 			return expression.Transform(CompiledParameters, static(compiledParameters, expr) =>
 			{
-				switch (expr.NodeType)
+				if (expr.NodeType == ExpressionType.Parameter)
 				{
-					case ExpressionType.Parameter:
-						if (compiledParameters != null)
-						{
-							var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
-
-							if (idx > 0)
-								return
-									Expression.Convert(
-										Expression.ArrayIndex(
-											ParametersParam,
-											ExpressionInstances.Int32(idx)),
-										expr.Type);
-						}
-
-						break;
+					var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
+					if (idx >= 0)
+						return Expression.Convert(
+							Expression.ArrayIndex(ParametersParam, ExpressionInstances.Int32(idx)),
+							expr.Type);
 				}
 
 				return expr;
@@ -511,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 
 									mc = mc.Update(mc.Object, args);
 									return new TransformInfo(mc, true);
-								};
+								}
 							}
 						}
 
@@ -726,7 +729,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertGroupBy
 
-		public class GroupSubQuery<TKey,TElement>
+		public sealed class GroupSubQuery<TKey,TElement>
 		{
 			public TKey     Key     = default!;
 			public TElement Element = default!;
@@ -746,7 +749,7 @@ namespace LinqToDB.Linq.Builder
 			Expression WrapInSubQueryResultE();
 		}
 
-		class GroupByHelper<TSource,TKey,TElement,TResult> : IGroupByHelper
+		sealed class GroupByHelper<TSource,TKey,TElement,TResult> : IGroupByHelper
 		{
 			bool              _wrapInSubQuery;
 			Expression        _sourceExpression = null!;
@@ -977,7 +980,7 @@ namespace LinqToDB.Linq.Builder
 					case "TKey"    : typeArgs[1] = argTypes[i]; break;
 					case "TElement": typeArgs[2] = argTypes[i]; break;
 					case "TResult" : typeArgs[3] = argTypes[i]; break;
-					default: return ThrowHelper.ThrowInvalidOperationException<Expression>($"Unexpected GroupBy type parameter: {args[i].Name}");
+					default: throw new InvalidOperationException($"Unexpected GroupBy type parameter: {args[i].Name}");
 				}
 			}
 
@@ -1060,7 +1063,7 @@ namespace LinqToDB.Linq.Builder
 			Expression AddElementSelectorE();
 		}
 
-		class SelectManyHelper<TSource,TCollection> : ISelectManyHelper
+		sealed class SelectManyHelper<TSource,TCollection> : ISelectManyHelper
 		{
 			Expression       _sourceExpression = null!;
 			LambdaExpression _colSelector = null!;
@@ -1180,7 +1183,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (cm == null)
-				ThrowHelper.ThrowInvalidOperationException("Sequence contains no elements");
+				throw new InvalidOperationException("Sequence contains no elements");
 
 			var wm = GetMethodInfo(method, "Where");
 
@@ -1279,7 +1282,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 			if (cm == null)
-				ThrowHelper.ThrowInvalidOperationException("Sequence contains no elements");
+				throw new InvalidOperationException("Sequence contains no elements");
 
 			var argType = types[0];
 
@@ -1385,8 +1388,8 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression))
 							{
-								if (callExpression.EvaluateExpression() is not IQueryable appliedQuery)
-									return ThrowHelper.ThrowLinqToDBException<Expression>($"Method call '{expression}' returned null value.");
+								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
+									throw new LinqToDBException($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Replace(fakeQuery.Expression, firstArgument);
 								return newExpression;
 							}
@@ -1400,7 +1403,7 @@ namespace LinqToDB.Linq.Builder
 
 				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
 				if (accessor == null)
-					ThrowHelper.ThrowLinqToDBException($"IQueryable value accessor for '{expression}' not found.");
+					throw new LinqToDBException($"IQueryable value accessor for '{expression}' not found.");
 
 				var path =
 					Expression.Call(
@@ -1426,7 +1429,7 @@ namespace LinqToDB.Linq.Builder
 				return qex;
 			}
 
-			return ThrowHelper.ThrowInvalidOperationException<Expression>();
+			throw new InvalidOperationException();
 		}
 
 		#endregion
@@ -1520,7 +1523,7 @@ namespace LinqToDB.Linq.Builder
 						return m;
 			}
 
-			return ThrowHelper.ThrowInvalidOperationException<MethodInfo>("Sequence contains no elements");
+			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
 		MethodInfo GetMethodInfo(MethodCallExpression method, string name)
@@ -1540,7 +1543,7 @@ namespace LinqToDB.Linq.Builder
 						return m;
 			}
 
-			return ThrowHelper.ThrowInvalidOperationException<MethodInfo>("Sequence contains no elements");
+			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
 		static Type[] GetMethodGenericTypes(MethodCallExpression method)
@@ -1591,7 +1594,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, Expression>? _rootExpressions;
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public Expression? GetRootObject(Expression? expr)
 		{
 			if (expr == null)

@@ -1,5 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace LinqToDB.Common
@@ -32,7 +37,7 @@ namespace LinqToDB.Common
 		internal static string GetPath(this Assembly assembly)
 		{
 			return Path.GetDirectoryName(assembly.GetFileName())
-				?? ThrowHelper.ThrowInvalidOperationException<string>($"Cannot get path to {assembly.GetFileName()}");
+				?? throw new InvalidOperationException($"Cannot get path to {assembly.GetFileName()}");
 		}
 
 		/// <summary>
@@ -96,7 +101,12 @@ namespace LinqToDB.Common
 			{
 				try
 				{
-					return Assembly.Load(assemblyName);
+					// first try to get already loaded assembly as under .net framework
+					// we can end up with multiple versions of assemblies in memory which
+					// doesn't make sense and actually breaks T4 templates
+					// https://github.com/linq2db/linq2db/issues/3218
+					return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == assemblyName)
+						?? Assembly.Load(assemblyName);
 				}
 				catch {}
 			}

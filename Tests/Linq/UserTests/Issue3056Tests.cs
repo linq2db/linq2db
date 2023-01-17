@@ -1,6 +1,10 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -33,10 +37,12 @@ namespace Tests.UserTests
 			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
 			using (db.CreateLocalTable<TestRow>())
 			{
-				var options          = GetDefaultBulkCopyOptions(context);
-				options.TableName    = TestTableName;
-				options.SchemaName   = "dbo";
-				options.MaxBatchSize = 100;
+				var options = GetDefaultBulkCopyOptions(context) with
+				{
+					TableName    = TestTableName,
+					SchemaName   = "dbo",
+					MaxBatchSize = 100
+				};
 
 				db.BulkCopy(options, rows);
 			}
@@ -44,7 +50,7 @@ namespace Tests.UserTests
 
 		private const string TestTableName = "Table_3056";
 		[Table(TestTableName, Schema = "dbo")]
-		class TestRow
+		sealed class TestRow
 		{
 			[PrimaryKey, Identity]
 			public int Id;

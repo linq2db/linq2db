@@ -1,4 +1,9 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
@@ -804,7 +809,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("LinqDataTypes")]
-		class Table1
+		sealed class Table1
 		{
 			[Column] public int  ID;
 			[Column] public bool BoolValue;
@@ -814,7 +819,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("Parent")]
-		class Table2
+		sealed class Table2
 		{
 			[Column] public int  ParentID;
 			[Column] public int? Value1;
@@ -916,7 +921,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("GrandChild")]
-		class Table3
+		sealed class Table3
 		{
 			[PrimaryKey(1)] public int? ParentID;
 			[PrimaryKey(2)] public int? ChildID;
@@ -1324,7 +1329,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("gt_s_one")]
-		class UpdateFromJoin
+		sealed class UpdateFromJoin
 		{
 			[PrimaryKey          ] public int     id   { get; set; }
 			[Column(Length = 100)] public string? col1 { get; set; }
@@ -1338,7 +1343,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("access_mode")]
-		class AccessMode
+		sealed class AccessMode
 		{
 			[PrimaryKey]
 			public int id { get; set; }
@@ -1361,6 +1366,7 @@ namespace Tests.xUpdate
 			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
 			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
 			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				gt_s_one
 					.GroupJoin(
 						access_mode,
@@ -1389,6 +1395,7 @@ namespace Tests.xUpdate
 							col5 = s.gt.col3 == "empty" ? "1" : "0",
 							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
 						});
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 		enum UpdateSetEnum
@@ -1398,7 +1405,7 @@ namespace Tests.xUpdate
 			Value3 = 8
 		}
 		[Table]
-		class UpdateSetTest
+		sealed class UpdateSetTest
 		{
 			[PrimaryKey] public int            Id     { get; set; }
 			[Column]     public Guid           Value1 { get; set; }
@@ -1601,7 +1608,7 @@ namespace Tests.xUpdate
 		}
 
 
-		class TextData
+		sealed class TextData
 		{
 			[Column]
 			public int Id { get; set; }
@@ -1678,7 +1685,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class MainTable
+		sealed class MainTable
 		{
 			[Column] public int Id;
 			[Column] public string? Field;
@@ -1698,7 +1705,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class AssociatedTable
+		sealed class AssociatedTable
 		{
 			[Column] public int Id;
 

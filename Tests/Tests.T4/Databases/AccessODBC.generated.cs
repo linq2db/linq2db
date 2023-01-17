@@ -57,14 +57,7 @@ namespace AccessODBCDataContext
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();

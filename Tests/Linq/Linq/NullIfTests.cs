@@ -1,9 +1,17 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Data;
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class NullIfTests : TestBase
 	{
@@ -87,7 +95,7 @@ namespace Tests.Linq
 			strings[1].Should().Be(null);
 		}
 
-		class Src
+		sealed class Src
 		{
 			public int Int { get; set; }
 			public int? NullableInt { get; set; }

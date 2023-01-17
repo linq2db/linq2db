@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.DataModel
-{
-	using Metadata;
+﻿using LinqToDB.Metadata;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Association (e.g. foreign key relation) model. Defines whole relation (both sides).
 	/// </summary>
@@ -74,5 +74,10 @@
 		/// it has collection-based type on target entity.
 		/// </summary>
 		public bool                ManyToOne              { get; set; }
+
+		/// <summary>
+		/// Get or set name of foreign key constrain for association based on foreign key.
+		/// </summary>
+		public string?             ForeignKeyName         { get; set; }
 	}
 }

@@ -1,15 +1,16 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
 	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
-	class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
+	sealed class SapHanaOdbcSqlBuilder : SapHanaSqlBuilder
 	{
-		public SapHanaOdbcSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SapHanaOdbcSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -18,7 +19,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return new SapHanaOdbcSqlBuilder(this);
 		}
 
-		protected SapHanaOdbcSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		private SapHanaOdbcSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 

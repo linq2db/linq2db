@@ -1,9 +1,11 @@
-﻿namespace LinqToDB
-{
-	using SqlQuery;
+﻿using System;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB
+{
 	partial class Sql
 	{
+
 		[Extension("", "", PreferServerSide = true, IsPredicate = true, BuilderType = typeof(BetweenBuilder))]
 		public static bool Between<T>(this T value, T low, T high)
 			where T : IComparable
@@ -32,7 +34,7 @@
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
 		}
 
-		private class BetweenBuilder : IExtensionCallBuilder
+		private sealed class BetweenBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -42,7 +44,7 @@
 			}
 		}
 		
-		private class NotBetweenBuilder : IExtensionCallBuilder
+		private sealed class NotBetweenBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{

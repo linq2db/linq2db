@@ -1,7 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Common.Internal;
 	using Mapping;
 
 	/// <summary>
@@ -39,7 +43,7 @@ namespace LinqToDB
 		public ExpressionMethodAttribute(string methodName)
 		{
 			if (string.IsNullOrEmpty(methodName))
-				ThrowHelper.ThrowArgumentException(nameof(methodName), "Value cannot be null or empty.");
+				throw new ArgumentException("Value cannot be null or empty.", nameof(methodName));
 			MethodName = methodName;
 		}
 
@@ -49,7 +53,7 @@ namespace LinqToDB
 		/// <param name="expression">Substitution expression.</param>
 		public ExpressionMethodAttribute(LambdaExpression expression)
 		{
-			Expression = expression ?? ThrowHelper.ThrowArgumentNullException<LambdaExpression>(nameof(expression));
+			Expression = expression ?? throw new ArgumentNullException(nameof(expression));
 		}
 
 		/// <summary>
@@ -60,7 +64,7 @@ namespace LinqToDB
 		public ExpressionMethodAttribute(string? configuration, string methodName)
 		{
 			Configuration = configuration;
-			MethodName    = methodName ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(methodName));
+			MethodName    = methodName ?? throw new ArgumentNullException(nameof(methodName));
 		}
 
 		/// <summary>
@@ -96,7 +100,7 @@ namespace LinqToDB
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{MethodName}.{(IsColumn?1:0)}.{Alias}.";
+			return $".{Configuration}.{MethodName}.{IdentifierBuilder.GetObjectID(Expression)}.{(IsColumn?1:0)}.{Alias}.";
 		}
 	}
 }

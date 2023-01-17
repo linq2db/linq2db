@@ -1,6 +1,8 @@
 ﻿using LinqToDB;
 using LinqToDB.Tools;
 using NUnit.Framework;
+using System;
+using System.Linq;
 using FluentAssertions;
 
 using static LinqToDB.Sql;
@@ -613,7 +615,7 @@ namespace Tests.Linq
 					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 });
 		}
 
-		class Ints : IEquatable<Ints>
+		sealed class Ints : IEquatable<Ints>
 		{
 			public int  One   { get; set; }
 			public int  Two   { get; set; }
@@ -634,7 +636,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class Mixed
+		sealed class Mixed
 		{
 			public int      Int    { get; set; }
 			public string?  Str    { get; set; }

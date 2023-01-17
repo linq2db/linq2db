@@ -1,3 +1,5 @@
+using System;
+
 namespace LinqToDB.Reflection
 {
 	public interface IObjectFactory

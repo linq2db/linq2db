@@ -1,13 +1,14 @@
 ﻿using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using System.Linq;
 
 namespace Tests.UserTests
 {
 	[TestFixture]
 	public class Issue1279Tests : TestBase
 	{
-		class Issue1279Table
+		sealed class Issue1279Table
 		{
 			[PrimaryKey(1)]
 			[Identity] public int Id { get; set; }

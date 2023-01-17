@@ -1,9 +1,13 @@
-﻿namespace LinqToDB.DataProvider.Access
+﻿using System.Collections.Generic;
+
+using JetBrains.Annotations;
+
+namespace LinqToDB.DataProvider.Access
 {
 	using Configuration;
 
 	[UsedImplicitly]
-	class AccessFactory : IDataProviderFactory
+	sealed class AccessFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{

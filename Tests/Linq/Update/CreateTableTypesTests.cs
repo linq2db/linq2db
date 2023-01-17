@@ -1,4 +1,7 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
 using JetBrains.Annotations;
 
 using LinqToDB;
@@ -12,8 +15,8 @@ using NUnit.Framework;
 // ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
 {
-	using ColumnBuilder = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
-	using ValueBuilder = Action<CreateTableTypesTests.CreateTableTypes>;
+	using ColumnBuilder       = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
+	using ValueBuilder        = Action<CreateTableTypesTests.CreateTableTypes>;
 	using DefaultValueBuilder = Action<string, CreateTableTypesTests.CreateTableTypes>;
 
 	[TestFixture]

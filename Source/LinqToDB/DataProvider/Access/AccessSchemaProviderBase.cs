@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Access
+﻿using System;
+using System.IO;
+
+namespace LinqToDB.DataProvider.Access
 {
 	using Data;
 	using SchemaProvider;
@@ -25,7 +28,7 @@
 		{
 			if (dataTypeInfo == null && dataType != null)
 			{
-				if (dataType.ToLower() == "text")
+				if (dataType.ToLowerInvariant() == "text")
 					return length == 1 && !options.GenerateChar1AsString ? typeof(char) : typeof(string);
 			}
 
@@ -34,7 +37,7 @@
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			return dataType?.ToLower() switch
+			return dataType?.ToLowerInvariant() switch
 			{
 				"smallint"   => DataType.Int16,
 				"short"      => DataType.Int16,

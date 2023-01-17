@@ -1,12 +1,17 @@
-﻿using System.Collections;
-using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
+	using System.Collections;
+	using System.Diagnostics.CodeAnalysis;
+	using System.Threading;
+	using System.Threading.Tasks;
 	using Common;
-	using Extensions;
+	using LinqToDB.Extensions;
 
 	/// <summary>
 	/// Implements typed mappings support for dynamically loaded types.
@@ -42,16 +47,16 @@ namespace LinqToDB.Expressions
 		public void RegisterTypeWrapper(Type wrapperType, Type originalType)
 		{
 			if (_finalized)
-				ThrowHelper.ThrowLinqToDBException($"Wrappers registration is not allowed after {nameof(FinalizeMappings)}() call");
+				throw new LinqToDBException($"Wrappers registration is not allowed after {nameof(FinalizeMappings)}() call");
 
 			var wrapperAttr = wrapperType.GetCustomAttribute<WrapperAttribute>(true);
 
 			if ((wrapperAttr?.TypeName ?? wrapperType.Name) != originalType.Name)
-				ThrowHelper.ThrowLinqToDBException($"Original and wraped types should have same type name. {wrapperType.Name} != {originalType.Name}");
+				throw new LinqToDBException($"Original and wraped types should have same type name. {wrapperType.Name} != {originalType.Name}");
 
 			var typeName = originalType.FullName ?? originalType.Name;
 			if (_types.ContainsKey(typeName))
-				ThrowHelper.ThrowLinqToDBException($"Type with name {typeName} already registered in mapper");
+				throw new LinqToDBException($"Type with name {typeName} already registered in mapper");
 
 			_types                  .Add(typeName    , originalType);
 			_typeMappingCache       .Add(wrapperType , originalType);
@@ -69,7 +74,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 			else
-				ThrowHelper.ThrowLinqToDBException($"Type {wrapperType} should inherit from {typeof(TypeWrapper)} or marked with {typeof(WrapperAttribute)} attribute");
+				throw new LinqToDBException($"Type {wrapperType} should inherit from {typeof(TypeWrapper)} or marked with {typeof(WrapperAttribute)} attribute");
 		}
 
 		private void BuildEnumConverters(Type wrapperType, Type originalType)
@@ -84,7 +89,7 @@ namespace LinqToDB.Expressions
 			var baseType = Enum.GetUnderlyingType(wrapperType);
 
 			if (baseType != Enum.GetUnderlyingType(originalType))
-				ThrowHelper.ThrowLinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
+				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
 			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
 			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
@@ -105,7 +110,7 @@ namespace LinqToDB.Expressions
 			}
 
 			if (!hasCommonMembers)
-				ThrowHelper.ThrowLinqToDBException($"Enums {wrapperType} and {originalType} have no common values");
+				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have no common values");
 
 			// build by-value converters
 			var pWrapper  = Expression.Parameter(wrapperType);
@@ -118,7 +123,7 @@ namespace LinqToDB.Expressions
 				// this should never happen, but it we will have such situation it is better to fail
 				if (wrapperType.GetCustomAttribute(typeof(FlagsAttribute)) != null
 					|| originalType.GetCustomAttribute(typeof(FlagsAttribute)) != null)
-					ThrowHelper.ThrowLinqToDBException($"Flags enums {wrapperType} and {originalType} are not compatible by values");
+					throw new LinqToDBException($"Flags enums {wrapperType} and {originalType} are not compatible by values");
 
 				// build dictionary-based converters
 
@@ -190,7 +195,7 @@ namespace LinqToDB.Expressions
 		public void FinalizeMappings()
 		{
 			if (_finalized)
-				ThrowHelper.ThrowLinqToDBException($"{nameof(FinalizeMappings)}() cannot be called multiple times");
+				throw new LinqToDBException($"{nameof(FinalizeMappings)}() cannot be called multiple times");
 
 			foreach (var wrapperType in _typeMappingCache.Keys.Where(t => typeof(TypeWrapper).IsSameOrParentOf(t)).ToList())
 			{
@@ -203,7 +208,7 @@ namespace LinqToDB.Expressions
 				var ctor = wrapperType.GetConstructor(types);
 
 				if (ctor == null)
-					ThrowHelper.ThrowLinqToDBException($"Cannot find contructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
+					throw new LinqToDBException($"Cannot find contructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
 
 				var pInstance = Expression.Parameter(typeof(object));
 
@@ -276,7 +281,7 @@ namespace LinqToDB.Expressions
 			if (events != null)
 			{
 				if (!TryMapType(wrapperType, out var targetType))
-					ThrowHelper.ThrowInvalidOperationException();
+					throw new InvalidOperationException();
 
 				var subscribeGenerator = new ExpressionGenerator(this);
 				var pWrapper           = Expression.Parameter(wrapperType);
@@ -414,7 +419,7 @@ namespace LinqToDB.Expressions
 				return expression;
 
 			if (!replacementType.IsEnum)
-				ThrowHelper.ThrowLinqToDBException("Only enums converted automatically.");
+				throw new LinqToDBException("Only enums converted automatically.");
 
 			return _enumFromWrapperCache[valueType].GetBody(expression);
 		}
@@ -425,7 +430,7 @@ namespace LinqToDB.Expressions
 			var toType    = typeof(TTarget);
 
 			if (!toType.IsEnum)
-				ThrowHelper.ThrowLinqToDBException("Only enums converted automatically.");
+				throw new LinqToDBException("Only enums converted automatically.");
 
 			return _enumToWrapperCache[valueType].GetBody(expression);
 		}
@@ -459,7 +464,7 @@ namespace LinqToDB.Expressions
 			return mappedLambda;
 		}
 
-		class ReplaceTypesContext
+		sealed class ReplaceTypesContext
 		{
 			public ReplaceTypesContext(TypeMapper mapper, LambdaExpression lambda, ParameterExpression[] newParameters, bool mapConvert, bool ignoreMissingMembers)
 			{
@@ -483,9 +488,9 @@ namespace LinqToDB.Expressions
 		{
 			var newMembers = targetType.GetMember(memberInfo.Name);
 			if (newMembers.Length == 0)
-				ThrowHelper.ThrowLinqToDBException($"There is no member '{memberInfo.Name}' in type '{targetType.FullName}'");
+				throw new LinqToDBException($"There is no member '{memberInfo.Name}' in type '{targetType.FullName}'");
 			if (newMembers.Length > 1)
-				ThrowHelper.ThrowLinqToDBException($"Ambiguous member '{memberInfo.Name}' in type '{targetType.FullName}'");
+				throw new LinqToDBException($"Ambiguous member '{memberInfo.Name}' in type '{targetType.FullName}'");
 			return newMembers[0];
 		}
 
@@ -528,7 +533,7 @@ namespace LinqToDB.Expressions
 
 										var name = replacement.FullName + "." + ue.Method.Name + "(" +
 												   string.Join(", ", types.Select(t => t.Name)) + ")";
-										ThrowHelper.ThrowLinqToDBException($"Method not found in target type: {name}");
+										throw new LinqToDBException($"Method not found in target type: {name}");
 									}
 
 									return Expression.Convert(expr, type, method);
@@ -586,7 +591,7 @@ namespace LinqToDB.Expressions
 							{
 								var expr = context.Mapper.ReplaceTypes(ma.Expression, context)!;
 								if (expr.Type != replacement)
-									ThrowHelper.ThrowLinqToDBException($"Invalid replacement of '{ma.Expression}' to type '{replacement.FullName}'.");
+									throw new LinqToDBException($"Invalid replacement of '{ma.Expression}' to type '{replacement.FullName}'.");
 
 								var prop = replacement.GetProperty(ma.Member.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly);
 								if (prop == null)
@@ -599,7 +604,7 @@ namespace LinqToDB.Expressions
 										return e;
 									}
 
-									ThrowHelper.ThrowLinqToDBException($"Property not found in target type: {replacement.FullName}.{ma.Member.Name}");
+									throw new LinqToDBException($"Property not found in target type: {replacement.FullName}.{ma.Member.Name}");
 								}
 
 								return Expression.MakeMemberAccess(expr, prop);
@@ -639,7 +644,7 @@ namespace LinqToDB.Expressions
 
 									var name = replacement.FullName + "." + ne.Constructor.Name + "(" +
 									           string.Join(", ", paramTypes.Select(t => t.Name)) + ")";
-									ThrowHelper.ThrowLinqToDBException($"Constructor not found in target type: {name}");
+									throw new LinqToDBException($"Constructor not found in target type: {name}");
 								}
 
 								var newArguments  = ne.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context)!);
@@ -668,17 +673,21 @@ namespace LinqToDB.Expressions
 									switch (b.BindingType)
 									{
 										case MemberBindingType.Assignment:
-										{
-											var mab = (MemberAssignment)b;
-											return Expression.Bind(ReplaceMember(mab.Member, replacement),
-												context.Mapper.ReplaceTypes(mab.Expression, context)!);
-										}
-
+											{
+												var mab = (MemberAssignment)b;
+												return Expression.Bind(ReplaceMember(mab.Member, replacement),
+													context.Mapper.ReplaceTypes(mab.Expression, context)!);
+											}
 										case MemberBindingType.MemberBinding:
+											{
+												throw new NotImplementedException();
+											}
 										case MemberBindingType.ListBinding:
-											return ThrowHelper.ThrowNotImplementedException<MemberAssignment>();
+											{
+												throw new NotImplementedException();
+											}
 										default:
-											return ThrowHelper.ThrowInvalidOperationException<MemberAssignment>($"Unexpected binding type: {b.BindingType}");
+											throw new InvalidOperationException($"Unexpected binding type: {b.BindingType}");
 									}
 								});
 
@@ -718,7 +727,7 @@ namespace LinqToDB.Expressions
 										var name = replacement.FullName + "." + methodName + "<" +
 												   string.Join(", ", typeArgs.Select(t => t.Name))+ ">(" +
 												   string.Join(", ", types.Select(t => t.Name)) + ")";
-										ThrowHelper.ThrowLinqToDBException($"Method not found in target type: {name}");
+										throw new LinqToDBException($"Method not found in target type: {name}");
 									}
 
 									var newArguments  = mc.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context)!);
@@ -734,7 +743,7 @@ namespace LinqToDB.Expressions
 												return e;
 											}
 
-											ThrowHelper.ThrowLinqToDBException($"Cannot map return type: {newMethodCall.Type} using {customReturnMapper.GetType()} mapper");
+											throw new LinqToDBException($"Cannot map return type: {newMethodCall.Type} using {customReturnMapper.GetType()} mapper");
 										}
 
 										return customReturnMapper.Map(newMethodCall);
@@ -757,7 +766,7 @@ namespace LinqToDB.Expressions
 
 										var name = replacement.FullName + "." + methodName + "(" +
 												   string.Join(", ", types.Select(t => t.Name)) + ")";
-										ThrowHelper.ThrowLinqToDBException($"Method not found in target type: {name}");
+										throw new LinqToDBException($"Method not found in target type: {name}");
 									}
 
 									var newArguments  = mc.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context)!);
@@ -773,7 +782,7 @@ namespace LinqToDB.Expressions
 												return e;
 											}
 
-											ThrowHelper.ThrowLinqToDBException($"Cannot map return type: {newMethodCall.Type} using {customReturnMapper.GetType()} mapper");
+											throw new LinqToDBException($"Cannot map return type: {newMethodCall.Type} using {customReturnMapper.GetType()} mapper");
 										}
 
 										return customReturnMapper.Map(newMethodCall);
@@ -793,7 +802,7 @@ namespace LinqToDB.Expressions
 			return ctx.Aborted ? null : converted;
 		}
 
-		[return: NotNullIfNotNull("mapperType")]
+		[return: NotNullIfNotNull(nameof(mapperType))]
 		private ICustomMapper? CreateTypeMapper(Type? mapperType)
 		{
 			if (mapperType == null)
@@ -803,7 +812,7 @@ namespace LinqToDB.Expressions
 			{
 				mapper = Activator.CreateInstance(mapperType) as ICustomMapper;
 				if (mapper == null)
-					ThrowHelper.ThrowLinqToDBException($"Type {mapperType} must implement {nameof(ICustomMapper)} interface.");
+					throw new LinqToDBException($"Type {mapperType} must implement {nameof(ICustomMapper)} interface.");
 
 				_typeMapperInstancesCache[mapperType] = mapper;
 			}
@@ -814,7 +823,7 @@ namespace LinqToDB.Expressions
 		private Expression MapExpressionInternal(LambdaExpression lambdaExpression, params Expression[] parameters)
 		{
 			if (lambdaExpression.Parameters.Count != parameters.Length)
-				ThrowHelper.ThrowLinqToDBException($"Parameters count is different: {lambdaExpression.Parameters.Count} != {parameters.Length}.");
+				throw new LinqToDBException($"Parameters count is different: {lambdaExpression.Parameters.Count} != {parameters.Length}.");
 
 			var lambda = MapLambdaInternal(lambdaExpression, true)!;
 			var expr   = lambda.Body.Transform((lambdaParams: lambda.Parameters, parameters), static (context, e) =>
@@ -835,7 +844,7 @@ namespace LinqToDB.Expressions
 		private LambdaExpression CorrectLambdaParameters(LambdaExpression lambda, Type? resultType, params Type[] paramTypes)
 		{
 			if (lambda.Parameters.Count != paramTypes.Length)
-				ThrowHelper.ThrowLinqToDBException("Invalid count of types.");
+				throw new LinqToDBException("Invalid count of types.");
 
 			var parameters = new ParameterExpression[paramTypes.Length];
 			var generator  = new ExpressionGenerator(this);
@@ -1164,7 +1173,7 @@ namespace LinqToDB.Expressions
 			// 2. generate wrapper constructor call instead of Wrap method call (will need null check of wrapped value)
 			var wrapperType = typeof(T);
 			if (!TryMapType(wrapperType, out var _))
-				ThrowHelper.ThrowLinqToDBException($"Wrapper type {wrapperType} is not registered");
+				throw new LinqToDBException($"Wrapper type {wrapperType} is not registered");
 
 			return BuildWrapperImpl(lambda, wrapResult, false)!;
 		}
@@ -1239,7 +1248,7 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
-		[return: NotNullIfNotNull("instance")]
+		[return: NotNullIfNotNull(nameof(instance))]
 		public TR? Wrap<TR>(object? instance)
 			where TR: TypeWrapper
 		{
@@ -1249,14 +1258,14 @@ namespace LinqToDB.Expressions
 			return (TR)Wrap(typeof(TR), instance);
 		}
 
-		[return: NotNullIfNotNull("instance")]
+		[return: NotNullIfNotNull(nameof(instance))]
 		private object? Wrap(Type wrapperType, object? instance)
 		{
 			if (instance == null)
 				return null;
 
 			if (!_wrapperFactoryCache.TryGetValue(wrapperType, out var factory))
-				ThrowHelper.ThrowLinqToDBException($"Missing type wrapper factory registration for type {wrapperType}");
+				throw new LinqToDBException($"Missing type wrapper factory registration for type {wrapperType}");
 
 			return factory(instance);
 		}
@@ -1272,7 +1281,7 @@ namespace LinqToDB.Expressions
 		private object? WrapTask(Type wrapperType, Task instance)
 		{
 			if (!_taskWrapperFactoryCache.TryGetValue(wrapperType, out var factory))
-				ThrowHelper.ThrowLinqToDBException($"Missing type wrapper factory registration for type {wrapperType}");
+				throw new LinqToDBException($"Missing type wrapper factory registration for type {wrapperType}");
 
 			return factory(instance);
 		}

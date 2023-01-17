@@ -1,13 +1,20 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using JetBrains.Annotations;
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Async
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-
 	/// <summary>
 	/// Provides factory methods to create async wrappers for <see cref="DbConnection"/> and <see cref="DbTransaction"/> instances.
 	/// </summary>
@@ -61,7 +68,7 @@ namespace LinqToDB.Async
 		public static IAsyncDbConnection Create(DbConnection connection)
 		{
 			if (connection == null)
-				ThrowHelper.ThrowArgumentNullException(nameof(connection));
+				throw new ArgumentNullException(nameof(connection));
 
 			// no wrap required
 			if (connection is IAsyncDbConnection asyncConnection)
@@ -78,7 +85,7 @@ namespace LinqToDB.Async
 		public static IAsyncDbTransaction Create(DbTransaction transaction)
 		{
 			if (transaction == null)
-				ThrowHelper.ThrowArgumentNullException(nameof(transaction));
+				throw new ArgumentNullException(nameof(transaction));
 
 			// no wrap required
 			if (transaction is IAsyncDbTransaction asyncTransaction)
@@ -263,7 +270,7 @@ namespace LinqToDB.Async
 				return default;
 
 			var pInstance      = Expression.Parameter(typeof(TInstance));
-			var parameters     = delegateParameterTypes.Select(t => Expression.Parameter(t)).ToArray();
+			var parameters     = delegateParameterTypes.Select(Expression.Parameter).ToArray();
 
 			var callParameters = new List<Expression>();
 			for (var i = 0; i < methodParameterTypes.Length; i++)
@@ -360,7 +367,7 @@ namespace LinqToDB.Async
 				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
-			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
+			var parameters = parametersTypes.Select(Expression.Parameter).ToArray();
 
 			Expression body = Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters);
 			if (returnsValueTask && !returnValueTask)

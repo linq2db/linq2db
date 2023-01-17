@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -9,7 +10,7 @@ namespace Tests.UserTests
 	public class Issue3186Tests : TestBase
 	{
 		[Table]
-		class element_services
+		sealed class element_services
 		{
 			[Column(IsPrimaryKey = true, Length = 100, CanBeNull = false)]
 			public string id { get; set; } = null!;
@@ -31,7 +32,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class component_categories
+		sealed class component_categories
 		{
 			[Column(IsPrimaryKey = true, Length = 100, CanBeNull = false)]
 			public string id { get; set; } = null!;
@@ -52,11 +53,10 @@ namespace Tests.UserTests
 					new component_categories { id = "TestElementCategory2", service_id = "TestElementService" },
 				};
 			}
-
 		}
 
 		[Table]
-		class Components
+		sealed class Components
 		{
 			[Column(IsPrimaryKey = true, Length = 100, CanBeNull = false)]
 			public string id { get; set; } = null!;

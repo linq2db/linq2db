@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+
+using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
@@ -291,7 +293,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class Key
+		sealed class Key
 		{
 			public int? fkey1;
 			public int? fkey2;

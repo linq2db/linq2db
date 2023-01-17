@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -9,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue357Tests : TestBase
 	{
 		[Table(Name="AllTypes2")]
-		class AllTypes2
+		sealed class AllTypes2
 		{
 			[Column(DbType="int"), PrimaryKey, Identity]
 			public int ID { get; set; }

@@ -1,13 +1,13 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
+	using LinqToDB.SqlQuery;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
-	class SqlServer2022SqlBuilder : SqlServer2019SqlBuilder
+	sealed class SqlServer2022SqlBuilder : SqlServer2019SqlBuilder
 	{
-		public SqlServer2022SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlServer2022SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

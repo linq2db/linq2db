@@ -1,4 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Linq;
@@ -63,7 +67,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class MappingTestClass
+		sealed class MappingTestClass
 		{
 			[Column] public int       Id    { get; set; }
 			[Column] public int       Value { get; set; }
@@ -104,7 +108,7 @@ namespace Tests.Linq
 			Expressions.MapMember<Parent,int>(p => Count1(p), p => p.Children.Count(c => c.ChildID > 0));
 
 			using (var db = GetDataContext(context))
-				AreEqual(Parent.Select(p => Count1(p)), db.Parent.Select(p => Count1(p)));
+				AreEqual(Parent.Select(Count1), db.Parent.Select(p => Count1(p)));
 		}
 
 		static int Count2(Parent p, int id) { return p.Children.Count(c => c.ChildID > id); }
@@ -345,7 +349,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class TestClass<T>
+		sealed class TestClass<T>
 		{
 			[ExpressionMethod(nameof(GetBoolExpression3))]
 			public static bool GetBool3(Parent? obj)
@@ -506,6 +510,7 @@ namespace Tests.Linq
 		[Test]
 		public void ToLowerInvariantTest([DataSources] string context)
 		{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			Expressions.MapMember((string s) => s.ToLowerInvariant(), s => s.ToLower());
 
 			using (var db = GetDataContext(context))
@@ -513,6 +518,7 @@ namespace Tests.Linq
 				AreEqual(
 					   Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()),
 					db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 
@@ -798,7 +804,7 @@ namespace Tests.Linq
 		}
 
 		[LinqToDB.Mapping.Table("AllTypes")]
-		class AllTypes
+		sealed class AllTypes
 		{
 			[LinqToDB.Mapping.Column] public int     ID              { get; set; }
 			[LinqToDB.Mapping.Column] public int?    intDataType     { get; set; }
@@ -945,7 +951,7 @@ namespace Tests.Linq
 
 		#region issue 2431
 		[Table]
-		class Issue2431Table
+		sealed class Issue2431Table
 		{
 			[Column] public int Id;
 			[Column(DataType = DataType.NVarChar)] public JsonType? Json;
@@ -957,7 +963,7 @@ namespace Tests.Linq
 				new Issue2431Table() { Id = 3 }
 			};
 
-			public class JsonType
+			public sealed class JsonType
 			{
 				public string? Text;
 			}
@@ -994,7 +1000,7 @@ namespace Tests.Linq
 
 		#region issue 2434
 		[Table]
-		class Issue2434Table
+		sealed class Issue2434Table
 		{
 			[Column] public int     Id;
 			[Column] public string? FirstName;
@@ -1166,7 +1172,7 @@ namespace Tests.Linq
 
 	static class ExpressionTestExtensions
 	{
-		public class LeftJoinInfo<TOuter,TInner>
+		public sealed class LeftJoinInfo<TOuter,TInner>
 		{
 			public TOuter Outer = default!;
 			public TInner Inner = default!;

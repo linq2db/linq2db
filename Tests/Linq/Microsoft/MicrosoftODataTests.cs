@@ -1,4 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using LinqToDB;
 using LinqToDB.Expressions;
@@ -171,18 +174,18 @@ namespace Tests.OData.Microsoft
 			public virtual AggregationPropertyContainer Container { get; set; } = null!;
 		}
 
-		class AggregationWrapper : GroupByWrapper
+		sealed class AggregationWrapper : GroupByWrapper
 		{
 		}
 
 		class AggregationPropertyContainer : NamedProperty
 		{
-			public class LastInChain : AggregationPropertyContainer
+			public sealed class LastInChain : AggregationPropertyContainer
 			{
 			}
 		}
 
-		class FlatteningWrapper<T>: GroupByWrapper
+		sealed class FlatteningWrapper<T>: GroupByWrapper
 		{
 			public T Source { get; set; } = default!;
 		}

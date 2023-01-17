@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
@@ -14,9 +17,9 @@ namespace LinqToDB.Tools.Mapper
 	using Extensions;
 	using Reflection;
 
-	class ExpressionBuilder
+	sealed class ExpressionBuilder
 	{
-		class BuilderData
+		sealed class BuilderData
 		{
 			public BuilderData(Tuple<MemberInfo[],LambdaExpression>[]? memberMappers) => MemberMappers = memberMappers;
 
@@ -238,7 +241,7 @@ namespace LinqToDB.Tools.Mapper
 			return New(type);
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		static Expression? Convert(Expression? expr, Type toType) =>
 			expr == null ? null : expr.Type == toType ? expr : Expression.Convert(expr, toType);
 
@@ -340,7 +343,7 @@ namespace LinqToDB.Tools.Mapper
 			return l;
 		}
 
-		class MappingImpl
+		sealed class MappingImpl
 		{
 			public MappingImpl(
 				ExpressionBuilder builder,

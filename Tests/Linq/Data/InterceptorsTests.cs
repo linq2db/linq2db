@@ -1,9 +1,13 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
@@ -274,12 +278,12 @@ namespace Tests.Data
 			var interceptor1 = new TestCommandInterceptor();
 			var interceptor2 = new TestCommandInterceptor();
 
-			var options = new LinqToDBConnectionOptionsBuilder()
+			var builder = new DataOptions()
 				.UseConfigurationString(context)
-				.WithInterceptor(interceptor1)
-				.WithInterceptor(interceptor2);
+				.UseInterceptor(interceptor1)
+				.UseInterceptor(interceptor2);
 
-			using (var db = new DataConnection(options.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				db.OnNextCommandInitialized((args, command) =>
 				{
@@ -326,12 +330,12 @@ namespace Tests.Data
 			var interceptor1 = new TestCommandInterceptor();
 			var interceptor2 = new TestCommandInterceptor();
 
-			var options = new LinqToDBConnectionOptionsBuilder()
+			var builder = new DataOptions()
 				.UseConfigurationString(context)
-				.WithInterceptor(interceptor1)
-				.WithInterceptor(interceptor2);
+				.UseInterceptor(interceptor1)
+				.UseInterceptor(interceptor2);
 
-			using (var db = new DataContext(options.Build()))
+			using (var db = new DataContext(builder))
 			{
 				db.CloseAfterUse = closeAfterUse;
 
@@ -1706,7 +1710,7 @@ namespace Tests.Data
 
 #endregion
 
-		private class TestCommandInterceptor : CommandInterceptor
+		private sealed class TestCommandInterceptor : CommandInterceptor
 		{
 			public bool CommandInitializedTriggered { get; set; }
 
@@ -1782,7 +1786,7 @@ namespace Tests.Data
 			}
 		}
 
-		private class TestConnectionInterceptor : ConnectionInterceptor
+		private sealed class TestConnectionInterceptor : ConnectionInterceptor
 		{
 			public bool ConnectionOpenedTriggered       { get; set; }
 			public bool ConnectionOpenedAsyncTriggered  { get; set; }
@@ -1814,7 +1818,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestEntityServiceInterceptor : EntityServiceInterceptor
+		sealed class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public List<IDataContext> EntityCreatedContexts { get; } = new ();
 
@@ -1825,7 +1829,7 @@ namespace Tests.Data
 			}
 		}
 
-		class TestDataContextInterceptor : DataContextInterceptor
+		sealed class TestDataContextInterceptor : DataContextInterceptor
 		{
 			public Dictionary<IDataContext, int> OnClosedContexts       { get; } = new();
 			public Dictionary<IDataContext, int> OnClosingContexts      { get; } = new();
@@ -1834,8 +1838,8 @@ namespace Tests.Data
 
 			public override void OnClosed(DataContextEventData eventData)
 			{
-				if (OnClosedContexts.ContainsKey(eventData.Context))
-					OnClosedContexts[eventData.Context]++;
+				if (OnClosedContexts.TryGetValue(eventData.Context, out var cnt))
+					OnClosedContexts[eventData.Context] = cnt + 1;
 				else
 					OnClosedContexts[eventData.Context] = 1;
 
@@ -1844,8 +1848,8 @@ namespace Tests.Data
 
 			public override void OnClosing(DataContextEventData eventData)
 			{
-				if (OnClosingContexts.ContainsKey(eventData.Context))
-					OnClosingContexts[eventData.Context]++;
+				if (OnClosingContexts.TryGetValue(eventData.Context, out var cnt))
+					OnClosingContexts[eventData.Context] = cnt + 1;
 				else
 					OnClosingContexts[eventData.Context] = 1;
 
@@ -1854,8 +1858,8 @@ namespace Tests.Data
 
 			public override Task OnClosedAsync(DataContextEventData eventData)
 			{
-				if (OnClosedAsyncContexts.ContainsKey(eventData.Context))
-					OnClosedAsyncContexts[eventData.Context]++;
+				if (OnClosedAsyncContexts.TryGetValue(eventData.Context, out var cnt))
+					OnClosedAsyncContexts[eventData.Context] = cnt + 1;
 				else
 					OnClosedAsyncContexts[eventData.Context] = 1;
 
@@ -1864,8 +1868,8 @@ namespace Tests.Data
 
 			public override Task OnClosingAsync(DataContextEventData eventData)
 			{
-				if (OnClosingAsyncContexts.ContainsKey(eventData.Context))
-					OnClosingAsyncContexts[eventData.Context]++;
+				if (OnClosingAsyncContexts.TryGetValue(eventData.Context, out var cnt))
+					OnClosingAsyncContexts[eventData.Context] = cnt + 1;
 				else
 					OnClosingAsyncContexts[eventData.Context] = 1;
 

@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Data
+﻿using System;
+
+namespace LinqToDB.Data
 {
 	using Interceptors;
 
@@ -52,13 +54,17 @@
 			this.AddInterceptorImpl(interceptor);
 		}
 
-		internal void RemoveInterceptor(IInterceptor interceptor)
+		public Action<IInterceptor>? OnRemoveInterceptor { get; set; }
+
+		public void RemoveInterceptor(IInterceptor interceptor)
 		{
 			((IInterceptable<ICommandInterceptor>)         this).RemoveInterceptor(interceptor);
 			((IInterceptable<IConnectionInterceptor>)      this).RemoveInterceptor(interceptor);
 			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
 			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
 			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
+
+			OnRemoveInterceptor?.Invoke(interceptor);
 		}
 	}
 }

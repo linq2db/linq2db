@@ -1,4 +1,9 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Numerics;
 using System.Globalization;
 
 namespace LinqToDB.DataProvider.Firebird
@@ -7,7 +12,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Data;
 	using SchemaProvider;
 
-	class FirebirdSchemaProvider : SchemaProviderBase
+	sealed class FirebirdSchemaProvider : SchemaProviderBase
 	{
 		private readonly FirebirdDataProvider _provider;
 		private int _majorVersion;
@@ -441,7 +446,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			return dataType?.ToLower() switch
+			return dataType?.ToLowerInvariant() switch
 			{
 				"array"            => DataType.VarBinary,
 				"bigint"           => DataType.Int64,
@@ -473,7 +478,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType?.ToLower())
+			switch (dataType?.ToLowerInvariant())
 			{
 				case "decfloat"                : return _provider.Adapter.FbDecFloatType?.Name;
 				case "timestamp with time zone": return _provider.Adapter.FbZonedDateTimeType?.Name;
@@ -485,7 +490,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			switch (dataType?.ToLower())
+			switch (dataType?.ToLowerInvariant())
 			{
 				case "int128"                  : return typeof(BigInteger);
 				case "decfloat"                : return _provider.Adapter.FbDecFloatType;

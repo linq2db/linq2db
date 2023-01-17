@@ -8,7 +8,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1585Tests : TestBase
 	{
-		class Test1585
+		sealed class Test1585
 		{
 			public int Id { get; set; }
 		}

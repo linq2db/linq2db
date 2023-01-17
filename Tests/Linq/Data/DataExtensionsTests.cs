@@ -1,12 +1,16 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Data
 {
+	using Model;
+
 	[TestFixture]
 	public class DataExtensionsTests : TestBase
 	{
@@ -43,7 +47,7 @@ namespace Tests.Data
 			}
 		}
 
-		class QueryObject
+		sealed class QueryObject
 		{
 			public int      Column1;
 			public DateTime Column2;
@@ -173,15 +177,13 @@ namespace Tests.Data
 		{
 			using (new GuardGrouping(false))
 			using (new PreloadGroups(false))
+			using (var dc = new DataContext(context))
 			{
-				using (var dc = new DataContext(context))
-				{
-					var dictionary = dc.GetTable<Person>()
-						.GroupBy(p => p.FirstName)
-						.ToDictionary(p => p.Key);
+				var dictionary = dc.GetTable<Person>()
+					.GroupBy(p => p.FirstName)
+					.ToDictionary(p => p.Key);
 
-					var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
-				}
+				var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
 			}
 		}
 
@@ -264,7 +266,7 @@ namespace Tests.Data
 		}
 
 		[ScalarType]
-		class TwoValues
+		sealed class TwoValues
 		{
 			public int Value1;
 			public int Value2;

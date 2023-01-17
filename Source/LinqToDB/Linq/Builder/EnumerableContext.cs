@@ -1,19 +1,22 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
+	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	class EnumerableContext : IBuildContext
+	sealed class EnumerableContext : IBuildContext
 	{
 		readonly Type _elementType;
 
@@ -182,7 +185,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region TableContext code almost not changed. TODO: Remove after implementing base ObjectContext
 
-		class ColumnInfo
+		sealed class ColumnInfo
 		{
 			public bool       IsComplex;
 			public string     Name       = null!;
@@ -198,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 				var membersWithOrder = new List<(int sequence, MemberAccessor ma)>();
 				foreach (var member in typeAccessor.Members)
 				{
-					var sequence = RecordsHelper.GetFSharpRecordMemberSequence(Builder.MappingSchema, typeAccessor.Type, member.MemberInfo);
+					var sequence = RecordsHelper.GetFSharpRecordMemberSequence(member.MemberInfo);
 					if (sequence != -1)
 					{
 						membersWithOrder.Add((sequence, member));
@@ -268,7 +271,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							var typeAcc          = TypeAccessor.GetAccessor(member.Type);
-							var memberRecordType = RecordsHelper.GetRecordType(Builder.MappingSchema, member.Type);
+							var memberRecordType = RecordsHelper.GetRecordType(member.Type);
 
 							var exprs = GetExpressions(typeAcc, memberRecordType, cols).ToList();
 
@@ -308,11 +311,11 @@ namespace LinqToDB.Linq.Builder
 				constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 
 				if (constructors.Length == 0)
-					ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no constructors.");
+					throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
 			}
 
 			if (constructors.Length > 1)
-				ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
+				throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 
 			return constructors[0];
 		}
@@ -360,7 +363,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!argFound)
 			{
-				ThrowHelper.ThrowInvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
+				throw new InvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
 			}
 
 			var expr = Expression.New(ctor, args);
@@ -473,7 +476,7 @@ namespace LinqToDB.Linq.Builder
 			if (buildBlock && _variable != null)
 				return _variable;
 
-			var recordType       = RecordsHelper.GetRecordType(Builder.MappingSchema, objectType);
+			var recordType       = RecordsHelper.GetRecordType(objectType);
 			var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
 
 			// choosing type that can be instantiated
@@ -542,7 +545,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (sql.Length == 0)
-						ThrowHelper.ThrowLinqToDBException($"Entity of type '{_elementType.Name}' as no defined columns.");
+						throw new LinqToDBException($"Entity of type '{_elementType.Name}' as no defined columns.");
 				}
 
 				return sql;
@@ -574,7 +577,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return ThrowHelper.ThrowNotImplementedException<SqlInfo[]>();
+			throw new NotImplementedException();
 		}
 
 		private SqlField BuildField(ColumnDescriptor column)
@@ -687,7 +690,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
 		{
-			return ThrowHelper.ThrowNotImplementedException<IBuildContext?>();
+			throw new NotImplementedException();
 		}
 
 		public int ConvertToParentIndex(int index, IBuildContext context)
@@ -706,7 +709,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlExpression GetSubQuery(IBuildContext context)
 		{
-			return ThrowHelper.ThrowNotImplementedException<ISqlExpression>();
+			throw new NotImplementedException();
 		}
 
 		public SqlStatement GetResultStatement()

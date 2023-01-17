@@ -1,12 +1,14 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using LinqToDB.Configuration;
+using LinqToDB.DataModel;
+using LinqToDB.Naming;
+using LinqToDB.Scaffold;
 
 namespace LinqToDB.CommandLine
 {
-	using Configuration;
-	using DataModel;
-	using Naming;
-	using Scaffold;
-
 	partial class ScaffoldCommand : CliCommand
 	{
 		private static readonly OptionCategory _generalOptions        = new (1, "General"        , "basic options"           , "general"  );
@@ -613,7 +615,7 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					false,
 					"generate data context contructor with options parameter",
-					$"Constructor example: public MyDataContext({nameof(LinqToDBConnectionOptions)} options) {{ ... }}",
+					$"Constructor example: public MyDataContext({nameof(DataOptions)} options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasUntypedOptionsConstructor,
@@ -627,7 +629,7 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					false,
 					"generate data context contructor with generic options parameter",
-					$"Constructor example: public MyDataContext({nameof(LinqToDBConnectionOptions)}<MyDataContext> options) {{ ... }}",
+					$"Constructor example: public MyDataContext({nameof(DataOptions)}<MyDataContext> options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasTypedOptionsConstructor,
@@ -921,7 +923,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"entity class naming options",
 				_defaultOptions.DataModel.EntityClassNameOptions,
 				_t4ModeOptions.DataModel.EntityClassNameOptions);
-			
+
 			/// <summary>
 			/// Entity column property naming option.
 			/// </summary>
@@ -930,7 +932,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"entity column properties naming options",
 				_defaultOptions.DataModel.EntityColumnPropertyNameOptions,
 				_t4ModeOptions.DataModel.EntityColumnPropertyNameOptions);
-			
+
 			/// <summary>
 			/// Entity data context property naming option.
 			/// </summary>
@@ -948,7 +950,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"association property or extension method naming options",
 				_defaultOptions.DataModel.SourceAssociationPropertyNameOptions,
 				_t4ModeOptions.DataModel.SourceAssociationPropertyNameOptions);
-			
+
 			/// <summary>
 			/// Association back reference property/method naming option for non-many cardinality association.
 			/// </summary>
@@ -975,7 +977,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"procedure or function method naming options",
 				_defaultOptions.DataModel.ProcedureNameOptions,
 				_t4ModeOptions.DataModel.ProcedureNameOptions);
-			
+
 			/// <summary>
 			/// Stored procedure or function mapping method parameters naming option.
 			/// </summary>
@@ -984,7 +986,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"procedure or function method parameters naming options",
 				_defaultOptions.DataModel.ProcedureParameterNameOptions,
 				_t4ModeOptions.DataModel.ProcedureParameterNameOptions);
-			
+
 			/// <summary>
 			/// Stored procedure or table function result-set record class naming option.
 			/// </summary>
@@ -1024,7 +1026,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"procedure or table function custom result record column property naming options. You probably don't want to specify this option, as it used for field with private visibility.",
 				_defaultOptions.DataModel.ProcedureResultColumnPropertyNameOptions,
 				_t4ModeOptions.DataModel.ProcedureResultColumnPropertyNameOptions);
-			
+
 			/// <summary>
 			/// Table function <see cref="MethodInfo"/> field naming option.
 			/// </summary>
@@ -1033,7 +1035,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"table function FieldInfo field naming options",
 				_defaultOptions.DataModel.TableFunctionMethodInfoFieldNameOptions,
 				_t4ModeOptions.DataModel.TableFunctionMethodInfoFieldNameOptions);
-			
+
 			/// <summary>
 			/// Scalar function with tuple return type tuple mapping class naming option.
 			/// </summary>
@@ -1060,7 +1062,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"non-default schema wrapper class naming options",
 				_defaultOptions.DataModel.SchemaClassNameOptions,
 				_t4ModeOptions.DataModel.SchemaClassNameOptions);
-			
+
 			/// <summary>
 			/// Non-default schema data context property naming option.
 			/// </summary>
@@ -1238,6 +1240,20 @@ When this option is not set, CLI tool use database-specific logic to detect defa
 					null,
 					_defaultOptions.Schema.LoadDatabaseName,
 					_t4ModeOptions.Schema.LoadDatabaseName);
+
+			/// <summary>
+			/// Don't load history tables for SQL Server temporal tables.
+			/// </summary>
+			public static readonly CliOption IgnoreSystemHistoryTables = new BooleanCliOption(
+					"mssql-ignore-temporal-history-tables",
+					null,
+					false,
+					"ignore history tables for SQL Server temporal tables (SQL Server 2016+ only)",
+					null,
+					null,
+					null,
+					_defaultOptions.Schema.IgnoreSystemHistoryTables,
+					_t4ModeOptions.Schema.IgnoreSystemHistoryTables);
 
 			/// <summary>
 			/// Use only safe schema load methods to load table function and store procedure result-set schema option.

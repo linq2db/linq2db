@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System.Collections.Generic;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -16,7 +18,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClass1 : ISample
+		sealed class SampleClass1 : ISample
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -37,7 +39,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClass2 : ISample
+		sealed class SampleClass2 : ISample
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -58,7 +60,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class ChildEntitity
+		sealed class ChildEntitity
 		{
 			[Column] public int  Id       { get; set; }
 			[Column] public int? ParentId { get; set; }
@@ -83,7 +85,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SubEntitity
+		sealed class SubEntitity
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }

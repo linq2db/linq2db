@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SchemaProvider
+﻿using System;
+
+namespace LinqToDB.SchemaProvider
 {
 	/// <summary>
 	/// Describes table column.
@@ -74,6 +76,11 @@
 		/// Gets column type scale.
 		/// </summary>
 		public int?        Scale                { get; set; }
+
+		/// <summary>
+		/// Column ordinal.
+		/// </summary>
+		public int?        Ordinal              { get; set; }
 
 		/// <summary>
 		/// Gets column owner schema.

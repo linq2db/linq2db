@@ -1,11 +1,12 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class TakeSkipBuilder : MethodCallBuilder
+	sealed class TakeSkipBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "Skip", "Take" };
 
@@ -17,11 +18,12 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
-			var arg = methodCall.Arguments[1].Unwrap();
+			var arg      = methodCall.Arguments[1].Unwrap();
 
 			ISqlExpression expr;
-			var parameterize = Common.Configuration.Linq.ParameterizeTakeSkip;
+
+			var linqOptions  = builder.DataContext.Options.LinqOptions;
+			var parameterize = linqOptions.ParameterizeTakeSkip;
 
 			if (arg.NodeType == ExpressionType.Lambda)
 			{
@@ -86,10 +88,10 @@ namespace LinqToDB.Linq.Builder
 			var sql = sequence.SelectQuery;
 
 			if (hints != null && !builder.DataContext.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
-				ThrowHelper.ThrowLinqException($"TakeHints are {hints} not supported by current database");
+				throw new LinqException($"TakeHints are {hints} not supported by current database");
 
 			if (hints != null && sql.Select.SkipValue != null)
-				ThrowHelper.ThrowLinqException("Take with hints could not be applied with Skip");
+				throw new LinqException("Take with hints could not be applied with Skip");
 
 			if (sql.Select.TakeValue != null)
 				expr = new SqlFunction(
@@ -113,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 			var sql = sequence.SelectQuery;
 
 			if (sql.Select.TakeHints != null)
-				ThrowHelper.ThrowLinqException("Skip could not be applied with Take with hints");
+				throw new LinqException("Skip could not be applied with Take with hints");
 
 			if (sql.Select.SkipValue != null)
 				sql.Select.Skip(new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive));

@@ -1,9 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class TagQueryBuilder : MethodCallBuilder
+	sealed class TagQueryBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

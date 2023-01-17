@@ -1,5 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -8,10 +14,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using SqlProvider;
 
-	class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
-	class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
-	class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
-	class PostgreSQLDataProvider15 : PostgreSQLDataProvider { public PostgreSQLDataProvider15() : base(ProviderName.PostgreSQL15, PostgreSQLVersion.v15) {} }
+	sealed class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
+	sealed class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
+	sealed class PostgreSQLDataProvider95 : PostgreSQLDataProvider { public PostgreSQLDataProvider95() : base(ProviderName.PostgreSQL95, PostgreSQLVersion.v95) {} }
+	sealed class PostgreSQLDataProvider15 : PostgreSQLDataProvider { public PostgreSQLDataProvider15() : base(ProviderName.PostgreSQL15, PostgreSQLVersion.v15) {} }
 
 	public abstract class PostgreSQLDataProvider : DynamicDataProviderBase<NpgsqlProviderAdapter>
 	{
@@ -196,14 +202,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new PostgreSQLSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new PostgreSQLSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
 		{
@@ -211,9 +217,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal object? NormalizeTimeStamp(object? value, DbDataType dataType)
+		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, DbDataType dataType)
 		{
-			if (PostgreSQLTools.NormalizeTimestampData)
+			if (options.NormalizeTimestampData)
 			{
 				// normalize DateTimeOffset values to prevent unnecessary (in this case) npgsql 6.0.0 complains
 				if (value is DateTimeOffset dto && dto.Offset != TimeSpan.Zero)
@@ -239,9 +245,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)
+			{
 				dataType = dataType.WithDataType(DataType.Dictionary);
+			}
 			else
-				value = NormalizeTimeStamp(value, dataType);
+			{
+				value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, dataType);
+			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
@@ -324,21 +334,24 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			return new PostgreSQLBulkCopy(this).BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(PostgreSQLOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new PostgreSQLBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(PostgreSQLOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
@@ -346,11 +359,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 #if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new PostgreSQLBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? PostgreSQLTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(PostgreSQLOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
@@ -375,7 +390,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (string.IsNullOrWhiteSpace(dbType))
 				return null;
 
-			dbType = dbType!.ToLower();
+			dbType = dbType!.ToLowerInvariant();
 
 			// detect arrays
 			var isArray = false;
@@ -514,10 +529,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (dbType.StartsWith("bit varying("))
 				dbType = "bit varying";
 
-			if (_npgsqlTypeMap.ContainsKey(dbType))
+			if (_npgsqlTypeMap.TryGetValue(dbType, out var result))
 			{
-				var result = _npgsqlTypeMap[dbType];
-
 				// because NpgsqlDbType fields numeric values changed in npgsql4,
 				// applying flag-like array/range bits is not straightforward process
 				result = Adapter.ApplyDbTypeFlags(result, isArray, isRange, isMultiRange, convertAlways);

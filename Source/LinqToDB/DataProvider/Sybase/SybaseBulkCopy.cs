@@ -1,11 +1,17 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.DataProvider.Sybase
 {
 	using Data;
 
 	// !table.TableOptions.HasIsTemporary() check:
 	// native bulk copy produce following error for insert into temp table:
 	// AseException : Incorrect syntax near ','.
-	class SybaseBulkCopy : BasicBulkCopy
+	sealed class SybaseBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Setting is conservative based on https://maxdb.sap.com/doc/7_6/f6/069940ccd42a54e10000000a1550b0/content.htm
@@ -25,9 +31,7 @@
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			var connections = GetProviderConnection(table);
 			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
@@ -35,7 +39,7 @@
 				return ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
-					options,
+					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source));
 			}
 
@@ -43,10 +47,7 @@
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>         table,
-			BulkCopyOptions   options,
-			IEnumerable<T>    source,
-			CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
 			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
@@ -55,7 +56,7 @@
 				return Task.FromResult(ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
-					options,
+					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source)));
 			}
 
@@ -64,10 +65,7 @@
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>           table,
-			BulkCopyOptions     options,
-			IAsyncEnumerable<T> source,
-			CancellationToken   cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connections = GetProviderConnection(table);
 			if (connections.HasValue && !table.TableOptions.HasIsTemporary())
@@ -76,7 +74,7 @@
 				return Task.FromResult(ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
-					options,
+					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken)));
 			}
 
@@ -125,7 +123,7 @@
 			var transaction    = providerConnections.ProviderTransaction;
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SybaseProviderAdapter.AseBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();
@@ -188,20 +186,20 @@
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			return MultipleRowsCopy2(table, options, source, "");
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
 		}
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy2Async(table, options, source, "", cancellationToken);
 		}

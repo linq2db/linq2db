@@ -1,12 +1,16 @@
-﻿using System.Data.Linq;
+﻿using System;
+using System.Data.Linq;
 using System.Diagnostics;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Numerics;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Types;
@@ -440,7 +444,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("LinqDataTypes")]
-		class MyLinqDataType
+		sealed class MyLinqDataType
 		{
 			[Column]
 			public byte[]? BinaryValue { get; set; }
@@ -556,14 +560,14 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class TestDropTable
+		sealed class TestDropTable
 		{
 			[Column]
 			public int Field;
 		}
 
 		[Table]
-		class TestIdentityDropTable
+		sealed class TestIdentityDropTable
 		{
 			[Column, Identity]
 			public int Field;
@@ -1109,7 +1113,7 @@ namespace Tests.DataProvider
 			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
 		}
 
-		public class Record
+		public sealed class Record
 		{
 			public int O { get; set; }
 		}
@@ -1117,7 +1121,7 @@ namespace Tests.DataProvider
 
 	static class FirebirdProcedures
 	{
-		public partial class PersonInsertResult
+		public sealed class PersonInsertResult
 		{
 			public int? PERSONID { get; set; }
 		}
@@ -1166,7 +1170,7 @@ namespace Tests.DataProvider
 				new DataParameter("INT_128",    INT_128,    DataType.Int128));
 		}
 
-		public partial class TestV4TYPESResult
+		public sealed class TestV4TYPESResult
 		{
 			public FbZonedDateTime? COL_TSTZ       { get; set; }
 			public FbZonedTime?     COL_TTZ        { get; set; }

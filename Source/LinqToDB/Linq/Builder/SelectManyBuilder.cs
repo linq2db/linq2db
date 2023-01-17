@@ -1,11 +1,13 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class SelectManyBuilder : MethodCallBuilder
+	sealed class SelectManyBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -38,8 +40,12 @@ namespace LinqToDB.Linq.Builder
 			var context        = new SelectManyContext(buildInfo.Parent, collectionSelector, sequence);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
-			var collectionInfo = new BuildInfo(context, expr, new SelectQuery());
-			var collection     = builder.BuildSequence(collectionInfo);
+			var collectionInfo            = new BuildInfo(context, expr, new SelectQuery());
+			var old                       = builder.DisableDefaultIfEmpty;
+			builder.DisableDefaultIfEmpty = true;
+			var collection                = builder.BuildSequence(collectionInfo);
+			builder.DisableDefaultIfEmpty = old;
+
 			if (resultSelector.Parameters.Count > 1)
 				collection.SetAlias(resultSelector.Parameters[1].Name);
 
@@ -123,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 				if (joinType == JoinType.Auto)
 				{
 					var isApplyJoin =
-						//Common.Configuration.Linq.PrefereApply    ||
+						//builder.DataOptions.LinqOptions.PreferApply    ||
 						collection.SelectQuery.Select.HasModifier ||
 						table.SqlTable.TableArguments != null && table.SqlTable.TableArguments.Length > 0 ||
 						table.SqlTable is SqlRawSqlTable rawTable && rawTable.Parameters.Length > 0;
@@ -191,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 			return new SqlFromClause.Join(joinType, sql, null, false, null);
 		}
 
-		public class SelectManyContext : SelectContext
+		public sealed class SelectManyContext : SelectContext
 		{
 			public SelectManyContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence)
 				: base(parent, lambda, sequence)
@@ -227,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 				if (Collection == null)
 					base.BuildQuery(query, queryParameter);
 
-				ThrowHelper.ThrowNotImplementedException();
+				throw new NotImplementedException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)

@@ -1,4 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -415,7 +418,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class InsertTable
+		sealed class InsertTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -982,7 +985,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class GuidID
+		sealed class GuidID
 		{
 			[Identity] public Guid ID;
 					   public int  Field1;
@@ -1003,7 +1006,8 @@ namespace Tests.xUpdate
 		{
 			try
 			{
-				SqlServerConfiguration.GenerateScopeIdentity = false;
+				SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = false };
+
 				using (var db = GetDataConnection(context))
 				{
 					var id = (Guid) db.InsertWithIdentity(new GuidID {Field1 = 1});
@@ -1012,7 +1016,7 @@ namespace Tests.xUpdate
 			}
 			finally
 			{
-				SqlServerConfiguration.GenerateScopeIdentity = true;
+				SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = true };
 			}
 		}
 
@@ -1024,7 +1028,8 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					SqlServerConfiguration.GenerateScopeIdentity = false;
+					SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = false };
+
 					for (var i = 0; i < 2; i++)
 					{
 						var person = new Person
@@ -1046,12 +1051,12 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					SqlServerConfiguration.GenerateScopeIdentity = true;
+					SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = true };
 				}
 			}
 		}
 
-		class GuidID2
+		sealed class GuidID2
 		{
 			[Identity] public Guid ID;
 		}
@@ -1422,11 +1427,10 @@ namespace Tests.xUpdate
 						new LinqDataTypes2 { ID = 1004, MoneyValue = 0m, DateTimeValue = null, BoolValue = true,  GuidValue = new Guid("ef129165-6ffe-4df9-bb6b-bb16e413c883"), SmallIntValue =  null, IntValue = null }
 					};
 
-					// workaround for https://github.com/DarkWanderer/ClickHouse.Client/issues/152
-					var options = new BulkCopyOptions();
-					options.MaxBatchSize = 1;
+					var options = new BulkCopyOptions { MaxBatchSize = 1 };
+
 					if (context.IsAnyOf(ProviderName.ClickHouseClient))
-						options.WithoutSession = true;
+						options = options with { WithoutSession = true };
 
 					((DataConnection)db).BulkCopy(options, data);
 				}
@@ -1446,8 +1450,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-					var options          = GetDefaultBulkCopyOptions(context);
-					options.MaxBatchSize = 100;
+					var options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 100 };
 
 					((DataConnection)db).BulkCopy(options, new[]
 					{
@@ -1658,7 +1661,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("LinqDataTypes")]
-		class TestConvertTable1
+		sealed class TestConvertTable1
 		{
 			[PrimaryKey]                        public int      ID;
 			[Column(DataType = DataType.Int64)] public TimeSpan BigIntValue;
@@ -1689,7 +1692,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table("LinqDataTypes")]
-		class TestConvertTable2
+		sealed class TestConvertTable2
 		{
 			[PrimaryKey]                        public int       ID;
 			[Column(DataType = DataType.Int64)] public TimeSpan? BigIntValue;
@@ -2024,7 +2027,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		class TestInsertOrReplaceTable
+		sealed class TestInsertOrReplaceTable
 		{
 			[PrimaryKey] public int     ID         { get; set; }
 			[Column]     public string? FirstName  { get; set; }

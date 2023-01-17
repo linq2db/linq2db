@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -10,7 +12,7 @@ namespace Tests.Linq
 	public class ExpandTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }

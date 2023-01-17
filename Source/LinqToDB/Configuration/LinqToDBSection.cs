@@ -37,8 +37,7 @@ namespace LinqToDB.Configuration
 				{
 					try
 					{
-						_instance = (LinqToDBSection)ConfigurationManager.GetSection("linq2db")
-							?? new LinqToDBSection();
+						_instance = (LinqToDBSection?)ConfigurationManager.GetSection("linq2db") ?? new();
 					}
 					catch (SecurityException)
 					{
@@ -77,7 +76,7 @@ namespace LinqToDB.Configuration
 
 		IEnumerable<IDataProviderSettings> ILinqToDBSettings.DataProviders => DataProviders.OfType<DataProviderElement>();
 
-		class ConnectionStringEx : IConnectionStringSettings
+		sealed class ConnectionStringEx : IConnectionStringSettings
 		{
 			private readonly CSS _css;
 

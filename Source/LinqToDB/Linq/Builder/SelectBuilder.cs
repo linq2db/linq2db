@@ -1,14 +1,19 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
+	using System.Data.Common;
 
-	class SelectBuilder : MethodCallBuilder
+	sealed class SelectBuilder : MethodCallBuilder
 	{
 		#region SelectBuilder
 
@@ -63,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region SelectContext2
 
-		class SelectContext2 : SelectContext
+		sealed class SelectContext2 : SelectContext
 		{
 			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence)
 				: base(parent, lambda, sequence)
@@ -273,7 +278,23 @@ namespace LinqToDB.Linq.Builder
 
 						break;
 					}
-
+				// new MyObject { MyProp = p.MyProp == null ? null : new MyObject2 { ... } ... }
+				//
+				case ExpressionType.Conditional:
+					{
+						var expr = (ConditionalExpression)expression;
+						var shouldNotNullExpr = expr.IfTrue.IsNullValue()
+							? expr.IfFalse : expr.IfFalse.IsNullValue()
+							? expr.IfTrue : null;
+						if(shouldNotNullExpr == null)
+						{
+							break;
+						}
+						var q = GetExpressions(param, path, level, shouldNotNullExpr);
+						foreach (var e in q)
+							yield return e;
+						break;
+					}
 				// parameter
 				//
 				case ExpressionType.Parameter  :

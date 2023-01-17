@@ -1,4 +1,10 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Data;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Data;
@@ -6,7 +12,7 @@
 
 	// Missing features:
 	// - function with ref_cursor return type returns object, need to find out how to map it
-	class OracleSchemaProvider : SchemaProviderBase
+	sealed class OracleSchemaProvider : SchemaProviderBase
 	{
 		private readonly OracleDataProvider _provider;
 		private int _majorVersion;
@@ -14,7 +20,7 @@
 		// both managed and native providers will execute procedure
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
-		protected string? SchemasFilter { get; private set; }
+		private string? SchemasFilter { get; set; }
 
 		public OracleSchemaProvider(OracleDataProvider provider)
 		{

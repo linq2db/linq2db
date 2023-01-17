@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -10,7 +13,7 @@ namespace LinqToDB.DataProvider.SQLite
 	{
 	}
 
-	class SQLiteSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISQLiteSpecificTable<TSource>, ITable
+	sealed class SQLiteSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISQLiteSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public SQLiteSpecificTable(ITable<TSource> table) : base(table)

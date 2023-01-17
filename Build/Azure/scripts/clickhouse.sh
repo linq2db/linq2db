@@ -5,9 +5,8 @@ docker run -d --name clickhouse --ulimit nofile=262144:262144 -p 8123:8123 -p 90
 docker ps -a
 
 echo Patching ClickHouse settings...
-docker exec clickhouse sed -i "s/<load_balancing>random<\/load_balancing>/<load_balancing>random<\/load_balancing><join_use_nulls>1<\/join_use_nulls><mutations_sync>1<\/mutations_sync><allow_experimental_object_type>1<\/allow_experimental_object_type><allow_experimental_geo_types>1<\/allow_experimental_geo_types>/g;" /etc/clickhouse-server/users.xml
-docker stop clickhouse
-docker start clickhouse
+docker exec clickhouse sed -i "0,/<\/default>/{s/<\/default>/<join_use_nulls>1<\/join_use_nulls><mutations_sync>1<\/mutations_sync><allow_experimental_object_type>1<\/allow_experimental_object_type><allow_experimental_geo_types>1<\/allow_experimental_geo_types><\/default>/}" /etc/clickhouse-server/users.xml
+docker restart clickhouse
 
 retries=0
 # note that clickhouse logs to stderr(sic!) so 2>&1 needed

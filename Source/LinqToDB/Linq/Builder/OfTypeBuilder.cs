@@ -1,12 +1,14 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlQuery;
 
-	class OfTypeBuilder : MethodCallBuilder
+	sealed class OfTypeBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -66,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			return builder.MakeIsPredicate((context, table), context, discriminators, toType,
 				static (context, name) =>
 				{
-					var field  = context.table[name] ?? ThrowHelper.ThrowLinqException<SqlField>($"Field {name} not found in table {context.table}");
+					var field  = context.table.FindFieldByMemberName(name) ?? throw new LinqException($"Field {name} not found in table {context.table}");
 					var member = field.ColumnDescriptor.MemberInfo;
 					var expr   = Expression.MakeMemberAccess(Expression.Parameter(member.DeclaringType!, "p"), member);
 					var sql    = context.context.ConvertToSql(expr, 1, ConvertFlags.Field)[0].Sql;
@@ -77,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region OfTypeContext
 
-		class OfTypeContext : PassThroughContext
+		sealed class OfTypeContext : PassThroughContext
 		{
 			public OfTypeContext(IBuildContext context, MethodCallExpression methodCall)
 				: base(context)

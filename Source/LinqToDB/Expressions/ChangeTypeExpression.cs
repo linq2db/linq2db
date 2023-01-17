@@ -1,8 +1,9 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	class ChangeTypeExpression : Expression
+	sealed class ChangeTypeExpression : Expression
 	{
 		public const ExpressionType ChangeTypeType = (ExpressionType)1000;
 

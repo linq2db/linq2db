@@ -1,11 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
-
-	class TableLikeQueryContext : SubQueryContext
+	sealed class TableLikeQueryContext : SubQueryContext
 	{
 		public SqlTableLikeSource Source { get; }
 

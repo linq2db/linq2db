@@ -1,4 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -29,7 +33,7 @@ namespace LinqToDB.SqlQuery
 			_doCloneStatic = doClone;
 		}
 
-		[return: NotNullIfNotNull("elements")]
+		[return: NotNullIfNotNull(nameof(elements))]
 		public T[]? Clone<T>(T[]? elements)
 			where T : class, IQueryElement
 		{
@@ -117,7 +121,7 @@ namespace LinqToDB.SqlQuery
 		// note on clone implementation:
 		// 1. when cloning element, add it first to _objectTree before cloing it's members to avoid issues, when child elements contain reference to current element
 		// 2. use _objectTree.Add() instead of _objectTree[e] = clone; to detect double clone errors
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		internal T? Clone<T>(T? element)
 			where T: class, IQueryElement
 		{
@@ -258,7 +262,7 @@ namespace LinqToDB.SqlQuery
 					var cteTable = (SqlCteTable)(IQueryElement)element;
 
 					if (cteTable.Cte == null)
-						ThrowHelper.ThrowInvalidOperationException("Cte is null");
+						throw new InvalidOperationException("Cte is null");
 
 					// TODO: children Clone called before _objectTree update (original cloning logic)
 					var table = new SqlCteTable(
@@ -789,8 +793,7 @@ namespace LinqToDB.SqlQuery
 				//case QueryElementType.MultiInsertStatement:
 				//case QueryElementType.MergeSourceTable:
 				default:
-					ThrowHelper.ThrowNotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
-					break;
+					throw new NotImplementedException($"Unsupported query element type: {element.GetType()} ({element.ElementType})");
 			}
 
 			if (element is IQueryExtendible { SqlQueryExtensions: {} } qe)

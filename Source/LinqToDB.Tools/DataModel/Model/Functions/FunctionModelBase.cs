@@ -1,7 +1,9 @@
-﻿namespace LinqToDB.DataModel
-{
-	using SqlQuery;
+﻿using System.Collections.Generic;
+using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Base class for stored procedure or function descriptors.
 	/// </summary>
@@ -9,9 +11,14 @@
 	{
 		protected FunctionModelBase(SqlObjectName name, MethodModel method)
 		{
+			Name   = name;
 			Method = method;
 		}
 
+		/// <summary>
+		/// Gets or sets database name of function/procedure.
+		/// </summary>
+		public SqlObjectName                Name       { get; set; }
 		/// <summary>
 		/// Gets or sets method descriptor for function/procedure.
 		/// </summary>

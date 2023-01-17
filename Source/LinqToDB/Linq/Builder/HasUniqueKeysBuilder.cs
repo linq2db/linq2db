@@ -1,9 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class HasUniqueKeyBuilder : MethodCallBuilder
+	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

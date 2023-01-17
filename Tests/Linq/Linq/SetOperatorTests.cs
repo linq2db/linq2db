@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
@@ -9,7 +10,7 @@ namespace Tests.Linq
 	public class SetOperatorTests : TestBase
 	{
 		[Table]
-		class SampleData
+		sealed class SampleData
 		{
 			[PrimaryKey]
 			[Column] public int Id     { get; set; }

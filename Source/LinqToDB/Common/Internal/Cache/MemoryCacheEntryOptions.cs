@@ -1,10 +1,13 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.Collections.Generic;
+
 namespace LinqToDB.Common.Internal.Cache
 {
 	/// <summary>
-	/// Represents the cache options applied to an entry of the <see cref="IMemoryCache{TKey}"/> instance.
+	/// Represents the cache options applied to an entry of the <see cref="IMemoryCache{TKey,TItem}"/> instance.
 	/// </summary>
 	public class MemoryCacheEntryOptions<TKey>
 		where TKey: notnull
@@ -33,7 +36,7 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				if (value <= TimeSpan.Zero)
 				{
-					ThrowHelper.ThrowArgumentOutOfRangeException(
+					throw new ArgumentOutOfRangeException(
 						nameof(AbsoluteExpirationRelativeToNow),
 						value,
 						"The relative expiration value must be positive.");
@@ -54,7 +57,7 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				if (value <= TimeSpan.Zero)
 				{
-					ThrowHelper.ThrowArgumentOutOfRangeException(
+					throw new ArgumentOutOfRangeException(
 						nameof(SlidingExpiration),
 						value,
 						"The sliding expiration value must be positive.");
@@ -90,7 +93,7 @@ namespace LinqToDB.Common.Internal.Cache
 			{
 				if (value < 0)
 				{
-					ThrowHelper.ThrowArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
+					throw new ArgumentOutOfRangeException(nameof(value), value, $"{nameof(value)} must be non-negative.");
 				}
 
 				_size = value;

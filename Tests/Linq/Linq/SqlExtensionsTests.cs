@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -10,7 +11,7 @@ namespace Tests.Linq
 	public class SqlExtensionsTests : TestBase
 	{
 		[Table("sample_table")]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column("id")]    public int Id    { get; set; }
 			[Column("value")] public int Value { get; set; }

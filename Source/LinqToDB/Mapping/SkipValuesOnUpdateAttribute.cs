@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Attribute for skipping specific values on update.
@@ -18,10 +20,5 @@
 		/// Operations, affected by value skipping.
 		/// </summary>
 		public override SkipModification Affects => SkipModification.Update;
-
-		public override string GetObjectID()
-		{
-			return $".{(int)Affects}.";
-		}
 	}
 }

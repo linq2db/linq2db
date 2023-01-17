@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 using JetBrains.Annotations;
 
@@ -20,14 +23,14 @@ namespace Tests.Tools
 			public virtual void M() {}
 		}
 
-		class B : A
+		sealed class B : A
 		{
 			public override int Overridable { get; set; }
 
 			public override void M() {}
 		}
 
-		class C : A
+		sealed class C : A
 		{
 		}
 
@@ -115,7 +118,7 @@ namespace Tests.Tools
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-		class TestClass
+		sealed class TestClass
 		{
 			public int     Field1;
 			public int?    Field2;
@@ -169,7 +172,7 @@ namespace Tests.Tools
 			Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 1 }), Is.True);
 		}
 
-		class NoMemberClass
+		sealed class NoMemberClass
 		{
 		}
 
@@ -185,7 +188,7 @@ namespace Tests.Tools
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-		class OneMemberClass
+		sealed class OneMemberClass
 		{
 			public int Field1;
 		}
@@ -276,12 +279,12 @@ namespace Tests.Tools
 		}
 
 		[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-		class IdentifierAttribute : Attribute
+		sealed class IdentifierAttribute : Attribute
 		{
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-		class TestClass2
+		sealed class TestClass2
 		{
 			[Identifier]
 			public int EntityType { get; set; }

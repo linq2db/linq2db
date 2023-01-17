@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -166,7 +168,7 @@ namespace Tests.xUpdate
 
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
 		[Table("AllTypes")]
-		class AllType
+		sealed class AllType
 		{
 			[PrimaryKey, Identity]
 			public int ID;

@@ -1,16 +1,18 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System;
+
+namespace LinqToDB.DataProvider.DB2
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
 
-	class DB2SqlOptimizer : BasicSqlOptimizer
+	sealed class DB2SqlOptimizer : BasicSqlOptimizer
 	{
 		public DB2SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			// DB2 LUW 9/10 supports only FETCH, v11 adds OFFSET, but for that we need to introduce versions into DB2 provider first
 			statement = SeparateDistinctFromPagination(statement, q => q.Select.SkipValue != null);
@@ -20,15 +22,15 @@
 			// This is mutable part
 			return statement.QueryType switch
 			{
-				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement),
-				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement),
+				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
+				QueryType.Update => GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions),
 				_                => statement,
 			};
 		}
 
 		public override bool CanCompareSearchConditions => true;
-		
-		protected static string[] DB2LikeCharactersToEscape = {"%", "_"};
+
+		private static string[] DB2LikeCharactersToEscape = {"%", "_"};
 
 		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
 
@@ -69,7 +71,7 @@
 
 						if (func.SystemType.ToUnderlying() == typeof(bool))
 						{
-							var ex = AlternativeConvertToBoolean(func, 1);
+							var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 							if (ex != null)
 								return ex;
 						}

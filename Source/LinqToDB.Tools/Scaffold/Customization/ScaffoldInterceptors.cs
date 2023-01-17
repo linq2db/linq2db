@@ -1,9 +1,13 @@
-﻿namespace LinqToDB.Scaffold
-{
-	using CodeModel;
-	using DataModel;
-	using Schema;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using LinqToDB.CodeModel;
+using LinqToDB.DataModel;
+using LinqToDB.Metadata;
+using LinqToDB.Schema;
 
+namespace LinqToDB.Scaffold
+{
 	// list of extension points based on:
 	// - user requests and PRs to old T4 templates (rsdn forum, bltoolkit and linq2db repositories). Both implemented and not
 	// - existing extensibility points in T4 templates that require custom code
@@ -101,7 +105,7 @@
 		/// <item>Return parameter descriptor: <see cref="StoredProcedureModel.Return"/></item>
 		/// <item>Return tables (data sets) descriptor: <see cref="StoredProcedureModel.Results"/></item>
 		/// <item>Error, returned by data set schema load procedure: <see cref="TableFunctionModelBase.Error"/></item>
-		/// <item>Metadata (procedure name): <see cref="TableFunctionModelBase.Name"/></item>
+		/// <item>Metadata (procedure name): <see cref="FunctionModelBase.Name"/></item>
 		/// <item>Method code-generation options: <see cref="FunctionModelBase.Method"/></item>
 		/// <item>Parameters: <see cref="FunctionModelBase.Parameters"/></item>
 		/// </list>
@@ -118,7 +122,7 @@
 		/// <item>Function metadata: <see cref="TableFunctionModel.Metadata"/></item>
 		/// <item>Return table descriptor: <see cref="TableFunctionModel.Result"/></item>
 		/// <item>Error, returned by data set schema load procedure: <see cref="TableFunctionModelBase.Error"/></item>
-		/// <item>Metadata (function name): <see cref="TableFunctionModelBase.Name"/></item>
+		/// <item>Metadata (function name): <see cref="FunctionModelBase.Name"/></item>
 		/// <item>Method code-generation options: <see cref="FunctionModelBase.Method"/></item>
 		/// <item>Parameters: <see cref="FunctionModelBase.Parameters"/></item>
 		/// </list>
@@ -176,5 +180,14 @@
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Event, triggered after source code generation done. Provides access to database model objects with final types and names set.
+		/// Could be used to establish link between database object and generated code.
+		/// </summary>
+		/// <param name="model">Database model descriptors.</param>
+		public virtual void AfterSourceCodeGenerated(FinalDataModel model)
+		{
+		}
 	}
 }

@@ -1,5 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -7,7 +10,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using Common.Internal;
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Mapping;
 
 	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
@@ -29,16 +32,9 @@ namespace LinqToDB.SqlQuery
 			Type = GetDataType(dataType).Type.WithDataType(dataType).WithLength(length);
 		}
 
-		public SqlDataType(Type type)
-		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-
-			Type = GetDataType(type).Type.WithSystemType(type);
-		}
-
 		public SqlDataType(DataType dataType, Type type)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -47,7 +43,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type, string dbType)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
+			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -57,8 +53,8 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type, int length)
 		{
-			if (type == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-			if (length <= 0)  ThrowHelper.ThrowArgumentOutOfRangeException(nameof(length));
+			if (type == null) throw new ArgumentNullException(nameof(type));
+			if (length <= 0)  throw new ArgumentOutOfRangeException(nameof(length));
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -68,9 +64,9 @@ namespace LinqToDB.SqlQuery
 
 		public SqlDataType(DataType dataType, Type type, int precision, int scale)
 		{
-			if (type      == null) ThrowHelper.ThrowArgumentNullException(nameof(type));
-			if (precision <= 0   ) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(precision));
-			if (scale     <  0   ) ThrowHelper.ThrowArgumentOutOfRangeException(nameof(scale));
+			if (type      == null) throw new ArgumentNullException(nameof(type));
+			if (precision <= 0   ) throw new ArgumentOutOfRangeException(nameof(precision));
+			if (scale     <  0   ) throw new ArgumentOutOfRangeException(nameof(scale));
 
 			Type = GetDataType(dataType).Type
 				.WithDataType(dataType)
@@ -116,7 +112,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Static Members
 
-		struct TypeInfo
+		readonly struct TypeInfo
 		{
 			public TypeInfo(DataType dbType, int? maxLength, int? maxPrecision, int? maxScale, int? maxDisplaySize)
 			{
@@ -199,71 +195,6 @@ namespace LinqToDB.SqlQuery
 		public static int? GetMaxScale      (DataType dbType) { return _typeInfo[(int)dbType].MaxScale;       }
 		public static int? GetMaxDisplaySize(DataType dbType) { return _typeInfo[(int)dbType].MaxDisplaySize; }
 
-		[Obsolete($"Use {nameof(MappingSchema)}.{nameof(MappingSchema.GetDataType)}() method instead")]
-		public static SqlDataType GetDataType(Type type)
-		{
-			var underlyingType = type;
-
-			if (underlyingType.IsNullable())
-				underlyingType = underlyingType.GetGenericArguments()[0];
-
-			if (underlyingType.IsEnum)
-				underlyingType = Enum.GetUnderlyingType(underlyingType);
-
-			switch (underlyingType.GetTypeCodeEx())
-			{
-				case TypeCode.Boolean  : return Boolean;
-				case TypeCode.Char     : return DbNChar;
-				case TypeCode.SByte    : return SByte;
-				case TypeCode.Byte     : return Byte;
-				case TypeCode.Int16    : return Int16;
-				case TypeCode.UInt16   : return UInt16;
-				case TypeCode.Int32    : return Int32;
-				case TypeCode.UInt32   : return UInt32;
-				case TypeCode.Int64    : return DbInt64;
-				case TypeCode.UInt64   : return UInt64;
-				case TypeCode.Single   : return Single;
-				case TypeCode.Double   : return Double;
-				case TypeCode.Decimal  : return Decimal;
-				case TypeCode.DateTime : return DateTime;
-				case TypeCode.String   : return String;
-				case TypeCode.Object   :
-					if (underlyingType == typeof(Guid))           return Guid;
-					if (underlyingType == typeof(byte[]))         return ByteArray;
-					if (underlyingType == typeof(System.Data.Linq.Binary)) return LinqBinary;
-					if (underlyingType == typeof(char[]))         return CharArray;
-					if (underlyingType == typeof(DateTimeOffset)) return DateTimeOffset;
-					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
-#if NET6_0_OR_GREATER
-					if (underlyingType == typeof(DateOnly))       return DbDate;
-#endif
-					break;
-
-				case TypeCode.DBNull   :
-				case TypeCode.Empty    :
-				default                : break;
-			}
-
-			if (underlyingType == typeof(SqlByte))     return SqlByte;
-			if (underlyingType == typeof(SqlInt16))    return SqlInt16;
-			if (underlyingType == typeof(SqlInt32))    return SqlInt32;
-			if (underlyingType == typeof(SqlInt64))    return SqlInt64;
-			if (underlyingType == typeof(SqlSingle))   return SqlSingle;
-			if (underlyingType == typeof(SqlBoolean))  return SqlBoolean;
-			if (underlyingType == typeof(SqlDouble))   return SqlDouble;
-			if (underlyingType == typeof(SqlDateTime)) return SqlDateTime;
-			if (underlyingType == typeof(SqlDecimal))  return SqlDecimal;
-			if (underlyingType == typeof(SqlMoney))    return SqlMoney;
-			if (underlyingType == typeof(SqlString))   return SqlString;
-			if (underlyingType == typeof(SqlBinary))   return SqlBinary;
-			if (underlyingType == typeof(SqlGuid))     return SqlGuid;
-			if (underlyingType == typeof(SqlBytes))    return SqlBytes;
-			if (underlyingType == typeof(SqlChars))    return SqlChars;
-			if (underlyingType == typeof(SqlXml))      return SqlXml;
-
-			return DbVariant;
-		}
-
 		public static SqlDataType GetDataType(DataType type)
 		{
 			return type switch
@@ -309,7 +240,7 @@ namespace LinqToDB.SqlQuery
 				DataType.Int128         => DbInt128,
 				DataType.DecFloat       => DbDecFloat,
 				DataType.TimeTZ         => DbTimeTZ,
-				_                       => ThrowHelper.ThrowInvalidOperationException<SqlDataType>($"Unexpected type: {type}"),
+				_                       => throw new InvalidOperationException($"Unexpected type: {type}"),
 			};
 		}
 

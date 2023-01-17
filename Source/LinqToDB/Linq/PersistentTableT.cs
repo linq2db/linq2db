@@ -1,5 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
@@ -7,14 +12,14 @@ namespace LinqToDB.Linq
 	using Async;
 #endif
 
-	class PersistentTable<T> : ITable<T>
+	sealed class PersistentTable<T> : ITable<T>
 		where T : notnull
 	{
 		private readonly IQueryable<T> _query;
 
 		public PersistentTable(IQueryable<T> query)
 		{
-			_query = query ?? ThrowHelper.ThrowArgumentNullException<IQueryable<T>>(nameof(query));
+			_query = query ?? throw new ArgumentNullException(nameof(query));
 		}
 
 		public IEnumerator<T> GetEnumerator()
@@ -31,7 +36,7 @@ namespace LinqToDB.Linq
 		Expression IExpressionQuery<T>.Expression
 		{
 			get => _query.Expression;
-			set => ThrowHelper.ThrowNotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public string         SqlText     { get; } = null!;
@@ -61,12 +66,12 @@ namespace LinqToDB.Linq
 
 		public Task<IAsyncEnumerable<TResult>> ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			return ThrowHelper.ThrowNotImplementedException<Task<IAsyncEnumerable<TResult>>>();
+			throw new NotImplementedException();
 		}
 
 		public Task<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			return ThrowHelper.ThrowNotImplementedException<Task<TResult>>();
+			throw new NotImplementedException();
 		}
 
 		Expression IExpressionQuery.Expression => Expression;

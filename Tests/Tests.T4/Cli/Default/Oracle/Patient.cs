@@ -22,8 +22,8 @@ namespace Cli.Default.Oracle
 		/// <summary>
 		/// Fk_Patient_Person
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Oracle.Person.PersonId))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
+		public Person FkPerson { get; set; } = null!;
 		#endregion
 	}
 }

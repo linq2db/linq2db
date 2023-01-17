@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.ClickHouse
+﻿using System;
+using System.Data.Common;
+
+namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Configuration;
 	using Data;
@@ -54,6 +57,11 @@
 		/// Default bulk copy mode.
 		/// Default value: <c>BulkCopyType.ProviderSpecific</c>.
 		/// </summary>
-		public static BulkCopyType DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
+		[Obsolete("Use ClickHouseOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => ClickHouseOptions.Default.BulkCopyType;
+			set => ClickHouseOptions.Default = ClickHouseOptions.Default with { BulkCopyType = value };
+		}
 	}
 }

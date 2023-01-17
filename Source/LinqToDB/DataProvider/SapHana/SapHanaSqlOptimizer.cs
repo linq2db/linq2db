@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using System;
+
+namespace LinqToDB.DataProvider.SapHana
 {
 	using Extensions;
 	using SqlProvider;
@@ -11,13 +13,14 @@
 
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
-				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
+				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
+				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions); break;
 			}
+
 			return statement;
 		}
 
@@ -33,7 +36,7 @@
 
 					if (ftype == typeof(bool))
 					{
-						var ex = AlternativeConvertToBoolean(func, 1);
+						var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 						if (ex != null)
 							return ex;
 					}
@@ -92,7 +95,7 @@
 				}
 				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
 			}
-			
+
 			return new SqlFunction(systemType, name,
 				cond,
 				parameters[start + 1],

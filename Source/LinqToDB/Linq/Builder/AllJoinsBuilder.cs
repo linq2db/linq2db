@@ -1,11 +1,12 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class AllJoinsBuilder : MethodCallBuilder
+	sealed class AllJoinsBuilder : MethodCallBuilder
 	{
 		private static readonly string[] RightNullableOnlyMethodNames    = { "RightJoin", "FullJoin" };
 		private static readonly string[] NotRightNullableOnlyMethodNames = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
@@ -45,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => ThrowHelper.ThrowInvalidOperationException<JoinType>($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[1].EvaluateExpression()!}")
+						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[1].EvaluateExpression()!}")
 					};
 					break;
 			}

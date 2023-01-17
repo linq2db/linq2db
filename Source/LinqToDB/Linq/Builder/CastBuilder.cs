@@ -1,9 +1,10 @@
 ﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class CastBuilder : MethodCallBuilder
+	using LinqToDB.Expressions;
+
+	sealed class CastBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -17,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 			return new CastContext(sequence, methodCall);
 		}
 
-		class CastContext : PassThroughContext
+		sealed class CastContext : PassThroughContext
 		{
 			public CastContext(IBuildContext context, MethodCallExpression methodCall)
 				: base(context)

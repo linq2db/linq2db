@@ -1,10 +1,20 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Linq;
+using System.Globalization;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+
+using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Common;
 	using LinqToDB.Data;
 	using Model;
 
@@ -219,8 +229,7 @@ namespace Tests.Linq
 		{
 			table.Delete();
 
-			var options          = GetDefaultBulkCopyOptions(context);
-			options.BulkCopyType = bulkCopyType;
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = bulkCopyType };
 
 			db.BulkCopy(options, data);
 			var records = table.OrderBy(r => r.Id).ToArray();

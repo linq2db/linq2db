@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.CodeModel
 {
@@ -297,7 +300,7 @@ namespace LinqToDB.CodeModel
 		/// <summary>
 		/// Data storage for simple column.
 		/// </summary>
-		private class SimpleColumnData : ColumnDataBase
+		private sealed class SimpleColumnData : ColumnDataBase
 		{
 			// per-row values
 			// as we don't know row count, we use list
@@ -354,7 +357,7 @@ namespace LinqToDB.CodeModel
 		/// <summary>
 		/// Simple column descriptor.
 		/// </summary>
-		private class SimpleColumn : ColumnBase<SimpleColumnData>
+		private sealed class SimpleColumn : ColumnBase<SimpleColumnData>
 		{
 			public SimpleColumn(string columnName)
 				: base(columnName)

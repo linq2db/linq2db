@@ -1,7 +1,9 @@
-﻿namespace LinqToDB.Schema
-{
-	using SqlQuery;
+﻿using System;
+using System.Collections.Generic;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Schema
+{
 	/// <summary>
 	/// Table function descriptor.
 	/// </summary>

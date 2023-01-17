@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Data.Common;
+using System.IO;
+using System.Reflection;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -11,7 +14,12 @@ namespace LinqToDB.DataProvider.SQLite
 		static readonly Lazy<IDataProvider> _SQLiteClassicDataProvider = DataConnection.CreateDataProvider<SQLiteDataProviderClassic>();
 		static readonly Lazy<IDataProvider> _SQLiteMSDataProvider      = DataConnection.CreateDataProvider<SQLiteDataProviderMS>();
 
-		public static bool AlwaysCheckDbNull = true;
+		[Obsolete("Use SQLiteOptions.Default.AlwaysCheckDbNull instead.")]
+		public static bool AlwaysCheckDbNull
+		{
+			get => SQLiteOptions.Default.AlwaysCheckDbNull;
+			set => SQLiteOptions.Default = SQLiteOptions.Default with { AlwaysCheckDbNull = value };
+		}
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
@@ -122,7 +130,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false)
 		{
-			if (databaseName == null) ThrowHelper.ThrowArgumentNullException(nameof(databaseName));
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.CreateFileDatabase(
 				databaseName, deleteIfExists, ".sqlite",
@@ -135,7 +143,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 		public static void DropDatabase(string databaseName)
 		{
-			if (databaseName == null) ThrowHelper.ThrowArgumentNullException(nameof(databaseName));
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
 			DataTools.DropFileDatabase(databaseName, ".sqlite");
 		}
@@ -167,7 +175,12 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use SQLiteOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => SQLiteOptions.Default.BulkCopyType;
+			set => SQLiteOptions.Default = SQLiteOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

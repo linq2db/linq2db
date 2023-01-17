@@ -1,4 +1,8 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.Access
 {
@@ -6,7 +10,7 @@ namespace LinqToDB.DataProvider.Access
 	using Data;
 	using SchemaProvider;
 
-	class AccessOleDbSchemaProvider : AccessSchemaProviderBase
+	sealed class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
 		private const OleDbProviderAdapter.ColumnFlags COUNTER_OR_BIT = OleDbProviderAdapter.ColumnFlags.MayBeNull
 			| OleDbProviderAdapter.ColumnFlags.IsFixedLength
@@ -234,7 +238,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
-			var dts = ExecuteOnNewConnection(dataConnection, cn => base.GetDataTypes(cn));
+			var dts = ExecuteOnNewConnection(dataConnection, base.GetDataTypes);
 
 			if (dts.All(dt => dt.ProviderDbType != 128))
 			{
@@ -285,7 +289,7 @@ namespace LinqToDB.DataProvider.Access
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
-						switch (paramNames[i].Trim().ToLower())
+						switch (paramNames[i].Trim().ToLowerInvariant())
 						{
 							case "max length": paramValues[i] = length;    break;
 							case "precision" : paramValues[i] = precision; break;

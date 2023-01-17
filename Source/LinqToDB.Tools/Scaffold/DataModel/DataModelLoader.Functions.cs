@@ -1,11 +1,14 @@
-﻿namespace LinqToDB.Scaffold
-{
-	using CodeModel;
-	using DataModel;
-	using Metadata;
-	using Schema;
-	using SqlQuery;
+﻿using System;
+using System.Collections.Generic;
+using LinqToDB.Metadata;
+using LinqToDB.Schema;
+using LinqToDB.CodeModel;
+using LinqToDB.DataModel;
+using System.Linq;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Scaffold
+{
 	partial class DataModelLoader
 	{
 		/// <summary>
@@ -16,7 +19,7 @@
 		/// <param name="defaultSchemas">List of default database schema names.</param>
 		private void BuildAggregateFunction(DataContextModel dataContext, AggregateFunction func, ISet<string> defaultSchemas)
 		{
-			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
+			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas, false);
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
@@ -65,7 +68,7 @@
 		/// <param name="defaultSchemas">List of default database schema names.</param>
 		private void BuildScalarFunction(DataContextModel dataContext, ScalarFunction func, ISet<string> defaultSchemas)
 		{
-			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
+			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas, _schemaProvider.DatabaseOptions.ScalarFunctionSchemaRequired);
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
@@ -154,7 +157,7 @@
 		/// <param name="defaultSchemas">List of default database schema names.</param>
 		private void BuildTableFunction(DataContextModel dataContext, TableFunction func, ISet<string> defaultSchemas)
 		{
-			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
+			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas, false);
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,
@@ -195,7 +198,7 @@
 		/// <param name="defaultSchemas">List of default database schema names.</param>
 		private void BuildStoredProcedure(DataContextModel dataContext, StoredProcedure func, ISet<string> defaultSchemas)
 		{
-			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas);
+			var (name, isNonDefaultSchema) = ProcessObjectName(func.Name, defaultSchemas, false);
 
 			var method = new MethodModel(
 				_namingServices.NormalizeIdentifier(_options.DataModel.ProcedureNameOptions,

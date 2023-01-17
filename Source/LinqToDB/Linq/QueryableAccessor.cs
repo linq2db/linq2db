@@ -1,8 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
 {
-	class QueryableAccessor
+	sealed class QueryableAccessor
 	{
 		public QueryableAccessor(Func<Expression, IQueryable> accessor, Expression expr)
 		{

@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Threading.Tasks;
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
@@ -12,14 +14,14 @@ namespace Tests.UserTests
 	{
 		public class MyDB : DataConnection
 		{
-			public static Func<MyDB> CreateFactory(string configuration, int retryCount, TimeSpan delay)
+			public static Func<MyDB> CreateFactory(string configuration, int retryCount, TimeSpan delay, double randomFactor, double exponentialBase, TimeSpan coefficient)
 			{
 				return () =>
 				{
 					var db = new MyDB(configuration)
 					{
 						// No exception if policy removed
-						RetryPolicy = new SqlServerRetryPolicy(retryCount, delay, null)
+						RetryPolicy = new SqlServerRetryPolicy(retryCount, delay, randomFactor, exponentialBase, coefficient, null)
 					};
 					return db;
 				};
@@ -48,7 +50,7 @@ namespace Tests.UserTests
 		[Test]
 		public void TestConcurrentSelect([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
-			var dbFactory = MyDB.CreateFactory(context, 1, TimeSpan.FromSeconds(1));
+			var dbFactory = MyDB.CreateFactory(context, 1, TimeSpan.FromSeconds(1), LinqToDB.Common.Configuration.RetryPolicy.DefaultRandomFactor, LinqToDB.Common.Configuration.RetryPolicy.DefaultExponentialBase, LinqToDB.Common.Configuration.RetryPolicy.DefaultCoefficient);
 
 			var users = new[]
 			{

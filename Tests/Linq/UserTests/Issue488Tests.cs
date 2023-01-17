@@ -1,5 +1,7 @@
-﻿using System.Data;
+﻿using System;
+using System.Data;
 using System.Data.Linq;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
@@ -14,13 +16,14 @@ namespace Tests.UserTests
 	{
 		public class LinqDataTypes
 		{
-			public int ID;
-			public decimal MoneyValue;
-			[Column(DataType = DataType.Date)]public DateTime DateTimeValue;
-			public bool BoolValue;
-			public Guid GuidValue;
-			public Binary? BinaryValue;
-			public short SmallIntValue;
+			public int      ID;
+			public decimal  MoneyValue;
+			[Column(DataType = DataType.Date)]
+			public DateTime DateTimeValue;
+			public bool     BoolValue;
+			public Guid     GuidValue;
+			public Binary?  BinaryValue;
+			public short    SmallIntValue;
 		}
 
 		[Test]

@@ -1,4 +1,7 @@
-﻿using LinqToDB.Mapping;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -10,7 +13,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class LetTests : TestBase
 	{
-		class Table1
+		sealed class Table1
 		{
 			public int  Field3;
 			public int? Field5;
@@ -22,7 +25,7 @@ namespace Tests.UserTests
 			public List<Table3> Ref2 { get; set; } = null!;
 		}
 
-		class Table2
+		sealed class Table2
 		{
 			public int? Field6;
 
@@ -30,7 +33,7 @@ namespace Tests.UserTests
 			public Table3? Ref3 { get; set; }
 		}
 
-		class Table3
+		sealed class Table3
 		{
 			public int? Field6;
 			public int  Field3;
@@ -46,7 +49,7 @@ namespace Tests.UserTests
 			public List<Table2> Ref9 { get; set; } = null!;
 		}
 
-		class Table7
+		sealed class Table7
 		{
 			public int     Field4;
 			public string? Field8;

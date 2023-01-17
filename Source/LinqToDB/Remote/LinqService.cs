@@ -1,4 +1,9 @@
-﻿namespace LinqToDB.Remote
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Remote
 {
 	using System.Threading;
 	using Common;
@@ -54,7 +59,7 @@
 		protected virtual void ValidateQuery(LinqServiceQuery query)
 		{
 			if (AllowUpdates == false && query.Statement.QueryType != QueryType.Select)
-				ThrowHelper.ThrowLinqException("Insert/Update/Delete requests are not allowed by the service policy.");
+				throw new LinqException("Insert/Update/Delete requests are not allowed by the service policy.");
 		}
 
 		protected virtual void HandleException(Exception exception)
@@ -70,8 +75,8 @@
 			return new LinqServiceInfo
 			{
 				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
 			};
@@ -84,8 +89,8 @@
 			return Task.FromResult(new LinqServiceInfo()
 			{
 				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
 			});
@@ -347,7 +352,7 @@
 				QueryType.Delete => ((SqlDeleteStatement)query.Statement).Output!.OutputColumns!,
 				QueryType.Update => ((SqlUpdateStatement)query.Statement).Output!.OutputColumns!,
 				QueryType.Merge  => ((SqlMergeStatement )query.Statement).Output!.OutputColumns!,
-				_ => ThrowHelper.ThrowNotImplementedException<List<ISqlExpression>>($"Query type not supported: {query.Statement.QueryType}"),
+				_ => throw new NotImplementedException($"Query type not supported: {query.Statement.QueryType}"),
 			};
 
 			for (var i = 0; i < ret.FieldCount; i++)
@@ -368,7 +373,14 @@
 				// ugh...
 				// still if it fails here due to empty columns - it is a bug in columns generation
 
-				var fieldType = selectExpressions[i].SystemType!;
+				var fieldType      = selectExpressions[i].SystemType!;
+				var valueConverter = QueryHelper.GetValueConverter(selectExpressions[i]);
+				if (valueConverter != null)
+				{
+					// value converter applied on client side for both directions
+					// here on read we need to prepare expected by converter type
+					fieldType = valueConverter.FromProviderExpression.Parameters[0].Type;
+				}
 
 				// async compiled query support
 				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
@@ -397,17 +409,18 @@
 
 			for (var i = 0; i < ret.FieldCount; i++)
 				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
-					ret.FieldTypes[i], i, QueryHelper.GetValueConverter(selectExpressions[i]), true);
+					// converter must be null, see notes above
+					ret.FieldTypes[i], i, converter: null, true);
 
 			while (rd.DataReader!.Read())
 			{
-				var data = new string  [rd.DataReader!.FieldCount];
+				var data = new string[rd.DataReader!.FieldCount];
 
 				ret.RowCount++;
 
 				for (var i = 0; i < ret.FieldCount; i++)
 				{
-					if (!rd.DataReader!.IsDBNull(i))
+					if (!reader.IsDBNull(i))
 					{
 						var value = columnReaders[i].GetValue(reader);
 
@@ -503,7 +516,7 @@
 
 		#region private classes
 
-		private class QueryContext : IQueryContext
+		private sealed class QueryContext : IQueryContext
 		{
 			public SqlStatement    Statement  { get; set; } = null!;
 			public object?         Context    { get; set; }

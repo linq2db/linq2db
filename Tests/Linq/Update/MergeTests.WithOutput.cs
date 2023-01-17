@@ -1,4 +1,8 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Async;
@@ -186,7 +190,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class InsertTempTable
+		sealed class InsertTempTable
 		{
 			public string? Action    { get; set; }
 			public int     NewId     { get; set; }

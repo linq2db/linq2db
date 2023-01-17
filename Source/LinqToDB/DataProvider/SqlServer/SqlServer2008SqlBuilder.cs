@@ -1,13 +1,15 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+using System;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
-	partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
+	sealed partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{
-		public SqlServer2008SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlServer2008SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 

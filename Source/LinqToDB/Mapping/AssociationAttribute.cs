@@ -1,7 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Defines relation between tables or views.
 	/// Could be applied to:
@@ -121,30 +126,6 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public string?      KeyName             { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public string?      BackReferenceName   { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public bool         IsBackReference     { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public Relationship Relationship        { get; set; }
-
-		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
 		/// </summary>
 		public string?      AliasName           { get; set; }
@@ -163,7 +144,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
 		}
 	}
 }

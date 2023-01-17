@@ -1,4 +1,5 @@
-﻿using LinqToDB.Mapping;
+﻿using System.Linq;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.Mapping
@@ -6,7 +7,7 @@ namespace Tests.Mapping
 	[TestFixture]
 	public class FluentMappingAliasTests : TestBase
 	{
-		class InstanceClass : IProjected
+		sealed class InstanceClass : IProjected
 		{
 			public int     Id       { get; set; }
 			public int     Value    { get; set; }

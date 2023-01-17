@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using LinqToDB.Data;
+using System;
 using LinqToDB.Mapping;
 
 namespace Tests.UserTests
@@ -46,15 +47,15 @@ namespace Tests.UserTests
 						Id                = TestData.Guid2
 					};
 
-					var options = GetDefaultBulkCopyOptions(context);
-					options.CheckConstraints = true;
-					options.BulkCopyType = BulkCopyType.ProviderSpecific;
-					options.MaxBatchSize = 5000;
-					options.UseInternalTransaction = false;
-					options.NotifyAfter = 2000;
-					options.BulkCopyTimeout = 0;
-					options.RowsCopiedCallback = i =>
+					var options = GetDefaultBulkCopyOptions(context) with
 					{
+						CheckConstraints       = true,
+						BulkCopyType           = BulkCopyType.ProviderSpecific,
+						MaxBatchSize           = 5000,
+						UseInternalTransaction = false,
+						NotifyAfter            = 2000,
+						BulkCopyTimeout        = 0,
+						RowsCopiedCallback     = i => { }
 					};
 
 					((DataConnection)db).BulkCopy(options, new[] { dto1 });

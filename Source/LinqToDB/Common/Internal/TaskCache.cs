@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.Common.Internal
-{
-	using Data;
+using System.Threading.Tasks;
+using LinqToDB.Data;
 
+namespace LinqToDB.Common.Internal
+{
 	// contains reusable task instances to avoid allocations
 	internal static class TaskCache
 	{

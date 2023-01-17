@@ -1,8 +1,13 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace LinqToDB.DataProvider
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -19,10 +24,10 @@ namespace LinqToDB.DataProvider
 		SqlProviderFlags SqlProviderFlags      { get; }
 		TableOptions     SupportedTableOptions { get; }
 		bool             TransactionsSupported { get; }
-		void             InitContext           (IDataContext dataContext);
+		void             InitContext           (IDataContext  dataContext);
 		DbConnection     CreateConnection      (string        connectionString);
-		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema);
-		ISqlOptimizer    GetSqlOptimizer       ();
+		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema, DataOptions dataOptions);
+		ISqlOptimizer    GetSqlOptimizer       (DataOptions   dataOptions);
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.
 		/// </summary>
@@ -40,7 +45,7 @@ namespace LinqToDB.DataProvider
 #endif
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (DbDataReader reader, int idx, Expression readerExpression, Type toType);
-		bool?              IsDBNullAllowed       (DbDataReader reader, int idx);
+		bool?              IsDBNullAllowed       (DataOptions options, DbDataReader reader, int idx);
 		void               SetParameter          (DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value);
 		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
@@ -57,14 +62,25 @@ namespace LinqToDB.DataProvider
 
 		ISchemaProvider    GetSchemaProvider     ();
 
-		BulkCopyRowsCopied       BulkCopy<T>     (ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
-			where T : notnull;
+		BulkCopyRowsCopied BulkCopy<T>(
+			DataOptions     options,
+			ITable<T>       table,
+			IEnumerable<T>  source)
+		where T : notnull;
 
-		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
-			where T : notnull;
+		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			DataOptions       options,
+			ITable<T>         table,
+			IEnumerable<T>    source,
+			CancellationToken cancellationToken)
+		where T : notnull;
 
 #if NATIVE_ASYNC
-		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			DataOptions         options,
+			ITable<T>           table,
+			IAsyncEnumerable<T> source,
+			CancellationToken   cancellationToken)
 		where T: notnull;
 #endif
 	}

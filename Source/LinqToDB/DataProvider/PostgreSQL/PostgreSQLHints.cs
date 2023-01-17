@@ -1,5 +1,9 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -20,7 +24,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public const string NoWait     = "NOWAIT";
 		public const string SkipLocked = "SKIP LOCKED";
 
-		class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
+		sealed class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
 		{
 			void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{

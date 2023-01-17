@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Linq;
+using FluentAssertions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -9,7 +10,7 @@ namespace Tests.Playground
 	public class TestTemplate : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column]              public int     Id    { get; set; }
 			[Column(Length = 50)] public string? Value { get; set; }

@@ -1,7 +1,14 @@
-﻿namespace LinqToDB.Data.RetryPolicy
+﻿using System;
+using System.Data;
+using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Data.RetryPolicy
 {
-	using Async;
 	using Configuration;
+	using LinqToDB.Async;
 
 	sealed class RetryingDbConnection : IAsyncDbConnection, IProxy<DbConnection>
 	{
@@ -59,7 +66,7 @@
 		Task IAsyncDbConnection.CloseAsync() => _connection.CloseAsync();
 
 		void IAsyncDbConnection.Open() => _policy.Execute(_connection.Open);
-		Task IAsyncDbConnection.OpenAsync(CancellationToken cancellationToken) => _policy.ExecuteAsync(ct => _connection.OpenAsync(ct), cancellationToken);
+		Task IAsyncDbConnection.OpenAsync(CancellationToken cancellationToken) => _policy.ExecuteAsync(_connection.OpenAsync, cancellationToken);
 
 		DbConnection? IAsyncDbConnection.TryClone() => _connection.TryClone();
 #endregion

@@ -12,8 +12,8 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MariaDB
 {
-	[Table("grandchild")]
-	public class Grandchild
+	[Table("GrandChild")]
+	public class GrandChild
 	{
 		[Column("ParentID"    )] public int? ParentId     { get; set; } // int(11)
 		[Column("ChildID"     )] public int? ChildId      { get; set; } // int(11)

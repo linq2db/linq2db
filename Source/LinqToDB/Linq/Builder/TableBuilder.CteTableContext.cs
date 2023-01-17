@@ -1,8 +1,11 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	partial class TableBuilder
@@ -32,8 +35,7 @@ namespace LinqToDB.Linq.Builder
 					isRecursive = true;
 					break;
 				default:
-					bodyExpr = ThrowHelper.ThrowInvalidOperationException<Expression>();
-					break;
+					throw new InvalidOperationException();
 			}
 
 			bodyExpr = builder.ConvertExpression(bodyExpr);
@@ -77,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 			return cteContext;
 		}
 
-		class CteTableContext : TableContext
+		sealed class CteTableContext : TableContext
 		{
 			private readonly CteClause      _cte;
 			private readonly Expression     _cteExpression;
@@ -212,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 
 			SqlField RegisterCteField(ISqlExpression? baseExpression, ISqlExpression expression, int index, string? alias)
 			{
-				if (expression == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
+				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
 				var cteField = _cte.RegisterFieldMapping(index, () =>
 				{
@@ -229,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 					return newField;
 				});
 
-				var field = SqlTable[cteField.Name!];
+				var field = SqlTable.FindFieldByMemberName(cteField.Name!);
 				if (field == null)
 				{
 					field = new SqlField(cteField);

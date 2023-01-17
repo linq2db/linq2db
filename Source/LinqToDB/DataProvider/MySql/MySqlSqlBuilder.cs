@@ -1,4 +1,8 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -7,10 +11,10 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-	class MySqlSqlBuilder : BasicSqlBuilder
+	sealed class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
-		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -21,11 +25,6 @@ namespace LinqToDB.DataProvider.MySql
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
 			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
-		}
-
-		static MySqlSqlBuilder()
-		{
-			ParameterSymbol = '@';
 		}
 
 		protected override bool   IsRecursiveCteKeywordRequired   => true;
@@ -313,57 +312,25 @@ namespace LinqToDB.DataProvider.MySql
 				base.BuildFromClause(statement, selectQuery);
 		}
 
-		public static char ParameterSymbol           { get; set; }
-		public static bool TryConvertParameterSymbol { get; set; }
-
-		private static string _commandParameterPrefix = string.Empty;
-		public  static string  CommandParameterPrefix
-		{
-			get => _commandParameterPrefix;
-			set => _commandParameterPrefix = value ?? string.Empty;
-		}
-
-		private static string _sprocParameterPrefix = string.Empty;
-		public  static string  SprocParameterPrefix
-		{
-			get => _sprocParameterPrefix;
-			set => _sprocParameterPrefix = value ?? string.Empty;
-		}
-
-		private static List<char>? _convertParameterSymbols;
-		public  static List<char>  ConvertParameterSymbols
-		{
-			get => _convertParameterSymbols ??= new List<char>();
-			set => _convertParameterSymbols = value ?? new List<char>();
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
 			{
-				case ConvertType.NameToQueryParameter:
-					return sb.Append(ParameterSymbol).Append(value);
-
+				case ConvertType.NameToQueryParameter  :
 				case ConvertType.NameToCommandParameter:
-					return sb.Append(ParameterSymbol).Append(CommandParameterPrefix).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))
-							ThrowHelper.ThrowArgumentException("Argument 'value' must represent parameter name.");
+							throw new ArgumentException("Argument 'value' must represent parameter name.");
 
-					if (value[0] == ParameterSymbol)
+					if (value[0] == '@')
 						value = value.Substring(1);
 
-					if (value.StartsWith(SprocParameterPrefix, StringComparison.Ordinal))
-						value = value.Substring(SprocParameterPrefix.Length);
-
-					return sb.Append(ParameterSymbol).Append(SprocParameterPrefix).Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.SprocParameterToName:
-					value = (value.Length > 0 && (value[0] == ParameterSymbol || (TryConvertParameterSymbol && ConvertParameterSymbols.Contains(value[0])))) ? value.Substring(1) : value;
-
-					if (!string.IsNullOrEmpty(SprocParameterPrefix) && value.StartsWith(SprocParameterPrefix))
-						value = value.Substring(SprocParameterPrefix.Length);
+					value = value.Length > 0 && value[0] == '@' ? value.Substring(1) : value;
 
 					return sb.Append(value);
 
@@ -514,7 +481,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)
 		{
-			ThrowHelper.ThrowLinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
 		protected override void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
@@ -545,32 +512,44 @@ namespace LinqToDB.DataProvider.MySql
 
 			Indent--;
 
-			StringBuilder.Append(
-				groupingType switch
-				{
-					GroupingType.Rollup => "WITH ROLLUP",
-					GroupingType.Cube   => "WITH CUBE",
-					_                   => ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected grouping type: {groupingType}"),
-				});
+			switch (groupingType)
+			{
+				case GroupingType.Rollup:
+					StringBuilder.Append("WITH ROLLUP");
+					break;
+				case GroupingType.Cube:
+					StringBuilder.Append("WITH CUBE");
+					break;
+				default:
+					throw new InvalidOperationException($"Unexpected grouping type: {groupingType}");
+			}
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				(true, TableOptions.IsTemporary                                                                             ) or
-				(true, TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                    ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData) or
-				(true,                                                                     TableOptions.IsLocalTemporaryData) or
-				(true,                            TableOptions.IsLocalTemporaryStructure                                    ) or
-				(true,                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData)
-					=> "CREATE TEMPORARY TABLE ",
-				(true, var value)
-					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
-				(false, _)
-					=> "CREATE TABLE ",
-			};
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
 			StringBuilder.Append(command);
 
@@ -578,7 +557,7 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		protected StringBuilder? HintBuilder;
+		private StringBuilder? HintBuilder;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;

@@ -1,8 +1,9 @@
-﻿namespace LinqToDB.DataModel
-{
-	using Metadata;
-	using SqlQuery;
+﻿using LinqToDB.Metadata;
+using LinqToDB.Schema;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Base class for scalar or aggregate function descriptors (methods with scalar return value).
 	/// </summary>

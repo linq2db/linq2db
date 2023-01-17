@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -8,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue1564Tests : TestBase
 	{
 		[Table]
-		class Issue1564Category
+		sealed class Issue1564Category
 		{
 			[PrimaryKey] public int     Id           { get; set; }
 			[Column]     public bool    IsVisible    { get; set; }
@@ -17,7 +18,7 @@ namespace Tests.UserTests
 			[Column]     public string? Name         { get; set; }
 		}
 
-		class AdminCategoryPreview
+		sealed class AdminCategoryPreview
 		{
 			public int     Id;
 			public bool    IsVisible;
@@ -25,7 +26,7 @@ namespace Tests.UserTests
 			public string? FullPath;
 		}
 
-		class AdminCategoryPathItemCte
+		sealed class AdminCategoryPathItemCte
 		{
 			public int     CategoryId;
 			public int     ParentCategoryId;

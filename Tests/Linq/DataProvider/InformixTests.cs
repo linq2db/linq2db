@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using LinqToDB;
 using LinqToDB.Data;
 
 #if NET472
@@ -202,7 +204,7 @@ namespace Tests.DataProvider
 		};
 
 		[Table("LinqDataTypes")]
-		class DataTypes
+		sealed class DataTypes
 		{
 			[Column] public int       ID;
 			[Column] public decimal?  MoneyValue;

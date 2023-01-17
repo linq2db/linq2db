@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -76,13 +77,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				return new TypeInfo()
 				{
 					Type     = type,
-					TypeName = type.Name.Substring(3).ToLower(),
+					TypeName = type.Name.Substring(3).ToLowerInvariant(),
 					Null     = getNullValue()
 				};
 			}
 		}
 
-		class TypeInfo
+		sealed class TypeInfo
 		{
 			public string  TypeName { get; set; } = null!;
 			public Type    Type     { get; set; } = null!;

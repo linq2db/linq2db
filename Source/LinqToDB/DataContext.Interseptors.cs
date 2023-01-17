@@ -1,4 +1,6 @@
-﻿namespace LinqToDB
+﻿using System;
+
+namespace LinqToDB
 {
 	using Interceptors;
 
@@ -49,6 +51,14 @@
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
+			AddInterceptor(interceptor, true);
+		}
+
+		void AddInterceptor(IInterceptor interceptor, bool addToOptions)
+		{
+			if (addToOptions)
+				Options = Options.UseInterceptor(interceptor);
+
 			switch (interceptor)
 			{
 				case ICommandInterceptor          cm : Add(ref _commandInterceptor,          cm); break;
@@ -66,13 +76,10 @@
 				{
 					if (aggregator != null)
 						// this actually shouldn't be possible
-						ThrowHelper.ThrowInvalidOperationException($"{nameof(AggregatedInterceptor<TI>)}<{nameof(TI)}> already exists");
+						throw new InvalidOperationException($"{nameof(AggregatedInterceptor<TI>)}<{nameof(TI)}> already exists");
 
 					aggregator = new();
 					aggregator.Interceptors.AddRange(ai.Interceptors);
-
-					_optionsBuilder.WithInterceptor(aggregator);
-					_prebuiltOptions = _optionsBuilder.Build();
 				}
 				else
 				{
@@ -80,14 +87,22 @@
 					{
 						aggregator = new();
 						_dataConnection?.AddInterceptor(aggregator);
-
-						_optionsBuilder.WithInterceptor(aggregator);
-						_prebuiltOptions = _optionsBuilder.Build();
 					}
 
 					aggregator.Interceptors.Add(intercept);
 				}
 			}
+		}
+
+		public void RemoveInterceptor(IInterceptor interceptor)
+		{
+			Options = Options.RemoveInterceptor(interceptor);
+
+			((IInterceptable<ICommandInterceptor>)         this).RemoveInterceptor(interceptor);
+			((IInterceptable<IConnectionInterceptor>)      this).RemoveInterceptor(interceptor);
+			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
+			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
+			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
 		}
 	}
 }

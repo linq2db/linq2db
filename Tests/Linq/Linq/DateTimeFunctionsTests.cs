@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+
+using LinqToDB;
 
 using NUnit.Framework;
 
@@ -115,11 +118,10 @@ namespace Tests.Linq
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
-					Assert.AreEqual(dbUtcNow.Kind, DateTimeKind.Utc);
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient))
+					Assert.AreEqual(DateTimeKind.Utc, dbUtcNow.Kind);
 				else
-					Assert.AreEqual(dbUtcNow.Kind, DateTimeKind.Unspecified);
-
+					Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
 			}
 		}
 
@@ -156,10 +158,10 @@ namespace Tests.Linq
 
 				// we don't set kind and rely on provider's behavior
 				// Most providers return Unspecified, but at least it shouldn't be Local
-				if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
-					Assert.AreEqual(dbUtcNow.Kind, DateTimeKind.Utc);
+				if (context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseClient))
+					Assert.AreEqual(DateTimeKind.Utc, dbUtcNow.Kind);
 				else
-					Assert.AreEqual(dbUtcNow.Kind, DateTimeKind.Unspecified);
+					Assert.AreEqual(DateTimeKind.Unspecified, dbUtcNow.Kind);
 			}
 		}
 

@@ -1,4 +1,6 @@
-﻿using Grpc.Net.Client;
+﻿using System;
+
+using Grpc.Net.Client;
 
 namespace LinqToDB.Remote.Grpc
 {
@@ -14,7 +16,7 @@ namespace LinqToDB.Remote.Grpc
 		/// <summary>
 		/// Gets GRPC client channel options.
 		/// </summary>
-		protected GrpcChannelOptions? Options { get; }
+		protected GrpcChannelOptions? ChannelOptions { get; }
 
 		#region Init
 
@@ -22,10 +24,10 @@ namespace LinqToDB.Remote.Grpc
 		/// Creates instance of grpc-based remote data context.
 		/// </summary>
 		/// <param name="address">Server address.</param>
-		public GrpcDataContext(string address)
+		public GrpcDataContext(string address) : base(new DataOptions())
 		{
 			if (string.IsNullOrWhiteSpace(address))
-				ThrowHelper.ThrowArgumentException(nameof(address), $"'{nameof(address)}' cannot be null or whitespace.");
+				throw new ArgumentException($"'{nameof(address)}' cannot be null or whitespace.", nameof(address));
 
 			Address = address;
 		}
@@ -34,11 +36,11 @@ namespace LinqToDB.Remote.Grpc
 		/// Creates instance of grpc-based remote data context.
 		/// </summary>
 		/// <param name="address">Server address.</param>
-		/// <param name="options">Optional client channel settings.</param>
-		public GrpcDataContext(string address, GrpcChannelOptions? options)
+		/// <param name="channelOptions">Optional client channel settings.</param>
+		public GrpcDataContext(string address, GrpcChannelOptions? channelOptions)
 			: this(address)
 		{
-			Options = options;
+			ChannelOptions = channelOptions;
 		}
 
 		#endregion
@@ -47,14 +49,14 @@ namespace LinqToDB.Remote.Grpc
 
 		protected override ILinqService GetClient()
 		{
-			var channel = Options == null ? GrpcChannel.ForAddress(Address) : GrpcChannel.ForAddress(Address, Options);
+			var channel = ChannelOptions == null ? GrpcChannel.ForAddress(Address) : GrpcChannel.ForAddress(Address, ChannelOptions);
 
 			return new GrpcLinqServiceClient(channel);
 		}
 
 		protected override IDataContext Clone()
 		{
-			return new GrpcDataContext(Address, Options)
+			return new GrpcDataContext(Address, ChannelOptions)
 			{
 				MappingSchema = MappingSchema,
 				Configuration = Configuration

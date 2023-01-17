@@ -1,10 +1,15 @@
-﻿namespace LinqToDB.DataProvider.MySql
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
-	using SchemaProvider;
+	using LinqToDB.SchemaProvider;
 
-	class MySqlSchemaProvider : SchemaProviderBase
+	sealed class MySqlSchemaProvider : SchemaProviderBase
 	{
 		private readonly MySqlDataProvider _provider;
 
@@ -54,7 +59,7 @@
 					{
 						// The latest MySql returns FK information with lowered schema names.
 						//
-						TableID            = catalog.ToLower() + ".." + name,
+						TableID            = catalog.ToLowerInvariant() + ".." + name,
 						CatalogName        = catalog,
 						TableName          = name,
 						IsDefaultSchema    = true,
@@ -110,7 +115,7 @@ SELECT
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var dataType   = rd.GetString(0);
 					var columnType = rd.GetString(1);
-					var tableId    = rd.GetString(2).ToLower() + ".." + rd.GetString(3);
+					var tableId    = rd.GetString(2).ToLowerInvariant() + ".." + rd.GetString(3);
 					var name       = rd.GetString(4);
 					var isNullable = rd.GetString(5) == "YES";
 					var ordinal    = Converter.ChangeTypeTo<int>(rd[6]);
@@ -170,10 +175,10 @@ SELECT
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					return new ForeignKeyInfo()
 					{
-						ThisTableID  = rd.GetString(0).ToLower() + ".." + rd.GetString(1),
+						ThisTableID  = rd.GetString(0).ToLowerInvariant() + ".." + rd.GetString(1),
 						Name         = rd.GetString(2),
 						ThisColumn   = rd.GetString(3),
-						OtherTableID = rd.GetString(4).ToLower() + ".." + rd.GetString(5),
+						OtherTableID = rd.GetString(4).ToLowerInvariant() + ".." + rd.GetString(5),
 						OtherColumn  = rd.GetString(6),
 						Ordinal      = Converter.ChangeTypeTo<int>(rd[7]),
 					};
@@ -200,7 +205,7 @@ SELECT
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			return dataType?.ToLower() switch
+			return dataType?.ToLowerInvariant() switch
 			{
 				"tinyint unsigned"  => DataType.Byte,
 				"smallint unsigned" => DataType.UInt16,
@@ -280,7 +285,7 @@ SELECT
 					var name      = Converter.ChangeTypeTo<string>(rd[4]);
 					var precision = Converter.ChangeTypeTo<int?>(rd[5]);
 					var scale     = Converter.ChangeTypeTo<long?>(rd[6]);
-					var type      = rd.GetString(7).ToUpper();
+					var type      = rd.GetString(7).ToUpperInvariant();
 					var length    = Converter.ChangeTypeTo<long?>(rd[8]);
 
 					return new ProcedureParameterInfo()
@@ -371,7 +376,7 @@ SELECT
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType?.ToLower())
+			switch (dataType?.ToLowerInvariant())
 			{
 				case "geometry"  : return _provider.Adapter.MySqlGeometryType.Name;
 				case "decimal"   : return _provider.Adapter.MySqlDecimalType?.Name;
@@ -386,7 +391,7 @@ SELECT
 
 		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			switch (dataType?.ToLower())
+			switch (dataType?.ToLowerInvariant())
 			{
 				case "bit"               :
 					{

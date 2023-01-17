@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.CodeModel
 {
 	/// <summary>
 	/// Base class for types.
@@ -17,6 +20,8 @@
 			XmlDoc     = xmlDoc;
 			Type       = type;
 			Name       = name;
+
+			Type.SetNameChangeHandler(_ => ChangeHandler?.Invoke(this));
 		}
 
 		/// <summary>
@@ -35,5 +40,10 @@
 		/// Type name.
 		/// </summary>
 		public CodeIdentifier  Name       { get; }
+
+		/// <summary>
+		/// Internal change-tracking infrastructure. Single action instance is enough.
+		/// </summary>
+		internal Action<TypeBase>? ChangeHandler { get; set; }
 	}
 }

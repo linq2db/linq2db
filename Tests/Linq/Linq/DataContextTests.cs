@@ -1,4 +1,7 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using LinqToDB;
 
 using NUnit.Framework;
 
@@ -150,7 +153,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class TestDataContext: DataContext
+		sealed class TestDataContext : DataContext
 		{
 			public TestDataContext(string context)
 				: base(context)
@@ -159,7 +162,7 @@ namespace Tests.Linq
 
 			public DataConnection? DataConnection { get; private set; }
 
-			protected override DataConnection CreateDataConnection(LinqToDBConnectionOptions options)
+			protected override DataConnection CreateDataConnection(DataOptions options)
 			{
 				return DataConnection = base.CreateDataConnection(options);
 			}
@@ -229,7 +232,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class NewDataContext : DataContext
+		sealed class NewDataContext : DataContext
 		{
 			public NewDataContext(string context)
 				: base(context)
@@ -239,13 +242,13 @@ namespace Tests.Linq
 			public int CreateCalled;
 			public int CloneCalled;
 
-			protected override DataConnection CreateDataConnection(LinqToDBConnectionOptions options)
+			protected override DataConnection CreateDataConnection(DataOptions options)
 			{
 				CreateCalled++;
 				return base.CreateDataConnection(options);
 			}
 
-			protected override DataConnection CloneDataConnection(DataConnection currentConnection, LinqToDBConnectionOptions options)
+			protected override DataConnection CloneDataConnection(DataConnection currentConnection, DataOptions options)
 			{
 				CloneCalled++;
 				return base.CloneDataConnection(currentConnection, options);

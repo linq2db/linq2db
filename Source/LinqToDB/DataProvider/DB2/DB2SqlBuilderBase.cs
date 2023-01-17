@@ -1,4 +1,9 @@
-﻿using System.Data.SqlTypes;
+﻿using System;
+using System.Data;
+using System.Data.SqlTypes;
+using System.Data.Common;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Globalization;
 
@@ -8,10 +13,10 @@ namespace LinqToDB.DataProvider.DB2
 	using SqlQuery;
 	using SqlProvider;
 
-	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
+	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
-		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -160,7 +165,12 @@ namespace LinqToDB.DataProvider.DB2
 			base.BuildCreateTableNullAttribute(field, defaultNullable);
 		}
 
-		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
+		[Obsolete("Use DB2Options.Default.IdentifierQuoteMode instead.")]
+		public static DB2IdentifierQuoteMode IdentifierQuoteMode
+		{
+			get => DB2Options.Default.IdentifierQuoteMode;
+			set => DB2Options.Default = DB2Options.Default with { IdentifierQuoteMode = value };
+		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -186,14 +196,14 @@ namespace LinqToDB.DataProvider.DB2
 				case ConvertType.NameToSchema         :
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToQueryTableAlias:
-					if (IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
+					if (ProviderOptions.IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
-						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
-							value.StartsWith("_") ||
-							value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+						if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
+						    value.StartsWith("_") ||
+						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
 
@@ -231,7 +241,7 @@ namespace LinqToDB.DataProvider.DB2
 
 			// "db..table" syntax not supported
 			if (name.Database != null && schemaName == null)
-				ThrowHelper.ThrowLinqToDBException("DB2 requires schema name if database name provided.");
+				throw new LinqToDBException("DB2 requires schema name if database name provided.");
 
 			if (name.Database != null)
 			{
@@ -270,7 +280,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table!;
+			var table = dropTable.Table;
 
 			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
@@ -293,31 +303,40 @@ END");
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				(true, TableOptions.IsTemporary                                                                              ) or
-				(true, TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData) or
-				(true,                                                                      TableOptions.IsLocalTemporaryData) or
-				(true,                            TableOptions.IsLocalTemporaryStructure                                     ) or
-				(true,                            TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData)
-					=> "DECLARE GLOBAL TEMPORARY TABLE ",
-				(true,                            TableOptions.IsGlobalTemporaryStructure                                    ) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData) 
-					=> "CREATE GLOBAL TEMPORARY TABLE ",
-				(true, var value)
-					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
-				(false, _) 
-					=> "CREATE TABLE ",
-			};
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                               :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                      :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
+					case                                                                      TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                      :
+					case                            TableOptions.IsLocalTemporaryStructure  | TableOptions.IsLocalTemporaryData :
+						command = "DECLARE GLOBAL TEMPORARY TABLE ";
+						break;
+					case                            TableOptions.IsGlobalTemporaryStructure                                     :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
 			StringBuilder.Append(command);
 		}
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
 				AppendIndent().AppendLine(@"BEGIN");
 
@@ -336,7 +355,7 @@ END");
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
 				Indent--;
 

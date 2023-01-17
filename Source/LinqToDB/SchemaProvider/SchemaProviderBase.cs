@@ -1,9 +1,14 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.SchemaProvider
 {
 	using Common;
 	using Data;
+	using LinqToDB.SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
@@ -187,6 +192,7 @@ namespace LinqToDB.SchemaProvider
 						Length               = column.c.Length,
 						Precision            = column.c.Precision,
 						Scale                = column.c.Scale,
+						Ordinal              = column.c.Ordinal,
 					});
 				}
 
@@ -253,7 +259,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				#region Procedures
 
-				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+				var sqlProvider = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
 				var procs       = GetProcedures(dataConnection, options);
 				var n           = 0;
 
@@ -319,7 +325,7 @@ namespace LinqToDB.SchemaProvider
 					var isActiveTransaction = dataConnection.Transaction != null;
 
 					if (GetProcedureSchemaExecutesProcedure && isActiveTransaction)
-						ThrowHelper.ThrowLinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
+						throw new LinqToDBException("Cannot read schema with GetSchemaOptions.GetProcedures = true from transaction. Remove transaction or set GetSchemaOptions.GetProcedures to false");
 
 					if (!isActiveTransaction)
 						dataConnection.BeginTransaction();
@@ -606,7 +612,7 @@ namespace LinqToDB.SchemaProvider
 
 					for (var i = 0; i < paramNames.Length; i++)
 					{
-						switch (paramNames[i].Trim().ToLower())
+						switch (paramNames[i].Trim().ToLowerInvariant())
 						{
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
@@ -758,7 +764,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				name = key.MemberName;
 
-				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLower().EndsWith("id"))
+				if (key.BackReference != null && key.ThisColumns.Count == 1 && key.ThisColumns[0].MemberName.ToLowerInvariant().EndsWith("id"))
 				{
 					name = key.ThisColumns[0].MemberName;
 					name = name.Substring(0, name.Length - "id".Length).TrimEnd('_');

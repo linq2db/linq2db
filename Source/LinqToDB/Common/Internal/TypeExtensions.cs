@@ -1,11 +1,13 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common.Internal
 {
 	using Extensions;
 
-	public static class TypeExtensions
+	static class TypeExtensions
 	{
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static Type UnwrapNullableType(this Type type)
 			=> Nullable.GetUnderlyingType(type) ?? type;

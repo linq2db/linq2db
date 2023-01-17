@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB;
 using LinqToDB.Common;
@@ -190,7 +193,7 @@ namespace Tests.Linq
 	public class DynamicWindowFunctionsTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id     { get; set; }
 			[Column] public int Value1 { get; set; }

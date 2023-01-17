@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Marks target member as dynamic columns store.
@@ -14,9 +16,6 @@
 		/// </summary>
 		public string? Configuration { get; set; }
 
-		public override string GetObjectID()
-		{
-			return $"{Configuration}";
-		}
+		public override string GetObjectID() => Configuration ?? string.Empty;
 	}
 }

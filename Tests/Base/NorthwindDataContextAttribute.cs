@@ -1,4 +1,6 @@
-﻿namespace Tests
+﻿using System;
+
+namespace Tests
 {
 	[AttributeUsage(AttributeTargets.Parameter)]
 	public class NorthwindDataContextAttribute : IncludeDataSourcesAttribute

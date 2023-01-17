@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CodeModel
+﻿using System;
+
+namespace LinqToDB.CodeModel
 {
 	// following attributes not supported currently: extern, unsafe, volatile
 	/// <summary>

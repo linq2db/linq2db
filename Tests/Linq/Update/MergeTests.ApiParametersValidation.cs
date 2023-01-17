@@ -1,5 +1,10 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Linq;
@@ -117,16 +122,16 @@ namespace Tests.xUpdate
 			Assert.Throws<ArgumentNullException>(action);
 		}
 
-		class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>
+		sealed class FakeMergeSource<TTarget, TSource> : IMergeableSource<TTarget, TSource>
 		{ }
 
-		class FakeMergeUsing<TTarget> : IMergeableUsing<TTarget>
+		sealed class FakeMergeUsing<TTarget> : IMergeableUsing<TTarget>
 		{ }
 
-		class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>
+		sealed class FakeMergeOn<TTarget, TSource> : IMergeableOn<TTarget, TSource>
 		{ }
 
-		private class FakeMergeQuery<TTarget, TSource> :
+		private sealed class FakeMergeQuery<TTarget, TSource> :
 			IMergeableUsing<TTarget>,
 			IMergeableOn<TTarget, TSource>,
 			IMergeableSource<TTarget, TSource>,
@@ -159,7 +164,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class FakeQueryProvider : IQueryProvider
+		sealed class FakeQueryProvider : IQueryProvider
 		{
 			IQueryable IQueryProvider.CreateQuery(Expression expression)
 			{
@@ -182,7 +187,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class FakeTable<TEntity> : ITable<TEntity>
+		sealed class FakeTable<TEntity> : ITable<TEntity>
 			where TEntity : notnull
 		{
 			IDataContext   IExpressionQuery.DataContext => throw new NotImplementedException();

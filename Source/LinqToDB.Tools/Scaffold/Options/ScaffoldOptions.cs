@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.Scaffold
-{
-	using DataModel;
-	using Naming;
-	using Schema;
+﻿using LinqToDB.DataModel;
+using LinqToDB.Naming;
+using LinqToDB.Schema;
 
+namespace LinqToDB.Scaffold
+{
 	public class ScaffoldOptions
 	{
 		private ScaffoldOptions()
@@ -42,6 +42,7 @@
 			options.Schema.IncludeSchemas              = true;
 			options.Schema.DefaultSchemas              = null;
 			options.Schema.IncludeCatalogs             = true;
+			options.Schema.IgnoreSystemHistoryTables   = false;
 			options.Schema.UseSafeSchemaLoad           = false;
 			options.Schema.LoadDatabaseName            = false;
 			options.Schema.LoadProceduresSchema        = true;

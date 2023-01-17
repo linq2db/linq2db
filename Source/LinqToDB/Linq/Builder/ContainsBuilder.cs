@@ -1,11 +1,12 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class ContainsBuilder : MethodCallBuilder
+	sealed class ContainsBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames      = { "Contains"      };
 		private static readonly string[] MethodNamesAsync = { "ContainsAsync" };
@@ -40,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(false) == false;
 		}
 
-		class ContainsContext : SequenceContextBase
+		sealed class ContainsContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;
 			readonly bool                 _buildInStatement;
@@ -90,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 					return new[] { new SqlInfo(sql, query) };
 				}
 
-				return ThrowHelper.ThrowInvalidOperationException<SqlInfo[]>();
+				throw new InvalidOperationException();
 			}
 
 			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
@@ -117,13 +118,13 @@ namespace LinqToDB.Linq.Builder
 				return requestFlag switch
 				{
 					RequestFor.Root => IsExpressionResult.False,
-					_               => ThrowHelper.ThrowInvalidOperationException<IsExpressionResult>(),
+					_               => throw new InvalidOperationException(),
 				};
 			}
 
 			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
 			{
-				return ThrowHelper.ThrowInvalidOperationException<IBuildContext>();
+				throw new InvalidOperationException();
 			}
 
 			ISqlExpression? _subQuerySql;

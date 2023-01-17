@@ -1,4 +1,8 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -8,7 +12,7 @@ namespace Tests.Linq
 	public class PaginationTests : TestBase
 	{
 		[Table]
-		class PaginationData
+		sealed class PaginationData
 		{
 			[Column] public int Id { get; set; }
 			[Column] public int Value { get; set; }

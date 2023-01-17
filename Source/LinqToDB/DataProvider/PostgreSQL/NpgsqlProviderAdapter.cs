@@ -1,6 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -9,7 +15,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Expressions;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 
 	public class NpgsqlProviderAdapter : IDynamicProviderAdapter
 	{
@@ -170,7 +175,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					{
 						var assembly = Tools.TryLoadAssembly(AssemblyName, null);
 						if (assembly == null)
-							ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
+							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 						var connectionType     = assembly.GetType($"{ClientNamespace}.NpgsqlConnection"  , true)!;
 						var parameterType      = assembly.GetType($"{ClientNamespace}.NpgsqlParameter"   , true)!;
@@ -398,7 +403,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		#region Wrappers
 
 		[Wrapper]
-		private class NpgsqlParameter
+		private sealed class NpgsqlParameter
 		{
 			public NpgsqlDbType NpgsqlDbType { get; set; }
 		}
@@ -533,10 +538,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[Wrapper]
-		public class NpgsqlConnection : TypeWrapper, IDisposable
+		public class NpgsqlConnection : TypeWrapper, IConnectionWrapper
 		{
-			private static LambdaExpression[] Wrappers { get; }
-				= new LambdaExpression[]
+			private static LambdaExpression[] Wrappers { get; } =
 			{
 				// [0]: get PostgreSqlVersion
 				(Expression<Func<NpgsqlConnection, Version>>)((NpgsqlConnection this_) => this_.PostgreSqlVersion),
@@ -550,16 +554,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			{
 			}
 
-			public NpgsqlConnection(string connectionString) => ThrowHelper.ThrowNotImplementedException();
+			public NpgsqlConnection(string connectionString) => throw new NotImplementedException();
 
 			public Version PostgreSqlVersion => ((Func<NpgsqlConnection, Version>)CompiledWrappers[0])(this);
 			public void    Open()            => ((Action<NpgsqlConnection>)CompiledWrappers[1])(this);
 			public void    Dispose()         => ((Action<NpgsqlConnection>)CompiledWrappers[2])(this);
 
 			// not implemented, as it is not called from wrapper
-			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => ThrowHelper.ThrowNotImplementedException<NpgsqlBinaryImporter>();
-			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) 
-				=> ThrowHelper.ThrowNotImplementedException<Task<NpgsqlBinaryImporter>>();
+			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
+			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
 		}
 
 		#region BulkCopy

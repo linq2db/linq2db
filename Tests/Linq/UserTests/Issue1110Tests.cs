@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System;
+
+using LinqToDB;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -8,7 +10,7 @@ namespace Tests.UserTests
 	public class Issue1110Tests : TestBase
 	{
 		[Table(Name = "Issue1110TB")]
-		class Issue1110TestsClass
+		sealed class Issue1110TestsClass
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }

@@ -1,4 +1,8 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Data;
+using System.Data.Common;
+using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Text;
@@ -11,10 +15,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using SqlQuery;
 
-	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder
+	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder<PostgreSQLOptions>
 	{
-		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -32,8 +36,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into!.GetIdentityField()
-			                    ?? ThrowHelper.ThrowSqlException<SqlField>($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
+			var identityField = insertClause.Into!.GetIdentityField();
+
+			if (identityField == null)
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');
@@ -134,10 +140,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);
 		}
 
-		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
+		[Obsolete("Use PostgreSQLOptions.Default.IdentifierQuoteMode instead.")]
+		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode
+		{
+			get => PostgreSQLOptions.Default.IdentifierQuoteMode;
+			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { IdentifierQuoteMode = value };
+		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
+			// TODO: implement better quotation logic
+			// E.g. we currently don't handle quotes inside identifier
+			// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField     :
@@ -148,14 +162,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
 				case ConvertType.SequenceName         :
-					if (IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
+					if (ProviderOptions.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
-						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+						if (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
 							|| IsReserved(value)
-							|| value.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
+							|| value.Any(c => char.IsWhiteSpace(c)
+							|| ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
 
@@ -234,7 +249,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
-					MappingSchema.ConvertToSqlValue(sb, null, BuildObjectName(new StringBuilder(), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
+					MappingSchema.ConvertToSqlValue(sb, null, DataOptions, BuildObjectName(new (), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
 					sb.Append(')');
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}
@@ -354,23 +369,31 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				(true, TableOptions.IsTemporary                                                                                   ) or
-				(true, TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData      ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                          ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
-				(true,                                                                     TableOptions.IsLocalTemporaryData      ) or
-				(true,                                                                     TableOptions.IsTransactionTemporaryData) or
-				(true,                            TableOptions.IsLocalTemporaryStructure                                          ) or
-				(true,                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
-				(true,                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsTransactionTemporaryData)
-					=> "CREATE TEMPORARY TABLE ",
-				(true, var value)
-					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
-				(false, _)
-					=> "CREATE TABLE ",
-			};
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                                    :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData       :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                           :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                                                                     TableOptions.IsLocalTemporaryData       :
+					case                                                                     TableOptions.IsTransactionTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                           :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
+						command = "CREATE TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
 			StringBuilder.Append(command);
 

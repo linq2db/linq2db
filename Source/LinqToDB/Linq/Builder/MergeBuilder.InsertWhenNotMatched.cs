@@ -1,15 +1,15 @@
 ﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 	internal partial class MergeBuilder
 	{
-		internal class InsertWhenNotMatched : MethodCallBuilder
+		internal sealed class InsertWhenNotMatched : MethodCallBuilder
 		{
 			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (field.IsInsertable)
 						{
-							var expression = LinqToDB.Expressions.ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
+							var expression = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, param);
 							var tgtExpr    = mergeContext.TargetContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 							var srcExpr    = mergeContext.SourceContext.ConvertToSql(builder.ConvertExpression(expression), 1, ConvertFlags.Field)[0].Sql;
 

@@ -2,6 +2,7 @@
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using System.Linq;
 
 namespace Tests.Linq
 {
@@ -691,7 +692,7 @@ namespace Tests.Linq
 
 		#region FTS shadow tables
 		[Table]
-		class FTS3_TABLE_segdir
+		sealed class FTS3_TABLE_segdir
 		{
 			[Column] public long    level;
 			[Column] public long    idx;

@@ -1,4 +1,6 @@
-﻿using FluentAssertions;
+﻿using System.Collections.Generic;
+using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 
 using NUnit.Framework;
@@ -23,7 +25,7 @@ namespace Tests.Linq
 			return ctx;
 		}
 
-		class TestEntityServiceInterceptor : EntityServiceInterceptor
+		sealed class TestEntityServiceInterceptor : EntityServiceInterceptor
 		{
 			public int EntityCreatedCallCounter { get; set; }
 			public bool CheckEntityIdentity     { get; set; }

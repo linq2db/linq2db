@@ -1,6 +1,13 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Data.Common;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Remote
 {
@@ -16,9 +23,14 @@ namespace LinqToDB.Remote
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext
 	{
+		protected RemoteDataContextBase(DataOptions options)
+		{
+			Options = options;
+		}
+
 		public string? Configuration { get; set; }
 
-		class ConfigurationInfo
+		sealed class ConfigurationInfo
 		{
 			public LinqServiceInfo LinqServiceInfo = null!;
 			public MappingSchema   MappingSchema   = null!;
@@ -26,7 +38,7 @@ namespace LinqToDB.Remote
 
 		static readonly ConcurrentDictionary<string,ConfigurationInfo> _configurations = new();
 
-		class RemoteMappingSchema : MappingSchema
+		sealed class RemoteMappingSchema : MappingSchema
 		{
 			public RemoteMappingSchema(string configuration, MappingSchema mappingSchema)
 				: base(configuration, mappingSchema)
@@ -98,8 +110,24 @@ namespace LinqToDB.Remote
 		string?            _contextName;
 		string IDataContext.ContextName => _contextName ??= GetConfigurationInfo().MappingSchema.ConfigurationList[0];
 
-		int?               _contextID;
-		int    IDataContext.ContextID   => _contextID   ??= new IdentifierBuilder(((IDataContext)this).ContextName).CreateID();
+		int  _msID;
+		int? _configurationID;
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				{
+					_configurationID = new IdentifierBuilder()
+						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						.Add(Options)
+						.Add(GetType())
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		private MappingSchema? _mappingSchema;
 		public  MappingSchema   MappingSchema
@@ -120,10 +148,10 @@ namespace LinqToDB.Remote
 
 
 		private List<string>? _queryHints;
-		public  List<string>   QueryHints => _queryHints ??= new List<string>();
+		public  List<string>   QueryHints => _queryHints ??= new();
 
 		private List<string>? _nextQueryHints;
-		public  List<string>   NextQueryHints => _nextQueryHints ??= new List<string>();
+		public  List<string>   NextQueryHints => _nextQueryHints ??= new();
 
 		private        Type? _sqlProviderType;
 		public virtual Type   SqlProviderType
@@ -158,6 +186,11 @@ namespace LinqToDB.Remote
 
 			set => _sqlOptimizerType = value;
 		}
+
+		/// <summary>
+		/// Current DataContext LINQ options
+		/// </summary>
+		public DataOptions Options { get; }
 
 		SqlProviderFlags IDataContext.SqlProviderFlags      => GetConfigurationInfo().LinqServiceInfo.SqlProviderFlags;
 		TableOptions     IDataContext.SupportedTableOptions => GetConfigurationInfo().LinqServiceInfo.SupportedTableOptions;
@@ -205,7 +238,7 @@ namespace LinqToDB.Remote
 			return null;
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type, MappingSchema, Type, SqlProviderFlags>, Func<ISqlBuilder>> _sqlBuilders = new ();
+		static readonly ConcurrentDictionary<Tuple<Type,MappingSchema,Type,SqlProviderFlags,DataOptions>,Func<ISqlBuilder>> _sqlBuilders = new ();
 
 		Func<ISqlBuilder>? _createSqlProvider;
 
@@ -215,7 +248,7 @@ namespace LinqToDB.Remote
 			{
 				if (_createSqlProvider == null)
 				{
-					var key  = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
+					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
 #if NET45 || NET46 || NETSTANDARD2_0
 					_createSqlProvider = _sqlBuilders.GetOrAdd(
@@ -223,7 +256,7 @@ namespace LinqToDB.Remote
 						key =>
 					{
 						var mappingSchema = MappingSchema;
-						var sqlOptimizer  = GetSqlOptimizer();
+						var sqlOptimizer  = GetSqlOptimizer(Options);
 #else
 					_createSqlProvider = _sqlBuilders.GetOrAdd(
 						key,
@@ -237,13 +270,15 @@ namespace LinqToDB.Remote
 								{
 									typeof(IDataProvider),
 									typeof(MappingSchema),
+									typeof(DataOptions),
 									typeof(ISqlOptimizer),
 									typeof(SqlProviderFlags)
-								}) ?? ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>($"Constructor for type '{key.Item1.Name}' not found."),
+								}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
 								new Expression[]
 								{
 									Expression.Constant(null, typeof(IDataProvider)),
 									Expression.Constant(mappingSchema, typeof(MappingSchema)),
+									Expression.Constant(key.Item5),
 									Expression.Constant(sqlOptimizer),
 									Expression.Constant(key.Item4)
 								}))
@@ -252,7 +287,7 @@ namespace LinqToDB.Remote
 #if NET45 || NET46 || NETSTANDARD2_0
 					);
 #else
-					, (MappingSchema, GetSqlOptimizer()));
+					, (MappingSchema, GetSqlOptimizer(Options)));
 #endif
 				}
 
@@ -260,26 +295,37 @@ namespace LinqToDB.Remote
 			}
 		}
 
-		static readonly ConcurrentDictionary<Tuple<Type, SqlProviderFlags>, Func<ISqlOptimizer>> _sqlOptimizers = new ();
+		static readonly ConcurrentDictionary<Tuple<Type,SqlProviderFlags>,Func<DataOptions,ISqlOptimizer>> _sqlOptimizers = new ();
 
-		Func<ISqlOptimizer>? _getSqlOptimizer;
+		Func<DataOptions,ISqlOptimizer>? _getSqlOptimizer;
 
-		public Func<ISqlOptimizer> GetSqlOptimizer
+		public Func<DataOptions,ISqlOptimizer> GetSqlOptimizer
 		{
 			get
 			{
 				if (_getSqlOptimizer == null)
 				{
-					var key  = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
+					var key = Tuple.Create(SqlOptimizerType, ((IDataContext)this).SqlProviderFlags);
 
 					_getSqlOptimizer = _sqlOptimizers.GetOrAdd(key, static key =>
-						Expression.Lambda<Func<ISqlOptimizer>>(
-								Expression.New(
-									key.Item1.GetConstructor(new[] { typeof(SqlProviderFlags) }) ??
-										ThrowHelper.ThrowInvalidOperationException<ConstructorInfo>(
-											$"Constructor for type '{key.Item1.Name}' not found."),
-									Expression.Constant(key.Item2)))
-							.CompileExpression());
+					{
+						var p = Expression.Parameter(typeof(DataOptions));
+						var c = key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags)});
+
+						if (c != null)
+							return Expression.Lambda<Func<DataOptions,ISqlOptimizer>>(
+								Expression.New(c, Expression.Constant(key.Item2)),
+								p)
+								.CompileExpression();
+
+						return Expression.Lambda<Func<DataOptions,ISqlOptimizer>>(
+							Expression.New(
+								key.Item1.GetConstructor(new[] {typeof(SqlProviderFlags), typeof(DataOptions)}) ?? throw new InvalidOperationException($"Constructor for type '{key.Item1.Name}' not found."),
+								Expression.Constant(key.Item2),
+								p),
+							p)
+							.CompileExpression();
+					});
 				}
 
 				return _getSqlOptimizer;
@@ -299,7 +345,7 @@ namespace LinqToDB.Remote
 		public void CommitBatch()
 		{
 			if (_batchCounter == 0)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			_batchCounter--;
 
@@ -323,7 +369,7 @@ namespace LinqToDB.Remote
 		public async Task CommitBatchAsync()
 		{
 			if (_batchCounter == 0)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			_batchCounter--;
 
@@ -361,7 +407,7 @@ namespace LinqToDB.Remote
 		protected void ThrowOnDisposed()
 		{
 			if (Disposed)
-				ThrowHelper.ThrowObjectDisposedException("RemoteDataContext", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
+				throw new ObjectDisposedException("RemoteDataContext", "IDataContext is disposed, see https://github.com/linq2db/linq2db/wiki/Managing-data-connection");
 		}
 
 		void IDataContext.Close()

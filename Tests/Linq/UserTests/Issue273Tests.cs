@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -8,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue273Tests : TestBase
 	{
 		[Table("LinqDataTypes")]
-		class ContainEnumTest
+		sealed class ContainEnumTest
 		{
 			public enum TestFieldEnum
 			{

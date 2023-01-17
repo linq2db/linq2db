@@ -1,15 +1,15 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
+using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Expressions
 {
-	using Linq.Builder;
-
-	class ContextRefExpression : Expression
+	sealed class ContextRefExpression : Expression
 	{
 		public ContextRefExpression(Type elementType, IBuildContext buildContext)
 		{
 			ElementType = elementType;
-			BuildContext = buildContext ?? ThrowHelper.ThrowArgumentNullException<IBuildContext>(nameof(buildContext));
+			BuildContext = buildContext ?? throw new ArgumentNullException(nameof(buildContext));
 		}
 
 		public Type ElementType { get; }
@@ -27,7 +27,7 @@ namespace LinqToDB.Expressions
 
 		#region Equality members
 
-		protected bool Equals(ContextRefExpression other)
+		private bool Equals(ContextRefExpression other)
 		{
 			return Equals(ElementType, other.ElementType) && Equals(BuildContext, other.BuildContext);
 		}

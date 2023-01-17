@@ -1,10 +1,11 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
 
-	class HintExtensionBuilder : ISqlQueryExtensionBuilder
+	sealed class HintExtensionBuilder : ISqlQueryExtensionBuilder
 	{
 		void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 		{

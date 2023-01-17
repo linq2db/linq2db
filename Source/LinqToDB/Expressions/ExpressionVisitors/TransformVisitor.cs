@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
@@ -6,9 +8,9 @@ namespace LinqToDB.Expressions
 {
 	internal readonly struct TransformVisitor<TContext>
 	{
-		private readonly TContext?                               _context;
-		private readonly Func<TContext, Expression, Expression>? _func;
-		private readonly Func<Expression, Expression>?           _staticFunc;
+		private readonly TContext?                             _context;
+		private readonly Func<TContext,Expression,Expression>? _func;
+		private readonly Func<Expression,Expression>?          _staticFunc;
 
 		public TransformVisitor(TContext context, Func<TContext, Expression, Expression> func)
 		{
@@ -40,7 +42,7 @@ namespace LinqToDB.Expressions
 			return new TransformVisitor<TContext>(context, func);
 		}
 
-		[return: NotNullIfNotNull("expr")]
+		[return: NotNullIfNotNull(nameof(expr))]
 		public Expression? Transform(Expression? expr)
 		{
 			if (expr == null)
@@ -182,7 +184,7 @@ namespace LinqToDB.Expressions
 						Transform(((LoopExpression)expr).Body));
 
 				default:
-					return ThrowHelper.ThrowNotImplementedException<Expression>($"Unhandled expression type: {expr.NodeType}");
+					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
 			}
 		}
 

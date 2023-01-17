@@ -1,4 +1,5 @@
-﻿using FluentAssertions;
+﻿using System.Linq;
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -34,6 +35,7 @@ namespace Tests.UserTests
 		{
 			const string Admin = "Admin";
 
+			using(new PreferApply(preferApply))
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Task>())
 			using (db.CreateLocalTable<Party>())
@@ -47,19 +49,16 @@ namespace Tests.UserTests
 						.DefaultIfEmpty()
 					select new { task.Description, party.Name };
 
-				using(new PreferApply(preferApply))
-				{
-					_ = query.ToArray();
-					var sql = query.ToString();
+				_ = query.ToArray();
+				var sql = query.ToString();
 
-					if (preferApply)
-					{
-						sql.Should().Contain("OUTER APPLY");
-					}
-					else
-					{
-						sql.Should().NotContain("OUTER APPLY");
-					}
+				if (preferApply)
+				{
+					sql.Should().Contain("OUTER APPLY");
+				}
+				else
+				{
+					sql.Should().NotContain("OUTER APPLY");
 				}
 			}
 		}

@@ -25,14 +25,14 @@ namespace Cli.Default.Oracle
 		/// <summary>
 		/// Fk_Doctor_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Doctor.PersonId))]
-		public Doctor? FkDoctor { get; set; }
+		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Oracle.Doctor.PersonId))]
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// Fk_Patient_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Patient.PersonId))]
-		public Patient? FkPatient { get; set; }
+		[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Oracle.Patient.PersonId))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 }

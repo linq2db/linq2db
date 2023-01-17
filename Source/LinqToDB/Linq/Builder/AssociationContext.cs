@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -7,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}, T: {BuildContextDebuggingHelper.GetContextInfo(TableContext)}")]
-	class AssociationContext : IBuildContext
+	sealed class AssociationContext : IBuildContext
 	{
 #if DEBUG
 		string? IBuildContext.SqlQueryText => TableContext.SqlQueryText;
@@ -20,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			// get => TableContext.SelectQuery;
 			get => SubqueryContext.SelectQuery;
-			set => ThrowHelper.ThrowNotImplementedException();
+			set => throw new NotImplementedException();
 		}
 
 		public SqlStatement? Statement
@@ -63,24 +65,29 @@ namespace LinqToDB.Linq.Builder
 			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
 			var indexes = ConvertToIndex(expression, level, flags);
 
-			indexes = indexes.Select(idx => idx.WithQuery(SelectQuery))
-				.ToArray();
+			for (var i = 0; i < indexes.Length; i++)
+				indexes[i] = indexes[i].WithQuery(SelectQuery);
 
 			return indexes;
 		}
 
 		public SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
 		{
-			expression = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
+			expression  = SequenceHelper.CorrectExpression(expression, this, SubqueryContext);
+			var indexes = SubqueryContext.ConvertToIndex(expression, level, flags);
+			var isOuter = SubqueryContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext defaultIfEmpty && !defaultIfEmpty.Disabled && !Builder.DisableDefaultIfEmpty;
 
-			var indexes = SubqueryContext
-				.ConvertToIndex(expression, level, flags)
-				.ToArray();
+			for (var i = 0; i < indexes.Length; i++)
+			{
+				var index  = indexes[i];
+				indexes[i] = index = index.WithSql(SubqueryContext.SelectQuery.Select.Columns[index.Index]);
 
-			var corrected = indexes.Select(s => s.WithSql(SubqueryContext.SelectQuery.Select.Columns[s.Index]))
-				.ToArray();
+				// force nullability
+				if (isOuter && !index.Sql.CanBeNull)
+					indexes[i] = index.WithSql(new SqlExpression(index.Sql.SystemType, "{0}", index.Sql.Precedence, index.Sql) { CanBeNull = true });
+			}
 
-			return corrected;
+			return indexes;
 		}
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)

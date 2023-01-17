@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.CodeModel
-{
-	using Common;
+﻿using System.Collections.Generic;
+using LinqToDB.Common;
 
+namespace LinqToDB.CodeModel
+{
 	/// <summary>
 	/// Namespace declaration.
 	/// </summary>

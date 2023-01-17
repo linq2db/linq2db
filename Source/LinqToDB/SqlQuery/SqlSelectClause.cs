@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -39,7 +42,7 @@ namespace LinqToDB.SqlQuery
 		public SqlSelectClause SubQuery(SelectQuery subQuery)
 		{
 			if (subQuery.ParentSelect != null && subQuery.ParentSelect != SelectQuery)
-				ThrowHelper.ThrowArgumentException("SqlQuery already used as subquery");
+				throw new ArgumentException("SqlQuery already used as subquery");
 
 			subQuery.ParentSelect = SelectQuery;
 
@@ -50,7 +53,7 @@ namespace LinqToDB.SqlQuery
 		public SqlSelectClause SubQuery(SelectQuery selectQuery, string alias)
 		{
 			if (selectQuery.ParentSelect != null && selectQuery.ParentSelect != SelectQuery)
-				ThrowHelper.ThrowArgumentException("SqlQuery already used as subquery");
+				throw new ArgumentException("SqlQuery already used as subquery");
 
 			selectQuery.ParentSelect = SelectQuery;
 
@@ -133,7 +136,7 @@ namespace LinqToDB.SqlQuery
 		public int Add(ISqlExpression expr)
 		{
 			if (expr is SqlColumn column && column.Parent == SelectQuery)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			return AddOrFindColumn(new SqlColumn(SelectQuery, expr));
 		}
@@ -146,7 +149,7 @@ namespace LinqToDB.SqlQuery
 		public int AddNew(ISqlExpression expr, string? alias = default)
 		{
 			if (expr is SqlColumn column && column.Parent == SelectQuery)
-				ThrowHelper.ThrowInvalidOperationException();
+				throw new InvalidOperationException();
 
 			Columns.Add(new SqlColumn(SelectQuery, expr, alias));
 			return Columns.Count - 1;
@@ -175,22 +178,18 @@ namespace LinqToDB.SqlQuery
 			{
 				var column           = Columns[i];
 				var columnExpression = column.Expression;
+				var underlying       = column.UnderlyingExpression();
 
-				if (columnExpression.CanBeNull == colExpression.CanBeNull)
+				if (underlying.Equals(colUnderlying))
 				{
-					var underlying = column.UnderlyingExpression();
-
-					if (underlying.Equals(colUnderlying))
+					if (underlying.ElementType == QueryElementType.SqlValue &&
+						colExpression.ElementType == QueryElementType.Column)
 					{
-						if (underlying.ElementType    == QueryElementType.SqlValue &&
-						    colExpression.ElementType == QueryElementType.Column)
-						{
-							// avoid suppressing constant columns
-							continue;
-						}
-
-						return i;
+						// avoid suppressing constant columns
+						continue;
 					}
+
+					return i;
 				}
 			}
 
@@ -203,7 +202,7 @@ namespace LinqToDB.SqlQuery
 						var table = ((SqlField)col.Expression).Table;
 
 						//if (SqlQuery.From.GetFromTables().Any(_ => _ == table))
-						//	ThrowHelper.ThrowInvalidOperationException("Wrong field usage.");
+						//	throw new InvalidOperationException("Wrong field usage.");
 
 						break;
 					}
@@ -213,7 +212,7 @@ namespace LinqToDB.SqlQuery
 						var query = ((SqlColumn)col.Expression).Parent;
 
 						//if (!SqlQuery.From.GetFromQueries().Any(_ => _ == query))
-						//	ThrowHelper.ThrowInvalidOperationException("Wrong column usage.");
+						//	throw new InvalidOperationException("Wrong column usage.");
 
 						if (SelectQuery.HasSetOperators)
 						{
@@ -229,7 +228,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlQuery :
 					{
 						if (col.Expression == SelectQuery)
-							ThrowHelper.ThrowInvalidOperationException("Wrong query usage.");
+							throw new InvalidOperationException("Wrong query usage.");
 						break;
 					}
 			}

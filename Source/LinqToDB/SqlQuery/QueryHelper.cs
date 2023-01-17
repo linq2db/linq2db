@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlQuery
@@ -14,7 +17,7 @@ namespace LinqToDB.SqlQuery
 			return null != testedRoot.Find(element, static (element, e) => e == element);
 		}
 
-		private class IsDependsOnSourcesContext
+		private sealed class IsDependsOnSourcesContext
 		{
 			public IsDependsOnSourcesContext(HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -70,7 +73,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class IsDependsOnElementContext
+		private sealed class IsDependsOnElementContext
 		{
 			public IsDependsOnElementContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -102,7 +105,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-		private class DependencyCountContext
+		private sealed class DependencyCountContext
 		{
 			public DependencyCountContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -341,37 +344,37 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public static bool IsTransitiveExpression(SqlExpression sqlExpression)
+		public static bool IsTransitiveExpression(SqlExpression sqlExpression, bool checkNullability)
 		{
-			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}" && sqlExpression.CanBeNull == sqlExpression.Parameters[0].CanBeNull)
+			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}" && (!checkNullability || sqlExpression.CanBeNull == sqlExpression.Parameters[0].CanBeNull))
 			{
 				if (sqlExpression.Parameters[0] is SqlExpression argExpression)
-					return IsTransitiveExpression(argExpression);
+					return IsTransitiveExpression(argExpression, checkNullability);
 				return true;
 			}
 
 			return false;
 		}
 
-		public static ISqlExpression UnwrapExpression(ISqlExpression expr)
+		public static ISqlExpression UnwrapExpression(ISqlExpression expr, bool checkNullability)
 		{
 			if (expr.ElementType == QueryElementType.SqlExpression)
 			{
-				var underlying = GetUnderlyingExpressionValue((SqlExpression)expr);
+				var underlying = GetUnderlyingExpressionValue((SqlExpression)expr, checkNullability);
 				if (!ReferenceEquals(expr, underlying))
-					return UnwrapExpression(underlying);
+					return UnwrapExpression(underlying, checkNullability);
 			}
 
 			return expr;
 		}
 
-		public static ISqlExpression GetUnderlyingExpressionValue(SqlExpression sqlExpression)
+		public static ISqlExpression GetUnderlyingExpressionValue(SqlExpression sqlExpression, bool checkNullability)
 		{
-			if (!IsTransitiveExpression(sqlExpression))
+			if (!IsTransitiveExpression(sqlExpression, checkNullability))
 				return sqlExpression;
 
 			if (sqlExpression.Parameters[0] is SqlExpression subExpr)
-				return GetUnderlyingExpressionValue(subExpr);
+				return GetUnderlyingExpressionValue(subExpr, checkNullability);
 
 			return sqlExpression.Parameters[0];
 		}
@@ -386,7 +389,7 @@ namespace LinqToDB.SqlQuery
 			if (expr.ElementType == QueryElementType.SqlExpression)
 			{
 				var sqlExpression = (SqlExpression) expr;
-				expr = GetUnderlyingExpressionValue(sqlExpression);
+				expr = GetUnderlyingExpressionValue(sqlExpression, true);
 			}
 			return expr.ElementType != QueryElementType.Column && expr.ElementType != QueryElementType.SqlField;
 		}
@@ -395,7 +398,7 @@ namespace LinqToDB.SqlQuery
 		{
 			return expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter;
 		}
-
+		
 		/// <summary>
 		/// Returns <c>true</c> if tested expression is constant during query execution (e.g. value or parameter).
 		/// </summary>
@@ -688,7 +691,7 @@ namespace LinqToDB.SqlQuery
 			if (nonProjecting.Count > 0)
 			{
 				if (!flags.IsOrderByAggregateFunctionsSupported)
-					ThrowHelper.ThrowLinqToDBException("Can not convert sequence to SQL. DISTINCT with ORDER BY not supported.");
+					throw new LinqToDBException("Can not convert sequence to SQL. DISTINCT with ORDER BY not supported.");
 
 				// converting to Group By
 
@@ -729,7 +732,7 @@ namespace LinqToDB.SqlQuery
 		/// <returns></returns>
 		public static bool CanRemoveOrderBy(SelectQuery selectQuery, SqlProviderFlags flags, QueryInformation information)
 		{
-			if (selectQuery == null) ThrowHelper.ThrowArgumentNullException(nameof(selectQuery));
+			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
 
 			if (selectQuery.OrderBy.IsEmpty || selectQuery.ParentSelect == null)
 				return false;
@@ -767,7 +770,7 @@ namespace LinqToDB.SqlQuery
 					case QueryInformation.HierarchyType.InnerQuery:
 						return true;
 					default:
-						return ThrowHelper.ThrowInvalidOperationException<bool>($"Unexpected hierarchy type: {info.HierarchyType}");
+						throw new InvalidOperationException($"Unexpected hierarchy type: {info.HierarchyType}");
 				}
 
 			} while (current != null);
@@ -783,7 +786,7 @@ namespace LinqToDB.SqlQuery
 		/// <returns></returns>
 		public static bool TryRemoveDistinct(SelectQuery selectQuery, QueryInformation information)
 		{
-			if (selectQuery == null) ThrowHelper.ThrowArgumentNullException(nameof(selectQuery));
+			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
 
 			if (!selectQuery.Select.IsDistinct)
 				return false;
@@ -905,7 +908,7 @@ namespace LinqToDB.SqlQuery
 				}
 				else if (current is SqlExpression expr)
 				{
-					if (IsTransitiveExpression(expr))
+					if (IsTransitiveExpression(expr, true))
 						current = expr.Parameters[0];
 					else
 						break;
@@ -917,11 +920,11 @@ namespace LinqToDB.SqlQuery
 			return current as SqlField;
 		}
 
-		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2)
+		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2, bool compareNullsAsValues)
 		{
 			var compare = new SqlCondition(false,
 				new SqlPredicate.ExprExpr(field1, SqlPredicate.Operator.Equal, field2,
-					Configuration.Linq.CompareNullsAsValues ? true : null));
+					compareNullsAsValues ? true : null));
 
 			return compare;
 		}
@@ -933,7 +936,7 @@ namespace LinqToDB.SqlQuery
 		/// <param name="foundSources">Output container for detected sources/</param>
 		public static void GetUsedSources(ISqlExpression root, HashSet<ISqlTableSource> foundSources)
 		{
-			if (foundSources == null) ThrowHelper.ThrowArgumentNullException(nameof(foundSources));
+			if (foundSources == null) throw new ArgumentNullException(nameof(foundSources));
 
 			root.Visit(foundSources, static (foundSources, e) =>
 			{
@@ -1080,9 +1083,9 @@ namespace LinqToDB.SqlQuery
 			bool                                             withStack)
 			where TStatement : SqlStatement
 		{
-			if (statement == null) ThrowHelper.ThrowArgumentNullException(nameof(statement));
-			if (wrapTest  == null) ThrowHelper.ThrowArgumentNullException(nameof(wrapTest));
-			if (onWrap    == null) ThrowHelper.ThrowArgumentNullException(nameof(onWrap));
+			if (statement == null) throw new ArgumentNullException(nameof(statement));
+			if (wrapTest  == null) throw new ArgumentNullException(nameof(wrapTest));
+			if (onWrap    == null) throw new ArgumentNullException(nameof(onWrap));
 
 			var correctedTables = new Dictionary<ISqlTableSource, SelectQuery>();
 			var newStatement = statement.Convert(
@@ -1216,7 +1219,7 @@ namespace LinqToDB.SqlQuery
 			bool        allowMutation)
 			where TStatement : SqlStatement
 		{
-			if (statement == null) ThrowHelper.ThrowArgumentNullException(nameof(statement));
+			if (statement == null) throw new ArgumentNullException(nameof(statement));
 
 			return WrapQuery(queryToWrap, statement, static (queryToWrap, q, _) => q == queryToWrap, null, allowMutation, false);
 		}
@@ -1243,8 +1246,8 @@ namespace LinqToDB.SqlQuery
 			bool                                              withStack)
 			where TStatement : SqlStatement
 		{
-			if (statement == null) ThrowHelper.ThrowArgumentNullException(nameof(statement));
-			if (wrapTest == null)  ThrowHelper.ThrowArgumentNullException(nameof(wrapTest));
+			if (statement == null) throw new ArgumentNullException(nameof(statement));
+			if (wrapTest == null)  throw new ArgumentNullException(nameof(wrapTest));
 
 			return WrapQuery(
 				(context, wrapTest, onWrap),
@@ -1339,8 +1342,8 @@ namespace LinqToDB.SqlQuery
 
 		public static string TransformExpressionIndexes<TContext>(TContext context, string expression, Func<TContext, int, int> transformFunc)
 		{
-			if (expression    == null) ThrowHelper.ThrowArgumentNullException(nameof(expression));
-			if (transformFunc == null) ThrowHelper.ThrowArgumentNullException(nameof(transformFunc));
+			if (expression    == null) throw new ArgumentNullException(nameof(expression));
+			if (transformFunc == null) throw new ArgumentNullException(nameof(transformFunc));
 
 			var str = _paramsRegex.Replace(expression, match =>
 			{
@@ -1366,8 +1369,8 @@ namespace LinqToDB.SqlQuery
 
 		public static ISqlExpression ConvertFormatToConcatenation(string format, IList<ISqlExpression> parameters)
 		{
-			if (format     == null) ThrowHelper.ThrowArgumentNullException(nameof(format));
-			if (parameters == null) ThrowHelper.ThrowArgumentNullException(nameof(parameters));
+			if (format     == null) throw new ArgumentNullException(nameof(format));
+			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			string StripDoubleQuotes(string str)
 			{
@@ -1426,17 +1429,61 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
 		{
+			return IsAggregationFunction(expr) || IsWindowFunction(expr);
+		}
+
+		public static bool IsAggregationFunction(IQueryElement expr)
+		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
 
 			if (expr is SqlExpression expression)
-				return (expression.Flags & (SqlFlags.IsAggregate | SqlFlags.IsWindowFunction)) != 0;
+				return (expression.Flags & SqlFlags.IsAggregate) != 0;
 
 			return false;
 		}
 
-		// TODO: IsAggregationOrWindowFunction use needs review - maybe we should call ContainsAggregationOrWindowFunction there
-		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr) => null != expr.Find(IsAggregationOrWindowFunction);
+		public static bool IsWindowFunction(IQueryElement expr)
+		{
+			if (expr is SqlExpression expression)
+				return (expression.Flags & SqlFlags.IsWindowFunction) != 0;
+
+			return false;
+		}
+
+		public static bool ContainsAggregationOrWindowFunction(IQueryElement expr)
+		{
+			if (expr is SqlColumn)
+				return false;
+			if (expr is SqlSearchCondition || expr is SelectQuery)
+				return ContainsAggregationOrWindowFunctionDeep(expr);
+
+			if (IsAggregationFunction(expr) || IsWindowFunction(expr))
+				return true;
+
+			return false;
+		}
+
+		public static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
+		{
+			return null != expr.Find(e => IsAggregationFunction(e) || IsWindowFunction(e));
+		}
+
+		public static bool ContainsAggregationOrWindowFunctionOneLevel(IQueryElement expr)
+		{
+			var found = false;
+			expr.VisitParentFirst(expr, (_, e) =>
+			{
+				if (found)
+					return true;
+				if (e is SqlColumn)
+					return false;
+				found = IsAggregationFunction(e) || IsWindowFunction(e);
+				return !found;
+			});
+
+			return found;
+		}
 
 		/// <summary>
 		/// Collects unique keys from different sources.
@@ -1626,7 +1673,7 @@ namespace LinqToDB.SqlQuery
 			return null != expression.Find(static e => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
 		}
 
-		private class NeedParameterInliningContext
+		private sealed class NeedParameterInliningContext
 		{
 			public bool HasParameter;
 			public bool IsQueryParameter;

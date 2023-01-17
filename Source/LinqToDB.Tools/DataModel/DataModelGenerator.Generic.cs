@@ -1,9 +1,11 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using LinqToDB.CodeModel;
 
 namespace LinqToDB.DataModel
 {
-	using CodeModel;
-
 	// contains basic code generation logic, not related to data model.
 	partial class DataModelGenerator
 	{
@@ -23,6 +25,12 @@ namespace LinqToDB.DataModel
 			// add paramer's xml doc to method xml doc definition
 			if (model.Description != null)
 				method.XmlComment().Parameter(parameter.Name, model.Description);
+
+			parameter.ChangeHandler += p =>
+			{
+				model.Name = p.Name.Name;
+				model.Type = p.Type.Type;
+			};
 
 			return parameter;
 		}
@@ -104,6 +112,12 @@ namespace LinqToDB.DataModel
 				foreach (var attr in model.CustomAttributes)
 					@class.AddAttribute(attr);
 
+			@class.Type.ChangeHandler += t =>
+			{
+				model.Name      = t.Type.Name!.Name;
+				model.Namespace = t.Type.Namespace != null && t.Type.Namespace.Count > 0 ? string.Join(".", t.Type.Namespace.Select(p => p.Name)) : null;
+			};
+
 			return @class;
 		}
 
@@ -133,6 +147,12 @@ namespace LinqToDB.DataModel
 				foreach (var attr in property.CustomAttributes)
 					propertyBuilder.AddAttribute(attr);
 
+			propertyBuilder.Property.ChangeHandler += p =>
+			{
+				property.Name = p.Name.Name;
+				property.Type = p.Type.Type;
+			};
+
 			return propertyBuilder;
 		}
 
@@ -159,6 +179,11 @@ namespace LinqToDB.DataModel
 			if (model.CustomAttributes != null)
 				foreach (var attr in model.CustomAttributes)
 					builder.AddAttribute(attr);
+
+			builder.Method.ChangeHandler += m =>
+			{
+				model.Name = m.Name.Name;
+			};
 
 			return builder;
 		}

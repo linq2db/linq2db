@@ -1,4 +1,6 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -21,7 +23,7 @@ namespace Tests.UserTests
 			Assert.That(table.Fields.Single().Type!.Scale, Is.EqualTo(4));
 		}
 
-		class Foo
+		sealed class Foo
 		{
 			public decimal Field { get; set; }
 		}

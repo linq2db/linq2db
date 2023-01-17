@@ -1,11 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.IO;
+using System.Linq.Expressions;
 using System.Reflection;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
-
-	class AssemblyResolver
+	sealed class AssemblyResolver
 	{
 		readonly string?   _path;
 		readonly string    _resolveName;
@@ -13,16 +14,16 @@ namespace LinqToDB.DataProvider
 
 		public AssemblyResolver(string path, string resolveName)
 		{
-			_path        = path        ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(path));
-			_resolveName = resolveName ?? ThrowHelper.ThrowArgumentNullException<string>(nameof(resolveName));
+			_path        = path        ?? throw new ArgumentNullException(nameof(path));
+			_resolveName = resolveName ?? throw new ArgumentNullException(nameof(resolveName));
 
 			SetResolver();
 		}
 
 		public AssemblyResolver(Assembly assembly, string resolveName)
 		{
-			_assembly    = assembly    ?? ThrowHelper.ThrowArgumentNullException<Assembly>(nameof(assembly));
-			_resolveName = resolveName ?? ThrowHelper.ThrowArgumentNullException<string  >(nameof(resolveName));
+			_assembly    = assembly    ?? throw new ArgumentNullException(nameof(assembly));
+			_resolveName = resolveName ?? throw new ArgumentNullException(nameof(resolveName));
 
 			SetResolver();
 		}

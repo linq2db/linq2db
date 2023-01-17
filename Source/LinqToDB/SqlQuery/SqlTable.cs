@@ -1,4 +1,8 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -51,7 +55,7 @@ namespace LinqToDB.SqlQuery
 		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
 			: this(objectType, null, new(String.Empty))
 		{
-			if (mappingSchema == null) ThrowHelper.ThrowArgumentNullException(nameof(mappingSchema));
+			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
 			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
@@ -165,13 +169,14 @@ namespace LinqToDB.SqlQuery
 
 		#region Public Members
 
-		public SqlField? this[string fieldName]
+		/// <summary>
+		/// Search for table field by mapping class member name.
+		/// </summary>
+		/// <param name="memberName">Mapping class member name.</param>
+		public SqlField? FindFieldByMemberName(string memberName)
 		{
-			get
-			{
-				_fieldsLookup.TryGetValue(fieldName, out var field);
-				return field;
-			}
+			_fieldsLookup.TryGetValue(memberName, out var field);
+			return field;
 		}
 
 		public         string?           Alias          { get; set; }
@@ -235,7 +240,7 @@ namespace LinqToDB.SqlQuery
 
 		public void Add(SqlField field)
 		{
-			if (field.Table != null) ThrowHelper.ThrowInvalidOperationException("Invalid parent table.");
+			if (field.Table != null) throw new InvalidOperationException("Invalid parent table.");
 
 			field.Table = this;
 

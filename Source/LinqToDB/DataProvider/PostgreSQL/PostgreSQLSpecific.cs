@@ -1,4 +1,7 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
@@ -10,7 +13,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 	}
 
-	class PostgreSQLSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IPostgreSQLSpecificTable<TSource>, ITable
+	sealed class PostgreSQLSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IPostgreSQLSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public PostgreSQLSpecificTable(ITable<TSource> table) : base(table)
@@ -22,7 +25,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	{
 	}
 
-	class PostgreSQLSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IPostgreSQLSpecificQueryable<TSource>, ITable
+	sealed class PostgreSQLSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IPostgreSQLSpecificQueryable<TSource>, ITable
 	{
 		public PostgreSQLSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

@@ -13,8 +13,8 @@
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<dependency id="linq2db"                 version="4.0.0"   />
-			<dependency id="System.Data.SQLite.Core" version="1.0.116" />
+			<dependency id="linq2db"                 version="5.0.0"   />
+			<dependency id="System.Data.SQLite.Core" version="1.0.117" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />

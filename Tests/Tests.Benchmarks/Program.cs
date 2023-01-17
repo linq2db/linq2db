@@ -1,4 +1,5 @@
-﻿using BenchmarkDotNet.Running;
+﻿using System.Threading.Tasks;
+using BenchmarkDotNet.Running;
 using LinqToDB.Benchmarks.Benchmarks.QueryGeneration;
 using LinqToDB.Benchmarks.Queries;
 
@@ -8,7 +9,7 @@ using JetBrains.Profiler.Api;
 
 namespace LinqToDB.Benchmarks
 {
-	class Program
+	sealed class Program
 	{
 		static void Main(string[] args)
 		{

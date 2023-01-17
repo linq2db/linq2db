@@ -1,7 +1,11 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
-	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(System.Func{System.Linq.IQueryable{T},LinqToDB.IDataContext,System.Linq.IQueryable{T}})"/>
+	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(Func{System.Linq.IQueryable{T},LinqToDB.IDataContext,System.Linq.IQueryable{T}})"/>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class QueryFilterAttribute : MappingAttribute
@@ -15,7 +19,7 @@
 
 		public override string GetObjectID()
 		{
-			return $"..";
+			return IdentifierBuilder.GetObjectID(FilterFunc?.Method);
 		}
 	}
 }

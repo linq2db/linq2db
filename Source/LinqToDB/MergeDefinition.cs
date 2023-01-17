@@ -1,10 +1,12 @@
-﻿using System.Linq.Expressions;
+﻿using LinqToDB.Common;
+using LinqToDB.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using Common;
-	using Linq;
-
 	public enum MergeOperationType
 	{
 		Insert,
@@ -177,7 +179,7 @@ namespace LinqToDB
 							return BySourcePredicate != null;
 					}
 
-					return ThrowHelper.ThrowInvalidOperationException<bool>();
+					throw new InvalidOperationException();
 				}
 			}
 

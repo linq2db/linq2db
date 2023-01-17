@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SchemaProvider
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.SchemaProvider
 {
 	public class ForeignKeySchema
 	{

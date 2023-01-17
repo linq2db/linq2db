@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Linq
+﻿using System;
+using System.Threading;
+
+namespace LinqToDB.Linq
 {
 	/// <summary>
 	/// Provides a scope, in which LINQ queries will not be added to a LINQ query cache. This could be used to tell

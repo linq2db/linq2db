@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Data
+﻿using System;
+
+namespace LinqToDB.Data
 {
 	/// <summary>
 	/// Bulk copy implementation type.

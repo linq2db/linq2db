@@ -1,16 +1,20 @@
-﻿namespace LinqToDB.DataProvider.Sybase
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.Sybase
 {
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
 
-	class SybaseSqlOptimizer : BasicSqlOptimizer
+	sealed class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
 		public SybaseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{
@@ -19,7 +23,7 @@
 			};
 		}
 
-		protected static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
+		private static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
 
 		public override string[] LikeCharactersToEscape => SybaseCharactersToEscape;
 

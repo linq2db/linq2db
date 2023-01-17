@@ -1,5 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -87,7 +90,7 @@ namespace LinqToDB.SqlQuery
 			return name;
 		}
 
-		private class PrepareQueryAndAliasesContext
+		private sealed class PrepareQueryAndAliasesContext
 		{
 			public PrepareQueryAndAliasesContext(AliasesContext? prevAliasContext)
 			{
@@ -291,7 +294,7 @@ namespace LinqToDB.SqlQuery
 					var ts = statement.SelectQuery?.GetTableSource(f.Table!) ?? statement.GetTableSource(f.Table!);
 
 					if (ts == null && f != f.Table!.All)
-						ThrowHelper.ThrowSqlException($"Table '{f.Table}' not found.");
+						throw new SqlException("Table '{0}' not found.", f.Table);
 				}
 			});
 		}

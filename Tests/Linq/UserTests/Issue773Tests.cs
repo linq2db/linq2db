@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Linq;
+using System.Reflection;
 
 using NUnit.Framework;
 
@@ -14,7 +16,7 @@ namespace Tests.UserTests
 	{
 		public static class SqlLite
 		{
-			class MatchBuilder : Sql.IExtensionCallBuilder
+			sealed class MatchBuilder : Sql.IExtensionCallBuilder
 			{
 				public void Build(Sql.ISqExtensionBuilder builder)
 				{

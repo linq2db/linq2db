@@ -1,6 +1,10 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
@@ -23,7 +27,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class MultiThreadedData
+		sealed class MultiThreadedData
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id    { get; set; }
@@ -120,7 +124,7 @@ namespace Tests.Linq
 					if (result.Item4 != null)
 					{
 						var sb = new StringBuilder();
-						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
+						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
 						TestContext.WriteLine(sb);
 					}
 					TestContext.WriteLine();

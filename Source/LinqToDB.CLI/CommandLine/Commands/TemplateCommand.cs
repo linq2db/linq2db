@@ -1,4 +1,8 @@
-﻿namespace LinqToDB.CommandLine
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// Template command implementation.
@@ -55,7 +59,7 @@
 				return StatusCodes.EXPECTED_ERROR;
 			}
 
-			Directory.CreateDirectory(Path.GetDirectoryName(fullPath));
+			Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
 
 			using var template = GetType().Assembly.GetManifestResourceStream("LinqToDB.CLI.Template.tt")!;
 			using var file     = File.Create(fullPath);

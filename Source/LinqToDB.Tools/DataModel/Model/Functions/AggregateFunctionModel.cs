@@ -1,9 +1,10 @@
-﻿namespace LinqToDB.DataModel
-{
-	using Metadata;
-	using CodeModel;
-	using SqlQuery;
+﻿using LinqToDB.Metadata;
+using LinqToDB.Schema;
+using LinqToDB.CodeModel;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataModel
+{
 	/// <summary>
 	/// Aggregate function model.
 	/// </summary>

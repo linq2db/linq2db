@@ -3,7 +3,7 @@ using System.Text;
 
 namespace LinqToDB.Linq
 {
-	class CteTable<T> : ExpressionQuery<T>
+	sealed class CteTable<T> : ExpressionQuery<T>
 	{
 		public CteTable(IDataContext dataContext)
 		{

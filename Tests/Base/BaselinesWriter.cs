@@ -1,9 +1,12 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using NUnit.Framework.Internal;
 
 namespace Tests
 {
-	internal class BaselinesWriter
+	internal sealed class BaselinesWriter
 	{
 		// used to detect baseline overwrites by another test(case)
 		// case-insensitive to support windoze file system
@@ -21,6 +24,8 @@ namespace Tests
 			var target = "core31";
 #elif NET6_0
 			var target = "net60";
+#elif NET7_0
+			var target = "net70";
 #else
 #error "Build Target must be specified here."
 #endif

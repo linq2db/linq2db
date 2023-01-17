@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFrameworks>net6.0</TargetFrameworks>
+		<TargetFrameworks>net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,10 +28,6 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Northwind.tt</DependentUpon>
 		</Compile>
-	</ItemGroup>
-
-	<ItemGroup>
-		<Using Remove="System.Net.Http" />
 	</ItemGroup>
 
 </Project>

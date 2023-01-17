@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Interceptors
+﻿using System;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Interceptors
 {
 	public abstract class DataContextInterceptor : IDataContextInterceptor
 	{

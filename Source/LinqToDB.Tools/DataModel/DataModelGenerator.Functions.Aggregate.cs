@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.DataModel
-{
-	using CodeModel;
+﻿using System;
+using LinqToDB.CodeModel;
 
+namespace LinqToDB.DataModel
+{
 	// contains generation logic for aggregate function mappings
 	partial class DataModelGenerator
 	{
@@ -44,6 +45,11 @@
 
 			method.Returns(aggregate.ReturnType);
 
+			method.Method.ChangeHandler += m =>
+			{
+				aggregate.ReturnType = m.ReturnType!.Type;
+			};
+
 			// define parameters
 			// aggregate has at least one parameter - collection of aggregated values
 			// and optionally could have one or more additional scalar parameters
@@ -66,11 +72,10 @@
 					parameterType = WellKnownTypes.System.Linq.Expressions.Expression(
 						WellKnownTypes.System.Func(parameterType, source));
 
-					var p = AST.Parameter(parameterType, AST.Name(param.Parameter.Name, null, i + 1), CodeParameterDirection.In);
-					method.Parameter(p);
+					param.Parameter.Type      = parameterType;
+					param.Parameter.Direction = CodeParameterDirection.In;
 
-					if (param.Parameter.Description != null)
-						method.XmlComment().Parameter(p.Name, param.Parameter.Description);
+					DefineParameter(method, param.Parameter);
 				}
 			}
 		}

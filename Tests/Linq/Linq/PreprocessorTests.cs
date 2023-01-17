@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB.Data;
 using LinqToDB.Expressions;
@@ -14,7 +15,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class PreprocessorTests : TestBase
 	{
-		class PostProcessorDataConnection : DataConnection, IExpressionPreprocessor
+		sealed class PostProcessorDataConnection : DataConnection, IExpressionPreprocessor
 		{
 			public PostProcessorDataConnection(string configurationString) : base(configurationString)
 			{

@@ -1,4 +1,10 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.DB2
 {
 	using Common;
 	using Data;
@@ -382,7 +388,7 @@ WHERE
 					var ss = s.Split('=');
 					return new { key = ss.Length == 2 ? ss[0] : "", value = ss.Length == 2 ? ss[1] : "" };
 				})
-				.Where (s => s.key.ToUpper() == "SERVER")
+				.Where (s => s.key.ToLowerInvariant() == "server")
 				.Select(s => s.value)
 				.FirstOrDefault();
 

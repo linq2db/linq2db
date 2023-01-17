@@ -1,12 +1,13 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using SqlQuery;
+	using LinqToDB.Expressions;
 
-	class OrderByBuilder : MethodCallBuilder
+	sealed class OrderByBuilder : MethodCallBuilder
 	{
 		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
 
@@ -28,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
 
 				if (throwExpr)
-					ThrowHelper.ThrowNotSupportedException($"Explicit construction of entity type '{body.Type}' in order by is not allowed.");
+					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in order by is not allowed.");
 			}
 
 			return true;
@@ -90,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 
-			if (!isContinuousOrder && !Configuration.Linq.DoNotClearOrderBys)
+			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
 			foreach (var expr in sql)

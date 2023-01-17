@@ -1,11 +1,16 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -14,9 +19,11 @@ using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NpgsqlTypes;
+
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
@@ -25,6 +32,7 @@ using NUnit.Framework.Internal.Builders;
 namespace Tests.DataProvider
 {
 	using Model;
+	using Npgsql;
 
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
@@ -94,7 +102,7 @@ namespace Tests.DataProvider
 			public object Result                                               { get; set; }
 		}
 
-		class TestDataTypeAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
+		sealed class TestDataTypeAttribute : NUnitAttribute, ITestBuilder, IImplyFixture
 		{
 			public TestDataTypeAttribute(string providerName)
 			{
@@ -1675,7 +1683,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class ExtraBulkCopyTypesTable
+		sealed class ExtraBulkCopyTypesTable
 		{
 			[Column                            ] public int     Id      { get; set; }
 			[Column                            ] public byte?   Byte    { get; set; }
@@ -1982,7 +1990,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class ScalarResult<T>
+		sealed class ScalarResult<T>
 		{
 			public T Value = default!;
 		}
@@ -2134,7 +2142,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		class TableWithArray
+		sealed class TableWithArray
 		{
 			[Column]
 			public string[] StringArray { get; set; } = null!;

@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
 using LinqToDB.Common;
@@ -29,9 +30,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 		private Action<MappingSchema, Wrapped.NpgsqlBinaryImporter, ColumnDescriptor[], TestEntity> _rowWriter = null!;
 
-		class Original
+		sealed class Original
 		{
-			public class NpgsqlBinaryImporter
+			public sealed class NpgsqlBinaryImporter
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)]
 				public void StartRow()
@@ -48,10 +49,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			}
 		}
 
-		class Wrapped
+		sealed class Wrapped
 		{
 			[Wrapper]
-			public class NpgsqlBinaryImporter : TypeWrapper
+			public sealed class NpgsqlBinaryImporter : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]

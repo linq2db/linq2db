@@ -12,7 +12,7 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MySql
 {
-	[Table("parent")]
+	[Table("Parent")]
 	public class Parent
 	{
 		[Column("ParentID")] public int? ParentId { get; set; } // int

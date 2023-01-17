@@ -1,4 +1,6 @@
-﻿#if !NET5_0_OR_GREATER
+﻿// don't use conditional compilation
+// see https://github.com/dotnet/runtime/issues/79082
+
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
@@ -17,4 +19,3 @@ namespace System.Runtime.CompilerServices
 	{
 	}
 }
-#endif

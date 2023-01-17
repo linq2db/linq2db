@@ -1,9 +1,11 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Linq.Builder;
 	using Mapping;
 	using Reflection;

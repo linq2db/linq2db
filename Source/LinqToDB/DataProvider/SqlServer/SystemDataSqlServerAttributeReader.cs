@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
 using System.Reflection;
 
 namespace LinqToDB.Metadata
@@ -108,18 +110,25 @@ namespace LinqToDB.Metadata
 								var mi = (MethodInfo)memberInfo;
 								var ps = mi.GetParameters();
 
-								var ex = mi.IsStatic
-									?
-									string.Format("{0}::{1}({2})",
-										memberInfo.DeclaringType!.Name.ToLower().StartsWith("sql")
-											? memberInfo.DeclaringType.Name.ToLower().Substring(3)
-											: memberInfo.DeclaringType.Name.ToLower(),
-											((dynamic)ma[0]).Name ?? memberInfo.Name,
-										string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}')))
-									:
-									string.Format("{{0}}.{0}({1})",
-											((dynamic)ma[0]).Name ?? memberInfo.Name,
+								string ex;
+								if (mi.IsStatic)
+								{
+									var name = memberInfo.DeclaringType!.Name.ToLowerInvariant();
+									name     = name.StartsWith("sql") ? name.Substring(3) : name;
+
+									ex = string.Format(
+										"{0}::{1}({2})",
+										name,
+										((dynamic)ma[0]).Name ?? memberInfo.Name,
+										string.Join(", ", ps.Select((_, i) => '{' + i.ToString() + '}')));
+								}
+								else
+								{
+									ex = string.Format(
+										"{{0}}.{0}({1})",
+										((dynamic)ma[0]).Name ?? memberInfo.Name,
 										string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString() + '}')));
+								}
 
 								attrs = new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
 							}

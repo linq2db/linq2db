@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Data.Common;
+using System.Linq;
+using System.Text;
 
 #region ReSharper disable
 // ReSharper disable SuggestUseVarKeywordEverywhere
@@ -11,12 +14,11 @@ namespace LinqToDB.DataProvider.Firebird
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Data.Common;
 
-	public partial class FirebirdSqlBuilder : BasicSqlBuilder
+	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
 	{
-		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -63,8 +65,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			var identityField = insertClause.Into!.GetIdentityField()
-			                    ?? ThrowHelper.ThrowSqlException<SqlField>($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
+			var identityField = insertClause.Into!.GetIdentityField();
+
+			if (identityField == null)
+				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append('\t');
@@ -91,11 +95,11 @@ namespace LinqToDB.DataProvider.Firebird
 					StringBuilder.Append("DECFLOAT");
 					if (type.Type.Precision != null && type.Type.Precision <= 16)
 						StringBuilder.Append("(16)");
-					                                                                                      break;
+					break;
 
 				case DataType.Decimal       :
 					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable, canBeNull);
-					                                                                                      break;
+					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");                           break;
 				case DataType.Money         : StringBuilder.AppendFormat("Decimal(18{0}4)", InlineComma); break;
@@ -167,8 +171,8 @@ namespace LinqToDB.DataProvider.Firebird
 				case ConvertType.NameToProcedure       :
 				case ConvertType.NameToPackage         :
 				case ConvertType.SequenceName          :
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-					   (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
+					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+					   (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
 					{
 						// I wonder what to do if identifier has " in name?
 						return sb.Append('"').Append(value).Append('"');
@@ -216,7 +220,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
+			var identityField = dropTable.Table.IdentityFields.Count > 0 ? dropTable.Table.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
 			{
@@ -254,9 +258,9 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = identifier;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
-						identifierValue = identifierValue.ToUpper();
+					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+						identifierValue = identifierValue.ToUpperInvariant();
 
 					BuildValue(null, identifierValue);
 
@@ -348,23 +352,31 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				(true, TableOptions.IsTemporary                                                                                    ) or
-				(true, TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData      ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                          ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
-				(true,                                                                      TableOptions.IsLocalTemporaryData      ) or
-				(true,                                                                      TableOptions.IsTransactionTemporaryData) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure                                          ) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData      ) or
-				(true,                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData)
-					=> "CREATE GLOBAL TEMPORARY TABLE ",
-				(true, var value)
-					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
-				(false, _)
-					=> "CREATE TABLE ",
-			};
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                                     :
+					case TableOptions.IsTemporary |                                           TableOptions.IsLocalTemporaryData       :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure                                           :
+					case TableOptions.IsTemporary | TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsLocalTemporaryData       :
+					case                                                                      TableOptions.IsTransactionTemporaryData :
+					case                            TableOptions.IsGlobalTemporaryStructure                                           :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsLocalTemporaryData       :
+					case                            TableOptions.IsGlobalTemporaryStructure | TableOptions.IsTransactionTemporaryData :
+						command = "CREATE GLOBAL TEMPORARY TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
 			StringBuilder.Append(command);
 		}
@@ -373,7 +385,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (createTable.StatementHeader == null)
 			{
-				_identityField = createTable.Table!.IdentityFields.Count > 0 ? createTable.Table!.IdentityFields[0] : null;
+				_identityField = createTable.Table.IdentityFields.Count > 0 ? createTable.Table.IdentityFields[0] : null;
 
 				var checkExistence = createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary();
 
@@ -391,9 +403,9 @@ namespace LinqToDB.DataProvider.Firebird
 						var identifierValue = createTable.Table.TableName.Name;
 
 						// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-						if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-							FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
-							identifierValue = identifierValue.ToUpper();
+						if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+							ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+							identifierValue = identifierValue.ToUpperInvariant();
 
 						BuildValue(null, identifierValue);
 
@@ -434,9 +446,9 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = createTable.Table.TableName.Name;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
-						identifierValue = identifierValue.ToUpper();
+					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+						identifierValue = identifierValue.ToUpperInvariant();
 
 					Indent--;
 
@@ -489,7 +501,7 @@ namespace LinqToDB.DataProvider.Firebird
 							Indent++;
 
 							AppendIndent().Append("CREATE GENERATOR ");
-							Convert(StringBuilder, "GIDENTITY_" + createTable.Table!.TableName.Name, ConvertType.NameToQueryTable);
+							Convert(StringBuilder, "GIDENTITY_" + createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder.AppendLine();
 
 							Indent--;
@@ -505,7 +517,7 @@ namespace LinqToDB.DataProvider.Firebird
 							Indent++;
 
 							AppendIndent().Append("CREATE TRIGGER ");
-							Convert(StringBuilder, "TIDENTITY_" + createTable.Table!.TableName.Name, ConvertType.NameToQueryTable);
+							Convert(StringBuilder, "TIDENTITY_" + createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder .Append(" FOR ");
 							Convert(StringBuilder, createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder .AppendLine();

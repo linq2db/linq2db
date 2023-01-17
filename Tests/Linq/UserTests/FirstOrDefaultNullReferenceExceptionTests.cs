@@ -1,4 +1,7 @@
-﻿using LinqToDB.Mapping;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -11,13 +14,13 @@ namespace Tests.UserTests
 	public class FirstOrDefaultNullReferenceExceptionTests : TestBase
 	{
 		[Table("GrandChild")]
-		class Table1
+		sealed class Table1
 		{
 			[Column] public int ChildID { get; set; }
 		}
 
 		[Table("Child")]
-		class Table2
+		sealed class Table2
 		{
 			[Column] public int ChildID  { get; set; }
 			[Column] public int ParentID { get; set; }
@@ -27,7 +30,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Parent")]
-		class Table3
+		sealed class Table3
 		{
 			[Column] public int ParentID { get; set; }
 

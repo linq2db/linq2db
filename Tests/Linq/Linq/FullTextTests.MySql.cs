@@ -2,6 +2,7 @@
 using LinqToDB.DataProvider.MySql;
 using LinqToDB.Mapping;
 using NUnit.Framework;
+using System.Linq;
 
 namespace Tests.Linq
 {

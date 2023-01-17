@@ -1,6 +1,10 @@
-﻿namespace LinqToDB.Async
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Async
 {
-	internal class AsyncEnumeratorAsyncWrapper<T> : IAsyncEnumerator<T>
+	internal sealed class AsyncEnumeratorAsyncWrapper<T> : IAsyncEnumerator<T>
 	{
 		private IAsyncEnumerator<T>? _enumerator;
 #if !NATIVE_ASYNC

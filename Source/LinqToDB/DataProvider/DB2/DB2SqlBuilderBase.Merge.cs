@@ -1,5 +1,8 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System.Linq;
+
+namespace LinqToDB.DataProvider.DB2
 {
+	using System.Collections.Generic;
 	using SqlQuery;
 
 	abstract partial class DB2SqlBuilderBase

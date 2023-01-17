@@ -5,7 +5,7 @@
 		<RootNamespace>LinqToDB.Tools</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
-		<TargetFrameworks>net45;net46;netstandard2.0;net6.0</TargetFrameworks>
+		<TargetFrameworks>net45;net46;netstandard2.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -24,10 +24,6 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Schemas.tt</DependentUpon>
 		</Compile>
-	</ItemGroup>
 
-	<ItemGroup>
-		<Using Remove="System.Net.Http" />
 	</ItemGroup>
-
 </Project>

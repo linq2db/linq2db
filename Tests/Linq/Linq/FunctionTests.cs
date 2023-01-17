@@ -1,6 +1,10 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 
@@ -617,7 +621,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class TagsTable
+		sealed class TagsTable
 		{
 			[Column] public string? Name { get; set; }
 		}
@@ -638,7 +642,7 @@ namespace Tests.Linq
 
 	public static class SqlLite
 	{
-		class MatchBuilder : Sql.IExtensionCallBuilder
+		sealed class MatchBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{

@@ -1,4 +1,9 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -17,7 +22,7 @@ namespace Tests.xUpdate
 		private const string FeatureUpdateOutputWithoutOldMultiple                 = $"{TestProvName.AllSqlServer},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureUpdateOutputInto                               = $"{TestProvName.AllSqlServer}";
 
-		class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
+		sealed class UpdateOutputComparer<T> : IEqualityComparer<UpdateOutput<T>>
 			where T : notnull
 		{
 			readonly IEqualityComparer<T> _comparer = ComparerBuilder.GetEqualityComparer<T>();
@@ -30,7 +35,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		record TableWithData
+		sealed record TableWithData
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -38,7 +43,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table(Schema = "TestSchema")]
-		record TableWithDataAndSchema
+		sealed record TableWithDataAndSchema
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }
@@ -46,7 +51,7 @@ namespace Tests.xUpdate
 		}
 
 		[Table]
-		record DestinationTable
+		sealed record DestinationTable
 		{
 			[Column]              public int     Id       { get; set; }
 			[Column]              public int     Value    { get; set; }

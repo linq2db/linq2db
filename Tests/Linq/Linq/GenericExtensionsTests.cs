@@ -1,6 +1,11 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -9,21 +14,26 @@ namespace Tests.Linq
 	using Model;
 
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-	public class ExtensionChoiceAttribute : Attribute
+	public class ExtensionChoiceAttribute : MappingAttribute
 	{
 		public ExtensionChoiceAttribute(string configuration, string expression, params Type?[] types)
 		{
 			Configuration = configuration;
 			Expression    = expression;
-			Types         = types ?? ThrowHelper.ThrowArgumentNullException<Type?[]>(nameof(types));
+			Types         = types ?? throw new ArgumentNullException(nameof(types));
 		}
 
 		public string  Configuration { get; set; }
 		public string  Expression    { get; set; }
-		public Type?[] Types         { get; }
+		public Type?[] Types { get; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{Expression}.[{string.Join(",", Types.Select(IdentifierBuilder.GetObjectID))}].";
+		}
 	}
 
-	class GenericBuilder : Sql.IExtensionCallBuilder
+	sealed class GenericBuilder : Sql.IExtensionCallBuilder
 	{
 		string Match(Type[] current, ExtensionChoiceAttribute[] choices)
 		{
@@ -90,9 +100,8 @@ namespace Tests.Linq
 		}
 	}
 
-	class GenericExtensionTests : TestBase
+	sealed class GenericExtensionTests : TestBase
 	{
-
 		[Test]
 		public void Issue326([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{

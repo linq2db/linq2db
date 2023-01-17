@@ -1,4 +1,6 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -46,14 +48,14 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes")]
-		class TestTable1
+		sealed class TestTable1
 		{
 			[PrimaryKey, Column("ID")] public int       Id;
 			[Column("BigIntValue")]    public TestEnum1 TestField;
 		}
 
 		[Table("LinqDataTypes")]
-		class TestTable2
+		sealed class TestTable2
 		{
 			[PrimaryKey, Column("ID")] public int        Id;
 			[Column("BigIntValue")]    public TestEnum21 TestField;
@@ -61,14 +63,14 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes")]
-		class NullableTestTable1
+		sealed class NullableTestTable1
 		{
 			[PrimaryKey, Column("ID")] public int?       Id;
 			[Column("BigIntValue")]    public TestEnum1? TestField;
 		}
 
 		[Table("LinqDataTypes")]
-		class NullableTestTable2
+		sealed class NullableTestTable2
 		{
 			[PrimaryKey, Column("ID")] public int?        Id;
 			[Column("BigIntValue")]    public TestEnum21? TestField;
@@ -76,7 +78,7 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes")]
-		class RawTable
+		sealed class RawTable
 		{
 			[PrimaryKey, Column("ID")] public int  Id;
 			[Column("BigIntValue")]    public long TestField;
@@ -84,13 +86,13 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes")]
-		class UndefinedValueTest
+		sealed class UndefinedValueTest
 		{
 			[PrimaryKey, Column("ID")] public int?          Id;
 			[Column("BigIntValue")]    public UndefinedEnum TestField;
 		}
 
-		class Cleaner : IDisposable
+		sealed class Cleaner : IDisposable
 		{
 			private readonly int _records;
 			readonly ITestDataContext _db;
@@ -1085,7 +1087,7 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes")]
-		class TestTable3
+		sealed class TestTable3
 		{
 			[PrimaryKey]            public int        ID;
 			[Column("BigIntValue")] public TestEnum1? TargetType;
@@ -1134,7 +1136,7 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes")]
-		class TestTable4
+		sealed class TestTable4
 		{
 			[PrimaryKey]            public int        ID;
 			[Column("BigIntValue")] public TestEnum2? TargetType;
@@ -1182,7 +1184,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class NullableResult
+		sealed class NullableResult
 		{
 			public TestEnum1? Value;
 		}
@@ -1222,7 +1224,7 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes", IsColumnAttributeRequired = false)]
-		class TestTable5
+		sealed class TestTable5
 		{
 			public int      ID;
 			public TestFlag IntValue;
@@ -1321,42 +1323,42 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes")]
-		class NullableTestTable01
+		sealed class NullableTestTable01
 		{
 			[PrimaryKey, Column("ID")] public int?           Id;
 			[Column("IntValue")]       public NullableEnum01 Value;
 		}
 
 		[Table("LinqDataTypes")]
-		class NullableTestTable02
+		sealed class NullableTestTable02
 		{
 			[PrimaryKey, Column("ID")] public int?            Id;
 			[Column("IntValue")]       public NullableEnum01? Value;
 		}
 
 		[Table("LinqDataTypes")]
-		class NullableTestTable03
+		sealed class NullableTestTable03
 		{
 			[PrimaryKey, Column("ID")] public int?           Id;
 			[Column("StringValue")]    public NullableEnum02 Value;
 		}
 
 		[Table("LinqDataTypes")]
-		class NullableTestTable04
+		sealed class NullableTestTable04
 		{
 			[PrimaryKey, Column("ID")] public int?            Id;
 			[Column("StringValue")]    public NullableEnum02? Value;
 		}
 
 		[Table("LinqDataTypes")]
-		class NullableTestTable05
+		sealed class NullableTestTable05
 		{
 			[PrimaryKey, Column("ID")] public int?           Id;
 			[Column("IntValue")]       public NullableEnum03 Value;
 		}
 
 		[Table("LinqDataTypes")]
-		class NullableTestTable06
+		sealed class NullableTestTable06
 		{
 			[PrimaryKey, Column("ID")] public int?            Id;
 			[Column("IntValue")]       public NullableEnum03? Value;
@@ -1384,7 +1386,7 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes")]
-		class RawTable2
+		sealed class RawTable2
 		{
 			[PrimaryKey, Column("ID")] public int     Id;
 			[Column("IntValue")]       public int?    Int32;

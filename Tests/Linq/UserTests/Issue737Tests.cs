@@ -1,4 +1,5 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
@@ -20,7 +21,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		class QueryOne
+		sealed class QueryOne
 		{
 			readonly DataConnection _db;
 
@@ -33,7 +34,7 @@ namespace Tests.UserTests
 				=> _db.GetTable<Person>().SelectMany(x => _db.GetTable<Person>().Where(y => false), (x, y) => x);
 		}
 
-		class QueryTwo
+		sealed class QueryTwo
 		{
 			readonly DataConnection _db;
 

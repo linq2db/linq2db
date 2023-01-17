@@ -1,4 +1,8 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -10,7 +14,7 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 	}
 
-	class OracleSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IOracleSpecificTable<TSource>, ITable
+	sealed class OracleSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IOracleSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public OracleSpecificTable(ITable<TSource> table) : base(table)
@@ -22,7 +26,7 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 	}
 
-	class OracleSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IOracleSpecificQueryable<TSource>, ITable
+	sealed class OracleSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IOracleSpecificQueryable<TSource>, ITable
 	{
 		public OracleSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{

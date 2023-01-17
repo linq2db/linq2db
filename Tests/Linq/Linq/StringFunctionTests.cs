@@ -1,12 +1,13 @@
-﻿#if NET472
+﻿using System;
+#if NET472
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
 #endif
 
+using System.Linq;
 using FluentAssertions;
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using NUnit.Framework;
@@ -48,8 +49,8 @@ namespace Tests.Linq
 		public void Like()
 		{
 #if !NETFRAMEWORK
-			Assert.Throws<LinqException>(() => Sql.Like(null, null));
-			Assert.Throws<LinqException>(() => Sql.Like(null, null, null));
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null));
+			Assert.Throws<InvalidOperationException>(() => Sql.Like(null, null, null));
 #else
 			Assert.Pass("We don't test server-side method here.");
 #endif
@@ -472,7 +473,7 @@ namespace Tests.Linq
 					case StringComparison.OrdinalIgnoreCase : 
 					case StringComparison.InvariantCultureIgnoreCase : 
 					case StringComparison.CurrentCultureIgnoreCase : 
-						nameToCheck = nameToCheck.ToUpper();
+						nameToCheck = nameToCheck.ToUpperInvariant();
 						break;
 				}
 
@@ -486,7 +487,7 @@ namespace Tests.Linq
 					case StringComparison.InvariantCulture : 
 					{
 						nameToCheck = firstName.Substring(0, 3);
-						nameToCheck = nameToCheck.ToUpper();
+						nameToCheck = nameToCheck.ToUpperInvariant();
 
 						db.Person.Count(p =>  p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(0);
 						db.Person.Count(p => !p.FirstName.StartsWith(nameToCheck, comparison) && p.ID == 1).Should().Be(1);
@@ -592,7 +593,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class StringTypesTable
+		sealed class StringTypesTable
 		{
 			[Column]                                                              public int    Id             { get; set; }
 			[Column(Length = 50, CanBeNull = true, DataType = DataType.Char)]     public string CharColumn     { get; set; } = null!;
@@ -989,19 +990,19 @@ namespace Tests.Linq
 			}
 		}
 
-		class Category
+		sealed class Category
 		{
 			[PrimaryKey, Identity] public int     Id;
 			[Column, NotNull]      public string? Name;
 		}
 
-		class Task
+		sealed class Task
 		{
 			[PrimaryKey, Identity] public int     Id;
 			[Column, NotNull]      public string? Name;
 		}
 
-		class TaskCategory
+		sealed class TaskCategory
 		{
 			[Column, NotNull] public int Id;
 			[Column, NotNull] public int TaskId;
@@ -1222,7 +1223,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToLower() == "john" && p.ID == 1 select p;
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1233,7 +1236,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var param = "JOHN";
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToLower() == param.ToLower() && p.ID == 1 select p;
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1243,7 +1248,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToUpper() == "JOHN" && p.ID == 1 select p;
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1254,7 +1261,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var param = "john";
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToUpper() == param.ToUpper() && p.ID == 1 select p;
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1441,7 +1450,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class CollatedTable
+		sealed class CollatedTable
 		{
 			[Column, PrimaryKey] public int    Id              { get; set; }
 			[Column            ] public string CaseSensitive   { get; set; } = null!;
@@ -1682,7 +1691,7 @@ namespace Tests.Linq
 			protected MySpecialBaseClass(string value)
 			{
 				if (value == null)
-					ThrowHelper.ThrowArgumentNullException(nameof(value));
+					throw new ArgumentNullException(nameof(value));
 				Value = value;
 			}
 
@@ -1768,7 +1777,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id { get; set; }
 			[Column(DataType = DataType.NVarChar, Length = 50)] public MyClass? Value { get; set; }

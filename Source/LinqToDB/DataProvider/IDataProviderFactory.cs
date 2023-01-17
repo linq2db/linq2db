@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider
+﻿using System;
+using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider
 {
 	using Configuration;
 

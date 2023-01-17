@@ -1,4 +1,8 @@
-﻿using LinqToDB;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
@@ -66,8 +70,8 @@ namespace Tests.SchemaProvider
 
 				//Get table from default schema and fall back to schema indifferent
 				TableSchema getTable(string name) =>
-								dbSchema.Tables.SingleOrDefault(t => t.IsDefaultSchema && t.TableName!.ToLower() == name)
-							??  dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLower() == name)!;
+								dbSchema.Tables.SingleOrDefault(t => t.IsDefaultSchema && t.TableName!.ToLowerInvariant() == name)
+							??  dbSchema.Tables.SingleOrDefault(t => t.TableName!.ToLowerInvariant() == name)!;
 
 				var table = getTable("parent");
 
@@ -80,7 +84,7 @@ namespace Tests.SchemaProvider
 				if (!context.IsAnyOf(ProviderName.AccessOdbc, TestProvName.AllClickHouse))
 					Assert.That(getTable("doctor").ForeignKeys.Count, Is.EqualTo(1));
 				else // no FK information for ACCESS ODBC, no FKs in CH
-					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLower() == "doctor").ForeignKeys.Count, Is.EqualTo(0));
+					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLowerInvariant() == "doctor").ForeignKeys.Count, Is.EqualTo(0));
 
 				switch (context)
 				{
@@ -186,13 +190,13 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		class PKTest
+		sealed class PKTest
 		{
 			[PrimaryKey(1)] public int ID1;
 			[PrimaryKey(2)] public int ID2;
 		}
 
-		class ArrayTest
+		sealed class ArrayTest
 		{
 			[Column(DbType = "text[]")]             public string[]  StrArray     { get; set; } = null!;
 			[Column(DbType = "int[]")]              public int[]     IntArray     { get; set; } = null!;

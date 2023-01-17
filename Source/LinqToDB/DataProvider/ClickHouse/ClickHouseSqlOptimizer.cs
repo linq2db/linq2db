@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.ClickHouse
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Mapping;
@@ -7,13 +10,19 @@
 
 	sealed class ClickHouseSqlOptimizer : BasicSqlOptimizer
 	{
-		public ClickHouseSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
+		public ClickHouseSqlOptimizer(SqlProviderFlags sqlProviderFlags, DataOptions dataOptions) : base(sqlProviderFlags)
 		{
+			_dataOptions = dataOptions;
 		}
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context)
+		readonly DataOptions _dataOptions;
+
+		ClickHouseOptions?   _providerOptions;
+		public ClickHouseOptions ProviderOptions => _providerOptions ??= _dataOptions.FindOrDefault(ClickHouseOptions.Default);
+
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
 		{
-			statement = base.FinalizeStatement(statement, context);
+			statement = base.FinalizeStatement(statement, context, dataOptions);
 
 			statement = DisableParameters(statement);
 
@@ -250,7 +259,7 @@
 				{
 					// use standard-compatible aggregates
 					// https://github.com/ClickHouse/ClickHouse/pull/16123
-					if (func.IsAggregate && ClickHouseConfiguration.UseStandardCompatibleAggregates)
+					if (func.IsAggregate && ProviderOptions.UseStandardCompatibleAggregates)
 					{
 						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + "OrNull", true, func.IsPure, func.Precedence, func.Parameters)
 						{
@@ -352,8 +361,8 @@
 						}
 					}
 
-					return ThrowHelper.ThrowLinqToDBException<ISqlExpression>($"Missing conversion function definition to type '{toType.Type}'");
-					
+					throw new LinqToDBException($"Missing conversion function definition to type '{toType.Type}'");
+
 				}
 			}
 

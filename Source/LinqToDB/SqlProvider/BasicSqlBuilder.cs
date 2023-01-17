@@ -1,28 +1,33 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
-	using System.Data.Common;
 	using Common;
 	using DataProvider;
+	using Extensions;
 	using Mapping;
 	using SqlQuery;
-	using Extensions;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{
 		#region Init
 
-		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 		{
 			DataProvider     = provider;
 			MappingSchema    = mappingSchema;
+			DataOptions      = dataOptions;
 			SqlOptimizer     = sqlOptimizer;
 			SqlProviderFlags = sqlProviderFlags;
 		}
@@ -31,6 +36,7 @@ namespace LinqToDB.SqlProvider
 		{
 			DataProvider     = parentBuilder.DataProvider;
 			MappingSchema    = parentBuilder.MappingSchema;
+			DataOptions      = parentBuilder.DataOptions;
 			SqlOptimizer     = parentBuilder.SqlOptimizer;
 			SqlProviderFlags = parentBuilder.SqlProviderFlags;
 			TablePath        = parentBuilder.TablePath;
@@ -42,6 +48,7 @@ namespace LinqToDB.SqlProvider
 		public MappingSchema       MappingSchema       { get;                }
 		public StringBuilder       StringBuilder       { get; set;           } = null!;
 		public SqlProviderFlags    SqlProviderFlags    { get;                }
+		public DataOptions         DataOptions         { get;                }
 
 		protected IDataProvider?      DataProvider;
 		protected ValueToSqlConverter ValueToSqlConverter => MappingSchema.ValueToSqlConverter;
@@ -111,11 +118,11 @@ namespace LinqToDB.SqlProvider
 
 		#region Helpers
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public T? ConvertElement<T>(T? element)
 			where T : class, IQueryElement
 		{
-			return (T?)SqlOptimizer.ConvertElement(MappingSchema, element, OptimizationContext);
+			return (T?)SqlOptimizer.ConvertElement(MappingSchema, DataOptions, element, OptimizationContext);
 		}
 
 		#endregion
@@ -129,18 +136,16 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
 		{
-			var op = operation switch
+			switch (operation)
 			{
-				SetOperation.Union        => "UNION",
-				SetOperation.UnionAll     => "UNION ALL",
-				SetOperation.Except       => "EXCEPT",
-				SetOperation.ExceptAll    => "EXCEPT ALL",
-				SetOperation.Intersect    => "INTERSECT",
-				SetOperation.IntersectAll => "INTERSECT ALL",
-				_ => ThrowHelper.ThrowArgumentOutOfRangeException<string>(nameof(operation), operation, null),
-			};
-
-			sb.Append(op);
+				case SetOperation.Union       : sb.Append("UNION");         break;
+				case SetOperation.UnionAll    : sb.Append("UNION ALL");     break;
+				case SetOperation.Except      : sb.Append("EXCEPT");        break;
+				case SetOperation.ExceptAll   : sb.Append("EXCEPT ALL");    break;
+				case SetOperation.Intersect   : sb.Append("INTERSECT");     break;
+				case SetOperation.IntersectAll: sb.Append("INTERSECT ALL"); break;
+				default                       : throw new ArgumentOutOfRangeException(nameof(operation), operation, null);
+			}
 		}
 
 		protected virtual void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
@@ -198,14 +203,14 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSqlBuilder(SelectQuery selectQuery, int indent, bool skipAlias)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr, skipExpr)
 				&& skipExpr != null)
-				ThrowHelper.ThrowSqlException($"Skip for subqueries is not supported by the '{Name}' provider.");
+				throw new SqlException("Skip for subqueries is not supported by the '{0}' provider.", Name);
 
 			if (!SqlProviderFlags.IsTakeSupported && takeExpr != null)
-				ThrowHelper.ThrowSqlException($"Take for subqueries is not supported by the '{Name}' provider.");
+				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
@@ -415,10 +420,12 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
-			=> ThrowHelper.ThrowSqlException("This data provider does not support multi-table insert.");
+			=> throw new SqlException("This data provider does not support multi-table insert.");
 
 		protected virtual void BuildUnknownQuery()
-			=> ThrowHelper.ThrowSqlException($"Unknown query type '{Statement.QueryType}'.");
+		{
+			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
+		}
 
 		// Default implementation. Doesn't generate linked server and package name components.
 		public virtual StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
@@ -705,7 +712,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildAlterDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 		}
-		
+
 		protected virtual void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			AppendIndent();
@@ -781,9 +788,9 @@ namespace LinqToDB.SqlProvider
 				if (expr.Column is SqlRow row)
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
-						ThrowHelper.ThrowLinqToDBException("This provider does not support SqlRow in UPDATE.");
+						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.UpdateLiteral) && expr.Expression is not SelectQuery)
-						ThrowHelper.ThrowLinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
+						throw new LinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
 				}
 
 				BuildExpression(expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
@@ -1003,7 +1010,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			ThrowHelper.ThrowSqlException($"InsertOrUpdate query type is not supported by {Name} provider.");
+			throw new SqlException("InsertOrUpdate query type is not supported by {0} provider.", Name);
 		}
 
 		protected virtual void BuildInsertOrUpdateQueryAsMerge(SqlInsertOrUpdateStatement insertOrUpdate, string? fromDummyTable)
@@ -1259,7 +1266,7 @@ namespace LinqToDB.SqlProvider
 				AppendIndent().Append(createTable.StatementFooter);
 		}
 
-		class CreateFieldInfo
+		sealed class CreateFieldInfo
 		{
 			public SqlField      Field = null!;
 			public StringBuilder StringBuilder = null!;
@@ -1658,15 +1665,14 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValuesTable:
 				{
 					if (alias == null)
-						ThrowHelper.ThrowLinqToDBException("Alias required for SqlValuesTable.");
+						throw new LinqToDBException("Alias required for SqlValuesTable.");
 					BuildSqlValuesTable((SqlValuesTable)table, alias, out var aliasBuilt);
 					buildAlias = !aliasBuilt;
 					break;
 				}
 
 				default:
-					ThrowHelper.ThrowInvalidOperationException($"Unexpected table type {table.ElementType}");
-					break;
+					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 
 			TablePath = tablePath;
@@ -1696,7 +1702,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(')');
 			}
 			else
-				ThrowHelper.ThrowLinqToDBException($"{Name} doesn't support values with empty source");
+				throw new LinqToDBException($"{Name} doesn't support values with empty source");
 
 			aliasBuilt = IsValuesSyntaxSupported;
 			if (aliasBuilt)
@@ -1840,7 +1846,7 @@ namespace LinqToDB.SqlProvider
 								var inst = Activator.CreateInstance(type);
 
 								if (inst is not ISqlExtensionBuilder builder)
-									return ThrowHelper.ThrowLinqToDBException<ISqlExtensionBuilder>($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
+									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
 
 								return builder;
 							});
@@ -1854,8 +1860,7 @@ namespace LinqToDB.SqlProvider
 								tableExtensionBuilder.Build(this, sb, ext, table, alias);
 								break;
 							default:
-								ThrowHelper.ThrowLinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
-								break;
+								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
 						}
 					}
 
@@ -1890,7 +1895,7 @@ namespace LinqToDB.SqlProvider
 								var inst = Activator.CreateInstance(type);
 
 								if (inst is not ISqlExtensionBuilder builder)
-									return ThrowHelper.ThrowLinqToDBException<ISqlExtensionBuilder>($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
+									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
 
 								return builder;
 							});
@@ -1901,8 +1906,7 @@ namespace LinqToDB.SqlProvider
 								queryExtensionBuilder.Build(this, sb, ext);
 								break;
 							default:
-								ThrowHelper.ThrowLinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
-								break;
+								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
 						}
 					}
 
@@ -1987,7 +1991,7 @@ namespace LinqToDB.SqlProvider
 				case JoinType.OuterApply: StringBuilder.Append("OUTER APPLY "); return false;
 				case JoinType.Right     : StringBuilder.Append("RIGHT JOIN ");  return true;
 				case JoinType.Full      : StringBuilder.Append("FULL JOIN ");   return true;
-				default: return ThrowHelper.ThrowInvalidOperationException<bool>();
+				default: throw new InvalidOperationException();
 			}
 		}
 
@@ -2028,12 +2032,7 @@ namespace LinqToDB.SqlProvider
 			if (selectQuery.GroupBy.Items.Count == 0)
 				return;
 
-			var items = selectQuery.GroupBy.Items.Where(i => !(i is SqlValue || i is SqlParameter)).ToList();
-
-			if (items.Count == 0)
-				return;
-
-			BuildGroupByBody(selectQuery.GroupBy.GroupingType, items);
+			BuildGroupByBody(selectQuery.GroupBy.GroupingType, selectQuery.GroupBy.Items);
 		}
 
 		protected virtual void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
@@ -2056,8 +2055,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(" CUBE");
 					break;
 				default:
-					ThrowHelper.ThrowInvalidOperationException($"Unexpected grouping type: {groupingType}");
-					break;
+					throw new InvalidOperationException($"Unexpected grouping type: {groupingType}");
 			}
 
 			if (groupingType != GroupingType.Default)
@@ -2167,7 +2165,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSkipFirst(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			if (SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
@@ -2200,7 +2198,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			var doSkip = NeedSkip(takeExpr, skipExpr) && OffsetFormat(selectQuery) != null;
 			var doTake = NeedTake(takeExpr)           && LimitFormat(selectQuery)  != null;
@@ -2217,7 +2215,7 @@ namespace LinqToDB.SqlProvider
 					if (doTake)
 						StringBuilder.Append(' ');
 		}
-		
+
 				if (doTake)
 		{
 					StringBuilder.AppendFormat(
@@ -2390,10 +2388,8 @@ namespace LinqToDB.SqlProvider
 					}
 
 					break;
-
 				default:
-					ThrowHelper.ThrowInvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
-					break;
+					throw new InvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
 			}
 		}
 
@@ -2454,7 +2450,7 @@ namespace LinqToDB.SqlProvider
 			{
 				QueryElementType.SqlField => (SqlField)expr,
 				QueryElementType.Column	  => GetUnderlayingField(((SqlColumn)expr).Expression),
-				_                         => ThrowHelper.ThrowInvalidOperationException<SqlField>(),
+				_                         => throw new InvalidOperationException(),
 			};
 		}
 
@@ -2489,10 +2485,10 @@ namespace LinqToDB.SqlProvider
 			return;
 
 			void TableSourceIn(ISqlTableSource table, IEnumerable items)
-			{				
+			{
 				var keys = table.GetKeys(true);
 				if (keys is null or { Count: 0 })
-					ThrowHelper.ThrowSqlException("Cannot create IN expression.");
+					throw new SqlException("Cannot create IN expression.");
 
 				var firstValue = true;
 
@@ -2656,7 +2652,7 @@ namespace LinqToDB.SqlProvider
 	 					BuildPredicate(new SqlPredicate.IsNull(p.Expr1, false));
 		 				multipleParts = true;
 			 		}
-				} 
+				}
 
 				if (multipleParts && !hasNull)
 					StringBuilder.Insert(len, "(").Append(')');
@@ -2744,7 +2740,7 @@ namespace LinqToDB.SqlProvider
 #endif
 
 									if (throwExceptionIfTableNotFound)
-										ThrowHelper.ThrowSqlException($"Table '{field.Table}' not found.");
+										throw new SqlException("Table '{0}' not found.", field.Table);
 								}
 							}
 							else
@@ -2758,7 +2754,7 @@ namespace LinqToDB.SqlProvider
 									Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
 
 								if (len == StringBuilder.Length)
-									ThrowHelper.ThrowSqlException($"Table '{field.Table}' should have an alias.");
+									throw new SqlException("Table {0} should have an alias.", field.Table);
 
 								addAlias = alias != field.PhysicalName;
 
@@ -2801,13 +2797,13 @@ namespace LinqToDB.SqlProvider
 							table = Statement.GetTableSource(column.Parent!);
 #endif
 
-							ThrowHelper.ThrowSqlException($"Table '{column}' not found.");
+							throw new SqlException("Table not found for '{0}'.", column);
 						}
 
 						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(column.Parent!, null, true);
 
 						if (string.IsNullOrEmpty(tableAlias))
-							ThrowHelper.ThrowSqlException($"Table '{column.Parent}' should have an alias.");
+							throw new SqlException("Table {0} should have an alias.", column.Parent);
 
 						addAlias = alias != column.Alias;
 
@@ -2848,7 +2844,10 @@ namespace LinqToDB.SqlProvider
 					{
 						var e = (SqlExpression)expr;
 
-						BuildFormatValues(e.Expr, e.Parameters, () => GetPrecedence(e));
+						if (e.Expr == "{0}")
+							BuildExpression(e.Parameters[0], buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
+						else
+							BuildFormatValues(e.Expr, e.Parameters, () => GetPrecedence(e));
 					}
 
 					break;
@@ -2869,7 +2868,7 @@ namespace LinqToDB.SqlProvider
 						if (inlining)
 						{
 							var paramValue = parm.GetParameterValue(OptimizationContext.Context.ParameterValues);
-							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), paramValue.ProviderValue))
+							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), DataOptions, paramValue.ProviderValue))
 								inlining = false;
 						}
 
@@ -2923,8 +2922,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				default:
-					ThrowHelper.ThrowInvalidOperationException($"Unexpected expression type {expr.ElementType}");
-					break;
+					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
 
 			return StringBuilder;
@@ -3040,7 +3038,7 @@ namespace LinqToDB.SqlProvider
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);
 			else
-			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, value);
+			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, DataOptions, value);
 		}
 
 		#endregion
@@ -3171,6 +3169,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(type.Type.DbType);
 			else
 			{
+				var systemType = type.Type.SystemType.FullName;
 				if (type.Type.DataType == DataType.Undefined)
 					type = MappingSchema.GetDataType(type.Type.SystemType);
 
@@ -3182,7 +3181,7 @@ namespace LinqToDB.SqlProvider
 
 				if (type.Type.DataType == DataType.Undefined)
 					// give some hint to user that it is expected situation and he need to fix something on his side
-					ThrowHelper.ThrowLinqToDBException("Database type cannot be determined automatically and must be specified explicitly");
+					throw new LinqToDBException($"Database column type cannot be determined automatically and must be specified explicitly for system type {systemType}");
 
 				BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 			}
@@ -3329,13 +3328,13 @@ namespace LinqToDB.SqlProvider
 
 			if (identityField == null)
 				if (throwException)
-					ThrowHelper.ThrowSqlException($"Identity field must be defined for '{table.NameForLogging}'.");
+					throw new SqlException("Identity field must be defined for '{0}'.", table.NameForLogging);
 				else
 					return null;
 
 			if (table.ObjectType == null)
 				if (throwException)
-					ThrowHelper.ThrowSqlException($"Sequence name can not be retrieved for the '{table.NameForLogging}' table.");
+					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.NameForLogging);
 				else
 					return null;
 
@@ -3343,7 +3342,7 @@ namespace LinqToDB.SqlProvider
 
 			if (attrs.IsNullOrEmpty())
 				if (throwException)
-					ThrowHelper.ThrowSqlException($"Sequence name can not be retrieved for the '{table.NameForLogging}' table.");
+					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.NameForLogging);
 				else
 					return null;
 
@@ -3392,7 +3391,7 @@ namespace LinqToDB.SqlProvider
 					return null;
 
 				default:
-					return ThrowHelper.ThrowInvalidOperationException<string?>($"Unexpected table type {table.ElementType}");
+					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 		}
 
@@ -3471,7 +3470,7 @@ namespace LinqToDB.SqlProvider
 					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);
 
 				default:
-					return ThrowHelper.ThrowInvalidOperationException<string>($"Unexpected table type {table.ElementType}");
+					throw new InvalidOperationException($"Unexpected table type {table.ElementType}");
 			}
 		}
 
@@ -3632,7 +3631,7 @@ namespace LinqToDB.SqlProvider
 							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(bytes, 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
-						MappingSchema.ValueToSqlConverter.TryConvert(sb, trimmed);
+						MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {bytes.Length}");
@@ -3648,7 +3647,7 @@ namespace LinqToDB.SqlProvider
 							new byte[Configuration.MaxBinaryParameterLengthLogging];
 						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
 							Configuration.MaxBinaryParameterLengthLogging);
-						MappingSchema.TryConvertToSql(sb, null, trimmed);
+						MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {binaryData.Length}");
@@ -3661,12 +3660,12 @@ namespace LinqToDB.SqlProvider
 						var trimmed =
 							s.Substring(0,
 								Configuration.MaxStringParameterLengthLogging);
-						MappingSchema.TryConvertToSql(sb, null, trimmed);
+						MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
 						sb.AppendLine();
 						sb.Append(
 							$"-- value above truncated for logging, actual length is {s.Length}");
 					}
-					else if (!MappingSchema.TryConvertToSql(sb, null, p.Value))
+					else if (!MappingSchema.TryConvertToSql(sb, null, DataOptions, p.Value))
 						FormatParameterValue(sb, p.Value);
 					sb.AppendLine();
 				}
@@ -3720,7 +3719,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return ThrowHelper.ThrowNotImplementedException<string>();
+			throw new NotImplementedException();
 		}
 
 		public virtual string GetMaxValueSql(EntityDescriptor entity, ColumnDescriptor column)
@@ -3811,10 +3810,10 @@ namespace LinqToDB.SqlProvider
 					Sql.SqlIDType.TableAlias => path!.TableAlias,
 					Sql.SqlIDType.TableName  => path!.TableName,
 					Sql.SqlIDType.TableSpec  => path!.TableSpec,
-					_ => ThrowHelper.ThrowInvalidOperationException<string>($"Unknown SqlID Type '{id.Type}'.")
+					_ => throw new InvalidOperationException($"Unknown SqlID Type '{id.Type}'.")
 				};
 
-			return ThrowHelper.ThrowInvalidOperationException<string>($"Table ID '{id.ID}' is not defined.");
+			throw new InvalidOperationException($"Table ID '{id.ID}' is not defined.");
 		}
 
 		int _testReplaceNumber;

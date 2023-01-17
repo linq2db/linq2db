@@ -1,7 +1,8 @@
-﻿namespace LinqToDB.Schema
-{
-	using SqlQuery;
+﻿using System.Collections.Generic;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Schema
+{
 	/// <summary>
 	/// Queryable table-like object descriptor.
 	/// </summary>

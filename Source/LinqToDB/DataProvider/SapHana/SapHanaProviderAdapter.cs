@@ -1,4 +1,9 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -61,7 +66,7 @@ namespace LinqToDB.DataProvider.SapHana
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
-							ThrowHelper.ThrowInvalidOperationException($"Cannot load assembly {AssemblyName}");
+							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
 
 						var connectionType  = assembly.GetType($"{ClientNamespace}.HanaConnection" , true)!;
 						var dataReaderType  = assembly.GetType($"{ClientNamespace}.HanaDataReader" , true)!;
@@ -121,7 +126,7 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		[Wrapper]
-		private class HanaParameter
+		private sealed class HanaParameter
 		{
 			public HanaDbType HanaDbType { get; set; }
 		}
@@ -198,7 +203,7 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 			}
 
-			public HanaBulkCopy(HanaConnection connection, HanaBulkCopyOptions options, HanaTransaction? transaction) => ThrowHelper.ThrowNotImplementedException();
+			public HanaBulkCopy(HanaConnection connection, HanaBulkCopyOptions options, HanaTransaction? transaction) => throw new NotImplementedException();
 
 			public void Dispose      ()                       => ((Action<HanaBulkCopy>)CompiledWrappers[0])(this);
 #pragma warning disable RS0030 // API mapping must preserve type
@@ -308,7 +313,7 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 			}
 
-			public HanaBulkCopyColumnMapping(int source, string destination) => ThrowHelper.ThrowNotImplementedException();
+			public HanaBulkCopyColumnMapping(int source, string destination) => throw new NotImplementedException();
 		}
 
 		#endregion

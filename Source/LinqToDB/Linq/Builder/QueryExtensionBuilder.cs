@@ -1,11 +1,14 @@
-﻿using System.Linq.Expressions;
-using LinqToDB.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class QueryExtensionBuilder : MethodCallBuilder
+	sealed class QueryExtensionBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -109,8 +112,7 @@ namespace LinqToDB.Linq.Builder
 					case Sql.QueryExtensionScope.TableHint:
 					case Sql.QueryExtensionScope.IndexHint:
 					{
-						var table = SequenceHelper.GetTableContext(sequence) ?? 
-							ThrowHelper.ThrowLinqToDBException<TableBuilder.TableContext>($"Cannot get table context from {sequence.GetType()}");
+						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
 						attr.ExtendTable(table.SqlTable, list);
 						break;
 					}
@@ -143,7 +145,7 @@ namespace LinqToDB.Linq.Builder
 			return joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence;
 		}
 
-		public class JoinHintContext : PassThroughContext
+		public sealed class JoinHintContext : PassThroughContext
 		{
 			public JoinHintContext(IBuildContext context, List<SqlQueryExtension> extensions)
 				: base(context)

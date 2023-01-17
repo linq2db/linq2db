@@ -1,17 +1,20 @@
-﻿using System.Text;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Globalization;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Globalization;
-	using Mapping;
-	using System.Data.Common;
 
-	partial class InformixSqlBuilder : BasicSqlBuilder
+	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -231,7 +234,7 @@ namespace LinqToDB.DataProvider.Informix
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
 			if (name.Server != null && name.Database == null)
-				ThrowHelper.ThrowLinqToDBException("You must specify database for linked server query");
+				throw new LinqToDBException("You must specify database for linked server query");
 
 			if (name.Database != null)
 			{
@@ -286,21 +289,29 @@ namespace LinqToDB.DataProvider.Informix
 
 		protected override void BuildCreateTableCommand(SqlTable table)
 		{
-			var command = (table.TableOptions.IsTemporaryOptionSet(), table.TableOptions & TableOptions.IsTemporaryOptionSet) switch
+			string command;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
 			{
-				(true, TableOptions.IsTemporary                                                                             ) or
-				(true, TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                    ) or
-				(true, TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData) or
-				(true,                                                                     TableOptions.IsLocalTemporaryData) or
-				(true,                            TableOptions.IsLocalTemporaryStructure                                    ) or
-				(true,                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData)
-					=> "CREATE TEMP TABLE ",
-				(true, var value)
-					=> ThrowHelper.ThrowInvalidOperationException<string>($"Incompatible table options '{value}'"),
-				(false, _)
-					=> "CREATE TABLE ",
-			};
+				switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
+				{
+					case TableOptions.IsTemporary                                                                              :
+					case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+					case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					case                                                                     TableOptions.IsLocalTemporaryData :
+					case                            TableOptions.IsLocalTemporaryStructure                                     :
+					case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+						command = "CREATE TEMP TABLE ";
+						break;
+					case var value :
+						throw new InvalidOperationException($"Incompatible table options '{value}'");
+				}
+			}
+			else
+			{
+				command = "CREATE TABLE ";
+			}
 
 			StringBuilder.Append(command);
 

@@ -1,4 +1,7 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 
 namespace LinqToDB.CodeModel
 {
@@ -178,7 +181,7 @@ namespace LinqToDB.CodeModel
 
 			Write(" =>");
 
-			WriteMethodBodyBlock(method.Body!, true, true, false, false);
+			WriteMethodBodyBlock(method.Body, true, true, false, false);
 		}
 
 		protected override void Visit(CodeMember expression)
@@ -322,7 +325,7 @@ namespace LinqToDB.CodeModel
 			if (method.Attributes.HasFlag(Modifiers.Partial) && method.Body == null)
 				WriteLine(";");
 			else
-				WriteMethodBodyBlock(method.Body!, false, method.ReturnType == null, false, true);
+				WriteMethodBodyBlock(method.Body, false, method.ReturnType == null, false, true);
 		}
 
 		protected override void Visit(CodeParameter parameter)
@@ -397,7 +400,7 @@ namespace LinqToDB.CodeModel
 
 			Write("()");
 
-			WriteMethodBodyBlock(cctor.Body!, false, true, false, true);
+			WriteMethodBodyBlock(cctor.Body, false, true, false, true);
 		}
 
 		protected override void Visit(CodeConstructor ctor)
@@ -425,7 +428,7 @@ namespace LinqToDB.CodeModel
 				DecreaseIdent();
 			}
 
-			WriteMethodBodyBlock(ctor.Body!, false, true, false, true);
+			WriteMethodBodyBlock(ctor.Body, false, true, false, true);
 		}
 
 		protected override void Visit(CodeThis expression)
@@ -1100,14 +1103,14 @@ namespace LinqToDB.CodeModel
 		/// <param name="inlineNeedsSemicolon">Indicate that when method body generated as inline statement, statement should be terminated by semicolon.</param>
 		/// <param name="endWithNewLine">Indicate that method body should be terminated by new line sequence.</param>
 		private void WriteMethodBodyBlock(
-			CodeBlock statements,
+			CodeBlock? statements,
 			bool preferInline,
 			bool allowEmpty,
 			bool inlineNeedsSemicolon,
 			bool endWithNewLine)
 		{
 			// empty body processing
-			if (statements.Items.Count == 0)
+			if (statements == null || statements.Items.Count == 0)
 			{
 				if (!allowEmpty)
 					throw new InvalidOperationException($"Emty code block encountered in unsuppored context");

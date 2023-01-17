@@ -1,4 +1,7 @@
-﻿using LinqToDB.Mapping;
+﻿using System;
+using System.Linq;
+
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -21,7 +24,7 @@ namespace Tests.Linq
 		}
 
 		[Table("LinqDataTypes")]
-		class TestTable : IDate
+		sealed class TestTable : IDate
 		{
 			[Column("GuidValue")] Guid? GuidValue { get; set; }
 			[Column("BoolValue")] public bool? Bit { get; set; }
