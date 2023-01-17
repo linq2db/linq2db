@@ -15,17 +15,15 @@ namespace LinqToDB.Linq.Builder
 		ExpressionBuilder  Builder     { get; }
 		Expression?        Expression  { get; }
 		SelectQuery        SelectQuery { get; }
-		SqlStatement?      Statement   { get; set; }
-		IBuildContext?     Parent      { get; set; }
+		SqlStatement?      Statement   { get; set; } // TODO: remove
+		IBuildContext?     Parent      { get; set; } // TODO: probably not needed
 
-		Expression    MakeExpression(Expression path, ProjectFlags flags);
-		IBuildContext Clone(CloningContext      context);
-		void          SetRunQuery<T>(Query<T>   query, Expression expr);
-
-		IBuildContext? GetContext(Expression expression, BuildInfo buildInfo);
-		void           SetAlias(string? alias);
-
-		SqlStatement       GetResultStatement();
-		void               CompleteColumns();
+		Expression     MakeExpression(Expression path, ProjectFlags flags);
+		IBuildContext  Clone(CloningContext      context);
+		void           SetRunQuery<T>(Query<T>   query,      Expression expr);
+		IBuildContext? GetContext(Expression     expression, BuildInfo  buildInfo);
+		void           SetAlias(string?          alias);
+		SqlStatement   GetResultStatement();
+		void           CompleteColumns();
 	}
 }
