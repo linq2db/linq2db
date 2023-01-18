@@ -5,7 +5,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlTextWriter
 	{
-		public struct IndentScope : IDisposable
+		public readonly struct IndentScope : IDisposable
 		{
 			readonly SqlTextWriter _writer;
 

@@ -28,9 +28,9 @@ namespace LinqToDB.DataProvider.Firebird
 		public override bool     LikeValueParameterSupport => false;
 
 
-		public override bool IsParameterDependedElement(NullabilityContext nulllability, IQueryElement element)
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
 		{
-			var result = base.IsParameterDependedElement(nulllability, element);
+			var result = base.IsParameterDependedElement(nullability, element);
 			if (result)
 				return true;
 

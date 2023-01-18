@@ -1307,8 +1307,6 @@ namespace Tests.Linq
 					);
 			});
 
-			var xx = query.ToString();
-
 			AreEqualWithComparer(
 				Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName)),
 				query.ToArray());

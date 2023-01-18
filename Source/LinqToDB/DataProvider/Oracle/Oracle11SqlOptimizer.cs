@@ -37,9 +37,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override string[] LikeCharactersToEscape => OracleLikeCharactersToEscape;
 
-		public override bool IsParameterDependedElement(NullabilityContext nulllability, IQueryElement element)
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
 		{
-			if (base.IsParameterDependedElement(nulllability, element))
+			if (base.IsParameterDependedElement(nullability, element))
 				return true;
 
 			switch (element.ElementType)
