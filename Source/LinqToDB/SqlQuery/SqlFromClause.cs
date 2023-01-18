@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -191,7 +188,7 @@ namespace LinqToDB.SqlQuery
 
 			public override string ToString()
 			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+				return this.ToDebugString(SelectQuery);
 			}
 
 #endif
@@ -214,27 +211,29 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.FromClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (sb.Length > 10240)
-				return sb;
+			if (writer.Length > 10240)
+				return writer;
 
-			sb.Append(" \nFROM \n");
+			writer
+				.AppendLine()
+				.Append(" FROM ");
 
 			if (Tables.Count > 0)
 			{
-				foreach (IQueryElement ts in Tables)
-				{
-					sb.Append('\t');
-					var len = sb.Length;
-					ts.ToString(sb, dic).Replace("\n", "\n\t", len, sb.Length - len);
-					sb.Append(", ");
-				}
+				using(writer.WithScope())
+					for (var index = 0; index < Tables.Count; index++)
+					{
+						var ts = Tables[index];
+						writer.AppendElement(ts);
 
-				sb.Length -= 2;
+						if (index < Tables.Count - 1)
+							writer.AppendLine(",");
+					}
 			}
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Data.SqlTypes;
 using System.Numerics;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -365,7 +364,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -417,19 +416,19 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlDataType;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append(Type.DataType);
+			writer.Append(Type.DataType);
 
 			if (!string.IsNullOrEmpty(Type.DbType))
-				sb.Append($":\"{Type.DbType}\"");
+				writer.Append($":\"{Type.DbType}\"");
 
 			if (Type.Length != 0)
-				sb.Append('(').Append(Type.Length).Append(')');
+				writer.Append('(').Append(Type.Length).Append(')');
 			else if (Type.Precision != 0)
-				sb.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
+				writer.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

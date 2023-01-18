@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -35,22 +34,23 @@ namespace LinqToDB.SqlQuery
 #if OVERRIDETOSTRING
 		public override string ToString()
 		{
-			var sb  = new StringBuilder();
-			var dic = new Dictionary<IQueryElement, IQueryElement>();
-			return ToString(sb, dic).ToString();
+			return this.ToDebugString();
 		}
 #endif
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			sb.Append('(');
-			foreach (var value in Values)
+			writer.Append('(');
+
+			for (var index = 0; index < Values.Length; index++)
 			{
-				value.ToString(sb, dic);
-				sb.Append(", ");
+				var value = Values[index];
+				writer.AppendElement(value);
+				if (index < Values.Length - 1)
+					writer.Append(", ");
 			}
-			sb.Length -= 2;	// Note that Values is guaranteed not to be empty, there's no API to build a 0 element row.
-			return sb.Append(')');
+
+			return writer.Append(')');
 		}
 
 		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)

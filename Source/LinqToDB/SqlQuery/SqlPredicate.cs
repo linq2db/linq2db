@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -51,9 +50,9 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.ExprPredicate;
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Expr1.ToString(sb, dic);
+				writer.AppendElement(Expr1);
 			}
 		}
 
@@ -78,11 +77,11 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				if (IsNot) sb.Append("NOT (");
-				base.ToString(sb, dic);
-				if (IsNot) sb.Append(')');
+				if (IsNot) writer.Append("NOT (");
+				base.ToString(writer);
+				if (IsNot) writer.Append(')');
 			}
 		}
 
@@ -135,9 +134,9 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Expr1.ToString(sb, dic);
+				writer.AppendElement(Expr1);
 				var op = Operator switch
 				{
 					Operator.Equal          => "=",
@@ -151,9 +150,8 @@ namespace LinqToDB.SqlQuery
 					Operator.Overlaps       => "OVERLAPS",
 					_                       => throw new InvalidOperationException(),
 				};
-				sb.Append(' ').Append(op).Append(' ');
-
-				Expr2.ToString(sb, dic);
+				writer.Append(' ').Append(op).Append(' ')
+					.AppendElement(Expr2);
 			}
 
 			static Operator InvertOperator(Operator op)
@@ -422,20 +420,20 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.LikePredicate;
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Expr1.ToString(sb, dic);
+				writer.AppendElement(Expr1);
 
-				if (IsNot) sb.Append(" NOT");
+				if (IsNot) writer.Append(" NOT");
 
-				sb.Append(' ').Append(FunctionName ?? "LIKE").Append(' ');
+				writer.Append(' ').Append(FunctionName ?? "LIKE").Append(' ');
 
-				Expr2.ToString(sb, dic);
+				writer.AppendElement(Expr2);
 
 				if (Escape != null)
 				{
-					sb.Append(" ESCAPE ");
-					Escape.ToString(sb, dic);
+					writer.Append(" ESCAPE ");
+					writer.AppendElement(Escape);
 				}
 			}
 		}
@@ -486,27 +484,27 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.SearchStringPredicate;
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Expr1.ToString(sb, dic);
+				writer.AppendElement(Expr1);
 
-				if (IsNot) sb.Append(" NOT");
+				if (IsNot) writer.Append(" NOT");
 				switch (Kind)
 				{
 					case SearchKind.StartsWith:
-						sb.Append(" STARTS_WITH ");
+						writer.Append(" STARTS_WITH ");
 						break;
 					case SearchKind.EndsWith:
-						sb.Append(" ENDS_WITH ");
+						writer.Append(" ENDS_WITH ");
 						break;
 					case SearchKind.Contains:
-						sb.Append(" CONTAINS ");
+						writer.Append(" CONTAINS ");
 						break;
 					default:
 						throw new InvalidOperationException($"Unexpected search kind: {Kind}");
 				}
 
-				Expr2.ToString(sb, dic);
+				writer.AppendElement(Expr2);
 			}
 		}
 
@@ -539,11 +537,11 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Expr1.ToString(sb, dic);
-				sb.Append(IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
-				Expr2.ToString(sb, dic);
+				writer.AppendElement(Expr1);
+				writer.Append(IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
+				writer.AppendElement(Expr2);
 			}
 		
 		}
@@ -584,16 +582,16 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.BetweenPredicate;
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Expr1.ToString(sb, dic);
+				writer.AppendElement(Expr1);
 
-				if (IsNot) sb.Append(" NOT");
-				sb.Append(" BETWEEN ");
+				if (IsNot) writer.Append(" NOT");
 
-				Expr2.ToString(sb, dic);
-				sb.Append(" AND ");
-				Expr3.ToString(sb, dic);
+				writer.Append(" BETWEEN ")
+					.AppendElement(Expr2)
+					.Append(" AND ")
+					.AppendElement(Expr3);
 			}
 		}
 
@@ -622,9 +620,9 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Reduce(NullabilityContext.NonQuery).ToString(sb, dic);
+				writer.AppendElement(Reduce(writer.Nullability));
 			}
 
 			public ISqlPredicate Reduce(NullabilityContext nullability)
@@ -669,10 +667,10 @@ namespace LinqToDB.SqlQuery
 				return new IsNull(Expr1, !IsNot);
 			}
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Expr1.ToString(sb, dic);
-				sb
+				writer
+					.AppendElement(Expr1)
 					.Append(" IS ")
 					.Append(IsNot ? "NOT " : "")
 					.Append("NULL");
@@ -713,15 +711,15 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.InSubQueryPredicate;
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Expr1.ToString(sb, dic);
+				writer.AppendElement(Expr1);
 
-				if (IsNot) sb.Append(" NOT");
-				sb.Append(" IN (");
+				if (IsNot) writer.Append(" NOT");
 
-				((IQueryElement)SubQuery).ToString(sb, dic);
-				sb.Append(')');
+				writer.Append(" IN (")
+					.AppendElement(SubQuery)
+					.Append(')');
 			}
 		}
 
@@ -781,23 +779,24 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.InListPredicate;
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				Expr1.ToString(sb, dic);
+				writer.AppendElement(Expr1);
 
-				if (IsNot) sb.Append(" NOT");
-				sb.Append(" IN (");
+				if (IsNot) writer.Append(" NOT");
+				writer.Append(" IN (");
 
 				foreach (var value in Values)
 				{
-					value.ToString(sb, dic);
-					sb.Append(',');
+					writer
+						.AppendElement(value)
+						.Append(',');
 				}
 
 				if (Values.Count > 0)
-					sb.Length--;
+					writer.Length--;
 
-				sb.Append(')');
+				writer.Append(')');
 			}
 		}
 
@@ -829,9 +828,9 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.FuncLikePredicate;
 
-			protected override void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+			protected override void ToString(QueryElementTextWriter writer)
 			{
-				((IQueryElement)Function).ToString(sb, dic);
+				writer.AppendElement(Function);
 			}
 		}
 
@@ -841,7 +840,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -872,18 +871,18 @@ namespace LinqToDB.SqlQuery
 
 		public abstract QueryElementType ElementType { get; }
 
-		protected abstract void ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic);
+		protected abstract void ToString(QueryElementTextWriter writer);
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
+			if (!writer.AddVisited(this))
+				return writer.Append("...");
 
-			dic.Add(this, this);
-			ToString(sb, dic);
-			dic.Remove(this);
+			writer.AppendElement(this);
 
-			return sb;
+			writer.RemoveVisited(this);
+
+			return writer;
 		}
 
 		#endregion

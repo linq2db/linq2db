@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Globalization;
@@ -8,8 +7,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Numerics;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {

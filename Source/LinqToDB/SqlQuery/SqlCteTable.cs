@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -54,19 +52,17 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementType ElementType  => QueryElementType.SqlCteTable;
 		public override SqlTableType     SqlTableType => SqlTableType.Cte;
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			Cte?.ToString(sb, dic);
-			sb.Append('[').Append(SourceID).Append(']');
-			return sb;
+			writer
+				.AppendElement(Cte)
+				.Append('[').Append(SourceID).Append(']');
+			return writer;
 		}
 
 		#region IQueryElement Members
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
-
+		public string SqlText => this.ToDebugString();
 
 		#endregion
 	}

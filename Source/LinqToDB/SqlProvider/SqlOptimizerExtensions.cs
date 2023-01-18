@@ -12,9 +12,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var optimizationContext = new OptimizationContext(context, aliases, false);
 
-			var nullability = statement.SelectQuery == null
-				? NullabilityContext.NonQuery
-				: new (statement.SelectQuery);
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
 			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, dataOptions, statement, optimizationContext, nullability);
 
@@ -24,9 +22,7 @@ namespace LinqToDB.SqlProvider
 		public static SqlStatement PrepareStatementForSql(this ISqlOptimizer optimizer, SqlStatement statement,
 			MappingSchema mappingSchema, DataOptions dataOptions, OptimizationContext optimizationContext)
 		{
-			var nullability = statement.SelectQuery == null
-				? NullabilityContext.NonQuery
-				: new (statement.SelectQuery);
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
 			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, dataOptions, statement, optimizationContext, nullability);
 

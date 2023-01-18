@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -27,15 +25,14 @@ namespace LinqToDB.SqlQuery
 
 		public override SelectQuery? SelectQuery { get => null; set {}}
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			sb.Append("CREATE TABLE ");
+			writer
+				.Append("CREATE TABLE ")
+				.AppendElement(Table)
+				.AppendLine();
 
-			((IQueryElement?)Table)?.ToString(sb, dic);
-
-			sb.AppendLine();
-
-			return sb;
+			return writer;
 		}
 
 		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)

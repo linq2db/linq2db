@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
 	using SqlQuery;
 

@@ -6,7 +6,6 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB
 {
-	using LinqToDB.Common;
 	using SqlQuery;
 
 	partial class Sql

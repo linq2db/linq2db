@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -23,7 +21,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -52,23 +50,24 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.UpdateClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append('\t');
-			((IQueryElement?)Table)?.ToString(sb, dic);
+			writer
+				.Append('\t')
+				.AppendElement(Table)
+				.AppendLine()
+				.Append("SET ")
+				.AppendLine();
 
-			sb.AppendLine();
-			sb.Append("SET ");
-			sb.AppendLine();
+			using (writer.WithScope())
+				foreach (var e in Items)
+				{
+					writer
+						.AppendElement(e)
+						.AppendLine();
+				}
 
-			foreach (var e in Items)
-			{
-				sb.Append('\t');
-				((IQueryElement)e).ToString(sb, dic);
-				sb.AppendLine();
-			}
-
-			return sb;
+			return writer;
 		}
 
 		#endregion

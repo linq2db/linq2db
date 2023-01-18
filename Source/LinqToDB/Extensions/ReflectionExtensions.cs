@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Linq;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml;
@@ -15,7 +12,6 @@ using JetBrains.Annotations;
 namespace LinqToDB.Extensions
 {
 	using System.Diagnostics.CodeAnalysis;
-	using Expressions;
 	using LinqToDB.Common;
 	using LinqToDB.Reflection;
 

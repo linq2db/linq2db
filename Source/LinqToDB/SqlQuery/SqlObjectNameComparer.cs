@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public sealed class SqlObjectNameComparer : IComparer<SqlObjectName>
 	{

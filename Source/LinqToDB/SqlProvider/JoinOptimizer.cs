@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
@@ -1346,10 +1343,10 @@ namespace LinqToDB.SqlProvider
 					return res;
 				}
 
-				var sb = new StringBuilder();
-				source.ToString(sb, new Dictionary<IQueryElement, IQueryElement>());
+				var writer = new QueryElementTextWriter();
+				source.ToString(writer);
 
-				return $"({source.SourceID}).{sb}";
+				return $"({source.SourceID}).{writer}";
 			}
 
 			public string DisplayString()

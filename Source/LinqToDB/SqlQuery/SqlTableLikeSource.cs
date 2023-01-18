@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -53,9 +52,9 @@ namespace LinqToDB.SqlQuery
 
 		QueryElementType IQueryElement.ElementType => QueryElementType.SqlTableLikeSource;
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return Source.ToString(sb, dic);
+			return writer.AppendElement(Source);
 		}
 
 		#endregion

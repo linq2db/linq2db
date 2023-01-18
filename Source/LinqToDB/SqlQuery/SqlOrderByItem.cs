@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -26,7 +24,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -37,14 +35,14 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.OrderByItem;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			Expression.ToString(sb, dic);
+			writer.AppendElement(Expression);
 
 			if (IsDescending)
-				sb.Append(" DESC");
+				writer.Append(" DESC");
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

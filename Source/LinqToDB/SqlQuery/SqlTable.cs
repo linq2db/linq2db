@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -159,7 +158,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 		#endregion
@@ -290,12 +289,12 @@ namespace LinqToDB.SqlQuery
 
 		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
 
-		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public virtual QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			if (TableName.Server   != null) sb.Append($"[{TableName.Server}].");
-			if (TableName.Database != null) sb.Append($"[{TableName.Database}].");
-			if (TableName.Schema   != null) sb.Append($"[{TableName.Schema}].");
-			return sb.Append($"[{Expression ?? TableName.Name}({SourceID})]");
+			if (TableName.Server   != null) writer.Append($"[{TableName.Server}].");
+			if (TableName.Database != null) writer.Append($"[{TableName.Database}].");
+			if (TableName.Schema   != null) writer.Append($"[{TableName.Schema}].");
+			return writer.Append($"[{Expression ?? TableName.Name}({SourceID})]");
 		}
 
 		#endregion

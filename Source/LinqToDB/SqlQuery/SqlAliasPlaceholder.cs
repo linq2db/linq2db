@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -7,9 +6,9 @@ namespace LinqToDB.SqlQuery
 	{
 		public QueryElementType ElementType => QueryElementType.SqlAliasPlaceholder;
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return sb.Append("%ts%");
+			return writer.Append("%ts%");
 		}
 
 		public bool Equals(ISqlExpression? other)

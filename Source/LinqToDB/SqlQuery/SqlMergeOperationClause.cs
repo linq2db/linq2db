@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -53,115 +52,127 @@ namespace LinqToDB.SqlQuery
 
 		QueryElementType IQueryElement.ElementType => QueryElementType.MergeOperationClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			switch (OperationType)
 			{
 				case MergeOperationType.Delete:
-					sb.Append("WHEN MATCHED");
+					writer.Append("WHEN MATCHED");
 
 					if (Where != null)
 					{
-						sb.Append(" AND ");
-						((IQueryElement)Where).ToString(sb, dic);
+						writer
+							.Append(" AND ")
+							.AppendElement(Where);
 					}
 
-					sb.AppendLine(" THEN DELETE");
+					writer.AppendLine(" THEN DELETE");
 
 					break;
 
 				case MergeOperationType.DeleteBySource:
-					sb.Append("WHEN NOT MATCHED BY SOURCE");
+					writer.Append("WHEN NOT MATCHED BY SOURCE");
 
 					if (Where != null)
 					{
-						sb.Append(" AND ");
-						((IQueryElement)Where).ToString(sb, dic);
+						writer
+							.Append(" AND ")
+							.AppendElement(Where);
 					}
 
-					sb.AppendLine(" THEN DELETE");
+					writer.AppendLine(" THEN DELETE");
 
 					break;
 
 				case MergeOperationType.Insert:
-					sb.Append("WHEN NOT MATCHED");
+					writer.Append("WHEN NOT MATCHED");
 
 					if (Where != null)
 					{
-						sb.Append(" AND ");
-						((IQueryElement)Where).ToString(sb, dic);
+						writer.Append(" AND ");
+						((IQueryElement)Where).ToString(writer);
 					}
 
-					sb.AppendLine(" THEN INSERT");
+					writer.AppendLine(" THEN INSERT");
 
-					foreach (var item in Items)
-					{
-						sb.Append('\t');
-						((IQueryElement)item).ToString(sb, dic);
-						sb.AppendLine();
-					}
+					using (writer.WithScope())
+						for (var index = 0; index < Items.Count; index++)
+						{
+							var item = Items[index];
+							writer.AppendElement(item);
+							if (index < Items.Count - 1)
+								writer.AppendLine();
+						}
 
 					break;
 
 				case MergeOperationType.Update:
-					sb.Append("WHEN MATCHED");
+					writer.Append("WHEN MATCHED");
 
 					if (Where != null)
 					{
-						sb.Append(" AND ");
-						((IQueryElement)Where).ToString(sb, dic);
+						writer
+							.Append(" AND ")
+							.AppendElement(Where);
 					}
 
-					sb.AppendLine(" THEN UPDATE");
+					writer.AppendLine(" THEN UPDATE");
 
-					foreach (var item in Items)
-					{
-						sb.Append('\t');
-						((IQueryElement)item).ToString(sb, dic);
-						sb.AppendLine();
-					}
+					using (writer.WithScope())
+						for (var index = 0; index < Items.Count; index++)
+						{
+							var item = Items[index];
+							writer.AppendElement(item);
+							if (index < Items.Count - 1)
+								writer.AppendLine();
+						}
 
 					break;
 
 				case MergeOperationType.UpdateBySource:
-					sb.Append("WHEN NOT MATCHED BY SOURCE");
+					writer.Append("WHEN NOT MATCHED BY SOURCE");
 
 					if (Where != null)
 					{
-						sb.Append(" AND ");
-						((IQueryElement)Where).ToString(sb, dic);
+						writer
+							.Append(" AND ")
+							.AppendElement(Where);
 					}
 
-					sb.AppendLine(" THEN UPDATE");
+					writer.AppendLine(" THEN UPDATE");
 
-					foreach (var item in Items)
-					{
-						sb.Append('\t');
-						((IQueryElement)item).ToString(sb, dic);
-						sb.AppendLine();
-					}
+					using (writer.WithScope())
+						for (var index = 0; index < Items.Count; index++)
+						{
+							var item = Items[index];
+							writer.AppendElement(item);
+							if (index < Items.Count - 1)
+								writer.AppendLine();
+						}
 
 					break;
 
 				case MergeOperationType.UpdateWithDelete:
-					sb.Append("WHEN MATCHED THEN UPDATE");
+					writer.Append("WHEN MATCHED THEN UPDATE");
 
 					if (Where != null)
 					{
-						sb.Append(" WHERE ");
-						((IQueryElement)Where).ToString(sb, dic);
+						writer
+							.Append(" WHERE ")
+							.AppendElement(Where);
 					}
 
 					if (WhereDelete != null)
 					{
-						sb.Append(" DELETE WHERE ");
-						((IQueryElement)WhereDelete).ToString(sb, dic);
+						writer
+							.Append(" DELETE WHERE ")
+							.AppendElement(WhereDelete);
 					}
 
 					break;
 			}
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

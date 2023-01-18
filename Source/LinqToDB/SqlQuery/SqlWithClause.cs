@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
@@ -9,9 +6,8 @@ namespace LinqToDB.SqlQuery
 	{
 		public QueryElementType ElementType => QueryElementType.WithClause;
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			var writer = new SqlTextWriter(sb);
 			if (Clauses.Count > 0)
 			{
 				var first = true;
@@ -30,7 +26,7 @@ namespace LinqToDB.SqlQuery
 					}
 
 					using (writer.WithScope())
-						writer.Append(cte, dic);
+						writer.AppendElement(cte);
 
 					if (cte.Fields.Count > 3)
 					{
@@ -45,7 +41,7 @@ namespace LinqToDB.SqlQuery
 								if (!firstField)
 									writer.AppendLine(",");
 								firstField = false;
-								writer.Append(field, dic);
+								writer.AppendElement(field);
 							}
 						}
 
@@ -62,7 +58,7 @@ namespace LinqToDB.SqlQuery
 							if (!firstField)
 								writer.Append(", ");
 							firstField = false;
-							writer.Append(field, dic);
+							writer.AppendElement(field);
 						}
 						writer.AppendLine(")");
 					}
@@ -76,7 +72,7 @@ namespace LinqToDB.SqlQuery
 
 					using (writer.WithScope())
 					{
-						writer.Append(cte.Body!, dic);
+						writer.AppendElement(cte.Body!);
 					}
 
 					writer.AppendLine();
@@ -89,7 +85,7 @@ namespace LinqToDB.SqlQuery
 
 			writer.AppendLine("--------");
 
-			return sb;
+			return writer;
 		}
 
 		public List<CteClause> Clauses { get; set; } = new List<CteClause>();

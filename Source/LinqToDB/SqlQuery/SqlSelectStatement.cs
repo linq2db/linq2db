@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -17,15 +15,16 @@ namespace LinqToDB.SqlQuery
 		public override QueryType          QueryType  => QueryType.Select;
 		public override QueryElementType   ElementType => QueryElementType.SelectStatement;
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (With?.Clauses.Count > 0)
 			{
-				With?.ToString(sb, dic);
-				sb.AppendLine("--------------------------");
+				writer
+					.AppendElement(With)
+					.AppendLine("--------------------------");
 			}
 
-			return SelectQuery.ToString(sb, dic);
+			return writer.AppendElement(SelectQuery);
 		}
 
 		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)

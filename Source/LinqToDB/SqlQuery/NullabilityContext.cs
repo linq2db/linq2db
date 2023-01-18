@@ -1,27 +1,35 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System.Diagnostics;
+
+namespace LinqToDB.SqlQuery
 {
 	public class NullabilityContext
 	{
+		public static NullabilityContext NonQuery { get; } = new(null!, null, null!);
+
+		public static NullabilityContext GetContext(SelectQuery? selectQuery) =>
+			selectQuery == null ? NonQuery : new NullabilityContext(selectQuery);
+
+
 		public NullabilityContext(SelectQuery inQuery) : this(inQuery, null)
 		{
 		}
 
 		public NullabilityContext(SelectQuery inQuery, ISqlTableSource? forSource)
 		{
-			InQuery = inQuery;
+			InQuery   = inQuery;
 			ForSource = forSource;
 		}
 
-		NullabilityContext(SelectQuery inQuery, ISqlTableSource? forSource, Dictionary<SelectQuery, NullabilityContext> nullabilityCache)
+		NullabilityContext(SelectQuery inQuery, ISqlTableSource? forSource, NullabilityCache nullabilityCache)
 			: this(inQuery, forSource)
 		{
 			_nullabilityCache = nullabilityCache;
 		}
 
-		public static NullabilityContext NonQuery { get; } = new(null!, null, null!);
-
 		public SelectQuery InQuery { get; }
 		public ISqlTableSource? ForSource { get; }
+
+		NullabilityCache? _nullabilityCache;
 
 		public NullabilityContext WitSource(ISqlTableSource forSource)
 		{
@@ -32,75 +40,16 @@
 			return new NullabilityContext(InQuery, forSource, _nullabilityCache);
 		}
 
-		Dictionary<ISqlTableSource, bool>? _nullableSources;
-		Dictionary<SelectQuery, NullabilityContext>? _nullabilityCache;
-
 		bool? CanBeNullInternal(SelectQuery query, ISqlTableSource source)
 		{
-			if (ForSource == source)
-				return null;
-
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-			// Handling fake case
-			if (InQuery == null)
+			if (query == null)
+			{
 				return null;
-
-			if (query != InQuery)
-			{
-				_nullabilityCache ??= new();
-
-				if (!_nullabilityCache.TryGetValue(query, out var nullabilityContext))
-				{
-					nullabilityContext = new NullabilityContext(query, null, _nullabilityCache);
-					_nullabilityCache.Add(query, nullabilityContext);
-				}
-
-				// let the cache grow
-				return nullabilityContext.CanBeNullInternal(query, source);
 			}
 
-			if (_nullableSources == null)
-			{
-				_nullableSources = new ();
-
-				foreach (var table in InQuery.From.Tables)
-				{
-					var canBeNullTable = table.Joins.Any(join =>
-						join.JoinType == JoinType.Right || join.JoinType == JoinType.RightApply ||
-						join.JoinType == JoinType.Full  || join.JoinType == JoinType.FullApply);
-
-					_nullableSources[table.Source] = canBeNullTable;
-
-					foreach (var join in table.Joins)
-					{
-						{
-							var canBeNullJoin = join.JoinType == JoinType.Full || join.JoinType == JoinType.FullApply ||
-												join.JoinType == JoinType.Left ||
-												join.JoinType == JoinType.OuterApply;
-
-							_nullableSources[join.Table.Source] = canBeNullJoin;
-
-							if (join.Table.Source is SelectQuery sc)
-							{
-								_nullabilityCache ??= new();
-
-								if (!_nullabilityCache.TryGetValue(sc, out var nullabilityContext))
-								{
-									nullabilityContext = new NullabilityContext(sc);
-									_nullabilityCache.Add(sc, nullabilityContext);
-								}
-							}
-						}
-					}
-				}
-			}
-
-			if (_nullableSources.TryGetValue(source, out var isNullable))
-			{
-				return isNullable;
-			}
-
-			return null;
+			_nullabilityCache ??= new();
+			return _nullabilityCache.IsNullableSource(query, source, ForSource);
 		}
 
 		public bool CanBeNull(ISqlExpression expression)
@@ -133,5 +82,81 @@
 
 			return false;
 		}
+
+		public class NullabilityCache
+		{
+			[DebuggerDisplay("Q[{InQuery.SourceID}] -> TS[{Source.SourceID}]")]
+			record struct NullabilityKey(SelectQuery InQuery, ISqlTableSource Source);
+
+			Dictionary<NullabilityKey, bool>? _nullableSources;
+			HashSet<SelectQuery>? _processedQueries;
+
+			public bool? IsNullableSource(SelectQuery inQuery, ISqlTableSource source, ISqlTableSource? forSource)
+			{
+				if (source == forSource)
+					return null;
+
+				_nullableSources ??= new();
+				_processedQueries ??= new HashSet<SelectQuery>();
+
+				ProcessQuery(new Stack<SelectQuery>(), inQuery);
+
+				if (_nullableSources.TryGetValue(new(inQuery, source), out var isNullable))
+				{
+					return isNullable;
+				}
+
+				return null;
+			}
+
+			void ProcessQuery(Stack<SelectQuery> current, SelectQuery selectQuery)
+			{
+				void Register(ISqlTableSource source, bool canBeNullTable)
+				{
+					foreach (var query in current)
+					{
+						_nullableSources![new (query, source)] = canBeNullTable;
+					}
+				}
+
+				if (!_processedQueries!.Add(selectQuery))
+					return;
+
+				current.Push(selectQuery);
+
+				foreach (var table in selectQuery.From.Tables)
+				{
+					if (table.Source is SelectQuery sc)
+					{
+						ProcessQuery(current, sc);
+					}
+
+					var canBeNullTable = table.Joins.Any(join =>
+						join.JoinType == JoinType.Right || join.JoinType == JoinType.RightApply ||
+						join.JoinType == JoinType.Full  || join.JoinType == JoinType.FullApply);
+
+					Register(table.Source, canBeNullTable);
+
+					foreach (var join in table.Joins)
+					{
+						{
+							var canBeNullJoin = join.JoinType == JoinType.Full || join.JoinType == JoinType.FullApply ||
+								                join.JoinType == JoinType.Left ||
+								                join.JoinType == JoinType.OuterApply;
+
+							Register(join.Table.Source, canBeNullJoin);
+
+							if (join.Table.Source is SelectQuery jc)
+							{
+								ProcessQuery(current, jc);
+							}
+						}
+					}
+				}
+
+				_ = current.Pop();
+			}
+		}
+
 	}
 }

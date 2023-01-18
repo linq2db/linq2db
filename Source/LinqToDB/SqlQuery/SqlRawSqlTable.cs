@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
 using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
@@ -51,25 +48,25 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			return sb
+			writer
 				.AppendLine("(")
 				.Append(SQL)
 				.Append(')')
 				.AppendLine();
+
+			return writer;
 		}
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 		#region IQueryElement Members
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		public string SqlText => this.ToDebugString();
 
 		#endregion
 

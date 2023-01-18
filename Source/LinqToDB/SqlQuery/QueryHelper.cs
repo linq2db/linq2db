@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlQuery
@@ -1745,20 +1744,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return null;
-		}
-
-		public static string ToDebugString(this IQueryElement expr)
-		{
-			try
-			{
-				var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-					.ToString();
-				return str;
-			}
-			catch
-			{
-				return $"FAIL ToDebugString('{expr.GetType().Name}').";
-			}
 		}
 
 		public static SqlCondition CorrectSearchConditionNesting(SelectQuery sql, SqlCondition condition, HashSet<ISqlTableSource> forTableSources)

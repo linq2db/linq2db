@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -72,7 +70,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString(SelectQuery);
 		}
 
 #endif
@@ -93,43 +91,48 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.GroupByClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			if (Items.Count == 0)
-				return sb;
+				return writer;
 
-			sb.Append(" \nGROUP BY");
+			writer
+				.AppendLine()
+				.AppendLine(" GROUP BY");
+
 			switch (GroupingType)
 			{
 				case GroupingType.Default:
-					sb.Append('\n');
 					break;
 				case GroupingType.GroupBySets:
-					sb.Append(" GROUPING SETS (\n");
+					writer.AppendLine(" GROUPING SETS (");
 					break;
 				case GroupingType.Rollup:
-					sb.Append(" ROLLUP (\n");
+					writer.AppendLine(" ROLLUP (");
 					break;
 				case GroupingType.Cube:
-					sb.Append(" CUBE (\n");
+					writer.AppendLine(" CUBE (");
 					break;
 				default:
 					throw new InvalidOperationException($"Unexpected grouping type: {GroupingType}");
 			}
 
-			foreach (var item in Items)
+			using(writer.WithScope())
 			{
-				sb.Append('\t');
-				item.ToString(sb, dic);
-				sb.Append(',');
+				for (var index = 0; index < Items.Count; index++)
+				{
+					var item = Items[index];
+					writer.AppendElement(item);
+					if (index < Items.Count - 1)
+						writer.AppendLine(',');
+				}
 			}
 
-			sb.Length--;
 
 			if (GroupingType != GroupingType.Default)
-				sb.Append(')');
+				writer.Append(')');
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -61,7 +60,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -148,29 +147,29 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlExpression;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			var len = sb.Length;
+			var len = writer.Length;
 			var ss  = Parameters.Select(p =>
 			{
-				p.ToString(sb, dic);
-				var s = sb.ToString(len, sb.Length - len);
-				sb.Length = len;
+				p.ToString(writer);
+				var s = writer.ToString(len, writer.Length - len);
+				writer.Length = len;
 				return (object)s;
 			});
 
 			if (Parameters.Length == 0)
-				return sb.Append(Expr);
+				return writer.Append(Expr);
 
 			if (Expr.Contains("{"))
-				sb.AppendFormat(Expr, ss.ToArray());
+				writer.AppendFormat(Expr, ss.ToArray());
 			else
-				sb.Append(Expr)
+				writer.Append(Expr)
 					.Append('{')
 					.Append(string.Join(", ", ss))
 					.Append('}');
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

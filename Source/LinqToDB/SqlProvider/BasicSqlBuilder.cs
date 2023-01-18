@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -368,9 +366,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			var nullability = statement.SelectQuery == null
-				? NullabilityContext.NonQuery
-				: new (statement.SelectQuery);
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
 			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
@@ -399,9 +395,7 @@ namespace LinqToDB.SqlProvider
 
 		protected void BuildInsertQuery2(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
-			var nullability = statement.SelectQuery == null
-				? NullabilityContext.NonQuery
-				: new (statement.SelectQuery);
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
 			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(nullability, statement, insertClause, addAlias);

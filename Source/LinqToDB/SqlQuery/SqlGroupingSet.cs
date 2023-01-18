@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -22,22 +21,22 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			sb.Append('(');
+			writer.Append('(');
 			for (int i = 0; i < Items.Count; i++)
 			{
-				Items[i].ToString(sb, dic);
+				Items[i].ToString(writer);
 				if (i < Items.Count - 1)
-					sb.Append(", ");
+					writer.Append(", ");
 			}
-			sb.Append(')');
-			return sb;
+			writer.Append(')');
+			return writer;
 		}
 
 		public bool Equals(ISqlExpression? other)

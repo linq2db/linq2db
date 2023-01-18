@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -45,36 +42,28 @@ namespace LinqToDB.SqlQuery
 		public override QueryType            QueryType         => QueryType.Merge;
 		public override QueryElementType     ElementType       => QueryElementType.MergeStatement;
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			if (With != null)
-				With.ToString(sb, dic);
-
-			sb.Append("MERGE INTO ");
-
-			((IQueryElement)Target).ToString(sb, dic);
-
-			sb
+			writer
+				.AppendElement(With)
+				.Append("MERGE INTO ")
+				.AppendElement(Target)
 				.AppendLine()
-				.Append("USING (");
-
-			Source.ToString(sb, dic);
-
-			sb
+				.Append("USING (")
+				.AppendElement(Source)
 				.AppendLine(")")
-				.Append("ON ");
-
-			((IQueryElement)On).ToString(sb, dic);
-
-			sb.AppendLine();
+				.Append("ON ")
+				.AppendElement(On)
+				.AppendLine();
 
 			foreach (var operation in Operations)
 			{
-				((IQueryElement)operation).ToString(sb, dic);
-				sb.AppendLine();
+				writer
+					.AppendElement(operation)
+					.AppendLine();
 			}
 
-			return sb;
+			return writer;
 		}
 
 		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
@@ -91,7 +80,6 @@ namespace LinqToDB.SqlQuery
 
 			return base.Walk(options, context, func);
 		}
-
 
 		public override bool IsParameterDependent
 		{

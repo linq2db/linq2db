@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -55,7 +54,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -156,22 +155,20 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SearchCondition;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
-
-			dic.Add(this, this);
+			if (!writer.AddVisited(this))
+				return writer.Append("...");
 
 			foreach (IQueryElement c in Conditions)
-				c.ToString(sb, dic);
+				writer.AppendElement(c);
 
 			if (Conditions.Count > 0)
-				sb.Length -= 4;
+				writer.Length -= 5;
 
-			dic.Remove(this);
+			writer.RemoveVisited(this);
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.Common;
-using System.IO;
 using System.Security;
 
 namespace LinqToDB.DataProvider.Access

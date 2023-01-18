@@ -8,7 +8,6 @@ namespace LinqToDB.DataProvider.Informix
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{

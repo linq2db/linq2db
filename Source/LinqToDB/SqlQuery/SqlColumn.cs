@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -13,7 +12,7 @@ namespace LinqToDB.SqlQuery
 			RawAlias    = alias;
 
 #if DEBUG
-			_columnNumber = ++_columnCounter;
+			_number = ++_columnCounter;
 #endif
 		}
 
@@ -23,8 +22,8 @@ namespace LinqToDB.SqlQuery
 		}
 
 #if DEBUG
-		readonly int _columnNumber;
-		public   int  ColumnNumber => _columnNumber;
+		readonly int _number;
+		public   int  Number => _number;
 		static   int _columnCounter;
 #endif
 
@@ -143,36 +142,35 @@ namespace LinqToDB.SqlQuery
 		public override string ToString()
 		{
 #if OVERRIDETOSTRING
-			var writer = new SqlTextWriter();
-			var dic    = new Dictionary<IQueryElement, IQueryElement>();
+			var writer = new QueryElementTextWriter(NullabilityContext.GetContext(Parent));
 
 			writer
 				.Append('t')
 				.Append(Parent?.SourceID ?? -1)
 #if DEBUG
-				.Append('[').Append(_columnNumber).Append(']')
+				.Append('[').Append(_number).Append(']')
 #endif
 				.Append('.')
 				.Append(Alias ?? "c")
 				.Append(" => ")
-				.Append(Expression, dic);
+				.AppendElement(Expression);
 
 			var underlying = UnderlyingExpression();
 			if (!ReferenceEquals(underlying, Expression))
 			{
 				writer
 					.Append(" := ")
-					.Append(underlying, dic);
+					.AppendElement(underlying);
 			}
 
-			if (CanBeNullable(NullabilityContext.NonQuery))
+			if (CanBeNullable(writer.Nullability))
 				writer.Append('?');
 
 			return writer.ToString();
 
 #else
 			if (Expression is SqlField)
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+				return this.ToDebugString();
 
 			return base.ToString()!;
 #endif
@@ -251,7 +249,7 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.Column;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			var parentIndex = -1;
 			if (Parent != null)
@@ -259,19 +257,19 @@ namespace LinqToDB.SqlQuery
 				parentIndex = Parent.Select.Columns.IndexOf(this);
 			}
 
-			sb
+			writer
 				.Append('t')
 				.Append(Parent?.SourceID ?? - 1)
 #if DEBUG
-				.Append('[').Append(_columnNumber).Append(']')
+				.Append('[').Append(_number).Append(']')
 #endif
 				.Append('.')
 				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
 
-				if (CanBeNullable(NullabilityContext.NonQuery))
-					sb.Append('?');
+				if (!Expression.CanBeNullable(writer.Nullability) && CanBeNullable(writer.Nullability))
+					writer.Append('?');
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

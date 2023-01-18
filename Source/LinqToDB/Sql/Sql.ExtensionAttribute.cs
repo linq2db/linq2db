@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using System.Threading;
 
 using JetBrains.Annotations;
 
@@ -285,8 +282,8 @@ namespace LinqToDB
 				}
 				else if (Expression != null)
 				{
-					var sb = new StringBuilder();
-					Expression.ToString(sb, new Dictionary<IQueryElement, IQueryElement>());
+					var sb = new QueryElementTextWriter();
+					Expression.ToString(sb);
 					str = $"{paramPrefix}('{Name ?? ""}'): {sb}";
 				}
 				else

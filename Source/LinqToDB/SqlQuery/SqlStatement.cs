@@ -1,22 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
-using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using System.Linq.Expressions;
 	using Common;
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
 	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
 	{
-		public string SqlText =>
-			((IQueryElement)this)
-				.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-				.ToString();
+		public string SqlText => this.ToDebugString(SelectQuery);
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		protected string DebugSqlText => Tools.ToDebugDisplay(SqlText);
@@ -59,8 +52,8 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement
 
-		public abstract QueryElementType ElementType { get; }
-		public abstract StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic);
+		public abstract QueryElementType       ElementType { get; }
+		public abstract QueryElementTextWriter ToString(QueryElementTextWriter writer);
 
 		#endregion
 
@@ -311,7 +304,7 @@ namespace LinqToDB.SqlQuery
 #if OVERRIDETOSTRING
 		public override string ToString()
 		{
-			return ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			return this.ToDebugString(SelectQuery);
 		}
 #endif
 

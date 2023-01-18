@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
-
 using OleDbType = LinqToDB.DataProvider.OleDbProviderAdapter.OleDbType;
 
 namespace LinqToDB.DataProvider.Access

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -20,7 +19,7 @@ namespace LinqToDB.SqlQuery
 
 			public override string ToString()
 			{
-				return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+				return this.ToDebugString();
 			}
 
 #endif
@@ -45,22 +44,23 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.InsertClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append("VALUES ");
+			writer
+				.Append("VALUES ")
+				.AppendElement(Into)
+				.AppendLine();
 
-			((IQueryElement?)Into)?.ToString(sb, dic);
+			using(writer.WithScope())
+				for (var index = 0; index < Items.Count; index++)
+				{
+					var e = Items[index];
+					writer.AppendElement(e);
+					if (index < Items.Count - 1)
+						writer.AppendLine();
+				}
 
-			sb.AppendLine();
-
-			foreach (var e in Items)
-			{
-				sb.Append('\t');
-				((IQueryElement)e).ToString(sb, dic);
-				sb.AppendLine();
-			}
-
-			return sb;
+			return writer;
 		}
 
 		#endregion

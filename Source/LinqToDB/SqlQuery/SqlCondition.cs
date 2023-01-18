@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -31,7 +30,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -40,23 +39,22 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.Condition;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
+			if (!writer.AddVisited(this))
+				return writer.Append("...");
 
-			dic.Add(this, this);
+			writer.Append('(');
 
-			sb.Append('(');
+			if (IsNot) writer.Append("NOT ");
 
-			if (IsNot) sb.Append("NOT ");
+			writer
+				.AppendElement(Predicate)
+				.Append(')').Append(IsOr ? "  OR " : " AND ");
 
-			Predicate.ToString(sb, dic);
-			sb.Append(')').Append(IsOr ? " OR " : " AND ");
+			writer.RemoveVisited(this);
 
-			dic.Remove(this);
-
-			return sb;
+			return writer;
 		}
 
 		#endregion

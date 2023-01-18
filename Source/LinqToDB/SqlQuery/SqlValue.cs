@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -53,7 +52,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -126,18 +125,18 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlValue;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			return
 				Value == null ?
-					sb.Append("NULL") :
+					writer.Append("NULL") :
 				Value is string strVal ?
-					sb
+					writer
 						.Append('\'')
 						.Append(strVal.Replace("\'", "''"))
 						.Append('\'')
 				:
-					sb.Append(Value);
+					writer.Append(Value);
 		}
 
 		#endregion

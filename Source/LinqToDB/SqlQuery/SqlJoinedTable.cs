@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -38,7 +36,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -64,36 +62,38 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.JoinedTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
+			if (!writer.AddVisited(this))
+				return writer.Append("...");
 
-			dic.Add(this, this);
-
+			writer.Append(" ");
 			if (IsWeak)
-				sb.Append("WEAK ");
+				writer.Append("WEAK ");
 
 			switch (JoinType)
 			{
-				case JoinType.Inner      : sb.Append("INNER JOIN ");  break;
-				case JoinType.Left       : sb.Append("LEFT JOIN ");   break;
-				case JoinType.CrossApply : sb.Append("CROSS APPLY "); break;
-				case JoinType.OuterApply : sb.Append("OUTER APPLY "); break;
-				case JoinType.Right      : sb.Append("RIGHT JOIN ");  break;
-				case JoinType.Full       : sb.Append("FULL JOIN ");   break;
-				case JoinType.FullApply  : sb.Append("FULL APPLY ");  break;
-				case JoinType.RightApply : sb.Append("RIGHT APPLY "); break;
-				default                  : sb.Append("SOME JOIN ");   break;
+				case JoinType.Inner      : writer.Append("INNER JOIN ");  break;
+				case JoinType.Left       : writer.Append("LEFT JOIN ");   break;
+				case JoinType.CrossApply : writer.Append("CROSS APPLY "); break;
+				case JoinType.OuterApply : writer.Append("OUTER APPLY "); break;
+				case JoinType.Right      : writer.Append("RIGHT JOIN ");  break;
+				case JoinType.Full       : writer.Append("FULL JOIN ");   break;
+				case JoinType.FullApply  : writer.Append("FULL APPLY ");  break;
+				case JoinType.RightApply : writer.Append("RIGHT APPLY "); break;
+				default                  : writer.Append("SOME JOIN ");   break;
 			}
 
-			((IQueryElement)Table).ToString(sb, dic);
-			sb.Append(" ON ");
-			((IQueryElement)Condition).ToString(sb, dic);
+			writer
+				.AppendElement(Table)
+				.Append(" ON ");
 
-			dic.Remove(this);
+			var localWriter = writer.WithSource(Table.Source);
+			localWriter.AppendElement(Condition);
 
-			return sb;
+			writer.RemoveVisited(this);
+
+			return writer;
 		}
 
 		#endregion

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -124,7 +123,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -168,37 +167,37 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.TableSource;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
-
-			dic.Add(this, this);
+			if (!writer.AddVisited(this))
+				return writer.Append("...");
 
 			if (Source is SelectQuery)
 			{
-				sb.Append("(\n\t");
-				var len = sb.Length;
-				Source.ToString(sb, dic).Replace("\n", "\n\t", len, sb.Length - len);
-				sb.Append("\n)");
+				writer.AppendLine("(");
+				using (writer.WithScope())
+					writer.AppendElement(Source);
+				writer.AppendLine();
+				writer.Append(")");
 			}
 			else
-				Source.ToString(sb, dic);
+				writer.AppendElement(Source);
 
-			sb
+			writer
 				.Append(" as t")
 				.Append(SourceID);
 
-			foreach (IQueryElement join in Joins)
-			{
-				sb.AppendLine().Append('\t');
-				var len = sb.Length;
-				join.ToString(sb, dic).Replace("\n", "\n\t", len, sb.Length - len);
-			}
+			writer.UnIndent();
+				foreach (var join in Joins)
+				{
+					writer.AppendLine();
+					writer.AppendElement(join);
+				}
+			writer.Indent();
 
-			dic.Remove(this);
+			writer.RemoveVisited(this);
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

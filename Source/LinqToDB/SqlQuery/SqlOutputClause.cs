@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -22,7 +20,7 @@ namespace LinqToDB.SqlQuery
 #if OVERRIDETOSTRING
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 #endif
 
@@ -57,9 +55,8 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.OutputClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			var writer = new SqlTextWriter(sb);
 			writer.AppendLine()
 				.AppendLine("OUTPUT");
 
@@ -78,7 +75,7 @@ namespace LinqToDB.SqlQuery
 								writer.AppendLine(',');
 							first = false;
 
-							writer.Append(oi.Expression!, dic);
+							writer.AppendElement(oi.Expression);
 						}
 
 						writer.AppendLine();
@@ -99,7 +96,7 @@ namespace LinqToDB.SqlQuery
 
 							first = false;
 
-							writer.Append(expr, dic);
+							writer.AppendElement(expr);
 						}
 					}
 
@@ -123,7 +120,7 @@ namespace LinqToDB.SqlQuery
 									writer.AppendLine(',');
 								firstColumn = false;
 
-								writer.Append(oi.Column, dic);
+								writer.AppendElement(oi.Column);
 							}
 						}
 
@@ -134,7 +131,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -30,11 +28,12 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			((IQueryElement)Insert).ToString(sb, dic);
-			((IQueryElement)Update).ToString(sb, dic);
-			return sb;
+			writer
+				.AppendElement(Insert)
+				.AppendElement(Update);
+			return writer;
 		}
 
 		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -8,7 +7,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 	using Extensions;
-	using SqlQuery;
 
 	sealed partial class TableBuilder : ISequenceBuilder
 	{

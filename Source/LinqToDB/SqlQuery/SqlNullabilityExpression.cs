@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public class SqlNullabilityExpression : ISqlExpression
 	{
@@ -17,7 +15,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -78,12 +76,13 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlNullabilityExpression;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append('(');
-			SqlExpression.ToString(sb, dic);
-			sb.Append(")?");
-			return sb;
+			writer
+				.Append('(')
+				.AppendElement(SqlExpression)
+				.Append(")?");
+			return writer;
 		}
 
 		#endregion

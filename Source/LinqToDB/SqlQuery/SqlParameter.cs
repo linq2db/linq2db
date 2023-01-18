@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -89,7 +88,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -142,23 +141,23 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlParameter;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			if (Name?.StartsWith("@") == false)
-				sb.Append('@');
+				writer.Append('@');
 
-			sb
+			writer
 				.Append(Name ?? "parameter");
 
 #if DEBUG
-			sb.Append('(').Append(_paramNumber).Append(')');
+			writer.Append('(').Append(_paramNumber).Append(')');
 #endif
 			if (Value != null)
-				sb
+				writer
 					.Append('[')
 					.Append(Value)
 					.Append(']');
-			return sb;
+			return writer;
 		}
 
 		#endregion

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -67,9 +66,9 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.CteClause;
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return sb.Append($"CTE({CteID}, {Name})");
+			return writer.Append($"CTE({CteID}, {Name})");
 		}
 
 		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -58,7 +57,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -129,15 +128,16 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlBinaryExpression;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			Expr1
-				.ToString(sb, dic)
+			writer
+				.AppendElement(Expr1)
 				.Append(' ')
 				.Append(Operation)
-				.Append(' ');
+				.Append(' ')
+				.AppendElement(Expr2);
 
-			return Expr2.ToString(sb, dic);
+			return writer;
 		}
 
 		#endregion

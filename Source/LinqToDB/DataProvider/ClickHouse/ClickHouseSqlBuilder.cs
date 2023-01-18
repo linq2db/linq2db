@@ -427,9 +427,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			// move CTE to SELECT clause for INSERT FROM SELECT queries
 
-			var nullability = statement.SelectQuery == null
-				? NullabilityContext.NonQuery
-				: new (statement.SelectQuery);
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
 			BuildStep = Step.Tag; BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(nullability, statement, insertClause, addAlias);

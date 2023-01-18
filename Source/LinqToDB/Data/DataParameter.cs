@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using System.Collections.Generic;
 
 namespace LinqToDB.Data
 {

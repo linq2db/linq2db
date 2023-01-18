@@ -39,6 +39,18 @@ namespace LinqToDB.SqlQuery
 			StringBuilder = stringBuilder;
 		}
 
+		public int Length 
+		{ 
+			get => StringBuilder.Length;
+			set => StringBuilder.Length = value;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public string ToString(int startIndex, int length)
+		{
+			return StringBuilder.ToString(startIndex, length);
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override string ToString()
 		{
@@ -64,7 +76,15 @@ namespace LinqToDB.SqlQuery
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SqlTextWriter Append(string value)
+		public SqlTextWriter Append(string? value)
+		{
+			AppendIndentIfNeeded();
+			StringBuilder.Append(value);
+			return this;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SqlTextWriter Append(object? value)
 		{
 			AppendIndentIfNeeded();
 			StringBuilder.Append(value);
@@ -250,5 +270,30 @@ namespace LinqToDB.SqlQuery
 
 			return this;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SqlTextWriter AppendFormat(string format, object arg0)
+		{
+			AppendIndentIfNeeded();
+			StringBuilder.AppendFormat(format, arg0);
+			return this;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SqlTextWriter AppendFormat(string format, params object[] args)
+		{
+			AppendIndentIfNeeded();
+			StringBuilder.AppendFormat(format, args);
+			return this;
+		}
+
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public SqlTextWriter Replace(string oldValue, string newValue, int startIndex, int count)
+		{
+			StringBuilder.Replace(oldValue, newValue, startIndex, count);
+			return this;
+		}
+
 	}
 }

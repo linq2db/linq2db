@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
 	public class SqlComment : IQueryElement
 	{
@@ -19,13 +16,13 @@ namespace LinqToDB.SqlQuery
 			Lines = lines;
 		}
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			foreach (var part in Lines)
-				sb
+				writer
 					.Append("-- ")
 					.AppendLine(part);
-			return sb;
+			return writer;
 		}
 	}
 }

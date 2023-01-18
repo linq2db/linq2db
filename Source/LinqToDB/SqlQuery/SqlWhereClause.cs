@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -44,7 +42,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -63,13 +61,19 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.WhereClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			if (Search.Conditions.Count == 0)
-				return sb;
+				return writer;
 
-			sb.Append("\nWHERE\n\t");
-			return ((IQueryElement)Search).ToString(sb, dic);
+			writer
+				.AppendLine()
+				.AppendLine(" WHERE");
+
+			using (writer.WithScope())
+				writer.AppendElement(Search);
+
+			return writer;
 		}
 
 		#endregion

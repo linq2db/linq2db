@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
-using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -168,55 +165,59 @@ namespace LinqToDB.SqlQuery
 		#region IQueryElement
 		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			var rows = Rows;
 			if (rows?.Count > 0)
 			{
-				sb.Append("VALUES");
-				sb.AppendLine().Append('\t');
-				for (var i = 0; i < rows.Count; i++)
-				{
-					// limit number of printed records
-					if (i == 10)
+				writer.Append("VALUES");
+				writer.AppendLine();
+
+				using (writer.WithScope())
+					for (var i = 0; i < rows.Count; i++)
 					{
-						sb.Append($"-- skipping... total rows: {rows.Count}");
-						break;
+						// limit number of printed records
+						if (i == 10)
+						{
+							writer.Append($"-- skipping... total rows: {rows.Count}");
+							break;
+						}
+
+						if (i > 0)
+							writer.AppendLine(',');
+
+						writer.Append('(');
+
+						for (var j = 0; j < Fields.Count; j++)
+						{
+							if (j > 0)
+								writer.Append(", ");
+
+							writer.AppendElement(rows[i][j]);
+						}
+
+						writer.Append(')');
 					}
 
-					if (i > 0)
-						sb.Append(",\n\t");
-
-					sb.Append('(');
-					for (var j = 0; j < Fields.Count; j++)
-					{
-						if (j > 0)
-							sb.Append(", ");
-
-						sb = rows[i][j].ToString(sb, dic);
-					}
-
-					sb.Append(')');
-				}
-				sb.AppendLine();
+				writer.AppendLine();
 			}
 			else
 			{
-				sb.Append("VALUES (...)");
+				writer.Append("VALUES (...)");
 			}
 
-			sb.Append('[');
+			writer.Append('[');
 
 			for (var i = 0; i < Fields.Count; i++)
 			{
 				if (i > 0)
-					sb.Append(", ");
-				sb.Append(Fields[i].PhysicalName);
+					writer.Append(", ");
+				writer.Append(Fields[i].PhysicalName);
 			}
 
-			sb.Append(']');
+			writer.Append(']');
 
-			return sb;
+			return writer;
 		}
 		#endregion
 

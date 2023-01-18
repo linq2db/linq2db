@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
 {

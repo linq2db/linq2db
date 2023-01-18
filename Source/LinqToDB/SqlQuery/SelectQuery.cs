@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -173,7 +172,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString(this);
 		}
 
 #endif
@@ -302,38 +301,35 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementType ElementType => QueryElementType.SqlQuery;
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		public string SqlText => this.ToDebugString(this);
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
+			if (!writer.AddVisited(this))
+				return writer.Append("...");
 
-			dic.Add(this, this);
-
-			sb
+			writer
 				.Append('(')
 				.Append(SourceID)
 				.Append(')');
 
-			sb.Append(' ');
+			writer.Append(' ');
 
-			((IQueryElement)Select). ToString(sb, dic);
-			((IQueryElement)From).   ToString(sb, dic);
-			((IQueryElement)Where).  ToString(sb, dic);
-			((IQueryElement)GroupBy).ToString(sb, dic);
-			((IQueryElement)Having). ToString(sb, dic);
-			((IQueryElement)OrderBy).ToString(sb, dic);
+			writer
+				.AppendElement(Select)
+				.AppendElement(From)
+				.AppendElement(Where)
+				.AppendElement(GroupBy)
+				.AppendElement(Having)
+				.AppendElement(OrderBy);
 
 			if (HasSetOperators)
 				foreach (IQueryElement u in SetOperators)
-					u.ToString(sb, dic);
+					writer.AppendElement(u);
 
-			dic.Remove(this);
+			writer.RemoveVisited(this);
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

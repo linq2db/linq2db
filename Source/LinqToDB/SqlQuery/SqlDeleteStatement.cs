@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -38,19 +36,17 @@ namespace LinqToDB.SqlQuery
 			return base.Walk(options, context, func);
 		}
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			var writer = new SqlTextWriter(sb);
-
 			writer
-				.Append(With, dic)
+				.AppendElement(With)
 				.Append("DELETE FROM ")
-				.Append(Table, dic)
+				.AppendElement(Table)
 				.AppendLine()
-				.AppendIndented(SelectQuery, dic)
+				.AppendElement(SelectQuery)
 				.AppendLine();
 
-			return sb;
+			return writer;
 		}
 
 	}

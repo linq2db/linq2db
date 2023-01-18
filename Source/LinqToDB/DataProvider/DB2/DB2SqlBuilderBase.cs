@@ -2,8 +2,6 @@
 using System.Data;
 using System.Data.SqlTypes;
 using System.Data.Common;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Globalization;
 
@@ -80,9 +78,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
-			var nullability = statement.SelectQuery == null
-				? NullabilityContext.NonQuery
-				: new (statement.SelectQuery);
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
 			Statement           = statement;
 			StringBuilder       = sb;

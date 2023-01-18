@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -32,18 +30,19 @@ namespace LinqToDB.SqlQuery
 
 		QueryElementType IQueryElement.ElementType => QueryElementType.ConditionalInsertClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			if (When != null)
 			{
-				sb.Append("WHEN ");
-				((IQueryElement)When).ToString(sb, dic);
-				sb.AppendLine(" THEN");
+				writer
+					.Append("WHEN ")
+					.AppendElement(When)
+					.AppendLine(" THEN");
 			}
 
-			((IQueryElement)Insert).ToString(sb, dic);
+			writer.AppendElement(Insert);
 
-			return sb;
+			return writer;
 		}
 
 		#endregion
