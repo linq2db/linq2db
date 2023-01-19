@@ -18,7 +18,7 @@ namespace Tests.Mapping
 
 		#nullable disable
 
-		class Disabled
+		sealed class Disabled
 		{
 			public int             A  { get; set; }
 			public string          S  { get; set; } = null!;
@@ -30,7 +30,7 @@ namespace Tests.Mapping
 		
 		#nullable enable
 
-		class Enabled
+		sealed class Enabled
 		{
 			public int             A  { get; set; }
 			public int?            NA { get; set; }
@@ -47,7 +47,7 @@ namespace Tests.Mapping
 			public IList<Related>? C2 { get; set; } = null!;
 		}
 		
-		class Override
+		sealed class Override
 		{
 			[Column(CanBeNull = true)]
 			public int             A1 { get; set; }
@@ -72,7 +72,7 @@ namespace Tests.Mapping
 			public IList<Related>? C2 { get; set; } = null!;
 		}
 
-		class Related
+		sealed class Related
 		{
 			public int Id { get; set; }
 		}
