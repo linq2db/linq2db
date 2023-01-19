@@ -399,7 +399,10 @@ namespace LinqToDB.CommandLine
 			// reference netstandard + System*
 			referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, "netstandard.dll")));
 			foreach (var asmName in Directory.GetFiles(fwPath, "System*.dll"))
-				referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
+			{
+				if (!asmName.Contains(".Native."))
+					referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
+			}
 
 			var usings = new List<string>();
 			foreach (var directive in template.Directives)
