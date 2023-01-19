@@ -193,7 +193,7 @@ namespace LinqToDB.Mapping
 
 			InitializeDynamicColumnsAccessors(hasInheritanceMapping);
 
-			var attrs = new List<ColumnAttribute>();
+			List<ColumnAttribute>? attrs = null;
 			var members = TypeAccessor.Members.Concat(
 				MappingSchema.GetDynamicColumns(ObjectType).Select(dc => new MemberAccessor(TypeAccessor, dc, this)));
 
@@ -221,7 +221,7 @@ namespace LinqToDB.Mapping
 						{
 							if (ca.MemberName != null)
 							{
-								attrs.Add(new ColumnAttribute(member.Name, ca));
+								(attrs ??= new()).Add(new ColumnAttribute(member.Name, ca));
 							}
 							else
 							{
@@ -263,9 +263,13 @@ namespace LinqToDB.Mapping
 
 			var typeColumnAttrs = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type);
 
-			foreach (var attr in typeColumnAttrs.Concat(attrs))
+			foreach (var attr in typeColumnAttrs)
 				if (attr.IsColumn)
 					SetColumn(attr, hasInheritanceMapping);
+			if (attrs != null)
+				foreach (var attr in attrs)
+					if (attr.IsColumn)
+						SetColumn(attr, hasInheritanceMapping);
 
 			SkipModificationFlags = Columns.Aggregate(SkipModification.None, (s, c) => s | c.SkipModificationFlags);
 

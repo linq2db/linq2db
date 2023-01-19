@@ -16,13 +16,11 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class MetadataReader : IMetadataReader
 	{
-		public static MetadataReader Default = new (
-			new AttributeReader()
-			, new SystemComponentModelDataAnnotationsSchemaAttributeReader()
-#if NETFRAMEWORK
-			, new SystemDataLinqAttributeReader()
-#endif
-		);
+		/// <summary>
+		/// Default instance of <see cref="MetadataReader"/>, used by <see cref="MappingSchema.Default"/>.
+		/// By default contains only <see cref="AttributeReader"/>.
+		/// </summary>
+		public static MetadataReader Default = new (new AttributeReader());
 
 		         Type[]?                                  _registeredTypes;
 		readonly MappingAttributesCache                   _cache;

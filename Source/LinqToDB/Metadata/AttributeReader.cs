@@ -6,13 +6,14 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 	using Mapping;
+	using Extensions;
 
 	public class AttributeReader : IMetadataReader
 	{
 		readonly static MappingAttributesCache _cache = new (
 			static (_, source) =>
 			{
-				var res = source.GetCustomAttributes(typeof(MappingAttribute), inherit: false);
+				var res = source.GetAttributes<MappingAttribute>(inherit: false);
 				// API returns object[] for old frameworks and typed array for new
 				return res.Length == 0 ? Array<MappingAttribute>.Empty : res is MappingAttribute[] attrRes ? attrRes : res.Cast<MappingAttribute>().ToArray();
 			});

@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Data;
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.Models;
-using LinqToDB.DataProvider;
+using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.Firebird;
 
@@ -18,11 +19,17 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 		[GlobalSetup]
 		public void Setup()
 		{
-			if (_dataProviders.Count > 0)
+			if (Options != null)
 				return;
 
-			_dataProviders.Add(ProviderName.Access,                new AccessOleDbDataProvider());
-			_dataProviders.Add(ProviderName.Firebird,              new FirebirdDataProvider());
+			Options = new[]
+			{
+				new DataOptions().UseDataProvider(new AccessOleDbDataProvider()).UseConnection(new MockDbConnection(Array.Empty<QueryResult>(), ConnectionState.Open)),
+				new DataOptions().UseDataProvider(new FirebirdDataProvider()).UseConnection(new MockDbConnection(Array.Empty<QueryResult>(), ConnectionState.Open)),
+			};
+
+			CurrentOptions = Options[0];
+
 			/*
 			_dataProviders.Add(ProviderName.SQLiteMS,              new SQLiteDataProvider(ProviderName.SQLiteMS));
 			_dataProviders.Add(ProviderName.SQLiteClassic,         new SQLiteDataProvider(ProviderName.SQLiteClassic));
@@ -40,22 +47,20 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 		*/
 		}
 
-		Dictionary<string, IDataProvider> _dataProviders = new ();
+		public DataOptions[]? Options;
 
-		public IEnumerable<string> ValuesForDataProvider => _dataProviders.Keys;
+		[ParamsSource(nameof(Options))]
+		public DataOptions CurrentOptions { get; set; } = default!;
 
-		[ParamsSource(nameof(ValuesForDataProvider))]
-		public string DataProvider { get; set; } = ProviderName.Access;
-
-		private NorthwindDB GetDataConnection(string providerName)
+		private NorthwindDB GetDataConnection(DataOptions options)
 		{
-			return new NorthwindDB(_dataProviders[providerName]);
+			return new NorthwindDB(options);
 		}
 
 		[Benchmark]
 		public void VwSalesByYear()
 		{
-			using var db = GetDataConnection(DataProvider);
+			using var db = GetDataConnection(CurrentOptions);
 
 			for (int i = 0; i < 2; i++)
 			{
@@ -66,7 +71,7 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 		[Benchmark]
 		public void VwSalesByYearMutation()
 		{
-			using var db = GetDataConnection(DataProvider);
+			using var db = GetDataConnection(CurrentOptions);
 
 			for (int i = 0; i < 2; i++)
 			{
@@ -77,7 +82,7 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 		[Benchmark]
 		public void VwSalesByCategoryContains()
 		{
-			using var db = GetDataConnection(DataProvider);
+			using var db = GetDataConnection(CurrentOptions);
 
 			for (int i = 0; i < 2; i++)
 			{

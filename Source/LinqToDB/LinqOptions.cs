@@ -132,6 +132,9 @@ namespace LinqToDB
 	/// If <c>true</c>, auto support for fluent mapping is ON,
 	/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
 	/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
+	/// Enabling of this option is not recommended as it will result in new <see cref="Mapping.MappingSchema"/> instance created for each context instance.
+	/// Proper approach is to create <see cref="Mapping.MappingSchema"/> once, configure fluent mappings for it and use this <see cref="Mapping.MappingSchema"/> instance for all contexts.
+	/// Default value: <c>false</c>.
 	/// </param>
 	public sealed record LinqOptions
 	(
@@ -148,7 +151,7 @@ namespace LinqToDB
 		bool      PreferApply             = true,
 		bool      KeepDistinctOrdered     = true,
 		bool      ParameterizeTakeSkip    = true,
-		bool      EnableAutoFluentMapping = true
+		bool      EnableAutoFluentMapping = false
 	)
 		: IOptionSet
 	{

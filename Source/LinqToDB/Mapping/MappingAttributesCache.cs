@@ -12,9 +12,11 @@ namespace LinqToDB.Metadata
 
 	internal sealed class MappingAttributesCache
 	{
+		record struct CacheKey(Type AttributeType, Key SourceKey);
 		record struct Key(ICustomAttributeProvider Source, Type? SourceOwner);
 
-		readonly ConcurrentDictionary<Type, ConcurrentDictionary<Key, MappingAttribute[]>> _cache = new();
+		private readonly Func<CacheKey, MappingAttribute[]?> _getMappingAttributesInternal;
+		readonly ConcurrentDictionary<CacheKey, MappingAttribute[]?> _cache = new();
 
 		readonly ConcurrentDictionary<Key, MappingAttribute[]> _noInheritMappingAttributes      = new ();
 		readonly ConcurrentDictionary<Key, MappingAttribute[]> _orderedInheritMappingAttributes = new ();
@@ -25,16 +27,27 @@ namespace LinqToDB.Metadata
 		public MappingAttributesCache(Func<Type?, ICustomAttributeProvider, MappingAttribute[]> attributesGetter)
 		{
 			_attributesGetter = attributesGetter;
+			_getMappingAttributesInternal = GetMappingAttributesInternal;
 		}
 
-		T[] GetMappingAttributesInternal<T>(Key key)
-			where T : MappingAttribute
+		MappingAttribute[]? GetMappingAttributesInternal(CacheKey key)
 		{
-			var res = _orderedInheritMappingAttributes
-				.GetOrAdd(key, GetMappingAttributesTreeInternal)
-				.OfType<T>().ToArray();
+			List<MappingAttribute>? results = null;
 
-			return res.Length == 0 ? Array<T>.Empty : res;
+			foreach (var attr in _orderedInheritMappingAttributes.GetOrAdd(key.SourceKey, GetMappingAttributesTreeInternal))
+				if (key.AttributeType.IsAssignableFrom(attr.GetType()))
+					(results ??= new()).Add(attr);
+
+			if (results != null)
+			{
+				var arr = (MappingAttribute[])Array.CreateInstance(key.AttributeType, results.Count);
+				for (var i = 0; i < results.Count; i++)
+					arr[i] = results[i];
+
+				return arr;
+			}
+
+			return null;
 		}
 
 		MappingAttribute[] GetNoInheritMappingAttributes(Key key)
@@ -135,8 +148,8 @@ namespace LinqToDB.Metadata
 		public T[] GetMappingAttributes<T>(ICustomAttributeProvider source)
 			where T : MappingAttribute
 		{
-			return (T[])_cache.GetOrAdd(typeof(T), t => new())
-				.GetOrAdd(new(source, null), GetMappingAttributesInternal<T>);
+			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
+			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, null)), _getMappingAttributesInternal) ?? Array<T>.Empty;
 		}
 
 		/// <summary>
@@ -152,8 +165,8 @@ namespace LinqToDB.Metadata
 		public T[] GetMappingAttributes<T>(Type sourceOwner, ICustomAttributeProvider source)
 			where T : MappingAttribute
 		{
-			return (T[])_cache.GetOrAdd(typeof(T), t => new())
-				.GetOrAdd(new(source, sourceOwner), GetMappingAttributesInternal<T>);
+			// GetMappingAttributesInternal is not generic to avoid delegate allocation on each call
+			return (T[]?)_cache.GetOrAdd(new(typeof(T), new(source, sourceOwner)), _getMappingAttributesInternal) ?? Array<T>.Empty;
 		}
 	}
 }

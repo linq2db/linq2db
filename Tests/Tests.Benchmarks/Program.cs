@@ -92,16 +92,14 @@ namespace LinqToDB.Benchmarks
 			//	return;
 			//}
 			//TestConcurrent();
-			/*
 			VwSalesByCategoryContainsPerf();
 			return;
-			*/
 
-			BenchmarkSwitcher
-				.FromAssembly(typeof(Program).Assembly)
-				.Run(
-					args.Length > 0 ? args : new[] { "--filter=*" },
-					Config.Instance);
+			//BenchmarkSwitcher
+			//	.FromAssembly(typeof(Program).Assembly)
+			//	.Run(
+			//		args.Length > 0 ? args : new[] { "--filter=*" },
+			//		Config.Instance);
 		}
 
 		#region Concurrent
@@ -118,7 +116,6 @@ namespace LinqToDB.Benchmarks
 		static void TestVwSalesByYear()
 		{
 			var benchmark = new QueryGenerationBenchmark();
-			benchmark.DataProvider = ProviderName.MySqlConnector;
 
 			for (int i = 0; i < 100000; i++)
 			{
@@ -129,7 +126,6 @@ namespace LinqToDB.Benchmarks
 		static void VwSalesByCategoryContainsPerf()
 		{
 			var benchmark = new QueryGenerationBenchmark();
-			benchmark.DataProvider = ProviderName.Access;
 
 #if JETBRAINS
 			MeasureProfiler.StartCollectingData();
@@ -149,7 +145,6 @@ namespace LinqToDB.Benchmarks
 		static void VwSalesByCategoryContainsMem()
 		{
 			var benchmark = new QueryGenerationBenchmark();
-			benchmark.DataProvider = ProviderName.Access;
 
 #if JETBRAINS
 			MemoryProfiler.CollectAllocations(true);
