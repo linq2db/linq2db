@@ -144,7 +144,7 @@ namespace LinqToDB.Common
 			catch (InvalidOperationException)
 			{ /* throw below */ }
 #endif
-			ThrowHelper.ThrowNotSupportedException("Nullable metadata is not available. " +
+			throw new NotSupportedException("Nullable metadata is not available. " +
 				"Check that you run on .net standard 2.0 or greater, " + 
 				"and that you don't trim nullable metadata during build (see NullabilityInfoContextSupport).");
 		}
