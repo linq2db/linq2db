@@ -4,44 +4,67 @@ namespace LinqToDB.SqlQuery
 {
 	public class NullabilityContext
 	{
-		public static NullabilityContext NonQuery { get; } = new(null!, null, null!);
+		public static NullabilityContext NonQuery { get; } = new(null!, null, null, null!);
 
 		public static NullabilityContext GetContext(SelectQuery? selectQuery) =>
 			selectQuery == null ? NonQuery : new NullabilityContext(selectQuery);
 
 
-		public NullabilityContext(SelectQuery inQuery) : this(inQuery, null)
+		public NullabilityContext(SelectQuery inQuery) : this(inQuery, null, null, null!)
 		{
 		}
 
-		public NullabilityContext(SelectQuery inQuery, ISqlTableSource? forSource)
+		public NullabilityContext(SelectQuery inQuery, ISqlTableSource? outerSource, ISqlTableSource? innerSource)
 		{
-			InQuery   = inQuery;
-			ForSource = forSource;
+			InQuery     = inQuery;
+			OuterSource = outerSource;
+			InnerSource = innerSource;
 		}
 
-		NullabilityContext(SelectQuery inQuery, ISqlTableSource? forSource, NullabilityCache nullabilityCache)
-			: this(inQuery, forSource)
+		NullabilityContext(SelectQuery inQuery, ISqlTableSource? outerSource, ISqlTableSource? innerSource, NullabilityCache nullabilityCache)
+			: this(inQuery, outerSource, innerSource)
 		{
 			_nullabilityCache = nullabilityCache;
 		}
 
-		public SelectQuery InQuery { get; }
-		public ISqlTableSource? ForSource { get; }
+		public SelectQuery      InQuery     { get; }
+		public ISqlTableSource? OuterSource { get; }
+		public ISqlTableSource? InnerSource { get; }
 
 		NullabilityCache? _nullabilityCache;
 
-		public NullabilityContext WitSource(ISqlTableSource forSource)
+		public NullabilityContext WithOuterInnerSource(ISqlTableSource outerSource, ISqlTableSource innerSource)
 		{
-			if (ForSource == forSource)
+			if (OuterSource == outerSource && InnerSource == innerSource)
 				return this;
 
 			_nullabilityCache ??= new();
-			return new NullabilityContext(InQuery, forSource, _nullabilityCache);
+			return new NullabilityContext(InQuery, outerSource, innerSource, _nullabilityCache);
+		}
+
+		public NullabilityContext WithOuterSource(ISqlTableSource outerSource)
+		{
+			if (OuterSource == outerSource)
+				return this;
+
+			_nullabilityCache ??= new();
+			return new NullabilityContext(InQuery, outerSource, InnerSource, _nullabilityCache);
+		}
+
+		public NullabilityContext WithInnerSource(ISqlTableSource innerSource)
+		{
+			if (InnerSource == innerSource)
+				return this;
+
+			_nullabilityCache ??= new();
+			return new NullabilityContext(InQuery, OuterSource, innerSource, _nullabilityCache);
 		}
 
 		bool? CanBeNullInternal(SelectQuery query, ISqlTableSource source)
 		{
+			if (source == OuterSource || source == InnerSource)
+				return null;
+
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 			if (query == null)
 			{
@@ -49,7 +72,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			_nullabilityCache ??= new();
-			return _nullabilityCache.IsNullableSource(query, source, ForSource);
+			return _nullabilityCache.IsNullableSource(query, source);
 		}
 
 		public bool CanBeNull(ISqlExpression expression)
@@ -91,11 +114,8 @@ namespace LinqToDB.SqlQuery
 			Dictionary<NullabilityKey, bool>? _nullableSources;
 			HashSet<SelectQuery>? _processedQueries;
 
-			public bool? IsNullableSource(SelectQuery inQuery, ISqlTableSource source, ISqlTableSource? forSource)
+			public bool? IsNullableSource(SelectQuery inQuery, ISqlTableSource source)
 			{
-				if (source == forSource)
-					return null;
-
 				_nullableSources ??= new();
 				_processedQueries ??= new HashSet<SelectQuery>();
 

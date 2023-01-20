@@ -6,7 +6,7 @@ namespace LinqToDB.SqlQuery
 	public class QueryElementTextWriter
 	{
 		HashSet<IQueryElement>? _visited;
-		SqlTextWriter           _writer = new();
+		readonly SqlTextWriter  _writer = new();
 
 		public NullabilityContext Nullability { get; }
 
@@ -26,13 +26,18 @@ namespace LinqToDB.SqlQuery
 		QueryElementTextWriter(NullabilityContext nullability, SqlTextWriter writer, HashSet<IQueryElement>? visited)
 		{
 			Nullability = nullability;
-			_writer = writer;
-			_visited = visited;
+			_writer     = writer;
+			_visited    = visited;
 		}
 
-		public QueryElementTextWriter WithSource(ISqlTableSource forSource)
+		public QueryElementTextWriter WithOuterSource(ISqlTableSource outerSource)
 		{
-			return new QueryElementTextWriter(Nullability.WitSource(forSource), _writer, _visited);
+			return new QueryElementTextWriter(Nullability.WithOuterSource(outerSource), _writer, _visited);
+		}
+
+		public QueryElementTextWriter WithInnerSource(ISqlTableSource innerSource)
+		{
+			return new QueryElementTextWriter(Nullability.WithInnerSource(innerSource), _writer, _visited);
 		}
 
 		public int Length 
@@ -49,8 +54,7 @@ namespace LinqToDB.SqlQuery
 
 		public void RemoveVisited(IQueryElement element)
 		{
-			if (_visited == null) return;
-			_visited.Remove(element);
+			_visited?.Remove(element);
 		}
 
 		public QueryElementTextWriter AppendIdentCheck(string str)

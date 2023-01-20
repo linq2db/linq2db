@@ -88,7 +88,7 @@ namespace LinqToDB.SqlQuery
 				.AppendElement(Table)
 				.Append(" ON ");
 
-			var localWriter = writer.WithSource(Table.Source);
+			var localWriter = writer.WithInnerSource(Table.Source);
 			localWriter.AppendElement(Condition);
 
 			writer.RemoveVisited(this);

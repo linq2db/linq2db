@@ -1592,7 +1592,7 @@ namespace LinqToDB.SqlProvider
 				BuildTableName(nullability, ts, true, true);
 
 				foreach (var jt in ts.Joins)
-					BuildJoinTable(nullability, selectQuery, jt, ref jn);
+					BuildJoinTable(nullability, selectQuery, ts, jt, ref jn);
 			}
 
 			Indent--;
@@ -1937,13 +1937,13 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected void BuildJoinTable(NullabilityContext nullability, SelectQuery selectQuery, SqlJoinedTable join, ref int joinCounter)
+		protected void BuildJoinTable(NullabilityContext nullability, SelectQuery selectQuery, SqlTableSource tableSource, SqlJoinedTable join, ref int joinCounter)
 		{
 			StringBuilder.AppendLine();
 			Indent++;
 			AppendIndent();
 
-			var condition = ConvertElement(join.Condition, nullability.WitSource(join.Table.Source));
+			var condition = ConvertElement(join.Condition, nullability.WithOuterInnerSource(tableSource.Source, join.Table.Source));
 			var buildOn   = BuildJoinType (join, condition);
 
 			if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
@@ -1954,7 +1954,7 @@ namespace LinqToDB.SqlProvider
 			if (IsNestedJoinSupported && join.Table.Joins.Count != 0)
 			{
 				foreach (var jt in join.Table.Joins)
-					BuildJoinTable(nullability, selectQuery, jt, ref joinCounter);
+					BuildJoinTable(nullability, selectQuery, tableSource, jt, ref joinCounter);
 
 				if (IsNestedJoinParenthesisRequired && join.Table.Joins.Count != 0)
 					StringBuilder.Append(')');
@@ -1991,7 +1991,7 @@ namespace LinqToDB.SqlProvider
 
 			if (!IsNestedJoinSupported)
 				foreach (var jt in join.Table.Joins)
-					BuildJoinTable(nullability, selectQuery, jt, ref joinCounter);
+					BuildJoinTable(nullability, selectQuery, tableSource, jt, ref joinCounter);
 
 			Indent--;
 		}

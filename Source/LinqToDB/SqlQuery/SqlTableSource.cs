@@ -188,11 +188,14 @@ namespace LinqToDB.SqlQuery
 				.Append(SourceID);
 
 			writer.UnIndent();
-				foreach (var join in Joins)
-				{
-					writer.AppendLine();
-					writer.AppendElement(join);
-				}
+
+			var joinWriter = writer.WithOuterSource(Source);
+			foreach (var join in Joins)
+			{
+				joinWriter.AppendLine();
+				joinWriter.AppendElement(join);
+			}
+
 			writer.Indent();
 
 			writer.RemoveVisited(this);
