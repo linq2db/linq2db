@@ -159,7 +159,7 @@ namespace Tests.Linq
 		[Test]
 		public async Task SinglePredicateAsync([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
@@ -209,7 +209,7 @@ namespace Tests.Linq
 		[Test]
 		public async Task SingleOrDefaultPredicateAsync([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
@@ -321,11 +321,10 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public async Task MinAsync([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()
@@ -345,7 +344,7 @@ namespace Tests.Linq
 		[Test]
 		public async Task MinSelectorAsync([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
 				db.MappingSchema.GetFluentMappingBuilder()

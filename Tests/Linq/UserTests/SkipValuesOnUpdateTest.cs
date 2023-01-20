@@ -185,10 +185,12 @@ namespace Tests.UserTests
 		[Test]
 		public void TestSkipWithFluentBuilder([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			var ms = new MappingSchema();
+			var mapping = ms.GetFluentMappingBuilder();
+			mapping.Entity<TestTableFluent>().HasSkipValuesOnUpdate(t => t.Age, 2, 5).Build();
+
+			using (var db = GetDataContext(context, ms))
 			{
-				var mapping = db.MappingSchema.GetFluentMappingBuilder();
-				mapping.Entity<TestTableFluent>().HasSkipValuesOnUpdate(t => t.Age, 2, 5).Build();
 				using (db.CreateLocalTable<TestTableFluent>())
 				{
 					var count = db.Insert(new TestTableFluent() { Id = 1, Name = null, Age = 2 });

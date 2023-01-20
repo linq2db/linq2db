@@ -25,17 +25,18 @@ namespace Tests.xUpdate
 		[Test]
 		public void CreateTable1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.Property(t => t.ID)
-							.IsIdentity()
-							.IsPrimaryKey()
-						.Property(t => t.Field1)
-							.HasLength(50)
-					.Build();
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<TestTable>()
+					.Property(t => t.ID)
+						.IsIdentity()
+						.IsPrimaryKey()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
 
+			using (var db = GetDataContext(context, ms))
+			{
 				db.DropTable<TestTable>(throwExceptionIfNotExists:false);
 
 				var table = db.CreateTable<TestTable>();
@@ -48,17 +49,18 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task CreateTable1Async([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.Property(t => t.ID)
-							.IsIdentity()
-							.IsPrimaryKey()
-						.Property(t => t.Field1)
-							.HasLength(50)
-					.Build();
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<TestTable>()
+					.Property(t => t.ID)
+						.IsIdentity()
+						.IsPrimaryKey()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
 
+			using (var db = GetDataContext(context, ms))
+			{
 				await db.DropTableAsync<TestTable>(throwExceptionIfNotExists:false);
 
 				var table = await db.CreateTableAsync<TestTable>();
@@ -121,14 +123,15 @@ namespace Tests.xUpdate
 			TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.Property(t => t.Field1)
-							.HasLength(50)
-					.Build();
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<TestTable>()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
 
+			using (var db = GetDataContext(context, ms))
+			{
 				const string tableName = "TestTable";
 
 				try
@@ -249,22 +252,24 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestIssue160([DataSources] string context)
 		{
-			using (var conn = GetDataContext(context))
+			var ms = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<Aa>()
+					.HasTableName("aa")
+					.Property(t => t.bb).IsPrimaryKey()
+					.Property(t => t.cc)
+					.Property(t => t.dd).IsNotColumn()
+
+				.Entity<Qq>()
+					.HasTableName("aa")
+					.Property(t => t.bb).IsPrimaryKey()
+					.Property(t => t.cc)
+
+				.Build();
+
+			using (var conn = GetDataContext(context, ms))
 			{
-				conn.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Aa>()
-						.HasTableName("aa")
-						.Property(t => t.bb).IsPrimaryKey()
-						.Property(t => t.cc)
-						.Property(t => t.dd).IsNotColumn()
-
-					.Entity<Qq>()
-						.HasTableName("aa")
-						.Property(t => t.bb).IsPrimaryKey()
-						.Property(t => t.cc)
-
-					.Build();
-
 				try
 				{
 					conn.CreateTable<Qq>();

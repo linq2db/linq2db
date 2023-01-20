@@ -4,7 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
-
+using LinqToDB.Mapping;
 using Npgsql;
 
 using NUnit.Framework;
@@ -24,16 +24,18 @@ namespace Tests.UserTests
 		[Test]
 		public void GeneralTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Client>()
-						.HasTableName("Issue1438")
-						.Property(x => x.Id)
-							.IsPrimaryKey()
-							.IsIdentity()
-					.Build();
+			var ms = new MappingSchema();
 
+			ms.GetFluentMappingBuilder()
+				.Entity<Client>()
+					.HasTableName("Issue1438")
+					.Property(x => x.Id)
+						.IsPrimaryKey()
+						.IsIdentity()
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (var tbl = db.CreateLocalTable<Client>())
 				{
 					var id = db.InsertWithInt32Identity(new Client()

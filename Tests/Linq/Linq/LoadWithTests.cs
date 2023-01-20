@@ -98,11 +98,11 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
-					t => ImmutableList.Create(t.ToArray()));
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<IEnumerable<Child>, ImmutableList<Child>>(t => ImmutableList.Create(t.ToArray()));
 
+			using (var db = GetDataContext(context, ms))
+			{
 				var q =
 					from p in db.Parent.LoadWith(p => p.Children3)
 					select new
@@ -120,11 +120,12 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithAsTable3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
-					t => ImmutableList.Create(t.ToArray()));
+			var ms = new MappingSchema();
 
+			ms.SetConvertExpression<IEnumerable<Child>, ImmutableList<Child>>(t => ImmutableList.Create(t.ToArray()));
+
+			using (var db = GetDataContext(context, ms))
+			{
 				var q =
 					from p in db.Parent.LoadWithAsTable(p => p.Children3)
 					select new
