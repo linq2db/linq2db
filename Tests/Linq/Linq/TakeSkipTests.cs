@@ -492,7 +492,7 @@ namespace Tests.Linq
 			}
 		}
 
-		void SkipTake6(ITestDataContext db, bool doSkip)
+		void SkipTake6Internal(ITestDataContext db, bool doSkip)
 		{
 			var q1 = from g in db.GrandChild select g;
 
@@ -533,10 +533,10 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				SkipTake6(db, false);
+				SkipTake6Internal(db, false);
 				CheckTakeGlobalParams(db);
 
-				SkipTake6(db, true);
+				SkipTake6Internal(db, true);
 				CheckTakeGlobalParams(db);
 			}
 		}

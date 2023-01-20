@@ -271,11 +271,6 @@ namespace LinqToDB.SqlProvider
 		public bool IsUpdateFromSupported             { get; set; }
 
 		/// <summary>
-		/// Indicates that provider supports window functions
-		/// </summary>
-		public bool IsWindowFunctionsSupported { get; set; }
-
-		/// <summary>
 		/// Provider supports Naming Query Blocks
 		/// <code>
 		/// QB_NAME(qb)
@@ -284,6 +279,12 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		[DataMember(Order = 33)]
 		public bool IsNamingQueryBlockSupported       { get; set; }
+
+		/// <summary>
+		/// Indicates that provider supports window functions
+		/// </summary>
+		[DataMember(Order = 34)]
+		public bool IsWindowFunctionsSupported { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
@@ -307,26 +308,26 @@ namespace LinqToDB.SqlProvider
 		/// Used when there is query which needs several additional database requests for completing query (e.g. eager load or client-side GroupBy).
 		/// Default (set by <see cref="DataProviderBase"/>): <see cref="IsolationLevel.RepeatableRead"/>.
 		/// </summary>
-		[DataMember(Order = 34)]
+		[DataMember(Order = 35)]
 		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; }
 
 		/// <summary>
 		/// Provider support Row Constructor `(1, 2, 3)` in various positions (flags)
 		/// Default (set by <see cref="DataProviderBase"/>): <see cref="RowFeature.None"/>.
 		/// </summary>
-		[DataMember(Order = 35)]
+		[DataMember(Order = 36)]
 		public RowFeature RowConstructorSupport { get; set; }
 
 		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
-		[DataMember(Order = 36)]
+		[DataMember(Order = 37)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
 		/// <summary>
 		/// Provider supports ROW_NUMBER OVER ()
 		/// </summary>
-		[DataMember(Order = 37)]
+		[DataMember(Order = 38)]
 		public bool SupportsRowNumberWithoutOrderBy { get; set; } = true;
 
 		#region Equality

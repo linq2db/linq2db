@@ -364,7 +364,8 @@ namespace LinqToDB.SqlQuery
 
 			if (Columns.Count == 0)
 			{
-				writer.AppendLine("*");
+				using(writer.WithScope())
+					writer.AppendLine("*");
 			}
 			else
 			{
@@ -407,6 +408,8 @@ namespace LinqToDB.SqlQuery
 
 						if (index < Columns.Count - 1)
 							writer.AppendLine(",");
+						else
+							writer.AppendLine();
 					}
 			}
 

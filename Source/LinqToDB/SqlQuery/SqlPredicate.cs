@@ -878,7 +878,7 @@ namespace LinqToDB.SqlQuery
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
 
-			writer.AppendElement(this);
+			ToString(writer);
 
 			writer.RemoveVisited(this);
 

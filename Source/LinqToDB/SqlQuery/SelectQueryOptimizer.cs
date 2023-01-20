@@ -801,7 +801,8 @@ namespace LinqToDB.SqlQuery
 
 			if (!_flags.AcceptsOuterExpressionInAggregate                &&
 			    column.Expression.ElementType != QueryElementType.Column &&
-			    QueryHelper.HasOuterReferences(sources, column))
+			    QueryHelper.HasOuterReferences(sources, column)          &&
+			    QueryHelper.IsAggregationFunction(column.Expression))
 			{
 				// handle case when aggregate expression has outer references. SQL Server will fail.
 				return true;
@@ -1274,6 +1275,13 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var whereToIgnore = new HashSet<IQueryElement> { sql.Where, sql.Select };
+
+				// add join conditions
+				foreach (var join in sql.From.Tables.SelectMany(t => t.Joins))
+				{
+					if (join.JoinType == JoinType.Inner || join.JoinType == JoinType.Left)
+						whereToIgnore.Add(join.Condition);
+				}
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
 				if (QueryHelper.IsDependsOnSources(sql, parentTableSources, whereToIgnore))

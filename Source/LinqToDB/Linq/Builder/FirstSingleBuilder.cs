@@ -7,6 +7,8 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Extensions;
+	using Reflection;
 
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
@@ -215,8 +217,9 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (flags.HasFlag(ProjectFlags.Expression))
 								{
-									throw new NotImplementedException("Eager loading for FirstSingleBuilder is not implemented yet.");
-									return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
+									var sequenceExpression = GetEagerLoadingExpression();
+
+									return new SqlEagerLoadExpression((ContextRefExpression)path, path, sequenceExpression);
 								}
 							}
 						}
@@ -228,6 +231,22 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return projected;
+			}
+
+			Expression GetEagerLoadingExpression()
+			{
+				var sequenceExpression = Builder.GetSequenceExpression(this);
+				sequenceExpression = ((MethodCallExpression)sequenceExpression).Arguments[0];
+
+				var method = typeof(IQueryable<>).IsSameOrParentOf(sequenceExpression.Type)
+					? Methods.Queryable.Take
+					: Methods.Enumerable.Take;
+
+				method = method.MakeGenericMethod(ExpressionBuilder.GetEnumerableElementType(sequenceExpression.Type));
+
+				var result = Expression.Call(method, sequenceExpression, Expression.Constant(1));
+
+				return result;
 			}
 
 			public override IBuildContext Clone(CloningContext context)

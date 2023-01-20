@@ -33,11 +33,11 @@ namespace LinqToDB.SqlProvider
 		{
 			if (_optimized.TryGetValue(element, out var replaced))
 			{
-				if (replaced != element)
+				if (!ReferenceEquals(replaced, element))
 				{
 					while (_optimized.TryGetValue(replaced, out var another))
 					{
-						if (replaced == another)
+						if (ReferenceEquals(replaced, another))
 							break;
 						replaced = another;
 					}

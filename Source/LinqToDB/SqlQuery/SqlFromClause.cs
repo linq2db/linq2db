@@ -217,7 +217,6 @@ namespace LinqToDB.SqlQuery
 				return writer;
 
 			writer
-				.AppendLine()
 				.Append(" FROM ");
 
 			if (Tables.Count > 0)
