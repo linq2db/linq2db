@@ -1802,12 +1802,12 @@ namespace LinqToDB.Linq
 			if (str == null || count == null)
 				return null;
 
-			var sb = new StringBuilder(str.Length * count.Value);
+			using var sb = Pools.StringBuilder.Allocate();
 
 			for (var i = 0; i < count; i++)
-				sb.Append(str);
+				sb.Value.Append(str);
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 
 		[CLSCompliant(false)]
@@ -1820,12 +1820,7 @@ namespace LinqToDB.Linq
 			if (ch == null || count == null)
 				return null;
 
-			var sb = new StringBuilder(count.Value);
-
-			for (var i = 0; i < count; i++)
-				sb.Append(ch);
-
-			return sb.ToString();
+			return new string(ch.Value, count.Value);
 		}
 
 		// SqlServer

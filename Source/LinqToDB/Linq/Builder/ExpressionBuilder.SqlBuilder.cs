@@ -1286,11 +1286,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Constant
 
-		readonly Dictionary<Tuple<Expression, ColumnDescriptor?>,SqlValue> _constants = new ();
+		readonly Dictionary<(Expression, ColumnDescriptor?),SqlValue> _constants = new ();
 
 		SqlValue BuildConstant(Expression expr, ColumnDescriptor? columnDescriptor)
 		{
-			var key = Tuple.Create(expr, columnDescriptor);
+			var key = (expr, columnDescriptor);
 			if (_constants.TryGetValue(key, out var sqlValue))
 				return sqlValue;
 

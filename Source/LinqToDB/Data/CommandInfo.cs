@@ -1554,17 +1554,17 @@ namespace LinqToDB.Data
 
 		static string GetFieldsKey(DbDataReader dataReader)
 		{
-			var sb = new StringBuilder();
+			using var sb = Pools.StringBuilder.Allocate();
 
 			for (var i = 0; i < dataReader.FieldCount; i++)
 			{
-				sb.Append(dataReader.GetName(i))
+				sb.Value.Append(dataReader.GetName(i))
 					.Append(',')
 					.Append(dataReader.GetFieldType(i))
 					.Append(';');
 			}
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 
 		static Func<DbDataReader,T> GetObjectReader<T>(DataConnection dataConnection, DbDataReader dataReader, string sql, string? additionalKey)

@@ -121,14 +121,26 @@ namespace LinqToDB
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(LinqOptions)
-			.Add(RetryPolicyOptions)
-			.Add(ConnectionOptions)
-			.Add(DataContextOptions)
-			.Add(BulkCopyOptions)
-			.AddRange(base.OptionSets)
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(LinqOptions)
+						.Add(RetryPolicyOptions)
+						.Add(ConnectionOptions)
+						.Add(DataContextOptions)
+						.Add(BulkCopyOptions)
+						.AddRange(base.OptionSets)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		public bool Equals(DataOptions? other)
 		{

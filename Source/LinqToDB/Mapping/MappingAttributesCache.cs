@@ -26,15 +26,16 @@ namespace LinqToDB.Metadata
 		/// <param name="attributesGetter">Raw attribute getter delegate for cache misses.</param>
 		public MappingAttributesCache(Func<Type?, ICustomAttributeProvider, MappingAttribute[]> attributesGetter)
 		{
-			_attributesGetter = attributesGetter;
-			_getMappingAttributesInternal = GetMappingAttributesInternal;
+			_attributesGetter                 = attributesGetter;
+			_getMappingAttributesInternal     = GetMappingAttributesInternal;
+			_getMappingAttributesTreeInternal = GetMappingAttributesTreeInternal;
 		}
 
 		MappingAttribute[]? GetMappingAttributesInternal(CacheKey key)
 		{
 			List<MappingAttribute>? results = null;
 
-			foreach (var attr in _orderedInheritMappingAttributes.GetOrAdd(key.SourceKey, GetMappingAttributesTreeInternal))
+			foreach (var attr in _orderedInheritMappingAttributes.GetOrAdd(key.SourceKey, _getMappingAttributesTreeInternal))
 				if (key.AttributeType.IsAssignableFrom(attr.GetType()))
 					(results ??= new()).Add(attr);
 
@@ -70,6 +71,7 @@ namespace LinqToDB.Metadata
 			return attrs;
 		}
 
+		readonly Func<Key, MappingAttribute[]> _getMappingAttributesTreeInternal;
 		MappingAttribute[] GetMappingAttributesTreeInternal(Key key)
 		{
 			var attrs = GetNoInheritMappingAttributes(key);

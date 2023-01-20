@@ -935,13 +935,13 @@ namespace LinqToDB.Linq.Builder
 									return result;
 								}
 
-								var key = new List<SqlInfo>();
+								List<SqlInfo>? key = null;
 								foreach (var field in SqlTable.Fields.Where(static f => f.IsPrimaryKey).OrderBy(static f => f.PrimaryKeyOrder))
 								{
-									key.Add(new SqlInfo(field.ColumnDescriptor.MemberInfo, field, SelectQuery));
+									(key ??= new()).Add(new SqlInfo(field.ColumnDescriptor.MemberInfo, field, SelectQuery));
 								}
 
-								return key.Count > 0 ? key.ToArray() : ConvertToSql(expression, level, ConvertFlags.All);
+								return key?.ToArray() ?? ConvertToSql(expression, level, ConvertFlags.All);
 							}
 							else
 							{

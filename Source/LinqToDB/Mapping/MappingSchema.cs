@@ -1212,7 +1212,7 @@ namespace LinqToDB.Mapping
 
 		protected internal virtual int GenerateID()
 		{
-			var idBuilder = new IdentifierBuilder();
+			using var idBuilder = new IdentifierBuilder();
 
 			lock (_syncRoot)
 			{

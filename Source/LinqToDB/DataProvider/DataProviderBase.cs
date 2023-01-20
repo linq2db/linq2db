@@ -102,7 +102,19 @@ namespace LinqToDB.DataProvider
 		}
 
 		private int? _id;
-		public  int   ID => _id ??= new IdentifierBuilder(Name).CreateID();
+		public  int   ID
+		{
+			get
+			{
+				if (_id == null)
+				{
+					using var idBuilder = new IdentifierBuilder(Name);
+					_id = idBuilder.CreateID();
+				}
+
+				return _id.Value;
+			}
+		}
 
 		public DbConnection CreateConnection(string connectionString)
 		{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -26,9 +27,14 @@ namespace LinqToDB.Extensions
 		static T[] GetAttributesInternal<T>(ICustomAttributeProvider source, bool inherit)
 			where T : Attribute
 		{
-			var res = (inherit ? GetInheritAttributes(source) : GetNoInheritAttributes(source)).OfType<T>().ToArray();
+			var attrs = inherit ? GetInheritAttributes(source) : GetNoInheritAttributes(source);
 
-			return res.Length == 0 ? Array<T>.Empty : res;
+			List<T>? results = null;
+			foreach (var attr in attrs)
+				if (typeof(T).IsAssignableFrom(attr.GetType()))
+					(results ??= new()).Add((T)attr);
+
+			return results == null ? Array<T>.Empty : results.ToArray();
 		}
 
 		static Attribute[] GetNoInheritAttributes(ICustomAttributeProvider source)

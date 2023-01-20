@@ -94,11 +94,11 @@ namespace LinqToDB.Metadata
 
 		private string CalculateObjectID()
 		{
-			var sb = new StringBuilder();
+			using var sb = Pools.StringBuilder.Allocate();
 
 			foreach (var type in _types)
 			{
-				sb.Append('.')
+				sb.Value.Append('.')
 					.Append(IdentifierBuilder.GetObjectID(type.Key))
 					.Append('.')
 					.Append(type.Value.Length)
@@ -106,12 +106,12 @@ namespace LinqToDB.Metadata
 					;
 
 				foreach (var a in type.Value)
-					sb.Append(a.GetObjectID()).Append('.');
+					sb.Value.Append(a.GetObjectID()).Append('.');
 			}
 
 			foreach (var member in _members)
 			{
-				sb.Append('.')
+				sb.Value.Append('.')
 					.Append(IdentifierBuilder.GetObjectID(member.Key.DeclaringType))
 					.Append('.')
 					.Append(member.Key.Name)
@@ -121,12 +121,12 @@ namespace LinqToDB.Metadata
 					;
 
 				foreach (var a in member.Value)
-					sb.Append(a.GetObjectID()).Append('.');
+					sb.Value.Append(a.GetObjectID()).Append('.');
 			}
 
 			foreach (var column in _dynamicColumns)
 			{
-				sb.Append('.')
+				sb.Value.Append('.')
 					.Append(IdentifierBuilder.GetObjectID(column.Key.DeclaringType))
 					.Append('.')
 					.Append(column.Key.Name)
@@ -136,10 +136,10 @@ namespace LinqToDB.Metadata
 					;
 
 				foreach (var mi in column.Value)
-					sb.Append(IdentifierBuilder.GetObjectID(mi)).Append('.');
+					sb.Value.Append(IdentifierBuilder.GetObjectID(mi)).Append('.');
 			}
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 	}
 }
