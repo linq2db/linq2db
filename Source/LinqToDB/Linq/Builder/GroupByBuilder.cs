@@ -193,7 +193,7 @@ namespace LinqToDB.Linq.Builder
 
 			var element = new ElementContext(buildInfo.Parent, elementSelector, dataSubquery, buildInfo.IsSubQuery);
 			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element, 
-				!Configuration.Linq.GuardGrouping || builder.IsGroupingGuardDisabled, true);
+				!builder.DataOptions.LinqOptions.GuardGrouping || builder.IsGroupingGuardDisabled, true);
 
 			// Will be used for eager loading generation
 			element.GroupByContext = groupBy;

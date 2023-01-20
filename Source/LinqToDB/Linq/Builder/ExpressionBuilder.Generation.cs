@@ -558,6 +558,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				case SqlGenericConstructorExpression.CreateType.MemberInit:
 				case SqlGenericConstructorExpression.CreateType.Auto:
+				case SqlGenericConstructorExpression.CreateType.Keys:
 				case SqlGenericConstructorExpression.CreateType.New:
 				{
 					return ConstructObject(mappingSchema, constructorExpression);

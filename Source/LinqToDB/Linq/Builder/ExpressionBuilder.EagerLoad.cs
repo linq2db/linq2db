@@ -334,11 +334,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (isSingleElement)
 				{
-					throw new NotImplementedException();
 					resultExpression = Expression.Call(Methods.Enumerable.FirstOrDefault.MakeGenericMethod(detailType),
 						resultExpression);
 				}
-
 
 				_expressionCache = saveExpressionCache;
 				_columnCache     = saveColumnsCache;
