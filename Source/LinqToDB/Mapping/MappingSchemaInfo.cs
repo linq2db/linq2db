@@ -46,7 +46,10 @@ namespace LinqToDB.Mapping
 			return _defaultValues.TryGetValue(type, out var o) ? Option<object?>.Some(o) : Option<object?>.None;
 		}
 
-		public void SetDefaultValue(Type type, object? value)
+		/// <param name="noThrow">When <c>true</c>, don't raise exception for locked schema.
+		/// Must be used only when default value calculated without schema change (lazy calculation).
+		/// E.g. when default enum value calculated.</param>
+		public void SetDefaultValue(Type type, object? value, bool noThrow = false)
 		{
 			if (_defaultValues == null)
 				lock (this)
@@ -54,7 +57,7 @@ namespace LinqToDB.Mapping
 
 			_defaultValues[type] = value;
 
-			ResetID();
+			ResetID(noThrow);
 		}
 
 		#endregion
@@ -71,7 +74,10 @@ namespace LinqToDB.Mapping
 			return _canBeNull.TryGetValue(type, out var o) ? Option<bool>.Some(o) : Option<bool>.None;
 		}
 
-		public void SetCanBeNull(Type type, bool value)
+		/// <param name="noThrow">When <c>true</c>, don't raise exception for locked schema.
+		/// Must be used only when default value calculated without schema change (lazy calculation).
+		/// E.g. when enum nullability calculated.</param>
+		public void SetCanBeNull(Type type, bool value, bool noThrow = false)
 		{
 			if (_canBeNull == null)
 				lock (this)
@@ -79,7 +85,7 @@ namespace LinqToDB.Mapping
 
 			_canBeNull[type] = value;
 
-			ResetID();
+			ResetID(noThrow);
 		}
 
 		#endregion
@@ -294,7 +300,7 @@ namespace LinqToDB.Mapping
 
 		internal bool HasConfigurationID => _configurationID != null;
 
-		public virtual void ResetID()
+		public virtual void ResetID(bool noThrow = false)
 		{
 			_configurationID = null;
 		}

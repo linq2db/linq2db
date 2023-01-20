@@ -219,7 +219,7 @@ namespace LinqToDB.Mapping
 
 					if (value != null)
 					{
-						SetDefaultValue(type, value);
+						SetDefaultValueSafe(type, value);
 						return value;
 					}
 				}
@@ -240,6 +240,15 @@ namespace LinqToDB.Mapping
 			{
 				Schemas[0].SetDefaultValue(type, value);
 				ResetID();
+			}
+		}
+
+		private void SetDefaultValueSafe(Type type, object? value)
+		{
+			lock (_syncRoot)
+			{
+				Schemas[0].SetDefaultValue(type, value, noThrow: true);
+				ResetID(true);
 			}
 		}
 
@@ -275,7 +284,7 @@ namespace LinqToDB.Mapping
 
 					if (value != null)
 					{
-						SetCanBeNull(type, true);
+						SetCanBeNullSafe(type, true);
 						return true;
 					}
 				}
@@ -295,6 +304,15 @@ namespace LinqToDB.Mapping
 			{
 				Schemas[0].SetCanBeNull(type, value);
 				ResetID();
+			}
+		}
+
+		public void SetCanBeNullSafe(Type type, bool value)
+		{
+			lock (_syncRoot)
+			{
+				Schemas[0].SetCanBeNull(type, value, true);
+				ResetID(true);
 			}
 		}
 
@@ -1227,7 +1245,7 @@ namespace LinqToDB.Mapping
 			return idBuilder.CreateID();
 		}
 
-		internal void ResetID()
+		internal void ResetID(bool noThrow = false)
 		{
 #if DEBUG
 			if (!IsLockable)
@@ -1239,7 +1257,7 @@ namespace LinqToDB.Mapping
 #endif
 
 			_configurationID = null;
-			Schemas[0].ResetID();
+			Schemas[0].ResetID(noThrow);
 		}
 
 		private string[]? _configurationList;
@@ -1355,7 +1373,7 @@ namespace LinqToDB.Mapping
 					return Default.GenerateID();
 				}
 
-				public override void ResetID()
+				public override void ResetID(bool noThrow = false)
 				{
 				}
 			}
