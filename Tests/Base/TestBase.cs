@@ -474,7 +474,7 @@ namespace Tests
 				if (!suppressSequentialAccess)
 					options = options.UseInterceptor(SequentialAccessCommandInterceptor.Instance);
 
-				options = options.UseMappingSchema(ms == null ? _sequentialAccessSchema : new(ms, _sequentialAccessSchema));
+				options = options.UseMappingSchema(ms == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(ms, _sequentialAccessSchema));
 			}
 			//else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
 			//	res.AddMappingSchema(_fecSchema);
