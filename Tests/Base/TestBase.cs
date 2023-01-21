@@ -502,7 +502,7 @@ namespace Tests
 			return res;
 		}
 
-		private static readonly MappingSchema _sequentialAccessSchema = new ();
+		private static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");
 		//private static readonly MappingSchema _fecSchema = new ();
 
 		protected static char GetParameterToken(string context)
