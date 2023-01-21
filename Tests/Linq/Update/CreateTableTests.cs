@@ -73,14 +73,15 @@ namespace Tests.xUpdate
 		[Test]
 		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus/*, ProviderName.DB2*/)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.Property(t => t.Field1)
-							.HasLength(50)
-					.Build();
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<TestTable>()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
 
+			using (var db = GetDataContext(context, ms))
+			{
 				const string tableName = "TestTable";
 
 				try

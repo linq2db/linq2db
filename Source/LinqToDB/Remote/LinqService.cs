@@ -31,11 +31,16 @@ namespace LinqToDB.Remote
 			set
 			{
 				_mappingSchema = value;
-				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+				_serializationMappingSchema = value != null
+					? MappingSchema.CombineSchemas(value, Remote.SerializationMappingSchema.Instance)
+					: Remote.SerializationMappingSchema.Instance;
 			}
 		}
 
-		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(_mappingSchema);
+		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??=
+			_mappingSchema != null
+				? MappingSchema.CombineSchemas(_mappingSchema, Remote.SerializationMappingSchema.Instance)
+				: Remote.SerializationMappingSchema.Instance;
 
 		public static Func<string, Type?> TypeResolver = _ => null;
 

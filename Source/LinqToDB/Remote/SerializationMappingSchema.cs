@@ -12,13 +12,10 @@
 	/// </summary>
 	internal sealed class SerializationMappingSchema : MappingSchema
 	{
-		public SerializationMappingSchema()
-			: this(null)
-		{
-		}
+		public static readonly SerializationMappingSchema Instance = new();
 
-		public SerializationMappingSchema(MappingSchema? mappingSchema)
-			: base("RemoteContextSerialization", mappingSchema == null ? Array<MappingSchema>.Empty : new[] { mappingSchema })
+		private SerializationMappingSchema()
+			: base("RemoteContextSerialization")
 		{
 			SetConvertExpression<bool          , string>(value => value ? "1" : "0");
 			SetConvertExpression<int           , string>(value => value.ToString(CultureInfo.InvariantCulture));

@@ -34,6 +34,22 @@ namespace LinqToDB.Mapping
 	[DebuggerDisplay("{DisplayID}")]
 	public class MappingSchema : IConfigurationID
 	{
+		static readonly MemoryCache<(MappingSchema ms1, MappingSchema ms2), MappingSchema> _combinedSchemasCache = new (new ());
+
+		/// <summary>
+		/// Internal API.
+		/// </summary>
+		public static MappingSchema CombineSchemas(MappingSchema ms1, MappingSchema ms2)
+		{
+			return _combinedSchemasCache.GetOrCreate(
+				(ms1, ms2),
+				static entry =>
+				{
+					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(entry.Key.ms1, entry.Key.ms2);
+				});
+		}
+
 		#region Init
 
 		/// <summary>

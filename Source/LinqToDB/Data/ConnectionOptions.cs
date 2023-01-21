@@ -102,7 +102,7 @@ namespace LinqToDB.Data
 		internal MappingSchema? SavedMappingSchema;
 		internal string?        SavedConnectionString;
 		internal string?        SavedConfigurationString;
-		internal bool           SavedEnableAutoFluentMapping;
+		internal bool           SavedEnableContextSchemaEdit;
 
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{

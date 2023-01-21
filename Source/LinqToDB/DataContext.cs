@@ -672,7 +672,7 @@ namespace LinqToDB
 				{
 					dataContext.MappingSchema = options.MappingSchema;
 				}
-				else if (dataContext.Options.LinqOptions.EnableAutoFluentMapping)
+				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
 				{
 					dataContext.MappingSchema = new (dataContext.MappingSchema);
 				}

@@ -1403,7 +1403,7 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema    = new (mappingSchema, MappingSchema);
+			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
 			_configurationID = null;
 
 			return this;
