@@ -4,42 +4,39 @@ BenchmarkDotNet=v0.13.3, OS=Windows 10 (10.0.17763.3650/1809/October2018Update/R
 AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
 .NET SDK=7.0.102
   [Host]     : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
-  Job-UZBSVL : .NET 6.0.13 (6.0.1322.58009), X64 RyuJIT AVX2
-  Job-AYZXIO : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
-  Job-NXXYQT : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
-  Job-HMCTKM : .NET Framework 4.8 (4.8.4515.0), X64 RyuJIT VectorSize=256
+  Job-RNZPMW : .NET 6.0.13 (6.0.1322.58009), X64 RyuJIT AVX2
+  Job-XCCWXF : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
+  Job-WSMVMG : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-FMTKFQ : .NET Framework 4.8 (4.8.4515.0), X64 RyuJIT VectorSize=256
 
 Jit=RyuJit  Platform=X64  
 
 ```
-|                    Method |              Runtime | DataProvider |       Mean |     Median | Ratio |    Gen0 |    Gen1 | Allocated | Alloc Ratio |
-|-------------------------- |--------------------- |------------- |-----------:|-----------:|------:|--------:|--------:|----------:|------------:|
-|             **VwSalesByYear** |             **.NET 6.0** |       **Access** |   **488.1 μs** |   **492.7 μs** |  **0.48** |  **8.7891** |  **0.9766** | **155.61 KB** |        **0.62** |
-|             VwSalesByYear |             .NET 7.0 |       Access |   372.2 μs |   438.3 μs |  0.34 |  8.7891 |  1.4648 | 145.65 KB |        0.58 |
-|             VwSalesByYear |        .NET Core 3.1 |       Access |   720.8 μs |   720.7 μs |  0.69 |  9.7656 |  0.9766 | 163.02 KB |        0.65 |
-|             VwSalesByYear | .NET Framework 4.7.2 |       Access | 1,050.8 μs | 1,057.6 μs |  1.00 | 39.0625 |  5.8594 | 249.12 KB |        1.00 |
-|                           |                      |              |            |            |       |         |         |           |             |
-|     VwSalesByYearMutation |             .NET 6.0 |       Access |   828.3 μs |   828.1 μs |  0.63 | 15.6250 |  1.9531 | 258.33 KB |        0.92 |
-|     VwSalesByYearMutation |             .NET 7.0 |       Access |   669.7 μs |   653.0 μs |  0.51 | 11.7188 |  1.9531 | 197.53 KB |        0.71 |
-|     VwSalesByYearMutation |        .NET Core 3.1 |       Access | 1,058.8 μs | 1,064.7 μs |  0.81 | 11.7188 |  0.9766 | 202.31 KB |        0.72 |
-|     VwSalesByYearMutation | .NET Framework 4.7.2 |       Access | 1,317.5 μs | 1,289.0 μs |  1.00 | 44.9219 |  5.8594 | 279.94 KB |        1.00 |
-|                           |                      |              |            |            |       |         |         |           |             |
-| VwSalesByCategoryContains |             .NET 6.0 |       Access | 1,683.0 μs | 1,658.9 μs |  0.63 | 27.3438 |  3.9063 |  484.9 KB |        1.04 |
-| VwSalesByCategoryContains |             .NET 7.0 |       Access | 1,524.2 μs | 1,522.5 μs |  0.57 | 27.3438 |  7.8125 | 454.64 KB |        0.97 |
-| VwSalesByCategoryContains |        .NET Core 3.1 |       Access | 2,007.1 μs | 2,023.7 μs |  0.76 | 27.3438 |  3.9063 | 483.85 KB |        1.03 |
-| VwSalesByCategoryContains | .NET Framework 4.7.2 |       Access | 2,654.5 μs | 2,667.5 μs |  1.00 | 74.2188 | 15.6250 | 467.58 KB |        1.00 |
-|                           |                      |              |            |            |       |         |         |           |             |
-|             **VwSalesByYear** |             **.NET 6.0** |     **Firebird** |   **530.1 μs** |   **529.9 μs** |  **0.55** |  **8.7891** |  **0.9766** | **156.24 KB** |        **0.63** |
-|             VwSalesByYear |             .NET 7.0 |     Firebird |   470.9 μs |   471.8 μs |  0.49 | 10.7422 |  1.9531 | 182.07 KB |        0.73 |
-|             VwSalesByYear |        .NET Core 3.1 |     Firebird |   746.9 μs |   744.8 μs |  0.78 |  9.7656 |  0.9766 | 163.65 KB |        0.65 |
-|             VwSalesByYear | .NET Framework 4.7.2 |     Firebird |   962.6 μs |   958.7 μs |  1.00 | 40.0391 |  7.8125 | 249.87 KB |        1.00 |
-|                           |                      |              |            |            |       |         |         |           |             |
-|     VwSalesByYearMutation |             .NET 6.0 |     Firebird |   386.1 μs |   384.7 μs |  0.27 | 15.6250 |  1.9531 | 261.49 KB |        0.92 |
-|     VwSalesByYearMutation |             .NET 7.0 |     Firebird |   673.2 μs |   660.4 μs |  0.46 | 10.7422 |  0.9766 |  187.1 KB |        0.66 |
-|     VwSalesByYearMutation |        .NET Core 3.1 |     Firebird |   884.3 μs | 1,081.8 μs |  0.67 | 11.7188 |       - | 205.49 KB |        0.73 |
-|     VwSalesByYearMutation | .NET Framework 4.7.2 |     Firebird | 1,462.6 μs | 1,482.8 μs |  1.00 | 44.9219 |  5.8594 | 283.33 KB |        1.00 |
-|                           |                      |              |            |            |       |         |         |           |             |
-| VwSalesByCategoryContains |             .NET 6.0 |     Firebird | 1,332.5 μs | 1,339.3 μs |  0.64 | 23.4375 |  5.8594 | 413.06 KB |        1.05 |
-| VwSalesByCategoryContains |             .NET 7.0 |     Firebird | 1,157.9 μs | 1,157.9 μs |  0.55 | 21.4844 |  3.9063 | 375.27 KB |        0.95 |
-| VwSalesByCategoryContains |        .NET Core 3.1 |     Firebird | 1,576.3 μs | 1,645.9 μs |  0.75 | 23.4375 |  3.9063 | 413.11 KB |        1.05 |
-| VwSalesByCategoryContains | .NET Framework 4.7.2 |     Firebird | 2,093.7 μs | 2,078.0 μs |  1.00 | 62.5000 | 11.7188 | 394.42 KB |        1.00 |
+|                    Method |              Runtime |       CurrentOptions |       Mean |     Median | Ratio |    Gen0 | Allocated | Alloc Ratio |
+|-------------------------- |--------------------- |--------------------- |-----------:|-----------:|------:|--------:|----------:|------------:|
+|             VwSalesByYear |             .NET 6.0 | LinqToDB.DataOptions |   548.6 μs |   591.6 μs |  0.66 |  3.9063 |  71.82 KB |        0.79 |
+|             VwSalesByYear |             .NET 6.0 | LinqToDB.DataOptions |   543.4 μs |   579.4 μs |  0.65 |  3.9063 |  72.07 KB |        0.79 |
+|             VwSalesByYear |             .NET 7.0 | LinqToDB.DataOptions |   376.6 μs |   404.1 μs |  0.45 |  2.9297 |  48.43 KB |        0.53 |
+|             VwSalesByYear |             .NET 7.0 | LinqToDB.DataOptions |   410.3 μs |   423.5 μs |  0.49 |  2.9297 |  49.73 KB |        0.55 |
+|             VwSalesByYear |        .NET Core 3.1 | LinqToDB.DataOptions |   735.2 μs |   753.0 μs |  0.88 |  3.9063 |  72.26 KB |        0.79 |
+|             VwSalesByYear |        .NET Core 3.1 | LinqToDB.DataOptions |   729.3 μs |   789.5 μs |  0.87 |  3.9063 |  72.01 KB |        0.79 |
+|             VwSalesByYear | .NET Framework 4.7.2 | LinqToDB.DataOptions |   876.2 μs |   822.7 μs |  1.00 | 13.6719 |  91.03 KB |        1.00 |
+|             VwSalesByYear | .NET Framework 4.7.2 | LinqToDB.DataOptions |   895.0 μs |   916.7 μs |  1.07 | 13.6719 |  90.75 KB |        1.00 |
+|                           |                      |                      |            |            |       |         |           |             |
+|     VwSalesByYearMutation |             .NET 6.0 | LinqToDB.DataOptions |   970.3 μs | 1,021.0 μs |  0.75 |  5.8594 | 112.67 KB |        0.83 |
+|     VwSalesByYearMutation |             .NET 6.0 | LinqToDB.DataOptions |   862.7 μs |   919.9 μs |  0.66 |  5.8594 | 110.14 KB |        0.82 |
+|     VwSalesByYearMutation |             .NET 7.0 | LinqToDB.DataOptions |   697.6 μs |   744.1 μs |  0.53 |  3.9063 |  85.41 KB |        0.63 |
+|     VwSalesByYearMutation |             .NET 7.0 | LinqToDB.DataOptions |   756.8 μs |   809.6 μs |  0.58 |  4.8828 |  88.88 KB |        0.66 |
+|     VwSalesByYearMutation |        .NET Core 3.1 | LinqToDB.DataOptions | 1,193.2 μs | 1,257.5 μs |  0.92 |  5.8594 | 111.29 KB |        0.82 |
+|     VwSalesByYearMutation |        .NET Core 3.1 | LinqToDB.DataOptions | 1,242.8 μs | 1,331.3 μs |  0.96 |  5.8594 | 113.81 KB |        0.84 |
+|     VwSalesByYearMutation | .NET Framework 4.7.2 | LinqToDB.DataOptions | 1,360.4 μs | 1,409.6 μs |  1.00 | 21.4844 | 135.02 KB |        1.00 |
+|     VwSalesByYearMutation | .NET Framework 4.7.2 | LinqToDB.DataOptions | 1,268.8 μs | 1,345.8 μs |  0.97 | 21.4844 | 132.08 KB |        0.98 |
+|                           |                      |                      |            |            |       |         |           |             |
+| VwSalesByCategoryContains |             .NET 6.0 | LinqToDB.DataOptions | 1,291.7 μs | 1,303.4 μs |  0.60 |  7.8125 | 152.64 KB |        0.62 |
+| VwSalesByCategoryContains |             .NET 6.0 | LinqToDB.DataOptions | 1,786.4 μs | 1,876.4 μs |  0.83 | 11.7188 | 214.54 KB |        0.87 |
+| VwSalesByCategoryContains |             .NET 7.0 | LinqToDB.DataOptions | 1,628.3 μs | 1,767.7 μs |  0.76 |  7.8125 |    184 KB |        0.75 |
+| VwSalesByCategoryContains |             .NET 7.0 | LinqToDB.DataOptions | 1,020.7 μs |   990.1 μs |  0.47 |  3.9063 |  121.8 KB |        0.49 |
+| VwSalesByCategoryContains |        .NET Core 3.1 | LinqToDB.DataOptions | 1,793.3 μs | 1,931.0 μs |  0.84 |  7.8125 | 155.76 KB |        0.63 |
+| VwSalesByCategoryContains |        .NET Core 3.1 | LinqToDB.DataOptions | 2,476.5 μs | 2,656.1 μs |  1.16 | 11.7188 | 216.65 KB |        0.88 |
+| VwSalesByCategoryContains | .NET Framework 4.7.2 | LinqToDB.DataOptions | 2,289.7 μs | 2,410.2 μs |  1.00 | 39.0625 | 246.81 KB |        1.00 |
+| VwSalesByCategoryContains | .NET Framework 4.7.2 | LinqToDB.DataOptions | 1,932.4 μs | 2,049.1 μs |  0.88 | 29.2969 | 184.97 KB |        0.75 |

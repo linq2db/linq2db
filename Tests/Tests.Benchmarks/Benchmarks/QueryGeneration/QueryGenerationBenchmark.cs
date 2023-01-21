@@ -47,7 +47,7 @@ namespace LinqToDB.Benchmarks.Benchmarks.QueryGeneration
 		*/
 		}
 
-		public DataOptions[]? Options;
+		public DataOptions[]? Options { get; set; }
 
 		[ParamsSource(nameof(Options))]
 		public DataOptions CurrentOptions { get; set; } = default!;

@@ -20,11 +20,11 @@ namespace LinqToDB.Mapping
 			return _mappingSchema.GenerateID();
 		}
 
-		public override void ResetID(bool noThrow = false)
+		public override void ResetID()
 		{
-			if (_isLocked && !noThrow)
+			if (_isLocked)
 				throw new LinqToDBException($"MappingSchema '{_mappingSchema.GetType()}' is locked.");
-			base.ResetID(noThrow);
+			base.ResetID();
 		}
 	}
 }

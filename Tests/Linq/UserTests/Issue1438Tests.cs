@@ -57,17 +57,19 @@ namespace Tests.UserTests
 			var provider = PostgreSQLTools.GetDataProvider(PostgreSQLVersion.v95);
 			var cs       = DataConnection.GetConnectionString(context);
 
+			var ms = new MappingSchema();
+			ms.GetFluentMappingBuilder()
+				.Entity<Client>()
+					.HasTableName("Issue1438")
+					.Property(x => x.Id)
+						.IsPrimaryKey()
+						.IsIdentity()
+				.Build();
+
 			using (var cn = new NpgsqlConnection(cs))
 			using (var db = new DataConnection(provider, cn))
 			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Client>()
-						.HasTableName("Issue1438")
-						.Property(x => x.Id)
-							.IsPrimaryKey()
-							.IsIdentity()
-					.Build();
-
+				db.AddMappingSchema(ms);
 				using (var tbl = db.CreateLocalTable<Client>())
 				{
 					var id = db.InsertWithInt32Identity(new Client()

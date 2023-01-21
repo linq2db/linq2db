@@ -92,14 +92,14 @@ namespace LinqToDB.Benchmarks
 			//	return;
 			//}
 			//TestConcurrent();
-			VwSalesByCategoryContainsPerf();
-			return;
+			//VwSalesByCategoryContainsPerf();
+			//return;
 
-			//BenchmarkSwitcher
-			//	.FromAssembly(typeof(Program).Assembly)
-			//	.Run(
-			//		args.Length > 0 ? args : new[] { "--filter=*" },
-			//		Config.Instance);
+			BenchmarkSwitcher
+				.FromAssembly(typeof(Program).Assembly)
+				.Run(
+					args.Length > 0 ? args : new[] { "--filter=*" },
+					Config.Instance);
 		}
 
 		#region Concurrent

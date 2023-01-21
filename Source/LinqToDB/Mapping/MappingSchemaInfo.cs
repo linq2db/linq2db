@@ -46,10 +46,7 @@ namespace LinqToDB.Mapping
 			return _defaultValues.TryGetValue(type, out var o) ? Option<object?>.Some(o) : Option<object?>.None;
 		}
 
-		/// <param name="noThrow">When <c>true</c>, don't raise exception for locked schema.
-		/// Must be used only when default value calculated without schema change (lazy calculation).
-		/// E.g. when default enum value calculated.</param>
-		public void SetDefaultValue(Type type, object? value, bool noThrow = false)
+		public void SetDefaultValue(Type type, object? value, bool resetId = true)
 		{
 			if (_defaultValues == null)
 				lock (this)
@@ -57,7 +54,8 @@ namespace LinqToDB.Mapping
 
 			_defaultValues[type] = value;
 
-			ResetID(noThrow);
+			if (resetId)
+				ResetID();
 		}
 
 		#endregion
@@ -74,10 +72,7 @@ namespace LinqToDB.Mapping
 			return _canBeNull.TryGetValue(type, out var o) ? Option<bool>.Some(o) : Option<bool>.None;
 		}
 
-		/// <param name="noThrow">When <c>true</c>, don't raise exception for locked schema.
-		/// Must be used only when default value calculated without schema change (lazy calculation).
-		/// E.g. when enum nullability calculated.</param>
-		public void SetCanBeNull(Type type, bool value, bool noThrow = false)
+		public void SetCanBeNull(Type type, bool value, bool resetId = true)
 		{
 			if (_canBeNull == null)
 				lock (this)
@@ -85,7 +80,8 @@ namespace LinqToDB.Mapping
 
 			_canBeNull[type] = value;
 
-			ResetID(noThrow);
+			if (resetId)
+				ResetID();
 		}
 
 		#endregion
@@ -152,12 +148,13 @@ namespace LinqToDB.Mapping
 
 		ConvertInfo? _convertInfo;
 
-		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr)
+		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr, bool resetId = true)
 		{
 			_convertInfo ??= new ();
 			_convertInfo.Set(from, to, expr);
 
-			ResetID();
+			if (resetId)
+				ResetID();
 		}
 
 		public void SetConvertInfo(Type from, Type to, ConvertInfo.LambdaInfo expr)
@@ -300,7 +297,7 @@ namespace LinqToDB.Mapping
 
 		internal bool HasConfigurationID => _configurationID != null;
 
-		public virtual void ResetID(bool noThrow = false)
+		public virtual void ResetID()
 		{
 			_configurationID = null;
 		}

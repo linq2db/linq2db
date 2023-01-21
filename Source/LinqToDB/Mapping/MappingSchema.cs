@@ -219,7 +219,10 @@ namespace LinqToDB.Mapping
 
 					if (value != null)
 					{
-						SetDefaultValueSafe(type, value);
+						lock (_syncRoot)
+						{
+							Schemas[0].SetDefaultValue(type, value, resetId: false);
+						}
 						return value;
 					}
 				}
@@ -240,15 +243,6 @@ namespace LinqToDB.Mapping
 			{
 				Schemas[0].SetDefaultValue(type, value);
 				ResetID();
-			}
-		}
-
-		private void SetDefaultValueSafe(Type type, object? value)
-		{
-			lock (_syncRoot)
-			{
-				Schemas[0].SetDefaultValue(type, value, noThrow: true);
-				ResetID(true);
 			}
 		}
 
@@ -284,7 +278,10 @@ namespace LinqToDB.Mapping
 
 					if (value != null)
 					{
-						SetCanBeNullSafe(type, true);
+						lock (_syncRoot)
+						{
+							Schemas[0].SetCanBeNull(type, true, resetId: false);
+						}
 						return true;
 					}
 				}
@@ -304,15 +301,6 @@ namespace LinqToDB.Mapping
 			{
 				Schemas[0].SetCanBeNull(type, value);
 				ResetID();
-			}
-		}
-
-		public void SetCanBeNullSafe(Type type, bool value)
-		{
-			lock (_syncRoot)
-			{
-				Schemas[0].SetCanBeNull(type, value, true);
-				ResetID(true);
 			}
 		}
 
@@ -480,8 +468,7 @@ namespace LinqToDB.Mapping
 
 				lock (_syncRoot)
 				{
-					Schemas[0].SetConvertInfo(from, to, new (li.CheckNullLambda, null, l, li.IsSchemaSpecific));
-					ResetID();
+					Schemas[0].SetConvertInfo(from, to, new (li.CheckNullLambda, null, l, li.IsSchemaSpecific), resetId: false);
 				}
 
 				return l;
@@ -1245,7 +1232,7 @@ namespace LinqToDB.Mapping
 			return idBuilder.CreateID();
 		}
 
-		internal void ResetID(bool noThrow = false)
+		internal void ResetID()
 		{
 #if DEBUG
 			if (!IsLockable)
@@ -1257,7 +1244,7 @@ namespace LinqToDB.Mapping
 #endif
 
 			_configurationID = null;
-			Schemas[0].ResetID(noThrow);
+			Schemas[0].ResetID();
 		}
 
 		private string[]? _configurationList;
@@ -1373,7 +1360,7 @@ namespace LinqToDB.Mapping
 					return Default.GenerateID();
 				}
 
-				public override void ResetID(bool noThrow = false)
+				public override void ResetID()
 				{
 				}
 			}
