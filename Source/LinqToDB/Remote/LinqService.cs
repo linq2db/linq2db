@@ -32,14 +32,14 @@ namespace LinqToDB.Remote
 			{
 				_mappingSchema = value;
 				_serializationMappingSchema = value != null
-					? MappingSchema.CombineSchemas(value, Remote.SerializationMappingSchema.Instance)
+					? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, value)
 					: Remote.SerializationMappingSchema.Instance;
 			}
 		}
 
 		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??=
 			_mappingSchema != null
-				? MappingSchema.CombineSchemas(_mappingSchema, Remote.SerializationMappingSchema.Instance)
+				? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, _mappingSchema)
 				: Remote.SerializationMappingSchema.Instance;
 
 		public static Func<string, Type?> TypeResolver = _ => null;

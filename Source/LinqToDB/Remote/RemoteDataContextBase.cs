@@ -151,12 +151,12 @@ namespace LinqToDB.Remote
 			set
 			{
 				_mappingSchema = value;
-				_serializationMappingSchema = MappingSchema.CombineSchemas(MappingSchema, Remote.SerializationMappingSchema.Instance);
+				_serializationMappingSchema = MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
 			}
 		}
 
 		private  MappingSchema? _serializationMappingSchema;
-		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(MappingSchema, Remote.SerializationMappingSchema.Instance);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }

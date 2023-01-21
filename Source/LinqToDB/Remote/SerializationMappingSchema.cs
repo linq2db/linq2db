@@ -10,7 +10,7 @@
 	/// Mapping schema, that defines remote context values de-/serialization converters.
 	/// Contains mappings between basic data types and <see cref="string"/>.
 	/// </summary>
-	internal sealed class SerializationMappingSchema : MappingSchema
+	internal sealed class SerializationMappingSchema : LockedMappingSchema
 	{
 		public static readonly SerializationMappingSchema Instance = new();
 
