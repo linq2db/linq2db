@@ -1,7 +1,6 @@
 # LINQ to DB ASP.NET Core<!-- omit in toc -->
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
-[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db)
 
 Main [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 

@@ -1,7 +1,6 @@
 # LINQ to DB
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
-[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db)
 
 > Starting from version 4 we obsolete T4 nugets in favor of new command-line scaffolding tool: [linq2db.cli](https://www.nuget.org/packages/linq2db.cli). Consider migration as we don't plan to introduce new features and fixes to T4 functionality.
 

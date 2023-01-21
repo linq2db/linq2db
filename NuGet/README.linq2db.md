@@ -1,7 +1,6 @@
 # LINQ to DB<!-- omit in toc -->
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
-[![Follow @linq2db](https://img.shields.io/twitter/follow/linq2db.svg)](https://twitter.com/linq2db)
 
 - [Standout Features](#standout-features)
   - [Related Linq To DB and 3rd-party projects](#related-linq-to-db-and-3rd-party-projects)
@@ -9,6 +8,7 @@
   - [Passing Into Constructor](#passing-into-constructor)
   - [Using Config File (.NET Framework)](#using-config-file-net-framework)
   - [Using Connection String Settings Provider](#using-connection-string-settings-provider)
+  - [Use with ASP.NET Core](#use-with-aspnet-core)
 - [Define **POCO** class](#define-poco-class)
   - [Configuration using mapping attributes](#configuration-using-mapping-attributes)
   - [Fluent Configuration](#fluent-configuration)
