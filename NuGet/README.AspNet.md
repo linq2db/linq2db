@@ -45,7 +45,7 @@ using LinqToDB.Data;
 
 public class AppDataConnection: DataConnection
 {
-    public AppDataConnection(LinqToDBConnectionOptions<AppDataConnection> options)
+    public AppDataConnection(DataOptions<AppDataConnection> options)
         :base(options)
     {
 
@@ -57,7 +57,7 @@ public class AppDataConnection: DataConnection
 > Note here our `AppDataConnection` inherits from `LinqToDB.Data.DataConnection` which is the base class for the `Linq To DB` connection.
 >
 > [!TIP]  
->a public constructor that accepts `LinqToDBConnectionOptions<AppDataConnection>` and passes the options on to the base constructor is required.
+>a public constructor that accepts `DataOptions<AppDataConnection>` and passes the options on to the base constructor is required.
 
 ### Add Connection String
 
@@ -94,25 +94,21 @@ public class Startup
     {
         //...
         //using LinqToDB.AspNet
-        services.AddLinqToDBContext<AppDataConnection>((provider, options) => {
-            options
-            //will configure the AppDataConnection to use
-            //sqite with the provided connection string
-            //there are methods for each supported database
-            .UseSQLite(Configuration.GetConnectionString("Default"))
-            //default logging will log everything using the ILoggerFactory configured in the provider
-            .UseDefaultLogging(provider);
-        });
+        services.AddLinqToDBContext<AppDataConnection>((provider, options)
+            => options
+                //will configure the AppDataConnection to use
+                //sqite with the provided connection string
+                //there are methods for each supported database
+                .UseSQLite(Configuration.GetConnectionString("Default"))
+                //default logging will log everything using the ILoggerFactory configured in the provider
+                .UseDefaultLogging(provider);
         //...
     }
 }
 ```
 
 > [!TIP]  
-> There's plenty of other configuration options available, if you are familiar with `LINQ To DB` already, you can convert your existing application over to use the new `LinqToDBConnectionOptions` class as every configuration method is supported
->
-> [!TIP]  
-> Note, only `DataConnection` supports `LinqToDBConnectionOptions`. `DataContext` is not yet supported.
+> There's plenty of other configuration options available, if you are familiar with `LINQ To DB` already, you can convert your existing application over to use the new `DataOptions` class as every configuration method is supported
 >
 > [!TIP]  
 > Use `AddLinqToDBContext<TContext, TContextImplementation>` if you would like to resolve an interface or base class instead of the concrete class in your controllers
@@ -130,8 +126,8 @@ using LinqToDB.Mapping;
 public class Person
 {
     [PrimaryKey]
-    public Guid Id { get; set; } = Guid.NewGuid();
-    public string Name { get; set; }
+    public Guid     Id       { get; set; } = Guid.NewGuid();
+    public string   Name     { get; set; }
     public DateTime Birthday { get; set; }
 }
 ```
@@ -239,17 +235,16 @@ public class Startup
     {
         //...
         //using LinqToDB.AspNet
-        services.AddLinqToDBContext<AppDataConnection>((provider, options) => {
-            options
-            //will configure the AppDataConnection to use
-            //SqlServer with the provided connection string
-            //there are methods for each supported database
-            .UseSqlServer(Configuration.GetConnectionString("Default"))
+        services.AddLinqToDBContext<AppDataConnection>((provider, options)
+            => options
+                //will configure the AppDataConnection to use
+                //SqlServer with the provided connection string
+                //there are methods for each supported database
+                .UseSqlServer(Configuration.GetConnectionString("Default"))
 
-            //default logging will log everything using
-            //an ILoggerFactory configured in the provider
-            .UseDefaultLogging(provider);
-        });
+                //default logging will log everything using
+                //an ILoggerFactory configured in the provider
+                .UseDefaultLogging(provider);
         //...
     }
 }
@@ -262,7 +257,7 @@ You'll need to update your data connection to accept the new options class too.
 ```C#
 public class AppDataConnection: DataConnection
 {
-    public AppDataConnection(LinqToDBConnectionOptions<AppDataConnection> options)
+    public AppDataConnection(DataOptions<AppDataConnection> options)
         :base(options)
     {
 
@@ -270,6 +265,4 @@ public class AppDataConnection: DataConnection
 }
 ```
 
-`DataConnection` will used the options passed into the base constructor to setup the connection.
-> [!NOTE]  
-> `DataConnection` supports `LinqToDBConnectionOptions`. However `DataContext` is not yet supported.
+`DataConnection` will use the options passed into the base constructor to setup the connection.

@@ -7,7 +7,6 @@
 
 This package provides required server and client classes to query database from remote client using [Linq To DB](https://github.com/linq2db/linq2db) library over gRPC transport.
 
-
 You can find working example [here](https://github.com/linq2db/linq2db/tree/master/Examples\Remote\Grpc).
 
 ## Other Transports

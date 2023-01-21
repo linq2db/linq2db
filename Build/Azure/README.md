@@ -118,7 +118,6 @@ Legend:
 ### Notes
 
 1. `TestNoopProvider` is a fake test provider to perform tests without database dependencies
-5. Northwind FTS SQL Server tests not enabled yet, as we need SQL Server images with full-text search included
 
 ### Test providers
 

@@ -12,6 +12,7 @@ You can read about T4 templates options [here](https://linq2db.github.io/article
 ## Important
 
 Don't use this package if you don't need database scaffolding functionality. Instead of this package, use:
+
 1. main [linq2db](https://www.nuget.org/packages/linq2db) package
 2. database provider nuget (see list of supported providers below)
 
@@ -62,7 +63,7 @@ Don't use this package if you don't need database scaffolding functionality. Ins
 
 ## Obsoletion Note
 
-T4 templates obsoleted starting from `Linq To DB` 4.0.0` and replaced with new scaffolding utility. We still release newer versions of templates to maintain compatibility with new `LinqToDB` releases but don't actively develop new features for them.
+T4 templates obsoleted starting from `Linq To DB` 4.0.0 and replaced with new scaffolding utility. We still release newer versions of templates to maintain compatibility with new `LinqToDB` releases but don't actively develop new features for them.
 
 There are multiple reasons for it:
 
@@ -71,4 +72,4 @@ There are multiple reasons for it:
 - T4 host use x86 process for Visual Studio 2019- and x64 process for Visual Studio 2022+. This creates issues with native providers as they are platform-dependent (ODBC and OleDb providers, various native ADO.NET providers).
 - It's very hard to maintain big code generation framework, written in T4 templates.
 
-Those are just several most major issues current T4 templates have.
+Those are just several most major issues T4 templates have.
