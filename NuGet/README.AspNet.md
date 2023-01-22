@@ -100,7 +100,7 @@ public class Startup
                 //there are methods for each supported database
                 .UseSQLite(Configuration.GetConnectionString("Default"))
                 //default logging will log everything using the ILoggerFactory configured in the provider
-                .UseDefaultLogging(provider);
+                .UseDefaultLogging(provider));
         //...
     }
 }
@@ -243,7 +243,7 @@ public class Startup
 
                 //default logging will log everything using
                 //an ILoggerFactory configured in the provider
-                .UseDefaultLogging(provider);
+                .UseDefaultLogging(provider));
         //...
     }
 }
