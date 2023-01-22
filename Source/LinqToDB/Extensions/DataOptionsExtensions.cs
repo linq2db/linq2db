@@ -208,7 +208,7 @@ namespace LinqToDB
 		/// If <c>true</c>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
 		/// Otherwise <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
 		/// It is not recommended to enable this option as it has performance implications.
-		/// Proper approach is to create single <see cref="MappingSchema"/> instance once, configure mappings for it and use this <see cref="Mapping.MappingSchema"/> instance for all context instances.
+		/// Proper approach is to create single <see cref="MappingSchema"/> instance once, configure mappings for it and use this <see cref="MappingSchema"/> instance for all context instances.
 		/// </summary>
 		public static LinqOptions WithEnableContextSchemaEdit(this LinqOptions options, bool enableContextSchemaEdit)
 		{
@@ -404,7 +404,7 @@ namespace LinqToDB
 		/// If <c>true</c>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
 		/// Otherwise <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
 		/// It is not recommended to enable this option as it has performance implications.
-		/// Proper approach is to create single <see cref="MappingSchema"/> instance once, configure mappings for it and use this <see cref="Mapping.MappingSchema"/> instance for all context instances.
+		/// Proper approach is to create single <see cref="MappingSchema"/> instance once, configure mappings for it and use this <see cref="MappingSchema"/> instance for all context instances.
 		/// </summary>
 		public static DataOptions UseEnableContextSchemaEdit(this DataOptions options, bool enableContextSchemaEdit)
 		{
@@ -482,7 +482,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Sets ConnectionFactory option.
 		/// </summary>
-		public static ConnectionOptions WithConnectionFactory(this ConnectionOptions options, Func<DbConnection> connectionFactory)
+		public static ConnectionOptions WithConnectionFactory(this ConnectionOptions options, Func<DataOptions, DbConnection> connectionFactory)
 		{
 			return options with { ConnectionFactory = connectionFactory };
 		}
@@ -608,7 +608,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Defines connection factory to use with DataOptions.
 		/// </summary>
-		public static DataOptions UseConnectionFactory(this DataOptions options, Func<DbConnection> connectionFactory)
+		public static DataOptions UseConnectionFactory(this DataOptions options, Func<DataOptions, DbConnection> connectionFactory)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionFactory = connectionFactory });
 		}
@@ -616,7 +616,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Defines data provider and connection factory to use with DataOptions.
 		/// </summary>
-		public static DataOptions UseConnectionFactory(this DataOptions options, IDataProvider dataProvider, Func<DbConnection> connectionFactory)
+		public static DataOptions UseConnectionFactory(this DataOptions options, IDataProvider dataProvider, Func<DataOptions, DbConnection> connectionFactory)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, ConnectionFactory = connectionFactory });
 		}

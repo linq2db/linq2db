@@ -74,13 +74,10 @@ Use connection factory to setup SqlClient-specific authentication token:
 
 ```cs
 var options = new DataOptions()
-  .UseConnectionFactory(
-    SqlServerTools.GetDataProvider(
-        SqlServerVersion.v2017,
-        SqlServerProvider.MicrosoftDataSqlClient),
-    () =>
+  .UseSqlServer(connectionString, SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient)
+  .UseConnectionFactory(options =>
     {
-        var cn = new SqlConnection(connectionString);
+        var cn = new SqlConnection(options.ConnectionOptions.ConnectionString);
         cn.AccessToken = accessToken;
         return cn;
     });
@@ -700,21 +697,18 @@ public class DbDataContext : DataConnection
 #else
   public DbDataContext()
       : base(
-          // get data provider instance using
-          // <DB_NAME>Tools.GetDataProvider() helpers
-          // In this case we use SQL Server provider
-          SqlServerTools.GetDataProvider(SqlServerVersion.v2012),
-          GetConnection())
+          new DataOptions()
+            .UseSqlServer(connectionString, SqlServerVersion.v2012)
+            .UseConnectionFactory(GetConnection)
+            .UseInterceptor(new UnwrapProfilerInterceptor()))
   {
-    AddInterceptor(new UnwrapProfilerInterceptor());
   }
 
   // wrap connection into profiler wrapper
-  private static DbConnection GetConnection()
+  private static DbConnection GetConnection(DataOptions options)
   {
      // create provider-specific connection instance. SqlConnection in our case
-     var dbConnection = new SqlConnection(
-         @"Server=.\SQL;Database=Northwind;Trusted_Connection=True;Enlist=False;");
+     var dbConnection = new SqlConnection(options.ConnectionOptions.ConnectionString);
 
      // wrap it by profiler's connection implementation
      return new StackExchange.Profiling.Data.ProfiledDbConnection(

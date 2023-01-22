@@ -34,23 +34,23 @@ namespace LinqToDB.Data
 	/// If <c>true</c>, <see cref="DataConnection"/> will dispose provided connection on own dispose.
 	/// </param>
 	/// <param name="ConnectionFactory">
-	/// Gets connection factory to use with <see cref="DataConnection"/> instance.
+	/// Gets connection factory to use with <see cref="DataConnection"/> instance. Accepts current context <see cref="DataOptions" /> settings.
 	/// </param>
 	/// <param name="DataProviderFactory">
 	/// Gets <see cref="IDataProvider"/> factory to use with <see cref="DataConnection"/> instance.
 	/// </param>
 	public sealed record ConnectionOptions
 	(
-		string?              ConfigurationString = default,
-		string?              ConnectionString    = default,
-		IDataProvider?       DataProvider        = default,
-		string?              ProviderName        = default,
-		MappingSchema?       MappingSchema       = default,
-		DbConnection?        DbConnection        = default,
-		DbTransaction?       DbTransaction       = default,
-		bool                 DisposeConnection   = default,
-		Func<DbConnection>?  ConnectionFactory   = default,
-		Func<IDataProvider>? DataProviderFactory = default
+		string?                           ConfigurationString = default,
+		string?                           ConnectionString    = default,
+		IDataProvider?                    DataProvider        = default,
+		string?                           ProviderName        = default,
+		MappingSchema?                    MappingSchema       = default,
+		DbConnection?                     DbConnection        = default,
+		DbTransaction?                    DbTransaction       = default,
+		bool                              DisposeConnection   = default,
+		Func<DataOptions, DbConnection>? ConnectionFactory    = default,
+		Func<IDataProvider>?             DataProviderFactory  = default
 	)
 		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{

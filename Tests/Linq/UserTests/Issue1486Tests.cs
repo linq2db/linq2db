@@ -38,7 +38,7 @@ namespace Tests.UserTests
 		public class FactoryDataConnection : DataConnection
 		{
 			public FactoryDataConnection(string configuration)
-				: base(GetDataProvider(configuration), () => GetConnection(configuration))
+				: base(GetDataProvider(configuration), _ => GetConnection(configuration))
 			{
 				// to avoid mapper conflict with SequentialAccess test provider
 				AddMappingSchema(new MappingSchema());
