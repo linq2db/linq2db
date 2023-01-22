@@ -537,10 +537,11 @@ namespace Tests.DataProvider
 		public void ParametersInlining([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] bool inline)
 		{
 			Query.ClearCaches();
-			var defaultValue = SqlCeConfiguration.InlineFunctionParameters;
+			var defaultValue = SqlCeOptions.Default.InlineFunctionParameters;
 			try
 			{
-				SqlCeConfiguration.InlineFunctionParameters = inline;
+				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = inline };
+
 				using (var db = GetDataConnection(context))
 				{
 					var values = db.GetTable<TestInline>()
@@ -552,7 +553,7 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				SqlCeConfiguration.InlineFunctionParameters = defaultValue;
+				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = defaultValue };
 			}
 		}
 

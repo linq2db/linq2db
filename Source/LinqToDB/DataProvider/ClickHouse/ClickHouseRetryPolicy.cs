@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// </summary>
 		/// <param name="maxRetryCount"> The maximum number of retry attempts. </param>
 		public ClickHouseRetryPolicy(int maxRetryCount)
-			: this(maxRetryCount, Configuration.RetryPolicy.DefaultMaxDelay, null)
+			: this(maxRetryCount, Configuration.RetryPolicy.DefaultMaxDelay, Configuration.RetryPolicy.DefaultRandomFactor, Configuration.RetryPolicy.DefaultExponentialBase, Configuration.RetryPolicy.DefaultCoefficient, null)
 		{ }
 
 		/// <summary>
@@ -37,12 +37,18 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// </summary>
 		/// <param name="maxRetryCount">The maximum number of retry attempts.</param>
 		/// <param name="maxRetryDelay">The maximum delay in milliseconds between retries.</param>
+		/// <param name="randomFactor">The maximum random factor. </param>
+		/// <param name="exponentialBase">The base for the exponential function used to compute the delay between retries. </param>
+		/// <param name="coefficient">The coefficient for the exponential function used to compute the delay between retries. </param>
 		/// <param name="errorNumbersToAdd">Additional SQL error numbers that should be considered transient.</param>
 		public ClickHouseRetryPolicy(
-			int maxRetryCount,
-			TimeSpan maxRetryDelay,
+			int               maxRetryCount,
+			TimeSpan          maxRetryDelay,
+			double            randomFactor,
+			double            exponentialBase,
+			TimeSpan          coefficient,
 			ICollection<int>? errorNumbersToAdd)
-			: base(maxRetryCount, maxRetryDelay)
+			: base(maxRetryCount, maxRetryDelay, randomFactor, exponentialBase, coefficient)
 		{
 			_additionalErrorNumbers = errorNumbersToAdd;
 		}

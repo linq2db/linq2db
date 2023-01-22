@@ -5,8 +5,8 @@ variables:
   baselines_master: master
   solution: 'linq2db.sln'
   build_configuration: 'Azure'
-  assemblyVersion: 4.4.1
+  assemblyVersion: 5.0.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 4.4.1
+    packageVersion: 5.0.0-preview.2
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 4.4.1
+    packageVersion: 5.0.0

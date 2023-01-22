@@ -39,13 +39,13 @@ namespace LinqToDB.Linq
 
 		internal Query(IDataContext dataContext, Expression? expression)
 		{
-			ContextID               = dataContext.ContextID;
+			ConfigurationID         = dataContext.ConfigurationID;
 			ContextType             = dataContext.GetType();
 			Expression              = expression;
 			MappingSchema           = dataContext.MappingSchema;
-			ConfigurationID         = dataContext.MappingSchema.ConfigurationID;
-			SqlOptimizer            = dataContext.GetSqlOptimizer();
+			SqlOptimizer            = dataContext.GetSqlOptimizer(dataContext.Options);
 			SqlProviderFlags        = dataContext.SqlProviderFlags;
+			DataOptions             = dataContext.Options;
 			InlineParameters        = dataContext.InlineParameters;
 			IsEntityServiceProvided = dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} };
 		}
@@ -54,21 +54,20 @@ namespace LinqToDB.Linq
 
 		#region Compare
 
-		internal readonly int              ContextID;
+		internal readonly int              ConfigurationID;
 		internal readonly Type             ContextType;
 		internal readonly Expression?      Expression;
 		internal readonly MappingSchema    MappingSchema;
-		internal readonly int              ConfigurationID;
 		internal readonly bool             InlineParameters;
 		internal readonly ISqlOptimizer    SqlOptimizer;
 		internal readonly SqlProviderFlags SqlProviderFlags;
+		internal readonly DataOptions      DataOptions;
 		internal readonly bool             IsEntityServiceProvided;
 
 		protected bool Compare(IDataContext dataContext, Expression expr)
 		{
 			return
-				ContextID               == dataContext.ContextID                                                        &&
-				ConfigurationID         == dataContext.MappingSchema.ConfigurationID                                    &&
+				ConfigurationID         == dataContext.ConfigurationID                                                  &&
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
@@ -291,20 +290,20 @@ namespace LinqToDB.Linq
 		{
 			sealed class QueryCacheEntry
 			{
-				public QueryCacheEntry(Query<T> query, QueryFlags flags)
+				public QueryCacheEntry(Query<T> query, QueryFlags queryFlags)
 				{
 					// query doesn't have GetHashCode now, so we cannot precalculate hashcode to speed-up search
-					Query = query;
-					Flags = flags;
+					Query       = query;
+					QueryFlags  = queryFlags;
 				}
 
-				public Query<T>   Query { get; }
-				public QueryFlags Flags { get; }
+				public Query<T>   Query      { get; }
+				public QueryFlags QueryFlags { get; }
 
 				// accepts components to avoid QueryCacheEntry allocation for cached query
-				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags flags)
+				public bool Compare(IDataContext context, Expression queryExpression, QueryFlags queryFlags)
 				{
-					return Flags == flags && Query.Compare(context, queryExpression);
+					return QueryFlags == queryFlags && Query.Compare(context, queryExpression);
 				}
 			}
 
@@ -334,7 +333,7 @@ namespace LinqToDB.Linq
 			const int CacheSize = 100;
 
 			/// <summary>
-			/// Empties LINQ query cache for <typeparamref name="T"/> entity type.
+			/// Empties LINQ query cache.
 			/// </summary>
 			public void Clear()
 			{
@@ -351,7 +350,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Adds query to cache if it is not cached already.
 			/// </summary>
-			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags flags)
+			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags queryFlags, DataOptions dataOptions)
 			{
 				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
@@ -364,12 +363,13 @@ namespace LinqToDB.Linq
 				}
 
 				for (var i = 0; i < cache.Length; i++)
-					if (cache[i].Compare(dataContext, query.Expression!, flags))
+					if (cache[i].Compare(dataContext, query.Expression!, queryFlags))
 						// already added by another thread
 						return;
 
 				lock (_syncCache)
 				{
+					// TODO : IT : check
 					var priorities   = _indexes;
 					var versionsDiff = _version - version;
 
@@ -380,7 +380,7 @@ namespace LinqToDB.Linq
 						// check only added queries, each version could add 1 query to first position, so we
 						// test only first N queries
 						for (var i = 0; i < cache.Length && i < versionsDiff; i++)
-							if (cache[i].Compare(dataContext, query.Expression!, flags))
+							if (cache[i].Compare(dataContext, query.Expression!, queryFlags))
 								// already added by another thread
 								return;
 					}
@@ -390,7 +390,7 @@ namespace LinqToDB.Linq
 					var newCache      = new QueryCacheEntry[cache.Length == CacheSize ? CacheSize : cache.Length + 1];
 					var newPriorities = new int[newCache.Length];
 
-					newCache[0]      = new QueryCacheEntry(query, flags);
+					newCache[0]      = new QueryCacheEntry(query, queryFlags);
 					newPriorities[0] = 0;
 
 					for (var i = 1; i < newCache.Length; i++)
@@ -408,7 +408,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
-			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags flags)
+			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags, DataOptions dataOptions)
 			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;
@@ -430,7 +430,7 @@ namespace LinqToDB.Linq
 						// if we have reordering lock, we can enumerate queries in priority order
 						var idx = allowReordering ? indexes[i] : i;
 
-						if (cache[idx].Compare(dataContext, expr, flags))
+						if (cache[idx].Compare(dataContext, expr, queryFlags))
 						{
 							// do reorder only if it is not blocked and cache wasn't replaced by new one
 							if (i > 0 && version == _version && allowReordering)
@@ -477,7 +477,8 @@ namespace LinqToDB.Linq
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
 			expr = optimizationContext.ExpandExpression(expr);
-			// we need this call for correct processing parameters in ExpressionMethod
+//			// we need this call for correct processing parameters in ExpressionMethod
+//			// TODO: IT breaks performance. All these operations must be cached.
 			expr = optimizationContext.ExposeExpression(expr);
 
 			dependsOnParameters = optimizationContext.IsDependsOnParameters();
@@ -485,18 +486,20 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-			if (Configuration.Linq.DisableQueryCache)
+			var dataOptions = dataContext.Options;
+
+			if (dataOptions.LinqOptions.DisableQueryCache)
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
-			var flags = dataContext.GetQueryFlags();
-			var query = _queryCache.Find(dataContext, expr, flags);
+			var queryFlags = dataContext.GetQueryFlags();
+			var query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
 
 			if (query == null)
 			{
 				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 				if (!query.DoNotCache)
-					_queryCache.TryAdd(dataContext, query, flags);
+					_queryCache.TryAdd(dataContext, query, queryFlags, dataOptions);
 			}
 
 			return query;
@@ -504,7 +507,8 @@ namespace LinqToDB.Linq
 
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
 		{
-			if (Configuration.Linq.GenerateExpressionTest)
+			var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
+			if (linqOptions.GenerateExpressionTest)
 			{
 				var testFile = new ExpressionTestGenerator().GenerateSource(expr);
 
@@ -523,10 +527,11 @@ namespace LinqToDB.Linq
 			}
 			catch (Exception)
 			{
-				if (!Configuration.Linq.GenerateExpressionTest)
+				if (!linqOptions.GenerateExpressionTest)
 				{
 					dataContext.WriteTraceLine(
-						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.",
+						"To generate test code to diagnose the problem set 'LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true'.\n" +
+						"Or specify LINQ options during 'DataContextOptions' building 'options.UseGenerateExpressionTest(true)'",
 						dataContext.GetTraceSwitch().DisplayName,
 						TraceLevel.Error);
 				}
@@ -559,11 +564,11 @@ namespace LinqToDB.Linq
 	sealed class ParameterAccessor
 	{
 		public ParameterAccessor(
-			Expression                             expression,
+			Expression                                           expression,
 			Func<Expression,IDataContext?,object?[]?,object?>    valueAccessor,
 			Func<Expression,IDataContext?,object?[]?,object?>    originalAccessor,
 			Func<Expression,IDataContext?,object?[]?,DbDataType> dbDataTypeAccessor,
-			SqlParameter                           sqlParameter)
+			SqlParameter                                         sqlParameter)
 		{
 			Expression         = expression;
 			ValueAccessor      = valueAccessor;
@@ -572,11 +577,11 @@ namespace LinqToDB.Linq
 			SqlParameter       = sqlParameter;
 		}
 
-		public          Expression                                           Expression;
-		public readonly Func<Expression,IDataContext?,object?[]?,object?>    ValueAccessor;
-		public readonly Func<Expression,IDataContext?,object?[]?,object?>    OriginalAccessor;
-		public readonly Func<Expression,IDataContext?,object?[]?,DbDataType> DbDataTypeAccessor;
-		public readonly SqlParameter                                         SqlParameter;
+		public          Expression                                            Expression;
+		public readonly Func<Expression,IDataContext?,object?[]?,object?>     ValueAccessor;
+		public readonly Func<Expression,IDataContext?,object?[]?,object?>     OriginalAccessor;
+		public readonly Func<Expression,IDataContext?,object?[]?,DbDataType>  DbDataTypeAccessor;
+		public readonly SqlParameter                                          SqlParameter;
 #if DEBUG
 		public Expression<Func<Expression,IDataContext?,object?[]?,object?>>? AccessorExpr;
 #endif

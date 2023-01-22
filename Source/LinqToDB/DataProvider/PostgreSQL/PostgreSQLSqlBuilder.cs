@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
@@ -16,10 +15,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using SqlProvider;
 	using SqlQuery;
 
-	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder
+	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder<PostgreSQLOptions>
 	{
-		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -141,10 +140,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);
 		}
 
-		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
+		[Obsolete("Use PostgreSQLOptions.Default.IdentifierQuoteMode instead.")]
+		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode
+		{
+			get => PostgreSQLOptions.Default.IdentifierQuoteMode;
+			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { IdentifierQuoteMode = value };
+		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
+			// TODO: implement better quotation logic
+			// E.g. we currently don't handle quotes inside identifier
+			// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField     :
@@ -155,14 +162,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
 				case ConvertType.SequenceName         :
-					if (IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
+					if (ProviderOptions.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
-						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+						if (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
 							|| IsReserved(value)
-							|| value.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
+							|| value.Any(c => char.IsWhiteSpace(c)
+							|| ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
 
@@ -241,7 +249,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					var sb = new StringBuilder();
 					sb.Append("nextval(");
-					MappingSchema.ConvertToSqlValue(sb, null, BuildObjectName(new StringBuilder(), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
+					MappingSchema.ConvertToSqlValue(sb, null, DataOptions, BuildObjectName(new (), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
 					sb.Append(')');
 					return new SqlExpression(sb.ToString(), Precedence.Primary);
 				}

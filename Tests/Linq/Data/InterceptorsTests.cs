@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
@@ -279,12 +278,12 @@ namespace Tests.Data
 			var interceptor1 = new TestCommandInterceptor();
 			var interceptor2 = new TestCommandInterceptor();
 
-			var options = new LinqToDBConnectionOptionsBuilder()
+			var builder = new DataOptions()
 				.UseConfigurationString(context)
-				.WithInterceptor(interceptor1)
-				.WithInterceptor(interceptor2);
+				.UseInterceptor(interceptor1)
+				.UseInterceptor(interceptor2);
 
-			using (var db = new DataConnection(options.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				db.OnNextCommandInitialized((args, command) =>
 				{
@@ -331,12 +330,12 @@ namespace Tests.Data
 			var interceptor1 = new TestCommandInterceptor();
 			var interceptor2 = new TestCommandInterceptor();
 
-			var options = new LinqToDBConnectionOptionsBuilder()
+			var builder = new DataOptions()
 				.UseConfigurationString(context)
-				.WithInterceptor(interceptor1)
-				.WithInterceptor(interceptor2);
+				.UseInterceptor(interceptor1)
+				.UseInterceptor(interceptor2);
 
-			using (var db = new DataContext(options.Build()))
+			using (var db = new DataContext(builder))
 			{
 				db.CloseAfterUse = closeAfterUse;
 

@@ -7,7 +7,6 @@ namespace LinqToDB.DataProvider.Sybase
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	sealed class SybaseSqlOptimizer : BasicSqlOptimizer
 	{
@@ -15,7 +14,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			return statement.QueryType switch
 			{

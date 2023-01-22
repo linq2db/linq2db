@@ -115,8 +115,8 @@ namespace LinqToDB.DataProvider
 		}
 
 		protected abstract DbConnection  CreateConnectionInternal (string connectionString);
-		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
-		public    abstract ISqlOptimizer GetSqlOptimizer ();
+		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema   mappingSchema, DataOptions dataOptions);
+		public    abstract ISqlOptimizer GetSqlOptimizer (DataOptions     dataOptions);
 
 		public virtual DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
@@ -322,7 +322,7 @@ namespace LinqToDB.DataProvider
 			return false;
 		}
 
-		public virtual bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public virtual bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
 			var st = reader.GetSchemaTable();
 			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
@@ -458,25 +458,25 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
+			return new BasicBulkCopy().BulkCopy(options.BulkCopyOptions.BulkCopyType, table, options, source);
 		}
 
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 
 #if NATIVE_ASYNC
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 #endif
 

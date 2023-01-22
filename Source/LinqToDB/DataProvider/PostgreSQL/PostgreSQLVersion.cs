@@ -6,6 +6,10 @@
 	public enum PostgreSQLVersion
 	{
 		/// <summary>
+		/// Use automatic detection of dialect by asking PostgreSQL server for version.
+		/// </summary>
+		AutoDetect,
+		/// <summary>
 		/// PostgreSQL 9.2+ SQL dialect.
 		/// </summary>
 		v92,

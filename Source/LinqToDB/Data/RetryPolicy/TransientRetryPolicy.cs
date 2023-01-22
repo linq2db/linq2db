@@ -26,7 +26,7 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		/// <param name="maxRetryCount"> The maximum number of retry attempts. </param>
 		public TransientRetryPolicy(int maxRetryCount)
-			: this(maxRetryCount, Configuration.RetryPolicy.DefaultMaxDelay)
+			: this(maxRetryCount, Configuration.RetryPolicy.DefaultMaxDelay, Configuration.RetryPolicy.DefaultRandomFactor, Configuration.RetryPolicy.DefaultExponentialBase, Configuration.RetryPolicy.DefaultCoefficient)
 		{ }
 
 		/// <summary>
@@ -34,10 +34,16 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		/// <param name="maxRetryCount">The maximum number of retry attempts.</param>
 		/// <param name="maxRetryDelay">The maximum delay in milliseconds between retries.</param>
+		/// <param name="randomFactor">The maximum random factor. </param>
+		/// <param name="exponentialBase">The base for the exponential function used to compute the delay between retries. </param>
+		/// <param name="coefficient">The coefficient for the exponential function used to compute the delay between retries. </param>
 		public TransientRetryPolicy(
-			int      maxRetryCount,
-			TimeSpan maxRetryDelay)
-			: base(maxRetryCount, maxRetryDelay)
+			int               maxRetryCount,
+			TimeSpan          maxRetryDelay,
+			double            randomFactor,
+			double            exponentialBase,
+			TimeSpan          coefficient)
+			: base(maxRetryCount, maxRetryDelay, randomFactor, exponentialBase, coefficient)
 		{
 		}
 

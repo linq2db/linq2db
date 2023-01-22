@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
+using System.IO;
+using System.Security;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using System.Data.Common;
-	using System.IO;
-	using System.Security;
+	using Configuration;
 	using Data;
-	using LinqToDB.Configuration;
 
 	/// <summary>
 	/// Contains Access provider management tools.
@@ -20,8 +19,7 @@ namespace LinqToDB.DataProvider.Access
 
 		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
 		{
-			if (connectionString.Contains("Microsoft.ACE.OLEDB")
-				|| connectionString.Contains("Microsoft.Jet.OLEDB"))
+			if (connectionString.Contains("Microsoft.ACE.OLEDB") || connectionString.Contains("Microsoft.Jet.OLEDB"))
 			{
 				return _accessOleDbDataProvider.Value;
 			}
@@ -57,6 +55,7 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 		#region CreateDataConnection
+
 		/// <summary>
 		/// Creates <see cref="DataConnection"/> object using provided Access connection string.
 		/// </summary>
@@ -89,9 +88,11 @@ namespace LinqToDB.DataProvider.Access
 		{
 			return new DataConnection(GetDataProvider(providerName), transaction);
 		}
+
 		#endregion
 
 		#region Database management
+
 		/// <summary>
 		/// Creates new Access database file. Requires Access OLE DB provider (JET or ACE) and ADOX.
 		/// </summary>
@@ -142,15 +143,23 @@ namespace LinqToDB.DataProvider.Access
 
 			DataTools.DropFileDatabase(databaseName, ".mdb");
 		}
+
 		#endregion
 
 		#region BulkCopy
+
 		/// <summary>
 		/// Default bulk copy mode, used for Access by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
 		/// methods, if mode is not specified explicitly.
 		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 		/// </summary>
-		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use AccessOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => AccessOptions.Default.BulkCopyType;
+			set => AccessOptions.Default = AccessOptions.Default with { BulkCopyType = value };
+		}
+
 		#endregion
 	}
 }

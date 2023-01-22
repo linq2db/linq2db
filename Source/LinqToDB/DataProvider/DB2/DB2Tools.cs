@@ -138,7 +138,12 @@ namespace LinqToDB.DataProvider.DB2
 		/// methods, if mode is not specified explicitly.
 		/// Default value: <see cref="BulkCopyType.MultipleRows"/>.
 		/// </summary>
-		public static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use DB2Options.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => DB2Options.Default.BulkCopyType;
+			set => DB2Options.Default = DB2Options.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

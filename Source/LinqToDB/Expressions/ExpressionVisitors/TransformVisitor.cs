@@ -8,9 +8,9 @@ namespace LinqToDB.Expressions
 {
 	internal readonly struct TransformVisitor<TContext>
 	{
-		private readonly TContext?                               _context;
-		private readonly Func<TContext, Expression, Expression>? _func;
-		private readonly Func<Expression, Expression>?           _staticFunc;
+		private readonly TContext?                             _context;
+		private readonly Func<TContext,Expression,Expression>? _func;
+		private readonly Func<Expression,Expression>?          _staticFunc;
 
 		public TransformVisitor(TContext context, Func<TContext, Expression, Expression> func)
 		{
