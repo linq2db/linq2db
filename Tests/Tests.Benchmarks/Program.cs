@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using BenchmarkDotNet.Running;
-using LinqToDB.Benchmarks.Benchmarks.QueryGeneration;
 using LinqToDB.Benchmarks.Queries;
+using LinqToDB.Benchmarks.QueryGeneration;
 
 #if JETBRAINS
 using JetBrains.Profiler.Api;
@@ -98,7 +98,9 @@ namespace LinqToDB.Benchmarks
 			BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly)
 				.Run(
-					args.Length > 0 ? args : new[] { "--filter=*" },
+					//args.Length > 0 ? args : new[] { "--filter=*" },
+					// don't run TypeMapper benchmarks by default as they hardly will change, but add a lot of running time
+					args.Length > 0 ? args : new[] { "--filter", "*.Queries.*", "*.QueryGeneration.*" },
 					Config.Instance);
 		}
 
