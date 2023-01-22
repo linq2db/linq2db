@@ -313,29 +313,13 @@ namespace LinqToDB.Mapping
 
 		private bool AnalyzeCanBeNull()
 		{
-#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
 			// Note that nullability of Collections can't be determined from types.
 			// OUTER JOIN are usually materialized in non-nullable, but empty, collections.
 			// For example, `IList<Product> Products` might well require an OUTER JOIN.
 			// Neither `IList<Product>?` nor `IList<Product?>` would be correct.
-			if (Configuration.UseNullableTypesMetadata && !IsList)
-			{
-				// Extract info from C# Nullable Reference Types if available.
-				// Note that this should also handle Nullable Value Types.
-				var context = new NullabilityInfoContext();
-				var nullability = MemberInfo switch 
-				{
-					PropertyInfo p => context.Create(p).ReadState,
-					FieldInfo    f => context.Create(f).ReadState,
-					MethodInfo   m => context.Create(m.ReturnParameter).ReadState,
-								 _ => NullabilityState.Unknown,
-				};
-				
-				if (nullability != NullabilityState.Unknown)
-					return nullability == NullabilityState.Nullable;				
-			}
-#endif
-			return true;
+			return Configuration.UseNullableTypesMetadata && !IsList && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable)
+				? isNullable
+				: true;
 		}
 	}
 }

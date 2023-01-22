@@ -166,23 +166,8 @@ namespace LinqToDB.Mapping
 			if (na != null)
 				return na.CanBeNull;
 				
-#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
-			if (Configuration.UseNullableTypesMetadata)
-			{
-				// Extract info from C# Nullable Reference Types if available.
-				// Note that this should also handle Nullable Value Types.
-				var context = new NullabilityInfoContext();
-				var nullability = MemberInfo switch 
-				{
-					PropertyInfo p => context.Create(p).ReadState,
-					FieldInfo    f => context.Create(f).ReadState,
-								 _ => NullabilityState.Unknown,
-				};
-				
-				if (nullability != NullabilityState.Unknown)
-					return nullability == NullabilityState.Nullable;
-			}
-#endif
+			if (Configuration.UseNullableTypesMetadata && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable))
+				return isNullable;
 
 			if (IsIdentity) 
 				return false;
