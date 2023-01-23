@@ -23,7 +23,6 @@ namespace Tests.Linq
 			Types         = types ?? throw new ArgumentNullException(nameof(types));
 		}
 
-		public string  Configuration { get; set; }
 		public string  Expression    { get; set; }
 		public Type?[] Types { get; }
 
@@ -76,8 +75,7 @@ namespace Tests.Linq
 			if (method != null && method.IsGenericMethod)
 			{
 				var typeParameters = method.GetGenericArguments();
-				builder.Expression = Match(typeParameters,
-					builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType!, method, a => a.Configuration));
+				builder.Expression = Match(typeParameters, builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType!, method));
 			}
 			else
 				throw new InvalidOperationException("This extension could be applied only to methods with type parameters.");

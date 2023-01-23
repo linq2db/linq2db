@@ -8,6 +8,7 @@ using System.Text;
 
 namespace LinqToDB.Data
 {
+	using Common.Internal;
 
 	/// <summary>
 	/// Tracing information for the <see cref="DataConnection"/> events.
@@ -109,7 +110,8 @@ namespace LinqToDB.Data
 						return _sqlText;
 
 					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder(DataConnection.MappingSchema, DataConnection.Options);
-					var sb          = new StringBuilder();
+					using var sbv    = Pools.StringBuilder.Allocate();
+					var sb           = sbv.Value;
 
 					sb.Append("-- ").Append(DataConnection.ConfigurationString);
 

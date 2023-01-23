@@ -682,7 +682,8 @@ namespace Tests.Linq
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<Top>()
-				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m!.ParentID && m.ChildID > 1 );
+				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m!.ParentID && m.ChildID > 1 )
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -708,7 +709,8 @@ namespace Tests.Linq
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<Top>()
-				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 );
+				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 )
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -1078,7 +1080,8 @@ namespace Tests.Linq
 				.Entity<Entity1711>()
 				.HasTableName("Entity1711")
 				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
-				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), e => e.Id, r => r.EntityId); ;
+				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), e => e.Id, r => r.EntityId)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var entity = db.CreateLocalTable<Entity1711>())
@@ -1099,7 +1102,8 @@ namespace Tests.Linq
 				.HasTableName("Entity1711")
 				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
 				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), (e, db) => db.GetTable<Relationship1711>()
-						.Where(r => r.Deleted == false && r.EntityId == e.Id));
+						.Where(r => r.Deleted == false && r.EntityId == e.Id))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var entity = db.CreateLocalTable<Entity1711>())

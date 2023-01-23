@@ -73,7 +73,7 @@ namespace Tests.UserTests
 			var dataSource = builder.Build();
 
 			var options = new DataOptions()
-				.UseConnectionFactory(dataProvider, dataSource.CreateConnection);
+				.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection());
 
 			try
 			{

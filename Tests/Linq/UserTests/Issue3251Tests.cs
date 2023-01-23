@@ -26,7 +26,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 			var mb = ms.GetFluentMappingBuilder();
-			mb.Entity<Class1>().HasTableName("Class1Table");
+			mb.Entity<Class1>().HasTableName("Class1Table").Build();
 
 			using (var db = new DataConnection("SQLite.MS", ms))
 			{
@@ -38,7 +38,7 @@ namespace Tests.UserTests
 
 			var newMs = new MappingSchema(ms);
 			var mb2 = newMs.GetFluentMappingBuilder();
-			mb2.Entity<Class2>().HasTableName("Class2Table");
+			mb2.Entity<Class2>().HasTableName("Class2Table").Build();
 			using (var db = new DataConnection("SQLite.MS", newMs))
 			{
 				var ed1 = newMs.GetEntityDescriptor(typeof(Class2));

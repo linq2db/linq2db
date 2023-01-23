@@ -331,36 +331,6 @@ namespace LinqToDB.Reflection
 
 		#endregion
 
-		#region Public Methods
-
-		public T? GetAttribute<T>() where T : Attribute
-		{
-			var attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
-
-			return attrs.Length > 0? (T)attrs[0]: null;
-		}
-
-		public T[]? GetAttributes<T>() where T : Attribute
-		{
-			Array attrs = MemberInfo.GetCustomAttributes(typeof(T), true);
-
-			return attrs.Length > 0? (T[])attrs: null;
-		}
-
-		public object[]? GetAttributes()
-		{
-			var attrs = MemberInfo.GetCustomAttributes(true);
-
-			return attrs.Length > 0? attrs: null;
-		}
-
-		public T[] GetTypeAttributes<T>() where T : Attribute
-		{
-			return TypeAccessor.Type.GetAttributes<T>();
-		}
-
-		#endregion
-
 		#region Set/Get Value
 
 		public virtual object? GetValue(object o)

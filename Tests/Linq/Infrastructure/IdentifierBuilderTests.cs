@@ -63,8 +63,8 @@ namespace Tests.Infrastructure
 		[TestCaseSource(nameof(_testCases))]
 		public void TestEquality(object? value1, object? value2, bool equals)
 		{
-			var ib1 = new IdentifierBuilder();
-			var ib2 = new IdentifierBuilder();
+			using var ib1 = new IdentifierBuilder();
+			using var ib2 = new IdentifierBuilder();
 
 			ib1.Add(value1);
 			ib2.Add(value2);

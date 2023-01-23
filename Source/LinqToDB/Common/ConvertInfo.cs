@@ -149,7 +149,7 @@ namespace LinqToDB.Common
 			if (_expressions.IsEmpty)
 				return 0;
 
-			var idBuilder = new IdentifierBuilder(_expressions.Count);
+			using var idBuilder = new IdentifierBuilder(_expressions.Count);
 
 			foreach (var (id, types) in _expressions
 				.Select (static e => (id : IdentifierBuilder.GetObjectID(e.Key), types : e.Value))

@@ -158,6 +158,9 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 			}
 
+			if (name.Length > 26)
+				name = name.Substring(0, 26);
+
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 

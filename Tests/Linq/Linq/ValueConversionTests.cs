@@ -161,7 +161,8 @@ namespace Tests.Linq
 				.HasConversion(
 					_ => _.HasValue ? _.Value.ToLocalTime() : new DateTime?(),
 					_ => _.HasValue ? new DateTime(_.Value.Ticks, DateTimeKind.Local) : new DateTime?()
-				);
+				)
+				.Build();
 
 			return ms;
 		}

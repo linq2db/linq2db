@@ -34,7 +34,8 @@ namespace Tests.UserTests
 				  .Entity<Entity>()
 				  .HasTableName("Issue464")
 				  .HasColumn(x => x.Id)
-				  .HasColumn(x => x.Value);
+				  .HasColumn(x => x.Value)
+				  .Build();
 
 			using (var db = new  DataConnection(context).AddMappingSchema(schema))
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
