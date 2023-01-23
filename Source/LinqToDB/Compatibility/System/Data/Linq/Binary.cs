@@ -80,16 +80,7 @@ namespace System.Data.Linq
 			return _hashCode!.Value;
 		}
 
-		public override string ToString()
-		{
-			using var sb = Pools.StringBuilder.Allocate();
-
-			return sb.Value
-				.Append('"')
-				.Append(Convert.ToBase64String(_bytes, 0, _bytes.Length))
-				.Append('"')
-				.ToString();
-		}
+		public override string ToString() => $"\"{Convert.ToBase64String(_bytes, 0, _bytes.Length)}\"";
 
 		private bool EqualsTo(Binary? binary)
 		{
