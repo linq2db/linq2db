@@ -911,10 +911,74 @@ namespace Tests.Linq
 		[Test]
 		public void AssociationExpressionMethod([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var _ = db.Parent.Select(p => p.ChildPredicate()).ToList();
+		}
+
+		[Table]
+		class NotNullParent
+		{
+			[Column] public int ID { get; set; }
+
+			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = false)]
+			public NotNullChild Child { get; set; } = null!;
+
+			static Expression<Func<NotNullParent, NotNullChild, bool>> ChildPredicate => (p, c) => p.ID == c.ParentID;
+		}
+
+		[Table]
+		class NotNullChild
+		{
+			[Column] public int ParentID { get; set; }
+		}
+
+		[Test]
+		public void AssociationExpressionNotNull([DataSources] string context)
+		{
+			var parentData = new[]
 			{
-				var _ = db.Parent.Select(p => p.ChildPredicate()).ToList();
-			}
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+
+			var childData = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
+
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(parentData);
+			using var child  = db.CreateLocalTable(childData);
+
+			var query = parent.Select(p => new { ParentID = (int?)p.Child.ParentID }); // Should be an INNER JOIN because CanBeNull = false
+
+			var result = query.ToArray();
+
+			Assert.AreEqual(1, result.Length);
+			Assert.AreEqual(1, result[0].ParentID);
+		}
+
+		[Test]
+		public void AssociationExpressionNotNullCount([DataSources] string context)
+		{
+			var parentData = new[]
+			{
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+
+			var childData = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
+
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(parentData);
+			using var child  = db.CreateLocalTable(childData);
+
+			var query = parent.Select(p => p.Child.ParentID); // Should be an INNER JOIN because CanBeNull = false
+
+			Assert.AreEqual(1, query.Count());
 		}
 
 		[Test]
