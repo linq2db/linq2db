@@ -121,7 +121,8 @@ namespace Tests.Samples
 
 				b.Entity<Entity>()
 					.Property(_ => _.Id  ).HasColumnName("EntityId")
-					.Property(_ => _.Name).HasColumnName("EntityName");
+					.Property(_ => _.Name).HasColumnName("EntityName")
+					.Build();
 
 				var q1 = db.GetTable<Entity>().Select(_ => _).ToString();
 				var q2 = dc.GetTable<Entity>().Select(_ => _).ToString()!;

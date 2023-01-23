@@ -673,7 +673,8 @@ namespace Tests.Linq
 				.Property(_ => _.ID)             .HasColumnName("PersonID")
 				.Property(_ => _.Name.FirstName) .HasColumnName("FirstName")
 				.Property(_ => _.Name.LastName)  .HasColumnName("LastName")
-				.Property(_ => _.Name.MiddleName).HasColumnName("MiddleName");
+				.Property(_ => _.Name.MiddleName).HasColumnName("MiddleName")
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{

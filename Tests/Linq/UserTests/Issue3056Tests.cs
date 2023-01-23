@@ -15,13 +15,14 @@ namespace Tests.UserTests
 		[Test]
 		public void DataModelDynamicTableTest2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var mappingSchema =  new MappingSchema();
-			var fm            =mappingSchema.GetFluentMappingBuilder();
+			var mappingSchema = new MappingSchema();
+			var fm            = mappingSchema.GetFluentMappingBuilder();
 
 			fm.Entity<DynamicTableRow>()
 				//.HasIdentity(x => Sql.Property<int>(x, "Id"))
 				.Property(x => Sql.Property<string>(x, "Name"))
-				.Property(x => Sql.Property<string>(x, "Description"));
+				.Property(x => Sql.Property<string>(x, "Description"))
+				.Build();
 
 			var rows = new List<DynamicTableRow>();
 			var drow = new DynamicTableRow();

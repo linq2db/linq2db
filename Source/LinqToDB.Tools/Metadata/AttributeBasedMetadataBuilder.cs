@@ -63,7 +63,7 @@ namespace LinqToDB.Metadata
 				|| (propertyBuilder.Property.Type.Type.IsValueType && metadata.CanBeNull != propertyBuilder.Property.Type.Type.IsNullable))
 				attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_CanBeNull, _builder.Constant(metadata.CanBeNull, true));
 
-			if (metadata.Configuration != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Configuration, _builder.Constant(metadata.Configuration , true));
+			if (metadata.Configuration != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.MappingAttribute_Configuration, _builder.Constant(metadata.Configuration , true));
 			if (metadata.DataType      != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_DataType     , _builder.Constant(metadata.DataType.Value, true));
 
 			// generate database type attributes
@@ -108,7 +108,7 @@ namespace LinqToDB.Metadata
 			}
 
 			if (metadata.IsView                              ) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_IsView                   , _builder.Constant(true                  , true));
-			if (metadata.Configuration != null               ) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Configuration            , _builder.Constant(metadata.Configuration, true));
+			if (metadata.Configuration != null               ) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.MappingAttribute_Configuration          , _builder.Constant(metadata.Configuration, true));
 			if (!metadata.IsColumnAttributeRequired          ) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_IsColumnAttributeRequired, _builder.Constant(false                 , true));
 			if (metadata.IsTemporary                         ) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_IsTemporary              , _builder.Constant(true                  , true));
 			if (metadata.TableOptions  != TableOptions.NotSet) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.TableAttribute_TableOptions             , _builder.Constant(metadata.TableOptions , true));
@@ -125,7 +125,7 @@ namespace LinqToDB.Metadata
 				attr.Parameter(_builder.Constant(_fqnGenerator(metadata.Name.Value), true));
 			}
 
-			if (metadata.Configuration    != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_ExpressionAttribute_Configuration   , _builder.Constant(metadata.Configuration         , true));
+			if (metadata.Configuration    != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.MappingAttribute_Configuration  , _builder.Constant(metadata.Configuration         , true));
 			if (metadata.ServerSideOnly   != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_ExpressionAttribute_ServerSideOnly  , _builder.Constant(metadata.ServerSideOnly.Value  , true));
 			if (metadata.PreferServerSide != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_ExpressionAttribute_PreferServerSide, _builder.Constant(metadata.PreferServerSide.Value, true));
 			if (metadata.InlineParameters != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_ExpressionAttribute_InlineParameters, _builder.Constant(metadata.InlineParameters.Value, true));
@@ -156,7 +156,7 @@ namespace LinqToDB.Metadata
 				if (metadata.Name.Value.Server   != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Server  , _builder.Constant(metadata.Name.Value.Server  , true));
 			}
 
-			if (metadata.Configuration != null) attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Configuration, _builder.Constant(metadata.Configuration, true));
+			if (metadata.Configuration != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.MappingAttribute_Configuration, _builder.Constant(metadata.Configuration, true));
 
 			if (metadata.ArgIndices != null && metadata.ArgIndices.Length > 0)
 				attr.Parameter(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_ArgIndices, _builder.Array(WellKnownTypes.System.Int32, true, true, BuildArgIndices(metadata.ArgIndices)));
@@ -251,9 +251,9 @@ namespace LinqToDB.Metadata
 			if (!associationConfigured && !(thisConfigured && otherConfigured))
 				throw new InvalidOperationException("Association is missing relation setup");
 
-			if (metadata.Configuration         != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Configuration    , _builder.Constant(metadata.Configuration        , true));
-			if (metadata.Alias                 != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_AliasName        , _builder.Constant(metadata.Alias                , true));
-			if (metadata.Storage               != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Storage          , _builder.Constant(metadata.Storage              , true));
+			if (metadata.Configuration         != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.MappingAttribute_Configuration, _builder.Constant(metadata.Configuration, true));
+			if (metadata.Alias                 != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_AliasName, _builder.Constant(metadata.Alias        , true));
+			if (metadata.Storage               != null) attr.Parameter(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Storage  , _builder.Constant(metadata.Storage      , true));
 		}
 	}
 }

@@ -519,7 +519,7 @@ namespace LinqToDB.SqlQuery
 			Visit(sc.SkipValue);
 
 			// TODO: review visitors to make instantiation unnecessary
-			foreach (var c in sc.Columns.ToList()) Visit(c);
+			foreach (var c in sc.Columns.ToArray()) Visit(c);
 		}
 
 		void VisitX(SqlUpdateClause sc)

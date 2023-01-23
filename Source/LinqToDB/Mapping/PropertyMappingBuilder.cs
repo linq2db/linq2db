@@ -230,7 +230,6 @@ namespace LinqToDB.Mapping
 						return a;
 					},
 					setColumn,
-					a => a.Configuration,
 					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 				return this;
@@ -246,7 +245,6 @@ namespace LinqToDB.Mapping
 						return a;
 					 },
 					(_,a) => setColumn(a),
-					a     => a.Configuration,
 					a     => new ColumnAttribute(a),
 					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
@@ -506,6 +504,14 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TProperty> UseSequence(string sequenceName, string? schema = null, string? configuration = null)
 		{
 			return HasAttribute(new SequenceNameAttribute(configuration ?? _entity.Configuration, sequenceName) { Schema = schema });
+		}
+
+		/// <summary>
+		/// Adds configured mappings to builder's mapping schema.
+		/// </summary>
+		public void Build()
+		{
+			_entity.Build();
 		}
 	}
 }

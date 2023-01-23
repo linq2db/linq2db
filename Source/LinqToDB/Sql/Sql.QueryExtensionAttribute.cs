@@ -63,7 +63,6 @@ namespace LinqToDB
 				ExtensionArguments   = new [] { extensionArgument0, extensionArgument1 };
 			}
 
-			public string?             Configuration        { get; }
 			public QueryExtensionScope Scope                { get; }
 			/// <summary>
 			/// Instance of <see cref="ISqlExtensionBuilder"/>.
@@ -125,7 +124,7 @@ namespace LinqToDB
 					default                          : return Array<QueryExtensionAttribute>.Empty;
 				}
 
-				return mapping.GetAttributes<QueryExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, a => a.Configuration, inherit: true, exactForConfiguration: true);
+				return mapping.GetAttributes<QueryExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, forFirstConfiguration: true);
 			}
 
 			public override string GetObjectID()

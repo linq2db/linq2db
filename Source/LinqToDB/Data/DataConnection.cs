@@ -220,9 +220,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider      dataProvider,
-			Func<DbConnection> connectionFactory,
-			MappingSchema      mappingSchema)
+			IDataProvider                   dataProvider,
+			Func<DataOptions, DbConnection> connectionFactory,
+			MappingSchema                   mappingSchema)
 			: this(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
 		{
 		}
@@ -234,10 +234,10 @@ namespace LinqToDB.Data
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider                 dataProvider,
-			Func<DbConnection>            connectionFactory,
-			MappingSchema                 mappingSchema,
-			Func<DataOptions,DataOptions> optionsSetter)
+			IDataProvider                   dataProvider,
+			Func<DataOptions, DbConnection> connectionFactory,
+			MappingSchema                   mappingSchema,
+			Func<DataOptions,DataOptions>   optionsSetter)
 			: this(optionsSetter(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema)))
 		{
 		}
@@ -248,8 +248,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		public DataConnection(
-			IDataProvider      dataProvider,
-			Func<DbConnection> connectionFactory)
+			IDataProvider                   dataProvider,
+			Func<DataOptions, DbConnection> connectionFactory)
 			: this(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory))
 		{
 		}
@@ -260,9 +260,9 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		public DataConnection(
-			IDataProvider                 dataProvider,
-			Func<DbConnection>            connectionFactory,
-			Func<DataOptions,DataOptions> optionsSetter)
+			IDataProvider                   dataProvider,
+			Func<DataOptions, DbConnection> connectionFactory,
+			Func<DataOptions,DataOptions>   optionsSetter)
 			: this(optionsSetter(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory)))
 		{
 		}
@@ -637,11 +637,11 @@ namespace LinqToDB.Data
 
 		#region Connection
 
-		bool                _closeConnection;
-		bool                _disposeConnection = true;
-		bool                _closeTransaction;
-		IAsyncDbConnection? _connection;
-		Func<DbConnection>? _connectionFactory;
+		bool                             _closeConnection;
+		bool                             _disposeConnection = true;
+		bool                             _closeTransaction;
+		IAsyncDbConnection?              _connection;
+		Func<DataOptions, DbConnection>? _connectionFactory;
 
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
@@ -658,7 +658,7 @@ namespace LinqToDB.Data
 				{
 					DbConnection connection;
 					if (_connectionFactory != null)
-						connection = _connectionFactory();
+						connection = _connectionFactory(Options);
 					else
 						connection = DataProvider.CreateConnection(ConnectionString!);
 
@@ -1403,7 +1403,7 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema    = new (mappingSchema, MappingSchema);
+			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
 			_configurationID = null;
 
 			return this;
@@ -1431,7 +1431,7 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke();
+			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke(Options);
 
 			// https://github.com/linq2db/linq2db/issues/1486
 			// when there is no ConnectionString and provider doesn't support connection cloning

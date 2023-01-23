@@ -213,6 +213,8 @@ namespace Tests.Linq
 				.Property(x => x.TestAnimalId).IsColumn().IsNullable().HasColumnName("TestAnimalId")
 				.Property(x => x.TestAnimal  ).IsNotColumn();
 
+			mappingBuilder.Build();
+
 			return ms;
 		}
 

@@ -98,12 +98,18 @@ namespace LinqToDB.Mapping
 		public static bool operator !=(DynamicColumnInfo? a, DynamicColumnInfo? b)
 			=> !a?.Equals(b) ?? !ReferenceEquals(b, null);
 
+
+#pragma warning disable RS0030 // Do not used banned APIs
 		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(bool)"/>
 		public override object[] GetCustomAttributes(bool inherit)
+#pragma warning restore RS0030 // Do not used banned APIs
 			=> Array<object>.Empty;
 
+
+#pragma warning disable RS0030 // Do not used banned APIs
 		/// <inheritdoc cref="MemberInfo.GetCustomAttributes(Type, bool)"/>
 		public override object[] GetCustomAttributes(Type attributeType, bool inherit)
+#pragma warning restore RS0030 // Do not used banned APIs
 			=> Array<object>.Empty;
 
 		/// <inheritdoc cref="MemberInfo.IsDefined"/>

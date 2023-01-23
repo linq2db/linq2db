@@ -19,7 +19,8 @@ namespace Tests.Linq
 					.Property(e => e.CEnum)
 						.HasDataType(DataType.VarChar)
 						.HasLength(20)
-						.HasConversion(v => $"___{v}___", v => (ConvertedEnum)Enum.Parse(typeof(ConvertedEnum), v.Substring(3, v.Length - 6)));
+						.HasConversion(v => $"___{v}___", v => (ConvertedEnum)Enum.Parse(typeof(ConvertedEnum), v.Substring(3, v.Length - 6)))
+				.Build();
 
 			var data = new[]
 			{

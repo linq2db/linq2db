@@ -3310,11 +3310,9 @@ namespace LinqToDB.SqlProvider
 
 		#region Alternative Builders
 
-		protected delegate IEnumerable<SqlColumn> ColumnSelector();
-
-		protected IEnumerable<SqlColumn> AlternativeGetSelectedColumns(SelectQuery selectQuery, ColumnSelector columnSelector)
+		protected IEnumerable<SqlColumn> AlternativeGetSelectedColumns(SelectQuery selectQuery, IEnumerable<SqlColumn> columns)
 		{
-			foreach (var col in columnSelector())
+			foreach (var col in columns)
 				yield return col;
 
 			SkipAlias = false;

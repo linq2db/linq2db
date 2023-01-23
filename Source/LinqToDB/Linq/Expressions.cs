@@ -245,7 +245,7 @@ namespace LinqToDB.Linq
 						var gtype    = type.Key.MakeGenericType(types);
 						var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype)!;
 
-						provider.SetInfo(new MappingSchema(mappingSchema));
+						provider.SetInfo(mappingSchema);
 
 						type.Value.Add(types);
 
