@@ -37,7 +37,7 @@ namespace LinqToDB
 			return query;
 		}
 
-		private static IQueryable<T> FilterByPrimaryKey<T>(this IDataContext dc, T obj, EntityDescriptor ed)
+		private static IQueryable<T> FilterByPrimaryKey<T>(this IQueryable<T> source, T obj, EntityDescriptor ed)
 			where T : class
 		{
 			var objType = typeof(T);
@@ -46,19 +46,19 @@ namespace LinqToDB
 			if (pks.Length == 0)
 				throw new LinqToDBException($"Entity of type {objType} does not have primary key defined.");
 
-			return FilterByColumns(dc.GetTable<T>(), obj, pks);
+			return FilterByColumns(source, obj, pks);
 		}
 
-		private static IQueryable<T> MakeConcurrentFilter<T>(IDataContext dc, T obj, Type objType, EntityDescriptor ed)
+		private static IQueryable<T> MakeConcurrentFilter<T>(IQueryable<T> source, T obj, Type objType, EntityDescriptor ed)
 			where T : class
 		{
-			var query   = FilterByPrimaryKey(dc, obj, ed);
+			var query   = FilterByPrimaryKey(source, obj, ed);
 
 			var concurrencyColumns = ed.Columns
 				.Select(c => new
 				{
 					Column = c,
-					Attr   = dc.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo)
+					Attr   = ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo)
 				})
 				.Where(_ => _.Attr != null)
 				.Select(_ => _.Column)
@@ -75,7 +75,7 @@ namespace LinqToDB
 		{
 			var objType = typeof(T);
 			var ed      = dc.MappingSchema.GetEntityDescriptor(objType);
-			var query   = MakeConcurrentFilter(dc, obj, objType, ed);
+			var query   = MakeConcurrentFilter(dc.GetTable<T>(), obj, objType, ed);
 
 			var updatable       = query.AsUpdatable();
 			var columnsToUpdate = ed.Columns.Where(c => !c.IsPrimaryKey && !c.IsIdentity && !c.SkipOnUpdate && !c.ShouldSkip(obj, ed, SkipModification.Update));
@@ -112,7 +112,17 @@ namespace LinqToDB
 		{
 			var objType = typeof(T);
 			var ed      = dc.MappingSchema.GetEntityDescriptor(objType);
-			var query   = MakeConcurrentFilter(dc, obj, objType, ed);
+			var query   = MakeConcurrentFilter(dc.GetTable<T>(), obj, objType, ed);
+
+			return query;
+		}
+
+		private static IQueryable<T> MakeDeleteConcurrent<T>(IQueryable<T> source, T obj)
+			where T : class
+		{
+			var objType = typeof(T);
+			var ed      = Internals.GetDataContext(source).MappingSchema.GetEntityDescriptor(objType);
+			var query   = MakeConcurrentFilter(source, obj, objType, ed);
 
 			return query;
 		}
@@ -181,6 +191,39 @@ namespace LinqToDB
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
 			return MakeDeleteConcurrent(dc, obj).DeleteAsync(cancellationToken);
+		}
+
+		/// <summary>
+		/// Performs record delete using optimistic lock strategy.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise regular delete operation will be performed.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Table source with optional filtering applied.</param>
+		/// <param name="obj">Entity instance to delete.</param>
+		/// <returns>Number of deleted records.</returns>
+		public static int DeleteOptimistic<T>(this IQueryable<T> source, T obj)
+			where T : class
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return MakeDeleteConcurrent(source, obj).Delete();
+		}
+
+		/// <summary>
+		/// Performs record delete using optimistic lock strategy asynchronously.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise regular delete operation will be performed.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Table source with optional filtering applied.</param>
+		/// <param name="obj">Entity instance to delete.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Number of deleted records.</returns>
+		public static Task<int> DeleteOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			return MakeDeleteConcurrent(source, obj).DeleteAsync(cancellationToken);
 		}
 	}
 }
