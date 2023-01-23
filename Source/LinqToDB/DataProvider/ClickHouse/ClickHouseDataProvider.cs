@@ -131,8 +131,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				value = (Provider, dataType.DataType, value) switch
 				{
 					// OCTONICA provider
-					// https://github.com/Octonica/ClickHouseClient/issues/69
-					(ClickHouseProvider.Octonica, _, bool val)                                                                                                            => (byte)(val ? 1 : 0),
 					// use ticks to avoid exceptions due to Local kind
 					(ClickHouseProvider.Octonica, DataType.DateTime or DataType.DateTime64/* or DataType.DateTime2*/, DateTime val)                                       => new DateTimeOffset(val.Ticks, default),
 					(ClickHouseProvider.Octonica, DataType.VarChar or DataType.NVarChar, Guid val)                                                                        => val.ToString("D"),

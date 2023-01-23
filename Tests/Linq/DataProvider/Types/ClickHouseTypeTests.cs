@@ -268,7 +268,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/69", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async ValueTask TestBoolType([ClickHouseDataSources(false)] string context)
 		{
@@ -800,23 +799,20 @@ namespace Tests.DataProvider
 			// Unmapped enums cannot be used as server returns string values, which cannot be converted to enum
 			// because we don't have mapping information
 
-			// https://github.com/Octonica/ClickHouseClient/issues/64
-			var nullBug = context.IsAnyOf(ProviderName.ClickHouseOctonica);
-
 			// Enum8
 
-			await TestType<Enum8Mapped, Enum8Mapped?>(context, new(typeof(Enum8Mapped), DataType.Enum8, "Enum8('value1' = -111, 'value2' = 123)"), Enum8Mapped.Two, nullBug ? (Enum8Mapped?)Enum8Mapped.One : default);
+			await TestType<Enum8Mapped, Enum8Mapped?>(context, new(typeof(Enum8Mapped), DataType.Enum8, "Enum8('value1' = -111, 'value2' = 123)"), Enum8Mapped.Two, default);
 			await TestType<Enum8Mapped, Enum8Mapped?>(context, new(typeof(Enum8Mapped), DataType.Enum8, "Enum8('value1' = -111, 'value2' = 123)"), Enum8Mapped.One, Enum8Mapped.Two);
 
 			// Enum16
 
-			await TestType<Enum16Mapped, Enum16Mapped?>(context, new(typeof(Enum16Mapped), DataType.Enum16, "Enum16('value1' = -1111, 'value2' = 2212)"), Enum16Mapped.Two, nullBug ? (Enum16Mapped?)Enum16Mapped.One : default);
+			await TestType<Enum16Mapped, Enum16Mapped?>(context, new(typeof(Enum16Mapped), DataType.Enum16, "Enum16('value1' = -1111, 'value2' = 2212)"), Enum16Mapped.Two, default);
 			await TestType<Enum16Mapped, Enum16Mapped?>(context, new(typeof(Enum16Mapped), DataType.Enum16, "Enum16('value1' = -1111, 'value2' = 2212)"), Enum16Mapped.One, Enum16Mapped.Two);
 
-			await TestType<EnumMappedVar, EnumMappedVar?>(context, new(typeof(EnumMappedVar), DataType.Enum16, "Enum16('value1' = -1234, 'value 2' = 4567)"), EnumMappedVar.Two, nullBug ? (EnumMappedVar?)EnumMappedVar.One : default);
+			await TestType<EnumMappedVar, EnumMappedVar?>(context, new(typeof(EnumMappedVar), DataType.Enum16, "Enum16('value1' = -1234, 'value 2' = 4567)"), EnumMappedVar.Two, default);
 			await TestType<EnumMappedVar, EnumMappedVar?>(context, new(typeof(EnumMappedVar), DataType.Enum16, "Enum16('value1' = -1234, 'value 2' = 4567)"), EnumMappedVar.One, EnumMappedVar.Two);
 
-			await TestType<EnumMappedFixed, EnumMappedFixed?>(context, new(typeof(EnumMappedFixed), DataType.Enum16, "Enum16('value1' = -1234, 'value2' = 4567)"), EnumMappedFixed.Two, nullBug ? (EnumMappedFixed?)EnumMappedFixed.One : default);
+			await TestType<EnumMappedFixed, EnumMappedFixed?>(context, new(typeof(EnumMappedFixed), DataType.Enum16, "Enum16('value1' = -1234, 'value2' = 4567)"), EnumMappedFixed.Two, default);
 			await TestType<EnumMappedFixed, EnumMappedFixed?>(context, new(typeof(EnumMappedFixed), DataType.Enum16, "Enum16('value1' = -1234, 'value2' = 4567)"), EnumMappedFixed.One, EnumMappedFixed.Two);
 
 			// check that default mappings still work
