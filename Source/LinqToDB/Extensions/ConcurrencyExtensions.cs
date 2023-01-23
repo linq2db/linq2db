@@ -70,12 +70,12 @@ namespace LinqToDB
 			return query;
 		}
 
-		private static IUpdatable<T> MakeUpdateOptimistic<T>(IDataContext dc, T obj)
+		private static IUpdatable<T> MakeUpdateOptimistic<T>(IQueryable<T> query, IDataContext dc, T obj)
 			where T : class
 		{
 			var objType = typeof(T);
 			var ed      = dc.MappingSchema.GetEntityDescriptor(objType);
-			var query   = MakeConcurrentFilter(dc.GetTable<T>(), obj, objType, ed);
+			    query   = MakeConcurrentFilter(query, obj, objType, ed);
 
 			var updatable       = query.AsUpdatable();
 			var columnsToUpdate = ed.Columns.Where(c => !c.IsPrimaryKey && !c.IsIdentity && !c.SkipOnUpdate && !c.ShouldSkip(obj, ed, SkipModification.Update));
@@ -88,7 +88,7 @@ namespace LinqToDB
 				var updateMethod    = Methods.LinqToDB.Update.SetUpdatablePrev.MakeGenericMethod(objType, cd.MemberInfo.GetMemberType());
 				var propExpression  = Expression.Lambda(Expression.MakeMemberAccess(param, cd.MemberInfo), param);
 
-				var concurrencyAttribute = dc.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, cd.MemberInfo);
+				var concurrencyAttribute = ed.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, cd.MemberInfo);
 
 				LambdaExpression? valueExpression;
 				if (concurrencyAttribute != null)
@@ -107,21 +107,11 @@ namespace LinqToDB
 			return updatable;
 		}
 
-		private static IQueryable<T> MakeDeleteConcurrent<T>(IDataContext dc, T obj)
+		private static IQueryable<T> MakeDeleteConcurrent<T>(IQueryable<T> source, IDataContext dc, T obj)
 			where T : class
 		{
 			var objType = typeof(T);
 			var ed      = dc.MappingSchema.GetEntityDescriptor(objType);
-			var query   = MakeConcurrentFilter(dc.GetTable<T>(), obj, objType, ed);
-
-			return query;
-		}
-
-		private static IQueryable<T> MakeDeleteConcurrent<T>(IQueryable<T> source, T obj)
-			where T : class
-		{
-			var objType = typeof(T);
-			var ed      = Internals.GetDataContext(source).MappingSchema.GetEntityDescriptor(objType);
 			var query   = MakeConcurrentFilter(source, obj, objType, ed);
 
 			return query;
@@ -138,9 +128,10 @@ namespace LinqToDB
 		public static int UpdateOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
+			if (dc  == null) throw new ArgumentNullException(nameof(dc));
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeUpdateOptimistic(dc, obj).Update();
+			return MakeUpdateOptimistic(dc.GetTable<T>(), dc, obj).Update();
 		}
 
 		/// <summary>
@@ -155,9 +146,49 @@ namespace LinqToDB
 		public static Task<int> UpdateOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
+			if (dc  == null) throw new ArgumentNullException(nameof(dc));
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeUpdateOptimistic(dc, obj).UpdateAsync(cancellationToken);
+			return MakeUpdateOptimistic(dc.GetTable<T>(), dc, obj).UpdateAsync(cancellationToken);
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise regular update operation will be performed.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Table source with optional filtering applied.</param>
+		/// <param name="obj">Entity instance to update.</param>
+		/// <returns>Number of updated records.</returns>
+		public static int UpdateOptimistic<T>(this IQueryable<T> source, T obj)
+			where T : class
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (obj    == null) throw new ArgumentNullException(nameof(obj));
+
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+
+			return MakeUpdateOptimistic(source, dc, obj).Update();
+		}
+
+		/// <summary>
+		/// Performs record update using optimistic lock strategy asynchronously.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise regular update operation will be performed.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Table source with optional filtering applied.</param>
+		/// <param name="obj">Entity instance to update.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Number of updated records.</returns>
+		public static Task<int> UpdateOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
+			where T : class
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (obj    == null) throw new ArgumentNullException(nameof(obj));
+
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+
+			return MakeUpdateOptimistic(source, dc, obj).UpdateAsync(cancellationToken);
 		}
 
 		/// <summary>
@@ -171,9 +202,10 @@ namespace LinqToDB
 		public static int DeleteOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
+			if (dc  == null) throw new ArgumentNullException(nameof(dc));
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeDeleteConcurrent(dc, obj).Delete();
+			return MakeDeleteConcurrent(dc.GetTable<T>(), dc, obj).Delete();
 		}
 
 		/// <summary>
@@ -188,9 +220,10 @@ namespace LinqToDB
 		public static Task<int> DeleteOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
+			if (dc  == null) throw new ArgumentNullException(nameof(dc));
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeDeleteConcurrent(dc, obj).DeleteAsync(cancellationToken);
+			return MakeDeleteConcurrent(dc.GetTable<T>(), dc, obj).DeleteAsync(cancellationToken);
 		}
 
 		/// <summary>
@@ -205,8 +238,11 @@ namespace LinqToDB
 			where T : class
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeDeleteConcurrent(source, obj).Delete();
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+
+			return MakeDeleteConcurrent(source, dc, obj).Delete();
 		}
 
 		/// <summary>
@@ -222,8 +258,11 @@ namespace LinqToDB
 			where T : class
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeDeleteConcurrent(source, obj).DeleteAsync(cancellationToken);
+			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+
+			return MakeDeleteConcurrent(source, dc, obj).DeleteAsync(cancellationToken);
 		}
 	}
 }

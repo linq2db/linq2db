@@ -104,98 +104,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFilteredDelete([DataSources] string context)
-		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
-			var ms      = new MappingSchema();
-
-			ms.GetFluentMappingBuilder()
-				.Entity<ConcurrencyTable<int>>()
-					.HasTableName("ConcurrencyFiltered")
-					.Property(e => e.Stamp)
-						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.AutoIncrement))
-				.Build();
-
-			using var db  = GetDataContext(context, ms);
-			using var t   = db.CreateLocalTable<ConcurrencyTable<int>>();
-
-			var record = new ConcurrencyTable<int>()
-			{
-				Id    = 1,
-				Stamp = -10,
-				Value = "initial"
-			};
-
-			var cnt = db.Insert(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			AssertData(record);
-
-			cnt = t.Where(r => r.Id == 2).DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(0, cnt);
-			AssertData(record);
-
-			cnt = t.Where(r => r.Id == 1).DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
-
-			void AssertData(ConcurrencyTable<int> record)
-			{
-				var data = t.ToArray();
-
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
-				Assert.AreEqual(record.Stamp, data[0].Stamp);
-			}
-		}
-
-		[Test]
-		public async ValueTask TestFilteredDeleteAsync([DataSources] string context)
-		{
-			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
-			var ms      = new MappingSchema();
-
-			ms.GetFluentMappingBuilder()
-				.Entity<ConcurrencyTable<int>>()
-					.HasTableName("ConcurrencyFiltered")
-					.Property(e => e.Stamp)
-						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.AutoIncrement))
-				.Build();
-
-			using var db  = GetDataContext(context, ms);
-			using var t   = db.CreateLocalTable<ConcurrencyTable<int>>();
-
-			var record = new ConcurrencyTable<int>()
-			{
-				Id    = 1,
-				Stamp = -10,
-				Value = "initial"
-			};
-
-			var cnt = await db.InsertAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			AssertData(record);
-
-			cnt = await t.Where(r => r.Id == 2).DeleteOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(0, cnt);
-			AssertData(record);
-
-			cnt = await t.Where(r => r.Id == 1).DeleteOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
-
-			void AssertData(ConcurrencyTable<int> record)
-			{
-				var data = t.ToArray();
-
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
-				Assert.AreEqual(record.Stamp, data[0].Stamp);
-			}
-		}
-
-		[Test]
 		public async ValueTask TestAutoIncrementAsync([DataSources] string context)
 		{
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
@@ -249,6 +157,122 @@ namespace Tests.Linq
 			AssertData(record);
 
 			cnt = await db.DeleteOptimisticAsync(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			Assert.AreEqual(0, t.ToArray().Length);
+
+			void AssertData(ConcurrencyTable<int> record)
+			{
+				var data = t.ToArray();
+
+				Assert.AreEqual(1, data.Length);
+				Assert.AreEqual(record.Id, data[0].Id);
+				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.AreEqual(record.Stamp, data[0].Stamp);
+			}
+		}
+
+		[Test]
+		public void TestFiltered([DataSources] string context)
+		{
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<ConcurrencyTable<int>>()
+					.HasTableName("ConcurrencyFiltered")
+					.Property(e => e.Stamp)
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.AutoIncrement))
+				.Build();
+
+			using var db  = GetDataContext(context, ms);
+			using var t   = db.CreateLocalTable<ConcurrencyTable<int>>();
+
+			var record = new ConcurrencyTable<int>()
+			{
+				Id    = 1,
+				Stamp = -10,
+				Value = "initial"
+			};
+
+			var cnt = db.Insert(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record);
+
+			record.Value = "value 1";
+			cnt = t.Where(r => r.Id == 2).UpdateOptimistic(record);
+			if (!skipCnt) Assert.AreEqual(0, cnt);
+			record.Value = "initial";
+			AssertData(record);
+
+			record.Value = "value 2";
+			cnt = t.Where(r => r.Id == 1).UpdateOptimistic(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			record.Stamp++;
+			AssertData(record);
+
+			cnt = t.Where(r => r.Id == 2).DeleteOptimistic(record);
+			if (!skipCnt) Assert.AreEqual(0, cnt);
+			AssertData(record);
+
+			cnt = t.Where(r => r.Id == 1).DeleteOptimistic(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			Assert.AreEqual(0, t.ToArray().Length);
+
+			void AssertData(ConcurrencyTable<int> record)
+			{
+				var data = t.ToArray();
+
+				Assert.AreEqual(1, data.Length);
+				Assert.AreEqual(record.Id, data[0].Id);
+				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.AreEqual(record.Stamp, data[0].Stamp);
+			}
+		}
+
+		[Test]
+		public async ValueTask TestFilteredAsync([DataSources] string context)
+		{
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<ConcurrencyTable<int>>()
+					.HasTableName("ConcurrencyFiltered")
+					.Property(e => e.Stamp)
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.AutoIncrement))
+				.Build();
+
+			using var db  = GetDataContext(context, ms);
+			using var t   = db.CreateLocalTable<ConcurrencyTable<int>>();
+
+			var record = new ConcurrencyTable<int>()
+			{
+				Id    = 1,
+				Stamp = -10,
+				Value = "initial"
+			};
+
+			var cnt = await db.InsertAsync(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record);
+
+			record.Value = "value 1";
+			cnt = await t.Where(r => r.Id == 2).UpdateOptimisticAsync(record);
+			if (!skipCnt) Assert.AreEqual(0, cnt);
+			record.Value = "initial";
+			AssertData(record);
+
+			record.Value = "value 2";
+			cnt = await t.Where(r => r.Id == 1).UpdateOptimisticAsync(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			record.Stamp++;
+			AssertData(record);
+
+			cnt = await t.Where(r => r.Id == 2).DeleteOptimisticAsync(record);
+			if (!skipCnt) Assert.AreEqual(0, cnt);
+			AssertData(record);
+
+			cnt = await t.Where(r => r.Id == 1).DeleteOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
