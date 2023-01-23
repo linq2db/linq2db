@@ -601,7 +601,6 @@ namespace Tests.Linq
 					select t);
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void ConvertToBoolean1([DataSources] string context)
 		{
@@ -611,7 +610,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select Convert.ToBoolean(t.MoneyValue) where p == true select p);
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void ConvertToBoolean2([DataSources] string context)
 		{
