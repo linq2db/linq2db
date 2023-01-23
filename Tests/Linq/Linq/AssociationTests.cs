@@ -921,41 +921,60 @@ namespace Tests.Linq
 			[Column] public int ID { get; set; }
 
 			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = false)]
-			public NotNullChild Child { get; set; } = null!;
+			public NotNullChild  ChildInner { get; set; } = null!;
+
+			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = true)]
+			public NotNullChild? ChildOuter { get; set; }
 
 			static Expression<Func<NotNullParent, NotNullChild, bool>> ChildPredicate => (p, c) => p.ID == c.ParentID;
+
+			public static readonly NotNullParent[] Data = new[]
+			{
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
 		}
 
 		[Table]
 		class NotNullChild
 		{
 			[Column] public int ParentID { get; set; }
+
+			public static readonly NotNullChild[] Data = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
 		}
 
 		[Test]
 		public void AssociationExpressionNotNull([DataSources] string context)
 		{
-			var parentData = new[]
-			{
-				new NotNullParent { ID = 1 },
-				new NotNullParent { ID = 2 },
-			};
-
-			var childData = new[]
-			{
-				new NotNullChild { ParentID = 1 },
-			};
-
 			using var db     = GetDataContext(context);
-			using var parent = db.CreateLocalTable(parentData);
-			using var child  = db.CreateLocalTable(childData);
+			using var parent = db.CreateLocalTable(NotNullParent.Data);
+			using var child  = db.CreateLocalTable(NotNullChild.Data);
 
-			var query = parent.Select(p => new { ParentID = (int?)p.Child.ParentID }); // Should be an INNER JOIN because CanBeNull = false
+			var query = parent.Select(p => new { ParentID = (int?)p.ChildInner.ParentID });
 
 			var result = query.ToArray();
 
 			Assert.AreEqual(1, result.Length);
 			Assert.AreEqual(1, result[0].ParentID);
+		}
+
+		[Test]
+		public void AssociationExpressionNull([DataSources] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(NotNullParent.Data);
+			using var child  = db.CreateLocalTable(NotNullChild.Data);
+
+			var query = parent.OrderBy(_ => _.ID).Select(p => new { ParentID = (int?)p.ChildOuter!.ParentID });
+
+			var result = query.ToArray();
+
+			Assert.AreEqual(2, result.Length);
+			Assert.AreEqual(1, result[0].ParentID);
+			Assert.IsNull(result[1].ParentID);
 		}
 
 		[Test]
@@ -976,9 +995,33 @@ namespace Tests.Linq
 			using var parent = db.CreateLocalTable(parentData);
 			using var child  = db.CreateLocalTable(childData);
 
-			var query = parent.Select(p => p.Child.ParentID); // Should be an INNER JOIN because CanBeNull = false
+			var query = parent.Select(p => p.ChildInner.ParentID);
 
 			Assert.AreEqual(1, query.Count());
+		}
+
+		[Test]
+		public void AssociationExpressionNullCount([DataSources] string context)
+		{
+			var parentData = new[]
+			{
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+
+			var childData = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
+
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(parentData);
+			using var child  = db.CreateLocalTable(childData);
+
+			var query = parent.Select(p => p.ChildOuter!.ParentID);
+
+			Assert.AreEqual(2, query.Count());
+			Assert.AreEqual(1, query.GetTableSource().Joins.Count);
 		}
 
 		[Test]
