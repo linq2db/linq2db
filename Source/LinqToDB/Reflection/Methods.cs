@@ -159,11 +159,13 @@ namespace LinqToDB.Reflection
 
 			public static class SqlExt
 			{
-				public static readonly MethodInfo ToNotNull     = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNull(i));
-				public static readonly MethodInfo ToNotNullable = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNullable(i));
-				public static readonly MethodInfo Alias         = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.Alias(i, ""));
+				public static readonly MethodInfo ToNotNull        = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNull(i));
+				public static readonly MethodInfo ToNotNullable    = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.ToNotNullable(i));
+				public static readonly MethodInfo Alias            = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.Alias(i, ""));
 				// don't use MethodOfGeneric here (Sql.Property treatened in special way by it)
-				public static readonly MethodInfo Property      = typeof(global::LinqToDB.Sql).GetMethodEx(nameof(global::LinqToDB.Sql.Property))!.GetGenericMethodDefinition();
+				public static readonly MethodInfo Property         = typeof(global::LinqToDB.Sql).GetMethodEx(nameof(global::LinqToDB.Sql.Property))!.GetGenericMethodDefinition();
+
+				public static readonly PropertyInfo CurrentTimestamp = MemberHelper.PropertyOf(() => global::LinqToDB.Sql.CurrentTimestamp);
 			}
 
 			public static class Update

@@ -69,6 +69,7 @@
 		<!--source-->
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.179"       />
 		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.50.0"        />
+		<PackageVersion Include="Microsoft.Extensions.Identity.Stores"                  Version="7.0.1"         />
 		<!--examples-->
 		<PackageVersion Include="linq2db.t4models"                                      Version="4.3.0"         />
 		<!--tests-->

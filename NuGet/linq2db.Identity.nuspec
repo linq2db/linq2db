@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>linq2db.Identity</id>
+		<title>LINQ to DB ASP.NET Core Identity Provider</title>
+		<description>ASP.NET Core Identity provider that uses LinqToDB as data access layer.</description>
+		<summary />
+		<tags>aspnetcore linq2db identity membership LinqToDB</tags>
+		<readme>README.md</readme>
+		<dependencies>
+			<group targetFramework="net462" >
+				<dependency id="linq2db"                              version="4.0.0"  />
+				<dependency id="Microsoft.Extensions.Identity.Stores" version="7.0.1"  />
+			</group>
+			<group targetFramework="netstandard2.0">
+				<dependency id="linq2db"                              version="4.0.0"  />
+				<dependency id="Microsoft.Extensions.Identity.Stores" version="7.0.1"  />
+			</group>
+			<group targetFramework="net7.0" >
+				<dependency id="linq2db"                              version="4.0.0"  />
+				<dependency id="Microsoft.Extensions.Identity.Stores" version="7.0.1"  />
+			</group>
+		</dependencies>
+	</metadata>
+
+	<files>
+		<file src="..\Nuget\README.Identity.md"                                                 target="README.md"           />
+
+		<file src="..\Source\LinqToDB.Identity\bin\Release\net462\linq2db.Identity.pdb"         target="lib\net462\"         />
+		<file src="..\Source\LinqToDB.Identity\bin\Release\net462\linq2db.Identity.xml"         target="lib\net462\"         />
+		<file src="..\Source\LinqToDB.Identity\bin\Release\net462\linq2db.Identity.dll"         target="lib\net462\"         />
+		<file src="..\Source\LinqToDB.Identity\bin\Release\netstandard2.0\linq2db.Identity.pdb" target="lib\netstandard2.0\" />
+		<file src="..\Source\LinqToDB.Identity\bin\Release\netstandard2.0\linq2db.Identity.xml" target="lib\netstandard2.0\" />
+		<file src="..\Source\LinqToDB.Identity\bin\Release\netstandard2.0\linq2db.Identity.dll" target="lib\netstandard2.0\" />
+		<file src="..\Source\LinqToDB.Identity\bin\Release\net7.0\linq2db.Identity.pdb"         target="lib\net7.0\"         />
+		<file src="..\Source\LinqToDB.Identity\bin\Release\net7.0\linq2db.Identity.xml"         target="lib\net7.0\"         />
+		<file src="..\Source\LinqToDB.Identity\bin\Release\net7.0\linq2db.Identity.dll"         target="lib\net7.0\"         />
+	</files>
+</package>
