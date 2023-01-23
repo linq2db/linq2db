@@ -1,13 +1,14 @@
 ﻿namespace LinqToDB.Mapping
 {
 	/// <summary>
-	/// Defines optimistic concurrency column modification strategy. Used with <see cref="ConcurrencyPropertyAttribute" /> attribute
-	/// and <see cref="ConcurrencyExtensions" /> extensions, e.g. <see cref="ConcurrencyExtensions.UpdateConcurrent{T}(IDataContext, T)"/> or <see cref="ConcurrencyExtensions.UpdateConcurrentAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/> methods.
+	/// Defines optimistic concurrency column modification strategy.
+	/// Used with <see cref="ConcurrencyPropertyAttribute" /> attribute and <see cref="ConcurrencyExtensions" /> extensions.
+	/// E.g. <see cref="ConcurrencyExtensions.UpdateConcurrent{T}(IDataContext, T)"/> or <see cref="ConcurrencyExtensions.UpdateConcurrentAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/> methods.
 	/// </summary>
 	public enum VersionBehavior
 	{
 		/// <summary>
-		/// Column value modified by server automatically on update. E.g. SQL Server rowversion/timestamp column or database trigger.
+		/// Column value modified by database automatically on update. E.g. using SQL Server rowversion/timestamp column or database trigger.
 		/// </summary>
 		Auto,
 		/// <summary>
@@ -15,8 +16,8 @@
 		/// </summary>
 		AutoIncrement,
 		/// <summary>
-		/// Use current timestamp value (provided by <see cref="Sql.CurrentTimestamp" /> helper).
+		/// Use <see cref="Guid"/> value.
 		/// </summary>
-		CurrentTimestamp
+		Guid
 	}
 }

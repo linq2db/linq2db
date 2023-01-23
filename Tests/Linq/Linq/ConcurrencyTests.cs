@@ -14,7 +14,8 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ConcurrencyTests : TestBase
 	{
-		[Table("ConcurrencyTable")]
+		// table name overriden for each test to workaround
+		// https://github.com/linq2db/linq2db/issues/3894
 		public class ConcurrencyTable<TStamp>
 			where TStamp: notnull
 		{
@@ -40,7 +41,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public void TestAutoIncrement([DataSources] string context)
 		{
@@ -50,6 +50,7 @@ namespace Tests.Linq
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<int>>()
+					.HasTableName("ConcurrencyAutoIncrement")
 					.Property(e => e.Stamp)
 						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.AutoIncrement));
 
@@ -108,7 +109,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public async ValueTask TestAutoIncrementAsync([DataSources] string context)
 		{
@@ -117,6 +117,7 @@ namespace Tests.Linq
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<int>>()
+					.HasTableName("ConcurrencyAutoIncrement")
 					.Property(e => e.Stamp)
 						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.AutoIncrement));
 
@@ -175,26 +176,26 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
-		public async ValueTask TestTimeStamp([DataSources] string context)
+		public async ValueTask TestGuid([DataSources] string context)
 		{
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
-				.Entity<ConcurrencyTable<DateTime>>()
+				.Entity<ConcurrencyTable<Guid>>()
+					.HasTableName("ConcurrencyGuid")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.CurrentTimestamp));
+						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid));
 
-			using var _   = new DisableBaseline("timestamp used");
+			using var _   = new DisableBaseline("guid used");
 			using var db  = GetDataContext(context, ms);
-			using var t   = db.CreateLocalTable<ConcurrencyTable<DateTime>>();
+			using var t   = db.CreateLocalTable<ConcurrencyTable<Guid>>();
 
-			var record = new ConcurrencyTable<DateTime>()
+			var record = new ConcurrencyTable<Guid>()
 			{
 				Id    = 1,
-				Stamp = TestData.DateTime0,
+				Stamp = default,
 				Value = "initial"
 			};
 
@@ -217,13 +218,13 @@ namespace Tests.Linq
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
-			record.Stamp = TestData.DateTime0;
+			record.Stamp = Guid.NewGuid();
 			cnt = db.UpdateConcurrent(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
-			record.Stamp = TestData.DateTime0;
+			record.Stamp = Guid.NewGuid();
 
 			cnt = db.DeleteConcurrent(record);
 			Assert.AreEqual(0, cnt);
@@ -234,7 +235,7 @@ namespace Tests.Linq
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
-			void AssertData(ConcurrencyTable<DateTime> record, bool equals = false)
+			void AssertData(ConcurrencyTable<Guid> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
@@ -251,26 +252,26 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
-		public async ValueTask TestTimeStampAsync([DataSources] string context)
+		public async ValueTask TestTestGuidAsync([DataSources] string context)
 		{
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
 			ms.GetFluentMappingBuilder()
-				.Entity<ConcurrencyTable<DateTime>>()
+				.Entity<ConcurrencyTable<Guid>>()
+					.HasTableName("ConcurrencyGuid")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.CurrentTimestamp));
+						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid));
 
-			using var _   = new DisableBaseline("timestamp used");
+			using var _   = new DisableBaseline("guid used");
 			using var db  = GetDataContext(context, ms);
-			using var t   = db.CreateLocalTable<ConcurrencyTable<DateTime>>();
+			using var t   = db.CreateLocalTable<ConcurrencyTable<Guid>>();
 
-			var record = new ConcurrencyTable<DateTime>()
+			var record = new ConcurrencyTable<Guid>()
 			{
 				Id    = 1,
-				Stamp = TestData.DateTime0,
+				Stamp = default,
 				Value = "initial"
 			};
 
@@ -293,13 +294,13 @@ namespace Tests.Linq
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
-			record.Stamp = TestData.DateTime0;
+			record.Stamp = Guid.NewGuid();
 			cnt = await db.UpdateConcurrentAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
-			record.Stamp = TestData.DateTime0;
+			record.Stamp = Guid.NewGuid();
 
 			cnt = await db.DeleteConcurrentAsync(record);
 			Assert.AreEqual(0, cnt);
@@ -310,7 +311,7 @@ namespace Tests.Linq
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
-			void AssertData(ConcurrencyTable<DateTime> record, bool equals = false)
+			void AssertData(ConcurrencyTable<Guid> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
@@ -327,7 +328,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public void TestCustomStrategy([DataSources] string context)
 		{
@@ -336,6 +336,7 @@ namespace Tests.Linq
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<string>>()
+					.HasTableName("ConcurrencyCustom")
 					.Property(e => e.Stamp)
 						.HasAttribute(new CustomConcurrencyPropertyAttribute());
 
@@ -400,7 +401,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3894", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public async ValueTask TestCustomStrategyAsync([DataSources] string context)
 		{
@@ -409,6 +409,7 @@ namespace Tests.Linq
 
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<string>>()
+					.HasTableName("ConcurrencyCustom")
 					.Property(e => e.Stamp)
 						.HasAttribute(new CustomConcurrencyPropertyAttribute());
 

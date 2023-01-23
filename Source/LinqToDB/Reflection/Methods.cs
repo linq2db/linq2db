@@ -32,6 +32,11 @@ namespace LinqToDB.Reflection
 			public static readonly PropertyInfo ConnectionString = MemberHelper.PropertyOf<DbConnection>(c => c.ConnectionString);
 		}
 
+		public static class System
+		{
+			public static readonly MethodInfo Guid_NewGuid = MemberHelper.MethodOf(() => Guid.NewGuid());
+		}
+
 		public static class Enumerable
 		{
 			public static readonly MethodInfo ToArray     = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToArray());
@@ -164,8 +169,6 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo Alias            = MemberHelper.MethodOfGeneric<int?>(i => global::LinqToDB.Sql.Alias(i, ""));
 				// don't use MethodOfGeneric here (Sql.Property treatened in special way by it)
 				public static readonly MethodInfo Property         = typeof(global::LinqToDB.Sql).GetMethodEx(nameof(global::LinqToDB.Sql.Property))!.GetGenericMethodDefinition();
-
-				public static readonly PropertyInfo CurrentTimestamp = MemberHelper.PropertyOf(() => global::LinqToDB.Sql.CurrentTimestamp);
 			}
 
 			public static class Update

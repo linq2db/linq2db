@@ -23,11 +23,6 @@ namespace LinqToDB.Mapping
 		public VersionBehavior Behavior { get; }
 
 		/// <summary>
-		/// Optional mapping configuration name.
-		/// </summary>
-		public string? Configuration { get; set; }
-
-		/// <summary>
 		/// Implements generation of update value expression for current optimistic lock column.
 		/// </summary>
 		/// <param name="column">Column mapping descriptor.</param>
@@ -45,9 +40,9 @@ namespace LinqToDB.Mapping
 						Expression.Add(column.MemberAccessor.GetterExpression.GetBody(record), Expression.Constant(1)),
 						record);
 
-				case VersionBehavior.CurrentTimestamp:
+				case VersionBehavior.Guid:
 					return Expression.Lambda(
-						Expression.Property(null, Methods.LinqToDB.SqlExt.CurrentTimestamp),
+						Expression.Call(null, Methods.System.Guid_NewGuid),
 						record);
 
 				default:
@@ -57,7 +52,9 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{(int)Behavior}.";
+			// TODO: replace after merge with mapping refactorings
+			//return $".{base.GetObjectID()}.{(int)Behavior}.";
+			return $".{(int)Behavior}.";
 		}
 	}
 }
