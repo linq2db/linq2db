@@ -26,13 +26,8 @@ namespace Tests.Linq
 			[Column] public string? Value { get; set; }
 		}
 
-		public class CustomConcurrencyPropertyAttribute : ConcurrencyPropertyBaseAttribute
+		public class CustomConcurrencyPropertyAttribute : OptimisticLockPropertyBaseAttribute
 		{
-			public CustomConcurrencyPropertyAttribute()
-				: base()
-			{
-			}
-
 			public override LambdaExpression GetNextValue(ColumnDescriptor column, ParameterExpression record)
 			{
 				return Expression.Lambda(Expression.Constant(Guid.NewGuid().ToString("N")), record);
@@ -50,7 +45,7 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<int>>()
 					.HasTableName("ConcurrencyAutoIncrement")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.AutoIncrement))
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.AutoIncrement))
 				.Build();
 
 			using var db  = GetDataContext(context, ms);
@@ -68,32 +63,32 @@ namespace Tests.Linq
 			AssertData(record);
 
 			record.Value = "value 1";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			record.Stamp++;
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			record.Stamp++;
 			AssertData(record);
 
 			record.Stamp--;
 			record.Value = "value 3";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp++;
 			record.Value = "value 2";
 			AssertData(record);
 			record.Stamp--;
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp++;
 			AssertData(record);
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
@@ -118,7 +113,7 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<int>>()
 					.HasTableName("ConcurrencyAutoIncrement")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.AutoIncrement))
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.AutoIncrement))
 				.Build();
 
 			using var db  = GetDataContext(context, ms);
@@ -136,32 +131,32 @@ namespace Tests.Linq
 			AssertData(record);
 
 			record.Value = "value 1";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			record.Stamp++;
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			record.Stamp++;
 			AssertData(record);
 
 			record.Stamp--;
 			record.Value = "value 3";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp++;
 			record.Value = "value 2";
 			AssertData(record);
 			record.Stamp--;
 
-			cnt = await db.DeleteConcurrentAsync(record);
+			cnt = await db.DeleteOptimisticAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp++;
 			AssertData(record);
 
-			cnt = await db.DeleteConcurrentAsync(record);
+			cnt = await db.DeleteOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
@@ -186,7 +181,7 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<Guid>>()
 					.HasTableName("ConcurrencyGuid")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid))
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
 			using var _   = new DisableBaseline("guid used");
@@ -205,31 +200,31 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			record.Value = "value 1";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid();
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid();
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
@@ -261,7 +256,7 @@ namespace Tests.Linq
 					.HasTableName("ConcurrencyGuidString")
 					.Property(e => e.Stamp)
 						.HasLength(36)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid))
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
 			using var _   = new DisableBaseline("guid used");
@@ -280,31 +275,31 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			record.Value = "value 1";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid().ToString();
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid().ToString();
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
@@ -336,7 +331,7 @@ namespace Tests.Linq
 					.HasTableName("ConcurrencyGuidBinary")
 					.Property(e => e.Stamp)
 						.HasLength(16)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid))
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
 			using var _   = new DisableBaseline("guid used");
@@ -355,31 +350,31 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			record.Value = "value 1";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid().ToByteArray();
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid().ToByteArray();
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
@@ -410,7 +405,7 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<Guid>>()
 					.HasTableName("ConcurrencyGuid")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid))
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
 
 			using var _   = new DisableBaseline("guid used");
@@ -429,31 +424,31 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			record.Value = "value 1";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid();
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid();
 
-			cnt = await db.DeleteConcurrentAsync(record);
+			cnt = await db.DeleteOptimisticAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
-			cnt = await db.DeleteConcurrentAsync(record);
+			cnt = await db.DeleteOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
@@ -503,31 +498,31 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			record.Value = "value 1";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = "unknown-value";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = "unknown-value";
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
@@ -577,31 +572,31 @@ namespace Tests.Linq
 			AssertData(record, true);
 
 			record.Value = "value 1";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = "unknown-value";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = "unknown-value";
 
-			cnt = await db.DeleteConcurrentAsync(record);
+			cnt = await db.DeleteOptimisticAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
-			cnt = await db.DeleteConcurrentAsync(record);
+			cnt = await db.DeleteOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
@@ -631,8 +626,8 @@ namespace Tests.Linq
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<byte[]>>()
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Auto))
-						// don't set skip-on-update to test UpdateConcurrent skips it
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Auto))
+						// don't set skip-on-update to test UpdateOptimistic skips it
 						.HasSkipOnInsert()
 						.HasDataType(DataType.Timestamp)
 				.Build();
@@ -652,31 +647,31 @@ namespace Tests.Linq
 			AssertData(record);
 
 			record.Value = "value 1";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp.ToArray();
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
-			cnt = db.UpdateConcurrent(record);
+			cnt = db.UpdateOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
-			cnt = db.DeleteConcurrent(record);
+			cnt = db.DeleteOptimistic(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
@@ -706,8 +701,8 @@ namespace Tests.Linq
 			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<byte[]>>()
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Auto))
-						// don't set skip-on-update to test UpdateConcurrent skips it
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Auto))
+						// don't set skip-on-update to test UpdateOptimistic skips it
 						.HasSkipOnInsert()
 						.HasDataType(DataType.Timestamp)
 				.Build();
@@ -727,31 +722,31 @@ namespace Tests.Linq
 			AssertData(record);
 
 			record.Value = "value 1";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp.ToArray();
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
-			cnt = await db.UpdateConcurrentAsync(record);
+			cnt = await db.UpdateOptimisticAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
-			cnt = await db.DeleteConcurrentAsync(record);
+			cnt = await db.DeleteOptimisticAsync(record);
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
-			cnt = await db.DeleteConcurrentAsync(record);
+			cnt = await db.DeleteOptimisticAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 

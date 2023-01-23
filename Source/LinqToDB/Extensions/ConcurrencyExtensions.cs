@@ -58,7 +58,7 @@ namespace LinqToDB
 				.Select(c => new
 				{
 					Column = c,
-					Attr   = dc.MappingSchema.GetAttribute<ConcurrencyPropertyBaseAttribute>(objType, c.MemberInfo)
+					Attr   = dc.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, c.MemberInfo)
 				})
 				.Where(_ => _.Attr != null)
 				.Select(_ => _.Column)
@@ -70,7 +70,7 @@ namespace LinqToDB
 			return query;
 		}
 
-		private static IUpdatable<T> MakeUpdateConcurrent<T>(IDataContext dc, T obj)
+		private static IUpdatable<T> MakeUpdateOptimistic<T>(IDataContext dc, T obj)
 			where T : class
 		{
 			var objType = typeof(T);
@@ -88,7 +88,7 @@ namespace LinqToDB
 				var updateMethod    = Methods.LinqToDB.Update.SetUpdatablePrev.MakeGenericMethod(objType, cd.MemberInfo.GetMemberType());
 				var propExpression  = Expression.Lambda(Expression.MakeMemberAccess(param, cd.MemberInfo), param);
 
-				var concurrencyAttribute = dc.MappingSchema.GetAttribute<ConcurrencyPropertyBaseAttribute>(objType, cd.MemberInfo);
+				var concurrencyAttribute = dc.MappingSchema.GetAttribute<OptimisticLockPropertyBaseAttribute>(objType, cd.MemberInfo);
 
 				LambdaExpression? valueExpression;
 				if (concurrencyAttribute != null)
@@ -119,46 +119,46 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Performs record update using optimistic lock strategy.
-		/// Entity should have column annotated with <see cref="ConcurrencyPropertyBaseAttribute" />, otherwise regular update operation will be performed.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise regular update operation will be performed.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update.</param>
 		/// <returns>Number of updated records.</returns>
-		public static int UpdateConcurrent<T>(this IDataContext dc, T obj)
+		public static int UpdateOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeUpdateConcurrent(dc, obj).Update();
+			return MakeUpdateOptimistic(dc, obj).Update();
 		}
 
 		/// <summary>
 		/// Performs record update using optimistic lock strategy asynchronously.
-		/// Entity should have column annotated with <see cref="ConcurrencyPropertyBaseAttribute" />, otherwise regular update operation will be performed.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise regular update operation will be performed.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to update.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
-		public static Task<int> UpdateConcurrentAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
+		public static Task<int> UpdateOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeUpdateConcurrent(dc, obj).UpdateAsync(cancellationToken);
+			return MakeUpdateOptimistic(dc, obj).UpdateAsync(cancellationToken);
 		}
 
 		/// <summary>
 		/// Performs record delete using optimistic lock strategy.
-		/// Entity should have column annotated with <see cref="ConcurrencyPropertyBaseAttribute" />, otherwise regular delete operation will be performed.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise regular delete operation will be performed.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <returns>Number of deleted records.</returns>
-		public static int DeleteConcurrent<T>(this IDataContext dc, T obj)
+		public static int DeleteOptimistic<T>(this IDataContext dc, T obj)
 			where T : class
 		{
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
@@ -168,14 +168,14 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Performs record delete using optimistic lock strategy asynchronously.
-		/// Entity should have column annotated with <see cref="ConcurrencyPropertyBaseAttribute" />, otherwise regular delete operation will be performed.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise regular delete operation will be performed.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
 		/// <param name="obj">Entity instance to delete.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Number of deleted records.</returns>
-		public static Task<int> DeleteConcurrentAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
+		public static Task<int> DeleteOptimisticAsync<T>(this IDataContext dc, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
 			if (obj == null) throw new ArgumentNullException(nameof(obj));

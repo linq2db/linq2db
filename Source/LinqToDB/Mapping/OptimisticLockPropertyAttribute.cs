@@ -6,23 +6,30 @@ using LinqToDB.Reflection;
 namespace LinqToDB.Mapping
 {
 	/// <summary>
-	/// Identifies optimistic concurrency column behavior/strategy column and strategy.
-	/// Used with <see cref="ConcurrencyExtensions" /> extensions, e.g. <see cref="ConcurrencyExtensions.UpdateConcurrent{T}(IDataContext, T)"/> or <see cref="ConcurrencyExtensions.UpdateConcurrentAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/> methods.
+	/// Implements built-in optimistic lock value generation strategies for updates.
+	/// See <see cref="VersionBehavior"/> for supported strategies.
+	/// Used with <see cref="ConcurrencyExtensions" /> extensions:
+	/// <list type="bullet">
+	/// <item><see cref="ConcurrencyExtensions.UpdateOptimistic{T}(IDataContext, T)"/></item>
+	/// <item><see cref="ConcurrencyExtensions.UpdateOptimisticAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/></item>
+	/// <item><see cref="ConcurrencyExtensions.DeleteOptimistic{T}(IDataContext, T)"/></item>
+	/// <item><see cref="ConcurrencyExtensions.DeleteOptimisticAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/></item>
+	/// </list>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-	public class ConcurrencyPropertyAttribute : ConcurrencyPropertyBaseAttribute
+	public class OptimisticLockPropertyAttribute : OptimisticLockPropertyBaseAttribute
 	{
 		private static readonly Expression _newGuidCall       = Expression.Call(null, Methods.System.Guid_NewGuid);
 		private static readonly Expression _newGuidStringCall = Expression.Call(_newGuidCall, Methods.System.Guid_ToString);
 		private static readonly Expression _newGuidArrayCall  = Expression.Call(_newGuidCall, Methods.System.Guid_ToByteArray);
 
-		public ConcurrencyPropertyAttribute(VersionBehavior behavior)
+		public OptimisticLockPropertyAttribute(VersionBehavior behavior)
 		{
 			Behavior = behavior;
 		}
 
 		/// <summary>
-		/// Versioning strategy.
+		/// Version column value generation strategy.
 		/// </summary>
 		public VersionBehavior Behavior { get; }
 
