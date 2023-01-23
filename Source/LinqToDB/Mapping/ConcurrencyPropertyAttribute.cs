@@ -10,7 +10,7 @@ namespace LinqToDB.Mapping
 	/// Used with <see cref="ConcurrencyExtensions" /> extensions, e.g. <see cref="ConcurrencyExtensions.UpdateConcurrent{T}(IDataContext, T)"/> or <see cref="ConcurrencyExtensions.UpdateConcurrentAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/> methods.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-	public class ConcurrencyPropertyAttribute : MappingAttribute
+	public class ConcurrencyPropertyAttribute : ConcurrencyPropertyBaseAttribute
 	{
 		public ConcurrencyPropertyAttribute(VersionBehavior behavior)
 		{
@@ -28,7 +28,7 @@ namespace LinqToDB.Mapping
 		/// <param name="column">Column mapping descriptor.</param>
 		/// <param name="record">Updated record.</param>
 		/// <returns><c>null</c> to skip explicit column update or update expression.</returns>
-		public virtual LambdaExpression? GetNextValue(ColumnDescriptor column, ParameterExpression record)
+		public override LambdaExpression? GetNextValue(ColumnDescriptor column, ParameterExpression record)
 		{
 			switch (Behavior)
 			{

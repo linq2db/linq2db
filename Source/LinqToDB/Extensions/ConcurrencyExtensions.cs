@@ -58,7 +58,7 @@ namespace LinqToDB
 				.Select(c => new
 				{
 					Column = c,
-					Attr   = dc.MappingSchema.GetAttribute<ConcurrencyPropertyAttribute>(objType, c.MemberInfo)
+					Attr   = dc.MappingSchema.GetAttribute<ConcurrencyPropertyBaseAttribute>(objType, c.MemberInfo)
 				})
 				.Where(_ => _.Attr != null)
 				.Select(_ => _.Column)
@@ -88,7 +88,7 @@ namespace LinqToDB
 				var updateMethod    = Methods.LinqToDB.Update.SetUpdatablePrev.MakeGenericMethod(objType, cd.MemberInfo.GetMemberType());
 				var propExpression  = Expression.Lambda(Expression.MakeMemberAccess(param, cd.MemberInfo), param);
 
-				var concurrencyAttribute = dc.MappingSchema.GetAttribute<ConcurrencyPropertyAttribute>(objType, cd.MemberInfo);
+				var concurrencyAttribute = dc.MappingSchema.GetAttribute<ConcurrencyPropertyBaseAttribute>(objType, cd.MemberInfo);
 
 				LambdaExpression? valueExpression;
 				if (concurrencyAttribute != null)
@@ -119,7 +119,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Performs record update using optimistic lock strategy.
-		/// Entity should have column annotated with <see cref="ConcurrencyPropertyAttribute" />, otherwise regular update operation will be performed.
+		/// Entity should have column annotated with <see cref="ConcurrencyPropertyBaseAttribute" />, otherwise regular update operation will be performed.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
@@ -135,7 +135,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Performs record update using optimistic lock strategy asynchronously.
-		/// Entity should have column annotated with <see cref="ConcurrencyPropertyAttribute" />, otherwise regular update operation will be performed.
+		/// Entity should have column annotated with <see cref="ConcurrencyPropertyBaseAttribute" />, otherwise regular update operation will be performed.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
@@ -152,7 +152,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Performs record delete using optimistic lock strategy.
-		/// Entity should have column annotated with <see cref="ConcurrencyPropertyAttribute" />, otherwise regular delete operation will be performed.
+		/// Entity should have column annotated with <see cref="ConcurrencyPropertyBaseAttribute" />, otherwise regular delete operation will be performed.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>
@@ -168,7 +168,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Performs record delete using optimistic lock strategy asynchronously.
-		/// Entity should have column annotated with <see cref="ConcurrencyPropertyAttribute" />, otherwise regular delete operation will be performed.
+		/// Entity should have column annotated with <see cref="ConcurrencyPropertyBaseAttribute" />, otherwise regular delete operation will be performed.
 		/// </summary>
 		/// <typeparam name="T">Entity type.</typeparam>
 		/// <param name="dc">Database context.</param>

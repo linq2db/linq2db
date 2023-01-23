@@ -26,18 +26,26 @@ namespace Tests.Linq
 			[Column] public string? Value { get; set; }
 		}
 
-		public class CustomConcurrencyPropertyAttribute : ConcurrencyPropertyAttribute
+		public class CustomConcurrencyPropertyAttribute : ConcurrencyPropertyBaseAttribute
 		{
+			private static readonly Expression _body = Expression.Constant(Guid.NewGuid().ToString("N"));
+
 			public CustomConcurrencyPropertyAttribute()
-				: base(default)
+				: base()
 			{
 			}
 
 			public override LambdaExpression GetNextValue(ColumnDescriptor column, ParameterExpression record)
 			{
-				return Expression.Lambda(
-					Expression.Constant(Guid.NewGuid().ToString("N")),
-					record);
+				return Expression.Lambda(Expression.Constant(Guid.NewGuid().ToString("N")), record);
+				// TODO: fix
+				//return Expression.Lambda(_body, record);
+			}
+
+			// TODO: remove after merge with attributes refactoring
+			public override string GetObjectID()
+			{
+				return "hi there";
 			}
 		}
 
