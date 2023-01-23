@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
+	using Common.Internal;
 	using Linq;
 	using SqlQuery;
 	using SqlProvider;
@@ -68,7 +69,8 @@ namespace LinqToDB.Data
 
 				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.Options);
 
-				var sb = new StringBuilder();
+				using var sbv = Pools.StringBuilder.Allocate();
+				var sb = sbv.Value;
 
 				sb.Append("-- ").Append(_dataConnection.ConfigurationString);
 
@@ -103,7 +105,8 @@ namespace LinqToDB.Data
 						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.Options);
 						sql = sqlBuilder.ApplyQueryHints(sql, _executionQuery.PreparedQuery.QueryHints);
 
-						sb = new StringBuilder(sql);
+						sb.Length = 0;
+						sb.Append(sql);
 					}
 				}
 
@@ -244,7 +247,7 @@ namespace LinqToDB.Data
 				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (dataConnection.Options);
 
 				var cc = sqlBuilder.CommandCount(sql);
-				var sb = new StringBuilder();
+				using var sb = Pools.StringBuilder.Allocate();
 
 				var commands = new CommandWithParameters[cc];
 
@@ -264,10 +267,10 @@ namespace LinqToDB.Data
 				for (var i = 0; i < cc; i++)
 				{
 					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent);
-					sb.Length = 0;
+					sb.Value.Length = 0;
 
-					sqlBuilder.BuildSql(i, sql, sb, optimizationContext, startIndent);
-					commands[i] = new CommandWithParameters(sb.ToString(), optimizationContext.GetParameters().ToArray());
+					sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);
+					commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters().ToArray());
 					optimizationContext.ClearParameters();
 				}
 

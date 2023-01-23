@@ -56,15 +56,27 @@ namespace LinqToDB.Data.RetryPolicy
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(RetryPolicy?.GetType())
-			.Add(Factory)
-			.Add(MaxRetryCount)
-			.Add(MaxDelay)
-			.Add(RandomFactor)
-			.Add(ExponentialBase)
-			.Add(Coefficient)
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(RetryPolicy?.GetType())
+						.Add(Factory)
+						.Add(MaxRetryCount)
+						.Add(MaxDelay)
+						.Add(RandomFactor)
+						.Add(ExponentialBase)
+						.Add(Coefficient)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{

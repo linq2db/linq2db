@@ -73,18 +73,30 @@ namespace LinqToDB.Data
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(ConfigurationString)
-			.Add(ConnectionString)
-			.Add(DataProvider?.ID)
-			.Add(ProviderName)
-			.Add(MappingSchema)
-			.Add(DbConnection?.ConnectionString)
-			.Add(DbTransaction?.Connection?.ConnectionString)
-			.Add(DisposeConnection)
-			.Add(ConnectionFactory)
-			.Add(DataProviderFactory)
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(ConfigurationString)
+						.Add(ConnectionString)
+						.Add(DataProvider?.ID)
+						.Add(ProviderName)
+						.Add(MappingSchema)
+						.Add(DbConnection?.ConnectionString)
+						.Add(DbTransaction?.Connection?.ConnectionString)
+						.Add(DisposeConnection)
+						.Add(ConnectionFactory)
+						.Add(DataProviderFactory)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		internal IDataProvider? SavedDataProvider;
 		internal MappingSchema? SavedMappingSchema;

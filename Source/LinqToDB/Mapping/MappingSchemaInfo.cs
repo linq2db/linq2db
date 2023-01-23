@@ -318,7 +318,7 @@ namespace LinqToDB.Mapping
 
 		protected virtual int GenerateID()
 		{
-			var idBuilder = new IdentifierBuilder(Configuration);
+			using var idBuilder = new IdentifierBuilder(Configuration);
 
 			ProcessDictionary(_defaultValues);
 			ProcessDictionary(_canBeNull);
