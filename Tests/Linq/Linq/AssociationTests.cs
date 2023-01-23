@@ -916,7 +916,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class NotNullParent
+		sealed class NotNullParent
 		{
 			[Column] public int ID { get; set; }
 
@@ -936,7 +936,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class NotNullChild
+		sealed class NotNullChild
 		{
 			[Column] public int ParentID { get; set; }
 
