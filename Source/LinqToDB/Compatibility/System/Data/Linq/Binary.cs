@@ -3,6 +3,7 @@ using System;
 using System.Text;
 using System.Runtime.Serialization;
 using LinqToDB.Common;
+using LinqToDB.Common.Internal;
 
 namespace System.Data.Linq
 {
@@ -81,11 +82,13 @@ namespace System.Data.Linq
 
 		public override string ToString()
 		{
-			var sb = new StringBuilder();
-			sb.Append('"');
-			sb.Append(Convert.ToBase64String(_bytes, 0, _bytes.Length));
-			sb.Append('"');
-			return sb.ToString();
+			using var sb = Pools.StringBuilder.Allocate();
+
+			return sb.Value
+				.Append('"')
+				.Append(Convert.ToBase64String(_bytes, 0, _bytes.Length))
+				.Append('"')
+				.ToString();
 		}
 
 		private bool EqualsTo(Binary? binary)

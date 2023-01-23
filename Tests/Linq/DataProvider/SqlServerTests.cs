@@ -1278,11 +1278,12 @@ namespace Tests.DataProvider
 			using var db = GetDataConnection(context);
 			var       ms = new MappingSchema();
 
-			db.AddMappingSchema(ms);
-
 			ms.GetFluentMappingBuilder()
 				.Entity<AllTypes>()
-					.HasTableName("AllTypeCreateTest");
+					.HasTableName("AllTypeCreateTest")
+				.Build();
+
+			db.AddMappingSchema(ms);
 
 			db.DropTable<AllTypes>(tableOptions:TableOptions.DropIfExists);
 
@@ -1299,11 +1300,12 @@ namespace Tests.DataProvider
 			{
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
 				ms.GetFluentMappingBuilder()
 					.Entity<AllTypes2>()
-					.HasTableName("AllType2CreateTest");
+						.HasTableName("AllType2CreateTest")
+					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{

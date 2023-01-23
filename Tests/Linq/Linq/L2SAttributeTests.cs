@@ -14,6 +14,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Metadata;
 	using Model;
 
 #if NET472
@@ -62,9 +63,15 @@ namespace Tests.Linq
 		[Test]
 		public void IsDbGeneratedTest([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
+			var ms = new LinqToDB.Mapping.MappingSchema();
+			ms.AddMetadataReader(new SystemComponentModelDataAnnotationsSchemaAttributeReader());
+#if NET472
+			ms.AddMetadataReader(new SystemDataLinqAttributeReader());
+#endif
+
 			ResetPersonIdentity(context);
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, ms))
 			{
 				db.BeginTransaction();
 

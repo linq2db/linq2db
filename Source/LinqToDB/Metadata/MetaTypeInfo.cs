@@ -19,13 +19,7 @@ namespace LinqToDB.Metadata
 
 		public AttributeInfo[] GetAttribute(Type type)
 		{
-			return
-				Attributes.Where(a => a.Name == type.FullName).Concat(
-				Attributes.Where(a => a.Name == type.Name).    Concat(
-					type.Name.EndsWith("Attribute") ?
-						Attributes.Where(a => a.Name == type.Name.Substring(0, type.Name.Length - "Attribute".Length)) :
-						Enumerable.Empty<AttributeInfo>())
-				).ToArray();
+			return Attributes.Where(a => type.IsAssignableFrom(a.Type)).ToArray();
 		}
 	}
 }

@@ -39,6 +39,8 @@ namespace Tests.UserTests
 			carBuilder.Property(x => x.Id).IsPrimaryKey();
 			carBuilder.Property(x => x.Name).HasLength(50);
 
+			fluentMappingBuilder.Build();
+
 			var records = new Car[]
 			{
 				new Car { Id = 1, Name = "Special" },

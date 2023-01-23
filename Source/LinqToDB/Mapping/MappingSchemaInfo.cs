@@ -46,7 +46,7 @@ namespace LinqToDB.Mapping
 			return _defaultValues.TryGetValue(type, out var o) ? Option<object?>.Some(o) : Option<object?>.None;
 		}
 
-		public void SetDefaultValue(Type type, object? value)
+		public void SetDefaultValue(Type type, object? value, bool resetId = true)
 		{
 			if (_defaultValues == null)
 				lock (this)
@@ -54,7 +54,8 @@ namespace LinqToDB.Mapping
 
 			_defaultValues[type] = value;
 
-			ResetID();
+			if (resetId)
+				ResetID();
 		}
 
 		#endregion
@@ -71,7 +72,7 @@ namespace LinqToDB.Mapping
 			return _canBeNull.TryGetValue(type, out var o) ? Option<bool>.Some(o) : Option<bool>.None;
 		}
 
-		public void SetCanBeNull(Type type, bool value)
+		public void SetCanBeNull(Type type, bool value, bool resetId = true)
 		{
 			if (_canBeNull == null)
 				lock (this)
@@ -79,7 +80,8 @@ namespace LinqToDB.Mapping
 
 			_canBeNull[type] = value;
 
-			ResetID();
+			if (resetId)
+				ResetID();
 		}
 
 		#endregion
@@ -146,12 +148,13 @@ namespace LinqToDB.Mapping
 
 		ConvertInfo? _convertInfo;
 
-		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr)
+		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr, bool resetId = true)
 		{
 			_convertInfo ??= new ();
 			_convertInfo.Set(from, to, expr);
 
-			ResetID();
+			if (resetId)
+				ResetID();
 		}
 
 		public void SetConvertInfo(Type from, Type to, ConvertInfo.LambdaInfo expr)
@@ -276,21 +279,13 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		public Type[] GetRegisteredTypes()
+		public IEnumerable<Type> GetRegisteredTypes()
 		{
 			switch (MetadataReader)
 			{
-				case FluentMetadataReader fr :
-					return fr.GetRegisteredTypes();
-				case MetadataReader mr :
-					return
-					(
-						from f in mr.Readers.OfType<FluentMetadataReader>()
-						from t in f.GetRegisteredTypes()
-						select t
-					)
-					.ToArray();
-				default : return Array<Type>.Empty;
+				case FluentMetadataReader fr : return fr.GetRegisteredTypes();
+				case MetadataReader mr       : return mr.GetRegisteredTypes();
+				default                      : return Array<Type>.Empty;
 			}
 		}
 
@@ -318,7 +313,7 @@ namespace LinqToDB.Mapping
 
 		protected virtual int GenerateID()
 		{
-			var idBuilder = new IdentifierBuilder(Configuration);
+			using var idBuilder = new IdentifierBuilder(Configuration);
 
 			ProcessDictionary(_defaultValues);
 			ProcessDictionary(_canBeNull);
@@ -343,34 +338,6 @@ namespace LinqToDB.Mapping
 							.Add(IdentifierBuilder.GetObjectID(value))
 							;
 					}
-				}
-			}
-
-			var list = new List<FluentMetadataReader>();
-
-			switch (MetadataReader)
-			{
-				case FluentMetadataReader fr :
-					list.Add(fr);
-					break;
-				case MetadataReader mr :
-					foreach (var r in mr.Readers)
-						if (r is FluentMetadataReader fr)
-							list.Add(fr);
-					break;
-			}
-
-			idBuilder.Add(list.Count);
-
-			if (list.Count > 0)
-			{
-				foreach (var id in
-					from id in list
-					from a in id.GetObjectIDs()
-					orderby a
-					select a)
-				{
-					idBuilder.Add(id);
 				}
 			}
 

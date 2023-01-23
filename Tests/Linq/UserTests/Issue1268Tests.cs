@@ -36,7 +36,8 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 			var builder = ms.GetFluentMappingBuilder();
 			builder.Entity<RepresentTable>()
-				.Property(x => Sql.Property<bool>(x, "IsDeleted"));
+				.Property(x => Sql.Property<bool>(x, "IsDeleted"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<FullClass>())

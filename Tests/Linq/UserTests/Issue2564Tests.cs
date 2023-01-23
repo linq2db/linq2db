@@ -28,8 +28,8 @@ namespace Tests.UserTests
 			ms.GetFluentMappingBuilder()
 				.Entity<Issue2564Class>()
 				.HasTableName("Issue2564Table")
-				.Property(e => e.Id).IsPrimaryKey();
-
+				.Property(e => e.Id).IsPrimaryKey()
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{

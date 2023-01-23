@@ -351,7 +351,7 @@ namespace LinqToDB.Common
 			{
 				var fromFields = from.GetFields()
 					.Where (f => (f.Attributes & EnumField) == EnumField)
-					.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(from, f, a => a.Configuration) })
+					.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(from, f) })
 					.ToList();
 
 				{
@@ -409,7 +409,7 @@ namespace LinqToDB.Common
 				{
 					var toFields = to.GetFields()
 						.Where (f => (f.Attributes & EnumField) == EnumField)
-						.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(to, f, a => a.Configuration) })
+						.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(to, f) })
 						.ToList();
 
 					var dic = new Dictionary<EnumValues,EnumValues>();
@@ -650,7 +650,7 @@ namespace LinqToDB.Common
 			{
 				if ((field.Attributes & EnumField) == EnumField)
 				{
-					var attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, field, static a => a.Configuration);
+					var attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, field);
 
 					if (attrs.Length == 0)
 						allFieldsMapped = false;

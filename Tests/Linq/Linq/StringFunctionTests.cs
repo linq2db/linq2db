@@ -731,8 +731,8 @@ namespace Tests.Linq
 			{
 				var str   = "some";
 				
-				var result = table.Where(t => 
-						t.CharColumn.StartsWith(str)  && 
+				var result = table.Where(t =>
+						t.CharColumn.StartsWith(str)  &&
 						t.NCharColumn.StartsWith(str) &&
 						t.VarCharColumn.StartsWith(str) &&
 						t.NVarCharColumn.StartsWith(str)

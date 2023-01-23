@@ -23,7 +23,7 @@ namespace LinqToDB.Extensions
 
 			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
 			{
-				if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
+				if (underlyingType.IsEnum && !mappingSchema.HasAttribute<Sql.EnumAttribute>(underlyingType))
 				{
 					if (originalValue != null || systemType == underlyingType)
 					{
@@ -58,7 +58,7 @@ namespace LinqToDB.Extensions
 
 			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
 			{
-				if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
+				if (underlyingType.IsEnum && !mappingSchema.HasAttribute<Sql.EnumAttribute>(underlyingType))
 				{
 					if (systemType == underlyingType)
 					{
@@ -85,12 +85,12 @@ namespace LinqToDB.Extensions
 
 		public static Sql.ExpressionAttribute? GetExpressionAttribute(this MemberInfo member, MappingSchema mappingSchema)
 		{
-			return mappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
+			return mappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member);
 		}
 
 		public static Sql.TableFunctionAttribute? GetTableFunctionAttribute(this MemberInfo member, MappingSchema mappingSchema)
 		{
-			return mappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
+			return mappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member);
 		}
 	}
 }

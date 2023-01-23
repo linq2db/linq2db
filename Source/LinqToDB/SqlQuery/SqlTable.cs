@@ -7,6 +7,7 @@ using System.Threading;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using Mapping;
 	using Remote;
@@ -162,7 +163,8 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			using var sb = Pools.StringBuilder.Allocate();
+			return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement,IQueryElement>()).ToString();
 		}
 
 		#endregion

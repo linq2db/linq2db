@@ -409,18 +409,19 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// If <c>true</c>, auto support for fluent mapping is ON,
-			/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
-			/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
-			/// Default value: <c>true</c>.
+			/// If <c>true</c>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
+			/// Otherwise <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
+			/// It is not recommended to enable this option as it has performance implications.
+			/// Proper approach is to create single <see cref="Mapping.MappingSchema"/> instance once, configure mappings for it and use this <see cref="Mapping.MappingSchema"/> instance for all context instances.
+			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool EnableAutoFluentMapping
+			public static bool EnableContextSchemaEdit
 			{
-				get => Options.EnableAutoFluentMapping;
+				get => Options.EnableContextSchemaEdit;
 				set
 				{
-					if (Options.EnableAutoFluentMapping != value)
-						Options = Options with { EnableAutoFluentMapping = value };
+					if (Options.EnableContextSchemaEdit != value)
+						Options = Options with { EnableContextSchemaEdit = value };
 				}
 			}
 		}

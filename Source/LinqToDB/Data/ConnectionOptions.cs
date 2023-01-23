@@ -34,23 +34,23 @@ namespace LinqToDB.Data
 	/// If <c>true</c>, <see cref="DataConnection"/> will dispose provided connection on own dispose.
 	/// </param>
 	/// <param name="ConnectionFactory">
-	/// Gets connection factory to use with <see cref="DataConnection"/> instance.
+	/// Gets connection factory to use with <see cref="DataConnection"/> instance. Accepts current context <see cref="DataOptions" /> settings.
 	/// </param>
 	/// <param name="DataProviderFactory">
 	/// Gets <see cref="IDataProvider"/> factory to use with <see cref="DataConnection"/> instance.
 	/// </param>
 	public sealed record ConnectionOptions
 	(
-		string?              ConfigurationString = default,
-		string?              ConnectionString    = default,
-		IDataProvider?       DataProvider        = default,
-		string?              ProviderName        = default,
-		MappingSchema?       MappingSchema       = default,
-		DbConnection?        DbConnection        = default,
-		DbTransaction?       DbTransaction       = default,
-		bool                 DisposeConnection   = default,
-		Func<DbConnection>?  ConnectionFactory   = default,
-		Func<IDataProvider>? DataProviderFactory = default
+		string?                           ConfigurationString = default,
+		string?                           ConnectionString    = default,
+		IDataProvider?                    DataProvider        = default,
+		string?                           ProviderName        = default,
+		MappingSchema?                    MappingSchema       = default,
+		DbConnection?                     DbConnection        = default,
+		DbTransaction?                    DbTransaction       = default,
+		bool                              DisposeConnection   = default,
+		Func<DataOptions, DbConnection>? ConnectionFactory    = default,
+		Func<IDataProvider>?             DataProviderFactory  = default
 	)
 		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
@@ -73,24 +73,36 @@ namespace LinqToDB.Data
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(ConfigurationString)
-			.Add(ConnectionString)
-			.Add(DataProvider?.ID)
-			.Add(ProviderName)
-			.Add(MappingSchema)
-			.Add(DbConnection?.ConnectionString)
-			.Add(DbTransaction?.Connection?.ConnectionString)
-			.Add(DisposeConnection)
-			.Add(ConnectionFactory)
-			.Add(DataProviderFactory)
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(ConfigurationString)
+						.Add(ConnectionString)
+						.Add(DataProvider?.ID)
+						.Add(ProviderName)
+						.Add(MappingSchema)
+						.Add(DbConnection?.ConnectionString)
+						.Add(DbTransaction?.Connection?.ConnectionString)
+						.Add(DisposeConnection)
+						.Add(ConnectionFactory)
+						.Add(DataProviderFactory)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		internal IDataProvider? SavedDataProvider;
 		internal MappingSchema? SavedMappingSchema;
 		internal string?        SavedConnectionString;
 		internal string?        SavedConfigurationString;
-		internal bool           SavedEnableAutoFluentMapping;
+		internal bool           SavedEnableContextSchemaEdit;
 
 		void IApplicable<DataConnection>.Apply(DataConnection obj)
 		{

@@ -581,7 +581,8 @@ namespace Tests.Linq
 			ms.GetFluentMappingBuilder().Entity<Record>()
 				.Property(p => p.Id).IsPrimaryKey()
 				.Property(p => p.Value)
-				.Property(p => p.BaseValue);
+				.Property(p => p.BaseValue)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable<Record>())
@@ -618,7 +619,8 @@ namespace Tests.Linq
 			ms.GetFluentMappingBuilder().Entity<RecordLike>()
 				.Property(p => p.Id).IsPrimaryKey()
 				.Property(p => p.Value)
-				.Property(p => p.BaseValue);
+				.Property(p => p.BaseValue)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable<RecordLike>())
@@ -654,7 +656,8 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			ms.GetFluentMappingBuilder().Entity<WithInitOnly>()
 				.Property(p => p.Id).IsPrimaryKey()
-				.Property(p => p.Value);
+				.Property(p => p.Value)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable<WithInitOnly>())

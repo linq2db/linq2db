@@ -66,12 +66,10 @@ namespace LinqToDB.DataProvider.SapHana
 			else
 			{
 				var name = WithStringBuilder(
-					new StringBuilder(),
-					() =>
+					static ctx =>
 					{
-						BuildPhysicalTable(createTable.Table, null);
-						return StringBuilder.ToString();
-					});
+						ctx.this_.BuildPhysicalTable(ctx.createTable.Table, null);
+					}, (this_: this, createTable));
 
 				AppendIndent().AppendFormat(createTable.StatementHeader, name);
 			}

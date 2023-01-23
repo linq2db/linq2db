@@ -7,15 +7,20 @@ using System.Linq;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Common.Internal;
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
 	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
 	{
-		public string SqlText =>
-			((IQueryElement)this)
-				.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-				.ToString();
+		public string SqlText
+		{
+			get
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
+		}
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		protected string DebugSqlText => Tools.ToDebugDisplay(SqlText);

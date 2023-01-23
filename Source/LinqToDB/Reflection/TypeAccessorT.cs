@@ -73,7 +73,7 @@ namespace LinqToDB.Reflection
 
 			// ObjectFactory
 			//
-			var attr = type.GetFirstAttribute<ObjectFactoryAttribute>();
+			var attr = type.GetAttribute<ObjectFactoryAttribute>();
 
 			if (attr != null)
 				_objectFactory = attr.ObjectFactory;

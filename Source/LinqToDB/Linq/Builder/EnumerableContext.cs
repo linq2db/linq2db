@@ -234,10 +234,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var assocAttr = Builder.MappingSchema.GetAttributes<AssociationAttribute>(typeAccessor.Type, member.MemberInfo).FirstOrDefault();
-					var isAssociation = assocAttr != null;
-
-					if (isAssociation)
+					if (Builder.MappingSchema.HasAttribute<AssociationAttribute>(typeAccessor.Type, member.MemberInfo))
 					{
 						/*var loadWithItem = loadWithItems.FirstOrDefault(_ => MemberInfoEqualityComparer.Default.Equals(_.Info.MemberInfo, member.MemberInfo));
 						if (loadWithItem != null)
