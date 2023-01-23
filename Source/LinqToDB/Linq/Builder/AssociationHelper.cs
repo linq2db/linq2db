@@ -294,7 +294,7 @@ namespace LinqToDB.Linq.Builder
 
 			var tableSource = tableContext.SelectQuery.From.Tables.First();
 			var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
-				descriptor.GenerateAlias(), true, null);
+				descriptor.GenerateAlias(), isOuter, null);
 
 			tableSource.Joins.Add(join.JoinedTable);
 
