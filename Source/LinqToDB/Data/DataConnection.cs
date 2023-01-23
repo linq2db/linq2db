@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
@@ -13,6 +12,7 @@ namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using DataProvider;
 	using Expressions;
 	using Mapping;
@@ -504,15 +504,15 @@ namespace LinqToDB.Data
 
 				case TraceInfoStep.Error:
 				{
-					var sb = new StringBuilder();
+					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Append(info.TraceInfoStep);
+					sb.Value.Append(info.TraceInfoStep);
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
 						try
 						{
-							sb
+							sb.Value
 								.AppendLine()
 								.AppendLine($"Exception: {ex.GetType()}")
 								.AppendLine($"Message  : {ex.Message}")
@@ -525,44 +525,44 @@ namespace LinqToDB.Data
 							// try to access Message property due to bug in AseErrorCollection.Message property.
 							// There it tries to fetch error from first element of list without checking wether
 							// list contains any elements or not
-							sb
+							sb.Value
 								.AppendLine()
 								.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
 								;
 						}
 					}
 
-					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
+					WriteTraceLineConnection(sb.Value.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
 
 				case TraceInfoStep.MapperCreated:
 				{
-					var sb = new StringBuilder();
+					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.AppendLine(info.TraceInfoStep.ToString());
+					sb.Value.AppendLine(info.TraceInfoStep.ToString());
 
 					if (info.MapperExpression != null && info.DataConnection.Options.LinqOptions.TraceMapperExpression)
-						sb.AppendLine(info.MapperExpression.GetDebugView());
+						sb.Value.AppendLine(info.MapperExpression.GetDebugView());
 
-					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
+					WriteTraceLineConnection(sb.Value.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
 
 				case TraceInfoStep.Completed:
 				{
-					var sb = new StringBuilder();
+					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Append($"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
+					sb.Value.Append($"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
-						sb.Append($" Rows Count: {info.RecordsAffected}.");
+						sb.Value.Append($" Rows Count: {info.RecordsAffected}.");
 
-					sb.AppendLine();
+					sb.Value.AppendLine();
 
-					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
+					WriteTraceLineConnection(sb.Value.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}

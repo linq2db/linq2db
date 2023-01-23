@@ -9,6 +9,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using Data;
 	using Extensions;
 	using SqlProvider;
@@ -139,11 +140,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var data           = new List<List<object?>>(columns.Count);
-			var cmd            = new StringBuilder();
+			using var cmd      = Pools.StringBuilder.Allocate();
 			var columnTypes    = columns.Select(_ => _.GetConvertedDbDataType()).ToArray();
 			var valueConverter = new BulkCopyReader.Parameter();
 
-			cmd
+			cmd.Value
 				.Append("INSERT INTO ")
 				.Append(GetTableName(sb, options, table))
 				.Append('(');
@@ -153,14 +154,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 				data.Add(new List<object?>());
 
 				if (i > 0)
-					cmd.Append(", ");
+					cmd.Value.Append(", ");
 
-				sb.Convert(cmd, columns[i].ColumnName, ConvertType.NameToQueryField);
+				sb.Convert(cmd.Value, columns[i].ColumnName, ConvertType.NameToQueryField);
 			}
 
-			cmd.AppendLine(") VALUES");
+			cmd.Value.AppendLine(") VALUES");
 
-			var sql = cmd.ToString();
+			var sql = cmd.Value.ToString();
 
 			using var bc = _provider.Adapter.OctonicaCreateWriter!(connection, sql);
 
@@ -244,11 +245,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var data           = new List<List<object?>>(columns.Count);
-			var cmd            = new StringBuilder();
+			using var cmd      = Pools.StringBuilder.Allocate();
 			var columnTypes    = columns.Select(_ => _.GetConvertedDbDataType()).ToArray();
 			var valueConverter = new BulkCopyReader.Parameter();
 
-			cmd
+			cmd.Value
 				.Append("INSERT INTO ")
 				.Append(GetTableName(sb, options, table))
 				.Append('(');
@@ -258,14 +259,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 				data.Add(new List<object?>());
 
 				if (i > 0)
-					cmd.Append(", ");
+					cmd.Value.Append(", ");
 
-				sb.Convert(cmd, columns[i].ColumnName, ConvertType.NameToQueryField);
+				sb.Convert(cmd.Value, columns[i].ColumnName, ConvertType.NameToQueryField);
 			}
 
-			cmd.AppendLine(") VALUES");
+			cmd.Value.AppendLine(") VALUES");
 
-			var sql = cmd.ToString();
+			var sql = cmd.Value.ToString();
 
 			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			await using (bc)
@@ -352,11 +353,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var data           = new List<List<object?>>(columns.Count);
-			var cmd            = new StringBuilder();
+			using var cmd      = Pools.StringBuilder.Allocate();
 			var columnTypes    = columns.Select(_ => _.GetConvertedDbDataType()).ToArray();
 			var valueConverter = new BulkCopyReader.Parameter();
 
-			cmd
+			cmd.Value
 				.Append("INSERT INTO ")
 				.Append(GetTableName(sb, options, table))
 				.Append('(');
@@ -366,14 +367,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 				data.Add(new List<object?>());
 
 				if (i > 0)
-					cmd.Append(", ");
+					cmd.Value.Append(", ");
 
-				sb.Convert(cmd, columns[i].ColumnName, ConvertType.NameToQueryField);
+				sb.Convert(cmd.Value, columns[i].ColumnName, ConvertType.NameToQueryField);
 			}
 
-			cmd.AppendLine(") VALUES");
+			cmd.Value.AppendLine(") VALUES");
 
-			var sql = cmd.ToString();
+			var sql = cmd.Value.ToString();
 
 			// thanks C#! (sarcasm)
 			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);

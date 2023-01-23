@@ -284,9 +284,9 @@ namespace LinqToDB
 				}
 				else if (Expression != null)
 				{
-					var sb = new StringBuilder();
-					Expression.ToString(sb, new Dictionary<IQueryElement, IQueryElement>());
-					str = $"{paramPrefix}('{Name ?? ""}'): {sb}";
+					using var sb = Pools.StringBuilder.Allocate();
+					Expression.ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>());
+					str = $"{paramPrefix}('{Name ?? ""}'): {sb.Value}";
 				}
 				else
 					str = $"{paramPrefix}('{Name ?? ""}')";
@@ -766,7 +766,6 @@ namespace LinqToDB
 			public static SqlExpression BuildSqlExpression(SqlExtension root, Type? systemType, int precedence,
 				SqlFlags flags, bool? canBeNull, IsNullableType isNullable)
 			{
-				var sb             = new StringBuilder();
 				var resolvedParams = new Dictionary<SqlExtensionParam, string?>();
 				var resolving      = new HashSet<SqlExtensionParam>();
 				var newParams      = new List<ISqlExpression>();
@@ -802,7 +801,6 @@ namespace LinqToDB
 							}
 							else
 							{
-								sb.Length = 0;
 								if (p.Expression != null)
 								{
 									paramValue = string.Format("{{{0}}}", newParams.Count);

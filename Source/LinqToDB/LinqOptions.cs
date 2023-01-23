@@ -175,22 +175,34 @@ namespace LinqToDB
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(PreloadGroups)
-			.Add(IgnoreEmptyUpdate)
-			.Add(GenerateExpressionTest)
-			.Add(TraceMapperExpression)
-			.Add(DoNotClearOrderBys)
-			.Add(OptimizeJoins)
-			.Add(CompareNullsAsValues)
-			.Add(GuardGrouping)
-			.Add(DisableQueryCache)
-			.Add(CacheSlidingExpiration)
-			.Add(PreferApply)
-			.Add(KeepDistinctOrdered)
-			.Add(ParameterizeTakeSkip)
-			.Add(EnableAutoFluentMapping)
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(PreloadGroups)
+						.Add(IgnoreEmptyUpdate)
+						.Add(GenerateExpressionTest)
+						.Add(TraceMapperExpression)
+						.Add(DoNotClearOrderBys)
+						.Add(OptimizeJoins)
+						.Add(CompareNullsAsValues)
+						.Add(GuardGrouping)
+						.Add(DisableQueryCache)
+						.Add(CacheSlidingExpiration)
+						.Add(PreferApply)
+						.Add(KeepDistinctOrdered)
+						.Add(ParameterizeTakeSkip)
+						.Add(EnableAutoFluentMapping)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		public TimeSpan CacheSlidingExpirationOrDefault => CacheSlidingExpiration ?? TimeSpan.FromHours(1);
 

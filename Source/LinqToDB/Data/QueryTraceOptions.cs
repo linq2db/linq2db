@@ -35,11 +35,23 @@ namespace LinqToDB.Data
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(TraceLevel)
-			.Add(OnTrace)
-			.Add(WriteTrace)
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(TraceLevel)
+						.Add(OnTrace)
+						.Add(WriteTrace)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		public static readonly QueryTraceOptions Empty = new();
 
