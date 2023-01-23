@@ -22,6 +22,8 @@ namespace LinqToDB.Mapping
 		/// Column value should be incremented by 1.
 		/// </summary>
 		AutoIncrement,
+
+#pragma warning disable CA1200 // Avoid using cref tags with a prefix: https://github.com/dotnet/roslyn-analyzers/issues/2004
 		/// <summary>
 		/// Uses <see cref="Guid.NewGuid()"/> value.
 		/// Supported column types:
@@ -32,5 +34,6 @@ namespace LinqToDB.Mapping
 		/// </list>
 		/// </summary>
 		Guid
+#pragma warning restore CA1200 // Avoid using cref tags with a prefix
 	}
 }
