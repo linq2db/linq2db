@@ -71,4 +71,4 @@ There are multiple reasons for it:
 - T4 host use x86 process for Visual Studio 2019- and x64 process for Visual Studio 2022+. This creates issues with native providers as they are platform-dependent (ODBC and OleDb providers, various native ADO.NET providers).
 - It's very hard to maintain big code generation framework, written in T4 templates.
 
-Those are just several most major issues T4 templates have.
+These are the most significant issues with T4 templates.
