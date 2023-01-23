@@ -203,7 +203,7 @@ namespace LinqToDB.Mapping
 
 				if (aa != null)
 				{
-					Associations.Add(new AssociationDescriptor(
+					_associations.Add(new AssociationDescriptor(
 						TypeAccessor.Type, 
 						member.MemberInfo, 
 						aa.GetThisKeys(), 

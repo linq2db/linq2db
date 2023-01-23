@@ -149,15 +149,12 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		private bool AnalyzeCanBeNull(ColumnAttribute columnAttribute)
+		private bool AnalyzeCanBeNull(ColumnAttribute? columnAttribute)
 		{
-			if (columnAttribute.HasCanBeNull())
+			if (columnAttribute?.HasCanBeNull() == true)
 				return columnAttribute.CanBeNull;
 			
-			var na = MappingSchema.GetAttribute<NullableAttribute>(
-				MemberAccessor.TypeAccessor.Type, 
-				MemberInfo, 
-				attr => attr.Configuration);
+			var na = MappingSchema.GetAttribute<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 			if (na != null)
 				return na.CanBeNull;
 				
