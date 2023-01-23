@@ -43,8 +43,8 @@ namespace LinqToDB.Linq.Builder
 
 			var context = new ChainContext(buildInfo.Parent, sequence, methodCall);
 
-			var sqlExpression = finalFunction.GetExpression((builder, context), builder.DataContext, context.SelectQuery, methodCall,
-				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor));
+			var sqlExpression = finalFunction.GetExpression((builder, context, flags: buildInfo.GetFlags()), builder.DataContext, context.SelectQuery, methodCall,
+				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
 
 			context.Placeholder = ExpressionBuilder.CreatePlaceholder(context, sqlExpression, methodCall, alias: methodCall.Method.Name);
 

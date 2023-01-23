@@ -380,7 +380,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expr, unwrap: false, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 		}
 
-		public ISqlExpression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor)
+		public ISqlExpression ConvertToExtensionSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor)
 		{
 			expression = expression.UnwrapConvertToObject();
 			var unwrapped = expression.Unwrap();
@@ -392,7 +392,7 @@ namespace LinqToDB.Linq.Builder
 					preparedExpression = ((MethodCallExpression)unwrapped).Arguments[0];
 				else
 					preparedExpression = ((Sql.IQueryableContainer)unwrapped.EvaluateExpression()!).Query.Expression;
-				return ConvertToExtensionSql(context, preparedExpression, columnDescriptor);
+				return ConvertToExtensionSql(context, flags, preparedExpression, columnDescriptor);
 			}
 
 			if (unwrapped is LambdaExpression lambda)
@@ -443,7 +443,7 @@ namespace LinqToDB.Linq.Builder
 			*/
 			}
 
-			return ConvertToSql(context, expression, unwrap: false, columnDescriptor: columnDescriptor);
+			return ConvertToSql(context, expression, flags: flags.SqlFlag(), unwrap: false, columnDescriptor: columnDescriptor);
 		}
 
 		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}")]
@@ -758,8 +758,12 @@ namespace LinqToDB.Linq.Builder
 					if (leftExpr is not SqlPlaceholderExpression || rightExpr is not SqlPlaceholderExpression)
 						return e;
 
-					var leftPlaceholder  = (SqlPlaceholderExpression)ConvertToSqlExpr(context, e.Left,  flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
-					var rightPlaceholder = (SqlPlaceholderExpression)ConvertToSqlExpr(context, e.Right, flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
+					var leftPlaceholder  = ConvertToSqlExpr(context, e.Left,  flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression) as SqlPlaceholderExpression;
+					if (leftPlaceholder == null)
+						return e;
+					var rightPlaceholder = ConvertToSqlExpr(context, e.Right, flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression) as SqlPlaceholderExpression;
+					if (rightPlaceholder == null)
+						return e;
 
 					var l = leftPlaceholder.Sql;
 					var r = rightPlaceholder.Sql;
@@ -966,7 +970,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (attr != null)
 					{
-						return CreatePlaceholder(context, ConvertExtensionToSql(context!, attr, e), expression, alias: alias);
+						return CreatePlaceholder(context, ConvertExtensionToSql(context!, flags, attr, e), expression, alias: alias);
 					}
 
 					if (e.Method.IsSqlPropertyMethodEx())
@@ -1114,7 +1118,7 @@ namespace LinqToDB.Linq.Builder
 			return QueryHelper.ConvertFormatToConcatenation(format, sqlArguments);
 		}
 
-		public ISqlExpression ConvertExtensionToSql(IBuildContext context, Sql.ExpressionAttribute attr, MethodCallExpression mc)
+		public ISqlExpression ConvertExtensionToSql(IBuildContext context, ProjectFlags flags, Sql.ExpressionAttribute attr, MethodCallExpression mc)
 		{
 			var inlineParameters = DataContext.InlineParameters;
 
@@ -1122,11 +1126,11 @@ namespace LinqToDB.Linq.Builder
 				DataContext.InlineParameters = true;
 
 			var sqlExpression = attr.GetExpression(
-				(this_: this, context),
+				(this_: this, context, flags),
 				DataContext,
 				context!.SelectQuery,
 				mc,
-				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, e, descriptor));
+				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
 
 			if (sqlExpression == null)
 				throw new LinqToDBException($"Cannot convert to SQL method '{mc}'.");

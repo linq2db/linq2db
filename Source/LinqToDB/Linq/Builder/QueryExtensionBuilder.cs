@@ -86,13 +86,13 @@ namespace LinqToDB.Linq.Builder
 					{
 						data.SqlExpression = data.Expression.Unwrap() switch
 						{
-							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, lex, null),
+							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), lex, null),
 							var ex => builder.ConvertToSql(sequence, ex)
 						};
 					}
 					else if (data.Expression is LambdaExpression le)
 					{
-						data.SqlExpression = builder.ConvertToExtensionSql(sequence, le, null);
+						data.SqlExpression = builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), le, null);
 					}
 					else
 					{

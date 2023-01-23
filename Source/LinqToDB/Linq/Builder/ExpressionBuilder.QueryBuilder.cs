@@ -180,26 +180,31 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
 		{
+			return UpdateNesting(upToContext.SelectQuery, expression);
+		}
+
+		public Expression UpdateNesting(SelectQuery upToQuery, Expression expression)
+		{
 			// short path
-			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToContext.SelectQuery)
+			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToQuery)
 				return expression;
 
 			var parentInfo = new Dictionary<SelectQuery, SelectQuery>();
-			BuildParentsInfo(upToContext.SelectQuery, parentInfo);
+			BuildParentsInfo(upToQuery, parentInfo);
 
 			var withColumns =
 				expression.Transform(
-					(builder: this, upToContext, parentInfo),
+					(builder: this, upToQuery, parentInfo),
 					static (context, expr) =>
 					{
-						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToContext.SelectQuery, placeholder.SelectQuery))
+						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToQuery, placeholder.SelectQuery))
 						{
 							do
 							{
 								if (placeholder.SelectQuery == null)
 									break;
 
-								if (ReferenceEquals(context.upToContext.SelectQuery, placeholder.SelectQuery))
+								if (ReferenceEquals(context.upToQuery, placeholder.SelectQuery))
 									break;
 
 								if (!GetParentQuery(context.parentInfo, placeholder.SelectQuery, out var parentQuery))
@@ -586,11 +591,11 @@ namespace LinqToDB.Linq.Builder
 
 				if (attr != null && (flags.HasFlag(ProjectFlags.Expression) || attr.ServerSideOnly))
 				{
-					var converted = attr.GetExpression((builder: this, context),
+					var converted = attr.GetExpression((builder: this, context, flags),
 						DataContext,
 						context.SelectQuery, expr,
 						static (context, e, descriptor) =>
-							context.builder.ConvertToExtensionSql(context.context, e, descriptor));
+							context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
 
 					if (converted != null)
 					{

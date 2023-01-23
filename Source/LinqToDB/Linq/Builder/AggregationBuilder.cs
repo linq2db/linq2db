@@ -167,8 +167,8 @@ namespace LinqToDB.Linq.Builder
 					else
 						valueExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
 
-					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, ProjectFlags.SQL);
-					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
+					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, buildInfo.GetFlags());
+					context = new AggregationContext(buildInfo.Parent, placeholderSequence, methodCall.Method.Name, methodCall.Method.ReturnType);
 
 					var sql = sqlPlaceholder.Sql;
 
@@ -243,6 +243,8 @@ namespace LinqToDB.Linq.Builder
 					_joinedTable = join.JoinedTable;
 
 					parentQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+
+					Placeholder = (SqlPlaceholderExpression)Builder.UpdateNesting(parentQuery, Placeholder);
 				}
 			}
 
