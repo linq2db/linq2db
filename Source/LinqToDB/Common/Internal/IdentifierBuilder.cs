@@ -18,14 +18,22 @@ namespace LinqToDB.Common.Internal
 	/// Internal infrastructure API.
 	/// Provides functionality for <see cref="IConfigurationID.ConfigurationID"/> generation.
 	/// </summary>
-	public sealed class IdentifierBuilder
+	public sealed class IdentifierBuilder : IDisposable
 	{
+		readonly ObjectPool<StringBuilder>.RentedElement _pooledElement;
+		StringBuilder? _stringBuilder;
+
 		public IdentifierBuilder()
 		{
+			_pooledElement = Pools.StringBuilder.Allocate();
+			_stringBuilder = _pooledElement.Value;
 		}
 
 		public IdentifierBuilder(object? data)
 		{
+			_pooledElement = Pools.StringBuilder.Allocate();
+			_stringBuilder = _pooledElement.Value;
+
 			Add(data);
 		}
 
@@ -42,11 +50,9 @@ namespace LinqToDB.Common.Internal
 			_objects.    Clear();
 		}
 
-		readonly StringBuilder _stringBuilder = new ();
-
 		public IdentifierBuilder Add(IConfigurationID? data)
 		{
-			_stringBuilder
+			_stringBuilder!
 				.Append('.')
 				.Append(data?.ConfigurationID)
 				;
@@ -55,7 +61,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(string? data)
 		{
-			_stringBuilder
+			_stringBuilder!
 				.Append('.')
 				.Append(data)
 				;
@@ -64,7 +70,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(bool data)
 		{
-			_stringBuilder
+			_stringBuilder!
 				.Append('.')
 				.Append(data ? "1" : "0")
 				;
@@ -73,7 +79,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(object? data)
 		{
-			_stringBuilder
+			_stringBuilder!
 				.Append('.')
 				.Append(GetObjectID(data))
 				;
@@ -82,7 +88,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(Delegate? data)
 		{
-			_stringBuilder
+			_stringBuilder!
 				.Append('.')
 				.Append(data?.Method)
 				;
@@ -91,7 +97,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(int? data)
 		{
-			_stringBuilder
+			_stringBuilder!
 				.Append('.')
 				.Append(data == null ? string.Empty : GetIntID(data.Value))
 				;
@@ -100,7 +106,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(string format, object? data)
 		{
-			_stringBuilder
+			_stringBuilder!
 				.Append('.')
 				.AppendFormat(format, data)
 				;
@@ -130,7 +136,7 @@ namespace LinqToDB.Common.Internal
 
 		public int CreateID()
 		{
-			var key = _stringBuilder.ToString();
+			var key = _stringBuilder!.ToString();
 			var id  = _identifiers.GetOrAdd(key, static _ => CreateNextID());
 
 #if DEBUG
@@ -231,6 +237,26 @@ namespace LinqToDB.Common.Internal
 			}
 
 			return id.ToString();
+		}
+
+		private void Dispose()
+		{
+			if (_stringBuilder != null)
+			{
+				_pooledElement.Dispose();
+				_stringBuilder = null;
+			}
+		}
+
+		~IdentifierBuilder()
+		{
+			Dispose();
+		}
+
+		void IDisposable.Dispose()
+		{
+			Dispose();
+			GC.SuppressFinalize(this);
 		}
 	}
 }

@@ -33,5 +33,3 @@ All T4 properties use `LinqToDBT4` name prefix.
   - `LinqToDBT4SQLiteTemplatesPath`: SQLite templates
   - `LinqToDBT4SqlServerTemplatesPath`: SQL Server templates
   - `LinqToDBT4SybaseAseTemplatesPath`: Sybase ASE templates
-
-

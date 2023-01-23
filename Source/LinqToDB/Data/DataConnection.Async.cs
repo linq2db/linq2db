@@ -125,7 +125,7 @@ namespace LinqToDB.Data
 				{
 					DbConnection connection;
 					if (_connectionFactory != null)
-						connection = _connectionFactory();
+						connection = _connectionFactory(Options);
 					else
 						connection = DataProvider.CreateConnection(ConnectionString!);
 

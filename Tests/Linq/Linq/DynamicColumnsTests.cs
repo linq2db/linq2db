@@ -430,7 +430,8 @@ namespace Tests.Linq
 				.Property(x => Sql.Property<string>(x, "FirstName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "LastName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "MiddleName"))
-				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID);
+				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID)
+				.Build();
 
 			return ms;
 		}
@@ -532,6 +533,8 @@ namespace Tests.Linq
 			builder.Property(x => x.Description).HasColumnName("F066_04");
 			builder.Property(x => Sql.Property<string>(x, "F066_05"));
 			builder.Property(x => Sql.Property<string>(x, "F066_00"));
+
+			builder.Build();
 
 			var testData1 = new[]
 			{

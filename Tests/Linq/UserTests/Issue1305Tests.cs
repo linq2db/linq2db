@@ -95,19 +95,22 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentMapping([DataSources(false, ProviderName.SQLiteMS)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<FluentMapping>()
-					.Property(t => t.Audit1ID).HasOrder(-10)
-					.Property(t => t.Audit2ID).HasOrder(-1)
-					.Property(t => t.RecordID).HasOrder(1)
-					.Property(t => t.EffectiveEnd).HasOrder(3)
-					.Property(t => t.EffectiveStart).HasOrder(2)
-					.Property(t => t.Key).HasOrder(4)
-					.Property(t => t.Unordered1)
-					.Property(t => t.Unordered2);
+			var ms = new MappingSchema();
 
+			ms.GetFluentMappingBuilder()
+				.Entity<FluentMapping>()
+				.Property(t => t.Audit1ID).HasOrder(-10)
+				.Property(t => t.Audit2ID).HasOrder(-1)
+				.Property(t => t.RecordID).HasOrder(1)
+				.Property(t => t.EffectiveEnd).HasOrder(3)
+				.Property(t => t.EffectiveStart).HasOrder(2)
+				.Property(t => t.Key).HasOrder(4)
+				.Property(t => t.Unordered1)
+				.Property(t => t.Unordered2)
+				.Build();
+
+			using (var db = GetDataConnection(context, ms))
+			{
 				using (var tbl = db.CreateLocalTable<FluentMapping>())
 				{
 					// Get table schema

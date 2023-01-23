@@ -45,7 +45,8 @@ namespace Tests.UserTests
 						Ids = values,
 						Value = x.Data
 					})
-				);
+				)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var u = db.CreateLocalTable<User>())

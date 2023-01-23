@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using BenchmarkDotNet.Running;
-using LinqToDB.Benchmarks.Benchmarks.QueryGeneration;
 using LinqToDB.Benchmarks.Queries;
+using LinqToDB.Benchmarks.QueryGeneration;
 
 #if JETBRAINS
 using JetBrains.Profiler.Api;
@@ -92,15 +92,15 @@ namespace LinqToDB.Benchmarks
 			//	return;
 			//}
 			//TestConcurrent();
-			/*
-			VwSalesByCategoryContainsPerf();
-			return;
-			*/
+			//VwSalesByCategoryContainsPerf();
+			//return;
 
 			BenchmarkSwitcher
 				.FromAssembly(typeof(Program).Assembly)
 				.Run(
-					args.Length > 0 ? args : new[] { "--filter=*" },
+					//args.Length > 0 ? args : new[] { "--filter=*" },
+					// don't run TypeMapper benchmarks by default as they hardly will change, but add a lot of running time
+					args.Length > 0 ? args : new[] { "--filter", "*.Queries.*", "*.QueryGeneration.*" },
 					Config.Instance);
 		}
 
@@ -118,7 +118,6 @@ namespace LinqToDB.Benchmarks
 		static void TestVwSalesByYear()
 		{
 			var benchmark = new QueryGenerationBenchmark();
-			benchmark.DataProvider = ProviderName.MySqlConnector;
 
 			for (int i = 0; i < 100000; i++)
 			{
@@ -129,7 +128,6 @@ namespace LinqToDB.Benchmarks
 		static void VwSalesByCategoryContainsPerf()
 		{
 			var benchmark = new QueryGenerationBenchmark();
-			benchmark.DataProvider = ProviderName.Access;
 
 #if JETBRAINS
 			MeasureProfiler.StartCollectingData();
@@ -149,7 +147,6 @@ namespace LinqToDB.Benchmarks
 		static void VwSalesByCategoryContainsMem()
 		{
 			var benchmark = new QueryGenerationBenchmark();
-			benchmark.DataProvider = ProviderName.Access;
 
 #if JETBRAINS
 			MemoryProfiler.CollectAllocations(true);

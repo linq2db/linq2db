@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Common;
+	using Common.Internal;
 	using Expressions;
 	using Linq;
 	using Mapping;
@@ -352,9 +353,9 @@ namespace LinqToDB
 
 					if (qualified != TableQualification.None)
 					{
-						var sb = new StringBuilder();
+						using var sb = Pools.StringBuilder.Allocate();
 						builder.DataContext.CreateSqlProvider().BuildObjectName(
-							sb,
+							sb.Value,
 							new SqlObjectName(
 								name,
 								Server  : (qualified & TableQualification.ServerName)   != 0 ? tableHelper.ServerName   : null,
@@ -363,7 +364,7 @@ namespace LinqToDB
 							ConvertType.NameToQueryTable,
 							true,
 							(qualified & TableQualification.TableOptions) != 0 ? tableHelper.TableOptions : TableOptions.NotSet);
-						name = sb.ToString();
+						name = sb.Value.ToString();
 					}
 
 					builder.ResultExpression = new SqlValue(name);
@@ -395,10 +396,10 @@ namespace LinqToDB
 
 				if (qualified != TableQualification.None)
 				{
-					var sb = new StringBuilder();
+					using var sb = Pools.StringBuilder.Allocate();
 
 					builder.DataContext.CreateSqlProvider().BuildObjectName(
-						sb,
+						sb.Value,
 						new SqlObjectName(
 							sqlTable.TableName.Name,
 							Server  : (qualified & TableQualification.ServerName)   != 0 ? sqlTable.TableName.Server       : null,
@@ -408,7 +409,7 @@ namespace LinqToDB
 						true,
 						(qualified & TableQualification.TableOptions) != 0 ? sqlTable.TableOptions : TableOptions.NotSet);
 
-					name = sb.ToString();
+					name = sb.Value.ToString();
 				}
 
 				builder.ResultExpression = isExpression
@@ -516,9 +517,9 @@ namespace LinqToDB
 					throw new LinqToDBException("Can not provide information for qualified table name");
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
-				var sb = new StringBuilder();
+				using var sb   = Pools.StringBuilder.Allocate();
 				sqlBuilder.BuildObjectName(
-					sb,
+					sb.Value,
 					new SqlObjectName(
 						table.TableName,
 						Server  : (qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
@@ -527,7 +528,7 @@ namespace LinqToDB
 					ConvertType.NameToQueryTable,
 					true,
 					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
-				result = sb.ToString();
+				result = sb.Value.ToString();
 			}
 
 			return result;
@@ -565,10 +566,10 @@ namespace LinqToDB
 					throw new LinqToDBException("Can not provide information for qualified table name");
 
 				var sqlBuilder = dataContext.CreateSqlProvider();
-				var sb         = new StringBuilder();
+				using var sb   = Pools.StringBuilder.Allocate();
 
 				sqlBuilder.BuildObjectName(
-					sb,
+					sb.Value,
 					new SqlObjectName(
 						table.TableName,
 						Server  : (qualification & TableQualification.ServerName)   != 0 ? table.ServerName   : null,
@@ -578,7 +579,7 @@ namespace LinqToDB
 					true,
 					(qualification & TableQualification.TableOptions) != 0 ? table.TableOptions : TableOptions.NotSet);
 
-				name = sb.ToString();
+				name = sb.Value.ToString();
 			}
 
 			return new SqlExpression(name, Precedence.Primary);

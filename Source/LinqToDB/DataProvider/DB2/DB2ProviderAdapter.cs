@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using Common;
 	using Expressions;
+	using Extensions;
 	using Mapping;
 
 	public class DB2ProviderAdapter : IDynamicProviderAdapter
@@ -131,7 +132,7 @@ namespace LinqToDB.DataProvider.DB2
 				if (type == null)
 					return null;
 
-				if (obsolete && type.GetCustomAttributes(typeof(ObsoleteAttribute), false).Length > 0)
+				if (obsolete && type.HasAttribute<ObsoleteAttribute>(false))
 					return null;
 
 				if (register)

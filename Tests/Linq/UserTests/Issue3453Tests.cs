@@ -78,7 +78,7 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 			var dataSource = builder.Build();
 
 			return new DataOptions()
-				.UseConnectionFactory(dataProvider, dataSource.CreateConnection)
+				.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection())
 				.UseMappingSchema(mappingSchema);
 		}
 
