@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Mapping
+﻿using System;
+
+namespace LinqToDB.Mapping
 {
 	/// <summary>
 	/// Defines optimistic concurrency column modification strategy.
@@ -16,7 +18,13 @@
 		/// </summary>
 		AutoIncrement,
 		/// <summary>
-		/// Use <see cref="Guid"/> value.
+		/// Use <see cref="System.Guid"/> value.
+		/// Supported column types:
+		/// <list type="bullet">
+		/// <item><see cref="System.Guid"/></item>
+		/// <item><see cref="string"/> using <see cref="Guid.ToString()"/></item>
+		/// <item><see cref="T:byte[]"/> using <see cref="Guid.ToByteArray()"/></item>
+		/// </list>
 		/// </summary>
 		Guid
 	}

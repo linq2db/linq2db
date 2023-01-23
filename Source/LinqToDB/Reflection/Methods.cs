@@ -34,7 +34,9 @@ namespace LinqToDB.Reflection
 
 		public static class System
 		{
-			public static readonly MethodInfo Guid_NewGuid = MemberHelper.MethodOf(() => Guid.NewGuid());
+			public static readonly MethodInfo Guid_NewGuid     = MemberHelper.MethodOf(     () => Guid.NewGuid());
+			public static readonly MethodInfo Guid_ToString    = MemberHelper.MethodOf<Guid>(g => g.ToString());
+			public static readonly MethodInfo Guid_ToByteArray = MemberHelper.MethodOf<Guid>(g => g.ToByteArray());
 		}
 
 		public static class Enumerable

@@ -28,8 +28,6 @@ namespace Tests.Linq
 
 		public class CustomConcurrencyPropertyAttribute : ConcurrencyPropertyBaseAttribute
 		{
-			private static readonly Expression _body = Expression.Constant(Guid.NewGuid().ToString("N"));
-
 			public CustomConcurrencyPropertyAttribute()
 				: base()
 			{
@@ -38,14 +36,6 @@ namespace Tests.Linq
 			public override LambdaExpression GetNextValue(ColumnDescriptor column, ParameterExpression record)
 			{
 				return Expression.Lambda(Expression.Constant(Guid.NewGuid().ToString("N")), record);
-				// TODO: fix
-				//return Expression.Lambda(_body, record);
-			}
-
-			// TODO: remove after merge with attributes refactoring
-			public override string GetObjectID()
-			{
-				return "hi there";
 			}
 		}
 
@@ -60,7 +50,8 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<int>>()
 					.HasTableName("ConcurrencyAutoIncrement")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.AutoIncrement));
+						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.AutoIncrement))
+				.Build();
 
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<int>>();
@@ -127,7 +118,8 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<int>>()
 					.HasTableName("ConcurrencyAutoIncrement")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.AutoIncrement));
+						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.AutoIncrement))
+				.Build();
 
 			using var db  = GetDataContext(context, ms);
 			using var t   = db.CreateLocalTable<ConcurrencyTable<int>>();
@@ -185,7 +177,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public async ValueTask TestGuid([DataSources] string context)
+		public void TestGuid([DataSources] string context)
 		{
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
@@ -194,7 +186,8 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<Guid>>()
 					.HasTableName("ConcurrencyGuid")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid));
+						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid))
+				.Build();
 
 			using var _   = new DisableBaseline("guid used");
 			using var db  = GetDataContext(context, ms);
@@ -215,14 +208,11 @@ namespace Tests.Linq
 			cnt = db.UpdateConcurrent(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
-			// still believe timestamp is good as unique value?
-			await Task.Delay(TimeSpan.FromSeconds(1));
 
 			record.Value = "value 2";
 			cnt = db.UpdateConcurrent(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
-			await Task.Delay(TimeSpan.FromSeconds(1));
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
@@ -261,6 +251,156 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestGuidString([DataSources] string context)
+		{
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<ConcurrencyTable<string>>()
+					.HasTableName("ConcurrencyGuidString")
+					.Property(e => e.Stamp)
+						.HasLength(36)
+						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid))
+				.Build();
+
+			using var _   = new DisableBaseline("guid used");
+			using var db  = GetDataContext(context, ms);
+			using var t   = db.CreateLocalTable<ConcurrencyTable<string>>();
+
+			var record = new ConcurrencyTable<string>()
+			{
+				Id    = 1,
+				Stamp = "-",
+				Value = "initial"
+			};
+
+			var cnt = db.Insert(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record, true);
+
+			record.Value = "value 1";
+			cnt = db.UpdateConcurrent(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record);
+
+			record.Value = "value 2";
+			cnt = db.UpdateConcurrent(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record);
+
+			var dbStamp = record.Stamp;
+			record.Value = "value 3";
+			record.Stamp = Guid.NewGuid().ToString();
+			cnt = db.UpdateConcurrent(record);
+			Assert.AreEqual(0, cnt);
+			record.Stamp = dbStamp;
+			record.Value = "value 2";
+			AssertData(record, true);
+			record.Stamp = Guid.NewGuid().ToString();
+
+			cnt = db.DeleteConcurrent(record);
+			Assert.AreEqual(0, cnt);
+			record.Stamp = dbStamp;
+			AssertData(record, true);
+
+			cnt = db.DeleteConcurrent(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			Assert.AreEqual(0, t.ToArray().Length);
+
+			void AssertData(ConcurrencyTable<string> record, bool equals = false)
+			{
+				var data = t.ToArray();
+
+				Assert.AreEqual(1, data.Length);
+				Assert.AreEqual(record.Id, data[0].Id);
+				Assert.AreEqual(record.Value, data[0].Value);
+
+				if (equals)
+					Assert.AreEqual(record.Stamp, data[0].Stamp);
+				else
+					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+
+				record.Stamp = data[0].Stamp;
+			}
+		}
+
+		[Test]
+		public void TestGuidBinary([DataSources] string context)
+		{
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
+
+			ms.GetFluentMappingBuilder()
+				.Entity<ConcurrencyTable<byte[]>>()
+					.HasTableName("ConcurrencyGuidBinary")
+					.Property(e => e.Stamp)
+						.HasLength(16)
+						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid))
+				.Build();
+
+			using var _   = new DisableBaseline("guid used");
+			using var db  = GetDataContext(context, ms);
+			using var t   = db.CreateLocalTable<ConcurrencyTable<byte[]>>();
+
+			var record = new ConcurrencyTable<byte[]>()
+			{
+				Id    = 1,
+				Stamp = Array.Empty<byte>(),
+				Value = "initial"
+			};
+
+			var cnt = db.Insert(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record, true);
+
+			record.Value = "value 1";
+			cnt = db.UpdateConcurrent(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record);
+
+			record.Value = "value 2";
+			cnt = db.UpdateConcurrent(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record);
+
+			var dbStamp = record.Stamp;
+			record.Value = "value 3";
+			record.Stamp = Guid.NewGuid().ToByteArray();
+			cnt = db.UpdateConcurrent(record);
+			Assert.AreEqual(0, cnt);
+			record.Stamp = dbStamp;
+			record.Value = "value 2";
+			AssertData(record, true);
+			record.Stamp = Guid.NewGuid().ToByteArray();
+
+			cnt = db.DeleteConcurrent(record);
+			Assert.AreEqual(0, cnt);
+			record.Stamp = dbStamp;
+			AssertData(record, true);
+
+			cnt = db.DeleteConcurrent(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			Assert.AreEqual(0, t.ToArray().Length);
+
+			void AssertData(ConcurrencyTable<byte[]> record, bool equals = false)
+			{
+				var data = t.ToArray();
+
+				Assert.AreEqual(1, data.Length);
+				Assert.AreEqual(record.Id, data[0].Id);
+				Assert.AreEqual(record.Value, data[0].Value);
+
+				if (equals)
+					Assert.AreEqual(record.Stamp, data[0].Stamp);
+				else
+					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+
+				record.Stamp = data[0].Stamp;
+			}
+		}
+
+		[Test]
 		public async ValueTask TestTestGuidAsync([DataSources] string context)
 		{
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
@@ -270,7 +410,8 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<Guid>>()
 					.HasTableName("ConcurrencyGuid")
 					.Property(e => e.Stamp)
-						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid));
+						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Guid))
+				.Build();
 
 			using var _   = new DisableBaseline("guid used");
 			using var db  = GetDataContext(context, ms);
@@ -291,14 +432,11 @@ namespace Tests.Linq
 			cnt = await db.UpdateConcurrentAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
-			// still believe timestamp is good as unique value?
-			await Task.Delay(TimeSpan.FromSeconds(1));
 
 			record.Value = "value 2";
 			cnt = await db.UpdateConcurrentAsync(record);
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
-			await Task.Delay(TimeSpan.FromSeconds(1));
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
@@ -346,7 +484,8 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<string>>()
 					.HasTableName("ConcurrencyCustom")
 					.Property(e => e.Stamp)
-						.HasAttribute(new CustomConcurrencyPropertyAttribute());
+						.HasAttribute(new CustomConcurrencyPropertyAttribute())
+				.Build();
 
 			using var _   = new DisableBaseline("random data used");
 			using var db  = GetDataContext(context, ms);
@@ -419,7 +558,8 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<string>>()
 					.HasTableName("ConcurrencyCustom")
 					.Property(e => e.Stamp)
-						.HasAttribute(new CustomConcurrencyPropertyAttribute());
+						.HasAttribute(new CustomConcurrencyPropertyAttribute())
+				.Build();
 
 			using var _   = new DisableBaseline("random data used");
 			using var db  = GetDataContext(context, ms);
@@ -494,7 +634,8 @@ namespace Tests.Linq
 						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Auto))
 						// don't set skip-on-update to test UpdateConcurrent skips it
 						.HasSkipOnInsert()
-						.HasDataType(DataType.Timestamp);
+						.HasDataType(DataType.Timestamp)
+				.Build();
 
 			using var _   = new DisableBaseline("timestamp used");
 			using var db  = GetDataContext(context, ms);
@@ -568,7 +709,8 @@ namespace Tests.Linq
 						.HasAttribute(new ConcurrencyPropertyAttribute(VersionBehavior.Auto))
 						// don't set skip-on-update to test UpdateConcurrent skips it
 						.HasSkipOnInsert()
-						.HasDataType(DataType.Timestamp);
+						.HasDataType(DataType.Timestamp)
+				.Build();
 
 			using var _   = new DisableBaseline("timestamp used");
 			using var db  = GetDataContext(context, ms);

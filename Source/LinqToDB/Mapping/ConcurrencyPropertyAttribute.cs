@@ -12,6 +12,10 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 	public class ConcurrencyPropertyAttribute : ConcurrencyPropertyBaseAttribute
 	{
+		private static readonly Expression _newGuidCall       = Expression.Call(null, Methods.System.Guid_NewGuid);
+		private static readonly Expression _newGuidStringCall = Expression.Call(_newGuidCall, Methods.System.Guid_ToString);
+		private static readonly Expression _newGuidArrayCall  = Expression.Call(_newGuidCall, Methods.System.Guid_ToByteArray);
+
 		public ConcurrencyPropertyAttribute(VersionBehavior behavior)
 		{
 			Behavior = behavior;
@@ -37,13 +41,15 @@ namespace LinqToDB.Mapping
 
 				case VersionBehavior.AutoIncrement:
 					return Expression.Lambda(
-						Expression.Add(column.MemberAccessor.GetterExpression.GetBody(record), Expression.Constant(1)),
+						Expression.Add(column.MemberAccessor.GetterExpression.GetBody(record), ExpressionInstances.Constant1),
 						record);
 
 				case VersionBehavior.Guid:
-					return Expression.Lambda(
-						Expression.Call(null, Methods.System.Guid_NewGuid),
-						record);
+					if (column.MemberType == typeof(Guid))   return Expression.Lambda(_newGuidCall, record);
+					if (column.MemberType == typeof(string)) return Expression.Lambda(_newGuidStringCall, record);
+					if (column.MemberType == typeof(byte[])) return Expression.Lambda(_newGuidArrayCall, record);
+
+					throw new LinqToDBException($"Unsupported column type '{column.MemberType}' for {nameof(VersionBehavior)}.{nameof(VersionBehavior.Guid)}");
 
 				default:
 					throw new ArgumentOutOfRangeException($"Unsupported {nameof(VersionBehavior)} value: {Behavior}");
@@ -52,9 +58,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			// TODO: replace after merge with mapping refactorings
-			//return $".{base.GetObjectID()}.{(int)Behavior}.";
-			return $".{(int)Behavior}.";
+			return $".{Configuration}.{(int)Behavior}.";
 		}
 	}
 }

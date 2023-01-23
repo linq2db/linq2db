@@ -17,5 +17,7 @@ namespace LinqToDB.Mapping
 		}
 
 		public abstract LambdaExpression? GetNextValue(ColumnDescriptor column, ParameterExpression record);
+
+		public override string GetObjectID() => $".{Configuration}.";
 	}
 }
