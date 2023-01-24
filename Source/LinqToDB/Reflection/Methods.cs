@@ -41,9 +41,13 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo Skip        = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Skip(1));
 			public static readonly MethodInfo Contains    = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Contains(1));
 
-			public static readonly MethodInfo First                   = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.First());
-			public static readonly MethodInfo FirstOrDefault          = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.FirstOrDefault());
-			public static readonly MethodInfo FirstOrDefaultCondition = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.FirstOrDefault(e => true));
+			public static readonly MethodInfo First                    = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.First());
+			public static readonly MethodInfo FirstOrDefault           = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.FirstOrDefault());
+			public static readonly MethodInfo FirstOrDefaultCondition  = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.FirstOrDefault(e => true));
+
+			public static readonly MethodInfo Single                   = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Single());
+			public static readonly MethodInfo SingleOrDefault          = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.SingleOrDefault());
+			public static readonly MethodInfo SingleOrDefaultCondition = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.SingleOrDefault(e => true));
 
 			public static readonly MethodInfo ElementAt               = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.ElementAt(0));
 			public static readonly MethodInfo ElementAtOrDefault      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.ElementAtOrDefault(0));

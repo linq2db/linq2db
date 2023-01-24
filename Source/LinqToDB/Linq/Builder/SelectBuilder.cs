@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
-			protected CounterContext(ExpressionBuilder builder, SelectQuery selectQuery) : base(builder, selectQuery)
+			CounterContext(ExpressionBuilder builder, SelectQuery selectQuery) : base(builder, selectQuery)
 			{
 
 			}

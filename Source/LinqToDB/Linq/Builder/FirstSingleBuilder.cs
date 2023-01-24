@@ -22,6 +22,30 @@ namespace LinqToDB.Linq.Builder
 				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
 		}
 
+		public enum MethodKind
+		{
+			First,
+			FirstOrDefault,
+			Single,
+			SingleOrDefault,
+		}
+
+		static MethodKind GetMethodKind(string methodName)
+		{
+			return methodName switch
+			{
+				"First"                => MethodKind.First,
+				"FirstAsync"           => MethodKind.First,
+				"FirstOrDefault"       => MethodKind.FirstOrDefault,
+				"FirstOrDefaultAsync"  => MethodKind.FirstOrDefault,
+				"Single"               => MethodKind.Single,
+				"SingleAsync"          => MethodKind.Single,
+				"SingleOrDefault"      => MethodKind.SingleOrDefault,
+				"SingleOrDefaultAsync" => MethodKind.SingleOrDefault,
+				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method.")
+			};
+		}
+
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var argument = methodCall.Arguments[0];
@@ -54,29 +78,26 @@ namespace LinqToDB.Linq.Builder
 				buildInfo.Parent!.SelectQuery.From.Tables[0].Joins.Remove(fakeJoin);
 			}
 
-			var take     = 0;
+			var take = 0;
 
-			var forceOuter = buildInfo.Parent is DefaultIfEmptyBuilder.DefaultIfEmptyContext; 
+			var forceOuter = buildInfo.Parent is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+			var methodKind = GetMethodKind(methodCall.Method.Name);
 
-				switch (methodCall.Method.Name)
-				{
-					case "First"                :
-					case "FirstOrDefault"       :
-					case "FirstAsync"           :
-					case "FirstOrDefaultAsync"  :
-						take = 1;
-						break;
+			switch (methodKind)
+			{
+				case MethodKind.First          :
+				case MethodKind.FirstOrDefault :
+					take = 1;
+					break;
 
-					case "Single"               :
-					case "SingleOrDefault"      :
-					case "SingleAsync"          :
-					case "SingleOrDefaultAsync" :
-						if (!buildInfo.IsSubQuery)
-							if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
-								take = 2;
+				case MethodKind.Single          :
+				case MethodKind.SingleOrDefault :
+					if (!buildInfo.IsSubQuery)
+						if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
+							take = 2;
 
-						break;
-				}
+					break;
+			}
 
 			if (take != 0)
 			{
@@ -92,27 +113,21 @@ namespace LinqToDB.Linq.Builder
 				isOuter  = true;
 			}
 
-			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall, buildInfo.IsSubQuery, buildInfo.IsAssociation, isOuter);
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
+			return new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, isOuter);
 		}
 
 		public sealed class FirstSingleContext : SequenceContextBase
 		{
-			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall, bool isSubQuery, bool isAssociation, bool isOuter)
+			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodKind methodKind, bool isSubQuery, bool isAssociation, bool isOuter)
 				: base(parent, sequence, null)
 			{
-				_methodCall   = methodCall;
+				_methodKind   = methodKind;
 				IsSubQuery    = isSubQuery;
 				IsAssociation = isAssociation;
 				IsOuter       = isOuter;
 			}
 
-			readonly MethodCallExpression _methodCall;
+			readonly MethodKind _methodKind;
 
 			public bool IsSubQuery    { get; }
 			public bool IsAssociation { get; }
@@ -124,12 +139,12 @@ namespace LinqToDB.Linq.Builder
 
 				QueryRunner.SetRunQuery(query, mapper);
 
-				switch (_methodCall.Method.Name.Replace("Async", ""))
+				switch (_methodKind)
 				{
-					case "First"           : GetFirstElement          (query); break;
-					case "FirstOrDefault"  : GetFirstOrDefaultElement (query); break;
-					case "Single"          : GetSingleElement         (query); break;
-					case "SingleOrDefault" : GetSingleOrDefaultElement(query); break;
+					case MethodKind.First           : GetFirstElement          (query); break;
+					case MethodKind.FirstOrDefault  : GetFirstOrDefaultElement (query); break;
+					case MethodKind.Single          : GetSingleElement         (query); break;
+					case MethodKind.SingleOrDefault : GetSingleOrDefaultElement(query); break;
 				}
 			}
 
@@ -217,7 +232,9 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (flags.HasFlag(ProjectFlags.Expression))
 								{
-									var sequenceExpression = GetEagerLoadingExpression();
+									// Do not generate Take. Provider do not support Outer queries. Result will be filtered on the client side.
+									//
+									var sequenceExpression = GetEagerLoadingExpression(false);
 
 									var resultType    = typeof(IEnumerable<>).MakeGenericType(path.Type);
 									var refExpression = (ContextRefExpression)path;
@@ -225,7 +242,17 @@ namespace LinqToDB.Linq.Builder
 										refExpression.WithType(resultType),
 										sequenceExpression);
 
-									result = Expression.Call(Methods.Enumerable.FirstOrDefault, result);
+									var methodInfo = _methodKind switch
+									{
+										MethodKind.First           => Methods.Enumerable.First,
+										MethodKind.FirstOrDefault  => Methods.Enumerable.FirstOrDefault,
+										MethodKind.Single          => Methods.Enumerable.Single,
+										MethodKind.SingleOrDefault => Methods.Enumerable.SingleOrDefault,
+										_ => throw new ArgumentOutOfRangeException(nameof(_methodKind), _methodKind,
+											"Invalid method kind.")
+									};
+
+									result = Expression.Call(methodInfo, result);
 
 									return result;
 								}
@@ -241,10 +268,15 @@ namespace LinqToDB.Linq.Builder
 				return projected;
 			}
 
-			Expression GetEagerLoadingExpression()
+			Expression GetEagerLoadingExpression(bool withTake)
 			{
 				var sequenceExpression = Builder.GetSequenceExpression(this);
 				sequenceExpression = ((MethodCallExpression)sequenceExpression).Arguments[0];
+
+				if (!withTake)
+				{
+					return sequenceExpression;
+				}
 
 				var method = typeof(IQueryable<>).IsSameOrParentOf(sequenceExpression.Type)
 					? Methods.Queryable.Take
@@ -260,7 +292,7 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new FirstSingleContext(null, context.CloneContext(Sequence),
-					context.CloneExpression(_methodCall), IsSubQuery, IsAssociation, IsOuter)
+					_methodKind, IsSubQuery, IsAssociation, IsOuter)
 				{
 					_isJoinCreated = _isJoinCreated
 				};
