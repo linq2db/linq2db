@@ -30,9 +30,7 @@ namespace LinqToDB.Mapping
 		/// Creates attribute instance.
 		/// </summary>
 		public AssociationAttribute()
-		{
-			CanBeNull = true;
-		}
+		{ }
 
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on this side of association.
@@ -105,13 +103,20 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string?      Storage             { get; set; }
 
+		internal bool?      ConfiguredCanBeNull;
 		/// <summary>
 		/// Defines type of join:
 		/// - inner join for <c>CanBeNull = false</c>;
-		/// - left join for <c>CanBeNull = true</c>.
-		/// Default value: <c>true</c>.
+		/// - outer join for <c>CanBeNull = true</c>.
+		/// When using Configuration.UseNullableTypesMetadata, the default value 
+		/// for associations (cardinality 1) is derived from nullability.
+		/// Otherwise the default value is <c>true</c> (for collections and when option is disabled).
 		/// </summary>
-		public bool         CanBeNull           { get; set; }
+		public bool         CanBeNull           
+		{ 
+			get => ConfiguredCanBeNull ?? true; 
+			set => ConfiguredCanBeNull = value;
+		}
 
 		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
