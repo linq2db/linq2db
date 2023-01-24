@@ -1377,6 +1377,12 @@ namespace LinqToDB.Linq.Builder
 					if (attr != null && attr.GetIsPredicate(expression))
 						break;
 
+					var processed = MakeExpression(context, expression, flags);
+					if (!ReferenceEquals(processed, expression))
+					{
+						return ConvertPredicate(context, processed, flags);
+					}
+
 					break;
 				}
 
@@ -1844,6 +1850,18 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var compareNullsAsValues = CompareNullsAsValues;
+
+			// Force nullability
+			if (QueryHelper.IsNullValue(lOriginal) && !QueryHelper.IsNullValue(rOriginal))
+			{
+				if (!rOriginal.CanBeNullable(nullability))
+					rOriginal = new SqlNullabilityExpression(rOriginal);
+			}
+			else if (QueryHelper.IsNullValue(rOriginal) && !QueryHelper.IsNullValue(lOriginal))
+			{
+				if (!lOriginal.CanBeNullable(nullability))
+					lOriginal = new SqlNullabilityExpression(lOriginal);
+			}
 
 			predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
 				compareNullsAsValues
@@ -2759,7 +2777,7 @@ namespace LinqToDB.Linq.Builder
 				return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, false));
 		}
 
-		Expression RemoveNullPropagation(Expression expr, bool forSearch)
+		public Expression RemoveNullPropagation(Expression expr, bool forSearch)
 		{
 			bool IsAcceptableType(Type type)
 			{

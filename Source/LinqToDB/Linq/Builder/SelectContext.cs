@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (flags.IsExpression() && Body is not ContextRefExpression)
+				if (flags.IsExpression())
 				{
 					if (!(path.Type.IsSameOrParentOf(Body.Type) || Body.Type.IsSameOrParentOf(path.Type)))
 					{

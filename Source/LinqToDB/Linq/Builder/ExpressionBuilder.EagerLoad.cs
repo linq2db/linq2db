@@ -237,10 +237,8 @@ namespace LinqToDB.Linq.Builder
 
 			Expression resultExpression;
 
-			var isSingleElement = !typeof(IEnumerable<>).IsSameOrParentOf(clonedMainContextRef.Type);
-
-			var mainType   = isSingleElement ? clonedMainContextRef.Type : GetEnumerableElementType(clonedMainContextRef.Type);
-			var detailType = isSingleElement ? eagerLoad.Type            : GetEnumerableElementType(eagerLoad.Type);
+			var mainType   = GetEnumerableElementType(clonedMainContextRef.Type);
+			var detailType = GetEnumerableElementType(eagerLoad.Type);
 
 			if (dependencies.Count == 0)
 			{
@@ -268,11 +266,6 @@ namespace LinqToDB.Linq.Builder
 					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail)), detailParameter));
 
 				var clonedParentContextRef = new ContextRefExpression(clonedMainContextRef.Type, clonedParentContext);
-
-				if (isSingleElement)
-				{
-					clonedParentContextRef = clonedParentContextRef.WithType(typeof(IQueryable<>).MakeGenericType(mainType));
-				}
 
 				Expression sourceQuery = clonedParentContextRef;
 
@@ -331,12 +324,6 @@ namespace LinqToDB.Linq.Builder
 				resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
 					.Invoke(this, parameters);
-
-				if (isSingleElement)
-				{
-					resultExpression = Expression.Call(Methods.Enumerable.FirstOrDefault.MakeGenericMethod(detailType),
-						resultExpression);
-				}
 
 				_expressionCache = saveExpressionCache;
 				_columnCache     = saveColumnsCache;

@@ -25,6 +25,7 @@ namespace LinqToDB.Linq.Builder
 					return root;
 
 				var newExpression = builder.MakeExpression(buildInfo.Parent, root, ProjectFlags.Expand);
+				newExpression = builder.RemoveNullPropagation(newExpression, true);
 
 				return newExpression;
 			}

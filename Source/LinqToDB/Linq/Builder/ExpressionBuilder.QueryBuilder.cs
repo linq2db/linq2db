@@ -867,7 +867,14 @@ namespace LinqToDB.Linq.Builder
 		{
 			var toRead = expression.Transform(e =>
 			{
-				if (e is SqlPlaceholderExpression placeholder)
+				if (e.NodeType == ExpressionType.Convert)
+				{
+					if (((UnaryExpression)e).Operand is SqlPlaceholderExpression convertPlaceholder)
+					{
+						return new TransformInfo(convertPlaceholder.WithType(e.Type), false, true);
+					}
+				}
+				else if (e is SqlPlaceholderExpression placeholder)
 				{
 					if (placeholder.Sql == null)
 						throw new InvalidOperationException();
@@ -880,7 +887,7 @@ namespace LinqToDB.Linq.Builder
 					                ?? placeholder.Sql.SystemType 
 					                ?? placeholder.Type;
 
-					var canBeNull = nullability.CanBeNull(placeholder.Sql);
+					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullable();
 
 					if (canBeNull && valueType != placeholder.Type && valueType.IsValueType && !valueType.IsNullable())
 					{
@@ -895,7 +902,7 @@ namespace LinqToDB.Linq.Builder
 						readerExpression = Expression.Convert(readerExpression, placeholder.Type);
 					}
 
-					return readerExpression;
+					return new TransformInfo(readerExpression);
 				}
 
 				if (e is SqlReaderIsNullExpression isNullExpression)
@@ -911,10 +918,10 @@ namespace LinqToDB.Linq.Builder
 					if (isNullExpression.IsNot)
 						nullCheck = Expression.Not(nullCheck);
 
-					return nullCheck;
+					return new TransformInfo(nullCheck);
 				}
 
-				return e;
+				return new TransformInfo(e);
 			});
 
 			return toRead;

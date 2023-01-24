@@ -219,7 +219,15 @@ namespace LinqToDB.Linq.Builder
 								{
 									var sequenceExpression = GetEagerLoadingExpression();
 
-									return new SqlEagerLoadExpression((ContextRefExpression)path, path, sequenceExpression);
+									var resultType    = typeof(IEnumerable<>).MakeGenericType(path.Type);
+									var refExpression = (ContextRefExpression)path;
+									var result = (Expression)new SqlEagerLoadExpression(refExpression,
+										refExpression.WithType(resultType),
+										sequenceExpression);
+
+									result = Expression.Call(Methods.Enumerable.FirstOrDefault, result);
+
+									return result;
 								}
 							}
 						}
@@ -251,7 +259,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new FirstSingleContext(null, context.CloneContext(Sequence), context.CloneExpression(_methodCall), IsSubQuery, IsAssociation, IsOuter);
+				return new FirstSingleContext(null, context.CloneContext(Sequence),
+					context.CloneExpression(_methodCall), IsSubQuery, IsAssociation, IsOuter)
+				{
+					_isJoinCreated = _isJoinCreated
+				};
 			}
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
