@@ -399,7 +399,6 @@ namespace LinqToDB.Mapping
 		/// Gets value converter for specific column.
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
-		
 		LambdaExpression?    _getOriginalValueLambda;
 
 		LambdaExpression?    _getDbValueLambda;
