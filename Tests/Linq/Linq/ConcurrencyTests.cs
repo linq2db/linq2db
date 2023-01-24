@@ -1,13 +1,11 @@
-﻿using FluentAssertions;
-using LinqToDB;
-using LinqToDB.Tools;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using LinqToDB.Expressions;
+using FluentAssertions;
+using LinqToDB;
+using LinqToDB.Mapping;
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -436,8 +434,11 @@ namespace Tests.Linq
 			}
 		}
 
+		// https://github.com/DarkWanderer/ClickHouse.Client/issues/138
+		// https://github.com/ClickHouse/ClickHouse/issues/38790
+		[ActiveIssue(Configurations = new[] { ProviderName.ClickHouseClient, ProviderName.ClickHouseMySql })]
 		[Test]
-		public void TestGuidBinary([DataSources] string context)
+		public void TestGuidBinary([DataSources(TestProvName.AllInformix)] string context)
 		{
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
@@ -457,7 +458,7 @@ namespace Tests.Linq
 			var record = new ConcurrencyTable<byte[]>()
 			{
 				Id    = 1,
-				Stamp = Array.Empty<byte>(),
+				Stamp = Guid.NewGuid().ToByteArray(),
 				Value = "initial"
 			};
 
