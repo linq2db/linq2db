@@ -997,15 +997,17 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var newExpr = HandleExtension(context, e, flags);
+					expression = newExpr;
 
-					return newExpr;
+					break;
 				}
 
 				case ExpressionType.MemberAccess:
 				{
-					var newExpr = HandleExtension(context, expression, flags) ;
+					var newExpr = HandleExtension(context, expression, flags);
+					expression = newExpr;
 
-					return newExpr;
+					break;
 				}
 
 				case ExpressionType.Invoke:
@@ -1083,7 +1085,7 @@ namespace LinqToDB.Linq.Builder
 				}*/
 			}
 
-			if (expression.Type == typeof(bool) && _convertedPredicates.Add(expression))
+			if (expression is not SqlPlaceholderExpression && (expression.Type == typeof(bool) || expression.Type == typeof(bool?)) && _convertedPredicates.Add(expression))
 			{
 				var predicate = ConvertPredicate(context, expression, flags);
 				if (predicate == null)
@@ -1281,20 +1283,30 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (BinaryExpression)expression;
 
+					/*
+					var left = MakeExpression(context, e.Left, flags.ExpandFlag());
+
 					var left  = MakeExpression(context, e.Left, flags.ExpandFlag());
 					var right = MakeExpression(context, e.Right, flags.ExpandFlag());
 
 					if (left is SqlErrorExpression || right is SqlErrorExpression)
 						return null;
+						*/
+
+					var left  = RemoveNullPropagation(context!, e.Left, flags, false);
+					var right = RemoveNullPropagation(context!, e.Right, flags, false);
 
 					var newExpr = e.Update(left, e.Conversion, right);
 
+					var optimized = newExpr;
+					/*
 					var optimized = OptimizationContext.OptimizeExpressionTree(newExpr, false);
 
 					if (optimized.NodeType != e.NodeType)
 					{
 						return ConvertPredicate(context, optimized, flags);
 					}
+					*/
 
 					left  = ((BinaryExpression)optimized).Left;
 					right = ((BinaryExpression)optimized).Right;
@@ -1490,7 +1502,7 @@ namespace LinqToDB.Linq.Builder
 
 				var nullability = new NullabilityContext(context.SelectQuery);
 
-				var notNull = placeholders.Where(p => p.Sql.CanBeNullable(nullability)).ToList();
+				var notNull = placeholders.Where(p => !p.Sql.CanBeNullable(nullability)).ToList();
 				if (notNull.Count == 0)
 					notNull = placeholders;
 
@@ -1789,84 +1801,111 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			if (l is SqlSearchCondition)
-			{
-				l = new SqlFunction(typeof(bool), "CASE", l, new SqlValue(true), new SqlValue(false))
-				{
-					CanBeNull     = false,
-					DoNotOptimize = true
-				};
-				lOriginal = l;
-			}
-
-			if (r is SqlSearchCondition)
-			{
-				r = new SqlFunction(typeof(bool), "CASE", r, new SqlValue(true), new SqlValue(false))
-				{
-					CanBeNull     = false,
-					DoNotOptimize = true
-				};
-				rOriginal = r;
-			}
-
 			ISqlPredicate? predicate = null;
-			if (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual)
-			{
-				bool?           value      = null;
-				ISqlExpression? expression = null;
-				var             isNullable = false;
-				if (IsBooleanConstant(left, out value))
-				{
-					isNullable = typeof(bool?) == left.Type || rOriginal.CanBeNullable(nullability);
-					expression = rOriginal;
-				}
-				else if (IsBooleanConstant(right, out value))
-				{
-					isNullable = typeof(bool?) == right.Type || lOriginal.CanBeNullable(nullability);
-					expression = lOriginal;
-				}
 
-				if (value != null
-					&& expression != null
-					&& !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue)expression).Value == null))
+			var isEquality = op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual
+				? op == SqlPredicate.Operator.Equal
+				: (bool?)null;
+
+			if (l is SqlSearchCondition lsc)
+			{
+				if (isEquality != null & IsBooleanConstant(rightExpr, out var boolRight) && boolRight != null)
 				{
-					var isNot = !value.Value;
-					var withNull = false;
-					if (op == SqlPredicate.Operator.NotEqual)
+					if (boolRight == isEquality)
+						predicate = lsc;
+					else
+						predicate = new SqlSearchCondition(new SqlCondition(true, lsc));
+				}
+				else
+				{
+					l = new SqlFunction(typeof(bool), "CASE", l, new SqlValue(true), new SqlValue(false))
 					{
-						isNot = !isNot;
-						withNull = true;
-					}
-					var descriptor = QueryHelper.GetColumnDescriptor(expression);
-					var trueValue  = ConvertToSql(context, ExpressionInstances.True,  unwrap: false, columnDescriptor: descriptor);
-					var falseValue = ConvertToSql(context, ExpressionInstances.False, unwrap: false, columnDescriptor: descriptor);
-
-					var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
-										(isNullable || NeedNullCheck(expression))
-						? withNull
-						: (bool?)null;
-					predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+						CanBeNull = false, DoNotOptimize = true
+					};
+					lOriginal = l;
+				}
+			} 
+			else if (r is SqlSearchCondition rsc)
+			{
+				if (isEquality != null & IsBooleanConstant(rightExpr, out var boolLeft) && boolLeft != null)
+				{
+					if (boolLeft == isEquality)
+						predicate = rsc;
+					else
+						predicate = new SqlSearchCondition(new SqlCondition(true, rsc));
+				}
+				else
+				{
+					r = new SqlFunction(typeof(bool), "CASE", r, new SqlValue(true), new SqlValue(false))
+					{
+						CanBeNull     = false,
+						DoNotOptimize = true
+					};
+					rOriginal = r;
 				}
 			}
 
-			var compareNullsAsValues = CompareNullsAsValues;
-
-			// Force nullability
-			if (QueryHelper.IsNullValue(lOriginal) && !QueryHelper.IsNullValue(rOriginal))
+			if (predicate == null)
 			{
-				if (!rOriginal.CanBeNullable(nullability))
-					rOriginal = new SqlNullabilityExpression(rOriginal);
-			}
-			else if (QueryHelper.IsNullValue(rOriginal) && !QueryHelper.IsNullValue(lOriginal))
-			{
-				if (!lOriginal.CanBeNullable(nullability))
-					lOriginal = new SqlNullabilityExpression(lOriginal);
-			}
+				if (isEquality != null)
+				{
+					bool?           value      = null;
+					ISqlExpression? expression = null;
+					var             isNullable = false;
+					if (IsBooleanConstant(left, out value))
+					{
+						isNullable = typeof(bool?) == left.Type || rOriginal.CanBeNullable(nullability);
+						expression = rOriginal;
+					}
+					else if (IsBooleanConstant(right, out value))
+					{
+						isNullable = typeof(bool?) == right.Type || lOriginal.CanBeNullable(nullability);
+						expression = lOriginal;
+					}
 
-			predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-				compareNullsAsValues
-					? true
-					: null);
+					if (value != null
+						&& expression != null
+						&& !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue)expression).Value == null))
+					{
+						var isNot = !value.Value;
+						var withNull = false;
+						if (op == SqlPredicate.Operator.NotEqual)
+						{
+							isNot = !isNot;
+							withNull = true;
+						}
+						var descriptor = QueryHelper.GetColumnDescriptor(expression);
+						var trueValue  = ConvertToSql(context, ExpressionInstances.True,  unwrap: false, columnDescriptor: descriptor);
+						var falseValue = ConvertToSql(context, ExpressionInstances.False, unwrap: false, columnDescriptor: descriptor);
+
+						var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
+											(isNullable || NeedNullCheck(expression))
+							? withNull
+							: (bool?)null;
+						predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+					}
+				}
+
+				var compareNullsAsValues = CompareNullsAsValues;
+
+				// Force nullability
+				if (QueryHelper.IsNullValue(lOriginal) && !QueryHelper.IsNullValue(rOriginal))
+				{
+					if (!rOriginal.CanBeNullable(nullability))
+						rOriginal = new SqlNullabilityExpression(rOriginal);
+				}
+				else if (QueryHelper.IsNullValue(rOriginal) && !QueryHelper.IsNullValue(lOriginal))
+				{
+					if (!lOriginal.CanBeNullable(nullability))
+						lOriginal = new SqlNullabilityExpression(lOriginal);
+				}
+
+				predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
+					compareNullsAsValues
+						? true
+						: null);
+
+			}
 
 			return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, predicate)), GetOriginalExpression());
 		}
@@ -1952,6 +1991,15 @@ namespace LinqToDB.Linq.Builder
 				{
 					value = expr.Type == typeof(bool) ? false : null;
 					return true;
+				}
+				else if (expr is SqlPlaceholderExpression palacehoder)
+				{
+					if (palacehoder.Sql is SqlValue sqlValue)
+					{
+						value = sqlValue.Value as bool?;
+						return true;
+					}
+					return false;
 				}
 			}
 			return false;
@@ -2761,7 +2809,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			// TODO: is it correct to return true for DefaultValueExpression for non-reference type or when default value
 			// set to non-null value?
-			return expr.IsNullValue()
+			return expr.UnwrapConvert().IsNullValue()
 				|| expr is DefaultValueExpression;
 		}
 
@@ -2775,6 +2823,95 @@ namespace LinqToDB.Linq.Builder
 				return _removeNullPropagationTransformerForSearch ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, true));
 			else
 				return _removeNullPropagationTransformer ??= TransformVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.RemoveNullPropagation(e, false));
+		}
+
+		public Expression RemoveNullPropagation(IBuildContext context, Expression expr, ProjectFlags flags, bool toSql)
+		{
+			static bool? IsNull(Expression sqlExpr)
+			{
+				if (sqlExpr is not SqlPlaceholderExpression placeholder)
+					return null;
+
+				return QueryHelper.IsNullValue(placeholder.Sql);
+			}
+
+			if (expr.NodeType == ExpressionType.Equal || expr.NodeType == ExpressionType.NotEqual)
+			{
+				var binary = (BinaryExpression)expr;
+				
+				var left  = RemoveNullPropagation(context, binary.Left, flags, true);
+				var right = RemoveNullPropagation(context, binary.Right, flags, true);
+
+				if (toSql)
+				{
+					binary = binary.Update(
+						left,
+						binary.Conversion,
+						right);
+				}
+
+				return binary;
+			}
+
+			if (expr.NodeType == ExpressionType.Conditional)
+			{
+				var cond = (ConditionalExpression)expr;
+
+				var test    = RemoveNullPropagation(context, cond.Test, flags, true);
+				var ifTrue  = RemoveNullPropagation(context, cond.IfTrue, flags, true);
+				var ifFalse = RemoveNullPropagation(context, cond.IfFalse, flags, true);
+
+				if (test.NodeType == ExpressionType.Equal || test.NodeType == ExpressionType.NotEqual)
+				{
+					var testLeft  = ((BinaryExpression)test).Left;
+					var testRight = ((BinaryExpression)test).Right;
+
+					var nullLeft  = IsNull(testLeft);
+					var nullRight = IsNull(testRight);
+
+					if (nullRight == true && nullLeft == true)
+					{
+						return test.NodeType == ExpressionType.Equal ? cond.IfTrue : cond.IfFalse;
+					}
+
+					if (test.NodeType == ExpressionType.Equal)
+					{
+						if (IsNull(ifTrue) == true && (nullLeft == true || nullRight == true))
+						{
+							return toSql ? ifFalse : cond.IfFalse;
+						}
+					}
+					else
+					{
+						if (IsNull(ifFalse) == true && (nullLeft == true || nullRight == true))
+						{
+							return toSql ? ifTrue : cond.IfTrue;
+						}
+					}
+				}
+
+				if (toSql)
+				{
+					cond = cond.Update(test, ifTrue, ifFalse);
+				}
+
+				return cond;
+			}
+
+			var doNotConvert = expr.NodeType == ExpressionType.Equal              ||
+			                   expr.NodeType == ExpressionType.NotEqual           ||
+			                   expr.NodeType == ExpressionType.GreaterThan        ||
+			                   expr.NodeType == ExpressionType.GreaterThanOrEqual ||
+			                   expr.NodeType == ExpressionType.LessThan           ||
+			                   expr.NodeType == ExpressionType.LessThanOrEqual;
+
+			if (!doNotConvert && toSql)
+			{
+				var sql = ConvertToSqlExpr(context, expr, flags);
+				if (sql is SqlPlaceholderExpression || sql is SqlGenericConstructorExpression)
+					return sql;
+			}
+			return expr;
 		}
 
 		public Expression RemoveNullPropagation(Expression expr, bool forSearch)

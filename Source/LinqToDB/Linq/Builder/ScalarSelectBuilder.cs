@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return new ScalarSelectContext(builder, buildInfo.SelectQuery);
+			return new ScalarSelectContext(builder, buildInfo.Expression.UnwrapLambda().Body, buildInfo.SelectQuery);
 		}
 
 		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
@@ -36,15 +36,20 @@ namespace LinqToDB.Linq.Builder
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		sealed class ScalarSelectContext : BuildContextBase
 		{
-			public ScalarSelectContext(ExpressionBuilder builder, SelectQuery selectQuery) : base(builder, selectQuery)
+			public override Expression Expression => Body;
+
+			public Expression Body { get; }
+
+			public ScalarSelectContext(ExpressionBuilder builder, Expression body, SelectQuery selectQuery) : base(builder, selectQuery)
 			{
+				Body = body;
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this))
 				{
-					var expression = ((LambdaExpression)Expression!).Body.Unwrap();
+					var expression = Body.Unwrap();
 					return expression;
 				}
 
@@ -53,7 +58,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new ScalarSelectContext(Builder, context.CloneElement(SelectQuery));
+				return new ScalarSelectContext(Builder, context.CloneExpression(Body), context.CloneElement(SelectQuery));
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

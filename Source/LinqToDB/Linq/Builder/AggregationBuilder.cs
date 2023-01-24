@@ -165,7 +165,9 @@ namespace LinqToDB.Linq.Builder
 						valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
 					}
 					else
-						valueExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
+					{
+						valueExpression = new ContextRefExpression(methodCall.Type, sequence);
+					};
 
 					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, buildInfo.GetFlags());
 					context = new AggregationContext(buildInfo.Parent, placeholderSequence, methodCall.Method.Name, methodCall.Method.ReturnType);
