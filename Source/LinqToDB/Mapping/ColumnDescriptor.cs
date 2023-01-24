@@ -88,25 +88,6 @@ namespace LinqToDB.Mapping
 				StorageInfo = expr.Member;
 			}
 
-			var defaultCanBeNull = false;
-
-			if (columnAttribute?.HasCanBeNull() == true)
-				CanBeNull = columnAttribute.CanBeNull;
-			else
-			{
-				var na = mappingSchema.GetAttribute<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
-
-				if (na != null)
-				{
-					CanBeNull = na.CanBeNull;
-				}
-				else
-				{
-					CanBeNull        = mappingSchema.GetCanBeNull(MemberType);
-					defaultCanBeNull = true;
-				}
-			}
-
 			if (columnAttribute?.HasIsIdentity() == true)
 			{
 				IsIdentity = columnAttribute.IsIdentity;
@@ -125,9 +106,8 @@ namespace LinqToDB.Mapping
 
 			SkipOnInsert = columnAttribute?.HasSkipOnInsert() == true ? columnAttribute.SkipOnInsert : IsIdentity;
 			SkipOnUpdate = columnAttribute?.HasSkipOnUpdate() == true ? columnAttribute.SkipOnUpdate : IsIdentity;
-
-			if (defaultCanBeNull && IsIdentity)
-				CanBeNull = false;
+			
+			CanBeNull = AnalyzeCanBeNull(columnAttribute);
 
 			if (columnAttribute?.HasIsPrimaryKey() == true)
 				IsPrimaryKey = columnAttribute.IsPrimaryKey;
@@ -167,6 +147,24 @@ namespace LinqToDB.Mapping
 				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
+		}
+
+		private bool AnalyzeCanBeNull(ColumnAttribute? columnAttribute)
+		{
+			if (columnAttribute?.HasCanBeNull() == true)
+				return columnAttribute.CanBeNull;
+			
+			var na = MappingSchema.GetAttribute<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
+			if (na != null)
+				return na.CanBeNull;
+				
+			if (Configuration.UseNullableTypesMetadata && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable))
+				return isNullable;
+
+			if (IsIdentity) 
+				return false;
+
+			return MappingSchema.GetCanBeNull(MemberType);
 		}
 
 		/// <summary>
@@ -401,7 +399,6 @@ namespace LinqToDB.Mapping
 		/// Gets value converter for specific column.
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
-
 		LambdaExpression?    _getOriginalValueLambda;
 
 		LambdaExpression?    _getDbValueLambda;
