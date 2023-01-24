@@ -32,8 +32,24 @@ namespace LinqToDB.Mapping
 	/// </summary>
 	[PublicAPI]
 	[DebuggerDisplay("{DisplayID}")]
-	public class MappingSchema
+	public class MappingSchema : IConfigurationID
 	{
+		static readonly MemoryCache<(MappingSchema ms1, MappingSchema ms2), MappingSchema> _combinedSchemasCache = new (new ());
+
+		/// <summary>
+		/// Internal API.
+		/// </summary>
+		public static MappingSchema CombineSchemas(MappingSchema ms1, MappingSchema ms2)
+		{
+			return _combinedSchemasCache.GetOrCreate(
+				(ms1, ms2),
+				static entry =>
+				{
+					entry.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					return new MappingSchema(entry.Key.ms1, entry.Key.ms2);
+				});
+		}
+
 		#region Init
 
 		/// <summary>
@@ -45,9 +61,9 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Creates mapping schema, derived from other mapping schemas.
+		/// Creates mapping schema, derived from other mapping schemata.
 		/// </summary>
-		/// <param name="schemas">Base mapping schemas.</param>
+		/// <param name="schemas">Base mapping schemata.</param>
 		public MappingSchema(params MappingSchema[] schemas)
 			: this(null, schemas)
 		{
@@ -78,12 +94,13 @@ namespace LinqToDB.Mapping
 		/// mappings for same type.</remarks>
 		public MappingSchema(string? configuration, params MappingSchema[]? schemas)
 		{
+			// initialize on schema creation to avoid race conditions later
+			// see https://github.com/linq2db/linq2db/issues/3312
 			_reduceDefaultValueTransformer = TransformVisitor<MappingSchema>.Create(this, static (ctx, e) => ctx.ReduceDefaultValueTransformer(e));
 
-			if (string.IsNullOrEmpty(configuration))
-				configuration = string.Empty;
+			configuration ??= string.Empty;
 
-			var schemaInfo = CreateMappingSchemaInfo(configuration!, this);
+			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
 
 			if (schemas == null || schemas.Length == 0)
 			{
@@ -114,8 +131,8 @@ namespace LinqToDB.Mapping
 			}
 			else
 			{
-				var schemaList     = new Dictionary<MappingSchemaInfo,   int>(schemas.Length);
-				var baseConverters = new Dictionary<ValueToSqlConverter, int>(10);
+				var schemaList     = new Dictionary<MappingSchemaInfo,  int>(schemas.Length);
+				var baseConverters = new Dictionary<ValueToSqlConverter,int>(10);
 
 				var i = 0;
 				var j = 0;
@@ -136,10 +153,15 @@ namespace LinqToDB.Mapping
 				Schemas             = schemaList.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray();
 				ValueToSqlConverter = new (baseConverters.OrderBy(static _ => _.Value).Select(static _ => _.Key).ToArray());
 			}
+
+			InitMetadataReaders();
+
+			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
 
 		object _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
+		readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 
 		#endregion
 
@@ -160,6 +182,20 @@ namespace LinqToDB.Mapping
 		/// - value.
 		/// </param>
 		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
+		{
+			ValueToSqlConverter.SetConverter(type, (sb,dt,_,v) => converter(sb, dt, v));
+		}
+
+		/// <summary>
+		/// Sets value to SQL converter action for specific value type.
+		/// </summary>
+		/// <param name="type">Value type.</param>
+		/// <param name="converter">Converter action. Action accepts three parameters:
+		/// - SQL string builder to write generated value SQL to;
+		/// - value SQL type descriptor;
+		/// - value.
+		/// </param>
+		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, converter);
 		}
@@ -199,7 +235,10 @@ namespace LinqToDB.Mapping
 
 					if (value != null)
 					{
-						SetDefaultValue(type, value);
+						lock (_syncRoot)
+						{
+							Schemas[0].SetDefaultValue(type, value, resetId: false);
+						}
 						return value;
 					}
 				}
@@ -255,7 +294,10 @@ namespace LinqToDB.Mapping
 
 					if (value != null)
 					{
-						SetCanBeNull(type, true);
+						lock (_syncRoot)
+						{
+							Schemas[0].SetCanBeNull(type, true, resetId: false);
+						}
 						return true;
 					}
 				}
@@ -442,8 +484,7 @@ namespace LinqToDB.Mapping
 
 				lock (_syncRoot)
 				{
-					Schemas[0].SetConvertInfo(from, to, new (li.CheckNullLambda, null, l, li.IsSchemaSpecific));
-					ResetID();
+					Schemas[0].SetConvertInfo(from, to, new (li.CheckNullLambda, null, l, li.IsSchemaSpecific), resetId: false);
 				}
 
 				return l;
@@ -838,7 +879,6 @@ namespace LinqToDB.Mapping
 			return _reduceDefaultValueTransformer.Transform(expr);
 		}
 
-		private readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 		private Expression ReduceDefaultValueTransformer(Expression e)
 		{
 			return Converter.IsDefaultValuePlaceHolder(e) ?
@@ -927,56 +967,38 @@ namespace LinqToDB.Mapping
 
 		void InitMetadataReaders()
 		{
-			if (Schemas.Length > 0)
+			if (Schemas.Length > 1)
 			{
-				var list = new List   <IMetadataReader>(Schemas.Length);
-				var hash = new HashSet<IMetadataReader>();
+				List<IMetadataReader>? readers = null;
+				HashSet<string>?       hash    = null;
 
 				for (var i = 0; i < Schemas.Length; i++)
 				{
 					var s = Schemas[i];
-					if (s.MetadataReader != null && hash.Add(s.MetadataReader))
-						list.Add(s.MetadataReader);
+					if (s.MetadataReader != null)
+						AddMetadataReaderInternal(s.MetadataReader);
 				}
 
-				_metadataReaders = list.ToArray();
-			}
-			else
-				_metadataReaders = Array<IMetadataReader>.Empty;
-		}
-
-#if NETFRAMEWORK
-		/// <summary>
-		/// Gets or sets metadata attributes provider for current schema.
-		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
-		/// - <see cref="AttributeReader"/> - .NET attributes provider;
-		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
-		/// - <see cref="SystemDataLinqAttributeReader"/> - metadata provider that converts <see cref="System.Data.Linq.Mapping"/> attributes to LINQ to DB mapping attributes;
-		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts <see cref="Microsoft.SqlServer.Server"/> attributes to LINQ to DB mapping attributes;
-		/// - <see cref="XmlAttributeReader"/> - XML-based mappings metadata provider.
-		/// </summary>
-#else
-		/// <summary>
-		/// Gets or sets metadata attributes provider for current schema.
-		/// Metadata providers, shipped with LINQ to DB:
-		/// - <see cref="Metadata.MetadataReader"/> - aggregation metadata provider over collection of other providers;
-		/// - <see cref="AttributeReader"/> - .NET attributes provider;
-		/// - <see cref="FluentMetadataReader"/> - fluent mappings metadata provider;
-		/// - <see cref="SystemDataSqlServerAttributeReader"/> - metadata provider that converts Microsoft.SqlServer.Server attributes to LINQ to DB mapping attributes;
-		/// - <see cref="XmlAttributeReader"/> - XML-based mappings metadata provider.
-		/// </summary>
-#endif
-		public IMetadataReader? MetadataReader
-		{
-			get => Schemas[0].MetadataReader;
-			set
-			{
-				lock (_syncRoot)
+				if (readers != null)
 				{
-					Schemas[0].MetadataReader = value;
-					InitMetadataReaders();
-					ResetID();
+					if (readers.Count == 1)
+						Schemas[0].MetadataReader = readers[0];
+					else
+						Schemas[0].MetadataReader = new MetadataReader(readers.ToArray());
+				}
+
+				void AddMetadataReaderInternal(IMetadataReader reader)
+				{
+					if (!(hash ??= new()).Add(reader.GetObjectID()))
+						return;
+
+					if (reader is MetadataReader metadataReader)
+					{
+						foreach (var mr in metadataReader.Readers)
+							AddMetadataReaderInternal(mr);
+					}
+					else
+						(readers ??= new()).Add(reader);
 				}
 			}
 		}
@@ -989,236 +1011,193 @@ namespace LinqToDB.Mapping
 		{
 			lock (_syncRoot)
 			{
-				var currentReader = MetadataReader;
-
+				var currentReader = Schemas[0].MetadataReader;
 				if (currentReader is MetadataReader metadataReader)
 				{
-					metadataReader.AddReader(reader);
-					return;
+					var readers = new IMetadataReader[metadataReader.Readers.Count + 1];
+
+					readers[0] = reader;
+					for (var i = 0; i < metadataReader.Readers.Count; i++)
+						readers[i + 1] = metadataReader.Readers[i];
+
+					Schemas[0].MetadataReader = new MetadataReader(readers);
 				}
+				else
+					Schemas[0].MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
 
-				MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
-			}
-		}
+				(_cache, _firstOnlyCache) = CreateAttributeCaches();
 
-		IMetadataReader[]? _metadataReaders;
-		IMetadataReader[]   MetadataReaders
-		{
-			get
-			{
-				if (_metadataReaders == null)
-					lock (_syncRoot)
-						if (_metadataReaders == null)
-							InitMetadataReaders();
-
-				return _metadataReaders!;
+				ResetID();
 			}
 		}
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type.
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Attributes owner type.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, bool inherit = true)
-			where T : Attribute
+		private T[] GetAllAttributes<T>(Type type)
+			where T : MappingAttribute
 		{
-			if (MetadataReaders.Length == 0)
-				return Array<T>.Empty;
-			if (MetadataReaders.Length == 1)
-				return MetadataReaders[0].GetAttributes<T>(type, inherit);
-
-			var length = 0;
-			var attrs = new T[MetadataReaders.Length][];
-
-			for (var i = 0; i < MetadataReaders.Length; i++)
-			{
-				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, inherit);
-				length += attrs[i].Length;
-			}
-
-			var attributes = new T[length];
-			length = 0;
-			for (var i = 0; i < attrs.Length; i++)
-			{
-				if (attrs[i].Length > 0)
-				{
-					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
-					length += attrs[i].Length;
-				}
-			}
-
-			return attributes;
+			return Schemas[0].MetadataReader?.GetAttributes<T>(type) ?? Array<T>.Empty;
 		}
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type member.
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
-			where T : Attribute
+		private T[] GetAllAttributes<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
-			if (MetadataReaders.Length == 0)
-				return Array<T>.Empty;
-			if (MetadataReaders.Length == 1)
-				return MetadataReaders[0].GetAttributes<T>(type, memberInfo, inherit);
+			return Schemas[0].MetadataReader?.GetAttributes<T>(type, memberInfo) ?? Array<T>.Empty;
+		}
 
-			var attrs = new T[MetadataReaders.Length][];
-			var length = 0;
-
-			for (var i = 0; i < MetadataReaders.Length; i++)
-			{
-				attrs[i] = MetadataReaders[i].GetAttributes<T>(type, memberInfo, inherit);
-				length += attrs[i].Length;
-			}
-
-			var attributes = new T[length];
-			length = 0;
-			for (var i = 0; i < attrs.Length; i++)
-			{
-				if (attrs[i].Length > 0)
+		private (MappingAttributesCache cache, MappingAttributesCache firstOnlyCache) CreateAttributeCaches()
+		{
+			var cache = new MappingAttributesCache(
+				(sourceOwner, source) =>
 				{
-					Array.Copy(attrs[i], 0, attributes, length, attrs[i].Length);
-					length += attrs[i].Length;
-				}
-			}
+					var attrs = sourceOwner != null
+						? GetAllAttributes<MappingAttribute>(sourceOwner, (MemberInfo)source)
+						: GetAllAttributes<MappingAttribute>((Type)source);
 
-			return attributes;
+					if (attrs.Length == 0)
+						return attrs;
+
+					List<MappingAttribute>? list = null;
+
+					foreach (var c in ConfigurationList)
+					{
+						foreach (var a in attrs)
+							if (a.Configuration == c)
+								(list ??= new()).Add(a);
+					}
+
+					foreach (var attribute in attrs)
+						if (string.IsNullOrEmpty(attribute.Configuration))
+							(list ??= new()).Add(attribute);
+
+					return list == null ? Array<MappingAttribute>.Empty : list.ToArray();
+				});
+
+			var firstOnlyCache = new MappingAttributesCache(
+				(sourceOwner, source) =>
+				{
+					var attrs = sourceOwner != null
+						? GetAllAttributes<MappingAttribute>(sourceOwner, (MemberInfo)source)
+						: GetAllAttributes<MappingAttribute>((Type)source);
+
+					if (attrs.Length == 0)
+						return attrs;
+
+					List<MappingAttribute>? list = null;
+
+					foreach (var c in ConfigurationList)
+					{
+						foreach (var a in attrs)
+							if (a.Configuration == c)
+								(list ??= new()).Add(a);
+						if (list != null)
+							return list.ToArray();
+					}
+
+					foreach (var attribute in attrs)
+						if (string.IsNullOrEmpty(attribute.Configuration))
+							(list ??= new()).Add(attribute);
+
+					return list == null ? Array<MappingAttribute>.Empty : list.ToArray();
+				});
+
+			return (cache, firstOnlyCache);
 		}
 
-		/// <summary>
-		/// Gets attribute of specified type, associated with specified type.
-		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
-		/// <param name="type">Attribute owner type.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
-		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		public T? GetAttribute<T>(Type type, bool inherit = true)
-			where T : Attribute
-		{
-			var attrs = GetAttributes<T>(type, inherit);
-			return attrs.Length == 0 ? null : attrs[0];
-		}
-
-		/// <summary>
-		/// Gets attribute of specified type, associated with specified type member.
-		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
-		/// <param name="type">Member's owner type.</param>
-		/// <param name="memberInfo">Attribute owner member.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
-		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, bool inherit = true)
-			where T : Attribute
-		{
-			var attrs = GetAttributes<T>(type, memberInfo, inherit);
-			return attrs.Length == 0 ? null : attrs[0];
-		}
+		MappingAttributesCache _cache;
+		MappingAttributesCache _firstOnlyCache;
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type.
-		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Attributes owner type.</param>
-		/// <param name="configGetter">Attribute configuration name provider.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
-		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, Func<T,string?> configGetter, bool inherit = true,
-			bool exactForConfiguration = false)
-			where T : Attribute
-		{
-			var list  = new List<T>();
-			var attrs = GetAttributes<T>(type, inherit);
-
-			foreach (var c in ConfigurationList)
-			{
-				foreach (var a in attrs)
-					if (configGetter(a) == c)
-						list.Add(a);
-				if (exactForConfiguration && list.Count > 0)
-					return list.ToArray();
-			}
-
-			foreach (var attribute in attrs)
-				if (string.IsNullOrEmpty(configGetter(attribute)))
-					list.Add(attribute);
-
-			return list.ToArray();
-		}
+		public T[] GetAttributes<T>(Type type)
+			where T : MappingAttribute
+			=> _cache.GetMappingAttributes<T>(type);
 
 		/// <summary>
 		/// Gets attributes of specified type, associated with specified type member.
-		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <param name="configGetter">Attribute configuration name provider.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attributes.</param>
-		/// <param name="exactForConfiguration">If <c>true</c> - only associated to configuration attributes will be returned.</param>
+		/// <param name="forFirstConfiguration">If <c>true</c> - returns only atributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
 		/// <returns>Attributes of specified type.</returns>
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true,
-			bool exactForConfiguration = false)
-			where T : Attribute
-		{
-			var list  = new List<T>();
-			var attrs = GetAttributes<T>(type, memberInfo, inherit);
-
-			foreach (var c in ConfigurationList)
-			{
-				foreach (var a in attrs)
-					if (configGetter(a) == c)
-						list.Add(a);
-				if (exactForConfiguration && list.Count > 0)
-					return list.ToArray();
-			}
-
-			foreach (var attribute in attrs)
-				if (string.IsNullOrEmpty(configGetter(attribute)))
-					list.Add(attribute);
-
-			return list.ToArray();
-		}
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool forFirstConfiguration = false)
+			where T : MappingAttribute
+		=> forFirstConfiguration
+			? _firstOnlyCache.GetMappingAttributes<T>(type, memberInfo)
+			: _cache         .GetMappingAttributes<T>(type, memberInfo);
 
 		/// <summary>
 		/// Gets attribute of specified type, associated with specified type.
-		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Attribute owner type.</param>
-		/// <param name="configGetter">Attribute configuration name provider.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		public T? GetAttribute<T>(Type type, Func<T,string?> configGetter, bool inherit = true)
-			where T : Attribute
+		public T? GetAttribute<T>(Type type)
+			where T : MappingAttribute
 		{
-			var attrs = GetAttributes(type, configGetter, inherit);
+			var attrs = GetAttributes<T>(type);
 			return attrs.Length == 0 ? null : attrs[0];
 		}
 
 		/// <summary>
 		/// Gets attribute of specified type, associated with specified type member.
-		/// Attributes filtered by schema's configuration names (see  <see cref="ConfigurationList"/>).
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
 		/// </summary>
-		/// <typeparam name="T">Attribute type.</typeparam>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attribute owner member.</param>
-		/// <param name="configGetter">Attribute configuration name provider.</param>
-		/// <param name="inherit">If <c>true</c> - include inherited attribute.</param>
 		/// <returns>First found attribute of specified type or <c>null</c>, if no attributes found.</returns>
-		public T? GetAttribute<T>(Type type, MemberInfo memberInfo, Func<T,string?> configGetter, bool inherit = true)
-			where T : Attribute
+		public T? GetAttribute<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
-			var attrs = GetAttributes(type, memberInfo, configGetter, inherit);
+			var attrs = GetAttributes<T>(type, memberInfo);
 			return attrs.Length == 0 ? null : attrs[0];
+		}
+
+		/// <summary>
+		/// Returns <c>true</c> if attribute of specified type, associated with specified type.
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
+		/// <param name="type">Attribute owner type.</param>
+		/// <returns>Returns <c>true</c> if attribute of specified type, associated with specified type.</returns>
+		public bool HasAttribute<T>(Type type)
+			where T : MappingAttribute
+		{
+			return GetAttributes<T>(type).Length > 0;
+		}
+
+		/// <summary>
+		/// Returns <c>true</c> if attribute of specified type, associated with specified type member.
+		/// Attributes are filtered by schema's configuration names (see <see cref="ConfigurationList"/>).
+		/// </summary>
+		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
+		/// <param name="type">Member's owner type.</param>
+		/// <param name="memberInfo">Attribute owner member.</param>
+		/// <returns>Returns <c>true</c> if attribute of specified type, associated with specified type member.</returns>
+		public bool HasAttribute<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
+		{
+			return GetAttributes<T>(type, memberInfo).Length > 0;
 		}
 
 		/// <summary>
@@ -1228,16 +1207,7 @@ namespace LinqToDB.Mapping
 		/// <returns>All dynamic columns defined on given type.</returns>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			List<MemberInfo>? result = null;
-
-			foreach (var reader in MetadataReaders)
-			{
-				var columns = reader.GetDynamicColumns(type);
-				if (columns.Length > 0)
-					(result ??= new()).AddRange(columns);
-			}
-
-			return result == null ? Array<MemberInfo>.Empty : result.ToArray();
+			return Schemas[0].MetadataReader?.GetDynamicColumns(type) ?? Array<MemberInfo>.Empty;
 		}
 
 		/// <summary>
@@ -1259,15 +1229,21 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Unique schema configuration identifier. For internal use only.
 		/// </summary>
-		internal int ConfigurationID => _configurationID ??= GenerateID();
+		int IConfigurationID.ConfigurationID => _configurationID ??= GenerateID();
 
 		protected internal virtual int GenerateID()
 		{
-			var idBuilder = new IdentifierBuilder();
+			using var idBuilder = new IdentifierBuilder();
 
 			lock (_syncRoot)
+			{
 				foreach (var s in Schemas)
 					idBuilder.Add(s.ConfigurationID);
+
+				var reader = Schemas[0].MetadataReader;
+				if (reader != null)
+					idBuilder.Add(reader.GetObjectID());
+			}
 
 			return idBuilder.CreateID();
 		}
@@ -1275,6 +1251,10 @@ namespace LinqToDB.Mapping
 		internal void ResetID()
 		{
 #if DEBUG
+			if (!IsLockable)
+			{
+			}
+
 			if (_configurationID != null)
 				Debug.WriteLine($"ResetID => '{DisplayID}'");
 #endif
@@ -1297,8 +1277,8 @@ namespace LinqToDB.Mapping
 					var list = new List<string>();
 
 					foreach (var s in Schemas)
-						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration!))
-							list.Add(s.Configuration!);
+						if (!string.IsNullOrEmpty(s.Configuration) && hash.Add(s.Configuration))
+							list.Add(s.Configuration);
 
 					_configurationList = list.ToArray();
 				}
@@ -1311,7 +1291,7 @@ namespace LinqToDB.Mapping
 		{
 			get
 			{
-				var list = Schemas == null || ConfigurationList == null? "" : ConfigurationList.Aggregate("", (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
+				var list = Schemas == null || ConfigurationList == null ? "" : ConfigurationList.Aggregate("", static (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
 				return $"{GetType().Name} : ({_configurationID}) {list}";
 			}
 		}
@@ -1327,6 +1307,10 @@ namespace LinqToDB.Mapping
 			Schemas = new[] { mappingSchemaInfo };
 
 			ValueToSqlConverter = new ();
+
+			InitMetadataReaders();
+
+			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
 
 		/// <summary>
@@ -1416,7 +1400,7 @@ namespace LinqToDB.Mapping
 					return o.Value;
 			}
 
-			var attr = GetAttribute<ScalarTypeAttribute>(type, static a => a.Configuration);
+			var attr = GetAttribute<ScalarTypeAttribute>(type);
 			var ret  = false;
 
 			if (attr != null)
@@ -1585,7 +1569,7 @@ namespace LinqToDB.Mapping
 
 				foreach (var f in underlyingType.GetFields())
 					if ((f.Attributes & EnumField) == EnumField)
-						attrs.AddRange(GetAttributes<MapValueAttribute>(underlyingType, f, static a => a.Configuration));
+						attrs.AddRange(GetAttributes<MapValueAttribute>(underlyingType, f));
 
 				if (attrs.Count == 0)
 				{
@@ -1625,7 +1609,7 @@ namespace LinqToDB.Mapping
 					}
 
 					if (valueType == null)
-						return SqlDataType.GetDataType(type);
+						return GetDataType(type);
 
 					var dt = GetDataType(valueType);
 
@@ -1661,31 +1645,27 @@ namespace LinqToDB.Mapping
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			_mapValues ??= new ConcurrentDictionary<Type,MapValue[]?>();
-
-			if (_mapValues.TryGetValue(type, out var mapValues))
-				return mapValues;
-
-			var underlyingType = type.ToNullableUnderlying();
-
-			if (underlyingType.IsEnum)
+			return (_mapValues ??= new ConcurrentDictionary<Type, MapValue[]?>()).GetOrAdd(type, type =>
 			{
-				var fields = new List<MapValue>();
+				var underlyingType = type.ToNullableUnderlying();
 
-				foreach (var f in underlyingType.GetFields())
-					if ((f.Attributes & EnumField) == EnumField)
-					{
-						var attrs = GetAttributes<MapValueAttribute>(underlyingType, f, static a => a.Configuration);
-						fields.Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
-					}
+				if (underlyingType.IsEnum)
+				{
+					List<MapValue>? fields = null;
 
-				if (fields.Any(static f => f.MapValues.Length > 0))
-					mapValues = fields.ToArray();
-			}
+					foreach (var f in underlyingType.GetFields())
+						if ((f.Attributes & EnumField) == EnumField)
+						{
+							var attrs = GetAttributes<MapValueAttribute>(underlyingType, f);
+							(fields ??= new()).Add(new MapValue(Enum.Parse(underlyingType, f.Name, false), attrs));
+						}
 
-			_mapValues[type] = mapValues;
+					if (fields?.Any(static f => f.MapValues.Length > 0) == true)
+						return fields.ToArray();
+				}
 
-			return mapValues;
+				return null;
+			});
 		}
 
 		#endregion
@@ -1736,7 +1716,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
-		internal static MemoryCache<(Type entityType, int schemaId)> EntityDescriptorsCache { get; } = new (new ());
+		internal static MemoryCache<(Type entityType, int schemaId),EntityDescriptor> EntityDescriptorsCache { get; } = new (new ());
 
 		/// <summary>
 		/// Returns mapped entity descriptor.
@@ -1746,7 +1726,7 @@ namespace LinqToDB.Mapping
 		public EntityDescriptor GetEntityDescriptor(Type type)
 		{
 			var ed = EntityDescriptorsCache.GetOrCreate(
-				(entityType: type, ConfigurationID),
+				(entityType: type, ((IConfigurationID)this).ConfigurationID),
 				this,
 				static (o, context) =>
 				{
@@ -1760,18 +1740,18 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Enumerates types registered by FluentMetadataBuilder.
+		/// Enumerates types registered by <see cref="FluentMappingBuilder"/>.
 		/// </summary>
 		/// <returns>
-		/// Returns array with all types, mapped by fluent mappings.
+		/// Returns all types, mapped by fluent mappings.
 		/// </returns>
-		public Type[] GetDefinedTypes()
+		public IEnumerable<Type> GetDefinedTypes()
 		{
-			return Schemas.SelectMany(static s => s.GetRegisteredTypes()).ToArray();
+			return Schemas.SelectMany(static s => s.GetRegisteredTypes()).Distinct();
 		}
 
 		/// <summary>
-		/// Clears EntityDescriptor cache.
+		/// Clears <see cref="EntityDescriptor"/> cache.
 		/// </summary>
 		public static void ClearCache()
 		{
@@ -1815,21 +1795,19 @@ namespace LinqToDB.Mapping
 
 		#endregion
 
-		internal IEnumerable<T> SortByConfiguration<T>(Func<T, string?> configGetter, IEnumerable<T> values)
+		internal IEnumerable<T> SortByConfiguration<T>(IEnumerable<T> attributes)
+			where T : MappingAttribute
 		{
-			var orderedValues = new List<Tuple<T, int>>();
-
-			foreach (var value in values)
-			{
-				var config = configGetter(value);
-				var index  = Array.IndexOf(ConfigurationList, config);
-				var order  = index == -1 ? ConfigurationList.Length : index;
-				orderedValues.Add(Tuple.Create(value, order));
-			}
-
-			return orderedValues
-				.OrderBy(static _ => _.Item2)
-				.Select (static _ => _.Item1);
+			return attributes
+				.Select(attr =>
+				{
+					var config = attr.Configuration;
+					var index  = Array.IndexOf(ConfigurationList, config);
+					var order  = index == -1 ? ConfigurationList.Length : index;
+					return (attr, order);
+				})
+				.OrderBy(static _ => _.order)
+				.Select (static _ => _.attr);
 		}
 
 		public virtual bool IsLockable => false;

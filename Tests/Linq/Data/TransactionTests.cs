@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 
 using NUnit.Framework;
 
@@ -199,6 +200,25 @@ namespace Tests.Data
 		}
 
 		[Test]
+		public async Task AutoRollbackTransactionAsync([DataSources(false, TestProvName.AllClickHouse)] string context)
+		{
+			await using (var db = GetDataConnection(context))
+			using (new RestoreBaseTables(db))
+			{
+				await db.InsertAsync(new Parent { ParentID = 1010, Value1 = 1010 });
+
+				await using (db.BeginTransaction())
+				{
+					db.Parent.Update(t => t.ParentID == 1010, t => new Parent { Value1 = 1012 });
+				}
+
+				var p = await db.Parent.FirstAsync(t => t.ParentID == 1010);
+
+				Assert.That(p.Value1, Is.Not.EqualTo(1012));
+			}
+		}
+
+		[Test]
 		public void CommitTransaction([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -236,6 +256,40 @@ namespace Tests.Data
 
 				Assert.That(p.Value1, Is.Not.EqualTo(1012));
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3863")]
+		public void DisposeCommitedTransaction([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var _ = db.BeginTransaction();
+			db.Execute("commit;");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3863")]
+		public async ValueTask DisposeCommitedTransactionAsync([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+			await using var _ = await db.BeginTransactionAsync();
+			await db.ExecuteAsync("commit;");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3863")]
+		public void DisposeCommitedTransactionDataContext([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = new DataContext(context);
+			using var _ = db.BeginTransaction();
+			db.NextQueryHints.Add("**commit;");
+			db.GetTable<Person>().Count();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3863")]
+		public async ValueTask DisposeCommitedTransactionAsyncDataContext([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = new DataContext(context);
+			await using var _ = await db.BeginTransactionAsync();
+			db.NextQueryHints.Add("**commit;");
+			await db.GetTable<Person>().CountAsync();
 		}
 	}
 }

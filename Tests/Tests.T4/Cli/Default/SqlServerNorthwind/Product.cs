@@ -29,22 +29,22 @@ namespace Cli.Default.SqlServerNorthwind
 
 		#region Associations
 		/// <summary>
-		/// FK_Products_Suppliers
-		/// </summary>
-		[Association(ThisKey = nameof(SupplierId), OtherKey = nameof(SqlServerNorthwind.Supplier.SupplierId))]
-		public Supplier? Supplier { get; set; }
-
-		/// <summary>
-		/// FK_Products_Categories
-		/// </summary>
-		[Association(ThisKey = nameof(CategoryId), OtherKey = nameof(SqlServerNorthwind.Category.CategoryId))]
-		public Category? Category { get; set; }
-
-		/// <summary>
 		/// FK_Order_Details_Products backreference
 		/// </summary>
 		[Association(ThisKey = nameof(ProductId), OtherKey = nameof(OrderDetail.ProductId))]
 		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
+
+		/// <summary>
+		/// FK_Products_Categories
+		/// </summary>
+		[Association(ThisKey = nameof(CategoryId), OtherKey = nameof(Category.CategoryId))]
+		public Category? Categories { get; set; }
+
+		/// <summary>
+		/// FK_Products_Suppliers
+		/// </summary>
+		[Association(ThisKey = nameof(SupplierId), OtherKey = nameof(Supplier.SupplierId))]
+		public Supplier? Suppliers { get; set; }
 		#endregion
 	}
 }

@@ -5,6 +5,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Defines relation between tables or views.
 	/// Could be applied to:
@@ -28,16 +30,7 @@ namespace LinqToDB.Mapping
 		/// Creates attribute instance.
 		/// </summary>
 		public AssociationAttribute()
-		{
-			CanBeNull = true;
-		}
-
-		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string?      Configuration       { get; set; }
+		{ }
 
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on this side of association.
@@ -110,37 +103,20 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string?      Storage             { get; set; }
 
+		internal bool?      ConfiguredCanBeNull;
 		/// <summary>
 		/// Defines type of join:
 		/// - inner join for <c>CanBeNull = false</c>;
-		/// - left join for <c>CanBeNull = true</c>.
-		/// Default value: <c>true</c>.
+		/// - outer join for <c>CanBeNull = true</c>.
+		/// When using Configuration.UseNullableTypesMetadata, the default value 
+		/// for associations (cardinality 1) is derived from nullability.
+		/// Otherwise the default value is <c>true</c> (for collections and when option is disabled).
 		/// </summary>
-		public bool         CanBeNull           { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public string?      KeyName             { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public string?      BackReferenceName   { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public bool         IsBackReference     { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public Relationship Relationship        { get; set; }
+		public bool         CanBeNull           
+		{ 
+			get => ConfiguredCanBeNull ?? true; 
+			set => ConfiguredCanBeNull = value;
+		}
 
 		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
@@ -161,7 +137,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
 		}
 	}
 }

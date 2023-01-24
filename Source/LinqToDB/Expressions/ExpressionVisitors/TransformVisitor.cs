@@ -8,9 +8,9 @@ namespace LinqToDB.Expressions
 {
 	internal readonly struct TransformVisitor<TContext>
 	{
-		private readonly TContext?                               _context;
-		private readonly Func<TContext, Expression, Expression>? _func;
-		private readonly Func<Expression, Expression>?           _staticFunc;
+		private readonly TContext?                             _context;
+		private readonly Func<TContext,Expression,Expression>? _func;
+		private readonly Func<Expression,Expression>?          _staticFunc;
 
 		public TransformVisitor(TContext context, Func<TContext, Expression, Expression> func)
 		{
@@ -196,7 +196,7 @@ namespace LinqToDB.Expressions
 		private Expression TransformX(TryExpression e)
 		{
 			var b = Transform(e.Body);
-			var c = Transform(e.Handlers, TransformCatchBlock);
+			var c = Transform(this, e.Handlers, TransformCatchBlock);
 			var f = Transform(e.Finally);
 			var t = Transform(e.Fault);
 
@@ -204,30 +204,30 @@ namespace LinqToDB.Expressions
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private CatchBlock TransformCatchBlock(CatchBlock h)
+		private static CatchBlock TransformCatchBlock(TransformVisitor<TContext> visitor, CatchBlock h)
 		{
 			return h.Update(
-				(ParameterExpression?)Transform(h.Variable),
-				Transform(h.Filter),
-				Transform(h.Body));
+				(ParameterExpression?)visitor.Transform(h.Variable),
+				visitor.Transform(h.Filter),
+				visitor.Transform(h.Body));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformX(SwitchExpression e)
 		{
 			var s = Transform(e.SwitchValue);
-			var c = Transform(e.Cases, TransformSwitchCase);
+			var c = Transform(this, e.Cases, TransformSwitchCase);
 			var d = Transform(e.DefaultBody);
 
 			return e.Update(s, c, d);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private SwitchCase TransformSwitchCase(SwitchCase cs)
+		private static SwitchCase TransformSwitchCase(TransformVisitor<TContext> visitor, SwitchCase cs)
 		{
 			return cs.Update(
-				Transform(cs.TestValues),
-				Transform(cs.Body));
+				visitor.Transform(cs.TestValues),
+				visitor.Transform(cs.Body));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -265,7 +265,7 @@ namespace LinqToDB.Expressions
 		{
 			return e.Update(
 				(NewExpression)Transform(e.NewExpression),
-				Transform(e.Bindings, Modify));
+				Transform(this, e.Bindings, Modify));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -280,15 +280,15 @@ namespace LinqToDB.Expressions
 		private Expression TransformX(ListInitExpression e)
 		{
 			var n = Transform(e.NewExpression);
-			var i = Transform(e.Initializers, TransformElementInit);
+			var i = Transform(this, e.Initializers, TransformElementInit);
 
 			return n != e.NewExpression || i != e.Initializers ? Expression.ListInit((NewExpression)n, i) : e;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private ElementInit TransformElementInit(ElementInit p)
+		private static ElementInit TransformElementInit(TransformVisitor<TContext> visitor, ElementInit p)
 		{
-			var args = Transform(p.Arguments);
+			var args = visitor.Transform(p.Arguments);
 			return args != p.Arguments ? Expression.ElementInit(p.AddMethod, args) : p;
 		}
 
@@ -329,7 +329,7 @@ namespace LinqToDB.Expressions
 				: e;
 		}
 
-		IEnumerable<T> Transform<T>(IList<T> source, Func<T, T> func)
+		static IEnumerable<T> Transform<T>(TransformVisitor<TContext> visitor, IList<T> source, Func<TransformVisitor<TContext>, T, T> func)
 			where T : class
 		{
 			List<T>? list = null;
@@ -337,7 +337,7 @@ namespace LinqToDB.Expressions
 			for (var i = 0; i < source.Count; i++)
 			{
 				var item = source[i];
-				var e    = func(item);
+				var e    = func(visitor, item);
 
 				if (e != item)
 				{
@@ -369,20 +369,20 @@ namespace LinqToDB.Expressions
 			return list ?? source;
 		}
 
-		MemberBinding Modify(MemberBinding b)
+		static MemberBinding Modify(TransformVisitor<TContext> visitor, MemberBinding b)
 		{
 			switch (b.BindingType)
 			{
 				case MemberBindingType.Assignment:
 				{
 					var ma = (MemberAssignment) b;
-					return ma.Update(Transform(ma.Expression));
+					return ma.Update(visitor.Transform(ma.Expression));
 				}
 
 				case MemberBindingType.ListBinding:
 				{
 					var ml = (MemberListBinding) b;
-					var i  = Transform(ml.Initializers, TransformElementInit);
+					var i  = TransformVisitor<TContext>.Transform(visitor, ml.Initializers, TransformElementInit);
 
 					if (i != ml.Initializers)
 						ml = Expression.ListBind(ml.Member, i);
@@ -393,7 +393,7 @@ namespace LinqToDB.Expressions
 				case MemberBindingType.MemberBinding:
 				{
 					var mm = (MemberMemberBinding) b;
-					var bs = Transform(mm.Bindings, Modify);
+					var bs = TransformVisitor<TContext>.Transform(visitor, mm.Bindings, Modify);
 
 					if (bs != mm.Bindings)
 						mm = Expression.MemberBind(mm.Member);

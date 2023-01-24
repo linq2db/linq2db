@@ -230,7 +230,7 @@ namespace Tests.UserTests
 				db.MappingSchema.SetDefaultValue(typeof(int?), 0);
 
 				var mapping = db.MappingSchema.GetFluentMappingBuilder();
-				mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5);
+				mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5).Build();
 				using (db.CreateLocalTable<TestTableFluent>())
 				{
 					var count = db.Insert(new TestTableFluent() { Id = 1, Name = null, Age = 2 });

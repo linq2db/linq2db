@@ -41,7 +41,7 @@ namespace Tests.UserTests
 			Day,
 		}
 
-		private LinqToDBConnectionOptions SetupEnums(string context, bool withTable)
+		private DataOptions SetupEnums(string context, bool withTable)
 		{
 			var mappingSchema = new MappingSchema();
 
@@ -77,10 +77,9 @@ INSERT INTO schedule(unit, unit_nullable,amount) VALUES ('day','day',1),('day','
 			builder.MapEnum<TimeUnit>("time_unit");
 			var dataSource = builder.Build();
 
-			return new LinqToDBConnectionOptionsBuilder()
-				.UseConnectionFactory(dataProvider, dataSource.CreateConnection)
-				.UseMappingSchema(mappingSchema)
-				.Build();
+			return new DataOptions()
+				.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection())
+				.UseMappingSchema(mappingSchema);
 		}
 
 		[Test]

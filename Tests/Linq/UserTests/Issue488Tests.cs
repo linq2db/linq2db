@@ -8,7 +8,6 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -17,13 +16,14 @@ namespace Tests.UserTests
 	{
 		public class LinqDataTypes
 		{
-			public int ID;
-			public decimal MoneyValue;
-			[Column(DataType = DataType.Date)]public DateTime DateTimeValue;
-			public bool BoolValue;
-			public Guid GuidValue;
-			public Binary? BinaryValue;
-			public short SmallIntValue;
+			public int      ID;
+			public decimal  MoneyValue;
+			[Column(DataType = DataType.Date)]
+			public DateTime DateTimeValue;
+			public bool     BoolValue;
+			public Guid     GuidValue;
+			public Binary?  BinaryValue;
+			public short    SmallIntValue;
 		}
 
 		[Test]

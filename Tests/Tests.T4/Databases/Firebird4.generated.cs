@@ -60,14 +60,7 @@ namespace Firebird4DataContext
 			InitMappingSchema();
 		}
 
-		public TESTDB40DB(LinqToDBConnectionOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TESTDB40DB(LinqToDBConnectionOptions<TESTDB40DB> options)
+		public TESTDB40DB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
@@ -538,7 +531,7 @@ namespace Firebird4DataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_15161 (SYSDBA.Person)
+		/// INTEG_18 (SYSDBA.Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -564,7 +557,7 @@ namespace Firebird4DataContext
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_15161_BackReference (SYSDBA.Patient)
+		/// INTEG_18_BackReference (SYSDBA.Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
 		public Patient? INTEG { get; set; }

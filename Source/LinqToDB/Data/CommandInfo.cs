@@ -2,26 +2,23 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-using System.Diagnostics;
 
 using JetBrains.Annotations;
-
-// type, readertype, configID, sql, additionalKey, isScalar
-using QueryKey = System.ValueTuple<System.Type, System.Type, int, string, string?, bool>;
 
 namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using Common.Internal.Cache;
 	using Expressions;
 	using Extensions;
@@ -256,7 +253,7 @@ namespace LinqToDB.Data
 #endif
 					while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						action(objectReader(rd.DataReader!));
-		}
+			}
 		}
 
 		#endregion
@@ -319,7 +316,7 @@ namespace LinqToDB.Data
 		{
 			return typeof(object) == type || typeof(ExpandoObject) == type;
 		}
-		
+
 		IEnumerable<T> ReadEnumerator<T>(DataReaderWrapper rd, IExecutionScope? scope, bool disposeReader = true)
 		{
 			var startedOn = DateTime.UtcNow;
@@ -439,38 +436,38 @@ namespace LinqToDB.Data
 #else
 				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
-			{
-					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
+					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					{
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
 						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
-					var isFaulted     = false;
+						var isFaulted     = false;
 
-					do
-					{
-						T result;
-
-						try
+						do
 						{
+							T result;
+
+							try
+							{
 								result = objectReader(reader);
-						}
-						catch (InvalidCastException)
-						{
-							if (isFaulted)
-								throw;
+							}
+							catch (InvalidCastException)
+							{
+								if (isFaulted)
+									throw;
 
-							isFaulted    = true;
+								isFaulted    = true;
 								objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey);
 								result       = objectReader(reader);
-						}
+							}
 
-						action(result);
+							action(result);
 
 						} while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+					}
 				}
 			}
-		}
 		}
 
 		#endregion
@@ -611,20 +608,31 @@ namespace LinqToDB.Data
 
 		Dictionary<int, MemberAccessor> GetMultipleQueryIndexMap<T>(TypeAccessor<T> typeAccessor)
 		{
-			var members = typeAccessor.Members.Where(m => m.HasSetter).ToArray();
+			var indexMap = new Dictionary<int, MemberAccessor>();
 
 			// Use attribute labels if any exist.
-			var indexMap = (from m in members
-				let a = m.GetAttributes<ResultSetIndexAttribute>()
-				where a != null
-				select new { Member = m, a[0].Index }).ToDictionary(e => e.Index, e => e.Member);
+			foreach (var m in typeAccessor.Members)
+			{
+				if (!m.HasGetter)
+					continue;
+
+				var attr = m.MemberInfo.GetAttribute<ResultSetIndexAttribute>();
+
+				if (attr != null)
+					indexMap.Add(attr.Index, m);
+			}
 
 			if (indexMap.Count == 0)
 			{
 				// Use ordering of properties according to reflection.
-				for (var i = 0; i < members.Length; i++)
+				var i = 0;
+				foreach (var m in typeAccessor.Members)
 				{
-					indexMap[i] = members[i];
+					if (m.HasGetter)
+					{
+						indexMap[i] = m;
+						i++;
+					}
 				}
 			}
 
@@ -1030,7 +1038,7 @@ namespace LinqToDB.Data
 					{
 						result = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey)(reader);
 					}
-			}
+				}
 
 				stopwatch.Stop();
 
@@ -1097,35 +1105,36 @@ namespace LinqToDB.Data
 #else
 				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
-			{
+				{
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-				{
+					{
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-					try
-					{
-							result = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+						try
+						{
+								result = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+						}
+						catch (InvalidCastException)
+						{
+								result = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+						}
 					}
-					catch (InvalidCastException)
+
+					stopwatch.Stop();
+
+					if (DataConnection.TraceSwitchConnection.TraceInfo)
 					{
-							result = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+						DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+						{
+							TraceLevel      = TraceLevel.Info,
+							Command         = rd.Command,
+							StartTime       = startedOn,
+							ExecutionTime   = stopwatch.Elapsed,
+							RecordsAffected = 1,
+						});
 					}
-				}
 
-				stopwatch.Stop();
-				if (DataConnection.TraceSwitchConnection.TraceInfo)
-				{
-					DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
-					{
-						TraceLevel      = TraceLevel.Info,
-						Command         = rd.Command,
-						StartTime       = startedOn,
-						ExecutionTime   = stopwatch.Elapsed,
-						RecordsAffected = 1,
-					});
+					SetRebindParameters(rd);
 				}
-
-				SetRebindParameters(rd);
-			}
 			}
 
 			return result;
@@ -1378,10 +1387,10 @@ namespace LinqToDB.Data
 		{
 			foreach (var dataParameter in Parameters!)
 			{
-				if (dataParameter.Direction.HasValue &&
-					(dataParameter.Direction == ParameterDirection.Output || dataParameter.Direction == ParameterDirection.InputOutput || dataParameter.Direction == ParameterDirection.ReturnValue))
+				if (dataParameter.Direction is ParameterDirection.Output or ParameterDirection.InputOutput or ParameterDirection.ReturnValue)
 				{
-					var dbParameter      = command.Parameters[dataParameter.Name!];
+					var dbParameter = command.Parameters[dataParameter.Name!];
+
 					dataParameter.Output = dbParameter;
 
 					if (!Equals(dataParameter.Value, dbParameter.Value))
@@ -1392,7 +1401,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly MemoryCache<(Type type, int contextId)>  _parameterReaders = new (new ());
+		static readonly MemoryCache<(Type type, int contextId),Func<object,DataParameter[]>> _parameterReaders = new (new ());
 
 		static readonly PropertyInfo _dataParameterName       = MemberHelper.PropertyOf<DataParameter>(p => p.Name);
 		static readonly PropertyInfo _dataParameterDbDataType = MemberHelper.PropertyOf<DataParameter>(p => p.DbDataType);
@@ -1410,16 +1419,16 @@ namespace LinqToDB.Data
 			}
 
 			var func = _parameterReaders.GetOrCreate(
-				(type: parameters.GetType(), dataConnection.ID),
+				(type: parameters.GetType(), ((IConfigurationID)dataConnection).ConfigurationID),
 				dataConnection,
-				static (o, dataConnection) =>
+				static (o, ctx) =>
 			{
-					var type = o.Key.type;
-				o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+				o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
-				var td  = dataConnection.MappingSchema.GetEntityDescriptor(type);
-				var p   = Expression.Parameter(typeof(object), "p");
-				var obj = Expression.Parameter(type, "obj");
+				var type = o.Key.type;
+				var td   = ctx.MappingSchema.GetEntityDescriptor(type);
+				var p    = Expression.Parameter(typeof(object), "p");
+				var obj  = Expression.Parameter(type,           "obj");
 
 				var expr = Expression.Lambda<Func<object,DataParameter[]>>(
 					Expression.Block(
@@ -1460,7 +1469,7 @@ namespace LinqToDB.Data
 
 									var memberType  = column.MemberType.ToNullableUnderlying();
 									var valueGetter = ExpressionHelper.PropertyOrField(obj, column.MemberName) as Expression;
-									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
+									var mapper      = ctx.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
 									if (mapper != null)
 									{
@@ -1472,8 +1481,8 @@ namespace LinqToDB.Data
 
 									if (memberType.IsEnum)
 									{
-										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType)!;
-										var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
+										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(ctx.MappingSchema, memberType)!;
+										var convExpr = ctx.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
 
 										memberType  = mapType;
 										valueGetter = convExpr.GetBody(valueGetter);
@@ -1481,7 +1490,7 @@ namespace LinqToDB.Data
 
 									var columnDbDataType = new DbDataType(memberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
 									if (columnDbDataType.DataType == DataType.Undefined)
-										columnDbDataType = columnDbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(memberType).Type.DataType);
+										columnDbDataType = columnDbDataType.WithDataType(ctx.MappingSchema.GetDataType(memberType).Type.DataType);
 
 									return (Expression)Expression.MemberInit(
 										Expression.New(typeof(DataParameter)),
@@ -1519,8 +1528,10 @@ namespace LinqToDB.Data
 
 		#region GetObjectReader
 
-		static readonly MemoryCache<QueryKey>                                   _objectReaders       = new (new ());
-		static readonly MemoryCache<(Type readerType, Type providerReaderType)> _dataReaderConverter = new (new ());
+		record struct QueryKey(Type TargetType, Type DbReaderType, int ConfigId, string Sql, string? ExtraKey, bool IsScalar, Type? ScalarSourceType);
+
+		static readonly MemoryCache<QueryKey,Delegate>                                            _objectReaders       = new (new ());
+		static readonly MemoryCache<(Type readerType, Type providerReaderType),LambdaExpression?> _dataReaderConverter = new (new ());
 
 		/// <summary>
 		/// Clears global cache of object mapping functions from query results and mapping functions from value to <see cref="DataParameter"/>.
@@ -1541,51 +1552,52 @@ namespace LinqToDB.Data
 
 		static string GetFieldsKey(DbDataReader dataReader)
 		{
-			var sb = new StringBuilder();
+			using var sb = Pools.StringBuilder.Allocate();
 
-			for (int i = 0; i < dataReader.FieldCount; i++)
+			for (var i = 0; i < dataReader.FieldCount; i++)
 			{
-				sb.Append(dataReader.GetName(i))
+				sb.Value.Append(dataReader.GetName(i))
 					.Append(',')
 					.Append(dataReader.GetFieldType(i))
 					.Append(';');
 			}
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 
-		static Func<DbDataReader, T> GetObjectReader<T>(DataConnection dataConnection, DbDataReader dataReader,
-			string sql, string? additionalKey)
+		static Func<DbDataReader,T> GetObjectReader<T>(DataConnection dataConnection, DbDataReader dataReader, string sql, string? additionalKey)
 		{
 			var func = _objectReaders.GetOrCreate(
-				new QueryKey(typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1),
+				new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1, dataReader.FieldCount == 1 ? dataReader.GetFieldType(0) : null),
 				(dataConnection, dataReader),
 				static (e, context) =>
-		{
-				e.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-
-					if (!e.Key.Item6 && IsDynamicType(typeof(T)))
 			{
+				e.SlidingExpiration = context.dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+
+				if (!e.Key.IsScalar && IsDynamicType(typeof(T)))
+				{
 					// dynamic case
 					//
-						return CreateDynamicObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
-			}
+					return CreateDynamicObjectReader<T>(context.dataConnection, context.dataReader,
+						(dc, dr, type, idx, dataReaderExpr) =>
+							new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
+				}
 
-					return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr) =>
+				return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr) =>
 					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr).Reduce(dc, dr));
 			});
 
-			return func;
+			return (Func<DbDataReader,T>)func;
 		}
 
-		static Func<DbDataReader, T> GetObjectReader2<T>(DataConnection dataConnection, DbDataReader dataReader,
+		static Func<DbDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, DbDataReader dataReader,
 			string sql, string? additionalKey)
 		{
-			var key = (typeof(T), dataReader.GetType(), dataConnection.ID, sql, additionalKey, dataReader.FieldCount <= 1);
+			var key = new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1, dataReader.FieldCount == 1 ? dataReader.GetFieldType(0) : null);
 
 			Delegate func;
-			if (!key.Item6 && IsDynamicType(typeof(T)))
+
+			if (!key.IsScalar && IsDynamicType(typeof(T)))
 			{
 				// dynamic case
 				//
@@ -1599,9 +1611,9 @@ namespace LinqToDB.Data
 			}
 
 			_objectReaders.Set(key, func,
-				new MemoryCacheEntryOptions<QueryKey>() {SlidingExpiration = Configuration.Linq.CacheSlidingExpiration});
+				new MemoryCacheEntryOptions<QueryKey> { SlidingExpiration = dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault });
 
-			return (Func<DbDataReader, T>)func;
+			return (Func<DbDataReader,T>)func;
 		}
 
 		static Func<DbDataReader, T> CreateObjectReader<T>(
@@ -1618,19 +1630,19 @@ namespace LinqToDB.Data
 
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				converterExpr    = _dataReaderConverter.GetOrCreate(
+				converterExpr = _dataReaderConverter.GetOrCreate(
 					(readerType, dataConnection.DataProvider.DataReaderType),
 					dataConnection,
-					static (o, dataConnection) =>
+					static (o, ctx) =>
 				{
-					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
-						var expr = dataConnection.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
+					var expr = ctx.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
 
 					///// !!!!!
 					if (expr != null)
 					{
-						expr      = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
+						expr = Expression.Lambda(Expression.Convert(expr.Body, ctx.DataProvider.DataReaderType), expr.Parameters);
 					}
 
 					return expr;
@@ -1729,7 +1741,7 @@ namespace LinqToDB.Data
 
 		static readonly ConstructorInfo _expandoObjectConstructor = MemberHelper.ConstructorOf(() => new ExpandoObject());
 		static readonly MethodInfo      _expandoAddMethodInfo     = MemberHelper.MethodOf(() => ((IDictionary<string, object>)null!).Add("", ""));
-		
+
 		static Func<DbDataReader, T> CreateDynamicObjectReader<T>(
 			DataConnection dataConnection,
 			DbDataReader dataReader,
@@ -1737,23 +1749,24 @@ namespace LinqToDB.Data
 		{
 			var parameter      = Expression.Parameter(typeof(DbDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
+			var readerType     = dataReader.GetType();
 
-			var readerType = dataReader.GetType();
 			LambdaExpression? converterExpr = null;
+
 			if (dataConnection.DataProvider.DataReaderType != readerType)
 			{
-				converterExpr    = _dataReaderConverter.GetOrCreate(
+				converterExpr = _dataReaderConverter.GetOrCreate(
 					(readerType, dataConnection.DataProvider.DataReaderType),
 					dataConnection,
-					static (o, dataConnection) =>
+					static (o, ctx) =>
 				{
-					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
+					o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
-						var expr = dataConnection.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
+					var expr = ctx.MappingSchema.GetConvertExpression(o.Key.readerType, typeof(DbDataReader), false, false);
 
 					if (expr != null)
 					{
-						expr = Expression.Lambda(Expression.Convert(expr.Body, dataConnection.DataProvider.DataReaderType), expr.Parameters);
+						expr = Expression.Lambda(Expression.Convert(expr.Body, ctx.DataProvider.DataReaderType), expr.Parameters);
 					}
 
 					return expr;

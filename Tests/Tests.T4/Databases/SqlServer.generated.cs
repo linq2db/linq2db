@@ -27,7 +27,7 @@ using Microsoft.SqlServer.Types;
 
 namespace DataModel
 {
-	public partial class TestDataNorthwindDB : LinqToDB.Data.DataConnection
+	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
@@ -566,11 +566,11 @@ namespace DataModel
 		#endregion
 	}
 
-	public static partial class TestDataNorthwindDBStoredProcedures
+	public static partial class NorthwindDBStoredProcedures
 	{
 		#region CustOrderHist
 
-		public static List<CustOrderHistResult> CustOrderHist(this TestDataNorthwindDB dataConnection, string? @CustomerID)
+		public static List<CustOrderHistResult> CustOrderHist(this NorthwindDB dataConnection, string? @CustomerID)
 		{
 			var parameters = new []
 			{
@@ -593,7 +593,7 @@ namespace DataModel
 
 		#region CustOrdersDetail
 
-		public static List<CustOrdersDetailResult> CustOrdersDetail(this TestDataNorthwindDB dataConnection, int? @OrderID)
+		public static List<CustOrdersDetailResult> CustOrdersDetail(this NorthwindDB dataConnection, int? @OrderID)
 		{
 			var parameters = new []
 			{
@@ -616,7 +616,7 @@ namespace DataModel
 
 		#region CustOrdersOrders
 
-		public static List<CustOrdersOrdersResult> CustOrdersOrders(this TestDataNorthwindDB dataConnection, string? @CustomerID)
+		public static List<CustOrdersOrdersResult> CustOrdersOrders(this NorthwindDB dataConnection, string? @CustomerID)
 		{
 			var parameters = new []
 			{
@@ -641,7 +641,7 @@ namespace DataModel
 
 		#region EmployeeSalesByCountry
 
-		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this TestDataNorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			var parameters = new []
 			{
@@ -666,7 +666,7 @@ namespace DataModel
 
 		#region SalesByYear
 
-		public static List<SalesByYearResult> SalesByYear(this TestDataNorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
 		{
 			var parameters = new []
 			{
@@ -689,7 +689,7 @@ namespace DataModel
 
 		#region SalesByCategory
 
-		public static List<SalesByCategoryResult> SalesByCategory(this TestDataNorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
+		public static List<SalesByCategoryResult> SalesByCategory(this NorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
 		{
 			var parameters = new []
 			{
@@ -716,7 +716,7 @@ namespace DataModel
 
 		#region TenMostExpensiveProducts
 
-		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this TestDataNorthwindDB dataConnection)
+		public static List<TenMostExpensiveProductsResult> TenMostExpensiveProducts(this NorthwindDB dataConnection)
 		{
 			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Ten Most Expensive Products]").ToList();
 		}
@@ -1141,6 +1141,7 @@ namespace DataModel
 		public ITable<Issue1115>               Issue1115                { get { return this.GetTable<Issue1115>(); } }
 		public ITable<Issue1144>               Issue1144                { get { return this.GetTable<Issue1144>(); } }
 		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Member>                  Members                  { get { return this.GetTable<Member>(); } }
 		public ITable<NameTest>                NameTests                { get { return this.GetTable<NameTest>(); } }
 		/// <summary>
 		/// This is Parent table
@@ -1149,6 +1150,7 @@ namespace DataModel
 		public ITable<ParentChildView>         ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
 		public ITable<ParentView>              ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
+		public ITable<Provider>                Providers                { get { return this.GetTable<Provider>(); } }
 		public ITable<SameTableName>           SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<SqlType>                 SqlTypes                 { get { return this.GetTable<SqlType>(); } }
 		public ITable<TestIdentity>            TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
@@ -1428,6 +1430,23 @@ namespace DataModel
 		[Column(       DbType="nvarchar(50)",     DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable            ] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
+	[Table("Member")]
+	public partial class Member
+	{
+		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey, Identity] public int    MemberId { get; set; } // int
+		[Column(DbType="nvarchar(50)", DataType=LinqToDB.DataType.NVarChar, Length=50), NotNull             ] public string Alias    { get; set; } = null!; // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference (dbo.Provider)
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public Provider? Provider { get; set; }
+
+		#endregion
+	}
+
 	[Table("Name.Test")]
 	public partial class NameTest
 	{
@@ -1466,6 +1485,23 @@ namespace DataModel
 	{
 		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
 		[Column(DbType="nvarchar(256)", DataType=LinqToDB.DataType.NVarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+	}
+
+	[Table("Provider")]
+	public partial class Provider
+	{
+		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                         PrimaryKey, NotNull] public int    ProviderId { get; set; } // int
+		[Column(DbType="nvarchar(max)", DataType=LinqToDB.DataType.NVarChar, Length=int.MaxValue),             NotNull] public string Test       { get; set; } = null!; // nvarchar(max)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_Provider_Member (dbo.Member)
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public Member Member { get; set; } = null!;
+
+		#endregion
 	}
 
 	[Table("SameTableName")]
@@ -2349,6 +2385,12 @@ namespace DataModel
 				t.Id == Id);
 		}
 
+		public static Member? Find(this ITable<Member> table, int MemberId)
+		{
+			return table.FirstOrDefault(t =>
+				t.MemberId == MemberId);
+		}
+
 		public static Parent? Find(this ITable<Parent> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -2359,6 +2401,12 @@ namespace DataModel
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Provider? Find(this ITable<Provider> table, int ProviderId)
+		{
+			return table.FirstOrDefault(t =>
+				t.ProviderId == ProviderId);
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int ID)
@@ -2439,6 +2487,50 @@ namespace DataModel
 		public static IndexTable2 Patient2IndexTable(this IndexTable obj, IDataContext db)
 		{
 			return db.GetTable<IndexTable2>().Where(c => c.PKField2 == obj.PKField2 && c.PKField1 == obj.PKField1).First();
+		}
+
+		#endregion
+
+		#region Member Associations
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public static IQueryable<Provider> Providers(this Member obj, IDataContext db)
+		{
+			return db.GetTable<Provider>().Where(c => c.ProviderId == obj.MemberId);
+		}
+
+		/// <summary>
+		/// FK_Provider_Member_BackReference
+		/// </summary>
+		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		public static Member? Provider(this Provider obj, IDataContext db)
+		{
+			return db.GetTable<Member>().Where(c => c.MemberId == obj.ProviderId).FirstOrDefault();
+		}
+
+		#endregion
+
+		#region Provider Associations
+
+		/// <summary>
+		/// FK_Provider_Member
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public static IQueryable<Member> Members(this Provider obj, IDataContext db)
+		{
+			return db.GetTable<Member>().Where(c => c.MemberId == obj.ProviderId);
+		}
+
+		/// <summary>
+		/// FK_Provider_Member
+		/// </summary>
+		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		public static Provider Member(this Member obj, IDataContext db)
+		{
+			return db.GetTable<Provider>().Where(c => c.ProviderId == obj.MemberId).First();
 		}
 
 		#endregion

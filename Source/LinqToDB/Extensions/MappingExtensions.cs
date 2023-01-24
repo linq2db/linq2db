@@ -23,7 +23,7 @@ namespace LinqToDB.Extensions
 
 			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
 			{
-				if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
+				if (underlyingType.IsEnum && !mappingSchema.HasAttribute<Sql.EnumAttribute>(underlyingType))
 				{
 					if (originalValue != null || systemType == underlyingType)
 					{
@@ -44,13 +44,13 @@ namespace LinqToDB.Extensions
 			return new SqlValue(systemType, originalValue);
 		}
 
-		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, object? value)
+		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, DataOptions options, object? value)
 		{
 			var sqlConverter = mappingSchema.ValueToSqlConverter;
 
 			if (value is null)
 			{
-				return sqlConverter.TryConvert(stringBuilder, dataType, value);
+				return sqlConverter.TryConvert(stringBuilder, mappingSchema, dataType, options, value);
 			}
 
 			var systemType     = value.GetType();
@@ -58,7 +58,7 @@ namespace LinqToDB.Extensions
 
 			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
 			{
-				if (underlyingType.IsEnum && mappingSchema.GetAttribute<Sql.EnumAttribute>(underlyingType) == null)
+				if (underlyingType.IsEnum && !mappingSchema.HasAttribute<Sql.EnumAttribute>(underlyingType))
 				{
 					if (systemType == underlyingType)
 					{
@@ -73,24 +73,24 @@ namespace LinqToDB.Extensions
 				}
 			}
 
-			return sqlConverter.TryConvert(stringBuilder, dataType, value);
+			return sqlConverter.TryConvert(stringBuilder, mappingSchema, dataType, options, value);
 		}
 
 		public static void ConvertToSqlValue(this MappingSchema mappingSchema, StringBuilder stringBuilder,
-			SqlDataType? dataType, object? value)
+			SqlDataType?                                        dataType,      DataOptions   options, object? value)
 		{
-			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, value))
+			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, options, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 		}
 
 		public static Sql.ExpressionAttribute? GetExpressionAttribute(this MemberInfo member, MappingSchema mappingSchema)
 		{
-			return mappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
+			return mappingSchema.GetAttribute<Sql.ExpressionAttribute>(member.ReflectedType!, member);
 		}
 
 		public static Sql.TableFunctionAttribute? GetTableFunctionAttribute(this MemberInfo member, MappingSchema mappingSchema)
 		{
-			return mappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member, static a => a.Configuration);
+			return mappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member);
 		}
 	}
 }

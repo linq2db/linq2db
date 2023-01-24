@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
@@ -108,7 +109,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 						pWriter,
 						"Write",
 						new[] { typeof(object) },
-						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetValue", Array<Type>.Empty, pEntity),
+						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetProviderValue", Array<Type>.Empty, pEntity),
 						Expression.Convert(Expression.Constant(Wrapped.NpgsqlDbType.Test), typeof(Original.NpgsqlDbType))));
 			}
 

@@ -24,3 +24,4 @@ linq2db.sln.ide/
 /.temp
 .vs/
 packages/
+.vscode/

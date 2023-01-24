@@ -69,6 +69,12 @@ namespace LinqToDB.Data
 		/// <see cref="DataConnection.RollbackTransaction"/> or <see cref="DataConnection.RollbackTransactionAsync(System.Threading.CancellationToken)"/> operation.
 		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
-		RollbackTransaction
+		RollbackTransaction,
+
+		/// <summary>
+		/// <see cref="DataConnection.DisposeTransaction"/> or <see cref="DataConnection.DisposeTransactionAsync"/> operation.
+		/// See also <seealso cref="TraceInfo.IsAsync"/>.
+		/// </summary>
+		DisposeTransaction
 	}
 }

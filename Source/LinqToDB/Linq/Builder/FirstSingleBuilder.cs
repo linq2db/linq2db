@@ -53,8 +53,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = Configuration.Linq.ParameterizeTakeSkip
-					? (ISqlExpression)new SqlParameter(new DbDataType(typeof(int)), "take", take)
+				var takeExpression = builder.DataOptions.LinqOptions.ParameterizeTakeSkip
+					? (ISqlExpression)new SqlParameter(new (typeof(int)), "take", take)
 					{
 						IsQueryParameter = !builder.DataContext.InlineParameters
 					}

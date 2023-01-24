@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using System.Diagnostics.CodeAnalysis;
+	using Common.Internal;
 	using Mapping;
 
 	public class SqlCteTable : SqlTable
@@ -68,9 +68,14 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public string SqlText =>
-			((IQueryElement) this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-			.ToString();
+		public string SqlText
+		{
+			get
+			{
+				using var sb = Pools.StringBuilder.Allocate();
+				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			}
+		}
 
 
 		#endregion

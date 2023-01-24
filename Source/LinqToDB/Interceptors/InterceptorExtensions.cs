@@ -41,22 +41,25 @@ namespace LinqToDB
 		{
 			switch (interceptor)
 			{
-				case ICommandInterceptor          cm : AddInterceptorImpl((IInterceptable<ICommandInterceptor>)         interceptable, cm); break;
-				case IConnectionInterceptor       cn : AddInterceptorImpl((IInterceptable<IConnectionInterceptor>)      interceptable, cn); break;
-				case IDataContextInterceptor      dc : AddInterceptorImpl((IInterceptable<IDataContextInterceptor>)     interceptable, dc); break;
-				case IEntityServiceInterceptor    es : AddInterceptorImpl((IInterceptable<IEntityServiceInterceptor>)   interceptable, es); break;
-				case IUnwrapDataObjectInterceptor wr : AddInterceptorImpl((IInterceptable<IUnwrapDataObjectInterceptor>)interceptable, wr); break;
+				case ICommandInterceptor          cm : AddInterceptorImpl(interceptable, cm); break;
+				case IConnectionInterceptor       cn : AddInterceptorImpl(interceptable, cn); break;
+				case IDataContextInterceptor      dc : AddInterceptorImpl(interceptable, dc); break;
+				case IEntityServiceInterceptor    es : AddInterceptorImpl(interceptable, es); break;
+				case IUnwrapDataObjectInterceptor wr : AddInterceptorImpl(interceptable, wr); break;
 			}
 		}
 
-		internal static void AddInterceptorImpl<T>(this IInterceptable<T> interceptable, T interceptor)
+		internal static void AddInterceptorImpl<T>(this IInterceptable interceptable, T interceptor)
 			where T : IInterceptor
 		{
-			if (interceptable.Interceptor == null)
-				interceptable.Interceptor = interceptor;
-			else if (interceptable.Interceptor is AggregatedInterceptor<T> aggregated)
+			if (interceptable is not IInterceptable<T> typedInterceptable)
+				throw new ArgumentException($"Context of type {interceptable.GetType()} doesn't support {typeof(T)} interceptor");
+
+			if (typedInterceptable.Interceptor == null)
+				typedInterceptable.Interceptor = interceptor;
+			else if (typedInterceptable.Interceptor is AggregatedInterceptor<T> aggregated)
 				aggregated.Interceptors.Add(interceptor);
-			else switch (interceptable)
+			else switch (typedInterceptable)
 			{
 				case IInterceptable<ICommandInterceptor> cmi when interceptor is ICommandInterceptor cm:
 					cmi.Interceptor = new AggregatedCommandInterceptor          { Interceptors = { cmi.Interceptor!, cm } };

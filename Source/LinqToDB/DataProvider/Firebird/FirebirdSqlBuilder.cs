@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -11,15 +11,15 @@ using System.Text;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
+	using Common.Internal;
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using System.Data.Common;
 
-	public partial class FirebirdSqlBuilder : BasicSqlBuilder
+	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
 	{
-		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -96,11 +96,11 @@ namespace LinqToDB.DataProvider.Firebird
 					StringBuilder.Append("DECFLOAT");
 					if (type.Type.Precision != null && type.Type.Precision <= 16)
 						StringBuilder.Append("(16)");
-					                                                                                      break;
+					break;
 
 				case DataType.Decimal       :
 					base.BuildDataTypeFromDataType(type.Type.Precision > 18 ? new SqlDataType(type.Type.DataType, type.Type.SystemType, null, 18, type.Type.Scale, type.Type.DbType) : type, forCreateTable, canBeNull);
-					                                                                                      break;
+					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");                           break;
 				case DataType.Money         : StringBuilder.AppendFormat("Decimal(18{0}4)", InlineComma); break;
@@ -172,8 +172,8 @@ namespace LinqToDB.DataProvider.Firebird
 				case ConvertType.NameToProcedure       :
 				case ConvertType.NameToPackage         :
 				case ConvertType.SequenceName          :
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
-					   (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
+					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Quote ||
+					   (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && !IsValidIdentifier(value)))
 					{
 						// I wonder what to do if identifier has " in name?
 						return sb.Append('"').Append(value).Append('"');
@@ -221,7 +221,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
+			var identityField = dropTable.Table.IdentityFields.Count > 0 ? dropTable.Table.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
 			{
@@ -259,8 +259,8 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = identifier;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpperInvariant();
 
 					BuildValue(null, identifierValue);
@@ -273,16 +273,16 @@ namespace LinqToDB.DataProvider.Firebird
 
 				AppendIndent().Append("EXECUTE STATEMENT ");
 
-				var dropCommand = new StringBuilder();
+				using var dropCommand = Pools.StringBuilder.Allocate();
 
-				dropCommand
+				dropCommand.Value
 					.Append("DROP ")
 					.Append(objectName)
 					.Append(' ');
 
-				Convert(dropCommand, identifier, ConvertType.NameToQueryTable);
+				Convert(dropCommand.Value, identifier, ConvertType.NameToQueryTable);
 
-				BuildValue(null, dropCommand.ToString());
+				BuildValue(null, dropCommand.Value.ToString());
 
 				StringBuilder.AppendLine(";");
 
@@ -386,7 +386,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (createTable.StatementHeader == null)
 			{
-				_identityField = createTable.Table!.IdentityFields.Count > 0 ? createTable.Table!.IdentityFields[0] : null;
+				_identityField = createTable.Table.IdentityFields.Count > 0 ? createTable.Table.IdentityFields[0] : null;
 
 				var checkExistence = createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary();
 
@@ -404,8 +404,8 @@ namespace LinqToDB.DataProvider.Firebird
 						var identifierValue = createTable.Table.TableName.Name;
 
 						// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-						if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-							FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+						if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+							ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 							identifierValue = identifierValue.ToUpperInvariant();
 
 						BuildValue(null, identifierValue);
@@ -447,8 +447,8 @@ namespace LinqToDB.DataProvider.Firebird
 					var identifierValue = createTable.Table.TableName.Name;
 
 					// if identifier is not quoted, it must be converted to upper case to match record in rdb$relation_name
-					if (FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
-						FirebirdConfiguration.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
+					if (ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.None ||
+						ProviderOptions.IdentifierQuoteMode == FirebirdIdentifierQuoteMode.Auto && IsValidIdentifier(identifierValue))
 						identifierValue = identifierValue.ToUpperInvariant();
 
 					Indent--;
@@ -502,7 +502,7 @@ namespace LinqToDB.DataProvider.Firebird
 							Indent++;
 
 							AppendIndent().Append("CREATE GENERATOR ");
-							Convert(StringBuilder, "GIDENTITY_" + createTable.Table!.TableName.Name, ConvertType.NameToQueryTable);
+							Convert(StringBuilder, "GIDENTITY_" + createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder.AppendLine();
 
 							Indent--;
@@ -518,7 +518,7 @@ namespace LinqToDB.DataProvider.Firebird
 							Indent++;
 
 							AppendIndent().Append("CREATE TRIGGER ");
-							Convert(StringBuilder, "TIDENTITY_" + createTable.Table!.TableName.Name, ConvertType.NameToQueryTable);
+							Convert(StringBuilder, "TIDENTITY_" + createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder .Append(" FOR ");
 							Convert(StringBuilder, createTable.Table.TableName.Name, ConvertType.NameToQueryTable);
 							StringBuilder .AppendLine();

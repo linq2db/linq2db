@@ -18,6 +18,7 @@ namespace LinqToDB.Expressions
 
 			return base.ExpressionsEqual(context, expr1, expr2, comparer);
 		}
+
 		public override IEnumerable<Expression> SplitExpression(Expression expression)
 		{
 			var val = expression.EvaluateExpression();

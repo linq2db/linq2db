@@ -537,17 +537,17 @@ namespace LinqToDB.Linq.Builder
 							{
 								var p = Expression.Parameter(Body.Type, "p");
 
-								var list = new List<SqlInfo>();
+								List<SqlInfo>? list = null;
 								foreach (var m in Members)
 								{
 									if (!(m.Key is MethodInfo || flags == ConvertFlags.Key && EagerLoading.IsDetailsMember(this, m.Value)))
 									{
 										foreach (var si in ConvertToIndex(Expression.MakeMemberAccess(p, m.Key), 1, flags))
-											list.Add(si.Clone(m.Key));
+											(list ??= new()).Add(si.Clone(m.Key));
 									}
 								}
 
-								return list.ToArray();
+								return list?.ToArray() ?? Array<SqlInfo>.Empty;
 							}
 					}
 				}

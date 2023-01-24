@@ -131,8 +131,10 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					sequence.ConvertToIndex(null, 0, ConvertFlags.All);
-					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, updateStatement, updateStatement.SelectQuery, 0)
+
+					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, builder.DataContext.Options, updateStatement, updateStatement.SelectQuery, 0)
 						.ResolveWeakJoins();
+
 					updateStatement.SelectQuery.Select.Columns.Clear();
 
 					BuildSetter(
@@ -493,7 +495,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql.Length != 1)
 					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
 
-				return table != null && field != null ? table[field.Name]! : sql[0].Sql;
+				return table != null && field != null ? table.FindFieldByMemberName(field.Name)! : sql[0].Sql;
 			}
 		}
 

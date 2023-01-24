@@ -34,7 +34,8 @@ namespace Tests.xUpdate
 					.Property(x => Sql.Property<int?>(x, "Field2"))
 					.Property(x => Sql.Property<int?>(x, "Field3")).HasSkipOnInsert(true)
 					.Property(x => Sql.Property<int?>(x, "Field4")).HasSkipOnUpdate(true)
-					.Property(x => Sql.Property<int?>(x, "Field5")).HasSkipOnInsert(true).HasSkipOnUpdate(true);
+					.Property(x => Sql.Property<int?>(x, "Field5")).HasSkipOnInsert(true).HasSkipOnUpdate(true)
+				.Build();
 
 			return ms;
 		}

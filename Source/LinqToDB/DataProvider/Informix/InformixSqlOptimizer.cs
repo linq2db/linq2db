@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.Informix
 				p.IsQueryParameter = false;
 		}
 
-		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			CheckAliases(statement, int.MaxValue);
 
@@ -94,22 +94,22 @@ namespace LinqToDB.DataProvider.Informix
 						select.VisitAll(ClearQueryParameter);
 				});
 
-			return base.Finalize(mappingSchema, statement);
+			return base.Finalize(mappingSchema, statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
-					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement);
+					var deleteStatement = GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions);
 					statement = deleteStatement;
 					if (deleteStatement.SelectQuery != null)
 						deleteStatement.SelectQuery.From.Tables[0].Alias = "$";
 					break;
 
 				case QueryType.Update:
-					statement = GetAlternativeUpdate((SqlUpdateStatement)statement);
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions);
 					break;
 			}
 
@@ -135,7 +135,8 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				switch (func.Name)
 				{
-					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl");
+					// passing parameter to NVL will result in "A syntax error has occurred." error from server
+					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
 					case "Convert"  :
 					{
 						var par0 = func.Parameters[0];
@@ -165,7 +166,7 @@ namespace LinqToDB.DataProvider.Informix
 
 								case TypeCode.Boolean  :
 								{
-									var ex = AlternativeConvertToBoolean(func, 1);
+									var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 									if (ex != null)
 										return ex;
 									break;

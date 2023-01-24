@@ -3789,7 +3789,6 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(DisableGuard, grouping), grouping.Expression));
 		}
 
-
 		#endregion
 
 		#region HasUniqueKey

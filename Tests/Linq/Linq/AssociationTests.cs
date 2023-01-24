@@ -423,6 +423,18 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "CanBeNull=true association doesn't enforce nullability on referenced non-nullable columns")]
+		public void TestNullabilityPropagation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// left join makes t.Middle!.ParentID which means with default NULL comparison semantics we
+			// should generate following SQL:
+			// parent_id <> 4 or parent_id is null
+			var result = db.GetTable<Top>().Where(t => t.Middle!.ParentID != 4).ToArray();
+			Assert.AreEqual(14, result.Length);
+		}
+
 		[Table(Name="Child", IsColumnAttributeRequired=false)]
 		[InheritanceMapping(Code = 1, IsDefault = true, Type = typeof(ChildForHierarchy))]
 		public class ChildBaseForHierarchy
@@ -670,7 +682,8 @@ namespace Tests.Linq
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<Top>()
-				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m!.ParentID && m.ChildID > 1 );
+				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m!.ParentID && m.ChildID > 1 )
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -696,7 +709,8 @@ namespace Tests.Linq
 			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<Top>()
-				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 );
+				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 )
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -897,10 +911,117 @@ namespace Tests.Linq
 		[Test]
 		public void AssociationExpressionMethod([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var _ = db.Parent.Select(p => p.ChildPredicate()).ToList();
+		}
+
+		[Table]
+		sealed class NotNullParent
+		{
+			[Column] public int ID { get; set; }
+
+			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = false)]
+			public NotNullChild  ChildInner { get; set; } = null!;
+
+			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = true)]
+			public NotNullChild? ChildOuter { get; set; }
+
+			static Expression<Func<NotNullParent, NotNullChild, bool>> ChildPredicate => (p, c) => p.ID == c.ParentID;
+
+			public static readonly NotNullParent[] Data = new[]
 			{
-				var _ = db.Parent.Select(p => p.ChildPredicate()).ToList();
-			}
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+		}
+
+		[Table]
+		sealed class NotNullChild
+		{
+			[Column] public int ParentID { get; set; }
+
+			public static readonly NotNullChild[] Data = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
+		}
+
+		[Test]
+		public void AssociationExpressionNotNull([DataSources] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(NotNullParent.Data);
+			using var child  = db.CreateLocalTable(NotNullChild.Data);
+
+			var query = parent.Select(p => new { ParentID = (int?)p.ChildInner.ParentID });
+
+			var result = query.ToArray();
+
+			Assert.AreEqual(1, result.Length);
+			Assert.AreEqual(1, result[0].ParentID);
+		}
+
+		[Test]
+		public void AssociationExpressionNull([DataSources] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(NotNullParent.Data);
+			using var child  = db.CreateLocalTable(NotNullChild.Data);
+
+			var query = parent.OrderBy(_ => _.ID).Select(p => new { ParentID = (int?)p.ChildOuter!.ParentID });
+
+			var result = query.ToArray();
+
+			Assert.AreEqual(2, result.Length);
+			Assert.AreEqual(1, result[0].ParentID);
+			Assert.IsNull(result[1].ParentID);
+		}
+
+		[Test]
+		public void AssociationExpressionNotNullCount([DataSources] string context)
+		{
+			var parentData = new[]
+			{
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+
+			var childData = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
+
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(parentData);
+			using var child  = db.CreateLocalTable(childData);
+
+			var query = parent.Select(p => p.ChildInner.ParentID);
+
+			Assert.AreEqual(1, query.Count());
+		}
+
+		[Test]
+		public void AssociationExpressionNullCount([DataSources] string context)
+		{
+			var parentData = new[]
+			{
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+
+			var childData = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
+
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(parentData);
+			using var child  = db.CreateLocalTable(childData);
+
+			var query = parent.Select(p => p.ChildOuter!.ParentID);
+
+			Assert.AreEqual(2, query.Count());
+			Assert.AreEqual(1, query.GetTableSource().Joins.Count);
 		}
 
 		[Test]
@@ -1066,7 +1187,8 @@ namespace Tests.Linq
 				.Entity<Entity1711>()
 				.HasTableName("Entity1711")
 				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
-				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), e => e.Id, r => r.EntityId); ;
+				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), e => e.Id, r => r.EntityId)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var entity = db.CreateLocalTable<Entity1711>())
@@ -1087,7 +1209,8 @@ namespace Tests.Linq
 				.HasTableName("Entity1711")
 				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
 				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), (e, db) => db.GetTable<Relationship1711>()
-						.Where(r => r.Deleted == false && r.EntityId == e.Id));
+						.Where(r => r.Deleted == false && r.EntityId == e.Id))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var entity = db.CreateLocalTable<Entity1711>())

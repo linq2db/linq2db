@@ -937,7 +937,7 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.SubtractChecked: return new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction);
 						case ExpressionType.Coalesce       :
 						{
-							if (QueryHelper.UnwrapExpression(r) is SqlFunction c)
+							if (QueryHelper.UnwrapExpression(r, checkNullability: true) is SqlFunction c)
 							{
 								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
 								{
@@ -1016,7 +1016,7 @@ namespace LinqToDB.Linq.Builder
 					var t = ConvertToSql(context, e.IfTrue);
 					var f = ConvertToSql(context, e.IfFalse);
 
-					if (QueryHelper.UnwrapExpression(f) is SqlFunction c && c.Name == "CASE")
+					if (QueryHelper.UnwrapExpression(f, checkNullability: true) is SqlFunction c && c.Name == "CASE")
 					{
 						var parms = new ISqlExpression[c.Parameters.Length + 2];
 
@@ -1286,11 +1286,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Constant
 
-		readonly Dictionary<Tuple<Expression, ColumnDescriptor?>,SqlValue> _constants = new ();
+		readonly Dictionary<(Expression, ColumnDescriptor?),SqlValue> _constants = new ();
 
 		SqlValue BuildConstant(Expression expr, ColumnDescriptor? columnDescriptor)
 		{
-			var key = Tuple.Create(expr, columnDescriptor);
+			var key = (expr, columnDescriptor);
 			if (_constants.TryGetValue(key, out var sqlValue))
 				return sqlValue;
 
@@ -1434,7 +1434,7 @@ namespace LinqToDB.Linq.Builder
 
 						predicate = ConvertInPredicate(context!, expr);
 					}
- 
+
 #if NETFRAMEWORK
 					else if (e.Method == ReflectionHelper.Functions.String.Like11) predicate = ConvertLikePredicate(context!, e);
 					else if (e.Method == ReflectionHelper.Functions.String.Like12) predicate = ConvertLikePredicate(context!, e);
@@ -1489,7 +1489,7 @@ namespace LinqToDB.Linq.Builder
 				var trueValue  = ConvertToSql(context, ExpressionInstances.True,  false, descriptor);
 				var falseValue = ConvertToSql(context, ExpressionInstances.False, false, descriptor);
 
-				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, Configuration.Linq.CompareNullsAsValues ? false : null, false);
+				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false);
 			}
 
 			return new SqlPredicate.Expr(ex);
@@ -1550,8 +1550,8 @@ namespace LinqToDB.Linq.Builder
 			var l  = ConvertToSql(context, left,  unwrap: false, cd);
 			var r  = ConvertToSql(context, right, unwrap: true,  cd);
 
-			l = QueryHelper.UnwrapExpression(l);
-			r = QueryHelper.UnwrapExpression(r);
+			l = QueryHelper.UnwrapExpression(l, checkNullability: true);
+			r = QueryHelper.UnwrapExpression(r, checkNullability: true);
 
 			if (l is SqlValue lValue)
 				lValue.ValueType = GetDataType(r, lValue.ValueType);
@@ -1637,7 +1637,7 @@ namespace LinqToDB.Linq.Builder
 					var trueValue  = ConvertToSql(context, ExpressionInstances.True,  false, descriptor);
 					var falseValue = ConvertToSql(context, ExpressionInstances.False, false, descriptor);
 
-					var withNullValue = Configuration.Linq.CompareNullsAsValues &&
+					var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
 										(isNullable || NeedNullCheck(expression))
 						? withNull
 						: (bool?)null;
@@ -1645,7 +1645,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			predicate ??= new SqlPredicate.ExprExpr(l, op, r, Configuration.Linq.CompareNullsAsValues ? true : null);
+			predicate ??= new SqlPredicate.ExprExpr(l, op, r, DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 			return predicate;
 		}
 
@@ -2021,7 +2021,7 @@ namespace LinqToDB.Linq.Builder
 				var predicate = new SqlPredicate.ExprExpr(
 					lcol.Sql,
 					nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
-					rex, Configuration.Linq.CompareNullsAsValues ? true : null);
+					rex, DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 
 				condition.Conditions.Add(new SqlCondition(false, predicate));
 			}
@@ -2066,7 +2066,7 @@ namespace LinqToDB.Linq.Builder
 					new SqlPredicate.ExprExpr(
 						lex,
 						nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
-						rex, Configuration.Linq.CompareNullsAsValues ? true : null);
+						rex, DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 
 				condition.Conditions.Add(new SqlCondition(false, predicate));
 			}
@@ -2266,7 +2266,7 @@ namespace LinqToDB.Linq.Builder
 						for (var i = 0; i < newArr.Expressions.Count; i++)
 							exprs[i] = ConvertToSql(context, newArr.Expressions[i], columnDescriptor: columnDescriptor);
 
-						return new SqlPredicate.InList(expr, Configuration.Linq.CompareNullsAsValues ? false : null, false, exprs);
+						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false, exprs);
 					}
 
 				default :
@@ -2275,7 +2275,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var p = ParametersContext.BuildParameter(arr, columnDescriptor, false, ParametersContext.BuildParameterType.InPredicate).SqlParameter;
 						p.IsQueryParameter = false;
-						return new SqlPredicate.InList(expr, Configuration.Linq.CompareNullsAsValues ? false : null, false, p);
+						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false, p);
 					}
 
 					break;
@@ -2376,13 +2376,13 @@ namespace LinqToDB.Linq.Builder
 					return new SqlPredicate.Expr(new SqlValue(true));
 			}
 
-			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable[name] ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
+			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		public ISqlPredicate MakeIsPredicate<TContext>(
 			TContext                              getSqlContext,
 			IBuildContext                         context,
-			List<InheritanceMapping>              inheritanceMapping,
+			IReadOnlyList<InheritanceMapping>     inheritanceMapping,
 			Type                                  toType,
 			Func<TContext,string, ISqlExpression> getSql)
 		{
@@ -2417,7 +2417,7 @@ namespace LinqToDB.Linq.Builder
 											new SqlPredicate.ExprExpr(
 												getSql(getSqlContext, m.DiscriminatorName),
 												SqlPredicate.Operator.NotEqual,
-												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), Configuration.Linq.CompareNullsAsValues ? true : null)));
+												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), DataOptions.LinqOptions.CompareNullsAsValues ? true : null)));
 							}
 						}
 						else
@@ -2432,7 +2432,7 @@ namespace LinqToDB.Linq.Builder
 												new SqlPredicate.ExprExpr(
 													getSql(getSqlContext, m.DiscriminatorName),
 													SqlPredicate.Operator.Equal,
-													MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), Configuration.Linq.CompareNullsAsValues ? true : null),
+													MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), DataOptions.LinqOptions.CompareNullsAsValues ? true : null),
 											true));
 								}
 							}
@@ -2445,7 +2445,7 @@ namespace LinqToDB.Linq.Builder
 					return new SqlPredicate.ExprExpr(
 							getSql(getSqlContext, mapping[0].DiscriminatorName),
 							SqlPredicate.Operator.Equal,
-							MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code), Configuration.Linq.CompareNullsAsValues ? true : null);
+							MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code), DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
 
 				default:
 					{
@@ -2459,7 +2459,7 @@ namespace LinqToDB.Linq.Builder
 										new SqlPredicate.ExprExpr(
 											getSql(getSqlContext, m.DiscriminatorName),
 											SqlPredicate.Operator.Equal,
-											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), Configuration.Linq.CompareNullsAsValues ? true : null),
+											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code), DataOptions.LinqOptions.CompareNullsAsValues ? true : null),
 									true));
 						}
 
@@ -2516,7 +2516,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable[table.InheritanceMapping[m.i].DiscriminatorName] ?? throw new LinqException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
+				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 
@@ -2785,7 +2785,7 @@ namespace LinqToDB.Linq.Builder
 
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformerForSearch;
-		
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private TransformVisitor<ExpressionBuilder> GetRemoveNullPropagationTransformer(bool forSearch)
 		{

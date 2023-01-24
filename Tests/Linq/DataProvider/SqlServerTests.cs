@@ -1278,11 +1278,12 @@ namespace Tests.DataProvider
 			using var db = GetDataConnection(context);
 			var       ms = new MappingSchema();
 
-			db.AddMappingSchema(ms);
-
 			ms.GetFluentMappingBuilder()
 				.Entity<AllTypes>()
-					.HasTableName("AllTypeCreateTest");
+					.HasTableName("AllTypeCreateTest")
+				.Build();
+
+			db.AddMappingSchema(ms);
 
 			db.DropTable<AllTypes>(tableOptions:TableOptions.DropIfExists);
 
@@ -1299,11 +1300,12 @@ namespace Tests.DataProvider
 			{
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
 				ms.GetFluentMappingBuilder()
 					.Entity<AllTypes2>()
-					.HasTableName("AllType2CreateTest");
+						.HasTableName("AllType2CreateTest")
+					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{
@@ -1980,6 +1982,178 @@ AS
 				{
 					DropTableFunction();
 				}
+			}
+		}
+
+		private const string CREATE_TEMPORAL = @"
+-- simple temporal table
+CREATE TABLE TemporalTable1
+(
+	Id INT NOT NULL PRIMARY KEY CLUSTERED,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START NOT NULL,
+	ValidTo DATETIME2 GENERATED ALWAYS AS ROW END NOT NULL,
+	PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
+) WITH (SYSTEM_VERSIONING = ON)
+
+-- with explicit history table name
+CREATE TABLE TemporalTable2
+(
+	Id INT NOT NULL PRIMARY KEY CLUSTERED,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START NOT NULL,
+	ValidTo DATETIME2 GENERATED ALWAYS AS ROW END NOT NULL,
+	PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
+) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.TemporalTable2History))
+
+
+-- with user-defined history table
+CREATE TABLE TemporalTable3History
+(
+	Id INT NOT NULL,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 NOT NULL,
+	ValidTo DATETIME2 NOT NULL
+)
+
+CREATE TABLE TemporalTable3
+(
+	Id INT NOT NULL PRIMARY KEY CLUSTERED,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START NOT NULL,
+	ValidTo DATETIME2 GENERATED ALWAYS AS ROW END NOT NULL,
+	PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
+) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.TemporalTable3History))
+
+-- with hidden period columns
+CREATE TABLE TemporalTable4
+(
+	Id INT NOT NULL PRIMARY KEY CLUSTERED,
+	Name NVARCHAR(10) NULL,
+	ValidFrom DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,
+	ValidTo DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
+	PERIOD FOR SYSTEM_TIME (ValidFrom, ValidTo)
+) WITH (SYSTEM_VERSIONING = ON)";
+
+		private const string DROP_TEMPORAL = @"
+IF OBJECT_ID('dbo.TemporalTable1', 'U') IS NOT NULL ALTER TABLE TemporalTable1 SET ( SYSTEM_VERSIONING = OFF)
+IF OBJECT_ID('dbo.TemporalTable2', 'U') IS NOT NULL ALTER TABLE TemporalTable2 SET ( SYSTEM_VERSIONING = OFF)
+IF OBJECT_ID('dbo.TemporalTable3', 'U') IS NOT NULL ALTER TABLE TemporalTable3 SET ( SYSTEM_VERSIONING = OFF)
+IF OBJECT_ID('dbo.TemporalTable4', 'U') IS NOT NULL ALTER TABLE TemporalTable4 SET ( SYSTEM_VERSIONING = OFF)
+
+DROP TABLE IF EXISTS TemporalTable1
+DROP TABLE IF EXISTS TemporalTable2
+DROP TABLE IF EXISTS TemporalTable3
+DROP TABLE IF EXISTS TemporalTable4
+DROP TABLE IF EXISTS TemporalTable2History
+DROP TABLE IF EXISTS TemporalTable3History
+";
+
+		[Test]
+		public void TestTemporalTableSchema([IncludeDataSources(false, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			db.Execute(DROP_TEMPORAL);
+			db.Execute(CREATE_TEMPORAL);
+
+			try
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable1").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable2").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable3").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable4").SingleOrDefault());
+
+				AssertHistoryTable(schema.Tables.Where(t => t.TableName == "TemporalTable2History").SingleOrDefault());
+				AssertHistoryTable(schema.Tables.Where(t => t.TableName == "TemporalTable3History").SingleOrDefault());
+			}
+			finally
+			{
+				db.Execute(DROP_TEMPORAL);
+			}
+
+			static void AssertTemporalTable(TableSchema? table)
+			{
+				Assert.IsNotNull(table);
+
+				Assert.AreEqual(4, table!.Columns.Count);
+
+				AssertColumn(table!, "Id", false);
+				AssertColumn(table!, "Name", false);
+				AssertColumn(table!, "ValidFrom", true);
+				AssertColumn(table!, "ValidTo", true);
+			}
+
+			static void AssertHistoryTable(TableSchema? table)
+			{
+				Assert.IsNotNull(table);
+
+				Assert.AreEqual(4, table!.Columns.Count);
+
+				AssertColumn(table!, "Id", true);
+				AssertColumn(table!, "Name", true);
+				AssertColumn(table!, "ValidFrom", true);
+				AssertColumn(table!, "ValidTo", true);
+			}
+
+			static void AssertColumn(TableSchema table, string name, bool readOnly)
+			{
+				var column = table.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+				Assert.IsNotNull(column);
+				Assert.AreEqual(readOnly, column!.SkipOnInsert);
+				Assert.AreEqual(readOnly, column!.SkipOnUpdate);
+			}
+		}
+
+		[Test]
+		public void TestTemporalTableSchemaHideSystemTables([IncludeDataSources(false, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = new TestDataConnection(context);
+
+			db.Execute(DROP_TEMPORAL);
+			db.Execute(CREATE_TEMPORAL);
+
+			try
+			{
+				var options = new GetSchemaOptions()
+				{
+					IgnoreSystemHistoryTables = true
+				};
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, options);
+
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable1").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable2").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable3").SingleOrDefault());
+				AssertTemporalTable(schema.Tables.Where(t => t.TableName == "TemporalTable4").SingleOrDefault());
+
+				Assert.IsNull(schema.Tables.Where(t => t.TableName == "TemporalTable2History").SingleOrDefault());
+				Assert.IsNull(schema.Tables.Where(t => t.TableName == "TemporalTable3History").SingleOrDefault());
+			}
+			finally
+			{
+				db.Execute(DROP_TEMPORAL);
+			}
+
+			static void AssertTemporalTable(TableSchema? table)
+			{
+				Assert.IsNotNull(table);
+
+				Assert.AreEqual(4, table!.Columns.Count);
+
+				AssertColumn(table!, "Id", false);
+				AssertColumn(table!, "Name", false);
+				AssertColumn(table!, "ValidFrom", true);
+				AssertColumn(table!, "ValidTo", true);
+			}
+
+			static void AssertColumn(TableSchema table, string name, bool readOnly)
+			{
+				var column = table.Columns.Where(c => c.ColumnName == name).SingleOrDefault();
+				Assert.IsNotNull(column);
+				Assert.AreEqual(readOnly, column!.SkipOnInsert);
+				Assert.AreEqual(readOnly, column!.SkipOnUpdate);
 			}
 		}
 	}

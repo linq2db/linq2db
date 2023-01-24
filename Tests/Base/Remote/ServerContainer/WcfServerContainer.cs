@@ -55,10 +55,10 @@ namespace Tests.Remote.ServerContainer
 				})
 			{ Configuration = configuration };
 
-			Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
+			Debug.WriteLine(((IDataContext)dx).ConfigurationID, "Provider ");
 
 			if (ms != null)
-				dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
+				dx.MappingSchema = dx.MappingSchema == null ? ms : MappingSchema.CombineSchemas(dx.MappingSchema, ms);
 
 			return dx;
 		}
@@ -81,7 +81,8 @@ namespace Tests.Remote.ServerContainer
 				}
 
 				var host = new ServiceHost(service = new TestWcfLinqService(new LinqService(), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
-				service.MappingSchema = ms;
+				if (ms != null)
+					service.MappingSchema = ms;
 
 				host.Description.Behaviors.Add(new ServiceMetadataBehavior());
 				host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;

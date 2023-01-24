@@ -1731,11 +1731,13 @@ namespace Tests.Data
 				{
 					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
 					{
-						long copied                = 0;
-						var options                = GetDefaultBulkCopyOptions(context);
-						options.BulkCopyType       = BulkCopyType.ProviderSpecific;
-						options.NotifyAfter        = 500;
-						options.RowsCopiedCallback = arg => copied = arg.RowsCopied;
+						long copied  = 0;
+						var  options = GetDefaultBulkCopyOptions(context) with
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied
+							};
 
 						db.BulkCopy(
 							options,
@@ -1754,11 +1756,13 @@ namespace Tests.Data
 				{
 					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
 					{
-						long copied                = 0;
-						var options                = GetDefaultBulkCopyOptions(context);
-						options.BulkCopyType       = BulkCopyType.ProviderSpecific;
-						options.NotifyAfter        = 500;
-						options.RowsCopiedCallback = arg => copied = arg.RowsCopied;
+						long copied  = 0;
+						var  options = GetDefaultBulkCopyOptions(context) with
+							{
+								BulkCopyType       = BulkCopyType.ProviderSpecific,
+								NotifyAfter        = 500,
+								RowsCopiedCallback = arg => copied = arg.RowsCopied
+							};
 
 						await db.BulkCopyAsync(
 							options,
@@ -1793,7 +1797,7 @@ namespace Tests.Data
 
 		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
 		{
-			var db = new DataConnection(provider, () =>
+			var db = new DataConnection(provider, options =>
 			{
 				// don't create connection using provider, or it will initialize types
 				var cn = connectionFactory(DataConnection.GetConnectionString(context) + csExtra);

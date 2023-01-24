@@ -12,8 +12,8 @@ using LinqToDB.Mapping;
 
 namespace Cli.Default.MySql
 {
-	[Table("fulltextindextest")]
-	public class Fulltextindextest
+	[Table("FullTextIndexTest")]
+	public class FullTextIndexTest
 	{
 		[Column("id"        , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public uint    Id         { get; set; } // int unsigned
 		[Column("TestField1"                                                                                  )] public string? TestField1 { get; set; } // text

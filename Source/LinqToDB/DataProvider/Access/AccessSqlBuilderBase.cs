@@ -11,8 +11,8 @@ namespace LinqToDB.DataProvider.Access
 
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
-		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		protected AccessSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.Access
 				return new[] { _selectColumn };
 
 			if (NeedSkip(selectQuery.Select.TakeValue, selectQuery.Select.SkipValue) && !selectQuery.OrderBy.IsEmpty)
-				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
+				return AlternativeGetSelectedColumns(selectQuery, base.GetSelectedColumns(selectQuery));
 
 			return base.GetSelectedColumns(selectQuery);
 		}

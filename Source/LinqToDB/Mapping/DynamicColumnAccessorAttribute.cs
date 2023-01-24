@@ -3,6 +3,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Configure setter and getter methods for dynamic columns.
 	/// </summary>
@@ -23,15 +25,8 @@ namespace LinqToDB.Mapping
 	/// </remarks>
 	/// <seealso cref="Attribute" />
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-	public class DynamicColumnAccessorAttribute : MappingAttribute, IConfigurationProvider
+	public class DynamicColumnAccessorAttribute : MappingAttribute
 	{
-		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration              { get; set; }
-
 		/// <summary>
 		/// Gets or sets name of dynamic properties property setter method.
 		/// </summary>
@@ -81,7 +76,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.";
+			return $".{Configuration}.{SetterMethod}.{GetterMethod}.{SetterExpressionMethod}.{GetterExpressionMethod}.{IdentifierBuilder.GetObjectID(SetterExpression)}.{IdentifierBuilder.GetObjectID(GetterExpression)}.";
 		}
 	}
 }

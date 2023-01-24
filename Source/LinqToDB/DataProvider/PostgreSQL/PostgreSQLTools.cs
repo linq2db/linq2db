@@ -7,18 +7,18 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Configuration;
 	using Data;
 
 	[PublicAPI]
 	public static partial class PostgreSQLTools
 	{
-		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = DataConnection.CreateDataProvider<PostgreSQLDataProvider92>();
-		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = DataConnection.CreateDataProvider<PostgreSQLDataProvider93>();
-		static readonly Lazy<IDataProvider> _postgreSQLDataProvider95 = DataConnection.CreateDataProvider<PostgreSQLDataProvider95>();
-		static readonly Lazy<IDataProvider> _postgreSQLDataProvider15 = DataConnection.CreateDataProvider<PostgreSQLDataProvider15>();
+		internal static PostgreSQLProviderDetector ProviderDetector = new();
 
-		public static bool AutoDetectProvider     { get; set; } = true;
+		public static bool AutoDetectProvider
+		{
+			get => ProviderDetector.AutoDetectProvider;
+			set => ProviderDetector.AutoDetectProvider = value;
+		}
 
 		/// <summary>
 		/// Enables normalization of <see cref="DateTime"/> and <see cref="DateTimeOffset"/> data, passed to query
@@ -31,112 +31,41 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// </list>
 		/// Default value: <c>true</c>.
 		/// </summary>
-		public static bool NormalizeTimestampData { get; set; } = true;
-
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		[Obsolete("Use PostgreSQLOptions.Default.NormalizeTimestampData instead.")]
+		public static bool NormalizeTimestampData
 		{
-			switch (css.ProviderName)
-			{
-				case ProviderName.PostgreSQL92 : return _postgreSQLDataProvider92.Value;
-				case ProviderName.PostgreSQL93 : return _postgreSQLDataProvider93.Value;
-				case ProviderName.PostgreSQL95 : return _postgreSQLDataProvider95.Value;
-				case ProviderName.PostgreSQL15 : return _postgreSQLDataProvider15.Value;
-				case ""                        :
-				case null                      :
-					if (css.Name == "PostgreSQL")
-						goto case "Npgsql";
-					break;
-				case NpgsqlProviderAdapter.ClientNamespace :
-				case var providerName when providerName.Contains("PostgreSQL") || providerName.Contains(NpgsqlProviderAdapter.AssemblyName):
-					if (css.Name.Contains("15"))
-						return _postgreSQLDataProvider15.Value;
-
-					if (css.Name.Contains("92") || css.Name.Contains("9.2"))
-						return _postgreSQLDataProvider92.Value;
-
-					if (css.Name.Contains("93") || css.Name.Contains("9.3") ||
-						css.Name.Contains("94") || css.Name.Contains("9.4"))
-						return _postgreSQLDataProvider93.Value;
-
-					if (css.Name.Contains("95") || css.Name.Contains("9.5") ||
-						css.Name.Contains("96") || css.Name.Contains("9.6") ||
-						css.Name.Contains("10") ||
-						css.Name.Contains("11") ||
-						css.Name.Contains("12") ||
-						css.Name.Contains("13") ||
-						css.Name.Contains("14"))
-						return _postgreSQLDataProvider95.Value;
-
-					if (AutoDetectProvider)
-					{
-						try
-						{
-							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
-
-							using (var conn = NpgsqlProviderAdapter.GetInstance().CreateConnection(cs))
-							{
-								conn.Open();
-
-								var postgreSqlVersion = conn.PostgreSqlVersion;
-
-								if (postgreSqlVersion.Major >= 15)
-									return _postgreSQLDataProvider15.Value;
-
-								if (postgreSqlVersion.Major > 9 || postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 4)
-									return _postgreSQLDataProvider95.Value;
-
-								if (postgreSqlVersion.Major == 9 && postgreSqlVersion.Minor > 2)
-									return _postgreSQLDataProvider93.Value;
-
-								return _postgreSQLDataProvider92.Value;
-							}
-						}
-						catch
-						{
-							return _postgreSQLDataProvider92.Value;
-						}
-					}
-
-					return GetDataProvider();
-			}
-
-			return null;
+			get => PostgreSQLOptions.Default.NormalizeTimestampData;
+			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { NormalizeTimestampData = value };
 		}
 
-		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null)
 		{
-			return version switch
-			{
-				PostgreSQLVersion.v15 => _postgreSQLDataProvider15.Value,
-				PostgreSQLVersion.v95 => _postgreSQLDataProvider95.Value,
-				PostgreSQLVersion.v93 => _postgreSQLDataProvider93.Value,
-				_                     => _postgreSQLDataProvider92.Value,
-			};
+			return ProviderDetector.GetDataProvider(default, version, connectionString);
 		}
 
 		public static void ResolvePostgreSQL(string path)
 		{
-			new AssemblyResolver(path, NpgsqlProviderAdapter.AssemblyName);
+			_ = new AssemblyResolver(path, NpgsqlProviderAdapter.AssemblyName);
 		}
 
 		public static void ResolvePostgreSQL(Assembly assembly)
 		{
-			new AssemblyResolver(assembly, assembly.FullName!);
+			_ = new AssemblyResolver(assembly, assembly.FullName!);
 		}
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString, PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static DataConnection CreateDataConnection(string connectionString, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(DbConnection connection, PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static DataConnection CreateDataConnection(DbConnection connection, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version), connection);
 		}
 
-		public static DataConnection CreateDataConnection(DbTransaction transaction, PostgreSQLVersion version = PostgreSQLVersion.v92)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
 			return new DataConnection(GetDataProvider(version), transaction);
 		}
@@ -145,7 +74,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.MultipleRows;
+		[Obsolete("Use PostgreSQLOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => PostgreSQLOptions.Default.BulkCopyType;
+			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

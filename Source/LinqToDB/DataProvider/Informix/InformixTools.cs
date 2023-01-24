@@ -106,7 +106,12 @@ namespace LinqToDB.DataProvider.Informix
 
 		#region BulkCopy
 
-		public  static BulkCopyType  DefaultBulkCopyType { get; set; } = BulkCopyType.ProviderSpecific;
+		[Obsolete("Use InformixOptions.Default.BulkCopyType instead.")]
+		public static BulkCopyType DefaultBulkCopyType
+		{
+			get => InformixOptions.Default.BulkCopyType;
+			set => InformixOptions.Default = InformixOptions.Default with { BulkCopyType = value };
+		}
 
 		#endregion
 	}

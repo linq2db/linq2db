@@ -31,11 +31,16 @@ namespace LinqToDB.Remote
 			set
 			{
 				_mappingSchema = value;
-				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+				_serializationMappingSchema = value != null
+					? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, value)
+					: Remote.SerializationMappingSchema.Instance;
 			}
 		}
 
-		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(_mappingSchema);
+		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??=
+			_mappingSchema != null
+				? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, _mappingSchema)
+				: Remote.SerializationMappingSchema.Instance;
 
 		public static Func<string, Type?> TypeResolver = _ => null;
 
@@ -75,8 +80,8 @@ namespace LinqToDB.Remote
 			return new LinqServiceInfo
 			{
 				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
 			};
@@ -89,8 +94,8 @@ namespace LinqToDB.Remote
 			return Task.FromResult(new LinqServiceInfo()
 			{
 				MappingSchemaType     = ctx.DataProvider.MappingSchema.GetType().AssemblyQualifiedName!,
-				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema).GetType().AssemblyQualifiedName!,
-				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer().GetType().AssemblyQualifiedName!,
+				SqlBuilderType        = ctx.DataProvider.CreateSqlBuilder(ctx.MappingSchema, ctx.Options).GetType().AssemblyQualifiedName!,
+				SqlOptimizerType      = ctx.DataProvider.GetSqlOptimizer(ctx.Options).GetType().AssemblyQualifiedName!,
 				SqlProviderFlags      = ctx.DataProvider.SqlProviderFlags,
 				SupportedTableOptions = ctx.DataProvider.SupportedTableOptions
 			});
@@ -373,7 +378,14 @@ namespace LinqToDB.Remote
 				// ugh...
 				// still if it fails here due to empty columns - it is a bug in columns generation
 
-				var fieldType = selectExpressions[i].SystemType!;
+				var fieldType      = selectExpressions[i].SystemType!;
+				var valueConverter = QueryHelper.GetValueConverter(selectExpressions[i]);
+				if (valueConverter != null)
+				{
+					// value converter applied on client side for both directions
+					// here on read we need to prepare expected by converter type
+					fieldType = valueConverter.FromProviderExpression.Parameters[0].Type;
+				}
 
 				// async compiled query support
 				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
@@ -402,17 +414,18 @@ namespace LinqToDB.Remote
 
 			for (var i = 0; i < ret.FieldCount; i++)
 				columnReaders[i] = new ConvertFromDataReaderExpression.ColumnReader(db, db.MappingSchema,
-					ret.FieldTypes[i], i, QueryHelper.GetValueConverter(selectExpressions[i]), true);
+					// converter must be null, see notes above
+					ret.FieldTypes[i], i, converter: null, true);
 
 			while (rd.DataReader!.Read())
 			{
-				var data = new string  [rd.DataReader!.FieldCount];
+				var data = new string[rd.DataReader!.FieldCount];
 
 				ret.RowCount++;
 
 				for (var i = 0; i < ret.FieldCount; i++)
 				{
-					if (!rd.DataReader!.IsDBNull(i))
+					if (!reader.IsDBNull(i))
 					{
 						var value = columnReaders[i].GetValue(reader);
 

@@ -8,7 +8,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Common.Internal;
 	using Expressions;
+	using Extensions;
 	using Mapping;
 	using SqlQuery;
 
@@ -21,7 +23,7 @@ namespace LinqToDB
 		[PublicAPI]
 		[Serializable]
 		[AttributeUsage(AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
-		public class ExpressionAttribute : Attribute
+		public class ExpressionAttribute : MappingAttribute
 		{
 			/// <summary>
 			/// Creates an Expression that will be used in SQL,
@@ -97,12 +99,6 @@ namespace LinqToDB
 			/// Refer to <see cref="SqlQuery.Precedence"/>.
 			/// </summary>
 			public int            Precedence       { get; set; }
-			/// <summary>
-			/// If <c>null</c>, this will be treated as the default
-			/// evaluation for the expression. If set to a <see cref="ProviderName"/>,
-			/// It will only be used for that provider configuration.
-			/// </summary>
-			public string?        Configuration    { get; set; }
 			/// <summary>
 			/// If <c>true</c> The expression will only be evaluated on the
 			/// database server. If it cannot, an exception will
@@ -302,7 +298,7 @@ namespace LinqToDB
 
 							var p = pis[i];
 
-							if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
+							if (p.HasAttribute<ParamArrayAttribute>())
 							{
 								knownExpressions.AddRange(nae.Expressions);
 							}
@@ -519,6 +515,11 @@ namespace LinqToDB
 			}
 
 			public virtual bool GetIsPredicate(Expression expression) => IsPredicate;
+
+			public override string GetObjectID()
+			{
+				return $".{Configuration}.{Expression}.{IdentifierBuilder.GetObjectID(ArgIndices)}.{Precedence}.{(ServerSideOnly ? 1 : 0)}.{(PreferServerSide ? 1 : 0)}.{(InlineParameters ? 1 : 0)}.{(ExpectExpression ? 1 : 0)}.{(IsPredicate ? 1 : 0)}.{(IsAggregate ? 1 : 0)}.{(IsWindowFunction ? 1 : 0)}.{(IsPure ? 1 : 0)}.{(int)IsNullable}.{(IgnoreGenericParameters ? 1 : 0)}.{(CanBeNull ? 1 : 0)}.";
+			}
 		}
 	}
 }

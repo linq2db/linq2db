@@ -59,7 +59,8 @@ namespace Tests.UserTests
 				.GetFluentMappingBuilder()
 					.Entity<DateTimeTestTable>()
 						.Property(t => t.DateTimeField)
-							.HasDbType($"datetime {GetQuantifierName(quantifiers.Item1)} to {GetQuantifierName(quantifiers.Item2)}");
+							.HasDbType($"datetime {GetQuantifierName(quantifiers.Item1)} to {GetQuantifierName(quantifiers.Item2)}")
+				.Build();
 
 			var isIDS = IsIDSProvider(context);
 

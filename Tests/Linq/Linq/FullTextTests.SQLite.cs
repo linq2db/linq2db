@@ -35,7 +35,8 @@ namespace Tests.Linq
 				.Entity<FtsTable>()
 				.HasTableName(type.ToString() + "_TABLE")
 				.HasColumn(t => t.text1)
-				.HasColumn(t => t.text2);
+				.HasColumn(t => t.text2)
+				.Build();
 
 			return ms;
 		}

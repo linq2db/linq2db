@@ -23,29 +23,29 @@ namespace Default.MySql
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
-		public ITable<Alltypesnoyear>    Alltypesnoyears    { get { return this.GetTable<Alltypesnoyear>(); } }
-		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
-		public ITable<Collatedtable>     Collatedtables     { get { return this.GetTable<Collatedtable>(); } }
-		public ITable<Datatypetest>      Datatypetests      { get { return this.GetTable<Datatypetest>(); } }
-		public ITable<Doctor>            Doctors            { get { return this.GetTable<Doctor>(); } }
-		public ITable<Fulltextindextest> Fulltextindextests { get { return this.GetTable<Fulltextindextest>(); } }
-		public ITable<Grandchild>        Grandchilds        { get { return this.GetTable<Grandchild>(); } }
-		public ITable<Inheritancechild>  Inheritancechilds  { get { return this.GetTable<Inheritancechild>(); } }
-		public ITable<Inheritanceparent> Inheritanceparents { get { return this.GetTable<Inheritanceparent>(); } }
-		public ITable<Issue1993>         Issue1993          { get { return this.GetTable<Issue1993>(); } }
-		public ITable<Linqdatatype>      Linqdatatypes      { get { return this.GetTable<Linqdatatype>(); } }
-		public ITable<Parent>            Parents            { get { return this.GetTable<Parent>(); } }
-		public ITable<Patient>           Patients           { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>            People             { get { return this.GetTable<Person>(); } }
+		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
+		public ITable<AllTypesNoYear>    AllTypesNoYears     { get { return this.GetTable<AllTypesNoYear>(); } }
+		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>     CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<DataTypeTest>      DataTypeTests       { get { return this.GetTable<DataTypeTest>(); } }
+		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
+		public ITable<FullTextIndexTest> FullTextIndexTests  { get { return this.GetTable<FullTextIndexTest>(); } }
+		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
+		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<Issue1993>         Issue1993           { get { return this.GetTable<Issue1993>(); } }
+		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
 		/// <summary>
 		/// VIEW
 		/// </summary>
-		public ITable<Personview>        Personviews        { get { return this.GetTable<Personview>(); } }
-		public ITable<Testidentity>      Testidentities     { get { return this.GetTable<Testidentity>(); } }
-		public ITable<Testmerge1>        Testmerge1         { get { return this.GetTable<Testmerge1>(); } }
-		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
-		public ITable<Testsamename>      Testsamenames      { get { return this.GetTable<Testsamename>(); } }
+		public ITable<PersonView>        PersonViews         { get { return this.GetTable<PersonView>(); } }
+		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
+		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestSameName>      TestSameNames       { get { return this.GetTable<TestSameName>(); } }
 
 		public TestDataDB()
 		{
@@ -60,14 +60,7 @@ namespace Default.MySql
 			InitMappingSchema();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
-			: base(options)
-		{
-			InitDataContext();
-			InitMappingSchema();
-		}
-
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
@@ -78,8 +71,8 @@ namespace Default.MySql
 		partial void InitMappingSchema();
 	}
 
-	[Table("alltypes")]
-	public partial class Alltype
+	[Table("AllTypes")]
+	public partial class AllType
 	{
 		[Column(),                      PrimaryKey, Identity] public int       ID                  { get; set; } // int
 		[Column("bigintDataType"),      Nullable            ] public long?     BigintDataType      { get; set; } // bigint
@@ -112,8 +105,8 @@ namespace Default.MySql
 		[Column("boolDataType"),        Nullable            ] public bool?     BoolDataType        { get; set; } // tinyint(1)
 	}
 
-	[Table("alltypesnoyear")]
-	public partial class Alltypesnoyear
+	[Table("AllTypesNoYear")]
+	public partial class AllTypesNoYear
 	{
 		[Column(),                      PrimaryKey, Identity] public int       ID                  { get; set; } // int
 		[Column("bigintDataType"),      Nullable            ] public long?     BigintDataType      { get; set; } // bigint
@@ -143,23 +136,23 @@ namespace Default.MySql
 		[Column("boolDataType"),        Nullable            ] public bool?     BoolDataType        { get; set; } // tinyint(1)
 	}
 
-	[Table("child")]
+	[Table("Child")]
 	public partial class Child
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // int
 		[Column, Nullable] public int? ChildID  { get; set; } // int
 	}
 
-	[Table("collatedtable")]
-	public partial class Collatedtable
+	[Table("CollatedTable")]
+	public partial class CollatedTable
 	{
 		[Column, NotNull] public int    Id              { get; set; } // int
 		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // varchar(20)
 		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // varchar(20)
 	}
 
-	[Table("datatypetest")]
-	public partial class Datatypetest
+	[Table("DataTypeTest")]
+	public partial class DataTypeTest
 	{
 		[Column(),            PrimaryKey,  Identity] public int       DataTypeID { get; set; } // int
 		[Column("Binary_"),      Nullable          ] public byte[]?   Binary     { get; set; } // binary(50)
@@ -185,7 +178,7 @@ namespace Default.MySql
 		[Column("Xml_"),         Nullable          ] public string?   Xml        { get; set; } // varchar(1000)
 	}
 
-	[Table("doctor")]
+	[Table("Doctor")]
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
@@ -194,7 +187,7 @@ namespace Default.MySql
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person (person)
+		/// FK_Doctor_Person (Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -202,24 +195,24 @@ namespace Default.MySql
 		#endregion
 	}
 
-	[Table("fulltextindextest")]
-	public partial class Fulltextindextest
+	[Table("FullTextIndexTest")]
+	public partial class FullTextIndexTest
 	{
 		[Column("id"), PrimaryKey, Identity] public uint    Id         { get; set; } // int unsigned
 		[Column(),     Nullable            ] public string? TestField1 { get; set; } // text
 		[Column(),     Nullable            ] public string? TestField2 { get; set; } // text
 	}
 
-	[Table("grandchild")]
-	public partial class Grandchild
+	[Table("GrandChild")]
+	public partial class GrandChild
 	{
 		[Column, Nullable] public int? ParentID     { get; set; } // int
 		[Column, Nullable] public int? ChildID      { get; set; } // int
 		[Column, Nullable] public int? GrandChildID { get; set; } // int
 	}
 
-	[Table("inheritancechild")]
-	public partial class Inheritancechild
+	[Table("InheritanceChild")]
+	public partial class InheritanceChild
 	{
 		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // int
 		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // int
@@ -227,23 +220,23 @@ namespace Default.MySql
 		[Column,        Nullable] public string? Name                { get; set; } // varchar(50)
 	}
 
-	[Table("inheritanceparent")]
-	public partial class Inheritanceparent
+	[Table("InheritanceParent")]
+	public partial class InheritanceParent
 	{
 		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
 		[Column,        Nullable] public string? Name                { get; set; } // varchar(50)
 	}
 
-	[Table("issue1993")]
+	[Table("Issue1993")]
 	public partial class Issue1993
 	{
 		[Column("id"),          PrimaryKey, Identity] public uint    Id          { get; set; } // int unsigned
 		[Column("description"), Nullable            ] public string? Description { get; set; } // varchar(100)
 	}
 
-	[Table("linqdatatypes")]
-	public partial class Linqdatatype
+	[Table("LinqDataTypes")]
+	public partial class LinqDataType
 	{
 		[Column, Nullable] public int?      ID             { get; set; } // int
 		[Column, Nullable] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
@@ -258,14 +251,14 @@ namespace Default.MySql
 		[Column, Nullable] public string?   StringValue    { get; set; } // varchar(50)
 	}
 
-	[Table("parent")]
+	[Table("Parent")]
 	public partial class Parent
 	{
 		[Column, Nullable] public int? ParentID { get; set; } // int
 		[Column, Nullable] public int? Value1   { get; set; } // int
 	}
 
-	[Table("patient")]
+	[Table("Patient")]
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
@@ -274,7 +267,7 @@ namespace Default.MySql
 		#region Associations
 
 		/// <summary>
-		/// FK_Patient_Person (person)
+		/// FK_Patient_Person (Person)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
 		public Person Person { get; set; } = null!;
@@ -282,7 +275,7 @@ namespace Default.MySql
 		#endregion
 	}
 
-	[Table("person")]
+	[Table("Person")]
 	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // int
@@ -294,16 +287,16 @@ namespace Default.MySql
 		#region Associations
 
 		/// <summary>
-		/// FK_Doctor_Person_BackReference (doctor)
+		/// FK_Doctor_Person_BackReference (Doctor)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public Doctor? DoctorPerson { get; set; }
+		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// FK_Patient_Person_BackReference (patient)
+		/// FK_Patient_Person_BackReference (Patient)
 		/// </summary>
 		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public Patient? PatientPerson { get; set; }
+		public Patient? Patient { get; set; }
 
 		#endregion
 	}
@@ -311,20 +304,20 @@ namespace Default.MySql
 	/// <summary>
 	/// VIEW
 	/// </summary>
-	[Table("personview", IsView=true)]
-	public partial class Personview
+	[Table("PersonView", IsView=true)]
+	public partial class PersonView
 	{
 		[Column, NotNull] public int ID { get; set; } // int
 	}
 
-	[Table("testidentity")]
-	public partial class Testidentity
+	[Table("TestIdentity")]
+	public partial class TestIdentity
 	{
 		[PrimaryKey, Identity] public int ID { get; set; } // int
 	}
 
-	[Table("testmerge1")]
-	public partial class Testmerge1
+	[Table("TestMerge1")]
+	public partial class TestMerge1
 	{
 		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // int
 		[Column,        Nullable] public int?      Field1          { get; set; } // int
@@ -350,8 +343,8 @@ namespace Default.MySql
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}
 
-	[Table("testmerge2")]
-	public partial class Testmerge2
+	[Table("TestMerge2")]
+	public partial class TestMerge2
 	{
 		[PrimaryKey, NotNull    ] public int       Id              { get; set; } // int
 		[Column,        Nullable] public int?      Field1          { get; set; } // int
@@ -377,8 +370,8 @@ namespace Default.MySql
 		[Column,        Nullable] public int?      FieldEnumNumber { get; set; } // int
 	}
 
-	[Table("testsamename")]
-	public partial class Testsamename
+	[Table("TestSameName")]
+	public partial class TestSameName
 	{
 		[PrimaryKey, NotNull] public int ID { get; set; } // int
 	}
@@ -396,11 +389,11 @@ namespace Default.MySql
 
 		#region Issue2313Parameters
 
-		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestDataDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, string? Json, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, int? Year, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection)
+		public static IEnumerable<Issue2313ParametersResult> Issue2313Parameters(this TestDataDB dataConnection, string? VarCharDefault, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, string? Json, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, int? Year, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection)
 		{
 			var parameters = new []
 			{
-				new DataParameter("VarChar255",         VarChar255,         LinqToDB.DataType.VarChar)
+				new DataParameter("VarCharDefault",     VarCharDefault,     LinqToDB.DataType.VarChar)
 				{
 					Size = 255
 				},
@@ -499,7 +492,7 @@ namespace Default.MySql
 
 		public partial class Issue2313ParametersResult
 		{
-			[Column("`VarChar255`")        ] public string?   VarChar255         { get; set; }
+			[Column("`VarCharDefault`")    ] public string?   VarCharDefault     { get; set; }
 			[Column("`VarChar1`")          ] public char?     VarChar1           { get; set; }
 			[Column("`Char255`")           ] public string?   Char255            { get; set; }
 			[Column("`Char1`")             ] public char?     Char1              { get; set; }
@@ -555,13 +548,13 @@ namespace Default.MySql
 
 		#region Issue2313Results
 
-		public static IEnumerable<Issue2313ResultsResult> Issue2313Results(this TestDataDB dataConnection, string? VarChar255, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, string? Json, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection, int? Year)
+		public static IEnumerable<Issue2313ResultsResult> Issue2313Results(this TestDataDB dataConnection, string? VarCharDefault, char? VarChar1, string? Char255, char? Char1, byte[]? VarBinary255, byte[]? Binary255, byte[]? TinyBlob, byte[]? Blob, byte[]? MediumBlob, byte[]? LongBlob, string? TinyText, string? Text, string? MediumText, string? LongText, DateTime? Date, DateTime? DateTime, DateTime? TimeStamp, TimeSpan? Time, sbyte? TinyInt, byte? TinyIntUnsigned, short? SmallInt, ushort? SmallIntUnsigned, int? MediumInt, uint? MediumIntUnsigned, int? Int, uint? IntUnsigned, long? BigInt, ulong? BigIntUnsigned, decimal? Decimal, float? Float, double? Double, bool? Boolean, bool? Bit1, byte? Bit8, ushort? Bit10, ushort? Bit16, uint? Bit32, ulong? Bit64, string? Enum, string? Set, string? Json, byte[]? Geometry, byte[]? Point, byte[]? LineString, byte[]? Polygon, byte[]? MultiPoint, byte[]? MultiLineString, byte[]? MultiPolygon, byte[]? GeometryCollection, int? Year)
 		{
 			var parameters = new []
 			{
-				new DataParameter("VarChar255",         VarChar255,         LinqToDB.DataType.VarChar)
+				new DataParameter("VarCharDefault",     VarCharDefault,     LinqToDB.DataType.VarChar)
 				{
-					Size = 255
+					Size = 4000
 				},
 				new DataParameter("VarChar1",           VarChar1,           LinqToDB.DataType.VarChar)
 				{
@@ -658,7 +651,7 @@ namespace Default.MySql
 
 		public partial class Issue2313ResultsResult
 		{
-			[Column("`VarChar255`")        ] public string?   VarChar255         { get; set; }
+			[Column("`VarCharDefault`")    ] public string?   VarCharDefault     { get; set; }
 			[Column("`VarChar1`")          ] public char?     VarChar1           { get; set; }
 			[Column("`Char255`")           ] public string?   Char255            { get; set; }
 			[Column("`Char1`")             ] public char?     Char1              { get; set; }
@@ -780,19 +773,19 @@ namespace Default.MySql
 
 	public static partial class TableExtensions
 	{
-		public static Alltype? Find(this ITable<Alltype> table, int ID)
+		public static AllType? Find(this ITable<AllType> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Alltypesnoyear? Find(this ITable<Alltypesnoyear> table, int ID)
+		public static AllTypesNoYear? Find(this ITable<AllTypesNoYear> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Datatypetest? Find(this ITable<Datatypetest> table, int DataTypeID)
+		public static DataTypeTest? Find(this ITable<DataTypeTest> table, int DataTypeID)
 		{
 			return table.FirstOrDefault(t =>
 				t.DataTypeID == DataTypeID);
@@ -804,19 +797,19 @@ namespace Default.MySql
 				t.PersonID == PersonID);
 		}
 
-		public static Fulltextindextest? Find(this ITable<Fulltextindextest> table, uint Id)
+		public static FullTextIndexTest? Find(this ITable<FullTextIndexTest> table, uint Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Inheritancechild? Find(this ITable<Inheritancechild> table, int InheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static Inheritanceparent? Find(this ITable<Inheritanceparent> table, int InheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
@@ -840,25 +833,25 @@ namespace Default.MySql
 				t.PersonID == PersonID);
 		}
 
-		public static Testidentity? Find(this ITable<Testidentity> table, int ID)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static Testmerge1? Find(this ITable<Testmerge1> table, int Id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Testmerge2? Find(this ITable<Testmerge2> table, int Id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static Testsamename? Find(this ITable<Testsamename> table, int ID)
+		public static TestSameName? Find(this ITable<TestSameName> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

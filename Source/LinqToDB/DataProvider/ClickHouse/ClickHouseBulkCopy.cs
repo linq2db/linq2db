@@ -9,8 +9,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using Data;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using SqlProvider;
 
 	sealed class ClickHouseBulkCopy : BasicBulkCopy
@@ -23,42 +24,40 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			return MultipleRowsCopy1(table, options, source);
 		}
 
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 #endif
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			var connections = TryGetProviderConnections(table);
 
 			if (connections.HasValue)
 			{
 				if (_provider.Adapter.OctonicaCreateWriter != null)
-					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options, source);
+					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, source);
 #if NATIVE_ASYNC
 				if (_provider.Adapter.OctonicaCreateWriterAsync != null)
-					return SafeAwaiter.Run(() => ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options, source, default));
+					return SafeAwaiter.Run(() => ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, default));
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
-					return SafeAwaiter.Run(() => ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), default));
+					return SafeAwaiter.Run(() => ProviderSpecificClientBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), default));
 #endif
 			}
 
@@ -66,22 +65,19 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source,
-			CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
 				if (_provider.Adapter.OctonicaCreateWriterAsync != null)
-					return ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options, source, cancellationToken);
+					return ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, cancellationToken);
 
 				if (_provider.Adapter.OctonicaCreateWriter != null)
-					return Task.FromResult(ProviderSpecificOctonicaBulkCopy(connections.Value, table, options, source));
+					return Task.FromResult(ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, source));
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
-					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), cancellationToken);
+					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), cancellationToken);
 			}
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
@@ -89,22 +85,19 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 #if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IAsyncEnumerable<T> source,
-			CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
 			{
 				if (_provider.Adapter.OctonicaCreateWriterAsync != null)
-					return ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options, source, cancellationToken);
+					return ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, cancellationToken);
 
 				if (_provider.Adapter.OctonicaCreateWriter != null)
-					return Task.FromResult(ProviderSpecificOctonicaBulkCopy(connections.Value, table, options, EnumerableHelper.AsyncToSyncEnumerable(source.GetAsyncEnumerator(cancellationToken))));
+					return Task.FromResult(ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, EnumerableHelper.AsyncToSyncEnumerable(source.GetAsyncEnumerator(cancellationToken))));
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
-					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken), cancellationToken);
+					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken), cancellationToken);
 			}
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
@@ -142,16 +135,16 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var data           = new List<List<object?>>(columns.Count);
-			var cmd            = new StringBuilder();
+			using var cmd      = Pools.StringBuilder.Allocate();
 			var columnTypes    = columns.Select(_ => _.GetConvertedDbDataType()).ToArray();
 			var valueConverter = new BulkCopyReader.Parameter();
 
-			cmd
+			cmd.Value
 				.Append("INSERT INTO ")
 				.Append(GetTableName(sb, options, table))
 				.Append('(');
@@ -161,14 +154,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 				data.Add(new List<object?>());
 
 				if (i > 0)
-					cmd.Append(", ");
+					cmd.Value.Append(", ");
 
-				sb.Convert(cmd, columns[i].ColumnName, ConvertType.NameToQueryField);
+				sb.Convert(cmd.Value, columns[i].ColumnName, ConvertType.NameToQueryField);
 			}
 
-			cmd.AppendLine(") VALUES");
+			cmd.Value.AppendLine(") VALUES");
 
-			var sql = cmd.ToString();
+			var sql = cmd.Value.ToString();
 
 			using var bc = _provider.Adapter.OctonicaCreateWriter!(connection, sql);
 
@@ -247,16 +240,16 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var data           = new List<List<object?>>(columns.Count);
-			var cmd            = new StringBuilder();
+			using var cmd      = Pools.StringBuilder.Allocate();
 			var columnTypes    = columns.Select(_ => _.GetConvertedDbDataType()).ToArray();
 			var valueConverter = new BulkCopyReader.Parameter();
 
-			cmd
+			cmd.Value
 				.Append("INSERT INTO ")
 				.Append(GetTableName(sb, options, table))
 				.Append('(');
@@ -266,14 +259,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 				data.Add(new List<object?>());
 
 				if (i > 0)
-					cmd.Append(", ");
+					cmd.Value.Append(", ");
 
-				sb.Convert(cmd, columns[i].ColumnName, ConvertType.NameToQueryField);
+				sb.Convert(cmd.Value, columns[i].ColumnName, ConvertType.NameToQueryField);
 			}
 
-			cmd.AppendLine(") VALUES");
+			cmd.Value.AppendLine(") VALUES");
 
-			var sql = cmd.ToString();
+			var sql = cmd.Value.ToString();
 
 			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			await using (bc)
@@ -355,16 +348,16 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var data           = new List<List<object?>>(columns.Count);
-			var cmd            = new StringBuilder();
+			using var cmd      = Pools.StringBuilder.Allocate();
 			var columnTypes    = columns.Select(_ => _.GetConvertedDbDataType()).ToArray();
 			var valueConverter = new BulkCopyReader.Parameter();
 
-			cmd
+			cmd.Value
 				.Append("INSERT INTO ")
 				.Append(GetTableName(sb, options, table))
 				.Append('(');
@@ -374,14 +367,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 				data.Add(new List<object?>());
 
 				if (i > 0)
-					cmd.Append(", ");
+					cmd.Value.Append(", ");
 
-				sb.Convert(cmd, columns[i].ColumnName, ConvertType.NameToQueryField);
+				sb.Convert(cmd.Value, columns[i].ColumnName, ConvertType.NameToQueryField);
 			}
 
-			cmd.AppendLine(") VALUES");
+			cmd.Value.AppendLine(") VALUES");
 
-			var sql = cmd.ToString();
+			var sql = cmd.Value.ToString();
 
 			// thanks C#! (sarcasm)
 			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -470,7 +463,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();

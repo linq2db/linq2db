@@ -46,6 +46,5 @@ namespace LinqToDB.Common
 
 			return array;
 		}
-
 	}
 }

@@ -19,7 +19,7 @@ namespace LinqToDB.Benchmarks.Queries
 		QueryResult                    _result           = null!;
 		int                            _key              = 124;
 		string                          CommandText      = "SELECT [SalesOrderID],[RevisionNumber],[OrderDate],[DueDate],[ShipDate],[Status],[OnlineOrderFlag],[SalesOrderNumber],[PurchaseOrderNumber],[AccountNumber],[CustomerID],[SalesPersonID],[TerritoryID],[BillToAddressID],[ShipToAddressID],[ShipMethodID],[CreditCardID],[CreditCardApprovalCode],[CurrencyRateID],[SubTotal],[TaxAmt],[Freight],[TotalDue],[Comment],[rowguid],[ModifiedDate] FROM [Sales].[SalesOrderHeader]";
-		IDataProvider                  _provider         = SqlServerTools.GetDataProvider();
+		IDataProvider                  _provider         = SqlServerTools.GetDataProvider(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient);
 
 		[GlobalSetup]
 		public void Setup()

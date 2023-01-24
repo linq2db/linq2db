@@ -4,14 +4,14 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
+	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
-	using Mapping;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
-		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -61,17 +61,15 @@ namespace LinqToDB.DataProvider.SapHana
 			if (createTable.StatementHeader == null)
 			{
 				AppendIndent().Append("CREATE COLUMN TABLE ");
-				BuildPhysicalTable(createTable.Table!, null);
+				BuildPhysicalTable(createTable.Table, null);
 			}
 			else
 			{
 				var name = WithStringBuilder(
-					new StringBuilder(),
-					() =>
+					static ctx =>
 					{
-						BuildPhysicalTable(createTable.Table!, null);
-						return StringBuilder.ToString();
-					});
+						ctx.this_.BuildPhysicalTable(ctx.createTable.Table, null);
+					}, (this_: this, createTable));
 
 				AppendIndent().AppendFormat(createTable.StatementHeader, name);
 			}

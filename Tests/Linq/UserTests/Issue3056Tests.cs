@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -13,13 +15,14 @@ namespace Tests.UserTests
 		[Test]
 		public void DataModelDynamicTableTest2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var mappingSchema =  new MappingSchema();
-			var fm            =mappingSchema.GetFluentMappingBuilder();
+			var mappingSchema = new MappingSchema();
+			var fm            = mappingSchema.GetFluentMappingBuilder();
 
 			fm.Entity<DynamicTableRow>()
 				//.HasIdentity(x => Sql.Property<int>(x, "Id"))
 				.Property(x => Sql.Property<string>(x, "Name"))
-				.Property(x => Sql.Property<string>(x, "Description"));
+				.Property(x => Sql.Property<string>(x, "Description"))
+				.Build();
 
 			var rows = new List<DynamicTableRow>();
 			var drow = new DynamicTableRow();
@@ -35,10 +38,12 @@ namespace Tests.UserTests
 			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
 			using (db.CreateLocalTable<TestRow>())
 			{
-				var options          = GetDefaultBulkCopyOptions(context);
-				options.TableName    = TestTableName;
-				options.SchemaName   = "dbo";
-				options.MaxBatchSize = 100;
+				var options = GetDefaultBulkCopyOptions(context) with
+				{
+					TableName    = TestTableName,
+					SchemaName   = "dbo",
+					MaxBatchSize = 100
+				};
 
 				db.BulkCopy(options, rows);
 			}

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -12,7 +14,7 @@ namespace Tests.Linq
 	using Model;
 
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-	public class ExtensionChoiceAttribute : Attribute
+	public class ExtensionChoiceAttribute : MappingAttribute
 	{
 		public ExtensionChoiceAttribute(string configuration, string expression, params Type?[] types)
 		{
@@ -21,9 +23,13 @@ namespace Tests.Linq
 			Types         = types ?? throw new ArgumentNullException(nameof(types));
 		}
 
-		public string  Configuration { get; set; }
 		public string  Expression    { get; set; }
-		public Type?[] Types         { get; }
+		public Type?[] Types { get; }
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{Expression}.[{string.Join(",", Types.Select(IdentifierBuilder.GetObjectID))}].";
+		}
 	}
 
 	sealed class GenericBuilder : Sql.IExtensionCallBuilder
@@ -69,8 +75,7 @@ namespace Tests.Linq
 			if (method != null && method.IsGenericMethod)
 			{
 				var typeParameters = method.GetGenericArguments();
-				builder.Expression = Match(typeParameters,
-					builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType!, method, a => a.Configuration));
+				builder.Expression = Match(typeParameters, builder.Mapping.GetAttributes<ExtensionChoiceAttribute>(builder.Member.DeclaringType!, method));
 			}
 			else
 				throw new InvalidOperationException("This extension could be applied only to methods with type parameters.");

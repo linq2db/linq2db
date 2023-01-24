@@ -245,7 +245,7 @@ namespace LinqToDB.Linq
 						var gtype    = type.Key.MakeGenericType(types);
 						var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype)!;
 
-						provider.SetInfo(new MappingSchema(mappingSchema));
+						provider.SetInfo(mappingSchema);
 
 						type.Value.Add(types);
 
@@ -502,15 +502,20 @@ namespace LinqToDB.Linq
 		{
 #pragma warning disable CS0649 // Field is never assigned to...
 			static T1? _member;
+			static T1  _default;
 #pragma warning restore CS0649 // Field is never assigned to...
 
 			public LambdaExpression GetExpression(MappingSchema mappingSchema)
 			{
-				var p = Expression.Parameter(typeof(T1?), "p");
+				var p            = Expression.Parameter(typeof(T1?), "p");
+				var defaultValue = mappingSchema.GetDefaultValue(typeof(T1));
 
-				return Expression.Lambda<Func<T1?,T1>>(
-					Expression.Coalesce(p, Expression.Constant(mappingSchema.GetDefaultValue(typeof(T1)))),
-					p);
+				if (!_default.Equals(defaultValue))
+					return Expression.Lambda<Func<T1?, T1>>(Expression.Coalesce(p, Expression.Constant(defaultValue)), p);
+				else
+					// use non-constant value (field) to allow parameter optimization
+					// but only when default value not overriden by user in mapping schema
+					return (Expression<Func<T1?, T1>>)((T1? p) => p ?? _default);
 			}
 
 			public void SetInfo()
@@ -1797,12 +1802,12 @@ namespace LinqToDB.Linq
 			if (str == null || count == null)
 				return null;
 
-			var sb = new StringBuilder(str.Length * count.Value);
+			using var sb = Pools.StringBuilder.Allocate();
 
 			for (var i = 0; i < count; i++)
-				sb.Append(str);
+				sb.Value.Append(str);
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 
 		[CLSCompliant(false)]
@@ -1815,12 +1820,7 @@ namespace LinqToDB.Linq
 			if (ch == null || count == null)
 				return null;
 
-			var sb = new StringBuilder(count.Value);
-
-			for (var i = 0; i < count; i++)
-				sb.Append(ch);
-
-			return sb.ToString();
+			return new string(ch.Value, count.Value);
 		}
 
 		// SqlServer

@@ -1,13 +1,11 @@
 ﻿using System;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Data
 {
-	using System.Data.Common;
 	using DataProvider;
-	using Linq;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -33,7 +31,7 @@ namespace LinqToDB.Data
 
 		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
-			return DataProvider.IsDBNullAllowed(reader, idx);
+			return DataProvider.IsDBNullAllowed(Options, reader, idx);
 		}
 
 		IDataContext IDataContext.Clone(bool forNestedQuery)
@@ -63,16 +61,15 @@ namespace LinqToDB.Data
 		}
 
 		string IDataContext.ContextName => DataProvider.Name;
-		int    IDataContext.ContextID   => DataProvider.ID;
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema);
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
 
-		static Func<ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
+		static Func<DataOptions,ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
 		{
 			return dp.GetSqlOptimizer;
 		}
 
-		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
+		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
 
 		#endregion
 	}
