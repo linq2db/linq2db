@@ -41,7 +41,7 @@ namespace LinqToDB.Mapping
 
 		public static bool TryAnalyzeMember(MemberInfo member, out bool isNullable)
 		{
-#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER			
+#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER			
 			// Extract info from C# Nullable Reference Types if available.
 			// Note that this also handles Nullable Value Types.
 			var context = new NullabilityInfoContext();
