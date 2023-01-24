@@ -33,7 +33,7 @@ namespace LinqToDB.Mapping
 		/// <item><see cref="T:byte[]"/> using <see cref="Guid.ToByteArray()"/></item>
 		/// </list>
 		/// </summary>
-		Guid
+		Guid,
 #pragma warning restore CA1200 // Avoid using cref tags with a prefix
 	}
 }
