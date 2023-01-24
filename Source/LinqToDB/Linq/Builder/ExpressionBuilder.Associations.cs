@@ -76,8 +76,7 @@ namespace LinqToDB.Linq.Builder
 			if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
 			{
 				var attribute = MappingSchema.GetAttribute<AssociationAttribute>(
-					accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo,
-					static a => a.Configuration);
+					accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo);
 
 				if (attribute != null)
 					descriptor = new AssociationDescriptor

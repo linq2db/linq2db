@@ -277,12 +277,15 @@ namespace Tests.Linq
 		[Test]
 		public void FluentMappingTest([DataSources(false, TestProvName.AllMySql)] string context)
 		{
-			using var db = GetDataContext(context);
+			var ms = new MappingSchema();
 
-			db.MappingSchema.GetFluentMappingBuilder()
+			ms.GetFluentMappingBuilder()
 				.Entity<TestTable>()
 				.HasIsTemporary()
-				.HasTableOptions(TableOptions.DropIfExists);
+				.HasTableOptions(TableOptions.DropIfExists)
+				.Build();
+
+			using var db = GetDataContext(context, ms);
 
 			db.DropTable<TestTable>();
 

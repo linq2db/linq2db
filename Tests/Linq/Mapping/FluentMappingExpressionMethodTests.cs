@@ -29,7 +29,8 @@ namespace Tests.Mapping
 				.Property(e => e.Id)
 				.Property(e => e.Value)
 				.Member(e => e.EntityValue).IsExpression(e => e.Id.ToString() + e.Value.ToString())
-				.Member(e => e.EntityMaterialized).IsExpression(e => "M" + e.Id.ToString(), true);
+				.Member(e => e.EntityMaterialized).IsExpression(e => "M" + e.Id.ToString(), true)
+				.Build();
 
 			return fluent.MappingSchema;
 		}

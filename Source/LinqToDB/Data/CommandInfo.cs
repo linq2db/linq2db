@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,9 +12,6 @@ using System.Runtime.CompilerServices;
 using System.Diagnostics;
 
 using JetBrains.Annotations;
-
-// type, readertype, configID, sql, additionalKey, isScalar
-using QueryKey = System.ValueTuple<System.Type, System.Type, int, string, string?, bool>;
 
 namespace LinqToDB.Data
 {
@@ -608,20 +607,31 @@ namespace LinqToDB.Data
 
 		Dictionary<int, MemberAccessor> GetMultipleQueryIndexMap<T>(TypeAccessor<T> typeAccessor)
 		{
-			var members = typeAccessor.Members.Where(m => m.HasSetter).ToArray();
+			var indexMap = new Dictionary<int, MemberAccessor>();
 
 			// Use attribute labels if any exist.
-			var indexMap = (from m in members
-				let a = m.GetAttributes<ResultSetIndexAttribute>()
-				where a != null
-				select new { Member = m, a[0].Index }).ToDictionary(e => e.Index, e => e.Member);
+			foreach (var m in typeAccessor.Members)
+			{
+				if (!m.HasGetter)
+					continue;
+
+				var attr = m.MemberInfo.GetAttribute<ResultSetIndexAttribute>();
+
+				if (attr != null)
+					indexMap.Add(attr.Index, m);
+			}
 
 			if (indexMap.Count == 0)
 			{
 				// Use ordering of properties according to reflection.
-				for (var i = 0; i < members.Length; i++)
+				var i = 0;
+				foreach (var m in typeAccessor.Members)
 				{
-					indexMap[i] = members[i];
+					if (m.HasGetter)
+					{
+						indexMap[i] = m;
+						i++;
+					}
 				}
 			}
 
@@ -1517,6 +1527,8 @@ namespace LinqToDB.Data
 
 		#region GetObjectReader
 
+		record struct QueryKey(Type TargetType, Type DbReaderType, int ConfigId, string Sql, string? ExtraKey, bool IsScalar, Type? ScalarSourceType);
+
 		static readonly MemoryCache<QueryKey,Delegate>                                            _objectReaders       = new (new ());
 		static readonly MemoryCache<(Type readerType, Type providerReaderType),LambdaExpression?> _dataReaderConverter = new (new ());
 
@@ -1539,29 +1551,29 @@ namespace LinqToDB.Data
 
 		static string GetFieldsKey(DbDataReader dataReader)
 		{
-			var sb = new StringBuilder();
+			using var sb = Pools.StringBuilder.Allocate();
 
 			for (var i = 0; i < dataReader.FieldCount; i++)
 			{
-				sb.Append(dataReader.GetName(i))
+				sb.Value.Append(dataReader.GetName(i))
 					.Append(',')
 					.Append(dataReader.GetFieldType(i))
 					.Append(';');
 			}
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 
 		static Func<DbDataReader,T> GetObjectReader<T>(DataConnection dataConnection, DbDataReader dataReader, string sql, string? additionalKey)
 		{
 			var func = _objectReaders.GetOrCreate(
-				new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1),
+				new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1, dataReader.FieldCount == 1 ? dataReader.GetFieldType(0) : null),
 				(dataConnection, dataReader),
 				static (e, context) =>
 			{
 				e.SlidingExpiration = context.dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
-				if (!e.Key.Item6 && IsDynamicType(typeof(T)))
+				if (!e.Key.IsScalar && IsDynamicType(typeof(T)))
 				{
 					// dynamic case
 					//
@@ -1580,11 +1592,11 @@ namespace LinqToDB.Data
 		static Func<DbDataReader,T> GetObjectReader2<T>(DataConnection dataConnection, DbDataReader dataReader,
 			string sql, string? additionalKey)
 		{
-			var key = (typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1);
+			var key = new QueryKey(typeof(T), dataReader.GetType(), ((IConfigurationID)dataConnection).ConfigurationID, sql, additionalKey, dataReader.FieldCount <= 1, dataReader.FieldCount == 1 ? dataReader.GetFieldType(0) : null);
 
 			Delegate func;
 
-			if (!key.Item6 && IsDynamicType(typeof(T)))
+			if (!key.IsScalar && IsDynamicType(typeof(T)))
 			{
 				// dynamic case
 				//

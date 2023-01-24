@@ -25,7 +25,19 @@
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= CreateID(new IdentifierBuilder().Add(BulkCopyType)).CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = CreateID(idBuilder.Add(BulkCopyType)).CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		protected abstract IdentifierBuilder CreateID(IdentifierBuilder builder);
 

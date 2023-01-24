@@ -2,6 +2,8 @@
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
+
 	public class SqlSelectClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 	{
 		#region Init

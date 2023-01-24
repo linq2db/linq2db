@@ -354,10 +354,7 @@ namespace LinqToDB.Expressions
 
 		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
 		{
-			var functions = mapping.GetAttributes<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType!,
-				methodCall.Method,
-				static f => f.Configuration);
-			return functions.Any();
+			return mapping.HasAttribute<Sql.ExtensionAttribute>(methodCall.Method.ReflectedType!, methodCall.Method);
 		}
 
 		public static bool IsQueryable(this MethodCallExpression method, string name)
@@ -424,7 +421,7 @@ namespace LinqToDB.Expressions
 
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
 		{
-			return mappingSchema.GetAttribute<AssociationAttribute>(method.Method.DeclaringType!, method.Method) != null;
+			return mappingSchema.HasAttribute<AssociationAttribute>(method.Method.DeclaringType!, method.Method);
 		}
 
 		private static readonly string[] CteMethodNames = { "AsCte", "GetCte" };

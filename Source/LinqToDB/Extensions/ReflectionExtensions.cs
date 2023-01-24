@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml;
@@ -11,7 +12,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Extensions
 {
-	using System.Diagnostics.CodeAnalysis;
 	using LinqToDB.Common;
 	using LinqToDB.Reflection;
 
@@ -284,125 +284,6 @@ namespace LinqToDB.Extensions
 #else
 			return type.GetInterfaceMap(interfaceType);
 #endif
-		}
-
-		static class CacheHelper<T>
-		{
-			public static readonly ConcurrentDictionary<Type,T[]> TypeAttributes = new ();
-		}
-
-#region Attributes cache
-
-		static readonly ConcurrentDictionary<Type, IReadOnlyCollection<object>> _typeAttributesTopInternal = new ();
-
-		static IReadOnlyCollection<object> GetAttributesInternal(Type type)
-		{
-			return _typeAttributesTopInternal.GetOrAdd(type, static type => GetAttributesTreeInternal(type));
-		}
-
-		static readonly ConcurrentDictionary<Type, IReadOnlyCollection<object>> _typeAttributesInternal = new ();
-
-		static IReadOnlyCollection<object> GetAttributesTreeInternal(Type type)
-		{
-			IReadOnlyCollection<object> attrs = _typeAttributesInternal.GetOrAdd(type, x => type.GetCustomAttributes(false));
-
-			if (type.IsInterface)
-				return attrs;
-
-			// Reflection returns interfaces for the whole inheritance chain.
-			// So, we are going to get some hemorrhoid here to restore the inheritance sequence.
-			//
-			var interfaces      = type.GetInterfaces();
-			var nBaseInterfaces = type.BaseType != null? type.BaseType.GetInterfaces().Length: 0;
-			List<object>? list  = null;
-
-			for (var i = 0; i < interfaces.Length; i++)
-			{
-				var intf = interfaces[i];
-
-				if (i < nBaseInterfaces)
-				{
-					var getAttr = false;
-
-					foreach (var mi in type.GetInterfaceMapEx(intf).TargetMethods)
-					{
-						// Check if the interface is reimplemented.
-						//
-						if (mi.DeclaringType == type)
-						{
-							getAttr = true;
-							break;
-						}
-					}
-
-					if (getAttr == false)
-						continue;
-				}
-
-				var ifaceAttrs = GetAttributesTreeInternal(intf);
-				if (ifaceAttrs.Count > 0)
-				{
-					if (list != null)
-						list.AddRange(ifaceAttrs);
-					else if (attrs.Count == 0)
-						attrs = ifaceAttrs;
-					else
-						(list ??= new(attrs)).AddRange(ifaceAttrs);
-				}
-			}
-
-			if (type.BaseType != null && type.BaseType != typeof(object))
-			{
-				var baseAttrs = GetAttributesTreeInternal(type.BaseType);
-				if (baseAttrs.Count > 0)
-				{
-					if (list != null)
-						list.AddRange(baseAttrs);
-					else if (attrs.Count == 0)
-						attrs = baseAttrs;
-					else
-						(list ??= new(attrs)).AddRange(baseAttrs);
-				}
-			}
-
-			if (list != null   ) return list;
-			if (attrs.Count > 0) return attrs;
-			return Array<object>.Empty;
-		}
-
-		#endregion
-
-		/// <summary>
-		/// Returns an array of custom attributes applied to a type.
-		/// </summary>
-		/// <param name="type">A type instance.</param>
-		/// <typeparam name="T">The type of attribute to search for.
-		/// Only attributes that are assignable to this type are returned.</typeparam>
-		/// <returns>An array of custom attributes applied to this type,
-		/// or an array with zero (0) elements if no attributes have been applied.</returns>
-		public static T[] GetAttributes<T>(this Type type)
-			where T : Attribute
-		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
-
-			return CacheHelper<T>.TypeAttributes.GetOrAdd(
-				type,
-				static type => GetAttributesInternal(type).OfType<T>().ToArray());
-		}
-
-		/// <summary>
-		/// Retrieves a custom attribute applied to a type.
-		/// </summary>
-		/// <param name="type">A type instance.</param>
-		/// <typeparam name="T">The type of attribute to search for.
-		/// Only attributes that are assignable to this type are returned.</typeparam>
-		/// <returns>A reference to the first custom attribute of type attributeType
-		/// that is applied to element, or null if there is no such attribute.</returns>
-		public static T GetFirstAttribute<T>(this Type type)
-			where T : Attribute
-		{
-			var attrs = GetAttributes<T>(type);
-			return attrs.Length > 0 ? attrs[0] : null!;
 		}
 
 		/// <summary>
@@ -1074,7 +955,7 @@ namespace LinqToDB.Extensions
 				(type.Name.StartsWith("<>f__AnonymousType", StringComparison.Ordinal) ||
 				 // VB.NET anonymous type name prefix
 				 type.Name.StartsWith("VB$AnonymousType", StringComparison.Ordinal)) &&
-				type.GetCustomAttribute(typeof(CompilerGeneratedAttribute), false) != null;
+				type.HasAttribute<CompilerGeneratedAttribute>(false);
 		}
 
 		internal static MemberInfo GetMemberOverride(this Type type, MemberInfo mi)

@@ -57,22 +57,18 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			var nullability = NullabilityContext.NonQuery;
-
 			if (createTable.StatementHeader == null)
 			{
 				AppendIndent().Append("CREATE COLUMN TABLE ");
-				BuildPhysicalTable(nullability, createTable.Table, null);
+				BuildPhysicalTable(NullabilityContext.NonQuery, createTable.Table, null);
 			}
 			else
 			{
 				var name = WithStringBuilder(
-					new StringBuilder(),
-					() =>
+					static ctx =>
 					{
-						BuildPhysicalTable(nullability, createTable.Table, null);
-						return StringBuilder.ToString();
-					});
+						ctx.this_.BuildPhysicalTable(NullabilityContext.NonQuery, ctx.createTable.Table, null);
+					}, (this_: this, createTable));
 
 				AppendIndent().AppendFormat(createTable.StatementHeader, name);
 			}

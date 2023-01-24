@@ -6,6 +6,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Common.Internal;
 	using Expressions;
 	using SqlProvider;
 	using Mapping;
@@ -55,23 +56,24 @@ namespace LinqToDB.DataProvider.Oracle
 
 			static string ValueConverter(IReadOnlyList<Action<StringBuilder,object>> converters, object obj)
 			{
-				var sb = new StringBuilder("<t>").AppendLine();
+				using var sb = Pools.StringBuilder.Allocate();
+				sb.Value.Append("<t>").AppendLine();
 
 				foreach (var item in (IEnumerable)obj)
 				{
-					sb.Append("<r>");
+					sb.Value.Append("<r>");
 
 					for (var i = 0; i < converters.Count; i++)
 					{
-						sb.Append("<c" + i + ">");
-						converters[i](sb, item!);
-						sb.Append("</c" + i + ">");
+						sb.Value.Append("<c" + i + ">");
+						converters[i](sb.Value, item!);
+						sb.Value.Append("</c" + i + ">");
 					}
 
-					sb.AppendLine("</r>");
+					sb.Value.AppendLine("</r>");
 				}
 
-				return sb.AppendLine("</t>").ToString();
+				return sb.Value.AppendLine("</t>").ToString();
 			}
 
 			internal static Func<object,string> GetXmlConverter(MappingSchema mappingSchema, SqlTable sqlTable)
@@ -90,7 +92,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 						if (value is string && c.MemberType == typeof(string))
 						{
-							var str = conv.Convert(new StringBuilder(), mappingSchema, null!, value).ToString();
+							using var sbv = Pools.StringBuilder.Allocate();
+							var str = conv.Convert(sbv.Value, mappingSchema, null!, value).ToString();
 
 							if (str.Length > 2)
 							{
@@ -131,15 +134,15 @@ namespace LinqToDB.DataProvider.Oracle
 					}
 				}
 
-				var columns = new StringBuilder();
+				using var columns = Pools.StringBuilder.Allocate();
 				for (var i = 0; i < ed.Columns.Count; i++)
 				{
 					if (i > 0)
-						columns.Append(", ");
+						columns.Value.Append(", ");
 
 					var  c= ed.Columns[i];
 
-					columns.AppendFormat(
+					columns.Value.AppendFormat(
 						"{0} {1} path 'c{2}'",
 						sqlBuilder.ConvertInline(c.ColumnName, ConvertType.NameToQueryField),
 						string.IsNullOrEmpty(c.DbType)
@@ -156,7 +159,7 @@ namespace LinqToDB.DataProvider.Oracle
 				}
 
 				table.SqlTableType   = SqlTableType.Expression;
-				table.Expression     = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns}) {{1}}";
+				table.Expression     = $"XmlTable(\'/t/r\' PASSING XmlType({{2}}) COLUMNS {columns.Value}) {{1}}";
 				table.TableArguments = new[] { arg };
 			}
 		}

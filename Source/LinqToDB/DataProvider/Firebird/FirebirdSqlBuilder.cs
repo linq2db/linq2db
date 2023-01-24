@@ -10,6 +10,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
+	using Common.Internal;
 	using Mapping;
 	using SqlQuery;
 	using SqlProvider;
@@ -271,16 +272,16 @@ namespace LinqToDB.DataProvider.Firebird
 
 				AppendIndent().Append("EXECUTE STATEMENT ");
 
-				var dropCommand = new StringBuilder();
+				using var dropCommand = Pools.StringBuilder.Allocate();
 
-				dropCommand
+				dropCommand.Value
 					.Append("DROP ")
 					.Append(objectName)
 					.Append(' ');
 
-				Convert(dropCommand, identifier, ConvertType.NameToQueryTable);
+				Convert(dropCommand.Value, identifier, ConvertType.NameToQueryTable);
 
-				BuildValue(null, dropCommand.ToString());
+				BuildValue(null, dropCommand.Value.ToString());
 
 				StringBuilder.AppendLine(";");
 

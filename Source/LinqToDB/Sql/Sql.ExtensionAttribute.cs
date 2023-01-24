@@ -508,9 +508,7 @@ namespace LinqToDB
 						return Array<ExtensionAttribute>.Empty;
 				}
 
-				var attributes =
-						mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo,
-							static a => a.Configuration, inherit: true, exactForConfiguration: true);
+				var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, forFirstConfiguration: true);
 
 				return attributes;
 			}
@@ -662,7 +660,7 @@ namespace LinqToDB
 						var param = parameters[i];
 
 						var names = new HashSet<string>();
-						foreach (var a in param.GetCustomAttributes(true).OfType<ExprParameterAttribute>())
+						foreach (var a in param.GetAttributes<ExprParameterAttribute>())
 							names.Add(a.Name ?? param.Name!);
 
 						if (names.Count > 0)
@@ -768,7 +766,6 @@ namespace LinqToDB
 			public static SqlExpression BuildSqlExpression(SqlExtension root, Type? systemType, int precedence,
 				SqlFlags flags, bool? canBeNull, IsNullableType isNullable)
 			{
-				var sb             = new StringBuilder();
 				var resolvedParams = new Dictionary<SqlExtensionParam, string?>();
 				var resolving      = new HashSet<SqlExtensionParam>();
 				var newParams      = new List<ISqlExpression>();
@@ -804,7 +801,6 @@ namespace LinqToDB
 							}
 							else
 							{
-								sb.Length = 0;
 								if (p.Expression != null)
 								{
 									paramValue = string.Format("{{{0}}}", newParams.Count);

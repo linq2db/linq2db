@@ -12,96 +12,67 @@ namespace LinqToDB.Metadata
 
 	public class FluentMetadataReader : IMetadataReader
 	{
-		// don't forget to put lock on List<Attribute> when access it
-		readonly ConcurrentDictionary<Type,List<MappingAttribute>>               _types          = new();
-		readonly ConcurrentDictionary<MemberInfo,List<MappingAttribute>>         _members        = new ();
-		// set used to guarantee uniqueness
-		// list used to guarantee same order for columns in select queries
-		readonly ConcurrentDictionary<Type,(ISet<MemberInfo>,IList<MemberInfo>)> _dynamicColumns = new();
+		private readonly string _objectId;
 
-		static bool IsSystemOrNullType(Type? type)
-			=> type == null || type == typeof(object) || type == typeof(ValueType) || type == typeof(Enum);
+		readonly ConcurrentDictionary<Type,MappingAttribute[]>       _types          = new();
+		readonly ConcurrentDictionary<MemberInfo,MappingAttribute[]> _members        = new();
+		readonly ConcurrentDictionary<Type, MemberInfo[]>            _dynamicColumns = new();
 
-		public T[] GetAttributes<T>(Type type, bool inherit = true)
-			where T : Attribute
+		readonly MappingAttributesCache _cache;
+
+		public FluentMetadataReader(IReadOnlyDictionary<Type, List<MappingAttribute>> typeAttributes, IReadOnlyDictionary<MemberInfo, List<MappingAttribute>> memberAttributes, IReadOnlyList<MemberInfo> orderedMembers)
 		{
-			if (_types.TryGetValue(type, out var attrs))
-				lock (attrs)
-					return attrs.OfType<T>().ToArray();
+			_types   = new(typeAttributes  .Select(kvp => new KeyValuePair<Type, MappingAttribute[]>      (kvp.Key, kvp.Value.ToArray())));
+			_members = new(memberAttributes.Select(kvp => new KeyValuePair<MemberInfo, MappingAttribute[]>(kvp.Key, kvp.Value.ToArray())));
 
-			if (!inherit)
-				return Array<T>.Empty;
-
-			var parents = new [] { type.BaseType }
-				.Where(_ => !IsSystemOrNullType(_))
-				.Concat(type.GetInterfaces())!;
-
-			foreach(var p in parents)
+			// dynamic columns collection
+			Dictionary<Type,List<MemberInfo>>? dynamicColumns = null;
+			foreach (var mi in orderedMembers)
 			{
-				var pattrs = GetAttributes<T>(p!, inherit);
-				if (pattrs.Length > 0)
-					return pattrs;
+				if (mi.IsDynamicColumnPropertyEx())
+				{
+					if (!(dynamicColumns ??= new()).TryGetValue(mi.DeclaringType!, out var members))
+						dynamicColumns.Add(mi.DeclaringType!, members = new());
+					members.Add(mi);
+				}
 			}
 
-			return Array<T>.Empty;
+			if (dynamicColumns != null)
+			{
+				foreach (var kvp in dynamicColumns)
+					_dynamicColumns.TryAdd(kvp.Key, kvp.Value.ToArray());
+			}
+
+			_objectId = CalculateObjectID();
+			_cache    = new(GetAllAttributes);
 		}
 
-		public void AddAttribute(Type type, MappingAttribute attribute)
+		private MappingAttribute[] GetAllAttributes(Type? sourceType, ICustomAttributeProvider attributeProvider)
 		{
-			var attrs = _types.GetOrAdd(type, static _ => new ());
-
-			lock (attrs)
-				attrs.Add(attribute);
+			if (sourceType == null)
+				return _types  .TryGetValue((Type      )attributeProvider, out var typeAttributes  ) ? typeAttributes   : Array<MappingAttribute>.Empty;
+			else
+				return _members.TryGetValue((MemberInfo)attributeProvider, out var memberAttributes) ? memberAttributes : Array<MappingAttribute>.Empty;
 		}
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit = true)
-			where T : Attribute
+		public T[] GetAttributes<T>(Type type)
+			where T : MappingAttribute
+			=> _cache.GetMappingAttributes<T>(type);
+
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
-			if (memberInfo.DeclaringType != type)
+			if (memberInfo.ReflectedType != type)
 				memberInfo = type.GetMemberEx(memberInfo) ?? memberInfo;
 
-			if (_members.TryGetValue(memberInfo, out var attrs))
-				return attrs.OfType<T>().ToArray();
-
-			if (inherit == false)
-				return Array<T>.Empty;
-
-			var parents = new [] { type.BaseType }
-				.Where(_ => !IsSystemOrNullType(_))
-				.Concat(type.GetInterfaces())!
-				.Select(_ => new { Type = _!, Member = _!.GetMemberEx(memberInfo) })
-				.Where(_ => _.Member != null)!;
-
-			foreach(var p in parents)
-			{
-				var pattrs = GetAttributes<T>(p!.Type, p.Member!, inherit);
-				if (pattrs.Length > 0)
-					return pattrs;
-			}
-
-			return Array<T>.Empty;
-		}
-
-		public void AddAttribute(MemberInfo memberInfo, MappingAttribute attribute)
-		{
-			if (memberInfo.IsDynamicColumnPropertyEx())
-			{
-				var dynamicColumns = _dynamicColumns.GetOrAdd(memberInfo.DeclaringType!, (new HashSet<MemberInfo>(), new List<MemberInfo>()));
-
-				lock (dynamicColumns.Item1)
-					if (dynamicColumns.Item1.Add(memberInfo))
-						dynamicColumns.Item2.Add(memberInfo);
-			}
-
-			_members.GetOrAdd(memberInfo, static _ => new ()).Add(attribute);
+			return _cache.GetMappingAttributes<T>(type, memberInfo);
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
 			if (_dynamicColumns.TryGetValue(type, out var dynamicColumns))
-				lock (dynamicColumns.Item1)
-					return dynamicColumns.Item2.ToArray();
+					return dynamicColumns;
 
 			return Array<MemberInfo>.Empty;
 		}
@@ -112,46 +83,61 @@ namespace LinqToDB.Metadata
 		/// <returns>
 		/// Returns array with all types, mapped by current fluent mapper.
 		/// </returns>
-		public Type[] GetRegisteredTypes()
+		public IEnumerable<Type> GetRegisteredTypes()
 		{
-			// CD.Keys is probably thread-safe for enumeration (but it is not documented behavior)
-			// https://stackoverflow.com/questions/10479867
-			return _types.Keys.ToArray();
+			return _types.Keys;
 		}
 
-		public IEnumerable<string> GetObjectIDs()
+		public string GetObjectID() => _objectId;
+
+		private string CalculateObjectID()
 		{
+			using var sb = Pools.StringBuilder.Allocate();
+
 			foreach (var type in _types)
 			{
-				var sb = new StringBuilder(".")
+				sb.Value.Append('.')
 					.Append(IdentifierBuilder.GetObjectID(type.Key))
 					.Append('.')
-					.Append(type.Value.Count)
+					.Append(type.Value.Length)
 					.Append('.')
 					;
 
 				foreach (var a in type.Value)
-					sb.Append(a.GetObjectID()).Append('.');
-
-				yield return sb.ToString();
+					sb.Value.Append(a.GetObjectID()).Append('.');
 			}
 
 			foreach (var member in _members)
 			{
-				var sb = new StringBuilder(".")
+				sb.Value.Append('.')
 					.Append(IdentifierBuilder.GetObjectID(member.Key.DeclaringType))
 					.Append('.')
 					.Append(member.Key.Name)
 					.Append('.')
-					.Append(member.Value.Count)
+					.Append(member.Value.Length)
 					.Append('.')
 					;
 
 				foreach (var a in member.Value)
-					sb.Append(a.GetObjectID()).Append('.');
-
-				yield return sb.ToString();
+					sb.Value.Append(a.GetObjectID()).Append('.');
 			}
+
+			foreach (var column in _dynamicColumns)
+			{
+				sb.Value.Append('.')
+					.Append(IdentifierBuilder.GetObjectID(column.Key.DeclaringType))
+					.Append('.')
+					.Append(column.Key.Name)
+					.Append('.')
+					.Append(column.Value.Length)
+					.Append('.')
+					;
+
+				foreach (var mi in column.Value)
+					sb.Value.Append(IdentifierBuilder.GetObjectID(mi)).Append('.');
+			}
+
+			return sb.Value.ToString();
 		}
 	}
 }

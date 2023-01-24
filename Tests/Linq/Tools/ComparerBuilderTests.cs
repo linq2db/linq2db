@@ -5,6 +5,7 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
 
@@ -297,7 +298,7 @@ namespace Tests.Tools
 		static IEnumerable<MemberAccessor> GetIdentifiers(TypeAccessor typeAccessor)
 		{
 			foreach (var member in typeAccessor.Members)
-				if (member.MemberInfo.GetCustomAttribute<IdentifierAttribute>() != null)
+				if (member.MemberInfo.HasAttribute<IdentifierAttribute>())
 					yield return member;
 		}
 

@@ -128,10 +128,12 @@ namespace LinqToDB
 	/// Enables Take/Skip parameterization.
 	/// Default value: <c>true</c>.
 	/// </param>
-	/// <param name="EnableAutoFluentMapping">
-	/// If <c>true</c>, auto support for fluent mapping is ON,
-	/// which means that you do not need to create additional MappingSchema object to define FluentMapping.
-	/// You can use <c>context.MappingSchema.GetFluentMappingBuilder()</c>.
+	/// <param name="EnableContextSchemaEdit">
+	/// If <c>true</c>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
+	/// Otherwise <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
+	/// It is not recommended to enable this option as it has performance implications.
+	/// Proper approach is to create single <see cref="Mapping.MappingSchema"/> instance once, configure mappings for it and use this <see cref="Mapping.MappingSchema"/> instance for all context instances.
+	/// Default value: <c>false</c>.
 	/// </param>
 	public sealed record LinqOptions
 	(
@@ -148,7 +150,7 @@ namespace LinqToDB
 		bool      PreferApply             = true,
 		bool      KeepDistinctOrdered     = true,
 		bool      ParameterizeTakeSkip    = true,
-		bool      EnableAutoFluentMapping = true
+		bool      EnableContextSchemaEdit = false
 	)
 		: IOptionSet
 	{
@@ -171,26 +173,38 @@ namespace LinqToDB
 			PreferApply             = original.PreferApply;
 			KeepDistinctOrdered     = original.KeepDistinctOrdered;
 			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
-			EnableAutoFluentMapping = original.EnableAutoFluentMapping;
+			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(PreloadGroups)
-			.Add(IgnoreEmptyUpdate)
-			.Add(GenerateExpressionTest)
-			.Add(TraceMapperExpression)
-			.Add(DoNotClearOrderBys)
-			.Add(OptimizeJoins)
-			.Add(CompareNullsAsValues)
-			.Add(GuardGrouping)
-			.Add(DisableQueryCache)
-			.Add(CacheSlidingExpiration)
-			.Add(PreferApply)
-			.Add(KeepDistinctOrdered)
-			.Add(ParameterizeTakeSkip)
-			.Add(EnableAutoFluentMapping)
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(PreloadGroups)
+						.Add(IgnoreEmptyUpdate)
+						.Add(GenerateExpressionTest)
+						.Add(TraceMapperExpression)
+						.Add(DoNotClearOrderBys)
+						.Add(OptimizeJoins)
+						.Add(CompareNullsAsValues)
+						.Add(GuardGrouping)
+						.Add(DisableQueryCache)
+						.Add(CacheSlidingExpiration)
+						.Add(PreferApply)
+						.Add(KeepDistinctOrdered)
+						.Add(ParameterizeTakeSkip)
+						.Add(EnableContextSchemaEdit)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		public TimeSpan CacheSlidingExpirationOrDefault => CacheSlidingExpiration ?? TimeSpan.FromHours(1);
 

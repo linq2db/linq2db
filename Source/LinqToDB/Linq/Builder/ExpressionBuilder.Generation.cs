@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		SqlGenericConstructorExpression BuildGenericFromMembers(IBuildContext? context,
-			List<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, int level,
+			IReadOnlyCollection<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, int level,
 			FullEntityPurpose purpose)
 		{
 			var members = new List<SqlGenericConstructorExpression.Assignment>();

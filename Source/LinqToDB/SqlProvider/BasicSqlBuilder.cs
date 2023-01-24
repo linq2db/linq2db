@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 namespace LinqToDB.SqlProvider
 {
 	using Common;
+	using Common.Internal;
 	using DataProvider;
 	using Extensions;
 	using Mapping;
@@ -217,26 +218,55 @@ namespace LinqToDB.SqlProvider
 
 		protected abstract ISqlBuilder CreateSqlBuilder();
 
-		protected T WithStringBuilder<T>(StringBuilder sb, Func<T> func)
+		protected string WithStringBuilderBuildExpression(NullabilityContext nullability, ISqlExpression expr)
 		{
-			var current = StringBuilder;
+			using var sb = Pools.StringBuilder.Allocate();
 
-			StringBuilder = sb;
+			var current   = StringBuilder;
+			StringBuilder = sb.Value;
 
-			var ret = func();
+			BuildExpression(nullability, expr);
 
 			StringBuilder = current;
 
-			return ret;
+			return sb.Value.ToString();
 		}
 
-		void WithStringBuilder(StringBuilder sb, Action func)
+		protected string WithStringBuilderBuildExpression(NullabilityContext nullability, int precedence, ISqlExpression expr)
+		{
+			using var sb = Pools.StringBuilder.Allocate();
+
+			var current   = StringBuilder;
+			StringBuilder = sb.Value;
+
+			BuildExpression(nullability, precedence, expr);
+
+			StringBuilder = current;
+
+			return sb.Value.ToString();
+		}
+
+		protected string WithStringBuilder<TContext>(Action<TContext> func, TContext context)
+		{
+			using var sb = Pools.StringBuilder.Allocate();
+
+			var current   = StringBuilder;
+			StringBuilder = sb.Value;
+
+			func(context);
+
+			StringBuilder = current;
+
+			return sb.Value.ToString();
+		}
+
+		void WithStringBuilder<TContext>(StringBuilder sb, Action<TContext> func, TContext context)
 		{
 			var current = StringBuilder;
 
 			StringBuilder = sb;
 
-			func();
+			func(context);
 
 			StringBuilder = current;
 		}
@@ -459,7 +489,8 @@ namespace LinqToDB.SqlProvider
 
 		public string ConvertInline(string value, ConvertType convertType)
 		{
-			return Convert(new StringBuilder(), value, convertType).ToString();
+			using var sb = Pools.StringBuilder.Allocate();
+			return Convert(sb.Value, value, convertType).ToString();
 		}
 
 		public virtual StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -1266,12 +1297,10 @@ namespace LinqToDB.SqlProvider
 			else
 			{
 				var name = WithStringBuilder(
-					new StringBuilder(),
-					() =>
+					static ctx =>
 					{
-						BuildPhysicalTable(NullabilityContext.NonQuery, createTable.Table!, null);
-						return StringBuilder.ToString();
-					});
+						ctx.this_.BuildPhysicalTable(NullabilityContext.NonQuery, ctx.createTable.Table!, null);
+					}, (this_: this, createTable));
 
 				AppendIndent().AppendFormat(createTable.StatementHeader, name);
 			}
@@ -1380,7 +1409,7 @@ namespace LinqToDB.SqlProvider
 						field.StringBuilder.Append(' ');
 
 					if (field.Field.IsIdentity)
-						WithStringBuilder(field.StringBuilder, () => BuildCreateTableIdentityAttribute1(field.Field));
+						WithStringBuilder(field.StringBuilder, static ctx => ctx.this_.BuildCreateTableIdentityAttribute1(ctx.field.Field), (this_: this, field));
 
 					if (field.Field.CreateFormat != null)
 					{
@@ -1409,7 +1438,8 @@ namespace LinqToDB.SqlProvider
 
 				WithStringBuilder(
 					field.StringBuilder,
-					() => BuildCreateTableNullAttribute(field.Field, createTable.DefaultNullable));
+					static ctx => ctx.this_.BuildCreateTableNullAttribute(ctx.field.Field, ctx.createTable.DefaultNullable),
+					(this_: this, field, createTable));
 
 				if (field.Field.CreateFormat != null)
 				{
@@ -1434,7 +1464,7 @@ namespace LinqToDB.SqlProvider
 						field.StringBuilder.Append(' ');
 
 					if (field.Field.IsIdentity)
-						WithStringBuilder(field.StringBuilder, () => BuildCreateTableIdentityAttribute2(field.Field));
+						WithStringBuilder(field.StringBuilder, static ctx => ctx.this_.BuildCreateTableIdentityAttribute2(ctx.field.Field), (this_: this, field));
 
 					if (field.Field.CreateFormat != null)
 					{
@@ -1670,7 +1700,7 @@ namespace LinqToDB.SqlProvider
 							.ToArray();
 					}
 
-					BuildFormatValues(nullability, IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), parameters, () => Precedence.Primary);
+					BuildFormatValues(nullability, IdentText(rawSqlTable.SQL, multiLine ? Indent + 1 : 0), parameters, Precedence.Primary);
 
 					if (multiLine)
 						StringBuilder.AppendLine();
@@ -2186,19 +2216,19 @@ namespace LinqToDB.SqlProvider
 
 			if (SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
-					SkipFormat, WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, skipExpr!)));
+					SkipFormat, WithStringBuilderBuildExpression(nullability, skipExpr!));
 
 			if (NeedTake(takeExpr) && FirstFormat(selectQuery) != null)
 			{
 				StringBuilder.Append(' ').AppendFormat(
-					FirstFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, takeExpr!)));
+					FirstFormat(selectQuery)!, WithStringBuilderBuildExpression(nullability, takeExpr!));
 
 				BuildTakeHints(selectQuery);
 			}
 
 			if (!SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
-					SkipFormat, WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, skipExpr!)));
+					SkipFormat, WithStringBuilderBuildExpression(nullability, skipExpr!));
 		}
 
 		protected virtual void BuildTakeHints(SelectQuery selectQuery)
@@ -2227,7 +2257,7 @@ namespace LinqToDB.SqlProvider
 				if (doSkip && OffsetFirst)
 				{
 					StringBuilder.AppendFormat(
-						OffsetFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, skipExpr!)));
+						OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(nullability, skipExpr!));
 
 					if (doTake)
 						StringBuilder.Append(' ');
@@ -2236,7 +2266,7 @@ namespace LinqToDB.SqlProvider
 				if (doTake)
 				{
 					StringBuilder.AppendFormat(
-						LimitFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, takeExpr!)));
+						LimitFormat(selectQuery)!, WithStringBuilderBuildExpression(nullability, takeExpr!));
 
 					if (doSkip)
 						StringBuilder.Append(' ');
@@ -2244,7 +2274,7 @@ namespace LinqToDB.SqlProvider
 
 				if (doSkip && !OffsetFirst)
 					StringBuilder.AppendFormat(
-						OffsetFormat(selectQuery)!, WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, skipExpr!)));
+						OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(nullability, skipExpr!));
 
 				StringBuilder.AppendLine();
 			}
@@ -2874,7 +2904,7 @@ namespace LinqToDB.SqlProvider
 						if (e.Expr == "{0}")
 							BuildExpression(nullability, e.Parameters[0], buildTableName, checkParentheses, alias, ref addAlias, throwExceptionIfTableNotFound);
 						else
-							BuildFormatValues(nullability, e.Expr, e.Parameters, () => GetPrecedence(e));
+							BuildFormatValues(nullability, e.Expr, e.Parameters, GetPrecedence(e));
 					}
 
 					break;
@@ -2988,22 +3018,19 @@ namespace LinqToDB.SqlProvider
 			Convert(StringBuilder, parameter.Name!, ConvertType.NameToQueryParameter);
 		}
 
-		void BuildFormatValues(NullabilityContext nullability, string format, IReadOnlyList<ISqlExpression>? parameters, Func<int> getPrecedence)
+		void BuildFormatValues(NullabilityContext nullability, string format, IReadOnlyList<ISqlExpression>? parameters, int precedence)
 		{
 			if (parameters == null || parameters.Count == 0)
 				StringBuilder.Append(format);
 			else
 			{
-				var s      = new StringBuilder();
 				var values = new object[parameters.Count];
 
 				for (var i = 0; i < values.Length; i++)
 				{
 					var value = parameters[i];
 
-					s.Length = 0;
-					WithStringBuilder(s, () => BuildExpression(nullability, getPrecedence(), value));
-					values[i] = s.ToString();
+					values[i] = WithStringBuilderBuildExpression(nullability, precedence, value);
 				}
 
 				StringBuilder.AppendFormat(format, values);
@@ -3018,17 +3045,17 @@ namespace LinqToDB.SqlProvider
 			text = text.Replace("\r", "");
 
 			var strArray = text.Split('\n');
-			var sb = new StringBuilder();
+			using var sb = Pools.StringBuilder.Allocate();
 
 			for (var i = 0; i < strArray.Length; i++)
 			{
 				var s = strArray[i];
-				sb.Append('\t', ident).Append(s);
+				sb.Value.Append('\t', ident).Append(s);
 				if (i < strArray.Length - 1)
-					sb.AppendLine();
+					sb.Value.AppendLine();
 			}
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 
 		void BuildExpression(NullabilityContext nullability, int parentPrecedence, ISqlExpression expr, string? alias, ref bool addAlias)
@@ -3081,7 +3108,7 @@ namespace LinqToDB.SqlProvider
 
 		void ISqlBuilder.BuildExpression(NullabilityContext nullability, StringBuilder sb, ISqlExpression expr, bool buildTableName)
 		{
-			WithStringBuilder(sb, () => BuildExpression(nullability, expr, buildTableName, true));
+			WithStringBuilder(sb, static ctx => ctx.this_.BuildExpression(ctx.nullability, ctx.expr, ctx.buildTableName, true), (this_: this, nullability, expr, buildTableName));
 		}
 
 		#endregion
@@ -3210,10 +3237,10 @@ namespace LinqToDB.SqlProvider
 		/// <returns>The stringbuilder with the type information appended.</returns>
 		public StringBuilder BuildDataType(StringBuilder sb, SqlDataType dataType)
 		{
-			WithStringBuilder(sb, () =>
+			WithStringBuilder(sb, static ctx =>
 			{
-				BuildDataType(dataType, forCreateTable: false, canBeNull: false);
-			});
+				ctx.this_.BuildDataType(ctx.dataType, forCreateTable: false, canBeNull: false);
+			}, (this_: this, dataType));
 			return sb;
 		}
 
@@ -3338,11 +3365,9 @@ namespace LinqToDB.SqlProvider
 
 		#region Alternative Builders
 
-		protected delegate IEnumerable<SqlColumn> ColumnSelector();
-
-		protected IEnumerable<SqlColumn> AlternativeGetSelectedColumns(SelectQuery selectQuery, ColumnSelector columnSelector)
+		protected IEnumerable<SqlColumn> AlternativeGetSelectedColumns(SelectQuery selectQuery, IEnumerable<SqlColumn> columns)
 		{
-			foreach (var col in columnSelector())
+			foreach (var col in columns)
 				yield return col;
 
 			SkipAlias = false;
@@ -3462,15 +3487,15 @@ namespace LinqToDB.SqlProvider
 						if (tableName.Database == null && defaultDatabaseName != null)
 							tableName = tableName with { Database = defaultDatabaseName };
 
-						var sb = new StringBuilder();
+						using var sb = Pools.StringBuilder.Allocate();
 
-						BuildObjectName(sb, tableName, tbl.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable, true, tbl.TableOptions);
+						BuildObjectName(sb.Value, tableName, tbl.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable, true, tbl.TableOptions);
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
 							var values = new object[2 + (tbl.TableArguments?.Length ?? 0)];
 
-							values[0] = sb.ToString();
+							values[0] = sb.Value.ToString();
 
 							if (alias != null)
 								values[1] = ConvertInline(alias, ConvertType.NameToQueryTableAlias);
@@ -3481,17 +3506,15 @@ namespace LinqToDB.SqlProvider
 							{
 								var value = tbl.TableArguments![i - 2];
 
-								sb.Length = 0;
-								WithStringBuilder(sb, () => BuildExpression(nullability, Precedence.Primary, value));
-								values[i] = sb.ToString();
+								values[i] = WithStringBuilderBuildExpression(nullability, Precedence.Primary, value);
 							}
 
-							sb.Length = 0;
-							sb.AppendFormat(tbl.Expression!, values);
+							sb.Value.Length = 0;
+							sb.Value.AppendFormat(tbl.Expression!, values);
 						}
 						else if (tbl.SqlTableType == SqlTableType.Function)
 						{
-							sb.Append('(');
+							sb.Value.Append('(');
 
 							if (tbl.TableArguments != null && tbl.TableArguments.Length > 0)
 							{
@@ -3500,18 +3523,18 @@ namespace LinqToDB.SqlProvider
 								foreach (var arg in tbl.TableArguments)
 								{
 									if (!first)
-										sb.Append(InlineComma);
+										sb.Value.Append(InlineComma);
 
-									WithStringBuilder(sb, () => BuildExpression(nullability, arg, true, !first));
+									WithStringBuilder(sb.Value, static ctx => ctx.this_.BuildExpression(ctx.nullability, ctx.arg, true, !ctx.first), (this_: this, nullability, arg, first));
 
 									first = false;
 								}
 							}
 
-							sb.Append(')');
+							sb.Value.Append(')');
 						}
 
-						return sb.ToString();
+						return sb.Value.ToString();
 					}
 
 				case QueryElementType.TableSource:
@@ -3757,19 +3780,19 @@ namespace LinqToDB.SqlProvider
 
 		public string ApplyQueryHints(string sqlText, IReadOnlyCollection<string> queryHints)
 		{
-			var sb = new StringBuilder();
+			using var sb = Pools.StringBuilder.Allocate();
 
 			foreach (var hint in queryHints)
 				if (hint?.Length >= 2 && hint.StartsWith("**"))
-					sb.AppendLine(hint.Substring(2));
+					sb.Value.AppendLine(hint.Substring(2));
 
-			sb.Append(sqlText);
+			sb.Value.Append(sqlText);
 
 			foreach (var hint in queryHints)
 				if (!(hint?.Length >= 2 && hint.StartsWith("**")))
-					sb.AppendLine(hint);
+					sb.Value.AppendLine(hint);
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 
 		public virtual string GetReserveSequenceValuesSql(int count, string sequenceName)
@@ -3779,12 +3802,13 @@ namespace LinqToDB.SqlProvider
 
 		public virtual string GetMaxValueSql(EntityDescriptor entity, ColumnDescriptor column)
 		{
-			var sb = new StringBuilder().Append("SELECT Max(");
+			using var sb = Pools.StringBuilder.Allocate();
+			sb.Value.Append("SELECT Max(");
 
-			Convert(sb, column.ColumnName, ConvertType.NameToQueryField)
+			Convert(sb.Value, column.ColumnName, ConvertType.NameToQueryField)
 				.Append(") FROM ");
 
-			return BuildObjectName(sb, entity.Name, ConvertType.NameToQueryTable, true, entity.TableOptions).ToString();
+			return BuildObjectName(sb.Value, entity.Name, ConvertType.NameToQueryTable, true, entity.TableOptions).ToString();
 		}
 
 		private string? _name;

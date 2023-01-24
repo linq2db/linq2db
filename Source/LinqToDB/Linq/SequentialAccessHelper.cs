@@ -262,7 +262,7 @@ namespace LinqToDB.Linq
 		private static int? TryGetColumnIndex(MethodCallExpression call)
 		{
 			// ColumnReaderAttribute method
-			var attr = call.Method.GetCustomAttribute<ColumnReaderAttribute>();
+			var attr = call.Method.GetAttribute<ColumnReaderAttribute>();
 			if (attr != null && call.Arguments[attr.IndexParameterIndex] is ConstantExpression c1 && c1.Type == typeof(int))
 				return (int)c1.Value!;
 

@@ -6,8 +6,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Expressions;
 	using Common.Internal;
+	using Expressions;
+	using Extensions;
 	using Mapping;
 	using SqlQuery;
 
@@ -96,12 +97,6 @@ namespace LinqToDB
 			/// Refer to <see cref="SqlQuery.Precedence"/>.
 			/// </summary>
 			public int            Precedence       { get; set; }
-			/// <summary>
-			/// If <c>null</c>, this will be treated as the default
-			/// evaluation for the expression. If set to a <see cref="ProviderName"/>,
-			/// It will only be used for that provider configuration.
-			/// </summary>
-			public string?        Configuration    { get; set; }
 			/// <summary>
 			/// If <c>true</c> The expression will only be evaluated on the
 			/// database server. If it cannot, an exception will
@@ -261,7 +256,7 @@ namespace LinqToDB
 
 							var p = pis[i];
 
-							if (p.GetCustomAttributes(true).OfType<ParamArrayAttribute>().Any())
+							if (p.HasAttribute<ParamArrayAttribute>())
 							{
 								knownExpressions.AddRange(nae.Expressions);
 							}

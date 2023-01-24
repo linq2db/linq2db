@@ -3,6 +3,7 @@
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using Mapping;
 	using Remote;

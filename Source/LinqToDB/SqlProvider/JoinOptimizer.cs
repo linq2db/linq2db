@@ -3,6 +3,7 @@ using System.Diagnostics;
 
 namespace LinqToDB.SqlProvider
 {
+	using Common.Internal;
 	using SqlQuery;
 
 	sealed class JoinOptimizer

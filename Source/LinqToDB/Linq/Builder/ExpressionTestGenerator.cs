@@ -198,9 +198,9 @@ namespace LinqToDB.Linq.Builder
 						var ex = (MethodCallExpression)expr;
 						var mi = ex.Method;
 
-						var attrs = mi.GetCustomAttributes(typeof(ExtensionAttribute), false);
+						var isExtension = mi.HasAttribute<ExtensionAttribute>(false);
 
-						if (attrs.Length != 0)
+						if (isExtension)
 						{
 							Build(ex.Arguments[0]);
 							PushIndent();
@@ -226,7 +226,7 @@ namespace LinqToDB.Linq.Builder
 
 						PushIndent();
 
-						var n = attrs.Length != 0 ? 1 : 0;
+						var n = isExtension ? 1 : 0;
 
 						for (var i = n; i < ex.Arguments.Count; i++)
 						{
@@ -242,7 +242,7 @@ namespace LinqToDB.Linq.Builder
 
 						_exprBuilder.Append(')');
 
-						if (attrs.Length != 0)
+						if (isExtension)
 						{
 							PopIndent();
 						}
@@ -540,7 +540,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var nm in Enum.GetNames(type))
 				{
 					var attr = "";
-					var valueAttribute = type.GetField(nm)!.GetCustomAttribute<MapValueAttribute>();
+					var valueAttribute = mappingSchema.GetAttribute<MapValueAttribute>(type, type.GetField(nm)!);
 					if (valueAttribute != null)
 					{
 						attr = "[MapValue(\"" + valueAttribute.Value + "\")] ";

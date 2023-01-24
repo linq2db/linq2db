@@ -31,10 +31,22 @@ namespace LinqToDB
 		}
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(CommandTimeout)
-			.AddTypes(Interceptors)
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(CommandTimeout)
+						.AddTypes(Interceptors)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		public static readonly DataContextOptions Empty = new();
 

@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.Access
 				return new[] { _selectColumn };
 
 			if (NeedSkip(selectQuery.Select.TakeValue, selectQuery.Select.SkipValue) && !selectQuery.OrderBy.IsEmpty)
-				return AlternativeGetSelectedColumns(selectQuery, () => base.GetSelectedColumns(selectQuery));
+				return AlternativeGetSelectedColumns(selectQuery, base.GetSelectedColumns(selectQuery));
 
 			return base.GetSelectedColumns(selectQuery);
 		}

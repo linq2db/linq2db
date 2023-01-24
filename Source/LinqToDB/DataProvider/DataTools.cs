@@ -6,6 +6,8 @@ using System.Text;
 
 namespace LinqToDB.DataProvider
 {
+	using Common.Internal;
+
 	public class DataTools
 	{
 		/// <summary>
@@ -22,12 +24,12 @@ namespace LinqToDB.DataProvider
 				return str;
 
 			var lastIndex = 0;
-			var newStr = new StringBuilder(str.Length + 10);
+			using var newStr = Pools.StringBuilder.Allocate();
 
 			while (nextIndex >= 0)
 			{
 				if (nextIndex != 0)
-					newStr.Append(str.Substring(lastIndex, nextIndex - lastIndex));
+					newStr.Value.Append(str.Substring(lastIndex, nextIndex - lastIndex));
 
 				lastIndex = nextIndex;
 
@@ -39,15 +41,15 @@ namespace LinqToDB.DataProvider
 				    (closeBracket - lastIndex == 2 && closeBracket - nextIndex == 1))
 				{
 					if (nextIndex < 0)
-						newStr.Append('[');
+						newStr.Value.Append('[');
 				}
 				else
-					newStr.Append("[[]");
+					newStr.Value.Append("[[]");
 
 			}
 
-			newStr.Append(str.Substring(lastIndex + 1));
-			return newStr.ToString();
+			newStr.Value.Append(str.Substring(lastIndex + 1));
+			return newStr.Value.ToString();
 		}
 
 		static readonly char[] _escapes = { '\x0', '\'' };

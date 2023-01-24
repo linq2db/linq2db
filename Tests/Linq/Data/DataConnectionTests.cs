@@ -1948,6 +1948,27 @@ namespace Tests.Data
 			}
 		}
 #endif
-#endregion
+		#endregion
+
+		[Test]
+		public void MappingSchemaReuse([DataSources] string context)
+		{
+			using var cn1 = GetDataContext(context);
+			using var cn2 = GetDataContext(context);
+
+			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+		}
+
+		[Test]
+		public void CustomMappingSchemaCaching([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<string, int>(int.Parse);
+
+			using var cn1 = GetDataContext(context, ms);
+			using var cn2 = GetDataContext(context, ms);
+
+			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+		}
 	}
 }

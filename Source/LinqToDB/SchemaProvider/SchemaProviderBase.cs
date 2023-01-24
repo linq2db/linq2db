@@ -5,7 +5,9 @@ using System.Text;
 namespace LinqToDB.SchemaProvider
 {
 	using Common;
+	using Common.Internal;
 	using Data;
+	using SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
@@ -63,22 +65,22 @@ namespace LinqToDB.SchemaProvider
 
 			var first = true;
 
-			var sb = new StringBuilder();
-			sb.Append("IN (");
+			using var sb = Pools.StringBuilder.Allocate();
+			sb.Value.Append("IN (");
 
 			foreach (var schema in schemas)
 			{
 				if (!first)
-					sb.Append(", ");
+					sb.Value.Append(", ");
 				else
 					first = false;
 
-				stringLiteralBuilder(sb, schema);
+				stringLiteralBuilder(sb.Value, schema);
 			}
 
-			sb.Append(')');
+			sb.Value.Append(')');
 
-			return sb.ToString();
+			return sb.Value.ToString();
 		}
 
 		public virtual DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)

@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 
 			var builtRows = new List<ISqlExpression[]>(arrayExpression.Expressions.Count);
 
-			var columnsInfo = knownMembers.Select(m => (Member: m, Column: ed.Columns.Find(c => c.MemberInfo == m)))
+			var columnsInfo = knownMembers.Select(m => (Member: m, Column: ed.Columns.FirstOrDefault(c => c.MemberInfo == m)))
 				.ToList();
 
 			foreach (var row in arrayExpression.Expressions)

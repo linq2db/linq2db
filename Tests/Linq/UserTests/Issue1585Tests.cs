@@ -21,7 +21,8 @@ namespace Tests.UserTests
 
 			fluentBuilder.Entity<Test1585>()
 				.HasTableName(tableName)
-				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
+				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey()
+				.Build();
 
 			return ms;
 		}

@@ -1077,7 +1077,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			mi = type.GetMemberOverride(mi);
 
-			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi, a => a.Configuration);
+			var attr = MappingSchema.GetAttribute<ExpressionMethodAttribute>(type, mi);
 
 			if (attr != null)
 			{

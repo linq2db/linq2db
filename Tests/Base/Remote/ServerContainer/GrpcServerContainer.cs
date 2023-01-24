@@ -62,7 +62,7 @@ namespace Tests.Remote.ServerContainer
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
 
 			if (ms != null)
-				dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
+				dx.MappingSchema = dx.MappingSchema == null ? ms : MappingSchema.CombineSchemas(dx.MappingSchema, ms);
 
 			return dx;
 		}
@@ -92,7 +92,9 @@ namespace Tests.Remote.ServerContainer
 					interceptor,
 					suppressSequentialAccess
 					);
-				service.MappingSchema = ms;
+
+				if (ms != null)
+					service.MappingSchema = ms;
 
 				Startup.GrpcLinqService = service;
 

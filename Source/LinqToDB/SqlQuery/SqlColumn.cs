@@ -3,6 +3,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
+
 	public class SqlColumn : IEquatable<SqlColumn>, ISqlExpression
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)

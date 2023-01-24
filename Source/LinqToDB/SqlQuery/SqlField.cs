@@ -3,6 +3,7 @@
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Common.Internal;
 	using Mapping;
 
 	public class SqlField : ISqlExpression

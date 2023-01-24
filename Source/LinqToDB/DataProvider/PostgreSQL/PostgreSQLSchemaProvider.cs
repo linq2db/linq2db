@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using SchemaProvider;
 	using SqlQuery;
@@ -192,9 +193,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		static string ToDatabaseLiteral(DataConnection dataConnection, string? str)
 		{
-			var sb = new StringBuilder();
-			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb, dataConnection.MappingSchema, SqlDataType.DbText, dataConnection.Options, str);
-			return sb.ToString();
+			using var sb = Pools.StringBuilder.Allocate();
+			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb.Value, dataConnection.MappingSchema, SqlDataType.DbText, dataConnection.Options, str);
+			return sb.Value.ToString();
 		}
 
 		string GenerateSchemaFilter(DataConnection dataConnection, string schemaColumnName)

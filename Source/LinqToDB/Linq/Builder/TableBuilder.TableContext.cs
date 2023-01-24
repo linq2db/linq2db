@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 				return OriginalType;
 			}
 
-			public List<InheritanceMapping> InheritanceMapping = null!;
+			public IReadOnlyList<InheritanceMapping> InheritanceMapping = null!;
 
 			protected void Init(bool applyFilters)
 			{
@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (EntityDescriptor.HasCalculatedMembers)
 					{
-						var found = EntityDescriptor.CalculatedMembers?.Find(ma =>
+						var found = EntityDescriptor.CalculatedMembers?.FirstOrDefault(ma =>
 							MemberInfoComparer.Instance.Equals(ma.MemberInfo, memberInfo));
 
 						if (found != null)

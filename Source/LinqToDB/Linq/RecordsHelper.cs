@@ -63,8 +63,7 @@ namespace LinqToDB.Linq
 		{
 			return _fsharpRecordMemberCache.GetOrAdd(memberInfo, static memberInfo =>
 			{
-				var attrs                  = memberInfo.GetCustomAttributes();
-				var compilationMappingAttr = attrs.FirstOrDefault(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute");
+				var compilationMappingAttr = memberInfo.GetAttributes<Attribute>().FirstOrDefault(attr => attr.GetType().FullName == "Microsoft.FSharp.Core.CompilationMappingAttribute");
 
 				if (compilationMappingAttr != null)
 				{

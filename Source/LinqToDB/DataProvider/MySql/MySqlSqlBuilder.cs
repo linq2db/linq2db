@@ -78,10 +78,10 @@ namespace LinqToDB.DataProvider.MySql
 				AppendIndent()
 					.AppendFormat(
 						"LIMIT {0}, {1}",
-						WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, selectQuery.Select.SkipValue)),
+						WithStringBuilderBuildExpression(nullability, selectQuery.Select.SkipValue),
 						selectQuery.Select.TakeValue == null ?
 							long.MaxValue.ToString() :
-							WithStringBuilder(new StringBuilder(), () => BuildExpression(nullability, selectQuery.Select.TakeValue).ToString()))
+							WithStringBuilderBuildExpression(nullability, selectQuery.Select.TakeValue))
 					.AppendLine();
 			}
 		}

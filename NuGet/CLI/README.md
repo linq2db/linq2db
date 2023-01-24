@@ -15,7 +15,7 @@
 
 ## Installation
 
-> Requres .NET Core 3.1 or higher.
+> Requires .NET Core 3.1 or higher.
 
 Install as global tool:
 

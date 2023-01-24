@@ -3,6 +3,7 @@ using System.Diagnostics;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]

@@ -6,6 +6,7 @@ namespace LinqToDB.SqlQuery
 {
 	using SqlProvider;
 	using Common;
+	using Common.Internal;
 	using Mapping;
 
 	public static partial class QueryHelper

@@ -168,26 +168,38 @@ namespace LinqToDB.Data
 		public static readonly BulkCopyOptions Empty = new();
 
 		int? _configurationID;
-		int IConfigurationID.ConfigurationID => _configurationID ??= new IdentifierBuilder()
-			.Add(MaxBatchSize)
-			.Add(BulkCopyTimeout)
-			.Add(BulkCopyType)
-			.Add(CheckConstraints)
-			.Add(KeepIdentity)
-			.Add(TableLock)
-			.Add(KeepNulls)
-			.Add(FireTriggers)
-			.Add(UseInternalTransaction)
-			.Add(ServerName)
-			.Add(DatabaseName)
-			.Add(SchemaName)
-			.Add(TableName)
-			.Add(TableOptions)
-			.Add(NotifyAfter)
-			.Add(RowsCopiedCallback)
-			.Add(MaxDegreeOfParallelism )
-			.Add(WithoutSession)
-			.CreateID();
+		int IConfigurationID.ConfigurationID
+		{
+			get
+			{
+				if (_configurationID == null)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(MaxBatchSize)
+						.Add(BulkCopyTimeout)
+						.Add(BulkCopyType)
+						.Add(CheckConstraints)
+						.Add(KeepIdentity)
+						.Add(TableLock)
+						.Add(KeepNulls)
+						.Add(FireTriggers)
+						.Add(UseInternalTransaction)
+						.Add(ServerName)
+						.Add(DatabaseName)
+						.Add(SchemaName)
+						.Add(TableName)
+						.Add(TableOptions)
+						.Add(NotifyAfter)
+						.Add(RowsCopiedCallback)
+						.Add(MaxDegreeOfParallelism)
+						.Add(WithoutSession)
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		#region IEquatable implementation
 

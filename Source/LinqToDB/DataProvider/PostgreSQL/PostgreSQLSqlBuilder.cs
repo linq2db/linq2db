@@ -9,6 +9,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
+	using Common.Internal;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
@@ -248,11 +249,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					var sequenceName = new SqlObjectName(attr.SequenceName, Server: table.TableName.Server, Database: table.TableName.Database, Schema: attr.Schema ?? table.TableName.Schema);
 
-					var sb = new StringBuilder();
-					sb.Append("nextval(");
-					MappingSchema.ConvertToSqlValue(sb, null, DataOptions, BuildObjectName(new (), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
-					sb.Append(')');
-					return new SqlExpression(sb.ToString(), Precedence.Primary);
+					using var sb = Pools.StringBuilder.Allocate();
+					sb.Value.Append("nextval(");
+					MappingSchema.ConvertToSqlValue(sb.Value, null, DataOptions, BuildObjectName(new (), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
+					sb.Value.Append(')');
+					return new SqlExpression(sb.Value.ToString(), Precedence.Primary);
 				}
 			}
 

@@ -8,22 +8,22 @@ namespace LinqToDB.Metadata
 
 	sealed class AttributeInfo
 	{
-		public AttributeInfo(string name, Dictionary<string,object?> values)
+		public AttributeInfo(Type type, Dictionary<string,object?> values)
 		{
-			Name   = name;
+			Type   = type;
 			Values = values;
 		}
 
-		public string                     Name;
+		public Type                       Type;
 		public Dictionary<string,object?> Values;
 
 		Func<Attribute>? _func;
 
-		public Attribute MakeAttribute(Type type)
+		public Attribute MakeAttribute()
 		{
 			if (_func == null)
 			{
-				var ctors = type.GetConstructors();
+				var ctors = Type.GetConstructors();
 				var ctor  = ctors.FirstOrDefault(c => c.GetParameters().Length == 0);
 
 				if (ctor != null)
@@ -34,7 +34,7 @@ namespace LinqToDB.Metadata
 								Expression.New(ctor),
 								Values.Select(k =>
 								{
-									var member = type.GetPublicMemberEx(k.Key)[0];
+									var member = Type.GetPublicMemberEx(k.Key)[0];
 									var mtype  = member.GetMemberType();
 
 									return Expression.Bind(
