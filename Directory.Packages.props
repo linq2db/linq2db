@@ -13,24 +13,26 @@
 		<PackageVersion Include="Microsoft.CSharp"                                      Version="4.7.0"         />
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="7.0.0"         />
 		<PackageVersion Include="System.ComponentModel.Annotations"                     Version="5.0.0"         />
+		<!--Source of NullabilityInfoContext for runtimes before .net 6-->
+		<PackageVersion Include="Nullability.Source"                                    Version="2.1.0"         />
 		<!--build support-->
-		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.3.4-beta1.22559.1" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.3.4"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="7.0.0"         />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="1.1.1"         />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.3.1"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.4.0"         />
 		<!--data providers-->
-		<PackageVersion Include="MySql.Data"                                            Version="8.0.31"        />
+		<PackageVersion Include="MySql.Data"                                            Version="8.0.32"        />
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"        />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.5"         />
+		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.1.0"         />
 		<!--don't use 5.0.1 version due to critical bug in it-->
-		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.0.0"         />
-		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.8.0"        />
+		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.9.0"        />
 		<!--3.21 provider currently contains bug which leads to test failures with oracle 12+-->
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.170"      />
-		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.80"       />-->
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.180"      />
+		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.90"       />-->
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.0.0"        />
-		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="9.1.0"         />
+		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="9.1.1"         />
 		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.117"       />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.5010.4"   />
 		<PackageVersion Include="IBM.Data.DB2.Core"                                     Version="3.1.0.600"     />
@@ -42,14 +44,14 @@
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="2.2.9"         />
 		<PackageVersion Include="Npgsql"                                                Version="7.0.1"         />
 		<PackageVersion Include="ClickHouse.Client"                                     Version="6.3.0"         />
-		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="7.0.1"         />
+		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="7.0.2"         />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.1000.6"    />
 		<!--tests support-->
 		<PackageVersion Include="NUnit"                                                 Version="3.13.3"        />
 		<PackageVersion Include="NUnit3TestAdapter"                                     Version="4.3.1"         />
 		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.4.1"        />
-		<PackageVersion Include="FluentAssertions"                                      Version="6.8.0"         />
-		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.13.3"        />
+		<PackageVersion Include="FluentAssertions"                                      Version="6.9.0"         />
+		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.13.4"        />
 		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.1.8"         />
 		<PackageVersion Include="FSharp.Core"                                           Version="7.0.0"         />
 		<!--packages for test projects-->
@@ -68,7 +70,7 @@
 		<!--remote targets + remote examples targets-->
 		<!--source-->
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.179"       />
-		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.50.0"        />
+		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.51.0"        />
 		<!--examples-->
 		<PackageVersion Include="linq2db.t4models"                                      Version="4.3.0"         />
 		<!--tests-->
@@ -88,8 +90,16 @@
 		<!--main version-->
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="6.0.1"         />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="6.0.3"         />
+
+		<!--test v1.x compatibility, required for Pomelo EF.Core provider v5 -->
+		<PackageVersion Include="MySqlConnector"                                        Version="1.3.14"        />
+		<!--v7+ dropped support of netcoreapp3.1 and ns2.0 build is useless as it throws PNSE ¯\_(ツ)_/¯ -->
+		<PackageVersion Include="System.Data.Odbc"                                      Version="6.0.1"         />
+		<PackageVersion Include="System.Data.OleDb"                                     Version="6.0.0"         />
+		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="6.0.0"         />
+		<PackageVersion Include="System.Text.Json"                                      Version="6.0.7"         />
 	</ItemGroup>
-	
+
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<!--main version-->
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="7.0.0"         />
@@ -103,16 +113,6 @@
 		<PackageVersion Include="System.Text.Json"                                      Version="7.0.1"         />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<!--test v1.x compatibility, required for Pomelo EF.Core provider v5 -->
-		<PackageVersion Include="MySqlConnector"                                        Version="1.3.14"        />
-		<!--v7+ dropped support of netcoreapp3.1 and ns2.0 build is useless as it throws PNSE ¯\_(ツ)_/¯ -->
-		<PackageVersion Include="System.Data.Odbc"                                      Version="6.0.1"         />
-		<PackageVersion Include="System.Data.OleDb"                                     Version="6.0.0"         />
-		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="6.0.0"         />
-		<PackageVersion Include="System.Text.Json"                                      Version="6.0.7"         />
-	</ItemGroup>
-
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
 		<PackageVersion Include="System.Data.Odbc"                                      Version="7.0.0"         />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="7.0.0"         />
@@ -120,7 +120,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
-		<PackageVersion Include="MySqlConnector"                                        Version="2.2.4"         />
+		<PackageVersion Include="MySqlConnector"                                        Version="2.2.5"         />
 	</ItemGroup>
 
 </Project>

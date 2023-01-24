@@ -100,7 +100,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, TOther>>   prop,
 			Expression<Func<TEntity, TThisKey>> thisKey,
 			Expression<Func<TOther, TOtherKey>> otherKey,
-			bool                                canBeNull = true)
+			bool?                               canBeNull = null)
 		{
 			return _entity.Association(prop, thisKey, otherKey, canBeNull);
 		}
@@ -120,7 +120,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, IEnumerable<TPropElement>>> prop,
 			Expression<Func<TEntity, TThisKey>>                  thisKey,
 			Expression<Func<TPropElement, TOtherKey>>            otherKey,
-			bool                                                 canBeNull = true)
+			bool?                                                canBeNull = null)
 		{
 			return _entity.Association(prop, thisKey, otherKey, canBeNull);
 		}
@@ -136,7 +136,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>> prop,
 			Expression<Func<TEntity, TOther, bool>>        predicate,
-			bool                                           canBeNull = true)
+			bool?                                          canBeNull = null)
 		{
 			return _entity.Association(prop, predicate, canBeNull);
 		}
@@ -152,7 +152,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
 			Expression<Func<TEntity, TOther>>       prop,
 			Expression<Func<TEntity, TOther, bool>> predicate,
-			bool                                    canBeNull = true)
+			bool?                                   canBeNull = null)
 		{
 			return _entity.Association(prop, predicate, canBeNull);
 		}
@@ -168,7 +168,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>>              prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                                                        canBeNull = true)
+			bool?                                                       canBeNull = null)
 		{
 			return _entity.Association(prop, queryExpression, canBeNull);
 		}
@@ -184,7 +184,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
 			Expression<Func<TEntity, TOther>>                           prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                                                        canBeNull = true)
+			bool?                                                       canBeNull = null)
 		{
 			return _entity.Association(prop, queryExpression, canBeNull);
 		}

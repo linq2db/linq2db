@@ -119,8 +119,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (expressionPredicate != null)
 				{
-					shouldAddDefaultIfEmpty = true;
-					shouldAddCacheCheck = true;
+					shouldAddDefaultIfEmpty = association.CanBeNull;
+					shouldAddCacheCheck     = true;
 
 					var replacedBody = expressionPredicate.GetBody(parentParam, childParam);
 
@@ -136,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 					if (ed.QueryFilterFunc != null)
 					{
 						shouldAddDefaultIfEmpty = true;
-						shouldAddCacheCheck = true;
+						shouldAddCacheCheck     = true;
 					}
 				}
 
@@ -294,7 +294,7 @@ namespace LinqToDB.Linq.Builder
 
 			var tableSource = tableContext.SelectQuery.From.Tables.First();
 			var join = new SqlFromClause.Join(isOuter ? JoinType.OuterApply : JoinType.CrossApply, context.SelectQuery,
-				descriptor.GenerateAlias(), true, null);
+				descriptor.GenerateAlias(), isOuter, null);
 
 			tableSource.Joins.Add(join.JoinedTable);
 
