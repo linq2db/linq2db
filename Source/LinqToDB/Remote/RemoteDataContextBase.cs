@@ -13,6 +13,7 @@ namespace LinqToDB.Remote
 {
 	using Common;
 	using Common.Internal;
+	using Common.Internal.Cache;
 	using DataProvider;
 	using Expressions;
 	using Extensions;
@@ -40,7 +41,20 @@ namespace LinqToDB.Remote
 
 		sealed class RemoteMappingSchema : MappingSchema
 		{
-			public RemoteMappingSchema(string configuration, MappingSchema mappingSchema)
+			static readonly MemoryCache<(string contextIDPrefix, Type mappingSchemaType), MappingSchema> _cache = new (new ());
+
+			public static MappingSchema GetOrCreate(string contextIDPrefix, Type mappingSchemaType)
+			{
+				return _cache.GetOrCreate(
+					(contextIDPrefix, mappingSchemaType),
+					static entry =>
+					{
+						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+						return new RemoteMappingSchema(entry.Key.contextIDPrefix, (MappingSchema)Activator.CreateInstance(entry.Key.mappingSchemaType)!);
+					});
+			}
+
+			private RemoteMappingSchema(string configuration, MappingSchema mappingSchema)
 				: base(configuration, mappingSchema)
 			{
 			}
@@ -58,7 +72,7 @@ namespace LinqToDB.Remote
 				{
 					var info = client.GetInfo(Configuration);
 					var type = Type.GetType(info.MappingSchemaType)!;
-					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type)!);
+					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
 
 					_configurationInfo = new ConfigurationInfo
 					{
@@ -86,7 +100,7 @@ namespace LinqToDB.Remote
 					var info = await client.GetInfoAsync(Configuration, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					var type = Type.GetType(info.MappingSchemaType)!;
-					var ms   = new RemoteMappingSchema(ContextIDPrefix, (MappingSchema)Activator.CreateInstance(type)!);
+					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
 
 					_configurationInfo = new ConfigurationInfo
 					{
@@ -118,7 +132,8 @@ namespace LinqToDB.Remote
 			{
 				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
-					_configurationID = new IdentifierBuilder()
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						.Add(Options)
 						.Add(GetType())
@@ -136,12 +151,12 @@ namespace LinqToDB.Remote
 			set
 			{
 				_mappingSchema = value;
-				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+				_serializationMappingSchema = MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
 			}
 		}
 
 		private  MappingSchema? _serializationMappingSchema;
-		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(MappingSchema);
+		internal MappingSchema   SerializationMappingSchema => _serializationMappingSchema ??= MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, MappingSchema);
 
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }

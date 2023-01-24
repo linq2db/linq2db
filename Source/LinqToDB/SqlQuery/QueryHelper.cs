@@ -8,6 +8,7 @@ namespace LinqToDB.SqlQuery
 {
 	using SqlProvider;
 	using Common;
+	using Common.Internal;
 	using Mapping;
 
 	public static partial class QueryHelper
@@ -1592,8 +1593,8 @@ namespace LinqToDB.SqlQuery
 		{
 			try
 			{
-				var str = expr.ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>())
-					.ToString();
+				using var sb = Pools.StringBuilder.Allocate();
+				var str = expr.ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
 				return str;
 			}
 			catch

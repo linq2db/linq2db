@@ -456,11 +456,12 @@ namespace Tests.DataProvider
 			{
 				using var db = GetDataContext(context);
 
-				var prop = db.GetFluentMappingBuilder()
+				db.GetFluentMappingBuilder()
 					.Entity<LiteralsTestTable<TValue>>()
-					.Property(e => e.Value)
-					.HasDataType(dataType)
-					.HasPrecision(precision);
+						.Property(e => e.Value)
+							.HasDataType(dataType)
+							.HasPrecision(precision)
+					.Build();
 
 				db.AddInterceptor(interceptor);
 				

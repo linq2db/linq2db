@@ -86,6 +86,19 @@ namespace LinqToDB.Linq.Builder
 
 			var context = new CountContext(buildInfo.Parent, sequence, returnType);
 
+			// new parser waiting room
+			if (sequence.IsExpression(null, 0, RequestFor.Field).Result)
+			{
+				var old = context.SelectQuery.Select.Columns.ToArray();
+				var sql = sequence.ConvertToIndex(null, 0, ConvertFlags.Field);
+
+				if (context.SelectQuery.Select.Columns.Count > old.Length)
+				{
+					context.SelectQuery.Select.Columns.Clear();
+					context.SelectQuery.Select.Columns.AddRange(old);
+				}
+			}
+
 			context.Sql        = context.SelectQuery;
 			context.FieldIndex = context.SelectQuery.Select.Add(SqlFunction.CreateCount(returnType, context.SelectQuery), "cnt");
 

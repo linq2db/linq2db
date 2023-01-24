@@ -482,7 +482,8 @@ namespace LinqToDB.Data
 			{
 				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
 				{
-					_configurationID = new IdentifierBuilder()
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
 						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
 						.Add(ConfigurationString ?? ConnectionString ?? Connection.ConnectionString)
 						.Add(Options)
@@ -505,7 +506,7 @@ namespace LinqToDB.Data
 					dataConnection.MappingSchema       = options.SavedMappingSchema!;
 					dataConnection.ConfigurationString = options.SavedConfigurationString;
 
-					if (options.SavedEnableAutoFluentMapping)
+					if (options.SavedEnableContextSchemaEdit)
 						dataConnection.MappingSchema = new(dataConnection.MappingSchema);
 
 					return;
@@ -617,9 +618,9 @@ namespace LinqToDB.Data
 				{
 					dataConnection.AddMappingSchema(options.MappingSchema);
 				}
-				else if (dataConnection.Options.LinqOptions.EnableAutoFluentMapping)
+				else if (dataConnection.Options.LinqOptions.EnableContextSchemaEdit)
 				{
-					options.SavedEnableAutoFluentMapping = true;
+					options.SavedEnableContextSchemaEdit = true;
 				}
 
 				if (doSave)
@@ -630,10 +631,8 @@ namespace LinqToDB.Data
 					options.SavedConfigurationString = dataConnection.ConfigurationString;
 				}
 
-				if (options.SavedEnableAutoFluentMapping)
-				{
+				if (options.SavedEnableContextSchemaEdit)
 					dataConnection.MappingSchema = new (dataConnection.MappingSchema);
-				}
 
 				IAsyncDbConnection WrapConnection(DbConnection connection)
 				{

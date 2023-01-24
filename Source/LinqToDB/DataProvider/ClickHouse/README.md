@@ -5,6 +5,7 @@
 Table below contains information on pre-configured type mappings for ClickHouse provider.
 
 Legend:
+
 - `Database Type` column: ClickHouse data type (only supported types listed)
 - `DataType` column: specify `DataType` enum value associated with current database type (could contain multiple values for some types)
 - `.NET Type` column: specify .net types that already supported for current database type (no additional mappings configuration required from user except column mapping itself)

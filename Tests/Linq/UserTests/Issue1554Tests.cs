@@ -459,7 +459,8 @@ namespace Tests.UserTests
 					.Property(p => p.Id)
 						.IsPrimaryKey()
 					.Property(p => p.ClaimedKeyType)
-					.Property(p => p.ClaimedKeyTypeN);
+					.Property(p => p.ClaimedKeyTypeN)
+				.Build();
 
 			return ms;
 		}

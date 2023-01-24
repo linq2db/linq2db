@@ -29,6 +29,7 @@ if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools" (
 
 set "msbuild_path=%root_path%\MSBuild\Current\Bin\amd64\MSBuild.exe"
 
-"%msbuild_path%" linq2db.sln /p:Configuration=Release /t:Restore;Rebuild /v:m
-"%msbuild_path%" linq2db.sln /p:Configuration=Debug   /t:Restore;Rebuild /v:m
-"%msbuild_path%" linq2db.sln /p:Configuration=Azure   /t:Restore;Rebuild /v:m
+dotnet restore
+"%msbuild_path%" linq2db.sln /p:Configuration=Release /t:Rebuild /v:m
+"%msbuild_path%" linq2db.sln /p:Configuration=Debug   /t:Rebuild /v:m
+"%msbuild_path%" linq2db.sln /p:Configuration=Azure   /t:Rebuild /v:m

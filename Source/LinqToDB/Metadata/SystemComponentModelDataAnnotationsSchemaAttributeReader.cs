@@ -4,20 +4,24 @@ using System.Reflection;
 namespace LinqToDB.Metadata
 {
 	using Common;
+	using Extensions;
 	using Mapping;
 
+	/// <summary>
+	/// Metadata provider using mapping attributes from <see cref="System.ComponentModel.DataAnnotations.Schema"/> namespace:
+	/// <list type="bullet">
+	/// <item><see cref="System.ComponentModel.DataAnnotations.Schema.TableAttribute"/></item>
+	/// <item><see cref="System.ComponentModel.DataAnnotations.Schema.ColumnAttribute"/></item>
+	/// </list>
+	/// </summary>
 	public class SystemComponentModelDataAnnotationsSchemaAttributeReader : IMetadataReader
 	{
-		readonly AttributeReader _reader = new AttributeReader();
-
-		public T[] GetAttributes<T>(Type type, bool inherit)
-			where T : Attribute
+		public T[] GetAttributes<T>(Type type)
+			where T : MappingAttribute
 		{
-			if (typeof(T) == typeof(TableAttribute))
+			if (typeof(T).IsAssignableFrom(typeof(TableAttribute)))
 			{
-				var ta = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.TableAttribute>(type, inherit);
-
-				var t = ta.Length == 1 ? ta[0] : null;
+				var t = type.GetAttribute<System.ComponentModel.DataAnnotations.Schema.TableAttribute>();
 
 				if (t != null)
 				{
@@ -38,9 +42,7 @@ namespace LinqToDB.Metadata
 								attr.Schema = names[1];
 								break;
 							default :
-								throw new MetadataException(string.Format(
-									"Invalid table name '{0}' of type '{1}'",
-									name, type.FullName));
+								throw new MetadataException($"Invalid table name '{name}' of type '{type.FullName}'");
 						}
 					}
 
@@ -51,18 +53,16 @@ namespace LinqToDB.Metadata
 			return Array<T>.Empty;
 		}
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
-			where T : Attribute
+		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
+			where T : MappingAttribute
 		{
-			if (typeof(T) == typeof(ColumnAttribute))
+			if (typeof(T).IsAssignableFrom(typeof(ColumnAttribute)))
 			{
-				var attrs = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>(type, memberInfo, inherit);
+				var c = memberInfo.GetAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>();
 
-				if (attrs.Length == 1)
+				if (c != null)
 				{
-					var c = attrs[0];
-
-					var attr = new ColumnAttribute
+					var attr = new ColumnAttribute()
 					{
 						Name   = c.Name,
 						DbType = c.TypeName
@@ -76,7 +76,8 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type)
-			=> Array<MemberInfo>.Empty;
+		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+
+		public string GetObjectID() => $".{nameof(SystemComponentModelDataAnnotationsSchemaAttributeReader)}.";
 	}
 }

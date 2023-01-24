@@ -156,6 +156,8 @@ namespace Tests.Linq
 				.Property(e => e.Id).IsPrimaryKey()
 				.Property(e => e.Value).HasColumnName(columnName).HasLength(50);
 
+			builder.Build();
+
 			return ms;
 		}
 

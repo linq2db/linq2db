@@ -35,7 +35,8 @@ namespace Tests.UserTests
 				fmb1.Entity<InventoryResourceDTO>()
 				  .HasTableName("InventoryResource")
 				  .Property(e => e.Id).IsPrimaryKey()
-				  .Property(e => e.Status).HasDataType(DataType.NVarChar);
+				  .Property(e => e.Status).HasDataType(DataType.NVarChar)
+				  .Build();
 
 				var ms2 = new MappingSchema();
 				ms2.SetConverter<InventoryResourceStatus, string>((obj) =>
@@ -55,7 +56,8 @@ namespace Tests.UserTests
 				fmb2.Entity<InventoryResourceDTO>()
 				  .HasTableName("InventoryResource")
 				  .Property(e => e.Id).IsPrimaryKey()
-				  .Property(e => e.Status);
+				  .Property(e => e.Status)
+				  .Build();
 
 				db1 = GetDataContext(context, ms1);
 				db1.DropTable<InventoryResourceDTO>(throwExceptionIfNotExists: false);

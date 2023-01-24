@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using LinqToDB.Common;
-	using LinqToDB.DataProvider.DB2;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Common;
+	using DB2;
+	using Expressions;
+	using Extensions;
+	using Mapping;
 
 	// Note on informix providers: there are actually 3 providers:
 	// - SQLI Provider(IBM.Data.Informix) : netfx only, no bulk copy
@@ -269,7 +270,7 @@ namespace LinqToDB.DataProvider.Informix
 				if (type == null)
 					return null;
 
-				if (obsolete && type.GetCustomAttributes(typeof(ObsoleteAttribute), false).Length > 0)
+				if (obsolete && type.HasAttribute<ObsoleteAttribute>(false))
 					return null;
 
 				if (register)

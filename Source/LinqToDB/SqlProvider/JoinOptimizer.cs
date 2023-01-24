@@ -6,6 +6,7 @@ using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
+	using Common.Internal;
 	using SqlQuery;
 
 	sealed class JoinOptimizer
@@ -1342,10 +1343,10 @@ namespace LinqToDB.SqlProvider
 					return res;
 				}
 
-				var sb = new StringBuilder();
-				source.ToString(sb, new Dictionary<IQueryElement, IQueryElement>());
+				using var sb = Pools.StringBuilder.Allocate();
+				source.ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>());
 
-				return $"({source.SourceID}).{sb}";
+				return $"({source.SourceID}).{sb.Value}";
 			}
 
 			public string DisplayString()

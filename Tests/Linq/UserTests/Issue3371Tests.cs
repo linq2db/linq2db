@@ -37,6 +37,8 @@ namespace Tests.UserTests
 
 			builder.Entity<PayRate>();
 
+			builder.Build();
+
 			var payRateData = new PayRate[]
 			{
 				new() { Id = 1, Name = "Name1" }, new() { Id = 2, Name = "Name2" }, new() { Id = 3, Name = "test" }

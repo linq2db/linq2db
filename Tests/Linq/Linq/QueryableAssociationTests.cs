@@ -175,6 +175,8 @@ namespace Tests.Linq
 			builder.Entity<SomeEntity>().Association(e => e.OthersMapped,
 				(e, db) => db.GetTable<SomeOtherEntity>().With("NOLOCK").Where(se => se.Id == e.Id));
 
+			builder.Build();
+
 			return builder.MappingSchema;
 		}
 

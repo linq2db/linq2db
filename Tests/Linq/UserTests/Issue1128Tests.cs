@@ -38,7 +38,8 @@ namespace Tests.UserTests
 
 			fluentBuilder.Entity<FluentBase>()
 				.HasTableName(tableName)
-				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
+				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey()
+				.Build();
 
 			return ms;
 		}

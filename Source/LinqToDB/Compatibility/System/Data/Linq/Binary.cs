@@ -3,6 +3,7 @@ using System;
 using System.Text;
 using System.Runtime.Serialization;
 using LinqToDB.Common;
+using LinqToDB.Common.Internal;
 
 namespace System.Data.Linq
 {
@@ -79,14 +80,7 @@ namespace System.Data.Linq
 			return _hashCode!.Value;
 		}
 
-		public override string ToString()
-		{
-			var sb = new StringBuilder();
-			sb.Append('"');
-			sb.Append(Convert.ToBase64String(_bytes, 0, _bytes.Length));
-			sb.Append('"');
-			return sb.ToString();
-		}
+		public override string ToString() => $"\"{Convert.ToBase64String(_bytes, 0, _bytes.Length)}\"";
 
 		private bool EqualsTo(Binary? binary)
 		{
