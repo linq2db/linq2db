@@ -34,7 +34,7 @@ namespace LinqToDB.Mapping
 			{
 				throw new NotSupportedException(
 					"Nullable metadata is not available. " +
-					"Check that you run on .net standard 2.0 or greater, " + 
+					"Check that you run on .NET Standard 2.0 or greater, " + 
 					"and that you don't trim nullable metadata during build (see NullabilityInfoContextSupport).");
 			}
 		}
