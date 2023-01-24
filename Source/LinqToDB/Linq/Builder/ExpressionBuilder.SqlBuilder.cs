@@ -1283,35 +1283,15 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (BinaryExpression)expression;
 
-					/*
-					var left = MakeExpression(context, e.Left, flags.ExpandFlag());
-
-					var left  = MakeExpression(context, e.Left, flags.ExpandFlag());
-					var right = MakeExpression(context, e.Right, flags.ExpandFlag());
-
-					if (left is SqlErrorExpression || right is SqlErrorExpression)
-						return null;
-						*/
-
 					var left  = RemoveNullPropagation(context!, e.Left, flags, false);
 					var right = RemoveNullPropagation(context!, e.Right, flags, false);
 
 					var newExpr = e.Update(left, e.Conversion, right);
 
-					var optimized = newExpr;
-					/*
-					var optimized = OptimizationContext.OptimizeExpressionTree(newExpr, false);
+					left  = newExpr.Left;
+					right = newExpr.Right;
 
-					if (optimized.NodeType != e.NodeType)
-					{
-						return ConvertPredicate(context, optimized, flags);
-					}
-					*/
-
-					left  = ((BinaryExpression)optimized).Left;
-					right = ((BinaryExpression)optimized).Right;
-
-					return CheckExpression(ConvertCompareExpression(context, optimized.NodeType, left, right, flags));
+					return CheckExpression(ConvertCompareExpression(context, newExpr.NodeType, left, right, flags));
 				}
 
 				case ExpressionType.Call:
