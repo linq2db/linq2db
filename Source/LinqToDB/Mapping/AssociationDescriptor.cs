@@ -39,7 +39,7 @@ namespace LinqToDB.Mapping
 			string?     expressionQueryMethod,
 			Expression? expressionQuery,
 			string?     storage,
-			bool        canBeNull,
+			bool?       canBeNull,
 			string?     aliasName)
 		{
 			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
@@ -63,7 +63,7 @@ namespace LinqToDB.Mapping
 			ExpressionQueryMethod = expressionQueryMethod;
 			ExpressionQuery       = expressionQuery;
 			Storage               = storage;
-			CanBeNull             = canBeNull;
+			CanBeNull             = canBeNull ?? AnalyzeCanBeNull();
 			AliasName             = aliasName;
 		}
 
@@ -107,7 +107,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets alias for association. Used in SQL generation process.
 		/// </summary>
-		public string? AliasName           { get; }
+		public string?     AliasName           { get; }
 
 		/// <summary>
 		/// Parse comma-separated list of association key column members into string array.
@@ -308,6 +308,17 @@ namespace LinqToDB.Mapping
 				throw new LinqToDBException("Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
 
 			return lambda;
+		}
+
+		private bool AnalyzeCanBeNull()
+		{
+			// Note that nullability of Collections can't be determined from types.
+			// OUTER JOIN are usually materialized in non-nullable, but empty, collections.
+			// For example, `IList<Product> Products` might well require an OUTER JOIN.
+			// Neither `IList<Product>?` nor `IList<Product?>` would be correct.
+			return Configuration.UseNullableTypesMetadata && !IsList && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable)
+				? isNullable
+				: true;
 		}
 	}
 }

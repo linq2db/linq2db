@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using LinqToDB.Common;
@@ -111,6 +112,10 @@ namespace LinqToDB.Mapping
 		public override object[] GetCustomAttributes(Type attributeType, bool inherit)
 #pragma warning restore RS0030 // Do not used banned APIs
 			=> Array<object>.Empty;
+
+		/// <inheritdoc cref="MemberInfo.GetCustomAttributesData()"/>
+		public override IList<CustomAttributeData> GetCustomAttributesData()
+			=> Array<CustomAttributeData>.Empty;
 
 		/// <inheritdoc cref="MemberInfo.IsDefined"/>
 		public override bool IsDefined(Type attributeType, bool inherit)

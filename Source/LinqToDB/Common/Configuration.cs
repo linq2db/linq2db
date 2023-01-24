@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
@@ -101,6 +102,26 @@ namespace LinqToDB.Common
 		/// Set to 0 to truncate all string data.
 		/// </remarks>
 		public static int MaxStringParameterLengthLogging { get; set; } = 200;
+		
+		private static bool _useNullableTypesMetadata;
+		/// <summary>
+		/// Whether or not Nullable Reference Types annotations from C#
+		/// are read and taken into consideration to determine if a
+		/// column or association can be null.
+		/// Nullable Types can be overriden with explicit CanBeNull
+		/// annotations in [Column], [Association], or [Nullable].
+		/// </summary>
+		/// <remarks>Defaults to false.</remarks>
+		public static bool UseNullableTypesMetadata 
+		{ 
+			get => _useNullableTypesMetadata;
+			set 
+			{
+				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.				
+				if (value) Mapping.Nullability.EnsureSupport();
+				_useNullableTypesMetadata = value;
+			}
+		}	
 
 		public static class Data
 		{
