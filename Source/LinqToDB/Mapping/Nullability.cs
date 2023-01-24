@@ -7,7 +7,7 @@ namespace LinqToDB.Mapping
 	{
 		private static Lazy<bool> _isSupported = new(() => 
 		{
-#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER || NET5_0_OR_GREATER
+#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER
 			try
 			{
 				var fieldInfo = typeof(Nullability).GetField(nameof(_isSupported), BindingFlags.NonPublic | BindingFlags.Static)!;
