@@ -652,7 +652,8 @@ namespace LinqToDB.Linq
 		static readonly PropertyInfo _expressionInfo  = MemberHelper.PropertyOf<IQueryRunner>(p => p.Expression);
 		static readonly PropertyInfo _parametersInfo  = MemberHelper.PropertyOf<IQueryRunner>(p => p.Parameters);
 		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.Preambles);
-		static readonly PropertyInfo _rowsCountInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.RowsCount);
+
+		public static readonly PropertyInfo RowsCountInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.RowsCount);
 
 		static Expression<Func<IQueryRunner, DbDataReader, T>> WrapMapper<T>(
 			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> expression)
@@ -704,49 +705,6 @@ namespace LinqToDB.Linq
 			Expression<Func<IQueryRunner,IDataContext, DbDataReader, Expression,object?[]?,object?[]?,T>> expression)
 		{
 			var l = WrapMapper(expression);
-
-			SetRunQuery(query, l);
-		}
-
-		#endregion
-
-		#region SetRunQuery / Select 2
-
-		public static void SetRunQuery<T>(
-			Query<T> query,
-			Expression<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,int,T>> expression)
-		{
-			var queryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-			var dataReaderParam  = ExpressionBuilder.DataReaderParam;
-
-			var dataContextVar = expression.Parameters[1];
-			var expressionVar  = expression.Parameters[3];
-			var parametersVar  = expression.Parameters[4];
-			var preamblesVar   = expression.Parameters[5];
-			var rowsCountVar   = expression.Parameters[6];
-
-			// we can safely assume it is block expression
-			var block = (BlockExpression)expression.Body;
-			var l     = Expression.Lambda<Func<IQueryRunner,DbDataReader,T>>(
-				block.Update(
-					new[]
-					{
-						dataContextVar,
-						expressionVar,
-						parametersVar,
-						preamblesVar,
-						rowsCountVar
-					}.Concat(block.Variables),
-					new[]
-					{
-						Expression.Assign(dataContextVar, Expression.Property(queryRunnerParam, _dataContextInfo)),
-						Expression.Assign(expressionVar , Expression.Property(queryRunnerParam, _expressionInfo)),
-						Expression.Assign(parametersVar , Expression.Property(queryRunnerParam, _parametersInfo)),
-						Expression.Assign(preamblesVar  , Expression.Property(queryRunnerParam, _preamblesInfo)),
-						Expression.Assign(rowsCountVar  , Expression.Property(queryRunnerParam, _rowsCountInfo))
-					}.Concat(block.Expressions)),
-				queryRunnerParam,
-				dataReaderParam);
 
 			SetRunQuery(query, l);
 		}

@@ -363,11 +363,8 @@ namespace LinqToDB.Linq.Builder
 
 							context.builder._convertedExpressions.Add(cex.Operand, cex);
 
-							var saveBlockDisable = context.builder.IsBlockDisable;
-							context.builder.IsBlockDisable = true;
 							var newOperand = context.builder.BuildSqlExpression(context.context,
 								cex.Operand, context.flags);
-							context.builder.IsBlockDisable = saveBlockDisable;
 
 							if (newOperand.Type != cex.Type)
 							{
@@ -834,37 +831,12 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Mapper
 
-		public Expression BuildBlock(Expression expression)
+		public Expression ToReadExpression(
+			ExpressionGenerator expressionGenerator, 
+			NullabilityContext  nullability,
+			Expression          expression)
 		{
-			if (IsBlockDisable || BlockExpressions.Count == 0)
-				return expression;
-
-			BlockExpressions.Add(expression);
-
-			var blockExpression = Expression.Block(BlockVariables, BlockExpressions);
-
-			while (BlockVariables.  Count > 1) BlockVariables.  RemoveAt(BlockVariables.  Count - 1);
-			while (BlockExpressions.Count > 1) BlockExpressions.RemoveAt(BlockExpressions.Count - 1);
-
-			return blockExpression;
-		}
-
-		public ParameterExpression BuildVariable(Expression expr, string? name = null)
-		{
-			name ??= expr.Type.Name + Interlocked.Increment(ref VarIndex);
-
-			var variable = Expression.Variable(
-				expr.Type,
-				name.IndexOf('<') >= 0 ? null : name);
-
-			BlockVariables.  Add(variable);
-			BlockExpressions.Add(Expression.Assign(variable, expr));
-
-			return variable;
-		}
-
-		public Expression ToReadExpression(NullabilityContext nullability, Expression expression)
-		{
+			Expression? rowCounter = null;
 			var toRead = expression.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Convert)
@@ -921,6 +893,17 @@ namespace LinqToDB.Linq.Builder
 					return new TransformInfo(nullCheck);
 				}
 
+				if (e == RowCounterParam)
+				{
+					if (rowCounter == null)
+					{
+						rowCounter = e;
+						expressionGenerator.AddVariable(RowCounterParam);
+						expressionGenerator.AddExpression(Expression.Assign(RowCounterParam,
+							Expression.Property(QueryRunnerParam, QueryRunner.RowsCountInfo)));
+					}
+				}
+
 				return new TransformInfo(e);
 			});
 
@@ -934,18 +917,23 @@ namespace LinqToDB.Linq.Builder
 			if (expr.Type != type)
 				expr = Expression.Convert(expr, type);
 
-			var readExpr = ToReadExpression(new NullabilityContext(query), expr);
+			var expressionGenerator = new ExpressionGenerator();
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>>(
-				BuildBlock(readExpr), new[]
-				{
-					QueryRunnerParam,
-					DataContextParam,
-					DataReaderParam,
-					ExpressionParam,
-					ParametersParam,
-					PreambleParam,
-				});
+			// variable accessed dynamically
+			_ = expressionGenerator.AssignToVariable(DataReaderParam, "ldr");
+
+			var readExpr = ToReadExpression(expressionGenerator, new NullabilityContext(query), expr);
+			expressionGenerator.AddExpression(readExpr);
+
+			var mappingBody = expressionGenerator.Build();
+
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>>(mappingBody, 
+				QueryRunnerParam, 
+				DataContextParam, 
+				DataReaderParam, 
+				ExpressionParam, 
+				ParametersParam, 
+				PreambleParam);
 
 			return mapper;
 		}

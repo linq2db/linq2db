@@ -103,11 +103,6 @@ namespace LinqToDB.Linq.Builder
 		public ExpressionTreeOptimizationContext   OptimizationContext => _optimizationContext;
 		public ParametersContext                   ParametersContext   => _parametersContext;
 
-		public readonly List<ParameterExpression>  BlockVariables   = new ();
-		public readonly List<Expression>           BlockExpressions = new ();
-		public          bool                       IsBlockDisable;
-		public          int                        VarIndex;
-
 		public SqlComment?                      Tag;
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
@@ -135,8 +130,6 @@ namespace LinqToDB.Linq.Builder
 			_parametersContext   = parametersContext;
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
-
-			DataReaderLocal      = BuildVariable(DataReaderParam, "ldr");
 		}
 
 		#endregion
@@ -151,9 +144,9 @@ namespace LinqToDB.Linq.Builder
 		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
 		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
-		public        readonly ParameterExpression DataReaderLocal;
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
+		public static readonly ParameterExpression RowCounterParam  = Expression.Parameter(typeof(int),          "counter");
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 

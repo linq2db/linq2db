@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
 	sealed class SelectBuilder : MethodCallBuilder
@@ -51,10 +52,11 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			var context = selector.Parameters.Count == 1 ?
-				new SelectContext (buildInfo.Parent, selector, buildInfo.IsSubQuery, sequence) :
-				new SelectContext2(buildInfo.Parent, selector, buildInfo.IsSubQuery, sequence);
+			body = selector.Parameters.Count == 1
+				? SequenceHelper.PrepareBody(selector, sequence)
+				: SequenceHelper.PrepareBody(selector, sequence, new CounterContext(sequence));
 
+			var context = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
 #if DEBUG
 			context.Debug_MethodCall = methodCall;
 			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);
@@ -79,19 +81,47 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region SelectContext2
-
-		sealed class SelectContext2 : SelectContext
+		class CounterContext : BuildContextBase
 		{
-			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext sequence)
-				: base(parent, lambda, isSubQuery, sequence)
+			public CounterContext(IBuildContext sequence) : this(sequence.Builder, sequence.SelectQuery)
 			{
 			}
 
-			static readonly ParameterExpression _counterParam = Expression.Parameter(typeof(int), "counter");
-		}
+			protected CounterContext(ExpressionBuilder builder, SelectQuery selectQuery) : base(builder, selectQuery)
+			{
 
-		#endregion
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this))
+				{
+					if (flags.IsExpression())
+					{
+						return ExpressionBuilder.RowCounterParam;
+					}
+				}
+
+				return path;
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new CounterContext(Builder, context.CloneElement(SelectQuery));
+			}
+
+			public override SqlStatement GetResultStatement()
+			{
+				throw new NotImplementedException();
+			}
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
+
+				QueryRunner.SetRunQuery(query, mapper);
+			}
+		}
 
 		#region Convert
 

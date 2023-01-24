@@ -5,16 +5,18 @@ namespace LinqToDB.Expressions
 {
 	public class ExpressionGenerator
 	{
-		private readonly List<ParameterExpression> _variables   = new ();
-		private readonly List<Expression>          _expressions = new ();
-		private readonly TypeMapper                _mapper;
+		public static TypeMapper NoOpTypeMapper = new TypeMapper();
+
+		List<ParameterExpression>? _variables;
+		List<Expression>?          _expressions;
+		readonly TypeMapper        _mapper;
 
 		public ExpressionGenerator(TypeMapper mapper)
 		{
 			_mapper = mapper;
 		}
 
-		public ExpressionGenerator() : this(new TypeMapper())
+		public ExpressionGenerator() : this(NoOpTypeMapper)
 		{
 		}
 
@@ -25,6 +27,8 @@ namespace LinqToDB.Expressions
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
 			var variable = Expression.Variable(type, name);
+
+			_variables ??= new();
 			_variables.Add(variable);
 			return variable;
 		}
@@ -33,6 +37,7 @@ namespace LinqToDB.Expressions
 		{
 			if (variable == null) throw new ArgumentNullException(nameof(variable));
 
+			_variables ??= new();
 			_variables.Add(variable);
 			return variable;
 		}
@@ -41,16 +46,17 @@ namespace LinqToDB.Expressions
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
+			_expressions ??= new();
 			_expressions.Add(expression);
 			return expression;
 		}
 
 		public Expression Build()
 		{
-			if (_variables.Count == 0 && _expressions.Count == 1)
+			if ((_variables?.Count ?? 0) == 0 && _expressions?.Count == 1)
 				return _expressions[0];
 
-			var block = Expression.Block(_variables, _expressions);
+			var block = Expression.Block(_variables, _expressions ?? Enumerable.Empty<Expression>());
 			return block;
 		}
 
