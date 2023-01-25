@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 			Parent            = buildInfo.Parent;
 			_elementType      = elementType;
 			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType);
-			Table             = BuildValuesTable();
+			Table             = BuildValuesTable(buildInfo.Expression);
 			Expression        = buildInfo.Expression;
 
 			foreach (var field in Table.Fields)
@@ -40,12 +40,12 @@ namespace LinqToDB.Linq.Builder
 				SelectQuery.From.Table(Table);
 		}
 
-		SqlValuesTable BuildValuesTable()
+		SqlValuesTable BuildValuesTable(Expression expr)
 		{
-			if (Expression!.NodeType == ExpressionType.NewArrayInit)
-				return BuildValuesTableFromArray((NewArrayExpression)Expression);
+			if (expr.NodeType == ExpressionType.NewArrayInit)
+				return BuildValuesTableFromArray((NewArrayExpression)expr);
 
-			return new SqlValuesTable(Builder.ConvertToSql(this, Expression));
+			return new SqlValuesTable(Builder.ConvertToSql(this, expr));
 		}
 
 		SqlValuesTable BuildValuesTableFromArray(NewArrayExpression arrayExpression)

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -45,8 +46,7 @@ namespace LinqToDB.Linq.Builder
 			if (isTest)
 				flags |= ProjectFlags.Test;
 
-			if (!BuildSearchCondition(sequence, expr, flags, sc.Conditions))
-				throw CreateSqlError(sequence, expr).CreateError();
+			BuildSearchCondition(sequence, expr, flags, sc.Conditions);
 
 			if (!isTest)
 			{
@@ -723,8 +723,8 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThanOrEqual:
 				{
 					var condition = new SqlSearchCondition();
-					if (!BuildSearchCondition(context, expression, flags, condition.Conditions))
-						return expression;
+					if (!BuildSearchCondition(context, expression, flags, condition.Conditions, out var error))
+						return error.WithType(expression.Type);
 					return CreatePlaceholder(context, condition, expression, alias: alias);
 				}
 
@@ -1087,9 +1087,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is not SqlPlaceholderExpression && (expression.Type == typeof(bool) || expression.Type == typeof(bool?)) && _convertedPredicates.Add(expression))
 			{
-				var predicate = ConvertPredicate(context, expression, flags);
+				var predicate = ConvertPredicate(context, expression, flags, out var error);
 				if (predicate == null)
-					return expression;
+					return error!.WithType(expression.Type);
 
 				_convertedPredicates.Remove(expression);
 				return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, predicate)), expression, alias: alias);
@@ -1231,12 +1231,16 @@ namespace LinqToDB.Linq.Builder
 
 		#region Predicate Converter
 
-		ISqlPredicate? ConvertPredicate(IBuildContext? context, Expression expression, ProjectFlags flags)
+		ISqlPredicate? ConvertPredicate(IBuildContext? context, Expression expression, ProjectFlags flags, out SqlErrorExpression? error)
 		{
-			ISqlPredicate? CheckExpression(Expression expr)
+			error = null;
+
+			ISqlPredicate? CheckExpression(Expression expr, ref SqlErrorExpression? resultError)
 			{
 				if (expr is SqlPlaceholderExpression placheolder && placheolder.Sql is SqlSearchCondition sc)
 					return sc;
+
+				resultError = SqlErrorExpression.EnsureError(context, expr);
 
 				return null;
 			}
@@ -1291,7 +1295,7 @@ namespace LinqToDB.Linq.Builder
 					left  = newExpr.Left;
 					right = newExpr.Right;
 
-					return CheckExpression(ConvertCompareExpression(context, newExpr.NodeType, left, right, flags));
+					return CheckExpression(ConvertCompareExpression(context, newExpr.NodeType, left, right, flags), ref error);
 				}
 
 				case ExpressionType.Call:
@@ -1301,7 +1305,7 @@ namespace LinqToDB.Linq.Builder
 					ISqlPredicate? predicate = null;
 
 					if (e.Method.Name == "Equals" && e.Object != null && e.Arguments.Count == 1)
-						return CheckExpression(ConvertCompareExpression(context, ExpressionType.Equal, e.Object, e.Arguments[0], flags));
+						return CheckExpression(ConvertCompareExpression(context, ExpressionType.Equal, e.Object, e.Arguments[0], flags), ref error);
 
 					if (e.Method.DeclaringType == typeof(string))
 					{
@@ -1372,7 +1376,7 @@ namespace LinqToDB.Linq.Builder
 					var processed = MakeExpression(context, expression, flags);
 					if (!ReferenceEquals(processed, expression))
 					{
-						return ConvertPredicate(context, processed, flags);
+						return ConvertPredicate(context, processed, flags, out error);
 					}
 
 					break;
@@ -1390,7 +1394,7 @@ namespace LinqToDB.Linq.Builder
 					var contextRef = GetRootContext(context, e.Expression, false);
 
 					if (contextRef != null && SequenceHelper.GetTableContext(contextRef.BuildContext) != null)
-						return MakeIsPredicate(contextRef.BuildContext, e, flags);
+						return MakeIsPredicate(contextRef.BuildContext, e, flags, out error);
 
 					break;
 				}
@@ -1400,13 +1404,13 @@ namespace LinqToDB.Linq.Builder
 					var e = (UnaryExpression)expression;
 
 					if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
-						return ConvertPredicate(context, e.Operand, flags);
+						return ConvertPredicate(context, e.Operand, flags, out error);
 
 					break;
 				}
 			}
 
-			if (!TryConvertToSql(context, flags, expression, null, out var ex, out _))
+			if (!TryConvertToSql(context, flags, expression, null, out var ex, out error))
 				return null;
 
 			if (SqlExpression.NeedsEqual(ex))
@@ -2590,11 +2594,11 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		ISqlPredicate MakeIsPredicate(IBuildContext context, TypeBinaryExpression expression, ProjectFlags flags)
+		ISqlPredicate? MakeIsPredicate(IBuildContext context, TypeBinaryExpression expression, ProjectFlags flags, out SqlErrorExpression? error)
 		{
 			var predicateExpr = MakeIsPredicateExpression(context, expression);
 
-			return ConvertPredicate(context, predicateExpr, flags);
+			return ConvertPredicate(context, predicateExpr, flags, out error);
 		}
 
 		Expression MakeIsPredicateExpression(IBuildContext context, TypeBinaryExpression expression)
@@ -2681,7 +2685,16 @@ namespace LinqToDB.Linq.Builder
 
 		#region Search Condition Builder
 
-		public bool BuildSearchCondition(IBuildContext? context, Expression expression, ProjectFlags flags, List<SqlCondition> conditions)
+		public void BuildSearchCondition(IBuildContext? context, Expression expression, ProjectFlags flags,
+			List<SqlCondition>                          conditions)
+		{
+			if (!BuildSearchCondition(context, expression, flags, conditions, out var error))
+			{
+				throw error.CreateError();
+			}
+		}
+
+		public bool BuildSearchCondition(IBuildContext? context, Expression expression, ProjectFlags flags, List<SqlCondition> conditions, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
 			//expression = GetRemoveNullPropagationTransformer(true).Transform(expression);
 
@@ -2692,9 +2705,17 @@ namespace LinqToDB.Linq.Builder
 					{
 						var e = (BinaryExpression)expression;
 
-						if (!BuildSearchCondition(context, e.Left, flags, conditions) ||
-						    !BuildSearchCondition(context, e.Right, flags, conditions))
+						if (!BuildSearchCondition(context, e.Left, flags, conditions, out var leftError))
+						{
+							error = leftError;
 							return false;
+						}
+
+						if (!BuildSearchCondition(context, e.Right, flags, conditions, out var rightError))
+						{
+							error = rightError;
+							return false;
+						}
 
 						break;
 					}
@@ -2710,11 +2731,19 @@ namespace LinqToDB.Linq.Builder
 						var e           = (BinaryExpression)expression;
 						var orCondition = new SqlSearchCondition();
 
-						if (!BuildSearchCondition(context, e.Left, flags, orCondition.Conditions))
+						if (!BuildSearchCondition(context, e.Left, flags, orCondition.Conditions, out var leftError))
+						{
+							error = leftError;
 							return false;
-						orCondition.Conditions[orCondition.Conditions.Count - 1].IsOr = true;
-						if (!BuildSearchCondition(context, e.Right, flags, orCondition.Conditions))
+						}
+
+						orCondition.Conditions[^1].IsOr = true;
+
+						if (!BuildSearchCondition(context, e.Right, flags, orCondition.Conditions, out var rightError))
+						{
+							error = rightError;
 							return false;
+						}
 
 						conditions.Add(new SqlCondition(false, orCondition));
 
@@ -2726,7 +2755,7 @@ namespace LinqToDB.Linq.Builder
 						var e            = (UnaryExpression)expression;
 						var notCondition = new SqlSearchCondition();
 
-						if (!BuildSearchCondition(context, e.Operand, flags, notCondition.Conditions))
+						if (!BuildSearchCondition(context, e.Operand, flags, notCondition.Conditions, out error))
 							return false;
 
 						conditions.Add(new SqlCondition(true, notCondition));
@@ -2735,16 +2764,21 @@ namespace LinqToDB.Linq.Builder
 					}
 
 				default                    :
-					var predicate = ConvertPredicate(context, expression, flags);
+					var predicate = ConvertPredicate(context, expression, flags, out error);
 
 					if (predicate == null)
+					{
+#pragma warning disable CS8762
 						return false;
+#pragma warning restore CS8762
+					}
 
 					conditions.Add(new SqlCondition(false, predicate));
 
 					break;
 			}
 
+			error = null;
 			return true;
 		}
 

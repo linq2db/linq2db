@@ -268,16 +268,19 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		public bool TryConvertToSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, out Expression actual)
+		public bool TryConvertToSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
 			flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
 
 			sqlExpression = null;
 
 			//Just test that we can convert
-			actual = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test, columnDescriptor: columnDescriptor);
+			var actual = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test, columnDescriptor: columnDescriptor);
 			if (actual is not SqlPlaceholderExpression placeholderTest)
+			{
+				error = SqlErrorExpression.EnsureError(context, expression);
 				return false;
+			};
 
 			sqlExpression = placeholderTest.Sql;
 
@@ -287,11 +290,15 @@ namespace LinqToDB.Linq.Builder
 				//Test conversion success, do it again
 				var newActual = ConvertToSqlExpr(context, expression, flags, columnDescriptor: columnDescriptor);
 				if (newActual is not SqlPlaceholderExpression placeholder)
+				{
+					error = SqlErrorExpression.EnsureError(context, expression);
 					return false;
+				}
 
 				sqlExpression = placeholder.Sql;
 			}
 
+			error = null;
 			return true;
 		}
 

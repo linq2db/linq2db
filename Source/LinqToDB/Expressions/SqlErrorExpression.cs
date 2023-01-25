@@ -42,6 +42,13 @@ namespace LinqToDB.Expressions
 			return CreateError(Expression);
 		}
 
+		public static SqlErrorExpression EnsureError(IBuildContext? context, Expression expression)
+		{
+			if (expression is SqlErrorExpression error)
+				return error.WithType(expression.Type);
+			return new SqlErrorExpression(context, expression);
+		}
+
 		public static Exception CreateError(Expression expression)
 		{
 			return new LinqException($"'{PrepareExpression(expression)}' cannot be converted to SQL.");
