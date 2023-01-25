@@ -3814,6 +3814,28 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			ContextRefExpression? CalcRootContext(Expression expressionToCheck)
+			{
+				expressionToCheck = expressionToCheck.UnwrapConvert();
+
+				if (expressionToCheck is ContextRefExpression contextRef)
+					return contextRef;
+
+				if (expressionToCheck is MemberExpression me)
+				{
+					if (me.Expression is null)
+						return null;
+					return CalcRootContext(me.Expression);
+				}
+
+				if (expressionToCheck is MethodCallExpression mc && mc.IsQueryable())
+				{
+					return CalcRootContext(mc.Arguments[0]);
+				}
+
+				return null;
+			}
+
 			// nothing to project here
 			if (path.NodeType   == ExpressionType.Parameter 
 				|| path.NodeType == ExpressionType.Lambda
@@ -3871,21 +3893,18 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				//TODO: why i cannot do that without GetLevelExpression ???
-				var rootLevelExpression = memberExpression.GetLevelExpression(MappingSchema, 0);
+				rootContext = CalcRootContext(memberExpression.Expression);
 
-				// do not process if root is parameter
-				if (rootLevelExpression.NodeType == ExpressionType.Parameter)
-					return path;
-
-				rootContext = rootLevelExpression as ContextRefExpression;
 				if (rootContext != null)
 				{
+					currentContext = rootContext.BuildContext;
+						
 					// SetOperationContext can know how to process such path without preparing
 
 					var corrected = ExecuteMake(rootContext.BuildContext, path, flags);
 
-					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) && corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
+					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) &&
+						corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
 						corrected = MakeExpression(rootContext.BuildContext, corrected, flags);
 
@@ -3912,12 +3931,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				rootContext = root as ContextRefExpression;
-				if (rootContext == null)
-				{
-					//TODO: why i cannot do that without GetLevelExpression ???
-					rootContext = root.GetLevelExpression(MappingSchema, 0) as ContextRefExpression;
-				}
+				rootContext = CalcRootContext(root);
 			}
 			else if (path is MethodCallExpression mc)
 			{
