@@ -43,12 +43,12 @@ namespace LinqToDB.Linq.Builder
 			return root is ContextRefExpression;
 		}
 
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var root = CalcBuildContext(builder, buildInfo);
 
 			if (root is not ContextRefExpression contextRef)
-				return builder.BuildSequence(new BuildInfo(buildInfo, root));
+				return builder.TryBuildSequence(new BuildInfo(buildInfo, root));
 
 			var context = contextRef.BuildContext;
 

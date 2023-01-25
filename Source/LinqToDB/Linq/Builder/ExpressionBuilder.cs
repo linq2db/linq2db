@@ -209,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException("Sequence has no registered expression");
 		}
 
-		public IBuildContext BuildSequence(BuildInfo buildInfo)
+		public IBuildContext? TryBuildSequence(BuildInfo buildInfo)
 		{
 			var originalExpression = buildInfo.Expression;
 
@@ -231,13 +231,21 @@ namespace LinqToDB.Linq.Builder
 					if (sequence != null)
 						_sequenceExpressions[sequence] = originalExpression;
 
-					return sequence!;
+					return sequence;
 				}
 
 				n = builder.BuildCounter;
 			}
 
-			throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+			return null;
+		}
+
+		public IBuildContext? BuildSequence(BuildInfo buildInfo)
+		{
+			var sequence = TryBuildSequence(buildInfo);
+			if (sequence == null)
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", buildInfo.Expression);
+			return sequence;
 		}
 
 		public ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)

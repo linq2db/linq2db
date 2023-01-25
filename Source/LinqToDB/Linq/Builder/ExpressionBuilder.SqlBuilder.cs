@@ -91,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 				IsTest         = isTest
 			};
 
-			var ctx = BuildSequence(info);
+			var ctx = TryBuildSequence(info);
 
 			return ctx;
 		}

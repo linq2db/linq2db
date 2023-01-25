@@ -1120,6 +1120,26 @@ FROM
 			}
 		}
 
+		[Test]
+		public void TestSkipTake([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					select new
+					{
+						m,
+						details = m.Details.Skip(1).Take(2).ToList()
+					};
+
+				AssertQuery(query);
+			}
+		}
+
 		#region issue 1862
 		[Table]
 		public partial class Blog

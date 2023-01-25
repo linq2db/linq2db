@@ -1191,7 +1191,7 @@ namespace LinqToDB.SqlQuery
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
-				if (isApplySupported && sql.Select.HasModifier)
+				if (isApplySupported && sql.Select.HasModifier && _flags.IsSubQueryTakeSupported)
 					return;
 
 				if (isApplySupported && isAgg)

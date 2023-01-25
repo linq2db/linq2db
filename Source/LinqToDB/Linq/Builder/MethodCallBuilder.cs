@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			return BuildMethodCall(builder, (MethodCallExpression)buildInfo.Expression, buildInfo);
 		}
@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 		public virtual bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo) => false;
 
 		protected abstract bool                 CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
-		protected abstract IBuildContext        BuildMethodCall   (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
+		protected abstract IBuildContext?       BuildMethodCall   (ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
 
 		protected static Expression ConvertMethod(
 			MethodCallExpression methodCall,

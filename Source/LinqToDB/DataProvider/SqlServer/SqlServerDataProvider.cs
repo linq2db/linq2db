@@ -58,6 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.SupportsRowNumberWithoutOrderBy   = false;
+			SqlProviderFlags.IsSubQueryTakeSupported           = version > SqlServerVersion.v2005;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));

@@ -15,8 +15,16 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(MethodNames);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			if (buildInfo.IsSubQuery)
+			{
+				// check that provider can handle limitation inside subquery
+				//
+				if (builder.DataContext.SqlProviderFlags is { IsApplyJoinSupported: false, IsWindowFunctionsSupported: false })
+					return null;
+			}
+
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var arg      = methodCall.Arguments[1].Unwrap();
 
