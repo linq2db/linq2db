@@ -788,7 +788,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class TestEntity
+		sealed class TestEntity
 		{
 			public int Id { get; set; }
 
