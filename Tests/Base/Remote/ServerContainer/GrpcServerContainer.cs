@@ -62,7 +62,7 @@ namespace Tests.Remote.ServerContainer
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
 
 			if (ms != null)
-				dx.MappingSchema = dx.MappingSchema == null ? ms : MappingSchema.CombineSchemas(dx.MappingSchema, ms);
+				dx.MappingSchema = dx.MappingSchema == null ? ms : MappingSchema.CombineSchemas(ms, dx.MappingSchema);
 
 			return dx;
 		}

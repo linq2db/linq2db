@@ -1,9 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.DB2
+﻿namespace LinqToDB.DataProvider.DB2
 {
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	sealed class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{
@@ -22,5 +21,21 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		protected override DB2Version Version => DB2Version.zOS;
+
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		{
+			switch (type.Type.DataType)
+			{
+				case DataType.VarBinary:
+					// https://www.ibm.com/docs/en/db2-for-zos/12?topic=strings-varying-length-binary
+					StringBuilder
+						.Append("VARBINARY(")
+						.Append(type.Type.Length == null || type.Type.Length > 32704 || type.Type.Length < 1 ? 32704 : type.Type.Length)
+						.Append(')');
+					return;
+			}
+
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
+		}
 	}
 }
