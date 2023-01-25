@@ -240,7 +240,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public IBuildContext? BuildSequence(BuildInfo buildInfo)
+		public IBuildContext BuildSequence(BuildInfo buildInfo)
 		{
 			var sequence = TryBuildSequence(buildInfo);
 			if (sequence == null)

@@ -35,6 +35,21 @@ namespace LinqToDB.Linq.Builder
 				: throw new InvalidOperationException("Unknown method " + methodCall.Method.Name);
 		}
 
+		static void ExtractSequence(IBuildContext sequence, out TableLikeQueryContext source, out MultiInsertContext multiInsertContext)
+		{
+			if (sequence is MultiInsertContext ic)
+			{
+				multiInsertContext = ic;
+				source             = multiInsertContext.QuerySource;
+			}
+			else
+			{
+				source             = (TableLikeQueryContext)sequence;
+				multiInsertContext = new MultiInsertContext(source);
+			}
+		}
+
+
 		static IBuildContext BuildMultiInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			// MultiInsert(IQueryable)
@@ -42,12 +57,9 @@ namespace LinqToDB.Linq.Builder
 			var sourceContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			var sourceContextRef = new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sourceContext);
-			
-			var source    = new TableLikeQueryContext(sourceContextRef, sourceContextRef);
-			var statement = new SqlMultiInsertStatement(source.Source);
 
-			sourceContext.Statement = statement;
-			return source;
+			var source = new TableLikeQueryContext(sourceContextRef, sourceContextRef);
+			return new MultiInsertContext(source);
 		}
 
 		static IBuildContext BuildTargetTable(
@@ -59,13 +71,15 @@ namespace LinqToDB.Linq.Builder
 			Expression        table,
 			LambdaExpression  setterLambda)
 		{
-			var source        = (TableLikeQueryContext)builder.BuildSequence(new BuildInfo(buildInfo, query));
-			var statement     = (SqlMultiInsertStatement)source.InnerQueryContext.Statement!;
-			var into          = builder.BuildSequence(new BuildInfo(buildInfo, table, new SelectQuery()));
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, query));
 
-			var intoTable = SequenceHelper.GetTableContext(into) ?? throw new LinqToDBException($"Cannot get table context from {source.GetType()}");
+			ExtractSequence(sequence, out var source, out var multiInsertContext);
 
-			var targetContext = new MultiInsertContext(statement, source, into);
+			var statement = multiInsertContext.MultiInsertStatement;
+			var into      = builder.BuildSequence(new BuildInfo(buildInfo, table, new SelectQuery()));
+
+			var intoTable = SequenceHelper.GetTableContext(into) ?? throw new LinqToDBException($"Cannot get table context from {SqlErrorExpression.PrepareExpression(query)}");
+
 			var when          = condition != null ? new SqlSearchCondition() : null;
 			var insert        = new SqlInsertClause
 			{
@@ -76,23 +90,20 @@ namespace LinqToDB.Linq.Builder
 
 			if (condition != null)
 			{
-				builder.BuildSearchCondition(
-					new ExpressionContext(null, new[] { source }, condition),
-					builder.ConvertExpression(condition.Body.Unwrap()), ProjectFlags.SQL,
+				var conditionExpr = source.PrepareSourceBody(condition);
+				builder.BuildSearchCondition(source, builder.ConvertExpression(conditionExpr), ProjectFlags.SQL,
 					when!.Conditions);
 			}
 
-			targetContext.AddSourceParameter(setterLambda.Parameters[0]);
-
-			var setterExpression = SequenceHelper.PrepareBody(setterLambda, source);
+			var setterExpression = source.PrepareSourceBody(setterLambda);
 			
-			var targetRef        = new ContextRefExpression(setterExpression.Type, targetContext);
+			var targetRef        = new ContextRefExpression(setterExpression.Type, into);
 
 			var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 			UpdateBuilder.ParseSetter(builder, targetRef, setterExpression, setterExpressions);
 			UpdateBuilder.InitializeSetExpressions(builder, into, source, setterExpressions, insert.Items, false);
 
-			return source;
+			return multiInsertContext;
 		}
 
 		static IBuildContext BuildInto(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -136,12 +147,13 @@ namespace LinqToDB.Linq.Builder
 
 		static IBuildContext BuildInsert(ExpressionBuilder builder, BuildInfo buildInfo, MultiInsertType type, Expression query)
 		{
-			var source           = (TableLikeQueryContext)builder.BuildSequence(new BuildInfo(buildInfo, query));
-			var statement        = (SqlMultiInsertStatement)source.InnerQueryContext.Statement!;
+			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, query));
+			ExtractSequence(sequence, out _, out var multiInsertContext);
 
+			var statement = multiInsertContext.MultiInsertStatement;
 			statement.InsertType = type;
 
-			return new MultiInsertContext(source.InnerQueryContext);
+			return multiInsertContext;
 		}
 
 		static IBuildContext BuildInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -178,27 +190,21 @@ namespace LinqToDB.Linq.Builder
 
 		#region MultiInsertContext
 
-		sealed class MultiInsertContext : SequenceContextBase
+		sealed class MultiInsertContext : BuildContextBase
 		{
-			readonly ISet<Expression> _sourceParameters = new HashSet<Expression>();
-
-			public void AddSourceParameter(Expression param) => _sourceParameters.Add(param);
-
-			IBuildContext  _source;
-			IBuildContext? _target;
-
-			public MultiInsertContext(IBuildContext source)
-				: base(null, source, null)
+			public MultiInsertContext(TableLikeQueryContext source)
+				: base(source.Builder, source.SelectQuery)
 			{
-				_source = source;
+				MultiInsertStatement = new SqlMultiInsertStatement(source.Source);
+				QuerySource          = source;
 			}
 
-			public MultiInsertContext(SqlMultiInsertStatement insert, IBuildContext source, IBuildContext target)
-				: base(null, new[] { target, source }, null)
+			public TableLikeQueryContext   QuerySource          { get; }
+			public SqlMultiInsertStatement MultiInsertStatement { get; }
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				_source   = source;
-				_target   = target;
-				Statement = insert;
+				return path;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
@@ -206,8 +212,15 @@ namespace LinqToDB.Linq.Builder
 				throw new NotImplementedException();
 			}
 
-			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
-				=> null;
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				QueryRunner.SetNonQueryQuery(query);
+			}
+
+			public override SqlStatement GetResultStatement()
+			{
+				return MultiInsertStatement;
+			}
 		}
 
 		#endregion

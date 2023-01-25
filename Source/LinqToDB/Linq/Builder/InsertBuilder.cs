@@ -25,12 +25,12 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(MethodNames);
 		}
 
-		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out InsertContext insertContext)
+		static void ExtractSequence(ref IBuildContext sequence, out InsertContext insertContext)
 		{
-			insertContext   = sequence as InsertContext;
-			if (insertContext != null)
+			if (sequence is InsertContext ic)
 			{
-				sequence = insertContext.QuerySequence;
+				insertContext = ic;
+				sequence      = insertContext.QuerySequence;
 			}
 			else
 			{
@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			ExtractSequence(buildInfo, ref sequence, out var insertContext);
+			ExtractSequence(ref sequence, out var insertContext);
 
 			var insertStatement = insertContext.InsertStatement;
 
@@ -433,7 +433,7 @@ namespace LinqToDB.Linq.Builder
 				var extract  = methodCall.Arguments[1].UnwrapLambda();
 				var update   = methodCall.Arguments[2].Unwrap();
 
-				ExtractSequence(buildInfo, ref sequence, out var insertContext);
+				ExtractSequence(ref sequence, out var insertContext);
 
 				insertContext.Into ??= sequence;
 

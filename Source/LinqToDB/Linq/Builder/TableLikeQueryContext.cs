@@ -152,6 +152,9 @@ namespace LinqToDB.Linq.Builder
 
 		bool IsTargetExpression(Expression pathExpression)
 		{
+			if (SourceContextRef == TargetContextRef)
+				return false;
+
 			var result = null != pathExpression.Find(this, static (ctx, e) =>
 			{
 				if (ExpressionEqualityComparer.Instance.Equals(e, ctx.TargetContextRef))
@@ -185,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 			var correctedPath       = subqueryPath;
 			var isTargetAssociation = false;
 			
-			if (!flags.HasFlag(ProjectFlags.Test))
+			if (!flags.IsTest())
 			{
 				if (IsTargetAssociation(projectedPath))
 				{
@@ -238,7 +241,7 @@ namespace LinqToDB.Linq.Builder
 
 				correctedPath = Builder.ConvertToSqlExpr(InnerQueryContext, correctedPath, flags);
 
-				if (!flags.HasFlag(ProjectFlags.Test))
+				if (!flags.IsTest())
 				{
 					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, SubqueryContext, this);
 
