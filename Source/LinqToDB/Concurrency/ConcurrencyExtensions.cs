@@ -3,14 +3,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 
-namespace LinqToDB
+namespace LinqToDB.Concurrency
 {
+	using Expressions;
+	using Extensions;
+	using Linq;
+	using Mapping;
+	using Reflection;
+
 	public static class ConcurrencyExtensions
 	{
 		private static IQueryable<T> FilterByColumns<T>(IQueryable<T> query, T obj, ColumnDescriptor[] columns)

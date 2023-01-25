@@ -1,20 +1,16 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
-using LinqToDB.Reflection;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Concurrency
 {
+	using Expressions;
+	using Mapping;
+	using Reflection;
+
 	/// <summary>
 	/// Implements built-in optimistic lock value generation strategies for updates.
 	/// See <see cref="VersionBehavior"/> for supported strategies.
-	/// Used with <see cref="ConcurrencyExtensions" /> extensions:
-	/// <list type="bullet">
-	/// <item><see cref="ConcurrencyExtensions.UpdateOptimistic{T}(IDataContext, T)"/></item>
-	/// <item><see cref="ConcurrencyExtensions.UpdateOptimisticAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/></item>
-	/// <item><see cref="ConcurrencyExtensions.DeleteOptimistic{T}(IDataContext, T)"/></item>
-	/// <item><see cref="ConcurrencyExtensions.DeleteOptimisticAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/></item>
-	/// </list>
+	/// Used with <see cref="ConcurrencyExtensions" /> extensions.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 	public class OptimisticLockPropertyAttribute : OptimisticLockPropertyBaseAttribute

@@ -1,19 +1,13 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
-using LinqToDB.Reflection;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Concurrency
 {
+	using Mapping;
+
 	/// <summary>
 	/// Defines optimistic lock column value generation strategy for update.
-	/// Used with <see cref="ConcurrencyExtensions" /> extensions:
-	/// <list type="bullet">
-	/// <item><see cref="ConcurrencyExtensions.UpdateOptimistic{T}(IDataContext, T)"/></item>
-	/// <item><see cref="ConcurrencyExtensions.UpdateOptimisticAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/></item>
-	/// <item><see cref="ConcurrencyExtensions.DeleteOptimistic{T}(IDataContext, T)"/></item>
-	/// <item><see cref="ConcurrencyExtensions.DeleteOptimisticAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/></item>
-	/// </list>
+	/// Used with <see cref="ConcurrencyExtensions" /> extensions.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 	public abstract class OptimisticLockPropertyBaseAttribute : MappingAttribute

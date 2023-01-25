@@ -1,16 +1,10 @@
 ﻿using System;
 
-namespace LinqToDB.Mapping
+namespace LinqToDB.Concurrency
 {
 	/// <summary>
 	/// Defines optimistic lock column value generation strategy on record update.
-	/// Used with <see cref="OptimisticLockPropertyAttribute" /> and <see cref="ConcurrencyExtensions" /> extensions:
-	/// <list type="bullet">
-	/// <item><see cref="ConcurrencyExtensions.UpdateOptimistic{T}(IDataContext, T)"/></item>
-	/// <item><see cref="ConcurrencyExtensions.UpdateOptimisticAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/></item>
-	/// <item><see cref="ConcurrencyExtensions.DeleteOptimistic{T}(IDataContext, T)"/></item>
-	/// <item><see cref="ConcurrencyExtensions.DeleteOptimisticAsync{T}(IDataContext, T, System.Threading.CancellationToken)"/></item>
-	/// </list>
+	/// Used with <see cref="OptimisticLockPropertyAttribute" /> and <see cref="ConcurrencyExtensions" /> extensions.
 	/// </summary>
 	public enum VersionBehavior
 	{
