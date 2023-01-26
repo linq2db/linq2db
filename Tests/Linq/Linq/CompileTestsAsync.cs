@@ -162,7 +162,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, new MappingSchema()))
 			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
-				db.MappingSchema.GetFluentMappingBuilder()
+				new FluentMappingBuilder(db.MappingSchema)
 					.Entity<AsyncDataTable>()
 						.HasTableName(lt.TableName)
 					.Build();
@@ -212,7 +212,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, new MappingSchema()))
 			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
-				db.MappingSchema.GetFluentMappingBuilder()
+				new FluentMappingBuilder(db.MappingSchema)
 					.Entity<AsyncDataTable>()
 						.HasTableName(lt.TableName)
 					.Build();
@@ -327,7 +327,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, new MappingSchema()))
 			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
-				db.MappingSchema.GetFluentMappingBuilder()
+				new FluentMappingBuilder(db.MappingSchema)
 					.Entity<AsyncDataTable>()
 						.HasTableName(lt.TableName)
 					.Build();
@@ -347,7 +347,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context, new MappingSchema()))
 			using (var lt = db.CreateLocalTable(GenerateData()))
 			{
-				db.MappingSchema.GetFluentMappingBuilder()
+				new FluentMappingBuilder(db.MappingSchema)
 					.Entity<AsyncDataTable>()
 						.HasTableName(lt.TableName)
 					.Build();

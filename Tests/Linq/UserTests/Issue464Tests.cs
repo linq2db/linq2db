@@ -30,7 +30,7 @@ namespace Tests.UserTests
 			schema.SetConvertExpression<decimal, MyInt>        (x => new MyInt { Value = (int)x }); //Oracle
 			schema.SetConvertExpression<MyInt,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.Value });
 
-			schema.GetFluentMappingBuilder()
+			new FluentMappingBuilder(schema)
 				  .Entity<Entity>()
 				  .HasTableName("Issue464")
 				  .HasColumn(x => x.Id)

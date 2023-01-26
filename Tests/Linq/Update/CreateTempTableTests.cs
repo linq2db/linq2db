@@ -68,7 +68,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void CreateTable3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, new MappingSchema()))
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists:false);
 

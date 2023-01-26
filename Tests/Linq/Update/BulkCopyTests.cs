@@ -441,7 +441,7 @@ namespace Tests.xUpdate
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<Inherited3>()
 				.Property(e => e.NullableBool)
 				.HasDataType(DataType.VarChar)

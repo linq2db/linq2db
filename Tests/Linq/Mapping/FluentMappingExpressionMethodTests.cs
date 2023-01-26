@@ -22,7 +22,7 @@ namespace Tests.Mapping
 		MappingSchema CreateMappingSchema()
 		{
 			var schema = new MappingSchema();
-			var fluent = schema.GetFluentMappingBuilder();
+			var fluent = new FluentMappingBuilder(schema);
 
 			fluent.Entity<InstanceClass>().IsColumnRequired()
 				.IsColumnRequired()

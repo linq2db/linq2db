@@ -630,6 +630,9 @@ namespace LinqToDB
 
 	public static partial class DataExtensions
 	{
+		private const string CreateTempTable_LockedSchemaError  = $"{nameof(CreateTempTable)} API with 'setTable' parameter cannot be used for context with read-only mapping schema. Enable writeable {nameof(MappingSchema)} for context using {nameof(DataOptionsExtensions)}.{nameof(DataOptionsExtensions.UseEnableContextSchemaEdit)}(true) configuration option.";
+		private const string IntoTempTable_LockedSchemaError    = $"{nameof(IntoTempTable)  } API with 'setTable' parameter cannot be used for context with read-only mapping schema. Enable writeable {nameof(MappingSchema)} for context using {nameof(DataOptionsExtensions)}.{nameof(DataOptionsExtensions.UseEnableContextSchemaEdit)}(true) configuration option.";
+
 		#region CreateTempTable
 
 		/// <summary>
@@ -743,7 +746,11 @@ namespace LinqToDB
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
+		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
+		/// Note that context mapping schema must be writable to allow it.
+		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
+		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
+		/// Latter option is not recommended as it will affect performance significantly.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
@@ -763,9 +770,10 @@ namespace LinqToDB
 			TableOptions                    tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			if (setTable == null           ) throw new ArgumentNullException(nameof(setTable));
+			if (db.MappingSchema.IsLockable) throw new LinqToDBException(CreateTempTable_LockedSchemaError);
 
-			var builder = db.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(db.MappingSchema);
 			setTable(builder.Entity<T>());
 			builder.Build();
 
@@ -807,7 +815,11 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
+		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
+		/// Note that context mapping schema must be writable to allow it.
+		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
+		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
+		/// Latter option is not recommended as it will affect performance significantly.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
@@ -826,9 +838,10 @@ namespace LinqToDB
 			TableOptions                    tableOptions = TableOptions.IsTemporary)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			if (setTable == null           ) throw new ArgumentNullException(nameof(setTable));
+			if (db.MappingSchema.IsLockable) throw new LinqToDBException(CreateTempTable_LockedSchemaError);
 
-			var builder = db.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(db.MappingSchema);
 			setTable(builder.Entity<T>());
 			builder.Build();
 
@@ -954,7 +967,11 @@ namespace LinqToDB
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
+		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
+		/// Note that context mapping schema must be writable to allow it.
+		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
+		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
+		/// Latter option is not recommended as it will affect performance significantly.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
@@ -976,9 +993,10 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			if (setTable == null           ) throw new ArgumentNullException(nameof(setTable));
+			if (db.MappingSchema.IsLockable) throw new LinqToDBException(CreateTempTable_LockedSchemaError);
 
-			var builder = db.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(db.MappingSchema);
 			setTable(builder.Entity<T>());
 			builder.Build();
 
@@ -1022,7 +1040,11 @@ namespace LinqToDB
 		/// <param name="db">Database connection instance.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
+		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
+		/// Note that context mapping schema must be writable to allow it.
+		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
+		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
+		/// Latter option is not recommended as it will affect performance significantly.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
 		/// <param name="action">Optional asynchronous action that will be executed after table creation but before it populated with data from <paramref name="items"/>.</param>
@@ -1043,9 +1065,10 @@ namespace LinqToDB
 			CancellationToken               cancellationToken = default)
 			where T : class
 		{
-			if (setTable == null) throw new ArgumentNullException(nameof(setTable));
+			if (setTable == null           ) throw new ArgumentNullException(nameof(setTable));
+			if (db.MappingSchema.IsLockable) throw new LinqToDBException(CreateTempTable_LockedSchemaError);
 
-			var builder = db.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(db.MappingSchema);
 			setTable(builder.Entity<T>());
 			builder.Build();
 
@@ -1094,7 +1117,11 @@ namespace LinqToDB
 		/// <param name="action">Optional action that will be executed after table creation, but before it populated with data from <paramref name="items"/>.</param>
 		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
 		/// <param name="tableOptions">Optional Table options. Default is <see cref="TableOptions.IsTemporary"/>.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
+		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
+		/// Note that context mapping schema must be writable to allow it.
+		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
+		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
+		/// Latter option is not recommended as it will affect performance significantly.</param>
 		/// <returns>Returns temporary table instance.</returns>
 		public static TempTable<T> IntoTempTable<T>(
 			this IQueryable<T>               items,
@@ -1111,7 +1138,9 @@ namespace LinqToDB
 			{
 				if (setTable != null)
 				{
-					var builder = eq.DataContext.GetFluentMappingBuilder();
+					if (eq.DataContext.MappingSchema.IsLockable) throw new LinqToDBException(IntoTempTable_LockedSchemaError);
+
+					var builder = new FluentMappingBuilder(eq.DataContext.MappingSchema);
 					setTable(builder.Entity<T>());
 					builder.Build();
 				}
@@ -1157,7 +1186,11 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="T">Table record mapping class.</typeparam>
 		/// <param name="items">Query to get records to populate created table with initial data.</param>
-		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.</param>
+		/// <param name="setTable">Action to modify <typeparamref name="T"/> entity's mapping using fluent mapping.
+		/// Note that context mapping schema must be writable to allow it.
+		/// You can enable writable <see cref="MappingSchema"/> using <see cref="DataOptionsExtensions.UseEnableContextSchemaEdit(DataOptions, bool)"/> configuration helper
+		/// or enable writeable schemata globally using <see cref="Common.Configuration.Linq.EnableContextSchemaEdit" /> option.
+		/// Latter option is not recommended as it will affect performance significantly.</param>
 		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
 		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
 		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
@@ -1182,7 +1215,9 @@ namespace LinqToDB
 			{
 				if (setTable != null)
 				{
-					var builder = eq.DataContext.GetFluentMappingBuilder();
+					if (eq.DataContext.MappingSchema.IsLockable) throw new LinqToDBException(IntoTempTable_LockedSchemaError);
+
+					var builder = new FluentMappingBuilder(eq.DataContext.MappingSchema);
 					setTable(builder.Entity<T>());
 					builder.Build();
 				}

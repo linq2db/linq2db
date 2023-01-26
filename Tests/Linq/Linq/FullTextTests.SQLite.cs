@@ -31,7 +31,7 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<FtsTable>()
 				.HasTableName(type.ToString() + "_TABLE")
 				.HasColumn(t => t.text1)
