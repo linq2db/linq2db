@@ -134,6 +134,13 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				return string.Format(CultureInfo.InvariantCulture, "MAX_EXECUTION_TIME({0})", value);
 			}
+
+			public const string ForUpdate       = "FOR UPDATE";
+			public const string ForShare        = "FOR SHARE";
+			public const string LockInShareMode = "LOCK IN SHARE MODE";
+
+			public const string NoWait          = "NOWAIT";
+			public const string SkipLocked      = "SKIP LOCKED";
 		}
 
 		/// <summary>

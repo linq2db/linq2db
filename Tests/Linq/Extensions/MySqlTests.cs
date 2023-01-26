@@ -244,5 +244,25 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.NoSemiJoin}(@qq FIRSTMATCH, LOOSESCAN)"));
 			Assert.That(LastQuery, Contains.Substring("\tSELECT /*+ QB_NAME(qq) */").Using(StringComparison.Ordinal));
 		}
+
+		[Test]
+		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context,
+			[Values(
+				MySqlHints.Query.ForUpdate,
+				MySqlHints.Query.ForShare,
+				MySqlHints.Query.LockInShareMode
+			)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Person.SubQueryHint(hint)
+				where p.ID > 0
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"\n{hint}").Using(StringComparison.Ordinal));
+		}
 	}
 }
