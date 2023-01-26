@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using System.Collections.Generic;
 	using Mapping;
 	using SqlQuery;
 
@@ -35,13 +36,15 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext         TableContext    { get; }
 		public AssociationDescriptor Descriptor      { get; }
+		public List<LoadWithInfo[]>? CurrentLoadWith { get; }
 		public IBuildContext         SubqueryContext { get; }
 		public SqlJoinedTable        Join            { get; }
 
-		public AssociationContext(ExpressionBuilder builder, AssociationDescriptor descriptor, IBuildContext tableContext, IBuildContext subqueryContext, SqlJoinedTable join)
+		public AssociationContext(ExpressionBuilder builder, AssociationDescriptor descriptor, List<LoadWithInfo[]>? currentLoadWith, IBuildContext tableContext, IBuildContext subqueryContext, SqlJoinedTable join)
 		{
 			Builder                = builder;
 			Descriptor             = descriptor;
+			CurrentLoadWith        = currentLoadWith;
 			TableContext           = tableContext;
 			SubqueryContext        = subqueryContext;
 			Join                   = join;
@@ -130,6 +133,16 @@ namespace LinqToDB.Linq.Builder
 
 		public void CompleteColumns()
 		{
+		}
+
+		public bool IsCompatibleLoadWith()
+		{
+			if (TableContext is not TableBuilder.TableContext tc)
+				return false;
+			if (!ReferenceEquals(CurrentLoadWith, tc.LoadWith))
+				return false;
+
+			return true;
 		}
 	}
 }

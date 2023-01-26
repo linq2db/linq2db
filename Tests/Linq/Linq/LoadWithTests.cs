@@ -574,6 +574,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LoadWithCacheAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				var filterQuery =
+					from m2 in db.GetTable<MainItem2>().LoadWith(m2 => m2.MainItem)
+					where m2.MainItem != null && m2.MainItem!.SubItems1.Count() > 1
+					select m2;
+
+				var xx = filterQuery.ToArray();
+			}
+		}
+
+		[Test]
 		public void LoadWithAndFilteredProperty([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();

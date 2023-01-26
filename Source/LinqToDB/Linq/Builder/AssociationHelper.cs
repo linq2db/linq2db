@@ -298,7 +298,7 @@ namespace LinqToDB.Linq.Builder
 
 			tableSource.Joins.Add(join.JoinedTable);
 
-			return new AssociationContext(builder, descriptor, tableContext, context, join.JoinedTable);
+			return new AssociationContext(builder, descriptor, tableContext.LoadWith, tableContext, context, join.JoinedTable);
 		}
 
 		public static IBuildContext BuildAssociationSelectMany(ExpressionBuilder builder, BuildInfo buildInfo, TableBuilder.TableContext tableContext,
