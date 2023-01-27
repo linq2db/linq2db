@@ -12,7 +12,7 @@ namespace Tests.Remote.ServerContainer
 		{
 			var dc = base.CreateDataContext(configuration);
 
-			if (configuration == ProviderName.MariaDB)
+			if (configuration?.StartsWith(ProviderName.MariaDB) == true)
 				dc.AddMappingSchema(TestBase._mariaDBSchema);
 
 			return dc;
