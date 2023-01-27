@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 using JetBrains.Annotations;
 
@@ -10,6 +11,8 @@ namespace LinqToDB.DataProvider.MySql
 	using Expressions;
 	using Linq;
 	using SqlProvider;
+	using SqlQuery;
+
 
 	public static partial class MySqlHints
 	{
@@ -134,7 +137,10 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				return string.Format(CultureInfo.InvariantCulture, "MAX_EXECUTION_TIME({0})", value);
 			}
+		}
 
+		public static class SubQuery
+		{
 			public const string ForUpdate       = "FOR UPDATE";
 			public const string ForShare        = "FOR SHARE";
 			public const string LockInShareMode = "LOCK IN SHARE MODE";
@@ -599,6 +605,164 @@ namespace LinqToDB.DataProvider.MySql
 					currentSource.Expression,
 					Expression.Constant(hint),
 					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p))))));
+		}
+
+		#endregion
+
+		#region SubQueryTableHint
+
+		sealed class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
+		{
+			void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			{
+				var hint    = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
+				var idCount = (int)   ((SqlValue)sqlQueryExtension.Arguments["tableIDs.Count"]).Value!;
+
+				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB))
+					stringBuilder.Append("-- ");
+
+				stringBuilder.Append(hint);
+
+				for (var i = 0; i < idCount; i++)
+				{
+					if (i == 0)
+						stringBuilder.Append(" OF ");
+					else if (i > 0)
+						stringBuilder.Append(", ");
+
+					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[$"tableIDs.{i}"]).Value!;
+					var alias = sqlBuilder.BuildSqlID(id);
+
+					stringBuilder.Append(alias);
+				}
+
+				if (sqlQueryExtension.Arguments.TryGetValue("hint2", out var h) && h is SqlValue { Value: string value })
+				{
+//					if (value != SubQuery.SkipLocked
+//						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95)
+//						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL15))
+					{
+						stringBuilder.Append(' ');
+						stringBuilder.Append(value);
+					}
+				}
+			}
+		}
+
+		/// <summary>
+		/// Adds subquery hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="tableIDs">Table IDs.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		public static IMySqlSpecificQueryable<TSource> SubQueryTableHint<TSource>(
+			this                       IMySqlSpecificQueryable<TSource> source,
+			[SqlQueryDependent]        string                           hint,
+			[SqlQueryDependent] params Sql.SqlID[]                      tableIDs)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, tableIDs),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))));
+		}
+
+		/// <summary>
+		/// Adds subquery hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
+		/// <param name="tableIDs">Table IDs.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		public static IMySqlSpecificQueryable<TSource> SubQueryTableHint<TSource>(
+			this                       IMySqlSpecificQueryable<TSource> source,
+			[SqlQueryDependent]        string                           hint,
+			[SqlQueryDependent]        string                           hint2,
+			[SqlQueryDependent] params Sql.SqlID[]                      tableIDs)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, hint2, tableIDs),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.Constant(hint2),
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))));
+		}
+
+		/// <summary>
+		/// Adds subquery hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="tableIDs">Table IDs.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		public static IMySqlSpecificTable<TSource> SubQueryTableHint<TSource>(
+			this                       IMySqlSpecificTable<TSource> table,
+			[SqlQueryDependent]        string                       hint,
+			[SqlQueryDependent] params Sql.SqlID[]                  tableIDs)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(SubQueryTableHint, table, hint, tableIDs),
+				table.Expression,
+				Expression.Constant(hint),
+				Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))));
+
+			return table;
+		}
+
+		/// <summary>
+		/// Adds subquery hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
+		/// <param name="tableIDs">Table IDs.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		public static IMySqlSpecificTable<TSource> SubQueryTableHint<TSource>(
+			this                       IMySqlSpecificTable<TSource> table,
+			[SqlQueryDependent]        string                       hint,
+			[SqlQueryDependent]        string                       hint2,
+			[SqlQueryDependent] params Sql.SqlID[]                  tableIDs)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(SubQueryTableHint, table, hint, hint2, tableIDs),
+				table.Expression,
+				Expression.Constant(hint),
+				Expression.Constant(hint2),
+				Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))));
+
+			return table;
 		}
 
 		#endregion

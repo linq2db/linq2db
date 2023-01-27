@@ -1,5 +1,6 @@
 ﻿#if !NETFRAMEWORK
 using System;
+using LinqToDB;
 
 namespace Tests.Remote
 {
@@ -49,6 +50,9 @@ namespace Tests.Remote
 
 			if (_interceptor != null)
 				dc.AddInterceptor(_interceptor);
+
+			if (configuration == ProviderName.MariaDB)
+				dc.AddMappingSchema(TestBase._mariaDBSchema);
 
 			return dc;
 		}

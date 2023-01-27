@@ -246,11 +246,11 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context,
+		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySqlServer)] string context,
 			[Values(
-				MySqlHints.Query.ForUpdate,
-				MySqlHints.Query.ForShare,
-				MySqlHints.Query.LockInShareMode
+				MySqlHints.SubQuery.ForUpdate,
+				MySqlHints.SubQuery.ForShare,
+				MySqlHints.SubQuery.LockInShareMode
 			)] string hint)
 		{
 			using var db = GetDataContext(context);
@@ -262,7 +262,43 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"\n{hint}").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring($"{hint}").Using(StringComparison.Ordinal));
+		}
+
+		[Test]
+		public void SubQueryTableHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Person.TableID("Pr")
+					.AsMySql()
+					.SubQueryTableHint(MySqlHints.SubQuery.ForUpdate, Sql.TableAlias("Pr"))
+				where p.ID > 0
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("FOR UPDATE OF p"));
+		}
+
+		[Test]
+		public void SubQueryTableHintTest2([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent.TableID("Pr")
+					join c in db.Child.TableID("Ch") on p.ParentID equals c.ParentID
+					select p
+				)
+				.AsMySql()
+				.SubQueryTableHint(MySqlHints.SubQuery.ForUpdate, MySqlHints.SubQuery.SkipLocked, Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("FOR UPDATE OF p, c_1 SKIP LOCKED"));
 		}
 	}
 }
