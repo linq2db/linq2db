@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 
 using JetBrains.Annotations;
@@ -11,6 +12,7 @@ namespace LinqToDB
 {
 	using Async;
 	using Linq;
+	using Linq.Builder;
 
 	public partial class LinqExtensions
 	{
@@ -722,5 +724,16 @@ namespace LinqToDB
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
+		//TODO: Remove in V6
+		[LinqTunnel]
+		[Pure] 
+		internal static IQueryable<TEntity> LoadWithInternal<TEntity>(
+			this IQueryable<TEntity> source,
+			LoadWithInfo             loadWith,
+			MemberInfo[]?            loadWithPath)
+			where TEntity : class
+		{
+			throw new InvalidOperationException();
+		}
 	}
 }

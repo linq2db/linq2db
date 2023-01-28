@@ -953,7 +953,7 @@ namespace LinqToDB.Linq.Builder
 
 										var queryMethod = AssociationHelper.CreateAssociationQueryLambda(context.context.Builder,
 											new AccessorMember(me), associationContext.Descriptor, parentType, parentType, childType, false,
-											false, null, out _);
+											false, new LoadWithInfo(), null, out _);
 
 										var dcConst = Expression.Constant(context.context.Builder.DataContext.Clone(true));
 
@@ -980,7 +980,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression? AssociationRoot;
-		public Stack<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>? AssociationPath;
+		public Stack<Tuple<AccessorMember, IBuildContext, LoadWithInfo, MemberInfo[]>>? AssociationPath;
 
 		HashSet<Expression>? _buildMultipleQueryExpressions;
 

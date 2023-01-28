@@ -688,8 +688,8 @@ namespace LinqToDB.Linq.Builder
 
 
 			var reversedAssociationPath = builder.AssociationPath == null
-				? new List<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>()
-				: new List<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>(builder.AssociationPath);
+				? new List<Tuple<AccessorMember, IBuildContext, LoadWithInfo, MemberInfo[]>>()
+				: new List<Tuple<AccessorMember, IBuildContext, LoadWithInfo, MemberInfo[]>>(builder.AssociationPath);
 
 			reversedAssociationPath.Reverse();
 
@@ -697,10 +697,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (reversedAssociationPath.Count == 0)
 			{
-				reversedAssociationPath.Add(new Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>(
+				reversedAssociationPath.Add(new Tuple<AccessorMember, IBuildContext, LoadWithInfo, MemberInfo[]>(
 					new AccessorMember(expression),
 					context,
-					null
+					new LoadWithInfo(),
+					new[]{association.MemberInfo}
 				));
 
 				projectionVariant = true;
@@ -711,7 +712,8 @@ namespace LinqToDB.Linq.Builder
 
 			var extractContext        = reversedAssociationPath[0].Item2;
 			var associationParentType = associationPath[0].MemberInfo.DeclaringType!;
-			var loadWithItems         = reversedAssociationPath[reversedAssociationPath.Count - 1].Item3;
+			var loadWith              = reversedAssociationPath[reversedAssociationPath.Count - 1].Item3;
+			var loadWithPath          = reversedAssociationPath[reversedAssociationPath.Count - 1].Item4;
 
 			if (!associationParentType.IsSameOrParentOf(mainQueryElementType) && !typeof(KeyDetailEnvelope<,>).IsSameOrParentOf(mainQueryElementType))
 			{
@@ -797,7 +799,7 @@ namespace LinqToDB.Linq.Builder
 				var parentType = association.GetParentElementType();
 				var objectType = association.GetElementType(builder.MappingSchema);
 				var associationLambda = AssociationHelper.CreateAssociationQueryLambda(builder, associationMember, association, parentType, parentType,
-					objectType, false, false, loadWithItems, out _);
+					objectType, false, false, loadWith, loadWithPath, out _);
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 
@@ -834,7 +836,7 @@ namespace LinqToDB.Linq.Builder
 				var parentType = association.GetParentElementType();
 				var objectType = association.GetElementType(builder.MappingSchema);
 				var associationLambda = AssociationHelper.CreateAssociationQueryLambda(builder, associationMember, association, parentType, parentType,
-					objectType, false, false, loadWithItems, out _);
+					objectType, false, false, loadWith, loadWithPath, out _);
 
 				var dependencyAnchor = detailQuery;
 				detailQuery = associationLambda.GetBody(dependencyAnchor);
