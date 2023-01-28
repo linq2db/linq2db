@@ -133,7 +133,5 @@ namespace LinqToDB
 		void RemoveInterceptor(IInterceptor interceptor);
 
 		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
-
-		FluentMappingBuilder GetFluentMappingBuilder();
 	}
 }

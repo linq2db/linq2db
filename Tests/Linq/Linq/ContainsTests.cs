@@ -14,7 +14,7 @@ namespace Tests.Linq
 	{
 		private TempTable<Src> SetupSrcTable(IDataContext db)
 		{
-			db.GetFluentMappingBuilder()
+			new FluentMappingBuilder(db.MappingSchema)
 				.Entity<Src>()
 					.Property(e => e.CEnum)
 						.HasDataType(DataType.VarChar)
@@ -38,7 +38,7 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int? result;
@@ -68,7 +68,7 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int? result;
@@ -98,7 +98,7 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int? result;
@@ -128,7 +128,7 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -149,7 +149,7 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -170,7 +170,7 @@ namespace Tests.Linq
 			[Values]      bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -195,7 +195,7 @@ namespace Tests.Linq
 			[Values]                              bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -217,7 +217,7 @@ namespace Tests.Linq
 			[Values]                              bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -239,7 +239,7 @@ namespace Tests.Linq
 			[Values]                              bool   withNullCompares)
 		{
 			using var _   = new CompareNullsAsValuesOption(withNullCompares);
-			using var db  = GetDataContext(context);
+			using var db  = GetDataContext(context, new MappingSchema());
 			using var src = SetupSrcTable(db);
 
 			int count;

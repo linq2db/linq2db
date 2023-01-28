@@ -27,7 +27,7 @@ namespace Tests.xUpdate
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<DynamicColumns1>().HasTableName("TestMerge1")
 					.HasPrimaryKey(x => Sql.Property<int>(x, "Id"))
 					.Property(x => Sql.Property<int?>(x, "Field1"))

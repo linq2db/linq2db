@@ -142,7 +142,7 @@ namespace Tests.UserTests
 			try
 			{
 				semaphore1.WaitOne();
-				var builder = ms.GetFluentMappingBuilder();
+				var builder = new FluentMappingBuilder(ms);
 
 				builder.Entity<TestEntity>().Property(_ => _.Id).IsColumn().Build();
 				semaphore2.WaitOne();
@@ -170,7 +170,7 @@ namespace Tests.UserTests
 			try
 			{
 				semaphore1.WaitOne();
-				var builder = ms.GetFluentMappingBuilder();
+				var builder = new FluentMappingBuilder(ms);
 
 				builder.Entity<TestEntity>().Property(_ => _.Value).IsColumn().Build();
 				semaphore2.WaitOne();
