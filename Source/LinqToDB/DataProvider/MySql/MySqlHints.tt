@@ -83,6 +83,8 @@ namespace LinqToDB.DataProvider.MySql
 	GenerateIndex2("ForceKeyForJoin");
 	GenerateIndex2("ForceKeyForOrderBy");
 	GenerateIndex2("ForceKeyForGroupBy");
+
+	GenerateSubQuery("ForUpdate",      ""); GenerateSubQuery("ForUpdate",      "NoWait"); GenerateSubQuery("ForUpdate",      "SkipLocked");
 #>
 	}
 }
@@ -238,6 +240,26 @@ void GenerateQuery5(string hint)
 			where TSource : notnull
 		{
 			return (query, values) => MySqlHints.QueryHint(query, Query.<#= hint #>, values);
+		}
+
+<#+
+}
+
+void GenerateSubQuery(string hint, string hint2)
+{
+#>
+		[ExpressionMethod(nameof(<#= hint #><#= hint2 #>HintImpl))]
+		public static IMySqlSpecificQueryable<TSource> <#= hint #><#= hint2 #>Hint<TSource>(
+			this IMySqlSpecificQueryable<TSource> query,
+			params Sql.SqlID[]                    tableIDs)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.<#= hint #>, <#= hint2?.Length == 0 ? "" : "SubQuery." + hint2 + ", " #>tableIDs);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,Sql.SqlID[],IMySqlSpecificQueryable<TSource>>> <#= hint #><#= hint2 #>HintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, tableIDs) => SubQueryTableHint(query, SubQuery.<#= hint #>, <#= hint2?.Length == 0 ? "" : "SubQuery." + hint2 + ", " #>tableIDs);
 		}
 
 <#+

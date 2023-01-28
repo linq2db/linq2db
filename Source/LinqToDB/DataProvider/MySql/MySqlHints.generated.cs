@@ -1195,5 +1195,47 @@ namespace LinqToDB.DataProvider.MySql
 			return (table, indexNames) => MySqlHints.TableIndexHint(table, Table.ForceKeyForGroupBy, indexNames);
 		}
 
+		[ExpressionMethod(nameof(ForUpdateHintImpl))]
+		public static IMySqlSpecificQueryable<TSource> ForUpdateHint<TSource>(
+			this IMySqlSpecificQueryable<TSource> query,
+			params Sql.SqlID[]                    tableIDs)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.ForUpdate, tableIDs);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,Sql.SqlID[],IMySqlSpecificQueryable<TSource>>> ForUpdateHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, tableIDs) => SubQueryTableHint(query, SubQuery.ForUpdate, tableIDs);
+		}
+
+		[ExpressionMethod(nameof(ForUpdateNoWaitHintImpl))]
+		public static IMySqlSpecificQueryable<TSource> ForUpdateNoWaitHint<TSource>(
+			this IMySqlSpecificQueryable<TSource> query,
+			params Sql.SqlID[]                    tableIDs)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.ForUpdate, SubQuery.NoWait, tableIDs);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,Sql.SqlID[],IMySqlSpecificQueryable<TSource>>> ForUpdateNoWaitHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, tableIDs) => SubQueryTableHint(query, SubQuery.ForUpdate, SubQuery.NoWait, tableIDs);
+		}
+
+		[ExpressionMethod(nameof(ForUpdateSkipLockedHintImpl))]
+		public static IMySqlSpecificQueryable<TSource> ForUpdateSkipLockedHint<TSource>(
+			this IMySqlSpecificQueryable<TSource> query,
+			params Sql.SqlID[]                    tableIDs)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.ForUpdate, SubQuery.SkipLocked, tableIDs);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,Sql.SqlID[],IMySqlSpecificQueryable<TSource>>> ForUpdateSkipLockedHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, tableIDs) => SubQueryTableHint(query, SubQuery.ForUpdate, SubQuery.SkipLocked, tableIDs);
+		}
+
 	}
 }

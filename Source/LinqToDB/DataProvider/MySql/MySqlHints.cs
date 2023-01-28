@@ -636,7 +636,7 @@ namespace LinqToDB.DataProvider.MySql
 					stringBuilder.Append(alias);
 				}
 
-				if (sqlQueryExtension.Arguments.TryGetValue("hint2", out var h) && h is SqlValue { Value: string value })
+				if (sqlQueryExtension.Arguments.TryGetValue("hint2", out var h) && h is SqlValue { Value: string value } && !string.IsNullOrWhiteSpace(value))
 				{
 //					if (value != SubQuery.SkipLocked
 //						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95)

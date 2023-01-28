@@ -476,7 +476,7 @@ namespace Tests
 
 				options = options.UseMappingSchema(ms == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(ms, _sequentialAccessSchema));
 			}
-			else if (configuration.StartsWith(TestProvName.MariaDB))
+			else if (configuration.IsAnyOf(TestProvName.AllMariaDB))
 				options = options.UseMappingSchema(ms == null ? _mariaDBSchema : MappingSchema.CombineSchemas(ms, _mariaDBSchema));
 
 			if (interceptor != null)
