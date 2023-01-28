@@ -638,13 +638,8 @@ namespace LinqToDB.DataProvider.MySql
 
 				if (sqlQueryExtension.Arguments.TryGetValue("hint2", out var h) && h is SqlValue { Value: string value } && !string.IsNullOrWhiteSpace(value))
 				{
-//					if (value != SubQuery.SkipLocked
-//						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95)
-//						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL15))
-					{
-						stringBuilder.Append(' ');
-						stringBuilder.Append(value);
-					}
+					stringBuilder.Append(' ');
+					stringBuilder.Append(value);
 				}
 			}
 		}

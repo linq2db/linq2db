@@ -504,7 +504,6 @@ namespace Tests
 
 		private  static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");
 		internal static readonly MappingSchema _mariaDBSchema          = new (ProviderName.MariaDB);
-		//private static readonly MappingSchema _fecSchema = new ();
 
 		protected static char GetParameterToken(string context)
 		{

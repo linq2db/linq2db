@@ -266,7 +266,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryTableHintTest([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		public void SubQueryTableHintTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
