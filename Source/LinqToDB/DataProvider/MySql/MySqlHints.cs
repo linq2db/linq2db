@@ -765,6 +765,20 @@ namespace LinqToDB.DataProvider.MySql
 			return table;
 		}
 
+
+		[ExpressionMethod(nameof(LockInShareModeHintImpl))]
+		public static IMySqlSpecificQueryable<TSource> LockInShareModeHint<TSource>(
+			this   IMySqlSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.LockInShareMode);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,IMySqlSpecificQueryable<TSource>>> LockInShareModeHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => SubQueryTableHint(query, SubQuery.LockInShareMode);
+		}
+
 		#endregion
 	}
 }

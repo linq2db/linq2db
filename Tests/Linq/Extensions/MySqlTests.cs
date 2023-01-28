@@ -246,7 +246,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySqlServer)] string context,
+		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySqlServer57Plus)] string context,
 			[Values(
 				MySqlHints.SubQuery.ForUpdate,
 				MySqlHints.SubQuery.ForShare,
@@ -283,7 +283,7 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SubQueryTableHintTest2([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		public void SubQueryTableHintTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -299,6 +299,25 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("FOR UPDATE OF p, c_1 SKIP LOCKED"));
+		}
+
+		[Test]
+		public void SubQueryHintLockInShareModeTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select p
+				)
+				.AsMySql()
+				.LockInShareModeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.LockInShareMode}"));
 		}
 	}
 }

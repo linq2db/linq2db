@@ -1736,11 +1736,6 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			//if (LastQuery.Contains(ProviderName.MySql92))
-			//	return;
-
-			//var skipLocked = LastQuery.Contains(ProviderName.MySql95) ? " SKIP LOCKED" : "";
-			//Assert.That(LastQuery, Contains.Substring($"{MySqlHints.ForUpdate}{skipLocked}"));
 			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForUpdate}"));
 		}
 
@@ -1760,11 +1755,6 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			//if (LastQuery.Contains(ProviderName.MySql55))
-			//	return;
-
-			//var skipLocked = LastQuery.Contains(ProviderName.MySql95) ? " SKIP LOCKED" : "";
-			//Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForUpdate} OF p, c_1{skipLocked}"));
 			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForUpdate} OF p, c_1"));
 		}
 
@@ -1784,11 +1774,6 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			//if (LastQuery.Contains(ProviderName.MySql92))
-			//	return;
-
-			//var skipLocked = LastQuery.Contains(ProviderName.MySql95) ? " SKIP LOCKED" : "";
-			//Assert.That(LastQuery, Contains.Substring($"{MySqlHints.ForUpdate}{skipLocked}"));
 			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForUpdate} {MySqlHints.SubQuery.NoWait}"));
 		}
 
@@ -1808,11 +1793,6 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			//if (LastQuery.Contains(ProviderName.MySql55))
-			//	return;
-
-			//var skipLocked = LastQuery.Contains(ProviderName.MySql95) ? " SKIP LOCKED" : "";
-			//Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForUpdate} OF p, c_1{skipLocked}"));
 			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForUpdate} OF p, c_1 {MySqlHints.SubQuery.NoWait}"));
 		}
 
@@ -1832,11 +1812,6 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			//if (LastQuery.Contains(ProviderName.MySql92))
-			//	return;
-
-			//var skipLocked = LastQuery.Contains(ProviderName.MySql95) ? " SKIP LOCKED" : "";
-			//Assert.That(LastQuery, Contains.Substring($"{MySqlHints.ForUpdate}{skipLocked}"));
 			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForUpdate} {MySqlHints.SubQuery.SkipLocked}"));
 		}
 
@@ -1856,12 +1831,121 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			//if (LastQuery.Contains(ProviderName.MySql55))
-			//	return;
-
-			//var skipLocked = LastQuery.Contains(ProviderName.MySql95) ? " SKIP LOCKED" : "";
-			//Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForUpdate} OF p, c_1{skipLocked}"));
 			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForUpdate} OF p, c_1 {MySqlHints.SubQuery.SkipLocked}"));
+		}
+
+		[Test]
+		public void SubQueryHintForShareTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsMySql()
+			.ForShareHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForShare}"));
+		}
+
+		[Test]
+		public void SubQueryHintForShareTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent.TableID("Pr")
+				join c in db.Child.TableID("Ch") on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsMySql()
+			.ForShareHint(Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForShare} OF p, c_1"));
+		}
+
+		[Test]
+		public void SubQueryHintForShareNoWaitTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsMySql()
+			.ForShareNoWaitHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForShare} {MySqlHints.SubQuery.NoWait}"));
+		}
+
+		[Test]
+		public void SubQueryHintForShareNoWaitTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent.TableID("Pr")
+				join c in db.Child.TableID("Ch") on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsMySql()
+			.ForShareNoWaitHint(Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForShare} OF p, c_1 {MySqlHints.SubQuery.NoWait}"));
+		}
+
+		[Test]
+		public void SubQueryHintForShareSkipLockedTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent
+				join c in db.Child on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsMySql()
+			.ForShareSkipLockedHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForShare} {MySqlHints.SubQuery.SkipLocked}"));
+		}
+
+		[Test]
+		public void SubQueryHintForShareSkipLockedTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent.TableID("Pr")
+				join c in db.Child.TableID("Ch") on p.ParentID equals c.ParentID
+				select p
+			)
+			.AsMySql()
+			.ForShareSkipLockedHint(Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.ForShare} OF p, c_1 {MySqlHints.SubQuery.SkipLocked}"));
 		}
 
 	}

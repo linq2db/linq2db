@@ -1237,5 +1237,47 @@ namespace LinqToDB.DataProvider.MySql
 			return (query, tableIDs) => SubQueryTableHint(query, SubQuery.ForUpdate, SubQuery.SkipLocked, tableIDs);
 		}
 
+		[ExpressionMethod(nameof(ForShareHintImpl))]
+		public static IMySqlSpecificQueryable<TSource> ForShareHint<TSource>(
+			this IMySqlSpecificQueryable<TSource> query,
+			params Sql.SqlID[]                    tableIDs)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.ForShare, tableIDs);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,Sql.SqlID[],IMySqlSpecificQueryable<TSource>>> ForShareHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, tableIDs) => SubQueryTableHint(query, SubQuery.ForShare, tableIDs);
+		}
+
+		[ExpressionMethod(nameof(ForShareNoWaitHintImpl))]
+		public static IMySqlSpecificQueryable<TSource> ForShareNoWaitHint<TSource>(
+			this IMySqlSpecificQueryable<TSource> query,
+			params Sql.SqlID[]                    tableIDs)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.ForShare, SubQuery.NoWait, tableIDs);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,Sql.SqlID[],IMySqlSpecificQueryable<TSource>>> ForShareNoWaitHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, tableIDs) => SubQueryTableHint(query, SubQuery.ForShare, SubQuery.NoWait, tableIDs);
+		}
+
+		[ExpressionMethod(nameof(ForShareSkipLockedHintImpl))]
+		public static IMySqlSpecificQueryable<TSource> ForShareSkipLockedHint<TSource>(
+			this IMySqlSpecificQueryable<TSource> query,
+			params Sql.SqlID[]                    tableIDs)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.ForShare, SubQuery.SkipLocked, tableIDs);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,Sql.SqlID[],IMySqlSpecificQueryable<TSource>>> ForShareSkipLockedHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return (query, tableIDs) => SubQueryTableHint(query, SubQuery.ForShare, SubQuery.SkipLocked, tableIDs);
+		}
+
 	}
 }

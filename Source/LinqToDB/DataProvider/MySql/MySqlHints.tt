@@ -84,7 +84,8 @@ namespace LinqToDB.DataProvider.MySql
 	GenerateIndex2("ForceKeyForOrderBy");
 	GenerateIndex2("ForceKeyForGroupBy");
 
-	GenerateSubQuery("ForUpdate",      ""); GenerateSubQuery("ForUpdate",      "NoWait"); GenerateSubQuery("ForUpdate",      "SkipLocked");
+	GenerateSubQuery("ForUpdate", ""); GenerateSubQuery("ForUpdate", "NoWait"); GenerateSubQuery("ForUpdate", "SkipLocked");
+	GenerateSubQuery("ForShare",  ""); GenerateSubQuery("ForShare",  "NoWait"); GenerateSubQuery("ForShare",  "SkipLocked");
 #>
 	}
 }
