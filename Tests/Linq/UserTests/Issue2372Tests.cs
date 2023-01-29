@@ -31,7 +31,7 @@ namespace Tests.UserTests
 			try
 			{
 				var ms1 = new MappingSchema();
-				var fmb1 = new FluentMappingBuilder(ms1);
+				var fmb1 = ms1.GetFluentMappingBuilder();
 				fmb1.Entity<InventoryResourceDTO>()
 				  .HasTableName("InventoryResource")
 				  .Property(e => e.Id).IsPrimaryKey()
@@ -52,7 +52,7 @@ namespace Tests.UserTests
 					return (InventoryResourceStatus)Enum.Parse(typeof(InventoryResourceStatus), txt, true);
 				});
 
-				var fmb2 = new FluentMappingBuilder(ms2);
+				var fmb2 = ms2.GetFluentMappingBuilder();
 				fmb2.Entity<InventoryResourceDTO>()
 				  .HasTableName("InventoryResource")
 				  .Property(e => e.Id).IsPrimaryKey()

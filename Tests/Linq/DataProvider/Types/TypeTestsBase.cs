@@ -84,7 +84,7 @@ namespace Tests.DataProvider
 			// setup test table mapping
 			var ms = new MappingSchema();
 
-			var ent = new FluentMappingBuilder(ms).Entity<TypeTable<TType, TNullableType>>();
+			var ent = ms.GetFluentMappingBuilder().Entity<TypeTable<TType, TNullableType>>();
 
 			var prop = ent.Property(e => e.Column).IsNullable(false);
 

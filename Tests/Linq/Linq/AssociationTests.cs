@@ -679,7 +679,7 @@ namespace Tests.Linq
 			var ids = new[] { 1, 5 };
 
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<Top>()
 				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m!.ParentID && m.ChildID > 1 )
@@ -706,7 +706,7 @@ namespace Tests.Linq
 			var ids = new[] { 1, 5 };
 
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<Top>()
 				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 )
@@ -1183,7 +1183,7 @@ namespace Tests.Linq
 		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Entity1711>()
 				.HasTableName("Entity1711")
 				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
@@ -1204,7 +1204,7 @@ namespace Tests.Linq
 		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Entity1711>()
 				.HasTableName("Entity1711")
 				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))

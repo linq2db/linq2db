@@ -98,6 +98,10 @@ namespace Tests.Samples
 			public void RemoveInterceptor(IInterceptor interceptor) => _context.RemoveInterceptor(interceptor);
 
 			public IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
+			public FluentMappingBuilder          GetFluentMappingBuilder()
+			{
+				return MappingSchema.GetFluentMappingBuilder();
+			}
 		}
 
 		public class Entity
@@ -112,7 +116,7 @@ namespace Tests.Samples
 			using (var db = new DataConnection())
 			{
 				var ms = new MappingSchema();
-				var b  = new FluentMappingBuilder(ms);
+				var b  = ms.GetFluentMappingBuilder();
 				var dc = new DataContextDecorator(db, ms);
 
 				b.Entity<Entity>()

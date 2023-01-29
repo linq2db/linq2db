@@ -13,10 +13,5 @@
 			: base(mappingSchema, typeof(T))
 		{
 		}
-
-		internal SqlTable(MappingSchema mappingSchema, EntityDescriptor? descriptor)
-			: base(mappingSchema, descriptor, typeof(T))
-		{
-		}
 	}
 }

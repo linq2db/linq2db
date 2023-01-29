@@ -116,7 +116,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Topic>()
 					.Property(e => e.Id)
 					.Association(e => e.MessagesF1, (t, m) => t.Id == m.TopicId)
@@ -152,7 +152,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Topic>()
 					.Property(e => e.Id)
 					.Association(e => e.MessagesF2, t => t.Id, m => m.TopicId)
@@ -188,7 +188,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Topic>()
 					.Property(e => e.Id)
 					.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
@@ -229,7 +229,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Topic>()
 					.Property(e => e.Id).IsPrimaryKey()
 					.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))

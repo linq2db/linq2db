@@ -6,7 +6,6 @@ namespace LinqToDB.Linq
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
-	using Mapping;
 
 	static partial class QueryRunner
 	{
@@ -14,18 +13,17 @@ namespace LinqToDB.Linq
 			where T : notnull
 		{
 			public static ITable<T> Query(
-				IDataContext      dataContext,
-				EntityDescriptor? tableDescriptor,
-				string?           tableName,
-				string?           serverName,
-				string?           databaseName,
-				string?           schemaName,
-				string?           statementHeader,
-				string?           statementFooter,
-				DefaultNullable   defaultNullable,
-				TableOptions      tableOptions)
+				IDataContext    dataContext,
+				string?         tableName,
+				string?         serverName,
+				string?         databaseName,
+				string?         schemaName,
+				string?         statementHeader,
+				string?         statementFooter,
+				DefaultNullable defaultNullable,
+				TableOptions    tableOptions)
 			{
-				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema, tableDescriptor);
+				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
@@ -52,7 +50,7 @@ namespace LinqToDB.Linq
 
 				query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
 
-				ITable<T> table = new Table<T>(dataContext, tableDescriptor);
+				ITable<T> table = new Table<T>(dataContext);
 
 				if (sqlTable.TableName.Name     != null) table = table.TableName   (sqlTable.TableName.Name);
 				if (sqlTable.TableName.Server   != null) table = table.ServerName  (sqlTable.TableName.Server);
@@ -65,7 +63,6 @@ namespace LinqToDB.Linq
 
 			public static async Task<ITable<T>> QueryAsync(
 				IDataContext      dataContext,
-				EntityDescriptor? tableDescriptor,
 				string?           tableName,
 				string?           serverName,
 				string?           databaseName,
@@ -76,7 +73,7 @@ namespace LinqToDB.Linq
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
-				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema, tableDescriptor);
+				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
@@ -103,7 +100,7 @@ namespace LinqToDB.Linq
 
 				await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				ITable<T> table = new Table<T>(dataContext, tableDescriptor);
+				ITable<T> table = new Table<T>(dataContext);
 
 				if (sqlTable.TableName.Name     != null) table = table.TableName   (sqlTable.TableName.Name);
 				if (sqlTable.TableName.Server   != null) table = table.ServerName  (sqlTable.TableName.Server);

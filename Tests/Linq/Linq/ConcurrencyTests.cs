@@ -40,7 +40,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<int>>()
 					.HasTableName("ConcurrencyAutoIncrement")
 					.Property(e => e.Stamp)
@@ -108,7 +108,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<int>>()
 					.HasTableName("ConcurrencyAutoIncrement")
 					.Property(e => e.Stamp)
@@ -176,7 +176,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<int>>()
 					.HasTableName("ConcurrencyFiltered")
 					.Property(e => e.Stamp)
@@ -234,7 +234,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<int>>()
 					.HasTableName("ConcurrencyFiltered")
 					.Property(e => e.Stamp)
@@ -292,7 +292,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<Guid>>()
 					.HasTableName("ConcurrencyGuid")
 					.Property(e => e.Stamp)
@@ -366,7 +366,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<string>>()
 					.HasTableName("ConcurrencyGuidString")
 					.Property(e => e.Stamp)
@@ -444,7 +444,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<byte[]>>()
 					.HasTableName("ConcurrencyGuidBinary")
 					.Property(e => e.Stamp)
@@ -519,7 +519,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<Guid>>()
 					.HasTableName("ConcurrencyGuid")
 					.Property(e => e.Stamp)
@@ -593,7 +593,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<string>>()
 					.HasTableName("ConcurrencyCustom")
 					.Property(e => e.Stamp)
@@ -667,7 +667,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<string>>()
 					.HasTableName("ConcurrencyCustom")
 					.Property(e => e.Stamp)
@@ -741,7 +741,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<byte[]>>()
 					.Property(e => e.Stamp)
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Auto))
@@ -816,7 +816,7 @@ namespace Tests.Linq
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<ConcurrencyTable<byte[]>>()
 					.Property(e => e.Stamp)
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Auto))

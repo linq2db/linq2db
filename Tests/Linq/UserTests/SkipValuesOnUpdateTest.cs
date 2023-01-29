@@ -186,7 +186,7 @@ namespace Tests.UserTests
 		public void TestSkipWithFluentBuilder([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-			var mapping = new FluentMappingBuilder(ms);
+			var mapping = ms.GetFluentMappingBuilder();
 			mapping.Entity<TestTableFluent>().HasSkipValuesOnUpdate(t => t.Age, 2, 5).Build();
 
 			using (var db = GetDataContext(context, ms))

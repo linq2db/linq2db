@@ -498,7 +498,7 @@ namespace Tests.DataProvider
 			{
 				var ms = new MappingSchema();
 
-				new FluentMappingBuilder(ms)
+				ms.GetFluentMappingBuilder()
 					.Entity<AllType>()
 						.HasTableName("AllTypeCreateTest")
 					.Build();
