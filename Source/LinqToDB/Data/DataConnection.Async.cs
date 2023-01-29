@@ -129,6 +129,12 @@ namespace LinqToDB.Data
 					else
 						connection = DataProvider.CreateConnection(ConnectionString!);
 
+					if (Options.ConnectionOptions.AfterConnectionCreatedAsync != null)
+						await Options.ConnectionOptions.AfterConnectionCreatedAsync(connection, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					else
+						Options.ConnectionOptions.AfterConnectionCreated?.Invoke(connection);
+
 					_connection = AsyncFactory.Create(connection);
 
 					if (RetryPolicy != null)
@@ -144,6 +150,12 @@ namespace LinqToDB.Data
 					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 					_closeConnection = true;
+
+					if (Options.ConnectionOptions.AfterConnectionOpenedAsync != null)
+						await Options.ConnectionOptions.AfterConnectionOpenedAsync(_connection.Connection, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					else
+						Options.ConnectionOptions.AfterConnectionOpened?.Invoke(_connection.Connection);
 
 					if (_connectionInterceptor != null)
 						await _connectionInterceptor.ConnectionOpenedAsync(new (this), _connection.Connection, cancellationToken)

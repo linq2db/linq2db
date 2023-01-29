@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
-using System.Reflection;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
 	using Data;
 
 	public static partial class OracleTools

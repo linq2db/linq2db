@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -490,9 +492,50 @@ namespace LinqToDB
 		/// <summary>
 		/// Sets DataProviderFactory option.
 		/// </summary>
-		public static ConnectionOptions WithDataProviderFactory(this ConnectionOptions options, Func<IDataProvider>? dataProviderFactory)
+		public static ConnectionOptions WithDataProviderFactory(this ConnectionOptions options, Func<IDataProvider> dataProviderFactory)
 		{
 			return options with { DataProviderFactory = dataProviderFactory };
+		}
+
+		/// <summary>
+		/// Sets custom actions, executed after connection created.
+		/// </summary>
+		/// <param name="afterConnectionCreated">
+		/// Action, executed for newly-created connection instance. Accepts created connection instance as parameter.
+		/// </param>
+		/// <param name="afterConnectionCreatedAsync">
+		/// Action, executed for newly-created connection instance from async execution path. Accepts created connection instance as parameter.
+		/// If this option is not set, <paramref name="afterConnectionCreated"/> synchronous action called.
+		/// Use this option only if you need to perform async work from action, otherwise <paramref name="afterConnectionCreated"/> is sufficient.
+		/// </param>
+		public static ConnectionOptions WithAfterConnectionCreated(
+			this ConnectionOptions                       options,
+			Action<DbConnection>                         afterConnectionCreated,
+			Func<DbConnection, CancellationToken, Task>? afterConnectionCreatedAsync = null)
+		{
+			return options with { AfterConnectionCreated = afterConnectionCreated, AfterConnectionCreatedAsync = afterConnectionCreatedAsync };
+		}
+
+		/// <summary>
+		/// Sets custom actions, executed after connection opened.
+		/// </summary>
+		/// <param name="afterConnectionOpened">
+		/// Action, executed for connection instance after <see cref="DbConnection.Open"/> call.
+		/// Also called after <see cref="DbConnection.OpenAsync(CancellationToken)"/> call if <paramref name="afterConnectionOpenedAsync"/> action is not provided.
+		/// Accepts connection instance as parameter.
+		/// </param>
+		/// <param name="afterConnectionOpenedAsync">
+		/// Action, executed for connection instance from async execution path after <see cref="DbConnection.OpenAsync(CancellationToken)"/> call.
+		/// Accepts connection instance as parameter.
+		/// If this option is not set, <paramref name="afterConnectionOpened"/> synchronous action called.
+		/// Use this option only if you need to perform async work from action, otherwise <paramref name="afterConnectionOpened"/> is sufficient.
+		/// </param>
+		public static ConnectionOptions WithAfterConnectionOpened(
+			this ConnectionOptions                       options,
+			Action<DbConnection>                         afterConnectionOpened,
+			Func<DbConnection, CancellationToken, Task>? afterConnectionOpenedAsync = null)
+		{
+			return options with { AfterConnectionOpened = afterConnectionOpened, AfterConnectionOpenedAsync = afterConnectionOpenedAsync };
 		}
 
 		#endregion
@@ -619,6 +662,55 @@ namespace LinqToDB
 		public static DataOptions UseConnectionFactory(this DataOptions options, IDataProvider dataProvider, Func<DataOptions, DbConnection> connectionFactory)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, ConnectionFactory = connectionFactory });
+		}
+
+		/// <summary>
+		/// Sets DataProviderFactory option.
+		/// </summary>
+		public static DataOptions UseDataProviderFactory(this DataOptions options, Func<IDataProvider> dataProviderFactory)
+		{
+			return options.WithOptions<ConnectionOptions>(o => o with { DataProviderFactory = dataProviderFactory });
+		}
+
+		/// <summary>
+		/// Sets custom actions, executed after connection created.
+		/// </summary>
+		/// <param name="afterConnectionCreated">
+		/// Action, executed for newly-created connection instance. Accepts created connection instance as parameter.
+		/// </param>
+		/// <param name="afterConnectionCreatedAsync">
+		/// Action, executed for newly-created connection instance from async execution path. Accepts created connection instance as parameter.
+		/// If this option is not set, <paramref name="afterConnectionCreated"/> synchronous action called.
+		/// Use this option only if you need to perform async work from action, otherwise <paramref name="afterConnectionCreated"/> is sufficient.
+		/// </param>
+		public static DataOptions UseAfterConnectionCreated(
+			this DataOptions                             options,
+			Action<DbConnection>                         afterConnectionCreated,
+			Func<DbConnection, CancellationToken, Task>? afterConnectionCreatedAsync = null)
+		{
+			return options.WithOptions<ConnectionOptions>(o => o with { AfterConnectionCreated = afterConnectionCreated, AfterConnectionCreatedAsync = afterConnectionCreatedAsync });
+		}
+
+		/// <summary>
+		/// Sets custom actions, executed after connection opened.
+		/// </summary>
+		/// <param name="afterConnectionOpened">
+		/// Action, executed for connection instance after <see cref="DbConnection.Open"/> call.
+		/// Also called after <see cref="DbConnection.OpenAsync(CancellationToken)"/> call if <paramref name="afterConnectionOpenedAsync"/> action is not provided.
+		/// Accepts connection instance as parameter.
+		/// </param>
+		/// <param name="afterConnectionOpenedAsync">
+		/// Action, executed for connection instance from async execution path after <see cref="DbConnection.OpenAsync(CancellationToken)"/> call.
+		/// Accepts connection instance as parameter.
+		/// If this option is not set, <paramref name="afterConnectionOpened"/> synchronous action called.
+		/// Use this option only if you need to perform async work from action, otherwise <paramref name="afterConnectionOpened"/> is sufficient.
+		/// </param>
+		public static DataOptions UseAfterConnectionOpened(
+			this DataOptions                             options,
+			Action<DbConnection>                         afterConnectionOpened,
+			Func<DbConnection, CancellationToken, Task>? afterConnectionOpenedAsync = null)
+		{
+			return options.WithOptions<ConnectionOptions>(o => o with { AfterConnectionOpened = afterConnectionOpened, AfterConnectionOpenedAsync = afterConnectionOpenedAsync });
 		}
 
 		/// <summary>
