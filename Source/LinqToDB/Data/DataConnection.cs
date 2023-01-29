@@ -662,8 +662,6 @@ namespace LinqToDB.Data
 					else
 						connection = DataProvider.CreateConnection(ConnectionString!);
 
-					Options.ConnectionOptions.AfterConnectionCreated?.Invoke(connection);
-
 					_connection = AsyncFactory.Create(connection);
 
 					if (RetryPolicy != null)
@@ -678,8 +676,6 @@ namespace LinqToDB.Data
 
 					_connection.Open();
 					_closeConnection = true;
-
-					Options.ConnectionOptions.AfterConnectionOpened?.Invoke(_connection.Connection);
 
 					_connectionInterceptor?.ConnectionOpened(new(this), _connection.Connection);
 				}
@@ -1437,9 +1433,6 @@ namespace LinqToDB.Data
 			CheckAndThrowOnDisposed();
 
 			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke(Options);
-
-			if (connection != null)
-				Options.ConnectionOptions.AfterConnectionCreated?.Invoke(connection);
 
 			// https://github.com/linq2db/linq2db/issues/1486
 			// when there is no ConnectionString and provider doesn't support connection cloning

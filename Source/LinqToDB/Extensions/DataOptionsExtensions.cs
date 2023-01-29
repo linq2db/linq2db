@@ -498,22 +498,24 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Sets custom actions, executed after connection created.
+		/// Sets custom actions, executed before connection opened.
 		/// </summary>
-		/// <param name="afterConnectionCreated">
-		/// Action, executed for newly-created connection instance. Accepts created connection instance as parameter.
+		/// <param name="afterConnectionOpening">
+		/// Action, executed before database connection opened.
+		/// Accepts connection instance as parameter.
 		/// </param>
-		/// <param name="afterConnectionCreatedAsync">
-		/// Action, executed for newly-created connection instance from async execution path. Accepts created connection instance as parameter.
-		/// If this option is not set, <paramref name="afterConnectionCreated"/> synchronous action called.
-		/// Use this option only if you need to perform async work from action, otherwise <paramref name="afterConnectionCreated"/> is sufficient.
+		/// <param name="afterConnectionOpeningAsync">
+		/// Action, executed after database connection opened from async execution path.
+		/// Accepts connection instance as parameter.
+		/// If this option is not set, <paramref name="afterConnectionOpening"/> synchronous action called.
+		/// Use this option only if you need to perform async work from action, otherwise <paramref name="afterConnectionOpening"/> is sufficient.
 		/// </param>
-		public static ConnectionOptions WithAfterConnectionCreated(
+		public static ConnectionOptions WithBeforeConnectionOpened(
 			this ConnectionOptions                       options,
-			Action<DbConnection>                         afterConnectionCreated,
-			Func<DbConnection, CancellationToken, Task>? afterConnectionCreatedAsync = null)
+			Action<DbConnection>                         afterConnectionOpening,
+			Func<DbConnection, CancellationToken, Task>? afterConnectionOpeningAsync = null)
 		{
-			return options with { AfterConnectionCreated = afterConnectionCreated, AfterConnectionCreatedAsync = afterConnectionCreatedAsync };
+			return options with { ConnectionInterceptor = new(afterConnectionOpening, afterConnectionOpeningAsync, options.ConnectionInterceptor?.OnConnectionOpened, options.ConnectionInterceptor?.OnConnectionOpenedAsync) };
 		}
 
 		/// <summary>
@@ -535,7 +537,7 @@ namespace LinqToDB
 			Action<DbConnection>                         afterConnectionOpened,
 			Func<DbConnection, CancellationToken, Task>? afterConnectionOpenedAsync = null)
 		{
-			return options with { AfterConnectionOpened = afterConnectionOpened, AfterConnectionOpenedAsync = afterConnectionOpenedAsync };
+			return options with { ConnectionInterceptor = new (options.ConnectionInterceptor?.OnConnectionOpening, options.ConnectionInterceptor?.OnConnectionOpeningAsync, afterConnectionOpened, afterConnectionOpenedAsync) };
 		}
 
 		#endregion
@@ -673,22 +675,24 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Sets custom actions, executed after connection created.
+		/// Sets custom actions, executed before connection opened.
 		/// </summary>
-		/// <param name="afterConnectionCreated">
-		/// Action, executed for newly-created connection instance. Accepts created connection instance as parameter.
+		/// <param name="afterConnectionOpening">
+		/// Action, executed before database connection opened.
+		/// Accepts connection instance as parameter.
 		/// </param>
-		/// <param name="afterConnectionCreatedAsync">
-		/// Action, executed for newly-created connection instance from async execution path. Accepts created connection instance as parameter.
-		/// If this option is not set, <paramref name="afterConnectionCreated"/> synchronous action called.
-		/// Use this option only if you need to perform async work from action, otherwise <paramref name="afterConnectionCreated"/> is sufficient.
+		/// <param name="afterConnectionOpeningAsync">
+		/// Action, executed after database connection opened from async execution path.
+		/// Accepts connection instance as parameter.
+		/// If this option is not set, <paramref name="afterConnectionOpening"/> synchronous action called.
+		/// Use this option only if you need to perform async work from action, otherwise <paramref name="afterConnectionOpening"/> is sufficient.
 		/// </param>
-		public static DataOptions UseAfterConnectionCreated(
+		public static DataOptions UseBeforeConnectionOpened(
 			this DataOptions                             options,
-			Action<DbConnection>                         afterConnectionCreated,
-			Func<DbConnection, CancellationToken, Task>? afterConnectionCreatedAsync = null)
+			Action<DbConnection>                         afterConnectionOpening,
+			Func<DbConnection, CancellationToken, Task>? afterConnectionOpeningAsync = null)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { AfterConnectionCreated = afterConnectionCreated, AfterConnectionCreatedAsync = afterConnectionCreatedAsync });
+			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionInterceptor = new(afterConnectionOpening, afterConnectionOpeningAsync, options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpened, options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpenedAsync) });
 		}
 
 		/// <summary>
@@ -710,7 +714,7 @@ namespace LinqToDB
 			Action<DbConnection>                         afterConnectionOpened,
 			Func<DbConnection, CancellationToken, Task>? afterConnectionOpenedAsync = null)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { AfterConnectionOpened = afterConnectionOpened, AfterConnectionOpenedAsync = afterConnectionOpenedAsync });
+			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionInterceptor = new(options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpening, options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpeningAsync, afterConnectionOpened, afterConnectionOpenedAsync) });
 		}
 
 		/// <summary>

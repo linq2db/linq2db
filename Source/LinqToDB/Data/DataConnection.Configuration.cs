@@ -634,6 +634,9 @@ namespace LinqToDB.Data
 				if (options.SavedEnableContextSchemaEdit)
 					dataConnection.MappingSchema = new (dataConnection.MappingSchema);
 
+				if (options.ConnectionInterceptor != null)
+					dataConnection.AddInterceptor(options.ConnectionInterceptor);
+
 				IAsyncDbConnection WrapConnection(DbConnection connection)
 				{
 					// TODO: IT Look into.

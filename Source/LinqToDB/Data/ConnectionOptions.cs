@@ -8,6 +8,7 @@ namespace LinqToDB.Data
 	using Common;
 	using Common.Internal;
 	using DataProvider;
+	using Interceptors;
 	using Mapping;
 
 	/// <param name="ConfigurationString">
@@ -41,41 +42,22 @@ namespace LinqToDB.Data
 	/// <param name="DataProviderFactory">
 	/// Gets <see cref="IDataProvider"/> factory to use with <see cref="DataConnection"/> instance.
 	/// </param>
-	/// <param name="AfterConnectionCreated">
-	/// Action, executed for newly-created connection instance. Accepts created connection instance as parameter.
-	/// </param>
-	/// <param name="AfterConnectionCreatedAsync">
-	/// Action, executed for newly-created connection instance from async execution path. Accepts created connection instance as parameter.
-	/// If this option is not set, <paramref name="AfterConnectionCreated"/> synchronous action called.
-	/// Use this option only if you need to perform async work from action, otherwise <paramref name="AfterConnectionCreated"/> is sufficient.
-	/// </param>
-	/// <param name="AfterConnectionOpened">
-	/// Action, executed for connection instance after <see cref="DbConnection.Open"/> call.
-	/// Also called after <see cref="DbConnection.OpenAsync(CancellationToken)"/> call if <paramref name="AfterConnectionOpenedAsync"/> action is not provided.
-	/// Accepts connection instance as parameter.
-	/// </param>
-	/// <param name="AfterConnectionOpenedAsync">
-	/// Action, executed for connection instance from async execution path after <see cref="DbConnection.OpenAsync(CancellationToken)"/> call.
-	/// Accepts connection instance as parameter.
-	/// If this option is not set, <paramref name="AfterConnectionOpened"/> synchronous action called.
-	/// Use this option only if you need to perform async work from action, otherwise <paramref name="AfterConnectionOpened"/> is sufficient.
+	/// <param name="ConnectionInterceptor">
+	/// Connection interceptor to support connection configuration before or right after connection opened.
 	/// </param>
 	public sealed record ConnectionOptions
 	(
-		string?                                      ConfigurationString         = default,
-		string?                                      ConnectionString            = default,
-		IDataProvider?                               DataProvider                = default,
-		string?                                      ProviderName                = default,
-		MappingSchema?                               MappingSchema               = default,
-		DbConnection?                                DbConnection                = default,
-		DbTransaction?                               DbTransaction               = default,
-		bool                                         DisposeConnection           = default,
-		Func<DataOptions, DbConnection>?             ConnectionFactory           = default,
-		Func<IDataProvider>?                         DataProviderFactory         = default,
-		Action<DbConnection>?                        AfterConnectionCreated      = default,
-		Func<DbConnection, CancellationToken, Task>? AfterConnectionCreatedAsync = default,
-		Action<DbConnection>?                        AfterConnectionOpened       = default,
-		Func<DbConnection, CancellationToken, Task>? AfterConnectionOpenedAsync  = default
+		string?                                 ConfigurationString   = default,
+		string?                                 ConnectionString      = default,
+		IDataProvider?                          DataProvider          = default,
+		string?                                 ProviderName          = default,
+		MappingSchema?                          MappingSchema         = default,
+		DbConnection?                           DbConnection          = default,
+		DbTransaction?                          DbTransaction         = default,
+		bool                                    DisposeConnection     = default,
+		Func<DataOptions, DbConnection>?        ConnectionFactory     = default,
+		Func<IDataProvider>?                    DataProviderFactory   = default,
+		ConnectionOptionsConnectionInterceptor? ConnectionInterceptor = default
 	)
 		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
@@ -95,10 +77,7 @@ namespace LinqToDB.Data
 			DisposeConnection           = original.DisposeConnection;
 			ConnectionFactory           = original.ConnectionFactory;
 			DataProviderFactory         = original.DataProviderFactory;
-			AfterConnectionCreated      = original.AfterConnectionCreated;
-			AfterConnectionCreatedAsync = original.AfterConnectionCreatedAsync;
-			AfterConnectionOpened       = original.AfterConnectionOpened;
-			AfterConnectionOpenedAsync  = original.AfterConnectionOpenedAsync;
+			ConnectionInterceptor       = original.ConnectionInterceptor;
 		}
 
 		int? _configurationID;
@@ -120,10 +99,7 @@ namespace LinqToDB.Data
 						.Add(DisposeConnection)
 						.Add(ConnectionFactory)
 						.Add(DataProviderFactory)
-						.Add(AfterConnectionCreated)
-						.Add(AfterConnectionCreatedAsync)
-						.Add(AfterConnectionOpened)
-						.Add(AfterConnectionOpenedAsync)
+						.Add(ConnectionInterceptor)
 						.CreateID();
 				}
 
