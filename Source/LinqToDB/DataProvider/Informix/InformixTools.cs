@@ -19,9 +19,9 @@ namespace LinqToDB.DataProvider.Informix
 
 		static readonly Lazy<IDataProvider> _informixDB2DataProvider = DataConnection.CreateDataProvider<InformixDataProviderDB2>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case ProviderName.InformixDB2:
 					return _informixDB2DataProvider.Value;
@@ -35,11 +35,11 @@ namespace LinqToDB.DataProvider.Informix
 				case DB2ProviderAdapter.CoreClientNamespace :
 
 					// this check used by both Informix and DB2 providers to avoid conflicts
-					if (css.Name.Contains("Informix"))
+					if (options.ConfigurationString?.Contains("Informix") == true)
 						goto case ProviderName.Informix;
 					break;
 				case ProviderName.Informix   :
-					if (css.Name.Contains("DB2"))
+					if (options.ConfigurationString?.Contains("DB2") == true)
 						return _informixDB2DataProvider.Value;
 
 #if NETFRAMEWORK

@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Detected SQL Server version.</returns>
 		public static SqlServerVersion? DetectServerVersion(SqlServerProvider provider, string connectionString)
 		{
-			return ProviderDetector.DetectServerVersion(provider, connectionString);
+			return ProviderDetector.DetectServerVersion(new ConnectionOptions(connectionString), provider);
 		}
 
 		#endregion
@@ -58,7 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerProvider provider         = SqlServerProvider.AutoDetect,
 			string?           connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(provider, version, connectionString);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, version);
 		}
 
 		/// <summary>

@@ -56,7 +56,7 @@ namespace LinqToDB.Data
 		DbTransaction?                          DbTransaction         = default,
 		bool                                    DisposeConnection     = default,
 		Func<DataOptions, DbConnection>?        ConnectionFactory     = default,
-		Func<IDataProvider>?                    DataProviderFactory   = default,
+		Func<ConnectionOptions, IDataProvider>? DataProviderFactory   = default,
 		ConnectionOptionsConnectionInterceptor? ConnectionInterceptor = default
 	)
 		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>

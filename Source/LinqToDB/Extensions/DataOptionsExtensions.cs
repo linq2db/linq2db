@@ -492,7 +492,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Sets DataProviderFactory option.
 		/// </summary>
-		public static ConnectionOptions WithDataProviderFactory(this ConnectionOptions options, Func<IDataProvider> dataProviderFactory)
+		public static ConnectionOptions WithDataProviderFactory(this ConnectionOptions options, Func<ConnectionOptions, IDataProvider> dataProviderFactory)
 		{
 			return options with { DataProviderFactory = dataProviderFactory };
 		}
@@ -669,7 +669,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Sets DataProviderFactory option.
 		/// </summary>
-		public static DataOptions UseDataProviderFactory(this DataOptions options, Func<IDataProvider> dataProviderFactory)
+		public static DataOptions UseDataProviderFactory(this DataOptions options, Func<ConnectionOptions, IDataProvider> dataProviderFactory)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProviderFactory = dataProviderFactory });
 		}

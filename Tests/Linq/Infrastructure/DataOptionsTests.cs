@@ -3,11 +3,16 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
+
+using Microsoft.Data.SqlClient;
 
 using NUnit.Framework;
 
 namespace Tests.Infrastructure
 {
+	using System.Net;
+	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
@@ -72,6 +77,162 @@ namespace Tests.Infrastructure
 			_child = db1.Child.ToList();
 
 			Assert.NotNull(s1);
+		}
+
+		[Test]
+		public async ValueTask OnBeforeAfterConnectionOpenedTest([IncludeDataSources(TestProvName.SqlServer2022MS)] string context)
+		{
+			var cs = DataConnection.GetConnectionString(context);
+
+			var builder = new SqlConnectionStringBuilder(cs);
+
+			if (string.IsNullOrEmpty(builder.Password))
+				Assert.Inconclusive("SQL Credentials required");
+
+			var password = new NetworkCredential("", builder.Password).SecurePassword;
+			password.MakeReadOnly();
+			var creds = new SqlCredential(builder.UserID, password);
+
+			builder.Remove("UserID");
+			builder.Remove("User ID");
+			builder.Remove("Password");
+
+			var cleanCs = builder.ToString();
+
+			var syncBeforeCalled  = false;
+			var asyncBeforeCalled = false;
+			var syncAfterCalled   = false;
+			var asyncAfterCalled  = false;
+
+			var options = new DataOptions()
+				.UseSqlServer(cleanCs, SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient)
+				.UseBeforeConnectionOpened(cn =>
+				{
+					((SqlConnection)cn).Credential = creds;
+					syncBeforeCalled = true;
+				},
+				(cn, t) =>
+				{
+					((SqlConnection)cn).Credential = creds;
+					asyncBeforeCalled = true;
+					return Task.CompletedTask;
+				})
+				.UseAfterConnectionOpened(_ =>
+				{
+					syncAfterCalled = true;
+				},
+				(_, _) =>
+				{
+					asyncAfterCalled = true;
+					return Task.CompletedTask;
+				});
+
+			using (var dc = new DataConnection(options))
+			{
+				dc.GetTable<Person>().ToList();
+
+				Assert.True(syncBeforeCalled);
+				Assert.True(syncAfterCalled);
+				Assert.False(asyncBeforeCalled);
+				Assert.False(asyncAfterCalled);
+			}
+
+			syncBeforeCalled  = false;
+			asyncBeforeCalled = false;
+			syncAfterCalled   = false;
+			asyncAfterCalled  = false;
+			using (var dc = new DataConnection(options))
+			{
+				await dc.GetTable<Person>().ToListAsync();
+
+				Assert.False(syncBeforeCalled);
+				Assert.False(syncAfterCalled);
+				Assert.True(asyncBeforeCalled);
+				Assert.True(asyncAfterCalled);
+			}
+
+			syncBeforeCalled  = false;
+			asyncBeforeCalled = false;
+			syncAfterCalled   = false;
+			asyncAfterCalled  = false;
+			using (var dc = new DataContext(options))
+			{
+				dc.GetTable<Person>().ToList();
+
+				Assert.True(syncBeforeCalled);
+				Assert.True(syncAfterCalled);
+				Assert.False(asyncBeforeCalled);
+				Assert.False(asyncAfterCalled);
+			}
+
+			syncBeforeCalled  = false;
+			asyncBeforeCalled = false;
+			syncAfterCalled   = false;
+			asyncAfterCalled  = false;
+			using (var dc = new DataContext(options))
+			{
+				await dc.GetTable<Person>().ToListAsync();
+
+				Assert.False(syncBeforeCalled);
+				Assert.False(syncAfterCalled);
+				Assert.True(asyncBeforeCalled);
+				Assert.True(asyncAfterCalled);
+			}
+
+			// test sync only handlers
+
+			var beforeCalled = false;
+			var afterCalled  = false;
+
+			options = new DataOptions()
+				.UseSqlServer(cleanCs, SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient)
+				.UseBeforeConnectionOpened(cn =>
+				{
+					((SqlConnection)cn).Credential = creds;
+					beforeCalled = true;
+				})
+				.UseAfterConnectionOpened(_ =>
+				{
+					afterCalled = true;
+				});
+
+			using (var dc = new DataConnection(options))
+			{
+				dc.GetTable<Person>().ToList();
+
+				Assert.True(beforeCalled);
+				Assert.True(afterCalled);
+			}
+
+			beforeCalled = false;
+			afterCalled  = false;
+			using (var dc = new DataConnection(options))
+			{
+				await dc.GetTable<Person>().ToListAsync();
+
+				Assert.True(beforeCalled);
+				Assert.True(afterCalled);
+			}
+
+			beforeCalled = false;
+			afterCalled  = false;
+			using (var dc = new DataContext(options))
+			{
+				dc.GetTable<Person>().ToList();
+
+				Assert.True(beforeCalled);
+				Assert.True(afterCalled);
+			}
+
+			beforeCalled = false;
+			afterCalled  = false;
+			using (var dc = new DataContext(options))
+			{
+				await dc.GetTable<Person>().ToListAsync();
+
+				Assert.True(beforeCalled);
+				Assert.True(afterCalled);
+			}
 		}
 	}
 }

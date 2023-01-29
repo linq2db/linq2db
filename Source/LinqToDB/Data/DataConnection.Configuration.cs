@@ -115,7 +115,10 @@ namespace LinqToDB.Data
 			{
 				get
 				{
-					var dataProvider = _dataProvider ??= GetDataProvider(_connectionStringSettings!, ConnectionString);
+					
+					var dataProvider = _dataProvider ??= GetDataProvider(
+						new (ConfigurationString: _connectionStringSettings?.Name, ConnectionString: ConnectionString, ProviderName: _connectionStringSettings?.ProviderName),
+						_connectionStringSettings?.IsGlobal ?? false);
 
 					if (dataProvider == null)
 						throw new LinqToDBException($"DataProvider is not provided for configuration: {_configurationString}");
@@ -124,11 +127,11 @@ namespace LinqToDB.Data
 				}
 			}
 
-			public static IDataProvider? GetDataProvider(IConnectionStringSettings css, string connectionString)
+			public static IDataProvider? GetDataProvider(ConnectionOptions options, bool isGlobal)
 			{
-				var configuration = css.Name;
-				var providerName  = css.ProviderName;
-				var dataProvider  = _providerDetectors.Select(d => d(css, connectionString)).FirstOrDefault(dp => dp != null);
+				var configuration = options.ConfigurationString;
+				var providerName  = options.ProviderName;
+				var dataProvider  = _providerDetectors.Select(d => d(options)).FirstOrDefault(dp => dp != null);
 
 				if (dataProvider == null)
 				{
@@ -138,9 +141,9 @@ namespace LinqToDB.Data
 						_dataProviders.TryGetValue(DefaultDataProvider, out defaultDataProvider);
 
 					if (string.IsNullOrEmpty(providerName))
-						dataProvider = FindProvider(configuration, _dataProviders, defaultDataProvider);
+						dataProvider = FindProvider(configuration!, _dataProviders, defaultDataProvider);
 					else if (!_dataProviders.TryGetValue(providerName!, out dataProvider) &&
-					         !_dataProviders.TryGetValue(configuration, out dataProvider))
+					         !_dataProviders.TryGetValue(configuration!, out dataProvider))
 					{
 						var providers = _dataProviders.Where(dp => dp.Value.ConnectionNamespace == providerName).ToList();
 
@@ -148,14 +151,14 @@ namespace LinqToDB.Data
 						{
 							0 => defaultDataProvider,
 							1 => providers[0].Value,
-							_ => FindProvider(configuration, providers, providers[0].Value),
+							_ => FindProvider(configuration!, providers, providers[0].Value),
 						};
 					}
 				}
 
-				if (dataProvider != null && DefaultConfiguration == null && !css.IsGlobal/*IsMachineConfig(css)*/)
+				if (dataProvider != null && DefaultConfiguration == null && !isGlobal)
 				{
-					DefaultConfiguration = css.Name;
+					DefaultConfiguration = configuration;
 				}
 
 				return dataProvider;
@@ -214,7 +217,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-		static readonly List<Func<IConnectionStringSettings,string,IDataProvider?>> _providerDetectors = new();
+		static readonly List<Func<ConnectionOptions,IDataProvider?>> _providerDetectors = new();
 
 		/// <summary>
 		/// Registers database provider factory method.
@@ -222,7 +225,7 @@ namespace LinqToDB.Data
 		/// instance using provided options.
 		/// </summary>
 		/// <param name="providerDetector">Factory method delegate.</param>
-		public static void AddProviderDetector(Func<IConnectionStringSettings,string,IDataProvider?> providerDetector)
+		public static void AddProviderDetector(Func<ConnectionOptions, IDataProvider?> providerDetector)
 		{
 			_providerDetectors.Add(providerDetector);
 		}
@@ -233,7 +236,7 @@ namespace LinqToDB.Data
 		/// instance using provided options.
 		/// </summary>
 		/// <param name="providerDetector">Factory method delegate.</param>
-		public static void InsertProviderDetector(Func<IConnectionStringSettings,string,IDataProvider?> providerDetector)
+		public static void InsertProviderDetector(Func<ConnectionOptions, IDataProvider?> providerDetector)
 		{
 			_providerDetectors.Insert(0, providerDetector);
 		}
@@ -300,8 +303,8 @@ namespace LinqToDB.Data
 			string connectionString)
 		{
 			return ConfigurationInfo.GetDataProvider(
-				new ConnectionStringSettings(configurationString, connectionString, providerName),
-				connectionString);
+				new (ConfigurationString: configurationString, ConnectionString: connectionString, ProviderName: providerName),
+				false);
 		}
 
 		/// <summary>
@@ -315,8 +318,8 @@ namespace LinqToDB.Data
 			string connectionString)
 		{
 			return ConfigurationInfo.GetDataProvider(
-				new ConnectionStringSettings(providerName, connectionString, providerName),
-				connectionString);
+				new(ConfigurationString: providerName, ConnectionString: connectionString, ProviderName: providerName),
+				false);
 		}
 
 		/// <summary>
@@ -499,6 +502,9 @@ namespace LinqToDB.Data
 		{
 			public static void Apply(DataConnection dataConnection, ConnectionOptions options)
 			{
+				if (options.ConnectionInterceptor != null)
+					dataConnection.AddInterceptor(options.ConnectionInterceptor);
+
 				if (options.SavedDataProvider != null)
 				{
 					dataConnection.DataProvider        = options.SavedDataProvider;
@@ -512,7 +518,7 @@ namespace LinqToDB.Data
 					return;
 				}
 
-				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory();
+				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory(options);
 				var doSave       = true;
 
 				switch (
@@ -633,9 +639,6 @@ namespace LinqToDB.Data
 
 				if (options.SavedEnableContextSchemaEdit)
 					dataConnection.MappingSchema = new (dataConnection.MappingSchema);
-
-				if (options.ConnectionInterceptor != null)
-					dataConnection.AddInterceptor(options.ConnectionInterceptor);
 
 				IAsyncDbConnection WrapConnection(DbConnection connection)
 				{
