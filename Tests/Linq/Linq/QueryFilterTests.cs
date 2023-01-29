@@ -63,7 +63,7 @@ namespace Tests.Linq
 
 		static QueryFilterTests()
 		{
-			var builder = new MappingSchema().GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<MasterClass>().HasQueryFilter((q, dc) => q.Where(e => !((DcParams)((MyDataContext)dc).Params).IsSoftDeleteFilterEnabled || !e.IsDeleted));
 
@@ -132,7 +132,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			var builder = new MappingSchema().GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
@@ -219,7 +219,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			var builder = new MappingSchema().GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted));
@@ -248,7 +248,7 @@ namespace Tests.Linq
 			var testData = GenerateTestData();
 
 			Expression<Func<ISoftDelete, MyDataContext, bool>> softDeleteCheck = (e, dc) => !dc.IsSoftDeleteFilterEnabled || !e.IsDeleted;
-			var builder = new MappingSchema().GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => softDeleteCheck.Compile()(e, dc)));
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>((q, dc) => q.Where(e => softDeleteCheck.Compile()(e, dc)));
@@ -292,7 +292,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			var builder = new MappingSchema().GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
 			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);

@@ -2194,7 +2194,7 @@ namespace Tests.DataProvider
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<DataTypeBinaryMapping>()
 					.Property(p => p.Binary).HasDataType(DataType.Binary).IsNullable(false)
 				.Build();

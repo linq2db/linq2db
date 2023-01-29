@@ -26,7 +26,7 @@ namespace Tests.xUpdate
 		public void CreateTable1([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<TestTable>()
 					.Property(t => t.ID)
 						.IsIdentity()
@@ -50,7 +50,7 @@ namespace Tests.xUpdate
 		public async Task CreateTable1Async([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<TestTable>()
 					.Property(t => t.ID)
 						.IsIdentity()
@@ -74,7 +74,7 @@ namespace Tests.xUpdate
 		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus/*, ProviderName.DB2*/)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<TestTable>()
 					.Property(t => t.Field1)
 						.HasLength(50)
@@ -125,7 +125,7 @@ namespace Tests.xUpdate
 			string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<TestTable>()
 					.Property(t => t.Field1)
 						.HasLength(50)
@@ -255,7 +255,7 @@ namespace Tests.xUpdate
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<Aa>()
 					.HasTableName("aa")
 					.Property(t => t.bb).IsPrimaryKey()

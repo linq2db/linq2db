@@ -728,13 +728,6 @@ namespace LinqToDB.Data
 			_dataContextInterceptor?.OnClosed(new (this));
 		}
 
-		public FluentMappingBuilder GetFluentMappingBuilder()
-		{
-			if (MappingSchema.IsLockable)
-				MappingSchema = new(MappingSchema);
-			return MappingSchema.GetFluentMappingBuilder();
-		}
-
 		#endregion
 
 		#region Command
