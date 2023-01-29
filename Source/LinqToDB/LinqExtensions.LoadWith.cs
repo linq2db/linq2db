@@ -735,5 +735,17 @@ namespace LinqToDB
 		{
 			throw new InvalidOperationException();
 		}
+
+		//TODO: Remove in V6
+		[LinqTunnel]
+		[Pure] 
+		internal static ITable<TEntity> LoadWithInternal<TEntity>(
+			this ITable<TEntity> table,
+			LoadWithInfo         loadWith,
+			MemberInfo[]?        loadWithPath)
+			where TEntity : class
+		{
+			throw new InvalidOperationException();
+		}
 	}
 }

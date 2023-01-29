@@ -350,7 +350,11 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression EnrichLoadWith(IDataContext dataContext, Type entityType, Expression table, LoadWithInfo loadWith, MemberInfo[]? loadWithPath)
 		{
-			var result = Expression.Call(Methods.LinqToDB.LoadWithInternal.MakeGenericMethod(entityType),
+			var method = typeof(ITable<>).IsSameOrParentOf(table.Type)
+				? Methods.LinqToDB.LoadWithInternalTable
+				: Methods.LinqToDB.LoadWithInternal;
+
+			var result = Expression.Call(method.MakeGenericMethod(entityType),
 				table,
 				Expression.Constant(loadWith),
 				Expression.Constant(loadWithPath, typeof(MemberInfo[])));
