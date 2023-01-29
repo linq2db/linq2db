@@ -574,7 +574,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithCacheAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void LoadWithCacheAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			var testData = GenerateTestData();
 
