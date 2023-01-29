@@ -233,6 +233,29 @@ namespace Tests.Infrastructure
 				Assert.True(beforeCalled);
 				Assert.True(afterCalled);
 			}
+
+			// test use from provider detector
+			var beforeCallCnt = 0;
+			var afterCallCnt  = 0;
+			options = new DataOptions()
+				.UseSqlServer(cleanCs, SqlServerVersion.AutoDetect, SqlServerProvider.MicrosoftDataSqlClient)
+				.UseBeforeConnectionOpened(cn =>
+				{
+					((SqlConnection)cn).Credential = creds;
+					beforeCallCnt++;
+				})
+				.UseAfterConnectionOpened(_ =>
+				{
+					afterCallCnt++;
+				});
+
+			using (var dc = new DataConnection(options))
+			{
+				dc.GetTable<Person>().ToList();
+
+				Assert.AreEqual(2, beforeCallCnt);
+				Assert.AreEqual(2, afterCallCnt);
+			}
 		}
 	}
 }
