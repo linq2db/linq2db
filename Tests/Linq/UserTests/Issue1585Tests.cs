@@ -17,7 +17,7 @@ namespace Tests.UserTests
 		{
 			var ms            = new MappingSchema();
 			var tableName     = nameof(Test1585);
-			var fluentBuilder = new FluentMappingBuilder(ms);
+			var fluentBuilder = ms.GetFluentMappingBuilder();
 
 			fluentBuilder.Entity<Test1585>()
 				.HasTableName(tableName)

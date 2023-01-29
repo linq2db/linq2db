@@ -20,7 +20,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Issue2546Class>()
 				.Property(m => m.Value2)
 				.HasSkipOnInsert()

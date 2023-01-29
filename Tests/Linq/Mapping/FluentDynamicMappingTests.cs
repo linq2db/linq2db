@@ -38,7 +38,7 @@ namespace Tests.Mapping
 		public void HasAttribute1()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.HasAttribute<MyClass>(x => Sql.Property<int>(x, "ID"), new PrimaryKeyAttribute()).Build();
 
@@ -51,7 +51,7 @@ namespace Tests.Mapping
 		public void HasAttribute2()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.HasAttribute<MyClass>(x => Sql.Property<int>(x, "ID2"), new PrimaryKeyAttribute()).Build();
 
@@ -64,7 +64,7 @@ namespace Tests.Mapping
 		public void Property1()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.Property(x => Sql.Property<int>(x, "ID")).IsPrimaryKey()
@@ -79,7 +79,7 @@ namespace Tests.Mapping
 		public void Property2()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.Property(x => Sql.Property<int>(x, "ID2")).IsPrimaryKey()
@@ -94,7 +94,7 @@ namespace Tests.Mapping
 		public void Association1()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.Association(x => Sql.Property<MyClass>(x, "Parent"), x => Sql.Property<int>(x, "ID1"), x => Sql.Property<int>(x, "ID"))
@@ -111,7 +111,7 @@ namespace Tests.Mapping
 		public void Association2()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.Association(x => Sql.Property<MyClass>(x, "Parent2"), x => Sql.Property<int>(x, "ID2"), x => Sql.Property<int>(x, "ID3"))
@@ -128,7 +128,7 @@ namespace Tests.Mapping
 		public void HasPrimaryKey1()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.HasPrimaryKey(x => Sql.Property<int>(x, "ID"))
@@ -143,7 +143,7 @@ namespace Tests.Mapping
 		public void HasPrimaryKey2()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.HasPrimaryKey(x => Sql.Property<int>(x, "ID2"))
@@ -158,7 +158,7 @@ namespace Tests.Mapping
 		public void HasIdentity1()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.HasIdentity(x => Sql.Property<int>(x, "ID"))
@@ -173,7 +173,7 @@ namespace Tests.Mapping
 		public void HasIdentity2()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.HasIdentity(x => Sql.Property<int>(x, "ID2"))
@@ -188,7 +188,7 @@ namespace Tests.Mapping
 		public void HasColumn1()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.HasColumn(x => Sql.Property<int>(x, "ID"))
@@ -203,7 +203,7 @@ namespace Tests.Mapping
 		public void HasColumn2()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.HasColumn(x => Sql.Property<int>(x, "ID2"))
@@ -218,7 +218,7 @@ namespace Tests.Mapping
 		public void Ignore()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.Ignore(x => Sql.Property<int>(x, "ID"))
@@ -257,7 +257,7 @@ namespace Tests.Mapping
 		public void Inheritance1()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.Inheritance(x => Sql.Property<byte>(x, "RowType"), 1, typeof(MyClass2))
@@ -272,7 +272,7 @@ namespace Tests.Mapping
 		public void Inheritance2()
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			mb.Entity<MyClass>()
 				.Inheritance(x => Sql.Property<byte>(x, "RowType2"), 1, typeof(MyClass2))

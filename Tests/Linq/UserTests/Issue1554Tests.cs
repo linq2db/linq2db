@@ -453,7 +453,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<PersonCacheFluent>()
 					.HasTableName("Issue1554FluentTable")
 					.Property(p => p.Id)

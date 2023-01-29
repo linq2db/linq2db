@@ -666,7 +666,7 @@ namespace Tests.Linq
 		public void SelectComplex3([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-			var b  = new FluentMappingBuilder(ms);
+			var b  = ms.GetFluentMappingBuilder();
 
 			b
 				.Entity<ComplexPerson3>()        .HasTableName ("Person")

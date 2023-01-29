@@ -30,7 +30,7 @@ namespace Tests.UserTests
 		public void NullReferenceExceptionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms      = new MappingSchema();
-			var builder = new FluentMappingBuilder(ms);
+			var builder = ms.GetFluentMappingBuilder();
 
 			builder.Entity<Employee>()
 				.Association(x => x.PayRate, x => x.PayRateId, x => x!.Id);

@@ -229,7 +229,7 @@ namespace Tests.UserTests
 				// Change default value, so that null is not inserted as default.
 				db.MappingSchema.SetDefaultValue(typeof(int?), 0);
 
-				var mapping = new FluentMappingBuilder(db.MappingSchema);
+				var mapping = db.MappingSchema.GetFluentMappingBuilder();
 				mapping.Entity<TestTableFluent>().HasSkipValuesOnInsert(t => t.Age, 2, 5).Build();
 				using (db.CreateLocalTable<TestTableFluent>())
 				{

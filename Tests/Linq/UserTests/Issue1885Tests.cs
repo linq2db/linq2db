@@ -33,7 +33,7 @@ namespace Tests.UserTests
 		public void TestGenericAssociationRuntime([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = new FluentMappingBuilder(ms);
+			var mb = ms.GetFluentMappingBuilder();
 
 			var values = new[] { 1, 5 };
 

@@ -171,7 +171,7 @@ namespace Tests.xUpdate
 			Query.ClearCaches();
 
 			var ms = new MappingSchema();
-			var entity = new FluentMappingBuilder(ms)
+			var entity = ms.GetFluentMappingBuilder()
 				.Entity<CreateTableTypes>()
 				.HasColumn(e => e.Id);
 

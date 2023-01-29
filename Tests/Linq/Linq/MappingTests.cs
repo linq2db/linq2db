@@ -578,11 +578,10 @@ namespace Tests.Linq
 		public void TestRecordMapping([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			new FluentMappingBuilder(ms)
-				.Entity<Record>()
-					.Property(p => p.Id).IsPrimaryKey()
-					.Property(p => p.Value)
-					.Property(p => p.BaseValue)
+			ms.GetFluentMappingBuilder().Entity<Record>()
+				.Property(p => p.Id).IsPrimaryKey()
+				.Property(p => p.Value)
+				.Property(p => p.BaseValue)
 				.Build();
 
 			using (var db = GetDataContext(context, ms))
@@ -617,11 +616,10 @@ namespace Tests.Linq
 		public void TestRecordLikeMapping([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			new FluentMappingBuilder(ms)
-				.Entity<RecordLike>()
-					.Property(p => p.Id).IsPrimaryKey()
-					.Property(p => p.Value)
-					.Property(p => p.BaseValue)
+			ms.GetFluentMappingBuilder().Entity<RecordLike>()
+				.Property(p => p.Id).IsPrimaryKey()
+				.Property(p => p.Value)
+				.Property(p => p.BaseValue)
 				.Build();
 
 			using (var db = GetDataContext(context, ms))
@@ -656,10 +654,9 @@ namespace Tests.Linq
 		public void TestInitOnly([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			new FluentMappingBuilder(ms)
-				.Entity<WithInitOnly>()
-					.Property(p => p.Id).IsPrimaryKey()
-					.Property(p => p.Value)
+			ms.GetFluentMappingBuilder().Entity<WithInitOnly>()
+				.Property(p => p.Id).IsPrimaryKey()
+				.Property(p => p.Value)
 				.Build();
 
 			using (var db = GetDataContext(context, ms))

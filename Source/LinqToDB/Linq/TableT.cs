@@ -1,12 +1,12 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 
 namespace LinqToDB.Linq
 {
 	using Extensions;
-	using Mapping;
+	using LinqToDB.SqlQuery;
 	using Reflection;
-	using SqlQuery;
 
 	sealed class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 		where T : notnull
@@ -18,29 +18,19 @@ namespace LinqToDB.Linq
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
 					Expression.Constant(dataContext));
 
-			InitTable(dataContext, expression, null);
-		}
-
-		internal Table(IDataContext dataContext, EntityDescriptor? tableDescriptor)
-		{
-			var expression = typeof(T).IsScalar()
-				? null
-				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
-					Expression.Constant(dataContext));
-
-			InitTable(dataContext, expression, tableDescriptor);
+			InitTable(dataContext, expression);
 		}
 
 		public Table(IDataContext dataContext, Expression expression)
 		{
-			InitTable(dataContext, expression, null);
+			InitTable(dataContext, expression);
 		}
 
-		void InitTable(IDataContext dataContext, Expression? expression, EntityDescriptor? tableDescriptor)
+		void InitTable(IDataContext dataContext, Expression? expression)
 		{
 			Init(dataContext, expression);
 
-			var ed = tableDescriptor ?? dataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed = dataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 
 			_name         = ed.Name;
 			_tableOptions = ed.TableOptions;

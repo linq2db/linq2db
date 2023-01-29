@@ -26,7 +26,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Client>()
 					.HasTableName("Issue1438")
 					.Property(x => x.Id)
@@ -58,7 +58,7 @@ namespace Tests.UserTests
 			var cs       = DataConnection.GetConnectionString(context);
 
 			var ms = new MappingSchema();
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Client>()
 					.HasTableName("Issue1438")
 					.Property(x => x.Id)

@@ -440,6 +440,11 @@ namespace LinqToDB.Remote
 			}
 		}
 
+		public FluentMappingBuilder GetFluentMappingBuilder()
+		{
+			return MappingSchema.GetFluentMappingBuilder();
+		}
+
 		public virtual void Dispose()
 		{
 			Disposed = true;

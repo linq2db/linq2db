@@ -279,10 +279,10 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<TestTable>()
-					.HasIsTemporary()
-					.HasTableOptions(TableOptions.DropIfExists)
+				.HasIsTemporary()
+				.HasTableOptions(TableOptions.DropIfExists)
 				.Build();
 
 			using var db = GetDataContext(context, ms);

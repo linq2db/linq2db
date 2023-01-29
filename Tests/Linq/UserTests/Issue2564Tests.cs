@@ -25,7 +25,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<Issue2564Class>()
 				.HasTableName("Issue2564Table")
 				.Property(e => e.Id).IsPrimaryKey()

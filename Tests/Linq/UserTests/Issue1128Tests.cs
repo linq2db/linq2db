@@ -34,7 +34,7 @@ namespace Tests.UserTests
 		{
 			var ms            = new MappingSchema();
 			var tableName     = nameof(AttributeBase);
-			var fluentBuilder = new FluentMappingBuilder(ms);
+			var fluentBuilder = ms.GetFluentMappingBuilder();
 
 			fluentBuilder.Entity<FluentBase>()
 				.HasTableName(tableName)

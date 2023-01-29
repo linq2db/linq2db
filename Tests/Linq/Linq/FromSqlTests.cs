@@ -337,7 +337,7 @@ namespace Tests.Linq
 
 			var idFilter = 1;
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<SampleClass>()
 				.Association(x => x.AssociatedOne,
 					(x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter))
@@ -370,7 +370,7 @@ namespace Tests.Linq
 
 				var idFilter = 1;
 
-				new FluentMappingBuilder(ms)
+				ms.GetFluentMappingBuilder()
 					.Entity<SampleClass>()
 						.Association(x => x.AssociatedOne, (x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter))
 					.Build();

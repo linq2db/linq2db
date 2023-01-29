@@ -16,7 +16,7 @@ namespace Tests.UserTests
 		public void DataModelDynamicTableTest2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var mappingSchema = new MappingSchema();
-			var fm            = new FluentMappingBuilder(mappingSchema);
+			var fm            = mappingSchema.GetFluentMappingBuilder();
 
 			fm.Entity<DynamicTableRow>()
 				//.HasIdentity(x => Sql.Property<int>(x, "Id"))

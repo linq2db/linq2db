@@ -97,7 +97,7 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			new FluentMappingBuilder(ms)
+			ms.GetFluentMappingBuilder()
 				.Entity<FluentMapping>()
 				.Property(t => t.Audit1ID).HasOrder(-10)
 				.Property(t => t.Audit2ID).HasOrder(-1)
