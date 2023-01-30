@@ -34,8 +34,7 @@ namespace LinqToDB.Linq.Builder
 			public SelectQuery            SelectQuery { get; set; }
 			public SqlStatement?          Statement   { get; set; }
 
-			public LoadWithInfo? LoadWith     { get; set; }
-			public MemberInfo[]? LoadWithPath { get; set; }
+			public List<LoadWithInfo[]>?  LoadWith    { get; set; }
 
 			public virtual IBuildContext? Parent      { get; set; }
 			public bool                   IsScalar    { get; set; }
@@ -177,41 +176,38 @@ namespace LinqToDB.Linq.Builder
 
 			void SetLoadWithBindings(Type objectType, ParameterExpression parentObject, List<Expression> exprs)
 			{
-				if (LoadWith == null)
+				var loadWith = GetLoadWith();
+
+				if (loadWith == null)
 					return;
 
-				var loadWith      = EnsureLoadWith();
-				var loadwithItems = GetLoadWith();
+				var members = AssociationHelper.GetLoadWith(loadWith);
 
-				foreach (var info in loadwithItems)
+				foreach (var member in members)
 				{
-					if (info.MemberInfo == null || !info.ShouldLoad)
-						continue;
-
-					if (info.MemberInfo.DeclaringType!.IsAssignableFrom(objectType))
+					if (member.Info.MemberInfo.DeclaringType!.IsAssignableFrom(objectType))
 					{
-						var ma   = Expression.MakeMemberAccess(new ContextRefExpression(objectType, this), info.MemberInfo);
-						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(info.MemberInfo.ReflectedType!, info.MemberInfo);
+						var ma   = Expression.MakeMemberAccess(new ContextRefExpression(objectType, this), member.Info.MemberInfo);
+						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.Info.MemberInfo.ReflectedType!, member.Info.MemberInfo);
 
-						if (_loadWithCache == null || !_loadWithCache.TryGetValue(info.MemberInfo, out var ex))
+						if (_loadWithCache == null || !_loadWithCache.TryGetValue(member.Info.MemberInfo, out var ex))
 						{
 							if (Builder.AssociationPath == null)
-								Builder.AssociationPath = new();
+								Builder.AssociationPath = new Stack<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>();
 
-							Builder.AssociationPath.Push(Tuple.Create(new AccessorMember(ma), (IBuildContext)this, loadWith, LoadWithPath ?? Array<MemberInfo>.Empty));
+							Builder.AssociationPath.Push(Tuple.Create(new AccessorMember(ma), (IBuildContext)this, (List<LoadWithInfo[]>?)loadWith));
 
 							ex = BuildExpression(ma, 1, parentObject);
-							
 							_loadWithCache ??= new Dictionary<MemberInfo, Expression>();
-							_loadWithCache.Add(info.MemberInfo, ex);
+							_loadWithCache.Add(member.Info.MemberInfo, ex);
 
 							_ = Builder.AssociationPath.Pop();
 						}
 
-						if (info.MemberInfo.IsDynamicColumnPropertyEx())
+						if (member.Info.MemberInfo.IsDynamicColumnPropertyEx())
 						{
-							var typeAcc = TypeAccessor.GetAccessor(info.MemberInfo.ReflectedType!);
-							var setter  = new MemberAccessor(typeAcc, info.MemberInfo, EntityDescriptor).SetterExpression;
+							var typeAcc = TypeAccessor.GetAccessor(member.Info.MemberInfo.ReflectedType!);
+							var setter  = new MemberAccessor(typeAcc, member.Info.MemberInfo, EntityDescriptor).SetterExpression;
 
 							exprs.Add(Expression.Invoke(setter, parentObject, ex));
 						}
@@ -220,7 +216,7 @@ namespace LinqToDB.Linq.Builder
 							exprs.Add(Expression.Assign(
 								attr?.Storage != null
 									? ExpressionHelper.PropertyOrField(parentObject, attr.Storage)
-									: Expression.MakeMemberAccess(parentObject, info.MemberInfo),
+									: Expression.MakeMemberAccess(parentObject, member.Info.MemberInfo),
 								ex));
 						}
 					}
@@ -356,7 +352,7 @@ namespace LinqToDB.Linq.Builder
 				var        hasComplex = members.Count > initExpr.Bindings.Count;
 				Expression expr       = initExpr;
 
-				var loadWith = LoadWith;
+				var loadWith   = GetLoadWith();
 
 				if (hasComplex || loadWith != null)
 				{
@@ -391,7 +387,7 @@ namespace LinqToDB.Linq.Builder
 				IEnumerable<MemberAccessor> members = typeAccessor.Members;
 
 				if (recordType == RecordType.FSharp)
-				{
+					{
 					var membersWithOrder = new List<(int sequence, MemberAccessor ma)>();
 					foreach (var member in typeAccessor.Members)
 					{
@@ -405,7 +401,8 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var loadWith = LoadWith;
+				var loadWith      = GetLoadWith();
+				var loadWithItems = loadWith == null ? new List<AssociationHelper.LoadWithItem>() : AssociationHelper.GetLoadWith(loadWith);
 
 				foreach (var member in members)
 				{
@@ -425,14 +422,11 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						if (loadWith?.NextInfos?.Count > 0 && Builder.MappingSchema.HasAttribute<AssociationAttribute>(typeAccessor.Type, member.MemberInfo))
+						if (Builder.MappingSchema.HasAttribute<AssociationAttribute>(typeAccessor.Type, member.MemberInfo))
 						{
-							foreach (var item in loadWith.NextInfos)
+							foreach (var item in loadWithItems)
 							{
-								if (item.MemberInfo == null)
-									continue;
-
-								if (MemberInfoEqualityComparer.Default.Equals(item.MemberInfo, member.MemberInfo))
+								if (MemberInfoEqualityComparer.Default.Equals(item.Info.MemberInfo, member.MemberInfo))
 								{
 									var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
 									yield return (member.Name, BuildExpression(ma, 1, false));
@@ -1187,7 +1181,7 @@ namespace LinqToDB.Linq.Builder
 			#region GetContext
 
 			Dictionary<AccessorMember, Tuple<IBuildContext, bool>>? _associationContexts;
-			Dictionary<AccessorMember, IBuildContext>?              _collectionAssociationContexts;
+			Dictionary<AccessorMember, IBuildContext>? _collectionAssociationContexts;
 
 
 			public IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
@@ -1245,7 +1239,7 @@ namespace LinqToDB.Linq.Builder
 
 								var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
 									Builder, new AccessorMember(expression), tableLevel.Descriptor, OriginalType, parentExactType, elementType,
-									false, false, EnsureLoadWith(), LoadWithPath, out _);
+									false, false, GetLoadWith(), out _);
 
 								var expr   = queryMethod.GetBody(ma);
 
@@ -1332,44 +1326,9 @@ namespace LinqToDB.Linq.Builder
 
 			#region Helpers
 
-			public LoadWithInfo EnsureLoadWith()
+			protected List<LoadWithInfo[]>? GetLoadWith()
 			{
-				LoadWith ??= new();
 				return LoadWith;
-			}
-
-			public List<LoadWithInfo> GetLoadWith()
-			{
-				var loadWith = EnsureLoadWith();
-				if (LoadWithPath != null)
-				{
-					foreach (var memberInfo in LoadWithPath)
-					{
-						var found = loadWith.NextInfos?.FirstOrDefault(li =>
-							MemberInfoEqualityComparer.Default.Equals(li.MemberInfo, memberInfo));
-
-						if (found != null)
-						{
-							loadWith = found;
-						}
-						else
-						{
-							loadWith.NextInfos ??= new();
-							var newInfo = new LoadWithInfo(memberInfo, false);
-							loadWith.NextInfos.Add(newInfo);
-
-							loadWith = newInfo;
-						}
-					}
-
-					if (loadWith.NextInfos != null)
-						return loadWith.NextInfos;
-				}
-
-				loadWith.NextInfos ??= new();
-
-				// ToList() is important here
-				return loadWith.NextInfos.ToList();
 			}
 
 			protected ISqlExpression? GetField(Expression expression, int level, bool throwException)
@@ -1636,7 +1595,14 @@ namespace LinqToDB.Linq.Builder
 
 								if (!descriptor.IsList && !AssociationsToSubQueries)
 								{
-									if (_associationContexts == null || !_associationContexts.TryGetValue(accessorMember, out var foundInfo))
+									var forceNew = false;
+									if (_associationContexts != null && _associationContexts.TryGetValue(accessorMember, out var testInfo))
+									{
+										if (testInfo.Item1 is AssociationContext ac && !ac.IsCompatibleLoadWith())
+											forceNew = true;
+									}
+
+									if (forceNew || _associationContexts == null || !_associationContexts.TryGetValue(accessorMember, out var foundInfo))
 									{
 
 										if (forceInner)
@@ -1655,8 +1621,11 @@ namespace LinqToDB.Linq.Builder
 											!forceInner,
 											ref isOuter);
 
-										_associationContexts ??= new ();
-										_associationContexts.Add(accessorMember, Tuple.Create(associatedContext, isOuter));
+										if (!forceNew)
+										{
+											_associationContexts ??= new ();
+											_associationContexts.Add(accessorMember, Tuple.Create(associatedContext, isOuter));
+										}
 									}
 									else
 									{
