@@ -25,7 +25,7 @@ namespace LinqToDB.Linq
 				DefaultNullable   defaultNullable,
 				TableOptions      tableOptions)
 			{
-				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema, tableDescriptor);
+				var sqlTable    = new SqlTable<T>(tableDescriptor?.MappingSchema ?? dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
@@ -76,7 +76,7 @@ namespace LinqToDB.Linq
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
-				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema, tableDescriptor);
+				var sqlTable    = new SqlTable<T>(tableDescriptor?.MappingSchema ?? dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)

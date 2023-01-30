@@ -54,16 +54,11 @@ namespace LinqToDB.SqlQuery
 		#region Init from type
 
 		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
-			: this(mappingSchema, null, objectType, physicalName)
-		{
-		}
-
-		internal SqlTable(MappingSchema mappingSchema, EntityDescriptor? descriptor, Type objectType, string? physicalName = null)
 			: this(objectType, null, new(String.Empty))
 		{
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
-			var ed = descriptor ?? mappingSchema.GetEntityDescriptor(objectType);
+			var ed = mappingSchema.GetEntityDescriptor(objectType);
 
 			TableName    = physicalName != null && ed.Name.Name != physicalName ? ed.Name with { Name = physicalName } : ed.Name;
 			TableOptions = ed.TableOptions;

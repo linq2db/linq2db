@@ -19,6 +19,7 @@ namespace LinqToDB
 	using Linq;
 	using Mapping;
 
+	// TODO: v6: obsolete methods with setTable parameter
 	/// <summary>
 	/// Temporary table. Temporary table is a table, created when you create instance of this class and deleted when
 	/// you dispose it. It uses regular tables even if underlying database supports temporary tables concept.
@@ -28,7 +29,8 @@ namespace LinqToDB
 	public class TempTable<T> : ITable<T>, ITableMutable<T>, IDisposable, IAsyncDisposable
 		where T : notnull
 	{
-		readonly ITable<T> _table;
+		readonly ITable<T>         _table;
+		readonly EntityDescriptor? _tableDescriptor;
 
 		/// <summary>
 		/// Gets total number of records, inserted into table using BulkCopy.
@@ -106,7 +108,8 @@ namespace LinqToDB
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table = db.CreateTable<T>(tableDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_table           = db.CreateTable<T>(tableDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_tableDescriptor = tableDescriptor;
 
 			try
 			{
@@ -200,7 +203,8 @@ namespace LinqToDB
 			if (db    == null) throw new ArgumentNullException(nameof(db));
 			if (items == null) throw new ArgumentNullException(nameof(items));
 
-			_table = db.CreateTable<T>(tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_table           = db.CreateTable<T>(tableDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions);
+			_tableDescriptor = tableDescriptor;
 
 			try
 			{
@@ -249,9 +253,11 @@ namespace LinqToDB
 		/// Configures a temporary table that will be dropped when this instance is disposed
 		/// </summary>
 		/// <param name="table">Table instance.</param>
-		protected TempTable(ITable<T> table)
+		/// <param name="tableDescriptor">Temporary table entity descriptor.</param>
+		protected TempTable(ITable<T> table, EntityDescriptor? tableDescriptor)
 		{
-			_table = table ?? throw new ArgumentNullException(nameof(table));
+			_table           = table ?? throw new ArgumentNullException(nameof(table));
+			_tableDescriptor = tableDescriptor;
 		}
 
 		/// <summary>
@@ -303,7 +309,8 @@ namespace LinqToDB
 
 			return new TempTable<T>(await db
 				.CreateTableAsync<T>(tableDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions, token: cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
+				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext),
+				tableDescriptor);
 		}
 
 		/// <summary>
@@ -599,7 +606,7 @@ namespace LinqToDB
 		private Expression<Func<T,T>> GenerateInsertSetter(IQueryable<T> items)
 		{
 			var type = typeof(T);
-			var ed   = _table.DataContext.MappingSchema.GetEntityDescriptor(type);
+			var ed   = _tableDescriptor ?? _table.DataContext.MappingSchema.GetEntityDescriptor(type);
 			var p    = Expression.Parameter(type, "t");
 
 			return _setterDic.GetOrAdd(type, t =>
