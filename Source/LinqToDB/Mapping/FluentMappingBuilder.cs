@@ -8,7 +8,6 @@ namespace LinqToDB.Mapping
 {
 	using Common;
 	using Expressions;
-	using Extensions;
 	using Metadata;
 
 	/// <summary>

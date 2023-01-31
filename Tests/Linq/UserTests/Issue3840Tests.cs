@@ -25,7 +25,7 @@ namespace Tests.UserTests.Test3840
 		}
 
 		[Test]
-		public void Test3840([IncludeDataSources(true, TestProvName.AllSqlServer)] string configuration)
+		public void Test3840([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string configuration)
 		{
 			using var db = GetDataContext(
 				configuration,
