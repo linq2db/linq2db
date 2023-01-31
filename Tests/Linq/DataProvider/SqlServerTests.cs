@@ -1278,7 +1278,7 @@ namespace Tests.DataProvider
 			using var db = GetDataConnection(context);
 			var       ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<AllTypes>()
 					.HasTableName("AllTypeCreateTest")
 				.Build();
@@ -1300,7 +1300,7 @@ namespace Tests.DataProvider
 			{
 				var ms = new MappingSchema();
 
-				ms.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<AllTypes2>()
 						.HasTableName("AllType2CreateTest")
 					.Build();

@@ -30,7 +30,7 @@ namespace Tests.Mapping
 		MappingSchema CreateMappingSchemaWithAlias()
 		{
 			var schema = new MappingSchema();
-			var fluent = schema.GetFluentMappingBuilder();
+			var fluent = new FluentMappingBuilder(schema);
 
 			fluent.Entity<InstanceClass>().IsColumnRequired()
 				.IsColumnRequired()
