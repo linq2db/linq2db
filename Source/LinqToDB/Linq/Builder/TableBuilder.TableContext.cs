@@ -387,7 +387,7 @@ namespace LinqToDB.Linq.Builder
 				IEnumerable<MemberAccessor> members = typeAccessor.Members;
 
 				if (recordType == RecordType.FSharp)
-					{
+				{
 					var membersWithOrder = new List<(int sequence, MemberAccessor ma)>();
 					foreach (var member in typeAccessor.Members)
 					{
@@ -685,8 +685,8 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var field           = SqlTable.FindFieldByMemberName(InheritanceMapping[0].DiscriminatorName) ?? throw new LinqException($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
-					var dindex          = ConvertToParentIndex(_indexes[field].Index, this);
+					var field  = SqlTable.FindFieldByMemberName(InheritanceMapping[0].DiscriminatorName) ?? throw new LinqException($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
+					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
 
 					expr = Expression.Convert(
 						Expression.Call(null, Methods.LinqToDB.Exceptions.DefaultInheritanceMappingException,

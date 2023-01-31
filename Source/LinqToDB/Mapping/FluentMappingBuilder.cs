@@ -23,6 +23,14 @@ namespace LinqToDB.Mapping
 		#region Init
 
 		/// <summary>
+		/// Creates new MappingSchema and fluent mapping builder for it.
+		/// </summary>
+		public FluentMappingBuilder()
+		{
+			MappingSchema = new ();
+		}
+
+		/// <summary>
 		/// Creates fluent mapping builder for specified mapping schema.
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema.</param>
