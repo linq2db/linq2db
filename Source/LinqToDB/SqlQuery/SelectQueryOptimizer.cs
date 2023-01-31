@@ -50,7 +50,7 @@ namespace LinqToDB.SqlQuery
 			FinalizeAndValidateInternal(isApplySupported);
 
 			//TODO: Why this is still needed
-			ResolveFields();
+			//ResolveFields();
 
 #if DEBUG
 			// ReSharper disable once RedundantAssignment
