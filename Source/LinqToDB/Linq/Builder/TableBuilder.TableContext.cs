@@ -1595,8 +1595,14 @@ namespace LinqToDB.Linq.Builder
 
 								if (!descriptor.IsList && !AssociationsToSubQueries)
 								{
-									if (_associationContexts == null ||
-										!_associationContexts.TryGetValue(accessorMember, out var foundInfo))
+									var forceNew = false;
+									if (_associationContexts != null && _associationContexts.TryGetValue(accessorMember, out var testInfo))
+									{
+										if (testInfo.Item1 is AssociationContext ac && !ac.IsCompatibleLoadWith())
+											forceNew = true;
+									}
+
+									if (forceNew || _associationContexts == null || !_associationContexts.TryGetValue(accessorMember, out var foundInfo))
 									{
 
 										if (forceInner)
@@ -1615,8 +1621,11 @@ namespace LinqToDB.Linq.Builder
 											!forceInner,
 											ref isOuter);
 
-										_associationContexts ??= new Dictionary<AccessorMember, Tuple<IBuildContext, bool>>();
-										_associationContexts.Add(accessorMember, Tuple.Create(associatedContext, isOuter));
+										if (!forceNew)
+										{
+											_associationContexts ??= new ();
+											_associationContexts.Add(accessorMember, Tuple.Create(associatedContext, isOuter));
+										}
 									}
 									else
 									{
