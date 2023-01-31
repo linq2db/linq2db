@@ -197,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 
 							Builder.AssociationPath.Push(Tuple.Create(new AccessorMember(ma), (IBuildContext)this, (List<LoadWithInfo[]>?)loadWith));
 
-							ex = BuildExpression(ma, 1, parentObject);
+							ex = BuildExpression(ma, 1, parentObject, true);
 							_loadWithCache ??= new Dictionary<MemberInfo, Expression>();
 							_loadWithCache.Add(member.Info.MemberInfo, ex);
 
@@ -760,10 +760,10 @@ namespace LinqToDB.Linq.Builder
 
 			public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
-				return BuildExpression(expression, level, null);
+				return BuildExpression(expression, level, null, enforceServerSide);
 			}
 
-			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject)
+			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject, bool enforceServerSide)
 			{
 				if (expression == null)
 				{
@@ -788,13 +788,6 @@ namespace LinqToDB.Linq.Builder
 
 				if (contextInfo == null)
 				{
-					if (levelExpression != expression)
-					{
-						var expr = BuildExpression(levelExpression, level, parentObject);
-
-						return expression.Transform(e => e == levelExpression ? expr : e);
-					}
-
 					if (expression is MemberExpression memberExpression)
 					{
 						if (EntityDescriptor != null &&
@@ -822,6 +815,13 @@ namespace LinqToDB.Linq.Builder
 						expr = contextInfo.Context.BuildExpression(contextInfo.CurrentExpression, contextInfo.CurrentLevel + 1, false);
 
 					return expr;
+				}
+
+				if (!enforceServerSide && contextInfo.LevelExpression != contextInfo.CurrentExpression)
+				{
+					var expr = BuildExpression(contextInfo.LevelExpression, level, parentObject, enforceServerSide);
+
+					return expression.Transform(e => e == contextInfo.LevelExpression ? expr : e);
 				}
 
 				// Build field.
@@ -963,6 +963,7 @@ namespace LinqToDB.Linq.Builder
 					case ConvertFlags.Field :
 						{
 							var contextInfo = FindContextExpression(expression, level, false, false);
+
 							if (contextInfo == null)
 							{
 								if (expression == null)
@@ -1338,7 +1339,7 @@ namespace LinqToDB.Linq.Builder
 				return LoadWith;
 			}
 
-			protected ISqlExpression? GetField(Expression expression, int level, bool throwException)
+			protected (ISqlExpression?,Expression?) GetField(Expression expression, int level, bool throwException)
 			{
 				expression = expression.SkipPathThrough();
 
@@ -1395,6 +1396,7 @@ namespace LinqToDB.Linq.Builder
 								if (!sameType)
 								{
 									var members = SqlTable.ObjectType.GetInstanceMemberEx(levelMember.Member.Name);
+
 									foreach (var mi in members)
 									{
 										if (mi.DeclaringType == levelMember.Member.DeclaringType)
@@ -1430,10 +1432,10 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											if (field.Name == pathName)
-												return field;
+												return (field, levelExpression);
 										}
 										else if (field.Name == name)
-											return null; //field;
+											return (field, levelExpression);
 									}
 								}
 							}
@@ -1462,12 +1464,12 @@ namespace LinqToDB.Linq.Builder
 											var fld = SqlTable.FindFieldByMemberName(name);
 
 											if (fld != null)
-												return fld;
+												return (fld, levelExpression);
 										}
 									}
 									else
 									{
-										return field;
+										return (field,levelExpression);
 									}
 								}
 
@@ -1475,16 +1477,16 @@ namespace LinqToDB.Linq.Builder
 									foreach (var mapping in InheritanceMapping)
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
-												return field;
+												return (field, levelExpression);
 
 								var dynamicField = GetOrAddDynamicColumn(memberExpression);
 								if (dynamicField != null)
-									return dynamicField;
+									return (dynamicField, levelExpression);
 							}
 
 							var newDynamicField = GetOrAddDynamicColumn(memberExpression);
 							if (newDynamicField != null)
-								return newDynamicField;
+								return (newDynamicField, levelExpression);
 
 							if (throwException &&
 								EntityDescriptor != null &&
@@ -1497,7 +1499,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				return null;
+				return (null,null);
 			}
 
 			private SqlField? GetOrAddDynamicColumn(MemberExpression memberExpression)
@@ -1544,21 +1546,23 @@ namespace LinqToDB.Linq.Builder
 
 			sealed class ContextInfo
 			{
-				public ContextInfo(IBuildContext context, ISqlExpression? field, Expression? currentExpression, int currentLevel)
+				public ContextInfo(IBuildContext context, ISqlExpression? field, Expression? currentExpression, int currentLevel, Expression? levelExpression)
 				{
 					Context           = context;
 					Field             = field;
 					CurrentExpression = currentExpression;
 					CurrentLevel      = currentLevel;
+					LevelExpression   = levelExpression;
 				}
 
-				public ContextInfo(IBuildContext context, Expression? currentExpression, int currentLevel):
-					this(context, null, currentExpression, currentLevel)
+				public ContextInfo(IBuildContext context, Expression? currentExpression, int currentLevel, Expression? levelExpression):
+					this(context, null, currentExpression, currentLevel, levelExpression)
 				{
 				}
 
 				public IBuildContext          Context;
 				public Expression?            CurrentExpression;
+				public Expression?            LevelExpression;
 				public ISqlExpression?        Field;
 				public int                    CurrentLevel;
 				public bool                   AsSubquery;
@@ -1569,7 +1573,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expression == null)
 				{
-					return new ContextInfo(this, null, 0);
+					return new ContextInfo(this, null, 0, null);
 				}
 
 				expression = expression.SkipPathThrough();
@@ -1580,15 +1584,15 @@ namespace LinqToDB.Linq.Builder
 				{
 					case ExpressionType.Parameter    :
 						{
-							return new ContextInfo(this, expression, level);
+							return new ContextInfo(this, expression, level, levelExpression);
 						}
 					case ExpressionType.MemberAccess:
 						{
-							var field = GetField(expression, level, false);
+							var (field,lex) = GetField(expression, level, false);
 
 							if (field != null)
 							{
-								return new ContextInfo(this, field, expression, level);
+								return new ContextInfo(this, field, expression, level, lex);
 							}
 
 							goto case ExpressionType.Call;
@@ -1596,6 +1600,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.Call         :
 						{
 							var descriptor = GetAssociationDescriptor(levelExpression, out var accessorMember);
+
 							if (descriptor != null && accessorMember != null)
 							{
 								var isOuter = descriptor.CanBeNull || ForceLeftJoinAssociations;
@@ -1633,7 +1638,7 @@ namespace LinqToDB.Linq.Builder
 
 									var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
 
-									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0) { Descriptor = descriptor };
+									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0, levelExpression) { Descriptor = descriptor };
 								}
 								else
 								{
@@ -1660,7 +1665,7 @@ namespace LinqToDB.Linq.Builder
 									}
 									var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
 
-									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0)
+									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0, levelExpression)
 									{
 										Descriptor = descriptor,
 										AsSubquery = AssociationsToSubQueries || descriptor.IsList
@@ -1675,7 +1680,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							if (levelExpression is ContextRefExpression refExpression)
 							{
-								return new ContextInfo(refExpression.BuildContext, expression, level);
+								return new ContextInfo(refExpression.BuildContext, expression, level, levelExpression);
 							}
 							break;
 						}

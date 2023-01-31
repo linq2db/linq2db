@@ -165,7 +165,7 @@ namespace LinqToDB.Expressions
 					break;
 				}
 			}
-			
+
 			return expr;
 		}
 
