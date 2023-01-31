@@ -56,12 +56,12 @@ namespace Tests.UserTests.Test3840
 				from t in db.GetTable<Test>()
 				select new
 				{
-//					StartDateTime         = t.StartDateTime,
-//					PreNotification       = t.PreNotification,
-//					NotificationDateTime  = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification!.Value.Milliseconds, t.StartDateTime),
-//					NotificationDateTime2 = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification2!.Value.Milliseconds, t.StartDateTime),
+					StartDateTime         = t.StartDateTime,
+					PreNotification       = t.PreNotification,
+					NotificationDateTime  = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification!.Value.Milliseconds, t.StartDateTime),
+					NotificationDateTime2 = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification2!.Value.Milliseconds, t.StartDateTime),
 					NotificationDateTime3 = Sql.DateAdd(Sql.DateParts.Millisecond, -1 * t.PreNotification3.Milliseconds, t.StartDateTime),
-//					t.StrField!.Value.Day
+					t.StrField!.Value.Day
 				};
 
 			_ = qry.ToList();

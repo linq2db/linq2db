@@ -255,7 +255,7 @@ namespace LinqToDB.DataProvider
 
 			typeName = NormalizeTypeName(typeName);
 
-#if DEBUG
+#if DEBUG1
 			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
 			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}",
