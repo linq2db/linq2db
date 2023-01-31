@@ -26,7 +26,6 @@ namespace System.Data.Linq
 				_bytes = new byte[value.Length];
 				Array.Copy(value, _bytes, value.Length);
 			}
-			ComputeHash();
 		}
 
 		public byte[] ToArray()
