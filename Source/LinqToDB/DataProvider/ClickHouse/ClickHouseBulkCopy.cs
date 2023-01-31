@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					return SafeAwaiter.Run(() => ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, default));
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
-					return SafeAwaiter.Run(() => ProviderSpecificClientBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), default));
+					return SafeAwaiter.Run(() => ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), default));
 #endif
 			}
 
@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					return Task.FromResult(ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, source));
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
-					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), cancellationToken);
+					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), cancellationToken);
 			}
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					return Task.FromResult(ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, EnumerableHelper.AsyncToSyncEnumerable(source.GetAsyncEnumerator(cancellationToken))));
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
-					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken), cancellationToken);
+					return ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, (columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken), cancellationToken);
 			}
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
@@ -456,7 +456,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		private async Task<BulkCopyRowsCopied> ProviderSpecificClientBulkCopyAsync<T>(
 			ProviderConnections                                     providerConnections,
 			ITable<T>                                               table,
-			BulkCopyOptions                                         options,
+			DataOptions                                             options,
 			Func<List<Mapping.ColumnDescriptor>, BulkCopyReader<T>> createDataReader,
 			CancellationToken                                       cancellationToken)
 			where T : notnull
@@ -467,34 +467,39 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
+			var copyOptions    = options.BulkCopyOptions;
 
 			var disposeConnection = false;
 
-			if (options.WithoutSession)
-			{
-				var cnBuilder         = _provider.Adapter.CreateClientConnectionStringBuilder!(connection.ConnectionString);
-
-				if (cnBuilder.UseSession)
-				{
-					disposeConnection    = true;
-					cnBuilder.UseSession = false;
-					connection           = _provider.Adapter.CreateConnection!(cnBuilder.ToString());
-				}
-			}
-
 			try
 			{
+				if (copyOptions.WithoutSession)
+				{
+					var cnBuilder         = _provider.Adapter.CreateClientConnectionStringBuilder!(connection.ConnectionString);
+
+					if (cnBuilder.UseSession)
+					{
+						cnBuilder.UseSession = false;
+						connection           = _provider.Adapter.CreateConnection!(cnBuilder.ToString());
+						disposeConnection    = true;
+
+						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpening(new(null), connection);
+						connection.Open();
+						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpened(new(null), connection);
+					}
+				}
+
 				using var bc = _provider.Adapter.ClientBulkCopyCreator!(connection);
 
-				if (options.MaxBatchSize.HasValue)
-					bc.BatchSize = options.MaxBatchSize.Value;
+				if (copyOptions.MaxBatchSize.HasValue)
+					bc.BatchSize = copyOptions.MaxBatchSize.Value;
 
-				var tableName = GetTableName(sb, options, table);
+				var tableName = GetTableName(sb, copyOptions, table);
 
 				bc.DestinationTableName = tableName;
 
-				if (options.MaxDegreeOfParallelism != null)
-					bc.MaxDegreeOfParallelism = options.MaxDegreeOfParallelism.Value;
+				if (copyOptions.MaxDegreeOfParallelism != null)
+					bc.MaxDegreeOfParallelism = copyOptions.MaxDegreeOfParallelism.Value;
 
 				var rd = createDataReader(columns);
 
@@ -509,8 +514,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 				rc.RowsCopied = bc.RowsWritten;
 
-				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
-					options.RowsCopiedCallback(rc);
+				if (copyOptions.NotifyAfter != 0 && copyOptions.RowsCopiedCallback != null)
+					copyOptions.RowsCopiedCallback(rc);
 			}
 			finally
 			{

@@ -12,17 +12,17 @@ namespace LinqToDB.DataProvider.ClickHouse
 		static readonly Lazy<IDataProvider> _clientDataProvider   = DataConnection.CreateDataProvider<ClickHouseClientDataProvider>();
 		static readonly Lazy<IDataProvider> _mysqlDataProvider    = DataConnection.CreateDataProvider<ClickHouseMySqlDataProvider>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if ((css.ProviderName?.Contains("Octonica") == true && css.ProviderName?.Contains("ClickHouse") == true)
-				|| (css.Name.Contains("Octonica") == true && css.Name.Contains("ClickHouse") == true))
+			if ((options.ProviderName?.Contains("Octonica") == true && options.ProviderName?.Contains("ClickHouse") == true)
+				|| (options.ConfigurationString?.Contains("Octonica") == true && options.ConfigurationString?.Contains("ClickHouse") == true))
 				return _octonicaDataProvider.Value;
 
-			if ((css.ProviderName?.Contains("ClickHouse") == true && css.ProviderName?.Contains("MySql") == true)
-				|| (css.Name.Contains("ClickHouse") && css.Name.Contains("MySql")))
+			if ((options.ProviderName?.Contains("ClickHouse") == true && options.ProviderName?.Contains("MySql") == true)
+				|| (options.ConfigurationString?.Contains("ClickHouse") == true && options.ConfigurationString?.Contains("MySql") == true))
 				return _mysqlDataProvider.Value;
 
-			if (css.ProviderName?.Contains("ClickHouse.Client") == true || css.Name.Contains("ClickHouse.Client"))
+			if (options.ProviderName?.Contains("ClickHouse.Client") == true || options.ConfigurationString?.Contains("ClickHouse.Client") == true)
 				return _clientDataProvider.Value;
 
 			return null;

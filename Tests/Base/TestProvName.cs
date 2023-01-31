@@ -27,10 +27,6 @@ namespace Tests
 
 		#region MySQL/MariaDB
 		/// <summary>
-		/// MariaDB over MySql.Data.
-		/// </summary>
-		public const string MariaDB           = "MariaDB";
-		/// <summary>
 		/// MariaDB over MySqlConnector.
 		/// </summary>
 		public const string MariaDBConnector  = "MariaDBConnector";
@@ -46,7 +42,7 @@ namespace Tests
 		/// <summary>
 		/// All MySql.Data providers.
 		/// </summary>
-		public const string AllMySqlData      = $"{MySql55},{ProviderName.MySql},{MariaDB}";
+		public const string AllMySqlData      = $"{MySql55},{ProviderName.MySql},{ProviderName.MariaDB}";
 		/// <summary>
 		/// All MySqlConnector providers.
 		/// </summary>
@@ -62,7 +58,7 @@ namespace Tests
 		/// <summary>
 		/// All mariadb test providers.
 		/// </summary>
-		public const string AllMariaDB        = $"{MariaDB},{MariaDBConnector}";
+		public const string AllMariaDB        = $"{ProviderName.MariaDB},{MariaDBConnector}";
 		/// <summary>
 		/// MySQL 5.5.
 		/// </summary>
@@ -70,7 +66,7 @@ namespace Tests
 		/// <summary>
 		/// MySQL > 5.7 (8.0 currently) and MariaDB.
 		/// </summary>
-		public const string AllMySql57Plus    = $"{ProviderName.MySql},{ProviderName.MySqlConnector},{MariaDB},{MariaDBConnector}";
+		public const string AllMySql57Plus    = $"{ProviderName.MySql},{ProviderName.MySqlConnector},{ProviderName.MariaDB},{MariaDBConnector}";
 		/// <summary>
 		/// MySQL/MariaDB with supported FTS support.
 		/// MySql less than 5.7 excluded due to inadequate FTS behavior.

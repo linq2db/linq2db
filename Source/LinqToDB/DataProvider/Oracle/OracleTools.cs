@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
-using System.Reflection;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
 	using Data;
 
 	public static partial class OracleTools
@@ -29,7 +26,7 @@ namespace LinqToDB.DataProvider.Oracle
 			OracleProvider provider         = OracleProvider.Managed,
 			string?        connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(provider, version, connectionString);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, version);
 		}
 
 		#region CreateDataConnection

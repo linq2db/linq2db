@@ -25,7 +25,7 @@ namespace Tests.UserTests
 		public void TestMappingCombine([IncludeDataSources(ProviderName.SQLiteMS, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 			mb.Entity<Class1>().HasTableName("Class1Table").Build();
 
 			using (var db = new DataConnection("SQLite.MS", ms))
@@ -37,7 +37,7 @@ namespace Tests.UserTests
 			}
 
 			var newMs = new MappingSchema(ms);
-			var mb2 = newMs.GetFluentMappingBuilder();
+			var mb2 = new FluentMappingBuilder(newMs);
 			mb2.Entity<Class2>().HasTableName("Class2Table").Build();
 			using (var db = new DataConnection("SQLite.MS", newMs))
 			{

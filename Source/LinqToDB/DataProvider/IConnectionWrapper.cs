@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider
 {
 	interface IConnectionWrapper : IDisposable
 	{
-		public void      Open();
+		void Open();
+		DbConnection Connection { get; }
 	}
 }

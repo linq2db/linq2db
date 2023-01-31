@@ -81,12 +81,12 @@ namespace LinqToDB.DataProvider.SapHana
 			return ProviderName.SapHanaOdbc;
 		}
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (connectionString.IndexOf("HDBODBC", StringComparison.OrdinalIgnoreCase) >= 0)
+			if (options.ConnectionString?.IndexOf("HDBODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 				return _hanaOdbcDataProvider.Value;
 
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case SapHanaProviderAdapter.ClientNamespace:
 				case "Sap.Data.Hana.v4.5"                  :
@@ -96,11 +96,11 @@ namespace LinqToDB.DataProvider.SapHana
 				case ProviderName.SapHanaOdbc              : return _hanaOdbcDataProvider.Value;
 				case ""                                    :
 				case null                                  :
-					if (css.Name.Contains("Hana"))
+					if (options.ConfigurationString?.Contains("Hana") == true)
 						goto case ProviderName.SapHana;
 					break;
 				case ProviderName.SapHana                  :
-					if (css.Name.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) >= 0)
+					if (options.ConfigurationString?.IndexOf("ODBC", StringComparison.OrdinalIgnoreCase) >= 0)
 						return _hanaOdbcDataProvider.Value;
 
 					return GetDataProvider();

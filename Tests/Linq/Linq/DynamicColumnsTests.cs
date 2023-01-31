@@ -424,7 +424,7 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<PersonWithDynamicStore>().HasTableName("Person")
 				.HasPrimaryKey(x => Sql.Property<int>(x, "ID"))
 				.Property(x => Sql.Property<string>(x, "FirstName")).IsNullable(false)
@@ -527,7 +527,7 @@ namespace Tests.Linq
 		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var mappingSchema = new MappingSchema();
-			var builder = mappingSchema.GetFluentMappingBuilder()
+			var builder = new FluentMappingBuilder(mappingSchema)
 				.Entity<SomeClassWithDynamic>();
 
 			builder.Property(x => x.Description).HasColumnName("F066_04");

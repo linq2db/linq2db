@@ -115,6 +115,11 @@ namespace LinqToDB
 		/// </summary>
 		public const string MySqlConnector = "MySqlConnector";
 		/// <summary>
+		/// MySql provider.
+		/// Used as an additional configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
+		/// </summary>
+		public const string MariaDB       = "MariaDB";
+		/// <summary>
 		/// Oracle ODP.NET autodetected provider (native or managed).
 		/// Used as configuration name for Oracle base mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema"/>.
 		/// </summary>
@@ -123,7 +128,7 @@ namespace LinqToDB
 		/// Oracle (11g dialect) ODP.NET native provider.
 		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Native11MappingSchema"/>.
 		/// </summary>
-		public const string Oracle11Native  = "Oracle.11.Native";
+		public const string Oracle11Native = "Oracle.11.Native";
 		/// <summary>
 		/// Oracle (11g dialect) Devart provider.
 		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Devart11MappingSchema"/>.

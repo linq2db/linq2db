@@ -16,9 +16,9 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 		static readonly Lazy<IDataProvider> _sybaseManagedDataProvider = DataConnection.CreateDataProvider<SybaseDataProviderManaged>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case SybaseProviderAdapter.ManagedClientNamespace:
 				case ProviderName.SybaseManaged                  : return _sybaseManagedDataProvider.Value;
@@ -29,14 +29,14 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 				case ""                                          :
 				case null                                        :
-					if (css.Name.Contains("Sybase"))
+					if (options.ConfigurationString?.Contains("Sybase") == true)
 						goto case ProviderName.Sybase;
 					break;
 				case ProviderName.Sybase                         :
-					if (css.Name.Contains("Managed"))
+					if (options.ConfigurationString?.Contains("Managed") == true)
 						return _sybaseManagedDataProvider.Value;
 #if NETFRAMEWORK
-					if (css.Name.Contains("Native"))
+					if (options.ConfigurationString?.Contains("Native") == true)
 						return _sybaseNativeDataProvider.Value;
 #endif
 					return GetDataProvider();

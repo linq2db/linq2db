@@ -926,8 +926,8 @@ namespace Tests.Data
 
 				db.Close();
 				db.AddInterceptor(new TestConnectionInterceptor(
-					(args, cn) => OnBeforeConnectionOpen(args.DataConnection, cn),
-					(args, cn) => OnConnectionOpened(args.DataConnection, cn),
+					(_, _) => OnBeforeConnectionOpen(),
+					(_, _) => OnConnectionOpened(),
 					null,
 					null));
 
@@ -982,8 +982,8 @@ namespace Tests.Data
 				}
 			}
 
-			void OnBeforeConnectionOpen(DataConnection dc, DbConnection cn) => open++;
-			void OnConnectionOpened    (DataConnection dc, DbConnection cn) => opened++;
+			void OnBeforeConnectionOpen() => open++;
+			void OnConnectionOpened    () => opened++;
 		}
 
 		[Test]
@@ -1013,8 +1013,8 @@ namespace Tests.Data
 				db.AddInterceptor(new TestConnectionInterceptor(
 					null,
 					null,
-					(args, cn, ct) => OnBeforeConnectionOpenAsync(args.DataConnection, cn, ct),
-					(args, cn, ct) => OnConnectionOpenedAsync(args.DataConnection, cn, ct)));
+					(_, _, _) => OnBeforeConnectionOpenAsync(),
+					(_,_,_) => OnConnectionOpenedAsync()));
 				Assert.AreEqual(0, open);
 				Assert.AreEqual(0, opened);
 				await db.EnsureConnectionAsync();
@@ -1066,13 +1066,13 @@ namespace Tests.Data
 				}
 			}
 
-			Task OnBeforeConnectionOpenAsync(DataConnection dc, DbConnection cn, CancellationToken ct)
+			Task OnBeforeConnectionOpenAsync()
 			{
 				open++;
 				return Task.CompletedTask;
 			}
 
-			Task OnConnectionOpenedAsync(DataConnection dc, DbConnection cn, CancellationToken ct)
+			Task OnConnectionOpenedAsync()
 			{
 				opened++;
 				return Task.CompletedTask;
