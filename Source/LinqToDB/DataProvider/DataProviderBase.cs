@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
@@ -240,11 +241,11 @@ namespace LinqToDB.DataProvider
 
 		#region GetReaderExpression
 
-		public virtual Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType)
+		public virtual Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type? toType)
 		{
 			var fieldType    = reader.GetFieldType(idx);
 			var providerType = reader.GetProviderSpecificFieldType(idx);
-			string? typeName = reader.GetDataTypeName(idx);
+			var typeName     = reader.GetDataTypeName(idx);
 
 			if (fieldType == null)
 			{
@@ -254,25 +255,24 @@ namespace LinqToDB.DataProvider
 
 			typeName = NormalizeTypeName(typeName);
 
-#if DEBUG1
+#if DEBUG
 			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
-			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}".Args(
+			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}",
 				toType       == null ? "(null)" : toType.Name,
 				providerType == null ? "(null)" : providerType.Name,
 				fieldType.Name,
-				typeName ?? "(null)"));
+				typeName ?? "(null)");
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
 
 			foreach (var ex in ReaderExpressions)
 			{
-				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}"
-					.Args(
-						ex.Key.ToType            == null ? null : ex.Key.ToType.Name,
-						ex.Key.ProviderFieldType == null ? null : ex.Key.ProviderFieldType.Name,
-						ex.Key.FieldType         == null ? null : ex.Key.FieldType.Name,
-						ex.Key.DataTypeName,
-						ex.Value));
+				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}",
+					ex.Key.ToType?.Name,
+					ex.Key.ProviderFieldType?.Name,
+					ex.Key.FieldType?.Name,
+					ex.Key.DataTypeName,
+					ex.Value);
 			}
 #endif
 

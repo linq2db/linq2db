@@ -147,8 +147,10 @@ namespace LinqToDB.Linq
 				Type         dataReaderType,
 				bool         slowMode)
 			{
-				Expression expression;
 				var ctx = new TransformMapperExpressionContext(_expression, context, dataReader, dataReaderType);
+
+				Expression expression;
+
 				if (slowMode)
 				{
 					expression = _expression.Transform(

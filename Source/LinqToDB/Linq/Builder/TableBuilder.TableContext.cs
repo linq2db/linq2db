@@ -765,7 +765,6 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject)
 			{
-
 				if (expression == null)
 				{
 					return BuildQuery(OriginalType, this, parentObject);
@@ -776,6 +775,7 @@ namespace LinqToDB.Linq.Builder
 
 				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
 				var descriptor      = GetAssociationDescriptor(levelExpression, out _);
+
 				if (descriptor?.IsList == true)
 				{
 					if (Builder.GetRootObject(expression) is ContextRefExpression)
@@ -788,6 +788,13 @@ namespace LinqToDB.Linq.Builder
 
 				if (contextInfo == null)
 				{
+					if (levelExpression != expression)
+					{
+						var expr = BuildExpression(levelExpression, level, parentObject);
+
+						return expression.Transform(e => e == levelExpression ? expr : e);
+					}
+
 					if (expression is MemberExpression memberExpression)
 					{
 						if (EntityDescriptor != null &&
@@ -1401,6 +1408,7 @@ namespace LinqToDB.Linq.Builder
 								if (sameType || InheritanceMapping.Count > 0)
 								{
 									string? pathName = null;
+
 									foreach (var field in SqlTable.Fields)
 									{
 										var name = levelMember.Member.Name;
@@ -1425,7 +1433,7 @@ namespace LinqToDB.Linq.Builder
 												return field;
 										}
 										else if (field.Name == name)
-											return field;
+											return null; //field;
 									}
 								}
 							}
@@ -1494,43 +1502,42 @@ namespace LinqToDB.Linq.Builder
 
 			private SqlField? GetOrAddDynamicColumn(MemberExpression memberExpression)
 			{
-								if (memberExpression.Member.IsDynamicColumnPropertyEx())
-								{
-									var fieldName = memberExpression.Member.Name;
+				if (memberExpression.Member.IsDynamicColumnPropertyEx())
+				{
+					var fieldName = memberExpression.Member.Name;
 
-									// do not add association columns
-									var flag = true;
-									foreach (var assoc in EntityDescriptor.Associations)
-									{
-										if (assoc.MemberInfo == memberExpression.Member)
-										{
-											flag = false;
-											break;
-										}
-									}
+					// do not add association columns
+					var flag = true;
 
-									if (flag)
-									{
-										var newField = SqlTable.FindFieldByMemberName(fieldName);
-										if (newField == null)
-										{
-											newField = new SqlField(
-												new ColumnDescriptor(
-													Builder.MappingSchema,
-													EntityDescriptor,
-													new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor,
-														memberExpression.Member, EntityDescriptor),
-													InheritanceMapping.Count > 0)
-							)
+					foreach (var assoc in EntityDescriptor.Associations)
+					{
+						if (assoc.MemberInfo == memberExpression.Member)
+						{
+							flag = false;
+							break;
+						}
+					}
+
+					if (flag)
+					{
+						var newField = SqlTable.FindFieldByMemberName(fieldName);
+						if (newField == null)
+						{
+							newField = new SqlField(
+								new ColumnDescriptor(
+									Builder.MappingSchema,
+									EntityDescriptor,
+									new ColumnAttribute(fieldName),
+									new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor),
+									InheritanceMapping.Count > 0))
 							{ IsDynamic = true, };
 
-											SqlTable.Add(newField);
-										}
+							SqlTable.Add(newField);
+						}
 
-										return newField;
-									}
-								}
+						return newField;
+					}
+				}
 
 				return null;
 			}
@@ -1578,6 +1585,7 @@ namespace LinqToDB.Linq.Builder
 					case ExpressionType.MemberAccess:
 						{
 							var field = GetField(expression, level, false);
+
 							if (field != null)
 							{
 								return new ContextInfo(this, field, expression, level);
@@ -1624,7 +1632,8 @@ namespace LinqToDB.Linq.Builder
 									}
 
 									var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
-									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0) {Descriptor = descriptor};
+
+									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0) { Descriptor = descriptor };
 								}
 								else
 								{
@@ -1649,10 +1658,9 @@ namespace LinqToDB.Linq.Builder
 										}
 
 									}
-									var contextRef =
-										new ContextRefExpression(levelExpression.Type, associatedContext);
-									return new ContextInfo(associatedContext,
-										expression.Replace(levelExpression, contextRef), 0)
+									var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
+
+									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0)
 									{
 										Descriptor = descriptor,
 										AsSubquery = AssociationsToSubQueries || descriptor.IsList

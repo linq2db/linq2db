@@ -41,7 +41,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Adds configured mappings to builder's mapping schema.
 		/// </summary>
-		public void Build()
+		public FluentMappingBuilder Build()
 		{
 			if (_typeAttributes.Count > 0 || _memberAttributes.Count > 0)
 			{
@@ -50,6 +50,8 @@ namespace LinqToDB.Mapping
 				_memberAttributes.Clear();
 				_orderedMembers.Clear();
 			}
+
+			return this;
 		}
 
 		#region GetAtributes
