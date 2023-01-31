@@ -817,7 +817,7 @@ namespace LinqToDB.Linq.Builder
 					return expr;
 				}
 
-				if (!enforceServerSide && contextInfo.LevelExpression != contextInfo.CurrentExpression)
+				if (!enforceServerSide && contextInfo.LevelExpression != null && contextInfo.LevelExpression != contextInfo.CurrentExpression)
 				{
 					var expr = BuildExpression(contextInfo.LevelExpression, level, parentObject, enforceServerSide);
 
@@ -1432,7 +1432,7 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											if (field.Name == pathName)
-												return (field, levelExpression);
+												return (field, null);
 										}
 										else if (field.Name == name)
 											return (field, levelExpression);
@@ -1464,12 +1464,12 @@ namespace LinqToDB.Linq.Builder
 											var fld = SqlTable.FindFieldByMemberName(name);
 
 											if (fld != null)
-												return (fld, levelExpression);
+												return (fld, null);
 										}
 									}
 									else
 									{
-										return (field,levelExpression);
+										return (field, null);
 									}
 								}
 
@@ -1477,16 +1477,16 @@ namespace LinqToDB.Linq.Builder
 									foreach (var mapping in InheritanceMapping)
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
-												return (field, levelExpression);
+												return (field, null);
 
 								var dynamicField = GetOrAddDynamicColumn(memberExpression);
 								if (dynamicField != null)
-									return (dynamicField, levelExpression);
+									return (dynamicField, null);
 							}
 
 							var newDynamicField = GetOrAddDynamicColumn(memberExpression);
 							if (newDynamicField != null)
-								return (newDynamicField, levelExpression);
+								return (newDynamicField, null);
 
 							if (throwException &&
 								EntityDescriptor != null &&
@@ -1499,7 +1499,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				return (null,null);
+				return (null, null);
 			}
 
 			private SqlField? GetOrAddDynamicColumn(MemberExpression memberExpression)
@@ -1671,7 +1671,6 @@ namespace LinqToDB.Linq.Builder
 										AsSubquery = AssociationsToSubQueries || descriptor.IsList
 									};
 								}
-
 							}
 
 							break;
