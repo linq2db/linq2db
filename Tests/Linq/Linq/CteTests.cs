@@ -1384,5 +1384,35 @@ namespace Tests.Linq
 
 			query.ToArray();
 		}
+
+		[Test(Description =
+			"Linq2db should not put a SELECT * FROM (..) around the query, " +
+			"as Oracle fails with ORA-00918 Column ambiguously defined.")]
+		public void Issue3945([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestFolder>();
+
+			var cte = db.GetCte<TestFolder>("CTE", cte => tb.Where(c => c.ParentId != null));
+			var join = from child in cte
+					   join parent in tb on child.ParentId equals parent.Id
+					   select new TestFolder
+					   {
+						   Id = Guid.NewGuid(),
+						   Label = parent.Label + "/" + child.Label,
+					   };
+			join.Insert(tb, x => x);
+			// This test simply shouldn't crash with ORA-00918.
+			// As of linq2db 4.3.0, the generated SQL looks like this:
+			// INSERT ...
+			// SELECT * FROM (
+			//   WITH cte (..)
+			//   SELECT ..
+			//   FROM cte ..
+			//   JOIN parent ..
+			// )
+			// The SELECT * is the problem, and it is introduced when using a CTE + a join in query.
+			// It is useless as the same query without SELECT * works.
+		}
 	}
 }
