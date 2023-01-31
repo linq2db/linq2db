@@ -70,16 +70,14 @@ var db = new DataConnection(
     .UseSqlServer(@"Server=.\;Database=Northwind;Trusted_Connection=True;"));
 ```
 
-Use connection factory to setup SqlClient-specific authentication token:
+Use connection configuration action to setup SqlClient-specific authentication token:
 
 ```cs
 var options = new DataOptions()
   .UseSqlServer(connectionString, SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient)
-  .UseConnectionFactory(options =>
+  .UseBeforeConnectionOpened(cn =>
     {
-        var cn = new SqlConnection(options.ConnectionOptions.ConnectionString);
-        cn.AccessToken = accessToken;
-        return cn;
+        ((SqlConnection)cn).AccessToken = accessToken;
     });
 
 // pass configured options to data context constructor

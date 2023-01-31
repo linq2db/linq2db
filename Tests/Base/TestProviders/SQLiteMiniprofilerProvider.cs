@@ -43,9 +43,9 @@ namespace Tests
 
 			DataConnection.InsertProviderDetector(ProviderDetector);
 
-			IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+			IDataProvider? ProviderDetector(ConnectionOptions options)
 			{
-				return css.Name switch
+				return options.ConfigurationString switch
 				{
 					TestProvName.SQLiteClassicMiniProfilerMapped   => mpm,
 					TestProvName.SQLiteClassicMiniProfilerUnmapped => mpu,

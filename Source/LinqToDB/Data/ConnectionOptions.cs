@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
 	using Common;
 	using Common.Internal;
 	using DataProvider;
+	using Interceptors;
 	using Mapping;
 
 	/// <param name="ConfigurationString">
@@ -39,18 +42,22 @@ namespace LinqToDB.Data
 	/// <param name="DataProviderFactory">
 	/// Gets <see cref="IDataProvider"/> factory to use with <see cref="DataConnection"/> instance.
 	/// </param>
+	/// <param name="ConnectionInterceptor">
+	/// Connection interceptor to support connection configuration before or right after connection opened.
+	/// </param>
 	public sealed record ConnectionOptions
 	(
-		string?                           ConfigurationString = default,
-		string?                           ConnectionString    = default,
-		IDataProvider?                    DataProvider        = default,
-		string?                           ProviderName        = default,
-		MappingSchema?                    MappingSchema       = default,
-		DbConnection?                     DbConnection        = default,
-		DbTransaction?                    DbTransaction       = default,
-		bool                              DisposeConnection   = default,
-		Func<DataOptions, DbConnection>? ConnectionFactory    = default,
-		Func<IDataProvider>?             DataProviderFactory  = default
+		string?                                 ConfigurationString   = default,
+		string?                                 ConnectionString      = default,
+		IDataProvider?                          DataProvider          = default,
+		string?                                 ProviderName          = default,
+		MappingSchema?                          MappingSchema         = default,
+		DbConnection?                           DbConnection          = default,
+		DbTransaction?                          DbTransaction         = default,
+		bool                                    DisposeConnection     = default,
+		Func<DataOptions, DbConnection>?        ConnectionFactory     = default,
+		Func<ConnectionOptions, IDataProvider>? DataProviderFactory   = default,
+		ConnectionOptionsConnectionInterceptor? ConnectionInterceptor = default
 	)
 		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
@@ -60,16 +67,17 @@ namespace LinqToDB.Data
 
 		ConnectionOptions(ConnectionOptions original)
 		{
-			ConfigurationString = original.ConfigurationString;
-			ConnectionString    = original.ConnectionString;
-			DataProvider        = original.DataProvider;
-			ProviderName        = original.ProviderName;
-			MappingSchema       = original.MappingSchema;
-			DbConnection        = original.DbConnection;
-			DbTransaction       = original.DbTransaction;
-			DisposeConnection   = original.DisposeConnection;
-			ConnectionFactory   = original.ConnectionFactory;
-			DataProviderFactory = original.DataProviderFactory;
+			ConfigurationString         = original.ConfigurationString;
+			ConnectionString            = original.ConnectionString;
+			DataProvider                = original.DataProvider;
+			ProviderName                = original.ProviderName;
+			MappingSchema               = original.MappingSchema;
+			DbConnection                = original.DbConnection;
+			DbTransaction               = original.DbTransaction;
+			DisposeConnection           = original.DisposeConnection;
+			ConnectionFactory           = original.ConnectionFactory;
+			DataProviderFactory         = original.DataProviderFactory;
+			ConnectionInterceptor       = original.ConnectionInterceptor;
 		}
 
 		int? _configurationID;
@@ -91,6 +99,7 @@ namespace LinqToDB.Data
 						.Add(DisposeConnection)
 						.Add(ConnectionFactory)
 						.Add(DataProviderFactory)
+						.Add(ConnectionInterceptor)
 						.CreateID();
 				}
 

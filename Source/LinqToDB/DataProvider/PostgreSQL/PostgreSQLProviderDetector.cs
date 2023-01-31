@@ -18,9 +18,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider95 = DataConnection.CreateDataProvider<PostgreSQLDataProvider95>();
 		static readonly Lazy<IDataProvider> _postgreSQLDataProvider15 = DataConnection.CreateDataProvider<PostgreSQLDataProvider15>();
 
-		public override IDataProvider? DetectProvider(IConnectionStringSettings css, string connectionString)
+		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case ProviderName.PostgreSQL92 : return _postgreSQLDataProvider92.Value;
 				case ProviderName.PostgreSQL93 : return _postgreSQLDataProvider93.Value;
@@ -28,38 +28,40 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ProviderName.PostgreSQL15 : return _postgreSQLDataProvider15.Value;
 				case ""                        :
 				case null                      :
-					if (css.Name == "PostgreSQL")
+					if (options.ConfigurationString == "PostgreSQL")
 						goto case NpgsqlProviderAdapter.ClientNamespace;
 					break;
 				case NpgsqlProviderAdapter.ClientNamespace :
 				case var providerName when providerName.Contains("PostgreSQL") || providerName.Contains(NpgsqlProviderAdapter.AssemblyName):
-					if (css.Name.Contains("15"))
-						return _postgreSQLDataProvider15.Value;
+					if (options.ConfigurationString != null)
+					{
+						if (options.ConfigurationString.Contains("15"))
+							return _postgreSQLDataProvider15.Value;
 
-					if (css.Name.Contains("92") || css.Name.Contains("9.2"))
-						return _postgreSQLDataProvider92.Value;
+						if (options.ConfigurationString.Contains("92") || options.ConfigurationString.Contains("9.2"))
+							return _postgreSQLDataProvider92.Value;
 
-					if (css.Name.Contains("93") || css.Name.Contains("9.3") ||
-					    css.Name.Contains("94") || css.Name.Contains("9.4"))
-						return _postgreSQLDataProvider93.Value;
+						if (options.ConfigurationString.Contains("93") || options.ConfigurationString.Contains("9.3") ||
+							options.ConfigurationString.Contains("94") || options.ConfigurationString.Contains("9.4"))
+							return _postgreSQLDataProvider93.Value;
 
-					if (css.Name.Contains("95") || css.Name.Contains("9.5") ||
-					    css.Name.Contains("96") || css.Name.Contains("9.6") ||
-					    css.Name.Contains("10") ||
-					    css.Name.Contains("11") ||
-					    css.Name.Contains("12") ||
-					    css.Name.Contains("13") ||
-					    css.Name.Contains("14"))
-						return _postgreSQLDataProvider95.Value;
+						if (options.ConfigurationString.Contains("95") || options.ConfigurationString.Contains("9.5") ||
+							options.ConfigurationString.Contains("96") || options.ConfigurationString.Contains("9.6") ||
+							options.ConfigurationString.Contains("10") ||
+							options.ConfigurationString.Contains("11") ||
+							options.ConfigurationString.Contains("12") ||
+							options.ConfigurationString.Contains("13") ||
+							options.ConfigurationString.Contains("14"))
+							return _postgreSQLDataProvider95.Value;
+					}
 
 					if (AutoDetectProvider)
 					{
 						try
 						{
-							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
-							var dv = DetectServerVersion(default, cs);
+							var dv = DetectServerVersion(options, default);
 
-							return dv != null ? GetDataProvider(default, dv.Value, connectionString) : null;
+							return dv != null ? GetDataProvider(options, default, dv.Value) : null;
 						}
 						catch
 						{
@@ -67,30 +69,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						}
 					}
 
-					return GetDataProvider(default, DefaultVersion, connectionString);
+					return GetDataProvider(options, default, DefaultVersion);
 			}
 
 			return null;
 		}
 
-		public override IDataProvider GetDataProvider(Provider provider, PostgreSQLVersion version, string? connectionString)
+		public override IDataProvider GetDataProvider(ConnectionOptions options, Provider provider, PostgreSQLVersion version)
 		{
 			return version switch
 			{
-				PostgreSQLVersion.AutoDetect => AutoDetectProvider(),
+				PostgreSQLVersion.AutoDetect => GetDataProvider(options, default, DetectServerVersion(options, default) ?? DefaultVersion),
 				PostgreSQLVersion.v15        => _postgreSQLDataProvider15.Value,
 				PostgreSQLVersion.v95        => _postgreSQLDataProvider95.Value,
 				PostgreSQLVersion.v93        => _postgreSQLDataProvider93.Value,
 				_                            => _postgreSQLDataProvider92.Value,
 			};
-
-			IDataProvider AutoDetectProvider()
-			{
-				if (connectionString == null)
-					throw new InvalidOperationException("Connection string is not provided.");
-
-				return GetDataProvider(default, DetectServerVersion(default, connectionString) ?? DefaultVersion, null);
-			}
 		}
 
 		public override PostgreSQLVersion? DetectServerVersion(NpgsqlProviderAdapter.NpgsqlConnection connection)
