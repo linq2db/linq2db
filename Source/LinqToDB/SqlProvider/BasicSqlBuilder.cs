@@ -65,6 +65,14 @@ namespace LinqToDB.SqlProvider
 
 		public virtual bool IsNestedJoinSupported           => true;
 		public virtual bool IsNestedJoinParenthesisRequired => false;
+		/// <summary>
+		/// Identifies CTE clause location:
+		/// <list type="bullet">
+		/// <item><c>CteFirst = true</c> (default): WITH clause goes first in query</item>
+		/// <item><c>CteFirst = false</c>: WITH clause goes before SELECT</item>
+		/// </list>
+		/// </summary>
+		public virtual bool CteFirst                        => true;
 
 		/// <summary>
 		/// True if it is needed to wrap join condition with ()
@@ -390,6 +398,12 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			if (!CteFirst && statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
+			{
+				BuildInsertQuery2(statement, insertClause, addAlias);
+				return;
+			}
+
 			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
@@ -420,10 +434,10 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
-			AppendIndent().AppendLine("SELECT * FROM");
-			AppendIndent().AppendLine(OpenParens);
+			//AppendIndent().AppendLine("SELECT * FROM");
+			//AppendIndent().AppendLine(OpenParens);
 
-			++Indent;
+			//++Indent;
 
 			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
 
@@ -444,9 +458,9 @@ namespace LinqToDB.SqlProvider
 			else
 				BuildOutputSubclause(statement.GetOutputClause());
 
-			--Indent;
+			//--Indent;
 
-			AppendIndent().AppendLine(")");
+			//AppendIndent().AppendLine(")");
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
