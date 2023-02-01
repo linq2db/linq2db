@@ -175,7 +175,7 @@ namespace LinqToDB.SqlQuery
 		static bool FindField(List<SqlColumn> columns, SqlField field)
 		{
 			foreach (var column in columns)
-				if (column.Expression.Find(field, static (field, e) => field == e) != null)
+				if (column.Expression != field && column.Expression.Find(field, static (field, e) => field == e) != null)
 					return true;
 
 			return false;
