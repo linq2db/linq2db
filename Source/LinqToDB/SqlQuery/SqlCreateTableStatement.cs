@@ -23,6 +23,11 @@ namespace LinqToDB.SqlQuery
 			set {}
 		}
 
+		public void Modify(SqlTable table)
+		{
+			Table = table;
+		}
+
 		public override SelectQuery? SelectQuery { get => null; set {}}
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)

@@ -4,8 +4,8 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlMultiInsertStatement : SqlStatement
 	{
-		public SqlTableLikeSource               Source     { get; }
-		public List<SqlConditionalInsertClause> Inserts    { get; }
+		public SqlTableLikeSource               Source     { get; private  set; }
+		public List<SqlConditionalInsertClause> Inserts    { get; private  set; }
 		public MultiInsertType                  InsertType { get; internal set; }
 
 		public SqlMultiInsertStatement(SqlTableLikeSource source)
@@ -23,6 +23,12 @@ namespace LinqToDB.SqlQuery
 
 		public void Add(SqlSearchCondition? when, SqlInsertClause insert)
 			=> Inserts.Add(new SqlConditionalInsertClause(insert, when));
+
+		public void Modify(SqlTableLikeSource source, List<SqlConditionalInsertClause> inserts)
+		{
+			Source  = source;
+			Inserts = inserts;
+		}
 
 		public override QueryType          QueryType   => QueryType.MultiInsert;
 		public override QueryElementType   ElementType => QueryElementType.MultiInsertStatement;
@@ -74,5 +80,6 @@ namespace LinqToDB.SqlQuery
 
 			return null;
 		}
+
 	}
 }

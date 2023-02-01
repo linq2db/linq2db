@@ -6,6 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Include="..\Linq\Extensions\QueryHintsTests.cs" Link="QueryHintsTests.cs" />
 		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />
 		<Compile Include="..\Linq\Linq\CommonTests.cs" Link="CommonTests.cs" />
 		<Compile Include="..\Linq\Linq\ContainsTests.cs" Link="ContainsTests.cs" />
@@ -13,8 +14,10 @@
 		<Compile Include="..\Linq\Linq\DistinctTests.cs" Link="DistinctTests.cs" />
 		<Compile Include="..\Linq\Linq\EagerLoadingTests.cs" Link="EagerLoadingTests.cs" />
 		<Compile Include="..\Linq\Linq\MathFunctionTests.cs" Link="MathFunctionTests.cs" />
+		<Compile Include="..\Linq\Linq\QueryableAssociationTests.cs" Link="QueryableAssociationTests.cs" />
 		<Compile Include="..\Linq\Linq\SelectScalarTests.cs" Link="SelectScalarTests.cs" />
 		<Compile Include="..\Linq\Linq\SqlRowTests.cs" Link="SqlRowTests.cs" />
+		<Compile Include="..\Linq\Linq\TagTests.cs" Link="TagTests.cs" />
 		<Compile Include="..\Linq\Linq\TakeSkipTests.cs" Link="TakeSkipTests.cs" />
 		<Compile Include="..\Linq\TestsInitialization.cs" Link="TestsInitialization.cs" />
 		<Compile Include="..\Linq\Create\CreateData.cs" Link="CreateData.cs" />

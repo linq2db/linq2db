@@ -9,12 +9,17 @@ namespace LinqToDB.SqlQuery
 			Table = table;
 		}
 
-		public SqlTable Table { get; }
+		public SqlTable Table { get; private set; }
 
 		public override QueryType        QueryType    => QueryType.DropTable;
 		public override QueryElementType ElementType  => QueryElementType.DropTableStatement;
 		public override bool             IsParameterDependent { get => false; set {} }
 		public override SelectQuery?     SelectQuery          { get => null;  set {} }
+
+		public void Modify(SqlTable table)
+		{
+			Table = table;
+		}
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{

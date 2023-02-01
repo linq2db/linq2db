@@ -101,7 +101,11 @@ namespace LinqToDB.SqlQuery
 		/// Contains list of columns that build unique key for this sub-query.
 		/// Used in JoinOptimizer for safely removing sub-query from resulting SQL.
 		/// </summary>
-		public List<ISqlExpression[]> UniqueKeys => _uniqueKeys ??= new ();
+		public List<ISqlExpression[]> UniqueKeys
+		{
+			get => _uniqueKeys ??= new();
+			internal set => _uniqueKeys = value;
+		}
 
 		public bool HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
 
@@ -110,8 +114,13 @@ namespace LinqToDB.SqlQuery
 		#region Union
 
 		private List<SqlSetOperator>? _setOperators;
-		public  List<SqlSetOperator>   SetOperators => _setOperators ??= new List<SqlSetOperator>();
-		public  bool            HasSetOperators    => _setOperators != null && _setOperators.Count > 0;
+		public  List<SqlSetOperator>  SetOperators
+		{
+			get => _setOperators ??= new List<SqlSetOperator>();
+			internal set => _setOperators = value;
+		}
+
+		public  bool                  HasSetOperators => _setOperators != null && _setOperators.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
 		{

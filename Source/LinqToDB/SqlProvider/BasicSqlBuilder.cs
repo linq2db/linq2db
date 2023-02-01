@@ -834,7 +834,7 @@ namespace LinqToDB.SqlProvider
 						throw new LinqToDBException("This provider does not support SqlRow literal on the right-hand side of an UPDATE SET.");
 				}
 
-				BuildExpression(nullability, expr.Column, SqlProviderFlags.IsUpdateSetTableAliasSupported, true, false);
+				BuildExpression(nullability, expr.Column, updateClause.TableSource != null, true, false);
 
 				if (expr.Expression != null)
 				{

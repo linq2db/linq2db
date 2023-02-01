@@ -4,7 +4,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlOutputClause : IQueryElement, ISqlExpressionWalkable
 	{
-		private List<SqlSetExpression>? _outputItems;
+		List<SqlSetExpression>? _outputItems;
 
 		public SqlTable?             InsertedTable { get; set; }
 		public SqlTable?             DeletedTable  { get; set; }
@@ -12,8 +12,23 @@ namespace LinqToDB.SqlQuery
 		public List<ISqlExpression>? OutputColumns { get; set; }
 
 		public bool                   HasOutput      => HasOutputItems || OutputColumns != null;
-		public bool                   HasOutputItems => _outputItems != null && _outputItems.Count > 0;
-		public List<SqlSetExpression> OutputItems    => _outputItems ??= new List<SqlSetExpression>();
+		public bool                   HasOutputItems => _outputItems                    != null && _outputItems.Count > 0;
+		public List<SqlSetExpression> OutputItems
+		{
+			get => _outputItems ??= new List<SqlSetExpression>();
+			set => _outputItems = value;
+		}
+
+		public void Modify(SqlTable? insertedTable, SqlTable? deletedTable,
+			SqlTable? outputTable, List<ISqlExpression>? outputColumns, List<SqlSetExpression>? outputItems)
+		{
+			InsertedTable = insertedTable;
+			DeletedTable  = deletedTable;
+			OutputTable   = outputTable;
+			OutputColumns = outputColumns;
+			_outputItems  = outputItems;
+		}
+
 
 		#region Overrides
 

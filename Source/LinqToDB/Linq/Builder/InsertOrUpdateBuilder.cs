@@ -20,7 +20,6 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			var insertOrUpdateStatement = new SqlInsertOrUpdateStatement(sequence.SelectQuery);
-			sequence.Statement = insertOrUpdateStatement;
 
 			var insertExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 			List<UpdateBuilder.SetExpressionEnvelope>? updateExpressions = null;
@@ -93,18 +92,28 @@ namespace LinqToDB.Linq.Builder
 					keysExpressions, insertOrUpdateStatement.Update.Keys, false);
 			}
 
-			return new InsertOrUpdateContext(buildInfo.Parent, sequence);
+			return new InsertOrUpdateContext(builder, sequence.SelectQuery, insertOrUpdateStatement);
 		}
 
 		#endregion
 
 		#region UpdateContext
 
-		sealed class InsertOrUpdateContext : SequenceContextBase
+		sealed class InsertOrUpdateContext : BuildContextBase
 		{
-			public InsertOrUpdateContext(IBuildContext? parent, IBuildContext sequence)
-				: base(parent, sequence, null)
+			public SqlInsertOrUpdateStatement InsertOrUpdateStatement { get; }
+
+			public InsertOrUpdateContext(ExpressionBuilder buider, SelectQuery selectQuery,
+				SqlInsertOrUpdateStatement insertOrUpdateStatement) : base(buider, selectQuery)
 			{
+				InsertOrUpdateStatement = insertOrUpdateStatement;
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this))
+					return Expression.Default(path.Type);
+				throw new InvalidOperationException();
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -115,9 +124,14 @@ namespace LinqToDB.Linq.Builder
 					QueryRunner.MakeAlternativeInsertOrUpdate(query);
 			}
 
+			public override SqlStatement GetResultStatement()
+			{
+				return InsertOrUpdateStatement;
+			}
+
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new InsertOrUpdateContext(null, context.CloneContext(Sequence));
+				return new InsertOrUpdateContext(Builder, context.CloneElement(SelectQuery), context.CloneElement(InsertOrUpdateStatement));
 			}
 		}
 

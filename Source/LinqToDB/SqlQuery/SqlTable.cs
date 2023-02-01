@@ -199,8 +199,8 @@ namespace LinqToDB.SqlQuery
 		internal string NameForLogging => Expression ?? TableName.Name;
 
 		// list user to preserve order of fields in queries
-		readonly List<SqlField>              _orderedFields = new();
-		readonly Dictionary<string,SqlField> _fieldsLookup  = new();
+		internal readonly List<SqlField>              _orderedFields = new();
+		readonly          Dictionary<string,SqlField> _fieldsLookup  = new();
 
 		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }

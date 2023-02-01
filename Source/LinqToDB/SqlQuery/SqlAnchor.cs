@@ -17,6 +17,11 @@
 			AnchorKind    = anchorKind;
 		}
 
+		public void Modify(ISqlExpression expression)
+		{
+			SqlExpression = expression;
+		}
+
 		#region Overrides
 
 //#if OVERRIDETOSTRING

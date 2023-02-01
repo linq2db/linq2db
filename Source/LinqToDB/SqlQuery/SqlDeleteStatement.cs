@@ -39,6 +39,7 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
+				.AppendTag(Tag)
 				.AppendElement(With)
 				.Append("DELETE FROM ")
 				.AppendElement(Table)

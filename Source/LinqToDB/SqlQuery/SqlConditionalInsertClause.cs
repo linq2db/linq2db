@@ -4,10 +4,16 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlConditionalInsertClause : IQueryElement, ISqlExpressionWalkable
 	{
-		public SqlInsertClause     Insert { get; }
-		public SqlSearchCondition? When   { get; }
+		public SqlInsertClause     Insert { get; private set; }
+		public SqlSearchCondition? When   { get; private set; }
 
 		public SqlConditionalInsertClause(SqlInsertClause insert, SqlSearchCondition? when)
+		{
+			Insert = insert;
+			When   = when;
+		}
+
+		public void Modify(SqlInsertClause insert, SqlSearchCondition? when)
 		{
 			Insert = insert;
 			When   = when;

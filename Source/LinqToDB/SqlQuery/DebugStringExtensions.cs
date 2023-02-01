@@ -12,6 +12,25 @@
 			return writer;
 		}
 
+		public static QueryElementTextWriter AppendTag(this QueryElementTextWriter writer, SqlComment? comment)
+		{
+			if (comment != null)
+			{
+				writer.Append("/* ");
+
+				for (var i = 0; i < comment.Lines.Count; i++)
+				{
+					writer.Append(comment.Lines[i].Replace("/*", "").Replace("*/", ""));
+					if (i < comment.Lines.Count - 1)
+						writer.AppendLine();
+				}
+
+				writer.AppendLine(" */");
+			}
+
+			return writer;
+		}
+
 		internal static string ToDebugString<T>(this T element, SelectQuery? selectQuery = null)
 			where T : IQueryElement
 		{

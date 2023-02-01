@@ -2,17 +2,18 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
+	using Reflection;
+	using LinqToDB.Expressions;
+
 	sealed class EnumerableBuilder : ISequenceBuilder
 	{
-		public int BuildCounter { get; set; }
+		static readonly MethodInfo[] _containsMethodInfos = { Methods.Enumerable.Contains, Methods.Queryable.Contains };
 
-		private static MethodInfo[] _containsMethodInfos = { Methods.Enumerable.Contains, Methods.Queryable.Contains };
+		public int          BuildCounter { get; set; }
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{

@@ -99,7 +99,12 @@ namespace LinqToDB.SqlQuery
 			ValueBuilders.Add(valueBuilder);
 		}
 
-		internal IReadOnlyList<ISqlExpression[]>? Rows { get; }
+		internal IReadOnlyList<ISqlExpression[]>? Rows { get; set;}
+
+		public void Modify(IReadOnlyList<ISqlExpression[]>? rows)
+		{
+			Rows = rows;
+		}
 
 		internal IReadOnlyList<ISqlExpression[]> BuildRows(EvaluationContext context)
 		{

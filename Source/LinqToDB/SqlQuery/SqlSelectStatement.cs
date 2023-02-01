@@ -17,6 +17,8 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
+			writer.AppendTag(Tag);
+
 			if (With?.Clauses.Count > 0)
 			{
 				writer

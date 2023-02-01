@@ -460,7 +460,7 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr2         { get; internal set; }
 			public SearchKind     Kind          { get; }
-			public ISqlExpression CaseSensitive { get; }
+			public ISqlExpression CaseSensitive { get; private set; }
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -505,6 +505,13 @@ namespace LinqToDB.SqlQuery
 				}
 
 				writer.AppendElement(Expr2);
+			}
+
+			public void Modify(ISqlExpression expr1, ISqlExpression expr2, ISqlExpression caseSensitive)
+			{
+				Expr1 = expr1;
+				Expr2 = expr2;
+				CaseSensitive = caseSensitive;
 			}
 		}
 
@@ -691,6 +698,12 @@ namespace LinqToDB.SqlQuery
 
 			public SelectQuery SubQuery { get; private set; }
 
+			public void Modify(ISqlExpression exp1, SelectQuery subQuery)
+			{
+				Expr1    = exp1;
+				SubQuery = subQuery;
+			}
+
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is InSubQuery expr
@@ -748,7 +761,13 @@ namespace LinqToDB.SqlQuery
 					Values.AddRange(values);
 			}
 
-			public   List<ISqlExpression>  Values { get; } = new List<ISqlExpression>();
+			public List<ISqlExpression> Values { get; private set; } = new();
+
+			public void Modify(ISqlExpression expr1, List<ISqlExpression> values)
+			{
+				Expr1  = expr1;
+				Values = values;
+			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -814,6 +833,11 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public SqlFunction Function { get; private set; }
+
+			public void Modify(SqlFunction function)
+			{
+				Function = function;
+			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{

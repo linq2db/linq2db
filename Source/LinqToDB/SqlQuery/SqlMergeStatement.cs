@@ -32,15 +32,25 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public string?                       Hint       { get; internal set; }
-		public SqlTableSource                Target     { get; }
-		public SqlTableLikeSource            Source     { get; internal set; } = null!;
-		public SqlSearchCondition            On         { get; }               = new();
-		public List<SqlMergeOperationClause> Operations { get; }               = new();
+		public SqlTableSource                Target     { get; private  set; }
+		public SqlTableLikeSource            Source     { get; internal set; }  = null!;
+		public SqlSearchCondition            On         { get; private  set; }  = new();
+		public List<SqlMergeOperationClause> Operations { get; private  set; } = new();
 		public SqlOutputClause?              Output     { get; set; }
 
 		public bool                          HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
 		public override QueryType            QueryType         => QueryType.Merge;
 		public override QueryElementType     ElementType       => QueryElementType.MergeStatement;
+
+		public void Modify(SqlTableSource target,     SqlTableLikeSource source, SqlSearchCondition on,
+			List<SqlMergeOperationClause> operations, SqlOutputClause?   output)
+		{
+			Target     = target;
+			Source     = source;
+			On         = on;
+			Operations = operations;
+			Output     = output;
+		}
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{

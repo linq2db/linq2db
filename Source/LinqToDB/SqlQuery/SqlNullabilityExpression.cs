@@ -9,6 +9,11 @@
 			SqlExpression = sqlExpression;
 		}
 
+		public void Modify(ISqlExpression sqlExpression)
+		{
+			SqlExpression = sqlExpression;
+		}
+
 		#region Overrides
 
 #if OVERRIDETOSTRING
@@ -86,5 +91,6 @@
 		}
 
 		#endregion
+
 	}
 }

@@ -44,6 +44,9 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public GroupingType GroupingType  { get; set; } = GroupingType.Default;
+
+		// Note: List is used in Visitor to modify elements, by replacing List by ReadOnly collection,
+		// Visitor should be corrected and appropriate Modify function updated.
 		public List<ISqlExpression> Items { get; } = new List<ISqlExpression>();
 
 		public bool IsEmpty => Items.Count == 0;

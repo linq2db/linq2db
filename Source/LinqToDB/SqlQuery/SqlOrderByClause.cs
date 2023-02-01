@@ -36,7 +36,12 @@ namespace LinqToDB.SqlQuery
 			Items.Add(new SqlOrderByItem(expr, isDescending));
 		}
 
-		public List<SqlOrderByItem>  Items { get; } = new List<SqlOrderByItem>();
+		public List<SqlOrderByItem>  Items { get; private set; } = new();
+
+		public void Modify(List<SqlOrderByItem> items)
+		{
+			Items = items;
+		}
 
 		public bool IsEmpty => Items.Count == 0;
 

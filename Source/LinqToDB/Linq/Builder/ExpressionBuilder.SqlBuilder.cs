@@ -79,13 +79,15 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, bool isTest)
 		{
+			var inScopeExpr = SequenceHelper.MoveAllToScopedContext(expr, context);
+
 			var testInfo =
-				new BuildInfo(context, expr, new SelectQuery { ParentSelect = context.SelectQuery }) { IsTest = true };
+				new BuildInfo(context, inScopeExpr, new SelectQuery { ParentSelect = context.SelectQuery }) { IsTest = true };
 
 			if (!IsSequence(testInfo))
 				return null;
 			
-			var info = new BuildInfo(context, expr, new SelectQuery {ParentSelect = context.SelectQuery})
+			var info = new BuildInfo(context, inScopeExpr, new SelectQuery {ParentSelect = context.SelectQuery})
 			{
 				CreateSubQuery = true,
 				IsTest         = isTest

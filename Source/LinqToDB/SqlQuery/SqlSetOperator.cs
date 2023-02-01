@@ -8,10 +8,15 @@
 			Operation   = operation;
 		}
 
-		public SelectQuery  SelectQuery { get; }
+		public SelectQuery  SelectQuery { get; private set; }
 		public SetOperation Operation   { get; }
 
 		public QueryElementType ElementType => QueryElementType.SetOperator;
+
+		public void Modify(SelectQuery selectQuery)
+		{
+			SelectQuery = selectQuery;
+		}
 
 #if OVERRIDETOSTRING
 

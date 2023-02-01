@@ -26,6 +26,7 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
+				.AppendTag(Tag)
 				.AppendElement(With)
 				.AppendLine("UPDATE")
 				.AppendElement(Update)

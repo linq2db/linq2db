@@ -39,7 +39,12 @@ namespace LinqToDB.SqlQuery
 			public ISqlExpression  ToExpr() { return _parent; }
 		}
 
-		public   List<SqlCondition>  Conditions { get; } = new List<SqlCondition>();
+		public List<SqlCondition> Conditions { get; private set; } = new();
+
+		public void Modify(List<SqlCondition> conditions)
+		{
+			Conditions = conditions;
+		}
 
 		protected override SqlSearchCondition Search => this;
 

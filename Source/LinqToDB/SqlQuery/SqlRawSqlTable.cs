@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 	{
 		public string SQL { get; }
 
-		public ISqlExpression[] Parameters { get; }
+		public ISqlExpression[] Parameters { get; private set; }
 
 		public SqlRawSqlTable(
 			MappingSchema    mappingSchema,
@@ -46,6 +46,11 @@ namespace LinqToDB.SqlQuery
 
 			SQL                = table.SQL;
 			Parameters         = parameters;
+		}
+
+		public void Modify(ISqlExpression[] parameters)
+		{
+			Parameters = parameters;
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;

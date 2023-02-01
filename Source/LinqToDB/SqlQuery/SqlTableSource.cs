@@ -69,6 +69,13 @@ namespace LinqToDB.SqlQuery
 		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
 
 
+		public void Modify(ISqlTableSource source, List<SqlJoinedTable> joins, List<ISqlExpression[]>? uniqueKeys)
+		{
+			Source      = source;
+			Joins       = joins;
+			_uniqueKeys = uniqueKeys;
+		}
+
 		public SqlTableSource? this[ISqlTableSource table] => this[table, null];
 
 		public SqlTableSource? this[ISqlTableSource table, string? alias]
@@ -87,7 +94,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public List<SqlJoinedTable> Joins { get; } = new List<SqlJoinedTable>();
+		public List<SqlJoinedTable> Joins { get; private set; } = new();
 
 		public void ForEach<TContext>(TContext context, Action<TContext, SqlTableSource> action, HashSet<SelectQuery> visitedQueries)
 		{
