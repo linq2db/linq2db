@@ -155,7 +155,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var t = FindField(field, table);
 
-					if (t != null)
+					if (t != null && !FindField(q.Select.Columns, field))
 					{
 						var n   = q.Select.Columns.Count;
 						var idx = q.Select.Add(field);
@@ -172,18 +172,27 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		static bool FindField(List<SqlColumn> columns, SqlField field)
+		{
+			foreach (var column in columns)
+				if (column.Expression != field && column.Expression.Find(field, static (field, e) => field == e) != null)
+					return true;
+
+			return false;
+		}
+
 		static void ResolveFields(QueryData data)
 		{
 			if (data.Queries.Count == 0)
 				return;
 
-			var dic = new Dictionary<ISqlExpression,ISqlExpression>();
+			Dictionary<ISqlExpression,ISqlExpression>? dic = null;
 
 			foreach (var sqlExpression in data.Fields)
 			{
 				var field = (SqlField)sqlExpression;
 
-				if (dic.ContainsKey(field))
+				if (dic?.ContainsKey(field) == true)
 					continue;
 
 				var found = false;
@@ -201,11 +210,11 @@ namespace LinqToDB.SqlQuery
 					var expr = GetColumn(data, field);
 
 					if (expr != null)
-						dic.Add(field, expr);
+						(dic ??= new()).Add(field, expr);
 				}
 			}
 
-			if (dic.Count > 0)
+			if (dic != null)
 				data.Query.VisitParentFirst((dic, data), static (context, e) =>
 				{
 					ISqlExpression? ex;
