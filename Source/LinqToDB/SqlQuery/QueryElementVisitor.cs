@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using System.Xml.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -21,6 +22,9 @@ namespace LinqToDB.SqlQuery
 		public VisitMode VisitMode { get; }
 
 		public virtual VisitMode GetVisitMode(IQueryElement element) => VisitMode;
+
+		// usually triggered by cloning
+		public virtual bool ShouldReplace(IQueryElement element) => false;
 
 		[return: NotNullIfNotNull(nameof(element))]
 		public virtual IQueryElement? Visit(IQueryElement? element)
@@ -161,8 +165,6 @@ namespace LinqToDB.SqlQuery
 				default:
 					throw new InvalidOperationException();
 			}
-
-			throw new NotImplementedException();
 		}
 
 		public IQueryElement VisitSqlExtension(IQueryExtension element)
@@ -192,9 +194,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var items = VisitElements(element.Items, VisitMode.Transform);
 
-					if (items != null && !ReferenceEquals(element.Items, items))
+					if (ShouldReplace(element) || items != null && !ReferenceEquals(element.Items, items))
 					{
-						return NotifyReplaced(new SqlGroupingSet(items), element);
+						return NotifyReplaced(new SqlGroupingSet(items ?? element.Items), element);
 					}
 
 					break;
@@ -232,7 +234,8 @@ namespace LinqToDB.SqlQuery
 					var whereDelete = (SqlSearchCondition?)Visit(element.WhereDelete);
 					var items       = VisitElements(element.Items, VisitMode.Transform);
 
-					if (!ReferenceEquals(element.Where, where)             ||
+					if (ShouldReplace(element)                             || 
+					    !ReferenceEquals(element.Where, where)             ||
 					    !ReferenceEquals(element.WhereDelete, whereDelete) ||
 					    items != null && !ReferenceEquals(element.Items, items))
 					{
@@ -276,7 +279,8 @@ namespace LinqToDB.SqlQuery
 					var sourceEnumerable = (SqlValuesTable?)Visit(element.SourceEnumerable);
 					var sourceQuery      = (SelectQuery?)Visit(element.SourceQuery);
 
-					if (!ReferenceEquals(element.SourceEnumerable, sourceEnumerable) ||
+					if (ShouldReplace(element)                                       || 
+					    !ReferenceEquals(element.SourceEnumerable, sourceEnumerable) ||
 					    !ReferenceEquals(element.SourceQuery, sourceQuery))
 					{
 						var newFields = new SqlField[element.SourceFields.Count];
@@ -326,7 +330,8 @@ namespace LinqToDB.SqlQuery
 					var tag   = (SqlComment?)Visit(element.Tag);
 					var table = (SqlTable?)Visit(element.Table);
 
-					if (!ReferenceEquals(element.Tag, tag) ||
+					if (ShouldReplace(element)             || 
+					    !ReferenceEquals(element.Tag, tag) ||
 					    !ReferenceEquals(element.Table, table))
 					{
 						return NotifyReplaced(
@@ -371,7 +376,8 @@ namespace LinqToDB.SqlQuery
 					var tag   = (SqlComment?)Visit(element.Tag);
 					var table = (SqlTable)Visit(element.Table);
 
-					if (!ReferenceEquals(element.Tag, tag) ||
+					if (ShouldReplace(element)             || 
+					    !ReferenceEquals(element.Tag, tag) ||
 					    !ReferenceEquals(element.Table, table))
 					{
 						return NotifyReplaced(new SqlCreateTableStatement(table) { Tag = tag }, element);
@@ -411,7 +417,8 @@ namespace LinqToDB.SqlQuery
 					var tag   = (SqlComment?)Visit(element.Tag);
 					var table = (SqlTable)Visit(element.Table);
 
-					if (!ReferenceEquals(element.Tag, tag) ||
+					if (ShouldReplace(element)             ||
+					    !ReferenceEquals(element.Tag, tag) ||
 					    !ReferenceEquals(element.Table, table))
 					{
 						return NotifyReplaced(new SqlCreateTableStatement(table) { Tag = tag }, element);
@@ -451,7 +458,8 @@ namespace LinqToDB.SqlQuery
 					var insert = (SqlInsertClause)Visit(element.Insert);
 					var when   = (SqlSearchCondition?)Visit(element.When);
 
-					if (!ReferenceEquals(element.Insert, insert) ||
+					if (ShouldReplace(element)                   ||
+					    !ReferenceEquals(element.Insert, insert) ||
 					    !ReferenceEquals(element.When, when))
 					{
 						return NotifyReplaced(new SqlConditionalInsertClause(insert, when), element);
@@ -553,13 +561,14 @@ namespace LinqToDB.SqlQuery
 					var output     = (SqlOutputClause?)Visit(element.Output);
 					var operations = VisitElements(element.Operations, VisitMode.Transform);
 
-					if (!ReferenceEquals(element.Tag, tag)                 ||
-					    !ReferenceEquals(element.With, with)               ||
-					    !ReferenceEquals(element.Target, target)           ||
-					    !ReferenceEquals(element.Source, source)           ||
-					    !ReferenceEquals(element.On, on)           ||
+					if (ShouldReplace(element)                   || 
+					    !ReferenceEquals(element.Tag, tag)       ||
+					    !ReferenceEquals(element.With, with)     ||
+					    !ReferenceEquals(element.Target, target) ||
+					    !ReferenceEquals(element.Source, source) ||
+					    !ReferenceEquals(element.On, on)         ||
 					    !ReferenceEquals(element.Output, output) ||
-						operations != null && !ReferenceEquals(element.Operations, operations)
+					    operations != null && !ReferenceEquals(element.Operations, operations)
 					   )
 					{
 						return NotifyReplaced(
@@ -618,7 +627,8 @@ namespace LinqToDB.SqlQuery
 					var top         = (ISqlExpression?)Visit(element.Top);
 					var output      = (SqlOutputClause?)Visit(element.Output);
 
-					if (!ReferenceEquals(element.SelectQuery, selectQuery) ||
+					if (ShouldReplace(element)                             || 
+					    !ReferenceEquals(element.SelectQuery, selectQuery) ||
 					    !ReferenceEquals(element.Tag, tag)                 ||
 					    !ReferenceEquals(element.With, with)               ||
 					    !ReferenceEquals(element.Table, table)             ||
@@ -677,7 +687,8 @@ namespace LinqToDB.SqlQuery
 					var selectQuery = (SelectQuery?)Visit(element.SelectQuery);
 					var update      = (SqlUpdateClause)Visit(element.Update);
 
-					if (!ReferenceEquals(element.SelectQuery, selectQuery) ||
+					if (ShouldReplace(element)                             ||
+					    !ReferenceEquals(element.SelectQuery, selectQuery) ||
 					    !ReferenceEquals(element.Tag, tag)                 ||
 					    !ReferenceEquals(element.With, with)               ||
 					    !ReferenceEquals(element.Update, update)
@@ -733,7 +744,8 @@ namespace LinqToDB.SqlQuery
 					var insert      = (SqlInsertClause)Visit(element.Insert);
 					var update      = (SqlUpdateClause)Visit(element.Update);
 
-					if (!ReferenceEquals(element.SelectQuery, selectQuery) ||
+					if (ShouldReplace(element)                             || 
+					    !ReferenceEquals(element.SelectQuery, selectQuery) ||
 					    !ReferenceEquals(element.Tag, tag)                 ||
 					    !ReferenceEquals(element.With, with)               ||
 					    !ReferenceEquals(element.Insert, insert)           ||
@@ -798,7 +810,8 @@ namespace LinqToDB.SqlQuery
 					var insert      = (SqlInsertClause)Visit(element.Insert);
 					var output      = (SqlOutputClause?)Visit(element.Output);
 
-					if (!ReferenceEquals(element.SelectQuery, selectQuery) ||
+					if (ShouldReplace(element)                             || 
+					    !ReferenceEquals(element.SelectQuery, selectQuery) ||
 					    !ReferenceEquals(element.Tag, tag)                 ||
 					    !ReferenceEquals(element.With, with)               ||
 					    !ReferenceEquals(element.Insert, insert)           ||
@@ -851,7 +864,8 @@ namespace LinqToDB.SqlQuery
 					var with        = (SqlWithClause?)Visit(element.With);
 					var selectQuery = (SelectQuery?)Visit(element.SelectQuery);
 
-					if (!ReferenceEquals(element.SelectQuery, selectQuery) ||
+					if (ShouldReplace(element)                             || 
+					    !ReferenceEquals(element.SelectQuery, selectQuery) ||
 					    !ReferenceEquals(element.Tag, tag)                 ||
 					    !ReferenceEquals(element.With, with))
 					{
@@ -918,13 +932,13 @@ namespace LinqToDB.SqlQuery
 					if (element.HasOutputItems)
 						outputItems = VisitElements(element.OutputItems, VisitMode.Transform);
 
-					if (
-						!ReferenceEquals(element.InsertedTable, insertedTable) ||
-						!ReferenceEquals(element.DeletedTable, deletedTable)   ||
-						!ReferenceEquals(element.OutputTable, outputTable)     ||
-						outputColumns   != null && !ReferenceEquals(element.OutputColumns, outputColumns)   ||
-						element.HasOutputItems && outputItems != null && !ReferenceEquals(element.OutputItems, outputItems)
-					)
+					if (ShouldReplace(element)                                                            ||
+					    !ReferenceEquals(element.InsertedTable, insertedTable)                            ||
+					    !ReferenceEquals(element.DeletedTable, deletedTable)                              ||
+					    !ReferenceEquals(element.OutputTable, outputTable)                                ||
+					    (outputColumns != null && !ReferenceEquals(element.OutputColumns, outputColumns)) ||
+					    (element.HasOutputItems && outputItems != null && !ReferenceEquals(element.OutputItems, outputItems))
+					   )
 					{
 						var newElement = NotifyReplaced(new SqlOutputClause
 						{
@@ -975,7 +989,7 @@ namespace LinqToDB.SqlQuery
 					if (element.Rows != null)
 					{
 						var newRows = VisitListOfArrays(element.Rows, VisitMode.Transform);
-						if (newRows != null)
+						if (ShouldReplace(element) || newRows != null)
 						{
 							var prevFields = element.Fields;
 							var newFields  = new SqlField[prevFields.Count];
@@ -991,7 +1005,7 @@ namespace LinqToDB.SqlQuery
 							}
 
 							return NotifyReplaced(new SqlValuesTable(element.Source!, element.ValueBuilders!,
-								newFields, newRows), element);
+								newFields, newRows ?? element.Rows), element);
 						}
 					}
 
@@ -1026,9 +1040,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var parameters = VisitElements(element.Parameters, VisitMode.Transform);
 
-					if (parameters != null && !ReferenceEquals(element.Parameters, parameters))
+					if (ShouldReplace(element) || parameters != null && !ReferenceEquals(element.Parameters, parameters))
 					{
-						return NotifyReplaced(new SqlRawSqlTable(element, parameters), element);
+						return NotifyReplaced(new SqlRawSqlTable(element, parameters ?? element.Parameters), element);
 					}
 
 					break;
@@ -1065,9 +1079,9 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Transform:
 				{
 					var clauses = VisitElements(element.Clauses, VisitMode.Transform);
-					if (clauses != null && !ReferenceEquals(element.Clauses, clauses))
+					if (ShouldReplace(element) || clauses != null && !ReferenceEquals(element.Clauses, clauses))
 					{
-						return NotifyReplaced(new SqlWithClause {Clauses = clauses}, element);
+						return NotifyReplaced(new SqlWithClause {Clauses = clauses ?? element.Clauses}, element);
 					}
 
 					break;
@@ -1099,7 +1113,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var body = (SelectQuery?)Visit(element.Body);
 
-					if (!ReferenceEquals(element.Body, body))
+					if (ShouldReplace(element) || !ReferenceEquals(element.Body, body))
 					{
 						var clonedFields = new List<SqlField>(element.Fields.Count);
 						for (var index = 0; index < element.Fields.Count; index++)
@@ -1156,7 +1170,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var selectQuery = (SelectQuery)Visit(element.SelectQuery);
 
-					if (!ReferenceEquals(element.SelectQuery, selectQuery))
+					if (ShouldReplace(element) || !ReferenceEquals(element.SelectQuery, selectQuery))
 					{
 						return NotifyReplaced(new SqlSetOperator(selectQuery, element.Operation), element);
 					}
@@ -1190,7 +1204,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var e = (ISqlExpression)Visit(element.Expression);
 
-					if (!ReferenceEquals(element.Expression, e))
+					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, e))
 						return NotifyReplaced(new SqlOrderByItem(e, element.IsDescending), element);
 
 					break;
@@ -1224,9 +1238,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var items = VisitElements(element.Items, VisitMode.Transform);
 
-					if (items != null && !ReferenceEquals(element.Items, items))
+					if (ShouldReplace(element) || items != null && !ReferenceEquals(element.Items, items))
 					{
-						return NotifyReplaced(new SqlOrderByClause(items), element);
+						return NotifyReplaced(new SqlOrderByClause(items ?? element.Items), element);
 					}
 
 					break;
@@ -1258,9 +1272,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var items = VisitElements(element.Items, VisitMode.Transform);
 
-					if (items != null && !ReferenceEquals(element.Items, items))
+					if (ShouldReplace(element) || items != null && !ReferenceEquals(element.Items, items))
 					{
-						return NotifyReplaced(new SqlGroupByClause(element.GroupingType, items), element);
+						return NotifyReplaced(new SqlGroupByClause(element.GroupingType, items ?? element.Items), element);
 					}
 
 					break;
@@ -1292,7 +1306,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var searchCond = (SqlSearchCondition)Visit(element.SearchCondition);
 
-					if (!ReferenceEquals(element.SearchCondition, searchCond))
+					if (ShouldReplace(element) || !ReferenceEquals(element.SearchCondition, searchCond))
 					{
 						return NotifyReplaced(new SqlWhereClause(searchCond), element);
 					}
@@ -1326,9 +1340,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var tables = VisitElements(element.Tables, VisitMode.Transform);
 
-					if (tables != null && !ReferenceEquals(element.Tables, tables))
+					if (ShouldReplace(element) || tables != null && !ReferenceEquals(element.Tables, tables))
 					{
-						return NotifyReplaced(new SqlFromClause(tables), element);
+						return NotifyReplaced(new SqlFromClause(tables ?? element.Tables), element);
 					}
 
 					break;
@@ -1363,8 +1377,10 @@ namespace LinqToDB.SqlQuery
 					var expr   = (ISqlExpression?)Visit(element.Expression);
 					var column = (ISqlExpression)Visit(element.Column);
 
-					if (!ReferenceEquals(element.Column, column) || !ReferenceEquals(element.Expression, expr))
+					if (ShouldReplace(element) || !ReferenceEquals(element.Column, column) || !ReferenceEquals(element.Expression, expr))
+					{
 						return NotifyReplaced(new SqlSetExpression(column, expr), element);
+					}
 
 					break;
 				}
@@ -1407,10 +1423,11 @@ namespace LinqToDB.SqlQuery
 					var items = VisitElements(element.Items, VisitMode.Transform);
 					var keys  = VisitElements(element.Keys, VisitMode.Transform);
 
-					if (!ReferenceEquals(element.Table, table)          ||
-					    !ReferenceEquals(element.TableSource, ts)       ||
-					    items != null && !ReferenceEquals(element.Items, items) ||
-					    keys != null && !ReferenceEquals(element.Keys, keys))
+					if (ShouldReplace(element)                                    ||
+					    !ReferenceEquals(element.Table, table)                    ||
+					    !ReferenceEquals(element.TableSource, ts)                 ||
+					    (items != null && !ReferenceEquals(element.Items, items)) ||
+					    keys  != null && !ReferenceEquals(element.Keys, keys))
 					{
 						var newUpdate = new SqlUpdateClause { Table = table, TableSource = ts };
 
@@ -1454,7 +1471,9 @@ namespace LinqToDB.SqlQuery
 					var into  = (SqlTable?)Visit(element.Into);
 					var items = VisitElements(element.Items, VisitMode.Transform);
 
-					if (!ReferenceEquals(element.Into, into) || items != null && !ReferenceEquals(element.Items, items))
+					if (ShouldReplace(element)               ||
+					    !ReferenceEquals(element.Into, into) ||
+					    (items != null && !ReferenceEquals(element.Items, items)))
 					{
 						var newInsert = new SqlInsertClause { Into = into };
 
@@ -1496,7 +1515,8 @@ namespace LinqToDB.SqlQuery
 					var table = (SqlTableSource)Visit(element.Table);
 					var cond  = (SqlSearchCondition)Visit(element.Condition);
 
-					if (!ReferenceEquals(table, element.Table) ||
+					if (ShouldReplace(element)                 ||
+					    !ReferenceEquals(table, element.Table) ||
 					    !ReferenceEquals(cond, element.Condition))
 					{
 						return NotifyReplaced(new SqlJoinedTable(element.JoinType, table, element.IsWeak, cond), element);
@@ -1544,8 +1564,9 @@ namespace LinqToDB.SqlQuery
 					if (element.HasUniqueKeys)
 						uk = VisitListOfArrays(element.UniqueKeys, VisitMode.Transform);
 
-					if (!ReferenceEquals(source, element.Source) ||
-					    joins != null && !ReferenceEquals(element.Joins, joins))
+					if (ShouldReplace(element)                   ||
+					    !ReferenceEquals(source, element.Source) ||
+					    (joins != null && !ReferenceEquals(element.Joins, joins)))
 					{
 						return NotifyReplaced(new SqlTableSource(
 								source,
@@ -1581,8 +1602,10 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Transform:
 				{
 					var p = (ISqlPredicate)Visit(element.Predicate);
-					if (!ReferenceEquals(element.Predicate, p))
+					if (ShouldReplace(element) || !ReferenceEquals(element.Predicate, p))
+					{
 						return NotifyReplaced(new SqlCondition(element.IsNot, p, element.IsOr), element);
+					}
 
 					break;
 				}
@@ -1614,9 +1637,9 @@ namespace LinqToDB.SqlQuery
 				{
 					var conditions = VisitElements(element.Conditions, VisitMode.Transform);
 
-					if (conditions != null && !ReferenceEquals(element.Conditions, conditions))
+					if (ShouldReplace(element) || conditions != null && !ReferenceEquals(element.Conditions, conditions))
 					{
-						return NotifyReplaced(new SqlSearchCondition(conditions), element);
+						return NotifyReplaced(new SqlSearchCondition(conditions ?? element.Conditions), element);
 					}
 
 					break;
@@ -1671,8 +1694,9 @@ namespace LinqToDB.SqlQuery
 						expressions[i] = expr;
 					}
 
-					if (modified                                   ||
-					    !ReferenceEquals(element.TakeValue, take)  ||
+					if (ShouldReplace(element)                    ||
+					    modified                                  ||
+					    !ReferenceEquals(element.TakeValue, take) ||
 					    !ReferenceEquals(element.SkipValue, skip))
 					{
 						var cols = new List<SqlColumn>(element.Columns.Count);
@@ -1704,7 +1728,7 @@ namespace LinqToDB.SqlQuery
 			return (ISqlExpression)Visit(expression);
 		}
 
-		public virtual ISqlExpression VisitSqlQuery(SelectQuery selectQuery)
+		public virtual IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			switch (GetVisitMode(selectQuery))
 			{
@@ -1772,7 +1796,8 @@ namespace LinqToDB.SqlQuery
 					if (selectQuery.HasUniqueKeys)
 						uk = VisitListOfArrays(selectQuery.UniqueKeys, VisitMode.Transform);
 
-					if (!ReferenceEquals(fc, selectQuery.From)
+					if (ShouldReplace(selectQuery) 
+					    || !ReferenceEquals(fc, selectQuery.From)
 					    || !ReferenceEquals(sc, selectQuery.Select)
 					    || !ReferenceEquals(wc, selectQuery.Where)
 					    || !ReferenceEquals(gc, selectQuery.GroupBy)
@@ -1897,7 +1922,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var func = Visit(element.Function);
 
-					if (!ReferenceEquals(func, element.Function))
+					if (ShouldReplace(element) || !ReferenceEquals(func, element.Function))
 					{
 						if (func is SqlFunction function)
 							return NotifyReplaced(new SqlPredicate.FuncLike(function), element);
@@ -1939,7 +1964,8 @@ namespace LinqToDB.SqlQuery
 					var expr1 = (ISqlExpression)Visit(predicate.Expr1);
 					var values = VisitElements(predicate.Values, VisitMode.Transform);
 
-					if (!ReferenceEquals(predicate.Expr1, expr1) || 
+					if (ShouldReplace(predicate)                 ||
+					    !ReferenceEquals(predicate.Expr1, expr1) ||
 					    (values != null && !ReferenceEquals(predicate.Values, values)))
 					{
 						return NotifyReplaced(new SqlPredicate.InList(expr1, predicate.WithNull, predicate.IsNot,
@@ -1979,12 +2005,13 @@ namespace LinqToDB.SqlQuery
 					var expr1    = (ISqlExpression)Visit(predicate.Expr1);
 					var subQuery = (SelectQuery)Visit(predicate.SubQuery);
 
-					if (!ReferenceEquals(predicate.Expr1, expr1) || 
+					if (ShouldReplace(predicate)                 ||
+					    !ReferenceEquals(predicate.Expr1, expr1) ||
 					    !ReferenceEquals(predicate.SubQuery, subQuery))
 					{
 						return NotifyReplaced(new SqlPredicate.InSubQuery(expr1, predicate.IsNot, subQuery), predicate);
 					}
-
+					
 					break;
 				}
 				default:
@@ -2014,13 +2041,19 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Transform:
 				{
-					var e1         = (ISqlExpression)Visit(predicate.Expr1);
+					var expr1      = (ISqlExpression)Visit(predicate.Expr1);
 					var trueValue  = (ISqlExpression)Visit(predicate.TrueValue);
 					var falseValue = (ISqlExpression)Visit(predicate.FalseValue);
 
-					if (!ReferenceEquals(predicate.Expr1, e1) || !ReferenceEquals(predicate.TrueValue, trueValue) || !ReferenceEquals(predicate.FalseValue, falseValue))
-						return NotifyReplaced(new SqlPredicate.IsTrue(e1, trueValue, falseValue, predicate.WithNull, predicate.IsNot), predicate);
+					if (ShouldReplace(predicate)                         ||
+					    !ReferenceEquals(predicate.Expr1, expr1)         ||
+					    !ReferenceEquals(predicate.TrueValue, trueValue) ||
+					    !ReferenceEquals(predicate.FalseValue, falseValue))
 
+					{
+						return NotifyReplaced(new SqlPredicate.IsTrue(expr1, trueValue, falseValue, predicate.WithNull, predicate.IsNot), predicate);
+					}
+					
 					break;
 				}
 				default:
@@ -2081,8 +2114,10 @@ namespace LinqToDB.SqlQuery
 				{
 					var e = (ISqlExpression)Visit(predicate.Expr1);
 
-					if (!ReferenceEquals(predicate.Expr1, e))
+					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, e))
+					{
 						return NotifyReplaced(new SqlPredicate.IsNull(e, predicate.IsNot), predicate);
+					}
 
 					break;
 				}
@@ -2102,6 +2137,7 @@ namespace LinqToDB.SqlQuery
 					Visit(predicate.Expr1);
 					Visit(predicate.Expr2);
 					Visit(predicate.Expr3);
+
 					break;
 				}
 				case VisitMode.Modify:
@@ -2109,16 +2145,19 @@ namespace LinqToDB.SqlQuery
 					predicate.Expr1 = (ISqlExpression)Visit(predicate.Expr1);
 					predicate.Expr2 = (ISqlExpression)Visit(predicate.Expr2);
 					predicate.Expr3 = (ISqlExpression)Visit(predicate.Expr3);
+
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var e1 = (ISqlExpression)Visit(predicate.Expr1);
-					var e2 = (ISqlExpression)Visit(predicate.Expr2);
-					var e3 = (ISqlExpression)Visit(predicate.Expr3);
+					var expr1 = (ISqlExpression)Visit(predicate.Expr1);
+					var expr2 = (ISqlExpression)Visit(predicate.Expr2);
+					var expr3 = (ISqlExpression)Visit(predicate.Expr3);
 
-					if (!ReferenceEquals(predicate.Expr1, e1) || !ReferenceEquals(predicate.Expr2, e2) || !ReferenceEquals(predicate.Expr3, e3))
-						return NotifyReplaced(new SqlPredicate.Between(e1, predicate.IsNot, e2, e3), predicate);
+					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, expr1) || !ReferenceEquals(predicate.Expr2, expr2) || !ReferenceEquals(predicate.Expr3, expr3))
+					{
+						return NotifyReplaced(new SqlPredicate.Between(expr1, predicate.IsNot, expr2, expr3), predicate);
+					}
 
 					break;
 				}
@@ -2156,7 +2195,8 @@ namespace LinqToDB.SqlQuery
 					var expr2 = (ISqlExpression)Visit(predicate.Expr2);
 					var caseSensitive = (ISqlExpression)Visit(predicate.CaseSensitive);
 
-					if (!ReferenceEquals(predicate.Expr1, expr1) || 
+					if (ShouldReplace(predicate)                 || 
+					    !ReferenceEquals(predicate.Expr1, expr1) || 
 					    !ReferenceEquals(predicate.Expr2, expr2) || 
 					    !ReferenceEquals(predicate.CaseSensitive, caseSensitive))
 					{
@@ -2199,9 +2239,12 @@ namespace LinqToDB.SqlQuery
 					var e1  = (ISqlExpression)Visit(predicate.Expr1);
 					var e2  = (ISqlExpression)Visit(predicate.Expr2);
 					var esc = predicate.Escape != null ? (ISqlExpression)Visit(predicate.Escape) : null;
-						
-					if (!ReferenceEquals(predicate.Expr1, e1) || !ReferenceEquals(predicate.Expr2, e2) || !ReferenceEquals(predicate.Escape, esc))
+
+					if (ShouldReplace(predicate)              || !ReferenceEquals(predicate.Expr1, e1) ||
+					    !ReferenceEquals(predicate.Expr2, e2) || !ReferenceEquals(predicate.Escape, esc))
+					{
 						return NotifyReplaced(new SqlPredicate.Like(e1, predicate.IsNot, e2, esc, predicate.FunctionName), predicate);
+					}
 
 					break;
 				}	
@@ -2230,11 +2273,13 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Transform:
 				{
-					var e1 = (ISqlExpression)Visit(predicate.Expr1);
-					var e2 = (ISqlExpression)Visit(predicate.Expr2);
+					var expr1 = (ISqlExpression)Visit(predicate.Expr1);
+					var expr2 = (ISqlExpression)Visit(predicate.Expr2);
 
-					if (!ReferenceEquals(predicate.Expr1, e1) || !ReferenceEquals(predicate.Expr2, e2))
-						return NotifyReplaced(new SqlPredicate.ExprExpr(e1, predicate.Operator, e2, predicate.WithNull), predicate);
+					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, expr1) || !ReferenceEquals(predicate.Expr2, expr2))
+					{
+						return NotifyReplaced(new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull), predicate);
+					}
 
 					break;
 				}
@@ -2259,8 +2304,10 @@ namespace LinqToDB.SqlQuery
 				{
 					var e = (ISqlExpression)Visit(predicate.Expr1);
 
-					if (!ReferenceEquals(predicate.Expr1, e))
+					if (ShouldReplace(predicate) ||!ReferenceEquals(predicate.Expr1, e))
+					{
 						return NotifyReplaced(new SqlPredicate.NotExpr(e, predicate.IsNot, predicate.Precedence), predicate);
+					}
 
 					break;
 				}
@@ -2289,8 +2336,10 @@ namespace LinqToDB.SqlQuery
 				{
 					var e = (ISqlExpression)Visit(predicate.Expr1);
 
-					if (!ReferenceEquals(predicate.Expr1, e))
+					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, e))
+					{
 						return NotifyReplaced(new SqlPredicate.Expr(e, predicate.Precedence), predicate);
+					}
 
 					break;
 				}
@@ -2338,37 +2387,45 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		public virtual IQueryElement VisitSqlAliasPlaceholder(SqlAliasPlaceholder element) =>
-			element;
+		public virtual IQueryElement VisitSqlAliasPlaceholder(SqlAliasPlaceholder element)
+		{
+			if (GetVisitMode(element) == VisitMode.Transform && ShouldReplace(element))
+				return NotifyReplaced(new SqlAliasPlaceholder(), element);
+
+			return element;
+		}
 
 		public virtual IQueryElement VisitSqlTable(SqlTable element)
 		{
-			/*switch (GetVisitMode(element))
+			switch (GetVisitMode(element))
 			{
 				case VisitMode.ReadOnly:
 				{
-					foreach (var field in element.Fields)
-					{
-						Visit(field);
-					}
-
 					break;
 				}
 
 				case VisitMode.Modify:
 				{
-					for (var i = 0; i < element._orderedFields.Count; i++)
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					if (ShouldReplace(element))
 					{
-						element._orderedFields[i] = (SqlField)Visit(element._orderedFields[i]);
+						var newTable = new SqlTable(element);
+						for (var index = 0; index < newTable.Fields.Count; index++)
+						{
+							NotifyReplaced(newTable.Fields[index], element.Fields[index]);
+						}
+
+						return NotifyReplaced(newTable, element);
 					}
 
 					break;
 				}
-				case VisitMode.Transform:
-					break;
 				default:
 					throw CreateInvalidVisitModeException();
-			}*/
+			}
 
 			return element;
 		}
@@ -2385,14 +2442,19 @@ namespace LinqToDB.SqlQuery
 			switch (GetVisitMode(element))
 			{
 				case VisitMode.ReadOnly:
+				{
 					break;
+				}
 				case VisitMode.Modify:
+				{
 					element.Expr1 = expr1;
 					element.Expr2 = expr2;
 					break;
+				}	
 				case VisitMode.Transform:
 				{
-					if (!ReferenceEquals(expr1, element.Expr1) ||
+					if (ShouldReplace(element)                 ||
+					    !ReferenceEquals(expr1, element.Expr1) ||
 					    !ReferenceEquals(expr2, element.Expr2))
 					{
 						return NotifyReplaced(new SqlBinaryExpression(
@@ -2462,8 +2524,8 @@ namespace LinqToDB.SqlQuery
 							currentParams[i] = sqlInfo;
 					}
 
-					if (currentParams != null)
-						return NotifyReplaced(new SqlObjectExpression(element.MappingSchema, currentParams), element);
+					if (ShouldReplace(element) || currentParams != null)
+						return NotifyReplaced(new SqlObjectExpression(element.MappingSchema, currentParams ?? element.InfoParameters), element);
 
 					break;
 				}
@@ -2492,7 +2554,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var sqlExpr = (ISqlExpression)Visit(element.SqlExpression);
 
-					if (!ReferenceEquals(sqlExpr, element.SqlExpression))
+					if (ShouldReplace(element) || !ReferenceEquals(sqlExpr, element.SqlExpression))
 						return NotifyReplaced(new SqlAnchor(sqlExpr, element.AnchorKind), element);
 
 					break;
@@ -2525,7 +2587,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var sqlExpr = (ISqlExpression)Visit(element.SqlExpression);
 
-					if (!ReferenceEquals(sqlExpr, element.SqlExpression))
+					if (ShouldReplace(element) ||!ReferenceEquals(sqlExpr, element.SqlExpression))
 						return NotifyReplaced(new SqlNullabilityExpression(sqlExpr), element);
 
 					break;
@@ -2554,11 +2616,12 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Transform:
 				{
 					var parameters = VisitElements(element.Parameters, VisitMode.Transform);
-					if (parameters != null && !ReferenceEquals(parameters, element.Parameters))
+					if (ShouldReplace(element) ||
+					    parameters != null && !ReferenceEquals(parameters, element.Parameters))
 					{
 						return NotifyReplaced(new SqlExpression(
 							element.SystemType, element.Expr, element.Precedence,
-							element.Flags, element.NullabilityType, element.CanBeNullNullable, parameters), 
+							element.Flags, element.NullabilityType, element.CanBeNullNullable, parameters ?? element.Parameters), 
 							element);
 					}
 
@@ -2590,12 +2653,12 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Transform:
 				{
 					var parameters = VisitElements(element.Parameters, VisitMode.Transform);
-					if (parameters != null && !ReferenceEquals(parameters, element.Parameters))
+					if (ShouldReplace(element) || parameters != null && !ReferenceEquals(parameters, element.Parameters))
 					{
 						return NotifyReplaced(
 							new SqlFunction(element.SystemType, element.Name, element.IsAggregate,
 								element.IsPure,
-								element.Precedence, element.NullabilityType, element.CanBeNullNullable, parameters)
+								element.Precedence, element.NullabilityType, element.CanBeNullNullable, parameters ?? element.Parameters)
 							{
 								DoNotOptimize = element.DoNotOptimize
 							},
@@ -2718,13 +2781,13 @@ namespace LinqToDB.SqlQuery
 								arr2 = new List<T>(arr1.Count);
 
 								for (var j = 0; j < i; j++)
-									arr2[j] = arr1[j];
+									arr2.Add(arr1[j]);
 							}
 
-							arr2[i] = elem2;
+							arr2.Add(elem2);
 						}
 						else if (arr2 != null)
-							arr2[i] = elem1;
+							arr2.Add(elem1);
 					}
 
 					return arr2;

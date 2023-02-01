@@ -1,8 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.SqlQuery.Visitors
 {
 	using Common;
+	using SqlQuery;
 
 	public class SqlQueryVisitor : QueryElementVisitor
 	{
@@ -23,7 +24,7 @@ namespace LinqToDB.SqlQuery
 				var visitMode = VisitMode;
 				if (visitMode == VisitMode.ReadOnly)
 					return VisitMode.ReadOnly;
-			
+
 				// We can just update elements which are replaced by new instances
 				//
 				if (visitMode == VisitMode.Transform && _queryVisitor._replaced?.Contains(element) == true)
@@ -46,13 +47,20 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public bool Interrupted { get; set; }
+		public virtual void Cleanup()
+		{
+			_replacements = null;
+			_replaced     = null;
+		}
 
 		[return: NotNullIfNotNull(nameof(element))]
 		public override IQueryElement? Visit(IQueryElement? element)
 		{
-			if (Interrupted)
-				return element;
+			if (element == null) return null;
+
+			if (GetReplacement(element, out var newElement))
+				return newElement;
+
 			return base.Visit(element);
 		}
 
@@ -61,7 +69,7 @@ namespace LinqToDB.SqlQuery
 			var visitMode = VisitMode;
 			if (visitMode == VisitMode.ReadOnly)
 				return VisitMode.ReadOnly;
-			
+
 			// We can just update elements which are replaced by new instances
 			//
 			if (visitMode == VisitMode.Transform && _replaced?.Contains(element) == true)
@@ -106,10 +114,10 @@ namespace LinqToDB.SqlQuery
 
 		public override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
-			 if (GetReplacement(element, out var replacement))
+			if (GetReplacement(element, out var replacement))
 				return replacement;
 
-			 return base.VisitSqlColumnReference(element);
+			return base.VisitSqlColumnReference(element);
 		}
 
 		public override IQueryElement VisitSqlFieldReference(SqlField element)
@@ -122,12 +130,12 @@ namespace LinqToDB.SqlQuery
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
 		{
-			if (oldElement.ElementType == QueryElementType.Column   ||
-			    oldElement.ElementType == QueryElementType.SqlField ||
-			    oldElement.ElementType == QueryElementType.CteClause)
+			if (oldElement.ElementType == QueryElementType.Column ||
+				oldElement.ElementType == QueryElementType.SqlField ||
+				oldElement.ElementType == QueryElementType.CteClause)
 			{
 				AddReplacement(oldElement, newElement);
-			}			
+			}
 
 			_replaced ??= new();
 			_replaced.Add(newElement);
@@ -149,20 +157,20 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		protected void AddReplacements(IEnumerable<SqlField> fields, IEnumerable<ISqlExpression> replacements)
+		*/
+
+		protected void AddReplacements(IEnumerable<IQueryElement> oldElements, IEnumerable<IQueryElement> newElements)
 		{
-			_fieldReplacements ??= new Dictionary<SqlField, ISqlExpression>(Utils.ObjectReferenceEqualityComparer<SqlField>.Default);
+			_replacements ??= new Dictionary<IQueryElement, IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
-			using var fe = fields.GetEnumerator();
-			using var re = replacements.GetEnumerator();
+			using var oe = oldElements.GetEnumerator();
+			using var ne = newElements.GetEnumerator();
 
-			while (fe.MoveNext() && re.MoveNext())
+			while (oe.MoveNext() && ne.MoveNext())
 			{
-				_fieldReplacements[fe.Current] = re.Current;
+				_replacements[oe.Current] = ne.Current;
 			}
 		}
-
-		*/
 
 		protected void AddReplacement(IQueryElement oldElement, IQueryElement newElement)
 		{
@@ -171,11 +179,11 @@ namespace LinqToDB.SqlQuery
 			_replacements[oldElement] = newElement;
 		}
 
-		protected void AddReplacements(Dictionary<IQueryElement, IQueryElement> replacements)
+		protected void AddReplacements(IReadOnlyDictionary<IQueryElement, IQueryElement> replacements)
 		{
 			_replacements ??= new Dictionary<IQueryElement, IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
-			foreach(var pair in replacements)
+			foreach (var pair in replacements)
 				_replacements[pair.Key] = pair.Value;
 		}
 
@@ -194,6 +202,17 @@ namespace LinqToDB.SqlQuery
 
 			replacement = null;
 			return false;
+		}
+
+		public void GetReplacements(Dictionary<IQueryElement, IQueryElement> objectTree)
+		{
+			if (_replacements != null)
+			{
+				foreach (var pair in _replacements)
+				{
+					objectTree[pair.Key] = pair.Value;
+				}
+			}
 		}
 
 	}

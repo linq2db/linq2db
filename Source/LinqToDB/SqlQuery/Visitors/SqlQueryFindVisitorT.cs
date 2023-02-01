@@ -2,17 +2,19 @@
 
 namespace LinqToDB.SqlQuery.Visitors
 {
-	public class SqlQueryStaticFindVisitor : QueryElementVisitor
+	public class SqlQueryFindVisitor<TContext> : QueryElementVisitor
 	{
-		Func<IQueryElement, bool> _findFunc = default!;
-		IQueryElement?            _found;
+		TContext                            _context  = default!;
+		Func<TContext, IQueryElement, bool> _findFunc = default!;
+		IQueryElement?                      _found;
 
-		public SqlQueryStaticFindVisitor() : base(VisitMode.ReadOnly)
+		public SqlQueryFindVisitor() : base(VisitMode.ReadOnly)
 		{
 		}
 
-		public IQueryElement? Find(IQueryElement root, Func<IQueryElement, bool> findFunc)
+		public IQueryElement? Find(TContext context, IQueryElement root, Func<TContext, IQueryElement, bool> findFunc)
 		{
+			_context  = context;
 			_findFunc = findFunc;
 			_found    = null;
 
@@ -25,6 +27,7 @@ namespace LinqToDB.SqlQuery.Visitors
 		{
 			_found    = null;
 			_findFunc = null!;
+			_context  = default!;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -36,7 +39,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			if (_found != null)
 				return element;
 
-			if (_findFunc(element))
+			if (_findFunc(_context, element))
 			{
 				_found = element;
 				return element;

@@ -14,6 +14,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using Tools;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{

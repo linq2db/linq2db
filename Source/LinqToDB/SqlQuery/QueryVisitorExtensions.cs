@@ -8,11 +8,13 @@ namespace LinqToDB.SqlQuery
 
 	public static class QueryVisitorExtensions
 	{
-		static readonly ObjectPool<SqlQueryStaticFindVisitor> _findVisitorPool = new(() => new SqlQueryStaticFindVisitor(), v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryFindVisitor>  FindVisitorPool  = new(() => new SqlQueryFindVisitor(),  v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryCloneVisitor> CloneVisitorPool = new(() => new SqlQueryCloneVisitor(), v => v.Cleanup(), 100);
 
 		class PoolHolder<TContext>
 		{
-			public static readonly ObjectPool<SqlQueryFindVisitor<TContext>> FindVisitorPool = new(() => new SqlQueryFindVisitor<TContext>(), v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryFindVisitor<TContext>>  FindPool  = new(() => new SqlQueryFindVisitor<TContext>(),  v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryCloneVisitor<TContext>> ClonePool = new(() => new SqlQueryCloneVisitor<TContext>(), v => v.Cleanup(), 100);
 		}
 
 		#region Visit
@@ -66,7 +68,7 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			using var findVisitor = PoolHolder<TContext>.FindVisitorPool.Allocate();
+			using var findVisitor = PoolHolder<TContext>.FindPool.Allocate();
 			return findVisitor.Value.Find(context, element, find);
 		}
 
@@ -75,7 +77,7 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			using var findVisitor = _findVisitorPool.Allocate();
+			using var findVisitor = FindVisitorPool.Allocate();
 			return findVisitor.Value.Find(element, find);
 		}
 
@@ -84,7 +86,7 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			using var findVisitor = PoolHolder<QueryElementType>.FindVisitorPool.Allocate();
+			using var findVisitor = PoolHolder<QueryElementType>.FindPool.Allocate();
 			return findVisitor.Value.Find(type, element, static (type, e) => e.ElementType == type);
 		}
 		#endregion
@@ -97,7 +99,14 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<object?>(objectTree, null).Clone(element);
+			using var cloneVisitor = CloneVisitorPool.Allocate();
+			cloneVisitor.Value.RegisterReplacements(objectTree);
+
+			var clone = (T)cloneVisitor.Value.PerformClone(element);
+
+			cloneVisitor.Value.GetReplacements(objectTree);
+
+			return clone;
 		}
 
 		public static void CloneInto<T>(this IReadOnlyList<T> source, IList<T> target, Dictionary<IQueryElement, IQueryElement> objectTree)
@@ -123,7 +132,14 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<TContext>(objectTree, context, doClone).Clone(element);
+			using var cloneVisitor = PoolHolder<TContext>.ClonePool.Allocate();
+			cloneVisitor.Value.RegisterReplacements(objectTree);
+
+			var clone = (T)cloneVisitor.Value.Clone(element, context, doClone);
+
+			cloneVisitor.Value.GetReplacements(objectTree);
+
+			return clone;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -133,7 +149,9 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<TContext>(null, context, doClone).Clone(element);
+			using var cloneVisitor = PoolHolder<TContext>.ClonePool.Allocate();
+
+			return (T)cloneVisitor.Value.Clone(element, context, doClone);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -143,7 +161,9 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<object?>(null, doClone).Clone(element);
+			using var cloneVisitor = CloneVisitorPool.Allocate();
+
+			return (T)cloneVisitor.Value.Clone(element, doClone);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -153,7 +173,9 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<object?>(null, null).Clone(element);
+			using var cloneVisitor = CloneVisitorPool.Allocate();
+
+			return (T)cloneVisitor.Value.Clone(element, null);
 		}
 		#endregion
 
