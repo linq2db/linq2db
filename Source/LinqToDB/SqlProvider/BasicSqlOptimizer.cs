@@ -313,8 +313,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 			});
-			// self-reference is allowed, so we do not need to add dependency
-			dependsOn.Remove(cteClause);
+
 			foundCte.Add(cteClause, dependsOn);
 
 			foreach (var clause in dependsOn)
@@ -372,18 +371,21 @@ namespace LinqToDB.SqlProvider
 					if (!SqlProviderFlags.IsCommonTableExpressionsSupported)
 						throw new LinqToDBException("DataProvider do not supports Common Table Expressions.");
 
-					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
-
-					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
-						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
-
 					// basic detection of non-recursive CTEs
 					// for more complex cases we will need dependency cycles detection
 					foreach (var kvp in cteHolder.WriteableValue)
 					{
 						if (kvp.Value.Count == 0)
 							kvp.Key.IsRecursive = false;
+
+						// remove self-reference for topo-sort
+						kvp.Value.Remove(kvp.Key);
 					}
+
+					var ordered = TopoSorting.TopoSort(cteHolder.WriteableValue.Keys, cteHolder, static (cteHolder, i) => cteHolder.WriteableValue![i]).ToList();
+
+					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
+						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
