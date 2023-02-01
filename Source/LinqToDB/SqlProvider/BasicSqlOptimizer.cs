@@ -377,6 +377,14 @@ namespace LinqToDB.SqlProvider
 					Utils.MakeUniqueNames(ordered, null, static (n, a) => !ReservedWords.IsReserved(n), static c => c.Name, static (c, n, a) => c.Name = n,
 						static c => string.IsNullOrEmpty(c.Name) ? "CTE_1" : c.Name, StringComparer.OrdinalIgnoreCase);
 
+					// basic detection of non-recursive CTEs
+					// for more complex cases we will need dependency cycles detection
+					foreach (var kvp in cteHolder.WriteableValue)
+					{
+						if (kvp.Value.Count == 0)
+							kvp.Key.IsRecursive = false;
+					}
+
 					select.With = new SqlWithClause();
 					select.With.Clauses.AddRange(ordered);
 				}

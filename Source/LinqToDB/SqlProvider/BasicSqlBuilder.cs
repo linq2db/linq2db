@@ -434,11 +434,6 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
-			//AppendIndent().AppendLine("SELECT * FROM");
-			//AppendIndent().AppendLine(OpenParens);
-
-			//++Indent;
-
 			BuildStep = Step.WithClause;   BuildWithClause(statement.GetWithClause());
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
@@ -457,10 +452,6 @@ namespace LinqToDB.SqlProvider
 				BuildGetIdentity(insertClause);
 			else
 				BuildOutputSubclause(statement.GetOutputClause());
-
-			//--Indent;
-
-			//AppendIndent().AppendLine(")");
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
