@@ -1396,7 +1396,7 @@ namespace Tests.Linq
 					   join parent in tb on child.ParentId equals parent.Id
 					   select new TestFolder
 					   {
-						   Id = Guid.NewGuid(),
+						   Id = TestData.Guid1,
 						   Label = parent.Label + "/" + child.Label,
 					   };
 			join.Insert(tb, x => x);
