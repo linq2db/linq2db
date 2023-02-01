@@ -233,8 +233,6 @@ namespace LinqToDB.SqlProvider
 			for (var i = 0; i < tableKeys.Count; i++)
 			{
 				var tableKey = tableKeys[i];
-				if (updateClause.Items.FindIndex(u => u.Column == tableKey) >= 0)
-					continue;
 
 				var column = QueryHelper.NeedColumnForExpression(updateQuery, compareKeys[i], false);
 				if (column == null)
@@ -2924,15 +2922,24 @@ namespace LinqToDB.SqlProvider
 			if (updateStatement.Update.Table == null)
 				throw new InvalidOperationException();
 
+			if (updateStatement.SelectQuery.From.Tables.Count == 1)
+			{
+				var sqlTableSource = updateStatement.SelectQuery.From.Tables[0];
+				if (sqlTableSource.Source == updateStatement.Update.Table && sqlTableSource.Joins.Count == 0)
+				{
+					// Simple variant
+					CorrectUpdateSetters(updateStatement);
+					updateStatement.Update.TableSource = null;
+					return updateStatement;
+				}
+			}
+
 			var needsComparison = !HasComparisonInQuery(updateStatement.SelectQuery, updateStatement.Update.Table);
 
-			if (updateStatement.Update.Table != null)
+			if (!needsComparison)
 			{
-				if (!needsComparison)
-				{
-					// trying to simplify query
-					RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table, out _);
-				}
+				// trying to simplify query
+				RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table, out _);
 			}
 
 			if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
@@ -3333,6 +3340,8 @@ namespace LinqToDB.SqlProvider
 
 					statement.SelectQuery.From.Tables.Insert(0, ts);
 				}
+
+				statement.Update.TableSource = statement.SelectQuery.From.Tables[0];
 			}
 
 			CorrectUpdateSetters(statement);
