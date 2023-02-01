@@ -244,7 +244,8 @@ namespace LinqToDB.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SqlTextWriter AppendIndent()
 		{
-			StringBuilder.Append('\t', _indentValue);
+			if (_indentValue > 0)
+				StringBuilder.Append('\t', _indentValue);
 			_isNewLine = false;
 			return this;
 		}

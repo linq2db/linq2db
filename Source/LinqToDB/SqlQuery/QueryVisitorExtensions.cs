@@ -3,8 +3,18 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
+	using Visitors;
+
 	public static class QueryVisitorExtensions
 	{
+		static readonly ObjectPool<SqlQueryStaticFindVisitor> _findVisitorPool = new(() => new SqlQueryStaticFindVisitor(), v => v.Cleanup(), 100);
+
+		class PoolHolder<TContext>
+		{
+			public static readonly ObjectPool<SqlQueryFindVisitor<TContext>> FindVisitorPool = new(() => new SqlQueryFindVisitor<TContext>(), v => v.Cleanup(), 100);
+		}
+
 		#region Visit
 		public static void Visit<TContext>(this IQueryElement element, TContext context, Action<TContext, IQueryElement> action)
 		{
@@ -56,7 +66,8 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new QueryFindVisitor<TContext>(context, find).Find(element);
+			using var findVisitor = PoolHolder<TContext>.FindVisitorPool.Allocate();
+			return findVisitor.Value.Find(context, element, find);
 		}
 
 		public static IQueryElement? Find(this IQueryElement? element, Func<IQueryElement, bool> find)
@@ -64,7 +75,8 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new QueryFindVisitor<object?>(find).Find(element);
+			using var findVisitor = _findVisitorPool.Allocate();
+			return findVisitor.Value.Find(element, find);
 		}
 
 		public static IQueryElement? Find(this IQueryElement? element, QueryElementType type)
@@ -72,7 +84,8 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new QueryFindVisitor<QueryElementType>(type, static (type, e) => e.ElementType == type).Find(element);
+			using var findVisitor = PoolHolder<QueryElementType>.FindVisitorPool.Allocate();
+			return findVisitor.Value.Find(type, element, static (type, e) => e.ElementType == type);
 		}
 		#endregion
 

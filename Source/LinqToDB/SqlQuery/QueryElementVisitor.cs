@@ -1118,7 +1118,9 @@ namespace LinqToDB.SqlQuery
 							element.IsRecursive,
 							element.Name);
 
-						var correctedBody = (SelectQuery)new QueryElementCorrectVisitor(element, newCte).Visit(body);
+						var correctedBody = body == null
+							? null
+							: (SelectQuery)new QueryElementCorrectVisitor(element, newCte).Visit(body);
 
 						newCte.Body = correctedBody;
 						return NotifyReplaced(newCte, element);
