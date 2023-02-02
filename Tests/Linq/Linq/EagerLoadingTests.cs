@@ -1581,5 +1581,40 @@ FROM
 		}
 		#endregion
 
+		#region Issue 3806
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3806Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue3806ItemTable.AssociationKey))]
+			public IEnumerable<Issue3806ItemTable> Items { get; set; } = null!;
+		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3806ItemTable
+		{
+			[PrimaryKey] public int Id             { get; set; }
+			[Column    ] public int Value          { get; set; }
+			[Column    ] public int AssociationKey { get; set; }
+		}
+
+		[Test]
+		public void Issue3806Test([DataSources(false)] string context)
+		{
+			var queries = new SaveQueriesInterceptor();
+			using var db = GetDataContext(context);
+			db.AddInterceptor(queries);
+
+			using var table = db.CreateLocalTable<Issue3806Table>();
+			using var items = db.CreateLocalTable<Issue3806ItemTable>();
+
+			queries.Queries.Clear();
+			table.LoadWith(a => a.Items).Where(a => a.Id != 0).ToList();
+
+			Assert.AreEqual(1, queries.Queries.Count);
+		}
+		#endregion
 	}
 }
