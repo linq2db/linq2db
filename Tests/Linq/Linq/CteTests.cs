@@ -1384,5 +1384,22 @@ namespace Tests.Linq
 
 			query.ToArray();
 		}
+
+		[Test]
+		public void Issue3945([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestFolder>();
+
+			var cte = db.GetCte<TestFolder>("CTE", cte => tb.Where(c => c.ParentId != null));
+			var join = from child in cte
+					   join parent in tb on child.ParentId equals parent.Id
+					   select new TestFolder
+					   {
+						   Id = TestData.Guid1,
+						   Label = parent.Label + "/" + child.Label,
+					   };
+			join.Insert(tb, x => x);
+		}
 	}
 }
