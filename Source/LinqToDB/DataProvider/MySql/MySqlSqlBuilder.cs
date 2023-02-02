@@ -80,10 +80,10 @@ namespace LinqToDB.DataProvider.MySql
 				AppendIndent()
 					.AppendFormat(
 						"LIMIT {0}, {1}",
-						WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.SkipValue)),
+						WithStringBuilderBuildExpression(selectQuery.Select.SkipValue),
 						selectQuery.Select.TakeValue == null ?
 							long.MaxValue.ToString() :
-							WithStringBuilder(new StringBuilder(), () => BuildExpression(selectQuery.Select.TakeValue).ToString()))
+							WithStringBuilderBuildExpression(selectQuery.Select.TakeValue))
 					.AppendLine();
 			}
 		}
@@ -621,6 +621,29 @@ namespace LinqToDB.DataProvider.MySql
 							Sql.QueryExtensionScope.TablesInScopeHint);
 
 				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint);
+			}
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
 			}
 		}
 	}

@@ -31,11 +31,16 @@ namespace LinqToDB.Remote
 			set
 			{
 				_mappingSchema = value;
-				_serializationMappingSchema = new SerializationMappingSchema(_mappingSchema);
+				_serializationMappingSchema = value != null
+					? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, value)
+					: Remote.SerializationMappingSchema.Instance;
 			}
 		}
 
-		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??= new SerializationMappingSchema(_mappingSchema);
+		internal MappingSchema SerializationMappingSchema => _serializationMappingSchema ??=
+			_mappingSchema != null
+				? MappingSchema.CombineSchemas(Remote.SerializationMappingSchema.Instance, _mappingSchema)
+				: Remote.SerializationMappingSchema.Instance;
 
 		public static Func<string, Type?> TypeResolver = _ => null;
 
@@ -106,7 +111,7 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
@@ -137,7 +142,7 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
@@ -170,7 +175,7 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
@@ -205,7 +210,7 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
@@ -271,7 +276,7 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
@@ -306,7 +311,7 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, queryData);
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
 
 				ValidateQuery(query);
 
@@ -441,8 +446,8 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, queryData);
-				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, r)).ToArray();
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, r)).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);
@@ -477,8 +482,8 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, queryData);
-				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, r)).ToArray();
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, r)).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);

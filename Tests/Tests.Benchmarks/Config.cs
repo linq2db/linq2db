@@ -54,14 +54,12 @@ namespace LinqToDB.Benchmarks
 			{
 				return _provider
 					.GetColumns(summary)
-					// Job is not useful at all, other columns could be enabled later if somebody will find them useful
 					.Where(c => c.ColumnName != "Job"
 							&& c.ColumnName != "Error"
-							&& c.ColumnName != "Gen 0"
-							&& c.ColumnName != "Gen 1"
-							&& c.ColumnName != "Gen 2"
-							&& c.ColumnName != "StdDev"
-							&& c.ColumnName != "RatioSD");
+							&& c.ColumnName != "Median"
+							&& !c.ColumnName.StartsWith("Gen")
+							&& !c.ColumnName.Contains("Ratio")
+							&& c.ColumnName != "StdDev");
 			}
 		}
 	}

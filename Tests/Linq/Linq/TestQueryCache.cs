@@ -145,7 +145,7 @@ namespace Tests.Linq
 		private static MappingSchema CreateMappingSchema(string columnName, string? schemaName = null)
 		{
 			var ms = new MappingSchema(schemaName);
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 
 			builder.Entity<SampleClass>()
 				.Property(e => e.Id).IsPrimaryKey()
@@ -155,6 +155,8 @@ namespace Tests.Linq
 			builder.Entity<SampleClassWithIdentity>()
 				.Property(e => e.Id).IsPrimaryKey()
 				.Property(e => e.Value).HasColumnName(columnName).HasLength(50);
+
+			builder.Build();
 
 			return ms;
 		}

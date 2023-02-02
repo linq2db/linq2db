@@ -33,7 +33,7 @@ namespace Tests.UserTests
 		public void TestGenericAssociationRuntime([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			var values = new[] { 1, 5 };
 
@@ -45,7 +45,8 @@ namespace Tests.UserTests
 						Ids = values,
 						Value = x.Data
 					})
-				);
+				)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var u = db.CreateLocalTable<User>())

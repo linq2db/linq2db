@@ -441,12 +441,13 @@ namespace Tests.xUpdate
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<Inherited3>()
 				.Property(e => e.NullableBool)
 				.HasDataType(DataType.VarChar)
 				.HasLength(1)
-				.HasConversion(b => b.HasValue ? b.Value ? "Y" : "N" : null, s => s != null ? s == "Y" : null, true);
+				.HasConversion(b => b.HasValue ? b.Value ? "Y" : "N" : null, s => s != null ? s == "Y" : null, true)
+				.Build();
 
 			var data = new BaseClass[]
 			{

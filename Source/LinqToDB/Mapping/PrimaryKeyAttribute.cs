@@ -37,13 +37,6 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration { get; set; }
-
-		/// <summary>
 		/// Gets or sets order of current column in composite primary key.
 		/// Order is used for query generation to define in which order primary key columns must be mentioned in query
 		/// from columns with smallest order value to greatest.

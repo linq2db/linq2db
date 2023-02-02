@@ -34,9 +34,10 @@ namespace Tests.UserTests
 		public void InsertWithDynamicColumn([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<RepresentTable>()
-				.Property(x => Sql.Property<bool>(x, "IsDeleted"));
+				.Property(x => Sql.Property<bool>(x, "IsDeleted"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<FullClass>())

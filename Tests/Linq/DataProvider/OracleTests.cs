@@ -996,19 +996,20 @@ namespace Tests.DataProvider
 				{
 					var ms = new MappingSchema();
 
-					ms.GetFluentMappingBuilder()
+					new FluentMappingBuilder(ms)
 						.Entity<LinqDataTypes>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
-						;
+						.Build();
+					;
 
 					if (context.IsAnyOf(TestProvName.AllOracleNative))
 					{
-						ms.GetFluentMappingBuilder()
+						new FluentMappingBuilder(ms)
 							.Entity<LinqDataTypes>()
 								.Property(e => e.BoolValue)
 									.HasDataType(DataType.Int16)
-							;
+							.Build();
 					}
 
 					db.AddMappingSchema(ms);
@@ -1049,7 +1050,7 @@ namespace Tests.DataProvider
 				{
 					var ms = new MappingSchema();
 
-					ms.GetFluentMappingBuilder()
+					new FluentMappingBuilder(ms)
 						.Entity<LinqDataTypes>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
@@ -1057,7 +1058,7 @@ namespace Tests.DataProvider
 
 					if (context.IsAnyOf(TestProvName.AllOracleNative))
 					{
-						ms.GetFluentMappingBuilder()
+						new FluentMappingBuilder(ms)
 							.Entity<LinqDataTypes>()
 								.Property(e => e.BoolValue)
 									.HasDataType(DataType.Int16)
@@ -1098,19 +1099,19 @@ namespace Tests.DataProvider
 				{
 					var ms = new MappingSchema();
 
-					ms.GetFluentMappingBuilder()
+					new FluentMappingBuilder(ms)
 						.Entity<LinqDataTypes>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
-						;
+						.Build();
 
 					if (context.IsAnyOf(TestProvName.AllOracleNative))
 					{
-						ms.GetFluentMappingBuilder()
+						new FluentMappingBuilder(ms)
 							.Entity<LinqDataTypes>()
 								.Property(e => e.BoolValue)
 									.HasDataType(DataType.Int16)
-							;
+							.Build();
 					}
 
 					db.AddMappingSchema(ms);
@@ -1150,18 +1151,13 @@ namespace Tests.DataProvider
 				{
 					var ms = new MappingSchema();
 
-					ms.GetFluentMappingBuilder()
-						.Entity<LinqDataTypes>()
-						.Property(e => e.GuidValue)
-						.IsNotColumn()
-						;
-
 					if (context.IsAnyOf(TestProvName.AllOracleNative))
 					{
-						ms.GetFluentMappingBuilder()
+						new FluentMappingBuilder(ms)
 							.Entity<LinqDataTypes>()
 							.Property(e => e.BoolValue)
 							.HasDataType(DataType.Int16)
+							.Build()
 							;
 					}
 
@@ -1642,13 +1638,13 @@ namespace Tests.DataProvider
 				{
 					var ms = new MappingSchema();
 
-					db.AddMappingSchema(ms);
-
-					ms.GetFluentMappingBuilder()
+					new FluentMappingBuilder(ms)
 						.Entity<LinqDataTypesBC>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
-						;
+						.Build();
+
+					db.AddMappingSchema(ms);
 				}
 
 				try
@@ -1680,13 +1676,13 @@ namespace Tests.DataProvider
 				{
 					var ms = new MappingSchema();
 
-					db.AddMappingSchema(ms);
-
-					ms.GetFluentMappingBuilder()
+					new FluentMappingBuilder(ms)
 						.Entity<LinqDataTypesBC>()
 							.Property(e => e.GuidValue)
 								.IsNotColumn()
-						;
+						.Build();
+
+					db.AddMappingSchema(ms);
 				}
 
 				try
@@ -1756,13 +1752,13 @@ namespace Tests.DataProvider
 
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
-				ms.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<LinqDataTypes2>()
 						.Property(e => e.GuidValue)
 							.IsNotColumn()
-					;
+					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{
@@ -1791,13 +1787,13 @@ namespace Tests.DataProvider
 
 				var ms = new MappingSchema();
 
-				db.AddMappingSchema(ms);
-
-				ms.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<LinqDataTypes2>()
 						.Property(e => e.GuidValue)
 							.IsNotColumn()
-					;
+					.Build();
+
+				db.AddMappingSchema(ms);
 
 				try
 				{
@@ -2678,9 +2674,10 @@ namespace Tests.DataProvider
 					try
 					{
 
-						db.MappingSchema.GetFluentMappingBuilder()
+						new FluentMappingBuilder(db.MappingSchema)
 							.Entity<Issue723Table>()
-							.HasSchemaName("C##ISSUE723SCHEMA");
+							.HasSchemaName("C##ISSUE723SCHEMA")
+							.Build();
 
 						for (var i = 1; i < 3; i++)
 						{
@@ -4107,10 +4104,14 @@ CREATE TABLE ""TABLE_A""(
 			using (var table = db.CreateLocalTable<NativeIdentity>())
 			{
 				var ms = new MappingSchema();
-				ms.GetFluentMappingBuilder().Entity<NativeIdentity>()
-					.HasColumn(e => e.Id)
-					.HasColumn(e => e.Field)
-					.HasIdentity(e => e.Id);
+
+				new FluentMappingBuilder(ms)
+					.Entity<NativeIdentity>()
+						.HasColumn(e => e.Id)
+						.HasColumn(e => e.Field)
+							.HasIdentity(e => e.Id)
+					.Build();
+
 				db.AddMappingSchema(ms);
 
 				var initialData = new []

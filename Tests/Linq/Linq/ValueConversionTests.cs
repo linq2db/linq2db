@@ -136,7 +136,7 @@ namespace Tests.Linq
 		private static MappingSchema CreateMappingSchema()
 		{
 			var ms = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 
 			builder.Entity<MainClass>()
 				.Property(e => e.Value1)
@@ -161,7 +161,8 @@ namespace Tests.Linq
 				.HasConversion(
 					_ => _.HasValue ? _.Value.ToLocalTime() : new DateTime?(),
 					_ => _.HasValue ? new DateTime(_.Value.Ticks, DateTimeKind.Local) : new DateTime?()
-				);
+				)
+				.Build();
 
 			return ms;
 		}

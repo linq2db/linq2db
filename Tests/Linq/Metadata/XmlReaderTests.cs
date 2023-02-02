@@ -1,9 +1,8 @@
-﻿#if NET472
-using System.Data.Linq.Mapping;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
 using NUnit.Framework;
@@ -38,9 +37,9 @@ namespace Tests.Metadata
 						</ColumnAttribute>
 					</Member>
 					<Member Name='Property1'>
-						<System.Data.Linq.Mapping.ColumnAttribute>
+						<LinqToDB.Mapping.ColumnAttribute>
 							<Name Value='TestName' />
-						</System.Data.Linq.Mapping.ColumnAttribute>
+						</LinqToDB.Mapping.ColumnAttribute>
 					</Member>
 				</Type>
 			</Types>";
@@ -89,4 +88,3 @@ namespace Tests.Metadata
 		}
 	}
 }
-#endif

@@ -24,9 +24,9 @@ namespace LinqToDB.Remote
 			return new QuerySerializer(serializationSchema).Serialize(statement, parameterValues, queryHints);
 		}
 
-		public static LinqServiceQuery Deserialize(MappingSchema serializationSchema, string str)
+		public static LinqServiceQuery Deserialize(MappingSchema serializationSchema, MappingSchema contextSchema, string str)
 		{
-			return new QueryDeserializer(serializationSchema).Deserialize(str);
+			return new QueryDeserializer(serializationSchema, contextSchema).Deserialize(str);
 		}
 
 		public static string Serialize(MappingSchema serializationSchema, LinqServiceResult result)
@@ -34,9 +34,9 @@ namespace LinqToDB.Remote
 			return new ResultSerializer(serializationSchema).Serialize(result);
 		}
 
-		public static LinqServiceResult DeserializeResult(MappingSchema serializationSchema, string str)
+		public static LinqServiceResult DeserializeResult(MappingSchema serializationSchema, MappingSchema contextSchema, string str)
 		{
-			return new ResultDeserializer(serializationSchema).DeserializeResult(str);
+			return new ResultDeserializer(serializationSchema, contextSchema).DeserializeResult(str);
 		}
 
 		public static string Serialize(MappingSchema serializationSchema, string[] data)
@@ -44,9 +44,9 @@ namespace LinqToDB.Remote
 			return new StringArraySerializer(serializationSchema).Serialize(data);
 		}
 
-		public static string[] DeserializeStringArray(MappingSchema serializationSchema, string str)
+		public static string[] DeserializeStringArray(MappingSchema serializationSchema, MappingSchema contextSchema, string str)
 		{
-			return new StringArrayDeserializer(serializationSchema).Deserialize(str);
+			return new StringArrayDeserializer(serializationSchema, contextSchema).Deserialize(str);
 		}
 
 		#endregion
@@ -262,16 +262,18 @@ namespace LinqToDB.Remote
 
 		public class DeserializerBase
 		{
-			protected readonly MappingSchema _ms;
+			protected readonly MappingSchema _contextSchema;
+			protected readonly MappingSchema _serializationSchema;
 			protected readonly Dictionary<int,object>         ObjectIndices  = new ();
 			protected readonly Dictionary<int,Action<object>> DelayedObjects = new ();
 
 			protected string Str = null!;
 			protected int    Pos;
 
-			protected DeserializerBase(MappingSchema serializationMappingSchema)
+			protected DeserializerBase(MappingSchema serializationMappingSchema, MappingSchema contextMappingSchema)
 			{
-				_ms = serializationMappingSchema;
+				_serializationSchema = serializationMappingSchema;
+				_contextSchema       = contextMappingSchema;
 			}
 
 			protected char Peek()
@@ -575,7 +577,7 @@ namespace LinqToDB.Remote
 					return deserializer(this);
 				}
 
-				return SerializationConverter.Deserialize(_ms, type, ReadString());
+				return SerializationConverter.Deserialize(_serializationSchema, type, ReadString());
 
 			}
 
@@ -1538,8 +1540,8 @@ namespace LinqToDB.Remote
 			readonly Dictionary<int,SelectQuery> _queries = new ();
 			readonly List<Action>                _actions = new ();
 
-			public QueryDeserializer(MappingSchema serializationMappingSchema)
-				: base(serializationMappingSchema)
+			public QueryDeserializer(MappingSchema serializationMappingSchema, MappingSchema contextSchema)
+				: base(serializationMappingSchema, contextSchema)
 			{
 			}
 
@@ -1629,7 +1631,7 @@ namespace LinqToDB.Remote
 								field.Table = table as ISqlTableSource;
 								if (table is SqlTable sqlTable && sqlTable.ObjectType != null)
 								{
-									var ed = _ms.GetEntityDescriptor(sqlTable.ObjectType);
+									var ed = _contextSchema.GetEntityDescriptor(sqlTable.ObjectType);
 									field.ColumnDescriptor = ed[field.Name]!;
 								}
 							});
@@ -2511,8 +2513,8 @@ namespace LinqToDB.Remote
 
 		sealed class ResultDeserializer : DeserializerBase
 		{
-			public ResultDeserializer(MappingSchema serializationMappingSchema)
-				: base(serializationMappingSchema)
+			public ResultDeserializer(MappingSchema serializationMappingSchema, MappingSchema contextSchema)
+				: base(serializationMappingSchema, contextSchema)
 			{
 			}
 
@@ -2583,8 +2585,8 @@ namespace LinqToDB.Remote
 
 		sealed class StringArrayDeserializer : DeserializerBase
 		{
-			public StringArrayDeserializer(MappingSchema serializationMappingSchema)
-				: base(serializationMappingSchema)
+			public StringArrayDeserializer(MappingSchema serializationMappingSchema, MappingSchema contextSchema)
+				: base(serializationMappingSchema, contextSchema)
 			{
 			}
 

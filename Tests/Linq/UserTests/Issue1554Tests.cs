@@ -453,13 +453,14 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<PersonCacheFluent>()
 					.HasTableName("Issue1554FluentTable")
 					.Property(p => p.Id)
 						.IsPrimaryKey()
 					.Property(p => p.ClaimedKeyType)
-					.Property(p => p.ClaimedKeyTypeN);
+					.Property(p => p.ClaimedKeyTypeN)
+				.Build();
 
 			return ms;
 		}

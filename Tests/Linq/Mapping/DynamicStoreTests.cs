@@ -350,11 +350,12 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<FluentMetadataBasedStore>()
 				.HasColumn(e => e.Id)
 				.Property(x => Sql.Property<string>(x, "Name"))
-				.Member(e => e.Values).HasAttribute(new DynamicColumnsStoreAttribute());
+				.Member(e => e.Values).HasAttribute(new DynamicColumnsStoreAttribute())
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -378,11 +379,12 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<FluentMetadataBasedStore>()
 				.HasColumn(e => e.Id)
 				.DynamicColumnsStore(e => e.Values)
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -406,13 +408,14 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<FluentMetadataBasedStore>()
 				.HasColumn(e => e.Id)
 				.DynamicColumnsStore(e => e.Values)
 				.Property(x => Sql.Property<string>(x, "Name"))
 				.Entity<FluentMetadataBasedStore>(ProviderName.SQLite)
-				.DynamicColumnsStore(e => e.SQLiteValues);
+				.DynamicColumnsStore(e => e.SQLiteValues)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -437,9 +440,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<AttributeMetadataBasedStore>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -463,11 +467,12 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<FluentMetadataBasedStore>()
 				.HasColumn(e => e.Id)
 				.DynamicColumnsStore(e => e.Values)
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -490,9 +495,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<InstanceGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -517,9 +523,10 @@ namespace Tests.Mapping
 			StaticGetterSetterMethods.InstanceValues.Clear();
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<StaticGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -549,9 +556,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<InstanceGetterSetterExpressionMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -577,9 +585,10 @@ namespace Tests.Mapping
 
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<StaticGetterSetterExpressionMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -609,9 +618,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<SQLiteInstanceGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -635,9 +645,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<GetterSetterVsStorageMethods1>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -661,9 +672,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<GetterSetterVsStorageMethods2>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -686,9 +698,10 @@ namespace Tests.Mapping
 		public void TestDynamicColumnStoreGetterSetterVsStorageMethodsConflict([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<GetterSetterVsStorageMethodsConflict>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -707,14 +720,15 @@ namespace Tests.Mapping
 			var storage = new Dictionary<int, Dictionary<string, object>>();
 
 			var ms = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 
 			builder.Entity<CustomSetterGetterBase>()
 				.DynamicPropertyAccessors(
 					(instance, property, defaultValue) => Getter(storage, instance, property, defaultValue),
 					(instance, property, value) => Setter(storage, instance, property, value))
 				.HasColumn(e => e.Id)
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -762,9 +776,10 @@ namespace Tests.Mapping
 			var ms = new MappingSchema();
 			ms.SetDefaultValue(typeof(string), "me_default");
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<AttributeMetadataBasedStore>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -788,9 +803,10 @@ namespace Tests.Mapping
 			var ms = new MappingSchema();
 			ms.SetDefaultValue(typeof(string), "accessor_def");
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<InstanceGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -812,9 +828,10 @@ namespace Tests.Mapping
 		public void TestDynamicColumnStoreMultipleGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<MultipleGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -831,9 +848,10 @@ namespace Tests.Mapping
 		public void TestDynamicColumnStoreNoGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<NoGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())

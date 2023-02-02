@@ -462,29 +462,30 @@ namespace Tests
 
 			Debug.WriteLine(configuration, "Provider ");
 
-			var res = new TestDataConnection(configuration);
+			var options = new DataOptions().UseConfiguration(configuration);
+
 			if (ms != null)
-				res.AddMappingSchema(ms);
+				options = options.UseMappingSchema(ms);
 
 			// add extra mapping schema to not share mappers with other sql2017/2019 providers
 			// use same schema to use cache within test provider scope
 			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
 			{
 				if (!suppressSequentialAccess)
-					res.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+					options = options.UseInterceptor(SequentialAccessCommandInterceptor.Instance);
 
-				res.AddMappingSchema(_sequentialAccessSchema);
+				options = options.UseMappingSchema(ms == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(ms, _sequentialAccessSchema));
 			}
-			//else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
-			//	res.AddMappingSchema(_fecSchema);
+			else if (configuration.IsAnyOf(TestProvName.AllMariaDB))
+				options = options.UseMappingSchema(ms == null ? _mariaDBSchema : MappingSchema.CombineSchemas(ms, _mariaDBSchema));
 
 			if (interceptor != null)
-				res.AddInterceptor(interceptor);
+				options = options.UseInterceptor(interceptor);
 
 			if (retryPolicy != null)
-				res.RetryPolicy = retryPolicy;
+				options = options.UseRetryPolicy(retryPolicy);
 
-			return res;
+			return new TestDataConnection(options);
 		}
 
 		protected TestDataConnection GetDataConnection(DataOptions options)
@@ -501,8 +502,8 @@ namespace Tests
 			return res;
 		}
 
-		private static readonly MappingSchema _sequentialAccessSchema = new ();
-		private static readonly MappingSchema _fecSchema = new ();
+		private  static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");
+		internal static readonly MappingSchema _mariaDBSchema          = new (ProviderName.MariaDB);
 
 		protected static char GetParameterToken(string context)
 		{

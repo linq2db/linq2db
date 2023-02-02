@@ -5,16 +5,17 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using System.Transactions;
+
 using LinqToDB;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Tests.Model;
-
 namespace Tests.Linq
 {
+	using Model;
+
 	[TestFixture]
 	public class LoadWithTests : TestBase
 	{
@@ -98,11 +99,11 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWith3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
-					t => ImmutableList.Create(t.ToArray()));
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<IEnumerable<Child>, ImmutableList<Child>>(t => ImmutableList.Create(t.ToArray()));
 
+			using (var db = GetDataContext(context, ms))
+			{
 				var q =
 					from p in db.Parent.LoadWith(p => p.Children3)
 					select new
@@ -120,11 +121,12 @@ namespace Tests.Linq
 		[Test]
 		public void LoadWithAsTable3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.SetConvertExpression<IEnumerable<Child>,ImmutableList<Child>>(
-					t => ImmutableList.Create(t.ToArray()));
+			var ms = new MappingSchema();
 
+			ms.SetConvertExpression<IEnumerable<Child>, ImmutableList<Child>>(t => ImmutableList.Create(t.ToArray()));
+
+			using (var db = GetDataContext(context, ms))
+			{
 				var q =
 					from p in db.Parent.LoadWithAsTable(p => p.Children3)
 					select new
@@ -333,7 +335,7 @@ namespace Tests.Linq
 					.LoadWith(p => p.Children)
 					.ThenLoad(x => x.Parent)
 					.ThenLoad(x => x!.Children);
-					
+
 				var result = q1.FirstOrDefault(p=> p.ParentID == id);
 				Assert.That(result, Is.Not.Null);
 				Assert.That(result!.Children[0].Parent!.Children[0].ParentID, Is.EqualTo(id));
@@ -348,13 +350,13 @@ namespace Tests.Linq
 			{
 				var result = db.Parent
 					.Where(x => x.ParentID == 1)
-					.Select(p => new 
+					.Select(p => new
 					{
 						Id = p.ParentID,
-						Children = p.Children.Select(c => new 
+						Children = p.Children.Select(c => new
 						{
 							Id = c.ChildID,
-						}).ToArray() 
+						}).ToArray()
 					})
 					.FirstOrDefault();
 
@@ -370,13 +372,13 @@ namespace Tests.Linq
 			{
 				var result = await db.Parent
 					.Where(x => x.ParentID == 1)
-					.Select(p => new 
+					.Select(p => new
 					{
 						Id = p.ParentID,
-						Children = p.Children.Select(c => new 
+						Children = p.Children.Select(c => new
 						{
 							Id = c.ChildID,
-						}).ToArray() 
+						}).ToArray()
 					})
 					.FirstOrDefaultAsync();
 
@@ -519,7 +521,7 @@ namespace Tests.Linq
 					.ThenLoad(c => c.SubSubItems)
 					.ThenLoad(ss => ss.ParentSubItem)
 					.LoadWith(m => m.SubItems2);
-				
+
 				var result = query.OrderBy(_ => _.Id).ToArray();
 				foreach (var item in result)
 				{
@@ -537,7 +539,7 @@ namespace Tests.Linq
 					.ThenLoad(ss => ss.ParentSubItem, q => q.Where(e => e!.Value == e.Value))
 					.LoadWith(m => m.SubItems2, q => q.Where(e => e.Value == e.Value))
 					.ThenLoad(e => e.Parent);
-				
+
 				var result2 = query2.OrderBy(_ => _.Id).ToArray();
 				foreach (var item in result2)
 				{
@@ -572,6 +574,27 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void LoadWithCacheAssociation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var testData = GenerateTestData();
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			using (db.CreateLocalTable(testData.Item4))
+			using (db.CreateLocalTable(testData.Item5))
+			{
+				var filterQuery =
+					from m2 in db.GetTable<MainItem2>().LoadWith(m2 => m2.MainItem)
+					where m2.MainItem != null && m2.MainItem!.SubItems1.Count() > 1
+					select m2;
+
+				var xx = filterQuery.ToArray();
+			}
+		}
+
+		[Test]
 		public void LoadWithAndFilteredProperty([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
@@ -586,38 +609,38 @@ namespace Tests.Linq
 				var filterQuery = from m in db.GetTable<MainItem>()
 					where m.Id > 1
 					select m;
-				
+
 				var query1 = filterQuery
 					.LoadWith(m => m.SubItems1.Where(e => e.ParentId % 2 == 0).OrderBy(_ => _.Id).Take(2));
-				
+
 				var result1 = query1.OrderBy(_ => _.Id).ToArray();
-				
+
 				Assert.That(result1[0].SubItems1.Length, Is.GreaterThan(0));
-				
-				
+
+
 				var query2 = filterQuery
 					.LoadWith(m => m.SubItems1.Where(e => e.ParentId % 2 == 0).OrderBy(_ => _.Id).Take(2),
 						e => e.Where(i => i.Value!.StartsWith("Sub1_")));
-				
+
 				var result2 = query2.OrderBy(_ => _.Id).ToArray();
-				
+
 				Assert.That(result2[0].SubItems1.Length, Is.GreaterThan(0));
-				
+
 				var query3 = filterQuery
 					.LoadWith(m => m.SubItems1[0].Parent!.SubItems2.Where(e => e.ParentId % 2 == 0).OrderBy(_ => _.Id).Take(2),
 						e => e.Where(i => i.Value!.StartsWith("Sub2_")));
-				
+
 				var result3 = query3.OrderBy(_ => _.Id).ToArray();
-				
+
 				Assert.That(result3[0].SubItems1[0].Parent!.SubItems2.Length, Is.GreaterThan(0));
-				
+
 				var query3_1 = filterQuery
 					.LoadWith(m => m.SubItems1)
 					.ThenLoad(s => s.Parent)
 					.ThenLoad(p => p!.SubItems2.Where(e => e.ParentId % 2 == 0).OrderBy(_ => _.Id).Take(2), e => e.Where(i => i.Value!.StartsWith("Sub2_")));
-				
+
 				var result3_1 = query3_1.OrderBy(_ => _.Id).ToArray();
-				
+
 				Assert.That(result3_1[0].SubItems1[0].Parent!.SubItems2.Length, Is.GreaterThan(0));
 
 				var query4 = filterQuery
@@ -646,7 +669,7 @@ namespace Tests.Linq
 				var filterQuery = from m in db.GetTable<MainItem>()
 					where m.Id > 1
 					select m;
-				
+
 				var query = filterQuery
 					.LoadWith(m => m.SubItems1,
 						q => q
@@ -654,21 +677,21 @@ namespace Tests.Linq
 							.Join(db.GetTable<MainItem2>(), qq => qq.Id / 10, mm => mm.Id, (qq, mm) => qq)
 							.Select(qq => new SubItem1 { Id = qq.Id, Value = "QueryResult" + qq.Id })
 					);
-				
+
 				var result = query.ToArray();
-				
+
 				var query2 = filterQuery
 					.LoadWith(m => m.SubItems1)
 					.ThenLoad(s => s.SubSubItems, q => q.Where(c => c.Id == 1).Take(2));
-				
+
 				var result2 = query2.ToArray();
-				
-				
+
+
 				var mainQuery = from s in db.GetTable<SubItem1>()
 					select s;
 
 				var query3 = mainQuery
-					.LoadWith(s => s.Parent!, q => q.Where(p => p.Id % 3 == 0));
+					.LoadWith(s => s.Parent, q => q.Where(p => p.Id % 3 == 0));
 
 				var result3 = query3.ToArray();
 			}
@@ -784,6 +807,33 @@ namespace Tests.Linq
 				Assert.AreEqual(3, result[0].Children.Count);
 				Assert.AreEqual(2, result[0].ActiveChildren.Count);
 			}
+		}
+
+		sealed class TestEntity
+		{
+			public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Id))]
+			public List<TestEntity>? Children;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Id))]
+			public TestEntity? Child { get; set; }
+		}
+
+		// It is a compile test, not a unit test.
+		public void NullableAssociationTest()
+		{
+			using var db = GetDataContext("");
+
+			_ = db.GetTable<TestEntity>()
+				.LoadWith(t => t.Children)
+				.ThenLoad(t => t.Children)
+				.ThenLoad(t => t.Children)
+				.LoadWith(t => t.Children, t => t.Where(e => e.Id == 1))
+				.ThenLoad(t => t.Children, t => t.Where(e => e.Id == 1))
+				.ThenLoad(t => t.Child,    t => t.Where(e => e.Id == 1))
+				.LoadWith(t => t.Child,    t => t.Where(e => e.Id == 1))
+				;
 		}
 	}
 }

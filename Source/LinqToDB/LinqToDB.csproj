@@ -111,6 +111,13 @@
 		<Reference Include="System.ComponentModel.DataAnnotations" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Nullability.Source">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
 		<PackageReference Include="System.Data.DataSetExtensions" />
 	</ItemGroup>

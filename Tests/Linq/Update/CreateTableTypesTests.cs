@@ -171,10 +171,13 @@ namespace Tests.xUpdate
 			Query.ClearCaches();
 
 			var ms = new MappingSchema();
-			var entity = ms.GetFluentMappingBuilder()
+			var entity = new FluentMappingBuilder(ms)
 				.Entity<CreateTableTypes>()
 				.HasColumn(e => e.Id);
+
 			testCase.ColumnBuilder(entity);
+
+			entity.Build();
 
 			var options = new JsonSerializerOptions () { IncludeFields = true };
 

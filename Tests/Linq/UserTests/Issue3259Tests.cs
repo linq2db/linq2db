@@ -64,7 +64,7 @@ namespace Tests.UserTests
 		public void SubqueryAggregation([DataSources(ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			var ms      = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 
 			builder.Entity<EmployeeTimeOffBalance>()
 				.HasPrimaryKey(x => x.Id)
@@ -80,6 +80,8 @@ namespace Tests.UserTests
 
 			builder.Entity<LeaveRequestDateEntry>()
 				.HasPrimaryKey(x => x.Id);
+
+			builder.Build();
 
 			var timeOffBalances = new EmployeeTimeOffBalance[]{new()
 				{

@@ -22,14 +22,15 @@ namespace Tests.Mapping
 		MappingSchema CreateMappingSchema()
 		{
 			var schema = new MappingSchema();
-			var fluent = schema.GetFluentMappingBuilder();
+			var fluent = new FluentMappingBuilder(schema);
 
 			fluent.Entity<InstanceClass>().IsColumnRequired()
 				.IsColumnRequired()
 				.Property(e => e.Id)
 				.Property(e => e.Value)
 				.Member(e => e.EntityValue).IsExpression(e => e.Id.ToString() + e.Value.ToString())
-				.Member(e => e.EntityMaterialized).IsExpression(e => "M" + e.Id.ToString(), true);
+				.Member(e => e.EntityMaterialized).IsExpression(e => "M" + e.Id.ToString(), true)
+				.Build();
 
 			return fluent.MappingSchema;
 		}

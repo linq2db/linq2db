@@ -10,9 +10,9 @@ namespace LinqToDB.Mapping
 	public interface IEntityChangeDescriptor
 	{
 		/// <summary>
-		/// Gets or sets mapping type accessor.
+		/// Gets mapping type accessor.
 		/// </summary>
-		TypeAccessor TypeAccessor { get; set; }
+		TypeAccessor TypeAccessor { get; }
 
 		/// <summary>
 		/// Gets or sets name of table or view in database.

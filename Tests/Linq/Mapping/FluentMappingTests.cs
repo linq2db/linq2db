@@ -98,7 +98,7 @@ namespace Tests.Mapping
 		public void LowerCaseMappingTest()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
 			{
@@ -109,21 +109,22 @@ namespace Tests.Mapping
 				}
 			};
 
-			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn();
+			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn().Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
 			Assert.That(ed.Name.Name, Is.EqualTo("newname"));
-			Assert.That(ed.Columns.First().ColumnName, Is.EqualTo("id1"));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
 		}
 
 		[Test]
 		public void AddAttributeTest1()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
-			mb.HasAttribute<MyClass>(new TableAttribute("NewName"));
+			mb.HasAttribute<MyClass>(new TableAttribute("NewName"))
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -139,9 +140,9 @@ namespace Tests.Mapping
 		public void AddAttributeTest2()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
-			mb.HasAttribute<MyClass>(new TableAttribute("NewName") { Configuration = "Test"});
+			mb.HasAttribute<MyClass>(new TableAttribute("NewName") { Configuration = "Test"}).Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -152,9 +153,9 @@ namespace Tests.Mapping
 		public void HasPrimaryKey1()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
-			mb.Entity<MyClass>().HasPrimaryKey(e => e.ID);
+			mb.Entity<MyClass>().HasPrimaryKey(e => e.ID).Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -165,9 +166,9 @@ namespace Tests.Mapping
 		public void HasPrimaryKey2()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
-			mb.Entity<MyClass>().HasPrimaryKey(e => e.ID1, 3);
+			mb.Entity<MyClass>().HasPrimaryKey(e => e.ID1, 3).Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -179,9 +180,9 @@ namespace Tests.Mapping
 		public void HasPrimaryKey3()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
-			mb.Entity<MyClass>().HasPrimaryKey(e => new { e.ID, e.ID1 }, 3);
+			mb.Entity<MyClass>().HasPrimaryKey(e => new { e.ID, e.ID1 }, 3).Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -195,9 +196,9 @@ namespace Tests.Mapping
 		public void HasPrimaryKey4()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
-			mb.Entity<MyClass>().Property(e => e.ID).IsPrimaryKey();
+			mb.Entity<MyClass>().Property(e => e.ID).IsPrimaryKey().Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -208,12 +209,13 @@ namespace Tests.Mapping
 		public void IsPrimaryKeyIsIdentity()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<MyClass>()
 				.Property(e => e.ID)
 					.IsPrimaryKey()
-					.IsIdentity();
+					.IsIdentity()
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -225,11 +227,12 @@ namespace Tests.Mapping
 		public void TableNameAndSchema()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<MyClass>()
 				.HasTableName ("Table")
-				.HasSchemaName("Schema");
+				.HasSchemaName("Schema")
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -241,11 +244,12 @@ namespace Tests.Mapping
 		public void Association()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<MyClass>()
 				.Property(e => e.Parent)
-					.HasAttribute(new AssociationAttribute { ThisKey = "ID", OtherKey = "ID1" });
+					.HasAttribute(new AssociationAttribute { ThisKey = "ID", OtherKey = "ID1" })
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -257,11 +261,12 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<MyClass2>()
 				.Property(e => e.ID).IsPrimaryKey()
-				.Property(e => e.Class3);
+				.Property(e => e.Class3)
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass2));
 
@@ -272,10 +277,11 @@ namespace Tests.Mapping
 		public void FluentAssociation1()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<MyClass>()
-				.Association( e => e.Parent, e => e.ID, o => o!.ID1 );
+				.Association( e => e.Parent, e => e.ID, o => o!.ID1 )
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -286,24 +292,26 @@ namespace Tests.Mapping
 		public void FluentAssociation2()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<MyClass>()
-				.Association( e => e.Parent, (e, o) => e.ID == o!.ID1 );
+				.Association( e => e.Parent, (e, o) => e.ID == o!.ID1 )
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+			Assert.That(ed.Associations, Is.Not.EqualTo( 0 ) );
 		}
 
 		[Test]
 		public void FluentAssociation3()
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<MyInheritedClass>()
-				.Association( e => e.Assosiations, (e, o) => e.Id == o.ID1 );
+				.Association( e => e.Assosiations, (e, o) => e.Id == o.ID1 )
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
 
@@ -332,11 +340,12 @@ namespace Tests.Mapping
 		public void FluentInheritance([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<TestInheritancePerson>()
 				.Inheritance(e => e.Gender, Gender.Male,   typeof(TestInheritanceMale))
-				.Inheritance(e => e.Gender, Gender.Female, typeof(TestInheritanceFemale));
+				.Inheritance(e => e.Gender, Gender.Female, typeof(TestInheritanceFemale))
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson));
 
@@ -357,11 +366,12 @@ namespace Tests.Mapping
 		public void FluentInheritance2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<TestInheritancePerson>()
 				.Inheritance(e => e.Gender, Gender.Male,   typeof(TestInheritanceMale))
-				.Inheritance(e => e.Gender, Gender.Female, typeof(TestInheritanceFemale));
+				.Inheritance(e => e.Gender, Gender.Female, typeof(TestInheritanceFemale))
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson));
 
@@ -399,11 +409,12 @@ namespace Tests.Mapping
 		public void FluentInheritanceExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<DescendantEntity>()
 				.Property(e => e.Value).IsExpression(e => e.Id + 100)
-				.Member(e => e.ValueMethod()).IsExpression(e => e.Id + 1000);
+				.Member(e => e.ValueMethod()).IsExpression(e => e.Id + 1000)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable(
@@ -423,15 +434,15 @@ namespace Tests.Mapping
 		public void DoubleNameChangeTest()
 		{
 			var ms = new MappingSchema();
-			var b  = ms.GetFluentMappingBuilder();
+			var b  = new FluentMappingBuilder(ms);
 
-			b.Entity<MyClass>().HasTableName("Name1");
+			b.Entity<MyClass>().HasTableName("Name1").Build();
 
 			var od1 = ms.GetEntityDescriptor(typeof(MyClass));
 
 			Assert.AreEqual("Name1", od1.Name.Name);
 
-			b.Entity<MyClass>().HasTableName("Name2");
+			b.Entity<MyClass>().HasTableName("Name2").Build();
 
 			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
 
@@ -442,12 +453,13 @@ namespace Tests.Mapping
 		public void AssociationInheritance()
 		{
 			var ms = new MappingSchema();
-			var b  = ms.GetFluentMappingBuilder();
+			var b  = new FluentMappingBuilder(ms);
 
 			b.Entity<MyInheritedClass>()
 				.Property(_ => _.Id)          .IsPrimaryKey()
 				.Property(_ => _.Assosiation) .HasAttribute(new AssociationAttribute() {ThisKey = "Assosiation.ID", OtherKey = "ID"})
-				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"});
+				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"})
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
 			Assert.AreEqual(2, ed.Associations.Count);
@@ -457,12 +469,13 @@ namespace Tests.Mapping
 		public void AttributeInheritance()
 		{
 			var ms = new MappingSchema();
-			var b  = ms.GetFluentMappingBuilder();
+			var b  = new FluentMappingBuilder(ms);
 
 			b.Entity<MyBaseClass>()
 				.Property(_ => _.Id)          .IsPrimaryKey()
 				.Property(_ => _.Assosiation) .HasAttribute(new AssociationAttribute() {ThisKey = "Assosiation.ID", OtherKey = "ID"})
-				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"});
+				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"})
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
 			Assert.AreEqual(2, ed.Associations.Count);
@@ -474,12 +487,13 @@ namespace Tests.Mapping
 		public void AttributeInheritance2()
 		{
 			var ms = new MappingSchema();
-			var b  = ms.GetFluentMappingBuilder();
+			var b  = new FluentMappingBuilder(ms);
 
 			b.Entity<MyInheritedClass>()
 				.Property(_ => _.Id)          .IsPrimaryKey()
 				.Property(_ => _.Assosiation) .HasAttribute(new AssociationAttribute() {ThisKey = "Assosiation.ID", OtherKey = "ID"})
-				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"});
+				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"})
+				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass2));
 			Assert.AreEqual(2, ed.Associations.Count);
@@ -495,7 +509,7 @@ namespace Tests.Mapping
 		public void InterfaceInheritance()
 		{
 			var ms = new MappingSchema();
-			var b  = ms.GetFluentMappingBuilder();
+			var b  = new FluentMappingBuilder(ms);
 
 			b.Entity<IInterfaceBase>()
 				.HasTableName(nameof(IInterfaceBase))
@@ -506,6 +520,8 @@ namespace Tests.Mapping
 
 			b.Entity<IInterface2>()
 				.Property(x => x.MarkedOnType).HasSkipOnInsert();
+
+			b.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass4));
 
@@ -549,7 +565,7 @@ namespace Tests.Mapping
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
-				db.MappingSchema.GetFluentMappingBuilder()
+				new FluentMappingBuilder(db.MappingSchema)
 
 				   .Entity<BaseClass>().HasTableName("my_table")
 				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
@@ -567,7 +583,8 @@ namespace Tests.Mapping
 				  .Property(t => t.NotACol).IsNotColumn()
 
 				  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
-				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col");
+				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+				  .Build();
 
 				using (db.CreateLocalTable<DerivedClass>())
 				{
@@ -591,7 +608,7 @@ namespace Tests.Mapping
 		{
 			using (var db = GetDataContext(context, new MappingSchema()))
 			{
-				db.MappingSchema.GetFluentMappingBuilder()
+				new FluentMappingBuilder(db.MappingSchema)
 				   .Entity<BaseClass>().HasTableName("my_table")
 				   .HasAttribute(new LinqToDB.Mapping.InheritanceMappingAttribute()
 				   {
@@ -602,7 +619,8 @@ namespace Tests.Mapping
 				  .Property(t => t.MyCol1).HasColumnName("my_col1")
 				  .Property(t => t.NotACol).IsNotColumn()
 				  .Entity<DerivedClass>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
-				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col");
+				  .Entity<DerivedClass1>().Property(t => t.SomeOtherField).HasColumnName("my_other_col")
+				  .Build();
 
 				using (db.CreateLocalTable<DerivedClass>())
 				{
@@ -671,9 +689,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<PersonCustom>()
-				.Property(p => p.Money).IsExpression(p => Sql.AsSql(p.Age * Sql.AsSql(1000) + p.Name.Length * 10), true, "MONEY");
+				.Property(p => p.Money).IsExpression(p => Sql.AsSql(p.Age * Sql.AsSql(1000) + p.Name.Length * 10), true, "MONEY")
+				.Build();
 
 			using (new GenerateFinalAliases(finalAliases))
 			using (var db = GetDataContext(context, ms))
@@ -709,10 +728,11 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<SequenceTable>()
 				.Property(p => p.Id)
-				.UseSequence("sequencetestseq");
+				.UseSequence("sequencetestseq")
+				.Build();
 
 			using var db = GetDataConnection(context, ms);
 			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
@@ -728,10 +748,11 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<SequenceTable>()
 				.Property(p => p.Id)
-				.HasAttribute(new SequenceNameAttribute("sequencetestseq"));
+				.HasAttribute(new SequenceNameAttribute("sequencetestseq"))
+				.Build();
 
 			using var db = GetDataConnection(context, ms);
 			var records = Enumerable.Range(1, 10).Select(x => new SequenceTable()).ToArray();
@@ -761,12 +782,14 @@ namespace Tests.Mapping
 		public void MapValueTest([DataSources] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Male))!,    new MapValueAttribute("M"));
 			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Female))!,  new MapValueAttribute("F"));
 			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Unknown))!, new MapValueAttribute("U"));
 			mb.HasAttribute(typeof(GenderEnum).GetField(nameof(GenderEnum.Other))!,   new MapValueAttribute("O"));
+
+			mb.Build();
 
 			using var db = GetDataContext(context, ms);
 

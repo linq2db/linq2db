@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Common
 {
 	/// <summary>
@@ -27,6 +29,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <param name="options">Set of options.</param>
 		/// <returns>New options object with <paramref name="options"/> applied.</returns>
+		[Pure]
 		public virtual T WithOptions(IOptionSet options)
 		{
 			var o = Clone();
@@ -45,6 +48,7 @@ namespace LinqToDB.Common
 		/// <typeparam name="TSet"><see cref="IOptionSet"/> concrete type.</typeparam>
 		/// <param name="optionSetter">New option set creation delegate. Takes current options set as parameter.</param>
 		/// <returns>New options object (if <paramref name="optionSetter"/> created new options set).</returns>
+		[Pure]
 		public T WithOptions<TSet>(Func<TSet,TSet> optionSetter)
 			where TSet : class, IOptionSet, new()
 		{

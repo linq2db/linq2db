@@ -454,13 +454,16 @@ namespace Tests.DataProvider
 
 			void Test<TValue>(DataType dataType, int precision, TValue value, TValue expected)
 			{
-				using var db = GetDataContext(context);
+				var ms = new MappingSchema();
 
-				var prop = db.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<LiteralsTestTable<TValue>>()
-					.Property(e => e.Value)
-					.HasDataType(dataType)
-					.HasPrecision(precision);
+						.Property(e => e.Value)
+							.HasDataType(dataType)
+							.HasPrecision(precision)
+					.Build();
+
+				using var db = GetDataContext(context, ms);
 
 				db.AddInterceptor(interceptor);
 				

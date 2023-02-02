@@ -4,7 +4,6 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
@@ -13,6 +12,7 @@ namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using DataProvider;
 	using Expressions;
 	using Mapping;
@@ -220,9 +220,9 @@ namespace LinqToDB.Data
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider      dataProvider,
-			Func<DbConnection> connectionFactory,
-			MappingSchema      mappingSchema)
+			IDataProvider                   dataProvider,
+			Func<DataOptions, DbConnection> connectionFactory,
+			MappingSchema                   mappingSchema)
 			: this(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema))
 		{
 		}
@@ -234,10 +234,10 @@ namespace LinqToDB.Data
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		/// <param name="mappingSchema">Mapping schema to use with this connection.</param>
 		public DataConnection(
-			IDataProvider                 dataProvider,
-			Func<DbConnection>            connectionFactory,
-			MappingSchema                 mappingSchema,
-			Func<DataOptions,DataOptions> optionsSetter)
+			IDataProvider                   dataProvider,
+			Func<DataOptions, DbConnection> connectionFactory,
+			MappingSchema                   mappingSchema,
+			Func<DataOptions,DataOptions>   optionsSetter)
 			: this(optionsSetter(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory).UseMappingSchema(mappingSchema)))
 		{
 		}
@@ -248,8 +248,8 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		public DataConnection(
-			IDataProvider      dataProvider,
-			Func<DbConnection> connectionFactory)
+			IDataProvider                   dataProvider,
+			Func<DataOptions, DbConnection> connectionFactory)
 			: this(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory))
 		{
 		}
@@ -260,9 +260,9 @@ namespace LinqToDB.Data
 		/// <param name="dataProvider">Database provider implementation to use with this connection.</param>
 		/// <param name="connectionFactory">Database connection factory method.</param>
 		public DataConnection(
-			IDataProvider                 dataProvider,
-			Func<DbConnection>            connectionFactory,
-			Func<DataOptions,DataOptions> optionsSetter)
+			IDataProvider                   dataProvider,
+			Func<DataOptions, DbConnection> connectionFactory,
+			Func<DataOptions,DataOptions>   optionsSetter)
 			: this(optionsSetter(DefaultDataOptions.UseConnectionFactory(dataProvider, connectionFactory)))
 		{
 		}
@@ -504,15 +504,15 @@ namespace LinqToDB.Data
 
 				case TraceInfoStep.Error:
 				{
-					var sb = new StringBuilder();
+					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Append(info.TraceInfoStep);
+					sb.Value.Append(info.TraceInfoStep);
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
 						try
 						{
-							sb
+							sb.Value
 								.AppendLine()
 								.AppendLine($"Exception: {ex.GetType()}")
 								.AppendLine($"Message  : {ex.Message}")
@@ -525,44 +525,44 @@ namespace LinqToDB.Data
 							// try to access Message property due to bug in AseErrorCollection.Message property.
 							// There it tries to fetch error from first element of list without checking wether
 							// list contains any elements or not
-							sb
+							sb.Value
 								.AppendLine()
 								.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
 								;
 						}
 					}
 
-					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
+					WriteTraceLineConnection(sb.Value.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
 
 				case TraceInfoStep.MapperCreated:
 				{
-					var sb = new StringBuilder();
+					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.AppendLine(info.TraceInfoStep.ToString());
+					sb.Value.AppendLine(info.TraceInfoStep.ToString());
 
 					if (info.MapperExpression != null && info.DataConnection.Options.LinqOptions.TraceMapperExpression)
-						sb.AppendLine(info.MapperExpression.GetDebugView());
+						sb.Value.AppendLine(info.MapperExpression.GetDebugView());
 
-					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
+					WriteTraceLineConnection(sb.Value.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
 
 				case TraceInfoStep.Completed:
 				{
-					var sb = new StringBuilder();
+					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Append($"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
+					sb.Value.Append($"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
-						sb.Append($" Rows Count: {info.RecordsAffected}.");
+						sb.Value.Append($" Rows Count: {info.RecordsAffected}.");
 
-					sb.AppendLine();
+					sb.Value.AppendLine();
 
-					WriteTraceLineConnection(sb.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
+					WriteTraceLineConnection(sb.Value.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -637,11 +637,11 @@ namespace LinqToDB.Data
 
 		#region Connection
 
-		bool                _closeConnection;
-		bool                _disposeConnection = true;
-		bool                _closeTransaction;
-		IAsyncDbConnection? _connection;
-		Func<DbConnection>? _connectionFactory;
+		bool                             _closeConnection;
+		bool                             _disposeConnection = true;
+		bool                             _closeTransaction;
+		IAsyncDbConnection?              _connection;
+		Func<DataOptions, DbConnection>? _connectionFactory;
 
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
@@ -658,7 +658,7 @@ namespace LinqToDB.Data
 				{
 					DbConnection connection;
 					if (_connectionFactory != null)
-						connection = _connectionFactory();
+						connection = _connectionFactory(Options);
 					else
 						connection = DataProvider.CreateConnection(ConnectionString!);
 
@@ -726,13 +726,6 @@ namespace LinqToDB.Data
 			}
 
 			_dataContextInterceptor?.OnClosed(new (this));
-		}
-
-		public FluentMappingBuilder GetFluentMappingBuilder()
-		{
-			if (MappingSchema.IsLockable)
-				MappingSchema = new(MappingSchema);
-			return MappingSchema.GetFluentMappingBuilder();
 		}
 
 		#endregion
@@ -1403,7 +1396,7 @@ namespace LinqToDB.Data
 		/// <returns>Current connection object.</returns>
 		public DataConnection AddMappingSchema(MappingSchema mappingSchema)
 		{
-			MappingSchema    = new (mappingSchema, MappingSchema);
+			MappingSchema    = MappingSchema.CombineSchemas(mappingSchema, MappingSchema);
 			_configurationID = null;
 
 			return this;
@@ -1423,6 +1416,7 @@ namespace LinqToDB.Data
 			Options             = options;
 		}
 
+		// TODO: v6: get rid of Clone as we shouldn't need to clone connection with new parser anymore
 		/// <summary>
 		/// Clones current connection.
 		/// </summary>
@@ -1431,7 +1425,7 @@ namespace LinqToDB.Data
 		{
 			CheckAndThrowOnDisposed();
 
-			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke();
+			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke(Options);
 
 			// https://github.com/linq2db/linq2db/issues/1486
 			// when there is no ConnectionString and provider doesn't support connection cloning

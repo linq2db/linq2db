@@ -18,14 +18,19 @@ namespace LinqToDB.Common.Internal
 	/// Internal infrastructure API.
 	/// Provides functionality for <see cref="IConfigurationID.ConfigurationID"/> generation.
 	/// </summary>
-	public sealed class IdentifierBuilder
+	public readonly struct IdentifierBuilder : IDisposable
 	{
+		readonly ObjectPool<StringBuilder>.RentedElement _sb;
+
 		public IdentifierBuilder()
 		{
+			_sb = Pools.StringBuilder.Allocate();
 		}
 
 		public IdentifierBuilder(object? data)
 		{
+			_sb = Pools.StringBuilder.Allocate();
+
 			Add(data);
 		}
 
@@ -42,11 +47,9 @@ namespace LinqToDB.Common.Internal
 			_objects.    Clear();
 		}
 
-		readonly StringBuilder _stringBuilder = new ();
-
 		public IdentifierBuilder Add(IConfigurationID? data)
 		{
-			_stringBuilder
+			_sb.Value
 				.Append('.')
 				.Append(data?.ConfigurationID)
 				;
@@ -55,7 +58,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(string? data)
 		{
-			_stringBuilder
+			_sb.Value
 				.Append('.')
 				.Append(data)
 				;
@@ -64,7 +67,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(bool data)
 		{
-			_stringBuilder
+			_sb.Value
 				.Append('.')
 				.Append(data ? "1" : "0")
 				;
@@ -73,7 +76,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(object? data)
 		{
-			_stringBuilder
+			_sb.Value
 				.Append('.')
 				.Append(GetObjectID(data))
 				;
@@ -82,7 +85,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(Delegate? data)
 		{
-			_stringBuilder
+			_sb.Value
 				.Append('.')
 				.Append(data?.Method)
 				;
@@ -91,7 +94,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(int? data)
 		{
-			_stringBuilder
+			_sb.Value
 				.Append('.')
 				.Append(data == null ? string.Empty : GetIntID(data.Value))
 				;
@@ -100,7 +103,7 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(string format, object? data)
 		{
-			_stringBuilder
+			_sb.Value
 				.Append('.')
 				.AppendFormat(format, data)
 				;
@@ -130,7 +133,7 @@ namespace LinqToDB.Common.Internal
 
 		public int CreateID()
 		{
-			var key = _stringBuilder.ToString();
+			var key = _sb.Value.ToString();
 			var id  = _identifiers.GetOrAdd(key, static _ => CreateNextID());
 
 #if DEBUG
@@ -231,6 +234,11 @@ namespace LinqToDB.Common.Internal
 			}
 
 			return id.ToString();
+		}
+
+		public void Dispose()
+		{
+			_sb.Dispose();
 		}
 	}
 }

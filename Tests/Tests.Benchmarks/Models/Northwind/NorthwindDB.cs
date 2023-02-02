@@ -11,6 +11,10 @@ namespace LinqToDB.Benchmarks.Models
 {
 	public class NorthwindDB : DataConnection
 	{
+		public NorthwindDB(DataOptions options) : base(options)
+		{
+		}
+
 		public NorthwindDB(IDataProvider provider) : base(provider, new MockDbConnection(Array.Empty<QueryResult>(), ConnectionState.Open))
 		{
 		}

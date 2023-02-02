@@ -16,7 +16,7 @@ namespace LinqToDB.Benchmarks.Queries
 	{
 		Func<Db,IQueryable<SalesOrderHeader>> _compiled = null!;
 		QueryResult[]                         _results  = null!;
-		IDataProvider                         _provider = SqlServerTools.GetDataProvider();
+		IDataProvider                         _provider = SqlServerTools.GetDataProvider(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient);
 
 		[GlobalSetup]
 		public void Setup()

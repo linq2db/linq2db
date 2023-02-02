@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
+using LinqToDB.Scaffold.Internal;
 using LinqToDB.Schema;
 using LinqToDB.SqlQuery;
 
@@ -217,19 +217,20 @@ namespace LinqToDB.Scaffold
 			var backreferenceSummary = $"{fk.Name} backreference";
 
 			// use foreign key column name for association name generation
-			var sourceColumnName     = fk.Relation.Count == 1 ? fk.Relation[0].SourceColumn : null;
 			var fromAssociationName  = GenerateAssociationName(
 				fk.Source,
 				fk.Target,
-				sourceColumnName,
+				false,
+				fk.Relation.Select(c => c.SourceColumn).ToArray(),
 				fk.Name,
 				_options.DataModel.SourceAssociationPropertyNameOptions,
 				defaultSchemas);
 			var toAssocationName     = GenerateAssociationName(
 				fk.Target,
 				fk.Source,
-				null,
-				null,
+				true,
+				fk.Relation.Select(c => c.TargetColumn).ToArray(),
+				fk.Name,
 				manyToOne
 					? _options.DataModel.TargetMultipleAssociationPropertyNameOptions
 					: _options.DataModel.TargetSingularAssociationPropertyNameOptions,
@@ -273,13 +274,13 @@ namespace LinqToDB.Scaffold
 			return association;
 		}
 
-		// a bit of inhuman logic to reduce migration PITA
 		/// <summary>
 		/// Generates association property/method name.
 		/// </summary>
 		/// <param name="thisTable">This table database name. Source table for direct relation and target for backreference.</param>
 		/// <param name="otherTable">Other table database name. Target table for direct relation and source for backreference.</param>
-		/// <param name="firstFromColumnName">Foreign key column name. Specified only for non-composite FK for from/source association.</param>
+		/// <param name="isBackReference">Identify relation side. When <c>true</c>, <paramref name="thisTable"/> references foreign key source table.</param>
+		/// <param name="thisColumns">Ordered set of column names, used by foreign key relation, defined on <paramref name="thisTable"/>.</param>
 		/// <param name="fkName">Foreign key constrain name.</param>
 		/// <param name="settings">Name generation/normalization rules.</param>
 		/// <param name="defaultSchemas">List of default database schema names.</param>
@@ -287,88 +288,23 @@ namespace LinqToDB.Scaffold
 		private string GenerateAssociationName(
 			SqlObjectName        thisTable,
 			SqlObjectName        otherTable,
-			string?              firstFromColumnName,
-			string?              fkName,
+			bool                 isBackReference,
+			string[]             thisColumns,
+			string               fkName,
 			NormalizationOptions settings,
 			ISet<string>         defaultSchemas)
 		{
-			var name = otherTable.Name;
-
-			// T4 compatibility mode use logic, similar to one, used by old T4 templates
-			if (fkName != null && settings.Transformation == NameTransformation.Association)
-			{
-				// approximate port of SetForeignKeyMemberName T4 method.
-				// Approximate, because not all logic could be converted due to difference in generation pipeline
-
-				string? newName = null;
-
-				// TODO: customization/interceptors not implemented yet
-				//if (schemaOptions.GetAssociationMemberName != null)
-				//{
-				//	newName = schemaOptions.GetAssociationMemberName(key);
-
-				//	if (newName != null)
-				//		name = ToValidName(newName);
-				//}
-
-				newName = fkName;
-
-				// FK side of one-to-one relation by primary keys
-				var isOneToOne = false;
-				if (firstFromColumnName != null && _entities.TryGetValue(otherTable, out var sourceTable))
-					isOneToOne = sourceTable.Entity.Columns.Any(_ => _.Metadata.Name == firstFromColumnName && _.Metadata.IsPrimaryKey);
-
-				// if column name provided - generate association name based on column name
-				if (!isOneToOne && firstFromColumnName != null && firstFromColumnName.ToLowerInvariant().EndsWith("id"))
-				{
-					// if column name provided and ends with ID suffix
-					// we trim ID part and possible _ connectors before it
-					newName = firstFromColumnName;
-					newName = newName.Substring(0, newName.Length - "id".Length).TrimEnd('_');
-					// here name could become empty if column name was ID
-				}
-				else
-				{
-					// if column name not provided - use FK name for association name
-
-					// remove FK_ prefix
-					if (newName.StartsWith("FK_"))
-						newName = newName.Substring(3);
-
-					// - split name into words using _ as separator
-					// - remove words that match target table name, schema or any of default schema
-					// - concat remaining words back into single name
-					newName = string.Concat(newName
-						.Split('_')
-						.Where(_ =>
-							_.Length > 0 && _ != thisTable.Name &&
-							(thisTable.Schema == null || defaultSchemas.Contains(thisTable.Schema) || _ != thisTable.Schema)));
-
-					// remove trailing digits
-					// note that new implementation match all digits, not just 0-9 as it was in T4
-					var skip = true;
-					newName  = string.Concat(newName.EnumerateCharacters().Reverse().Select(_ =>
-					{
-						if (skip)
-						{
-							if (_.category == UnicodeCategory.DecimalDigitNumber)
-								return string.Empty;
-							else
-								skip = false;
-						}
-
-						return _.codePoint;
-					}).Reverse());
-				}
-
-				// if resulting name is empty - just use:
-				// - for self-reference relation (to same table): table name
-				// - otherwise: foreign key name without changes
-				if (string.IsNullOrEmpty(newName))
-					newName = thisTable == otherTable ? thisTable.Name : fkName;
-
-				name = newName;
-			}
+			// name generation logic moved to separate class to cover it with unittests
+			
+			var name = NameGenerationServices.GenerateAssociationName(
+				(tableName, columnName) => _entities.TryGetValue(tableName, out var table) && table.Entity.Columns.Any(_ => _.Metadata.Name == columnName && _.Metadata.IsPrimaryKey),
+				thisTable,
+				otherTable,
+				isBackReference,
+				thisColumns,
+				fkName,
+				settings.Transformation,
+				defaultSchemas);
 
 			return _namingServices.NormalizeIdentifier(settings, name);
 		}

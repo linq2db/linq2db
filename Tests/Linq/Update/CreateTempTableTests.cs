@@ -305,5 +305,46 @@ namespace Tests.xUpdate
 			using var t = new[] { new TableWithPrimaryKey() { Key = 1 } }
 				.IntoTempTable(db, tableName: "TableWithPrimaryKey2", tableOptions: TableOptions.IsTemporary);
 		}
+
+		[Table]
+		sealed class TestTempTable
+		{
+			[Column] public int Id        { get; set; }
+			[Column] public string? Value { get; set; }
+		}
+
+		[Test]
+		[ActiveIssue("It is only possible to implement limited set of mapping changes. API should be removed at some point")]
+		public void CreateTempTable_TestSchemaConflicts([DataSources] string context)
+		{
+			using var db    = GetDataContext(context, new MappingSchema());
+
+			using var table = db.CreateLocalTable<TestTempTable>();
+			table.Insert(() => new TestTempTable() { Id = 1, Value = "value" });
+
+			using var tmp   = db.CreateTempTable(
+				"TempTable",
+				table,
+				setTable: em => em.Property(e => e.Value).HasColumnName("Renamed"),
+				tableOptions: TableOptions.CheckExistence);
+
+			table.Insert(() => new TestTempTable() { Id = 2, Value = "value 2" });
+			tmp  .Insert(() => new TestTempTable() { Id = 2, Value = "renamed 2" });
+
+			var records1 = table.OrderBy(r => r.Id).ToArray();
+			var records2 = tmp.OrderBy(r => r.Id).ToArray();
+
+			Assert.AreEqual(2, records1.Length);
+			Assert.AreEqual(1, records1[0].Id);
+			Assert.AreEqual("value", records1[0].Value);
+			Assert.AreEqual(2, records1[1].Id);
+			Assert.AreEqual("value 2", records1[1].Value);
+
+			Assert.AreEqual(2, records2.Length);
+			Assert.AreEqual(1, records2[0].Id);
+			Assert.AreEqual("value", records2[0].Value);
+			Assert.AreEqual(2, records2[1].Id);
+			Assert.AreEqual("renamed 2", records2[1].Value);
+		}
 	}
 }

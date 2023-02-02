@@ -34,11 +34,12 @@ namespace Tests.UserTests
 		{
 			var ms            = new MappingSchema();
 			var tableName     = nameof(AttributeBase);
-			var fluentBuilder = ms.GetFluentMappingBuilder();
+			var fluentBuilder = new FluentMappingBuilder(ms);
 
 			fluentBuilder.Entity<FluentBase>()
 				.HasTableName(tableName)
-				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
+				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey()
+				.Build();
 
 			return ms;
 		}

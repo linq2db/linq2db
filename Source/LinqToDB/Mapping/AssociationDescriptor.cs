@@ -3,12 +3,12 @@ using System.Collections;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Mapping
 {
 	using Common;
 	using Extensions;
+	using Linq.Builder;
 
 	/// <summary>
 	/// Stores association descriptor.
@@ -39,7 +39,7 @@ namespace LinqToDB.Mapping
 			string?     expressionQueryMethod,
 			Expression? expressionQuery,
 			string?     storage,
-			bool        canBeNull,
+			bool?       canBeNull,
 			string?     aliasName)
 		{
 			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
@@ -63,51 +63,51 @@ namespace LinqToDB.Mapping
 			ExpressionQueryMethod = expressionQueryMethod;
 			ExpressionQuery       = expressionQuery;
 			Storage               = storage;
-			CanBeNull             = canBeNull;
+			CanBeNull             = canBeNull ?? AnalyzeCanBeNull();
 			AliasName             = aliasName;
 		}
 
 		/// <summary>
-		/// Gets or sets association member (field, property or method).
+		/// Gets association member (field, property or method).
 		/// </summary>
-		public MemberInfo  MemberInfo          { get; set; }
+		public MemberInfo  MemberInfo          { get; }
 		/// <summary>
-		/// Gets or sets list of names of from (this) key members. Could be empty, if association has predicate expression.
+		/// Gets list of names of from (this) key members. Could be empty, if association has predicate expression.
 		/// </summary>
-		public string[]    ThisKey             { get; set; }
+		public string[]    ThisKey             { get; }
 		/// <summary>
-		/// Gets or sets list of names of to (other) key members. Could be empty, if association has predicate expression.
+		/// Gets list of names of to (other) key members. Could be empty, if association has predicate expression.
 		/// </summary>
-		public string[]    OtherKey            { get; set; }
+		public string[]    OtherKey            { get; }
 		/// <summary>
-		/// Gets or sets optional predicate expression source property or method.
+		/// Gets optional predicate expression source property or method.
 		/// </summary>
-		public string?     ExpressionPredicate { get; set; }
+		public string?     ExpressionPredicate { get; }
 		/// <summary>
-		/// Gets or sets optional query method source property or method.
+		/// Gets optional query method source property or method.
 		/// </summary>
-		public string?     ExpressionQueryMethod { get; set; }
+		public string?     ExpressionQueryMethod { get; }
 		/// <summary>
-		/// Gets or sets optional query expression.
+		/// Gets optional query expression.
 		/// </summary>
-		public Expression? ExpressionQuery     { get; set; }
+		public Expression? ExpressionQuery     { get; }
 		/// <summary>
-		/// Gets or sets optional predicate expression.
+		/// Gets optional predicate expression.
 		/// </summary>
-		public Expression? Predicate           { get; set; }
+		public Expression? Predicate           { get; }
 		/// <summary>
-		/// Gets or sets optional association value storage field or property name. Used with LoadWith.
+		/// Gets optional association value storage field or property name. Used with LoadWith.
 		/// </summary>
-		public string?     Storage             { get; set; }
+		public string?     Storage             { get; }
 		/// <summary>
-		/// Gets or sets join type, generated for current association.
+		/// Gets join type, generated for current association.
 		/// If <c>true</c>, association will generate outer join, otherwise - inner join.
 		/// </summary>
-		public bool        CanBeNull           { get; set; }
+		public bool        CanBeNull           { get; }
 		/// <summary>
-		/// Gets or sets alias for association. Used in SQL generation process.
+		/// Gets alias for association. Used in SQL generation process.
 		/// </summary>
-		public string? AliasName           { get; set; }
+		public string?     AliasName           { get; }
 
 		/// <summary>
 		/// Parse comma-separated list of association key column members into string array.
@@ -262,7 +262,6 @@ namespace LinqToDB.Mapping
 			return lambda;
 		}
 
-
 		public bool HasQueryMethod()
 		{
 			return ExpressionQuery != null || !string.IsNullOrEmpty(ExpressionQueryMethod);
@@ -309,6 +308,17 @@ namespace LinqToDB.Mapping
 				throw new LinqToDBException("Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
 
 			return lambda;
+		}
+
+		private bool AnalyzeCanBeNull()
+		{
+			// Note that nullability of Collections can't be determined from types.
+			// OUTER JOIN are usually materialized in non-nullable, but empty, collections.
+			// For example, `IList<Product> Products` might well require an OUTER JOIN.
+			// Neither `IList<Product>?` nor `IList<Product?>` would be correct.
+			return Configuration.UseNullableTypesMetadata && !IsList && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable)
+				? isNullable
+				: true;
 		}
 	}
 }

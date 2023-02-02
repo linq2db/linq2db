@@ -4,7 +4,6 @@ using System.Data.Common;
 namespace LinqToDB.DataProvider
 {
 	using Common.Internal.Cache;
-	using Configuration;
 	using Data;
 
 	abstract class ProviderDetectorBase<TProvider,TVersion,TConnection>
@@ -40,24 +39,29 @@ namespace LinqToDB.DataProvider
 		/// <summary>
 		/// Connects to database and parses version information.
 		/// </summary>
-		/// <param name="provider"></param>
-		/// <param name="connectionString"></param>
-		/// <returns>Detected SQL Server version.</returns>
+		/// <returns>Detected database server/dialect version.</returns>
 		/// <remarks>Uses cache to avoid unwanted connections to Database.</remarks>
-		public TVersion? DetectServerVersion(TProvider provider, string connectionString)
+		public TVersion? DetectServerVersion(ConnectionOptions options, TProvider provider)
 		{
-			var version = _providerCache.GetOrCreate(connectionString, entry =>
+			if (options.ConnectionString == null)
+				throw new InvalidOperationException("Connection string is not provided.");
+
+			var version = _providerCache.GetOrCreate(options.ConnectionString, entry =>
 			{
 				entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 
-				using var conn = CreateConnection(provider, connectionString);
+				using var conn = CreateConnection(provider, options.ConnectionString);
 
-				switch (conn)
+				var cn = conn switch
 				{
-					case DbConnection       c : c.Open(); break;
-					case IConnectionWrapper m : m.Open(); break;
-					default                   : throw new InvalidOperationException();
-				}
+					DbConnection       c => c,
+					IConnectionWrapper m => m.Connection,
+					_                    => throw new InvalidOperationException()
+				};
+
+				options.ConnectionInterceptor?.ConnectionOpening(new(null), cn);
+				cn.Open();
+				options.ConnectionInterceptor?.ConnectionOpened(new(null), cn);
 
 				return DetectServerVersion(conn);
 			});
@@ -65,29 +69,31 @@ namespace LinqToDB.DataProvider
 			return version;
 		}
 
-		public DataOptions CreateOptions(DataOptions options, string connectionString, TVersion dialect, TProvider provider)
+		public DataOptions CreateOptions(DataOptions options, TVersion dialect, TProvider provider)
 		{
+			if (options.ConnectionOptions.ConnectionString == null)
+				throw new InvalidOperationException("Connection string is not provided.");
+
 			if (dialect.Equals(AutoDetectVersion))
 			{
-				if (TryGetCachedServerVersion(connectionString, out var version))
+				if (TryGetCachedServerVersion(options.ConnectionOptions.ConnectionString, out var version))
 					dialect = version ?? DefaultVersion;
 				else
 					return options.WithOptions<ConnectionOptions>(o => o with
 					{
-						ConnectionString    = connectionString,
-						DataProviderFactory = () =>
+						DataProviderFactory = o =>
 						{
-							var v = DetectServerVersion(provider, connectionString);
-							return GetDataProvider(provider, v ?? DefaultVersion, connectionString);
+							var v = DetectServerVersion(o, provider);
+							return GetDataProvider(o, provider, v ?? DefaultVersion);
 						}
 					});
 			}
 
-			return options.UseConnectionString(GetDataProvider(provider, dialect, null), connectionString);
+			return options.UseDataProvider(GetDataProvider(options.ConnectionOptions, provider, dialect));
 		}
 
-		public    abstract IDataProvider? DetectProvider     (IConnectionStringSettings css, string connectionString);
-		public    abstract IDataProvider  GetDataProvider    (TProvider provider, TVersion version, string? connectionString);
+		public    abstract IDataProvider? DetectProvider     (ConnectionOptions options);
+		public    abstract IDataProvider  GetDataProvider    (ConnectionOptions options, TProvider provider, TVersion version);
 		public    abstract TVersion?      DetectServerVersion(TConnection connection);
 		protected abstract TConnection    CreateConnection   (TProvider provider, string connectionString);
 	}

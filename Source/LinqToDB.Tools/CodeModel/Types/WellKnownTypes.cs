@@ -369,10 +369,6 @@ namespace LinqToDB.CodeModel
 			public static CodeIdentifier DataExtensions_GetTable { get; } = new CodeIdentifier(nameof(global::LinqToDB.DataExtensions.GetTable), true);
 
 			/// <summary>
-			/// <see cref="Sql.ExpressionAttribute.Configuration"/> property reference.
-			/// </summary>
-			public static CodeIdentifier Sql_ExpressionAttribute_Configuration    { get; } = new CodeIdentifier(nameof(Sql.ExpressionAttribute.Configuration), true);
-			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/> property reference.
 			/// </summary>
 			public static CodeIdentifier Sql_ExpressionAttribute_ServerSideOnly   { get; } = new CodeIdentifier(nameof(Sql.ExpressionAttribute.ServerSideOnly), true);
@@ -429,10 +425,6 @@ namespace LinqToDB.CodeModel
 			/// <see cref="Sql.TableFunctionAttribute.Package"/> property reference.
 			/// </summary>
 			public static CodeIdentifier Sql_TableFunctionAttribute_Package       { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.Package), true);
-			/// <summary>
-			/// <see cref="Sql.TableFunctionAttribute.Configuration"/> property reference.
-			/// </summary>
-			public static CodeIdentifier Sql_TableFunctionAttribute_Configuration { get; } = new CodeIdentifier(nameof(Sql.TableFunctionAttribute.Configuration), true);
 			/// <summary>
 			/// <see cref="Sql.TableFunctionAttribute.ArgIndices"/> property reference.
 			/// </summary>
@@ -531,6 +523,11 @@ namespace LinqToDB.CodeModel
 				public static CodeIdentifier MappingSchema_SetConvertExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.MappingSchema.SetConvertExpression), true);
 
 				/// <summary>
+				/// <see cref="MappingAttribute.Configuration"/> property reference.
+				/// </summary>
+				public static CodeIdentifier MappingAttribute_Configuration { get; } = new CodeIdentifier(nameof(MappingAttribute.Configuration), true);
+
+				/// <summary>
 				/// <see cref="AssociationAttribute.CanBeNull"/> property reference.
 				/// </summary>
 				public static CodeIdentifier AssociationAttribute_CanBeNull             { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.CanBeNull), true);
@@ -550,10 +547,6 @@ namespace LinqToDB.CodeModel
 				/// <see cref="AssociationAttribute.OtherKey"/> property reference.
 				/// </summary>
 				public static CodeIdentifier AssociationAttribute_OtherKey              { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.OtherKey), true);
-				/// <summary>
-				/// <see cref="AssociationAttribute.Configuration"/> property reference.
-				/// </summary>
-				public static CodeIdentifier AssociationAttribute_Configuration         { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.AssociationAttribute.Configuration), true);
 				/// <summary>
 				/// <see cref="AssociationAttribute.AliasName"/> property reference.
 				/// </summary>
@@ -579,10 +572,6 @@ namespace LinqToDB.CodeModel
 				/// </summary>
 				public static CodeIdentifier TableAttribute_IsView                    { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.IsView), true);
 				/// <summary>
-				/// <see cref="TableAttribute.Configuration"/> property reference.
-				/// </summary>
-				public static CodeIdentifier TableAttribute_Configuration             { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.Configuration), true);
-				/// <summary>
 				/// <see cref="TableAttribute.IsColumnAttributeRequired"/> property reference.
 				/// </summary>
 				public static CodeIdentifier TableAttribute_IsColumnAttributeRequired { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.TableAttribute.IsColumnAttributeRequired), true);
@@ -599,10 +588,6 @@ namespace LinqToDB.CodeModel
 				/// <see cref="ColumnAttribute.CanBeNull"/> property reference.
 				/// </summary>
 				public static CodeIdentifier ColumnAttribute_CanBeNull         { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.ColumnAttribute.CanBeNull), true);
-				/// <summary>
-				/// <see cref="ColumnAttribute.Configuration"/> property reference.
-				/// </summary>
-				public static CodeIdentifier ColumnAttribute_Configuration     { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.ColumnAttribute.Configuration), true);
 				/// <summary>
 				/// <see cref="ColumnAttribute.DataType"/> property reference.
 				/// </summary>

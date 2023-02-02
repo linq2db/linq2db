@@ -167,13 +167,15 @@ namespace Tests.Linq
 
 		static MappingSchema GetMapping()
 		{
-			var builder = new MappingSchema().GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(new MappingSchema());
 
 			builder.Entity<SomeEntity>().Association(e => e.OtherMapped,
 				(e, db) => db.GetTable<SomeOtherEntity>().With("NOLOCK").Where(se => se.Id == e.Id));
 
 			builder.Entity<SomeEntity>().Association(e => e.OthersMapped,
 				(e, db) => db.GetTable<SomeOtherEntity>().With("NOLOCK").Where(se => se.Id == e.Id));
+
+			builder.Build();
 
 			return builder.MappingSchema;
 		}

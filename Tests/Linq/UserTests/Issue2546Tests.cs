@@ -20,12 +20,13 @@ namespace Tests.UserTests
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<Issue2546Class>()
 				.Property(m => m.Value2)
 				.HasSkipOnInsert()
 				.HasSkipOnUpdate()
-				.IsExpression(x => Sql.Property<object>(x, "Value"));
+				.IsExpression(x => Sql.Property<object>(x, "Value"))
+				.Build();
 
 			var data = new[] { new Issue2546Class { Id = 1, Value = "Hello World" } };
 

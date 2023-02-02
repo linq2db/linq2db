@@ -9,6 +9,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Data;
+	using Common.Internal;
 
 	[PublicAPI]
 	public static partial class SqlServerTools
@@ -19,7 +20,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public static string QuoteIdentifier(string identifier)
 		{
-			return QuoteIdentifier(new StringBuilder(), identifier).ToString();
+			using var sb = Pools.StringBuilder.Allocate();
+			return QuoteIdentifier(sb.Value, identifier).ToString();
 		}
 
 		internal static StringBuilder QuoteIdentifier(StringBuilder sb, string identifier)
@@ -44,7 +46,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Detected SQL Server version.</returns>
 		public static SqlServerVersion? DetectServerVersion(SqlServerProvider provider, string connectionString)
 		{
-			return ProviderDetector.DetectServerVersion(provider, connectionString);
+			return ProviderDetector.DetectServerVersion(new ConnectionOptions(connectionString), provider);
 		}
 
 		#endregion
@@ -56,7 +58,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlServerProvider provider         = SqlServerProvider.AutoDetect,
 			string?           connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(provider, version, connectionString);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), provider, version);
 		}
 
 		/// <summary>

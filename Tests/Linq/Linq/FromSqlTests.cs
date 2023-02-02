@@ -337,10 +337,11 @@ namespace Tests.Linq
 
 			var idFilter = 1;
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<SampleClass>()
 				.Association(x => x.AssociatedOne,
-					(x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter));
+					(x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter))
+				.Build();
 
 			using var db    = GetDataContext(context, ms);
 			using var table = db.CreateLocalTable(GenerateTestData());
@@ -369,9 +370,10 @@ namespace Tests.Linq
 
 				var idFilter = 1;
 
-				ms.GetFluentMappingBuilder()
+				new FluentMappingBuilder(ms)
 					.Entity<SampleClass>()
-						.Association(x => x.AssociatedOne, (x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter));
+						.Association(x => x.AssociatedOne, (x, db) => db.FromSql<SomeOtherClass>(someGeneratedSqlString, x.Id, idFilter))
+					.Build();
 
 				using var db    = GetDataContext(context, ms);
 				using var table = db.CreateLocalTable(GenerateTestData());

@@ -563,6 +563,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			// not implemented, as it is not called from wrapper
 			internal NpgsqlBinaryImporter BeginBinaryImport(string copyFromCommand) => throw new NotImplementedException();
 			internal Task<NpgsqlBinaryImporter> BeginBinaryImportAsync(string copyFromCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		#region BulkCopy

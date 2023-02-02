@@ -14,10 +14,10 @@ namespace LinqToDB.DataProvider.Firebird
 	{
 		static readonly Lazy<IDataProvider> _firebirdDataProvider = DataConnection.CreateDataProvider<FirebirdDataProvider>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (css.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace ||
-			    css.Name.Contains("Firebird"))
+			if (options.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace ||
+				options.ConfigurationString?.Contains("Firebird") == true)
 				return _firebirdDataProvider.Value;
 
 			return null;

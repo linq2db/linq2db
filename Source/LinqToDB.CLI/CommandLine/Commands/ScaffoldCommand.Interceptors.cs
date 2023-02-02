@@ -267,7 +267,7 @@ namespace LinqToDB.CommandLine
 			var (status, templateAsembly) = CompileAndLoadAssembly(TEMPLATE_ASSEMBLY_NAME, templateCode, references);
 
 			// find and instantiate template host class
-			var type = templateAsembly!.GetType(TEMPLATE_CLASS_NAME);
+			var type = templateAsembly!.GetTypes().FirstOrDefault(type => type.Name == TEMPLATE_CLASS_NAME);
 			if (type == null)
 			{
 				Console.Error.WriteLine("Cannot find template in T4 file. Make sure you didn't changed @template directive");
@@ -399,8 +399,10 @@ namespace LinqToDB.CommandLine
 			// reference netstandard + System*
 			referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, "netstandard.dll")));
 			foreach (var asmName in Directory.GetFiles(fwPath, "System*.dll"))
-				referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
-
+			{
+				if (!asmName.Contains(".Native."))
+					referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
+			}
 			var usings = new List<string>();
 			foreach (var directive in template.Directives)
 			{

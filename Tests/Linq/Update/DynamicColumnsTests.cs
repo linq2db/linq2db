@@ -134,14 +134,15 @@ namespace Tests.xUpdate
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<MyClass>().HasTableName("Person")
 				.HasPrimaryKey(x => Sql.Property<int>(x, "ID"))
 				.Property(x => Sql.Property<string>(x, "FirstName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "LastName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "MiddleName"))
 				.Property(x => Sql.Property<Gender>(x, "Gender")).IsNullable(false)
-				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID);
+				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID)
+				.Build();
 
 			return ms;
 		}

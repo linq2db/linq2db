@@ -1,6 +1,6 @@
 # SQL Extensions
 
-This folder contains SQL extensions for linq2db, as well as components to help you build your own extensions.
+This folder contains SQL extensions for Linq To DB, as well as components to help you build your own extensions.
 
 ## `Sql`
 
@@ -53,8 +53,8 @@ namespace MyProject
 {
     public static partial class SqlExpr
     {
-        [Sql.Expression("SqlServer", "ISNUMERIC('-' + {0} + '.0e0')", PreferServerSide = true)]
-        [Sql.Expression("SQLite", "NOT {0} GLOB '*[^0-9]*' AND {0} LIKE '_%'", PreferServerSide = true)]
+        [Sql.Expression(ProviderName.SqlServer, "ISNUMERIC('-' + {0} + '.0e0')", PreferServerSide = true)]
+        [Sql.Expression(ProviderName.SQLite, "NOT {0} GLOB '*[^0-9]*' AND {0} LIKE '_%'", PreferServerSide = true)]
         public static bool IsPositiveInteger<T>(T value)
         {
             int checkDecimal = 0;

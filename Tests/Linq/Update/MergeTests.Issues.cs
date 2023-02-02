@@ -830,7 +830,7 @@ namespace Tests.xUpdate
 				PrepareData(db1);
 
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder().Entity<TestMapping1>().HasQueryFilter((t, _) => t.Where(_ => _.Id > 5));
+			new FluentMappingBuilder(ms).Entity<TestMapping1>().HasQueryFilter((t, _) => t.Where(_ => _.Id > 5)).Build();
 
 			using var db = GetDataContext(context, ms);
 

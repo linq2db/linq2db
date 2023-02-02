@@ -171,7 +171,7 @@ namespace Tests.Linq
 			var animalsTableName = "Animals" + cnt;
 			var eyeTableName     = "Eyes"    + cnt;
 
-			var mappingBuilder = ms.GetFluentMappingBuilder();
+			var mappingBuilder = new FluentMappingBuilder(ms);
 
 			mappingBuilder.Entity<Animal>()
 				.HasTableName(animalsTableName)
@@ -212,6 +212,8 @@ namespace Tests.Linq
 				.Association(x => x.TestAnimal, x => x.TestAnimalId, x => x!.Id)
 				.Property(x => x.TestAnimalId).IsColumn().IsNullable().HasColumnName("TestAnimalId")
 				.Property(x => x.TestAnimal  ).IsNotColumn();
+
+			mappingBuilder.Build();
 
 			return ms;
 		}

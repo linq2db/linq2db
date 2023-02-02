@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using Common;
 	using Expressions;
+	using Extensions;
 	using Mapping;
 
 	public class DB2ProviderAdapter : IDynamicProviderAdapter
@@ -131,7 +132,7 @@ namespace LinqToDB.DataProvider.DB2
 				if (type == null)
 					return null;
 
-				if (obsolete && type.GetCustomAttributes(typeof(ObsoleteAttribute), false).Length > 0)
+				if (obsolete && type.HasAttribute<ObsoleteAttribute>(false))
 					return null;
 
 				if (register)
@@ -250,7 +251,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		[Wrapper]
-		public class DB2Connection : TypeWrapper, IDisposable
+		public class DB2Connection : TypeWrapper, IConnectionWrapper
 		{
 			private static LambdaExpression[] Wrappers { get; }
 				= new LambdaExpression[]
@@ -273,6 +274,8 @@ namespace LinqToDB.DataProvider.DB2
 			public DB2ServerTypes eServerType => ((Func<DB2Connection, DB2ServerTypes>)CompiledWrappers[0])(this);
 			public void           Open()      => ((Action<DB2Connection>)CompiledWrappers[1])(this);
 			public void           Dispose()   => ((Action<DB2Connection>)CompiledWrappers[2])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]

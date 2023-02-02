@@ -1,40 +1,48 @@
 ``` ini
 
-BenchmarkDotNet=v0.13.1, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
-Intel Core i7-3770K CPU 3.50GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
-Frequency=3417994 Hz, Resolution=292.5693 ns, Timer=TSC
-.NET SDK=5.0.402
-  [Host]     : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
-  Job-ODZCDL : .NET 5.0.11 (5.0.1121.47308), X64 RyuJIT
-  Job-PCJJBI : .NET Core 3.1.20 (CoreCLR 4.700.21.47003, CoreFX 4.700.21.47101), X64 RyuJIT
-  Job-HHEMGO : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
+BenchmarkDotNet=v0.13.3, OS=Windows 10 (10.0.17763.3650/1809/October2018Update/Redstone5), VM=Hyper-V
+AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
+.NET SDK=7.0.102
+  [Host]     : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
+  Job-HCNGBR : .NET 6.0.13 (6.0.1322.58009), X64 RyuJIT AVX2
+  Job-XBFFOD : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
+  Job-INBZNN : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-THZJXI : .NET Framework 4.8 (4.8.4515.0), X64 RyuJIT VectorSize=256
 
 Jit=RyuJit  Platform=X64  
 
 ```
-|              Method |              Runtime |      Mean | Ratio | Allocated |
-|-------------------- |--------------------- |----------:|------:|----------:|
-|    TypeMapperString |             .NET 5.0 |  8.032 ns |  2.73 |         - |
-|  DirectAccessString |             .NET 5.0 |  3.195 ns |  1.09 |         - |
-|       TypeMapperInt |             .NET 5.0 |  5.773 ns |  1.96 |         - |
-|     DirectAccessInt |             .NET 5.0 |  1.020 ns |  0.35 |         - |
-|   TypeMapperBoolean |             .NET 5.0 |  6.185 ns |  2.10 |         - |
-| DirectAccessBoolean |             .NET 5.0 |  1.080 ns |  0.37 |         - |
-|   TypeMapperWrapper |             .NET 5.0 |  8.763 ns |  2.97 |         - |
-| DirectAccessWrapper |             .NET 5.0 |  2.984 ns |  1.01 |         - |
-|    TypeMapperString |        .NET Core 3.1 |  7.970 ns |  2.70 |         - |
-|  DirectAccessString |        .NET Core 3.1 |  2.916 ns |  0.99 |         - |
-|       TypeMapperInt |        .NET Core 3.1 |  5.873 ns |  1.99 |         - |
-|     DirectAccessInt |        .NET Core 3.1 |  1.074 ns |  0.36 |         - |
-|   TypeMapperBoolean |        .NET Core 3.1 |  5.890 ns |  2.00 |         - |
-| DirectAccessBoolean |        .NET Core 3.1 |  1.337 ns |  0.45 |         - |
-|   TypeMapperWrapper |        .NET Core 3.1 |  8.442 ns |  2.87 |         - |
-| DirectAccessWrapper |        .NET Core 3.1 |  2.650 ns |  0.90 |         - |
-|    TypeMapperString | .NET Framework 4.7.2 | 20.967 ns |  7.16 |         - |
-|  DirectAccessString | .NET Framework 4.7.2 |  2.948 ns |  1.00 |         - |
-|       TypeMapperInt | .NET Framework 4.7.2 | 19.235 ns |  6.53 |         - |
-|     DirectAccessInt | .NET Framework 4.7.2 |  1.077 ns |  0.37 |         - |
-|   TypeMapperBoolean | .NET Framework 4.7.2 | 19.205 ns |  6.52 |         - |
-| DirectAccessBoolean | .NET Framework 4.7.2 |  1.084 ns |  0.37 |         - |
-|   TypeMapperWrapper | .NET Framework 4.7.2 | 28.006 ns |  9.52 |         - |
-| DirectAccessWrapper | .NET Framework 4.7.2 |  3.230 ns |  1.10 |         - |
+|              Method |              Runtime |       Mean | Allocated |
+|-------------------- |--------------------- |-----------:|----------:|
+|    TypeMapperString |             .NET 6.0 |  7.5954 ns |         - |
+|  DirectAccessString |             .NET 6.0 |  3.2727 ns |         - |
+|       TypeMapperInt |             .NET 6.0 |  5.2403 ns |         - |
+|     DirectAccessInt |             .NET 6.0 |  0.9547 ns |         - |
+|   TypeMapperBoolean |             .NET 6.0 |  5.1427 ns |         - |
+| DirectAccessBoolean |             .NET 6.0 |  0.9071 ns |         - |
+|   TypeMapperWrapper |             .NET 6.0 |  8.9323 ns |         - |
+| DirectAccessWrapper |             .NET 6.0 |  3.2888 ns |         - |
+|    TypeMapperString |             .NET 7.0 |  8.8474 ns |         - |
+|  DirectAccessString |             .NET 7.0 |  4.7144 ns |         - |
+|       TypeMapperInt |             .NET 7.0 |  5.1957 ns |         - |
+|     DirectAccessInt |             .NET 7.0 |  0.4657 ns |         - |
+|   TypeMapperBoolean |             .NET 7.0 |  4.4941 ns |         - |
+| DirectAccessBoolean |             .NET 7.0 |  1.4928 ns |         - |
+|   TypeMapperWrapper |             .NET 7.0 |  8.7192 ns |         - |
+| DirectAccessWrapper |             .NET 7.0 |  4.1103 ns |         - |
+|    TypeMapperString |        .NET Core 3.1 |  8.9096 ns |         - |
+|  DirectAccessString |        .NET Core 3.1 |  3.2237 ns |         - |
+|       TypeMapperInt |        .NET Core 3.1 |  5.3810 ns |         - |
+|     DirectAccessInt |        .NET Core 3.1 |  0.9316 ns |         - |
+|   TypeMapperBoolean |        .NET Core 3.1 |  6.1028 ns |         - |
+| DirectAccessBoolean |        .NET Core 3.1 |  0.5596 ns |         - |
+|   TypeMapperWrapper |        .NET Core 3.1 |  8.9114 ns |         - |
+| DirectAccessWrapper |        .NET Core 3.1 |  3.2735 ns |         - |
+|    TypeMapperString | .NET Framework 4.7.2 | 25.9124 ns |         - |
+|  DirectAccessString | .NET Framework 4.7.2 |  4.4159 ns |         - |
+|       TypeMapperInt | .NET Framework 4.7.2 | 20.9236 ns |         - |
+|     DirectAccessInt | .NET Framework 4.7.2 |  0.8988 ns |         - |
+|   TypeMapperBoolean | .NET Framework 4.7.2 | 23.5435 ns |         - |
+| DirectAccessBoolean | .NET Framework 4.7.2 |  1.0420 ns |         - |
+|   TypeMapperWrapper | .NET Framework 4.7.2 | 31.9145 ns |         - |
+| DirectAccessWrapper | .NET Framework 4.7.2 |  4.8932 ns |         - |
