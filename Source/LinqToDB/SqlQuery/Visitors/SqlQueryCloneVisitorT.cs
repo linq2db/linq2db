@@ -24,7 +24,7 @@
 
 		public override bool ShouldReplace(IQueryElement element)
 		{
-			if (_cloneFunc(_context, element))
+			if (base.ShouldReplace(element) && _cloneFunc(_context, element))
 			{
 				return true;
 			}

@@ -1663,124 +1663,122 @@ namespace LinqToDB.SqlQuery
 			if (!_flags.IsSubQueryColumnSupported)
 				return selectQuery;
 
-			var mappings = new Dictionary<ISqlExpression, ISqlExpression>();
+			EvaluationContext? evaluationContext = null;
 
-			selectQuery.VisitParentFirst((flags: _flags, mappings, context: _evaluationContext), static (ctx, e) =>
+			foreach (var sq in QueryHelper.EnumerateAccessibleSources(selectQuery).OfType<SelectQuery>())
 			{
-				if (e is SelectQuery sq)
+				for (var ti = 0; ti < sq.From.Tables.Count; ti++)
 				{
-					for (var ti = 0; ti < sq.From.Tables.Count; ti++)
+					var table = sq.From.Tables[ti];
+					for (int j = table.Joins.Count - 1; j >= 0; j--)
 					{
-						var table = sq.From.Tables[ti];
-						for (int j = table.Joins.Count - 1; j >= 0; j--)
+						var join = table.Joins[j];
+						if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.CrossApply ||
+						    join.JoinType == JoinType.Left)
 						{
-							var join = table.Joins[j];
-							if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.Left)
+							evaluationContext ??= new EvaluationContext();
+
+							if (join.Table.Source is SelectQuery tsQuery &&
+							    tsQuery.Select.Columns.Count == 1        &&
+							    IsLimitedToOneRecord(tsQuery, evaluationContext, out var byTake))
 							{
-								if (join.Table.Source is SelectQuery tsQuery &&
-								    tsQuery.Select.Columns.Count == 1        &&
-								    IsLimitedToOneRecord(tsQuery, ctx.context, out var byTake))
+								if (byTake && !_flags.IsSubQueryTakeSupported)
+									continue;
+
+								// where we can start analyzing that we can move join to subquery
+								var testedColumn = tsQuery.Select.Columns[0];
+
+								if (!IsUniqueUsage(sq, testedColumn))
 								{
-									if (byTake && !ctx.flags.IsSubQueryTakeSupported)
-										continue;
+									QueryHelper.MoveDuplicateUsageToSubQuery(sq);
+									// will be processed in the next step
+									ti = -1;
+									break;
+								}
 
-									// where we can start analyzing that we can move join to subquery
-									var testedColumn = tsQuery.Select.Columns[0];
-
-									if (!IsUniqueUsage(sq, testedColumn))
+								if (testedColumn.Expression is SqlFunction function)
+								{
+									if (function.IsAggregate)
 									{
-										QueryHelper.MoveDuplicateUsageToSubQuery(sq);
-										// will be processed in the next step
-										ti = -1;
-										break;
+										if (!_flags.IsCountSubQuerySupported)
+											continue;
 									}
+								}
 
-									if (testedColumn.Expression is SqlFunction function)
-									{
-										if (function.IsAggregate)
+								var mainQuery = table.Source as SelectQuery;
+								/*
+								if (mainQuery?.Select.HasModifier == true)
+									continue;
+									*/
+
+								// moving whole join to subquery
+
+								table.Joins.RemoveAt(j);
+								tsQuery.Where.ConcatSearchCondition(join.Condition);
+
+								if (mainQuery != null)
+								{
+									// moving into FROM query
+
+									var idx       = mainQuery.Select.Add(tsQuery);
+									var newColumn = mainQuery.Select.Columns[idx];
+									newColumn.RawAlias = testedColumn.RawAlias;
+
+									// temporary remove to avoid recursion
+									mainQuery.Select.Columns.RemoveAt(idx);
+
+									sq.Walk(WalkOptions.Default, (testedColumn, newColumn),
+										static (ctx, e) =>
 										{
-											if (!ctx.flags.IsCountSubQuerySupported)
-												continue;
-										}
-									}
-
-									var mainQuery = table.Source as SelectQuery;
-									/*
-									if (mainQuery?.Select.HasModifier == true)
-										continue;
-										*/
-
-									// moving whole join to subquery
-
-									table.Joins.RemoveAt(j);
-									tsQuery.Where.ConcatSearchCondition(join.Condition);
-
-									if (mainQuery != null)
-									{
-										// moving into FROM query
-
-										var idx       = mainQuery.Select.Add(tsQuery);
-										var newColumn = mainQuery.Select.Columns[idx];
-										newColumn.RawAlias = testedColumn.RawAlias;
-
-										// temporary remove to avoid recursion
-										mainQuery.Select.Columns.RemoveAt(idx);
-
-										sq.Walk(WalkOptions.Default, (testedColumn, newColumn),
-											static (ctx, e) =>
+											if (e == ctx.testedColumn)
 											{
-												if (e == ctx.testedColumn)
-												{
-													return ctx.newColumn;
-												}
+												return ctx.newColumn;
+											}
 
-												return e;
-											});
+											return e;
+										});
 
 
-										var newQuery = tsQuery.ConvertAll((mainQuery, testedColumn, newColumn),
-											allowMutation: true,
-											static (visitor, e) =>
+									var newQuery = tsQuery.ConvertAll((mainQuery, testedColumn, newColumn),
+										allowMutation : true,
+										static (visitor, e) =>
+										{
+											if (e is SqlColumn column &&
+											    column.Parent == visitor.Context.mainQuery)
 											{
-												if (e is SqlColumn column &&
-												    column.Parent == visitor.Context.mainQuery)
-												{
-													return column.Expression;
-												}
+												return column.Expression;
+											}
 
-												return e;
-											});
+											return e;
+										});
 
-										newColumn.Expression = newQuery;
+									newColumn.Expression = newQuery;
 
-										// restore at index
-										mainQuery.Select.Columns.Insert(idx, newColumn);
-									}
-									else
-									{
-										// replacing column with subquery
+									// restore at index
+									mainQuery.Select.Columns.Insert(idx, newColumn);
+								}
+								else
+								{
+									// replacing column with subquery
 
-										var newQuery = sq.ConvertAll((query: tsQuery, column: testedColumn),
-											allowMutation: true,
-											static (visitor, e) =>
-											{
-												if (e == visitor.Context.column)
-													return visitor.Context.query;
+									var newQuery = sq.ConvertAll((query : tsQuery, column : testedColumn),
+										allowMutation : true,
+										static (visitor, e) =>
+										{
+											if (e == visitor.Context.column)
+												return visitor.Context.query;
 
-												return e;
-											});
+											return e;
+										});
 
-										if (!ReferenceEquals(sq, newQuery))
-											throw new InvalidOperationException("Query should be not changed.");
-									}
+									if (!ReferenceEquals(sq, newQuery))
+										throw new InvalidOperationException("Query should be not changed.");
 								}
 							}
 						}
 					}
 				}
-
-				return true;
-			});
+			}
 
 			return selectQuery;
 		}

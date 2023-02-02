@@ -17,6 +17,17 @@
 			return base.NotifyReplaced(newElement, oldElement);
 		}
 
+		public override bool ShouldReplace(IQueryElement element)
+		{
+			if (base.ShouldReplace(element))
+				return true;
+
+			if (element.ElementType == QueryElementType.SqlParameter)
+				return false;
+
+			return true;
+		}
+
 		public IQueryElement PerformClone(IQueryElement element)
 		{
 			return ProcessElement(element);

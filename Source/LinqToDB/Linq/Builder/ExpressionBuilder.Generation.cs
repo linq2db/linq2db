@@ -168,7 +168,9 @@ namespace LinqToDB.Linq.Builder
 						: SqlGenericConstructorExpression.CreateType.Full
 					: SqlGenericConstructorExpression.CreateType.Auto,
 				currentPath.Type,
-				null, new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members));
+				null, 
+				new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members),
+				context);
 
 			return generic;
 		}

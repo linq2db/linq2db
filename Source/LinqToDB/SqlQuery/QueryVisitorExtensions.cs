@@ -8,34 +8,42 @@ namespace LinqToDB.SqlQuery
 
 	public static class QueryVisitorExtensions
 	{
-		internal static readonly ObjectPool<SqlQueryFindVisitor>  FindVisitorPool  = new(() => new SqlQueryFindVisitor(),  v => v.Cleanup(), 100);
-		internal static readonly ObjectPool<SqlQueryCloneVisitor> CloneVisitorPool = new(() => new SqlQueryCloneVisitor(), v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryFindVisitor>   FindVisitorPool        = new(() => new SqlQueryFindVisitor(),        v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryActionVisitor> ActionVisitorPool      = new(() => new SqlQueryActionVisitor(),      v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryParentFirstVisitor> ParentVisitorPool = new(() => new SqlQueryParentFirstVisitor(), v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryCloneVisitor>  CloneVisitorPool       = new(() => new SqlQueryCloneVisitor(),       v => v.Cleanup(), 100);
 
 		class PoolHolder<TContext>
 		{
-			public static readonly ObjectPool<SqlQueryFindVisitor<TContext>>  FindPool  = new(() => new SqlQueryFindVisitor<TContext>(),  v => v.Cleanup(), 100);
-			public static readonly ObjectPool<SqlQueryCloneVisitor<TContext>> ClonePool = new(() => new SqlQueryCloneVisitor<TContext>(), v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryFindVisitor<TContext>>   FindPool             = new(() => new SqlQueryFindVisitor<TContext>(),        v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryActionVisitor<TContext>> ActionPool           = new(() => new SqlQueryActionVisitor<TContext>(),      v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryParentFirstVisitor<TContext>> ParentFirstPool = new(() => new SqlQueryParentFirstVisitor<TContext>(), v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryCloneVisitor<TContext>>  ClonePool            = new(() => new SqlQueryCloneVisitor<TContext>(),       v => v.Cleanup(), 100);
 		}
 
 		#region Visit
 		public static void Visit<TContext>(this IQueryElement element, TContext context, Action<TContext, IQueryElement> action)
 		{
-			new QueryVisitor<TContext>(context, false, action).Visit(element);
+			using var actionVisitor = PoolHolder<TContext>.ActionPool.Allocate();
+			actionVisitor.Value.Visit(context, element, false, action);
 		}
 
 		public static void Visit(this IQueryElement element, Action<IQueryElement> action)
 		{
-			new QueryVisitor<object?>(false, action).Visit(element);
+			using var actionVisitor = ActionVisitorPool.Allocate();
+			actionVisitor.Value.Visit(element, false, action);
 		}
 
 		public static void VisitAll<TContext>(this IQueryElement element, TContext context, Action<TContext, IQueryElement> action)
 		{
-			new QueryVisitor<TContext>(context, true, action).Visit(element);
+			using var actionVisitor = PoolHolder<TContext>.ActionPool.Allocate();
+			actionVisitor.Value.Visit(context, element, true, action);
 		}
 
 		public static void VisitAll(this IQueryElement element, Action<IQueryElement> action)
 		{
-			new QueryVisitor<object?>(true, action).Visit(element);
+			using var actionVisitor = ActionVisitorPool.Allocate();
+			actionVisitor.Value.Visit(element, true, action);
 		}
 
 		#endregion
@@ -43,23 +51,28 @@ namespace LinqToDB.SqlQuery
 		#region VisitParent
 		public static void VisitParentFirst<TContext>(this IQueryElement element, TContext context, Func<TContext, IQueryElement, bool> action)
 		{
-			new QueryParentVisitor<TContext>(context, false, action).Visit(element);
+			using var actionVisitor = PoolHolder<TContext>.ParentFirstPool.Allocate();
+			actionVisitor.Value.Visit(context, element, false, action);
 		}
 
 		public static void VisitParentFirst(this IQueryElement element, Func<IQueryElement, bool> action)
 		{
-			new QueryParentVisitor<object?>(false, action).Visit(element);
+			using var actionVisitor = ParentVisitorPool.Allocate();
+			actionVisitor.Value.Visit(element, false, action);
 		}
 
 		public static void VisitParentFirstAll<TContext>(this IQueryElement element, TContext context, Func<TContext, IQueryElement, bool> action)
 		{
-			new QueryParentVisitor<TContext>(context, true, action).Visit(element);
+			using var actionVisitor = PoolHolder<TContext>.ParentFirstPool.Allocate();
+			actionVisitor.Value.Visit(context, element, true, action);
 		}
 
 		public static void VisitParentFirstAll(this IQueryElement element, Func<IQueryElement, bool> action)
 		{
-			new QueryParentVisitor<object?>(true, action).Visit(element);
+			using var actionVisitor = ParentVisitorPool.Allocate();
+			actionVisitor.Value.Visit(element, true, action);
 		}
+
 		#endregion
 
 		#region Find

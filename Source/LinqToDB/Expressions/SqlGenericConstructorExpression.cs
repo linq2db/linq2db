@@ -7,6 +7,7 @@ namespace LinqToDB.Expressions
 	using Extensions;
 	using Reflection;
 	using SqlQuery;
+	using Linq.Builder;
 
 	internal class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
 	{
@@ -166,12 +167,13 @@ namespace LinqToDB.Expressions
 			ObjectType  = null!;
 		}
 
-		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments) : this()
+		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments, IBuildContext? buildContext = null) : this()
 		{
 			ObjectType    = objectType;
 			ConstructType = createType;
 			Parameters    = parameters  ?? Parameter.EmptyCollection;
 			Assignments   = assignments ?? Assignment.EmptyCollection;
+			BuildContext  = buildContext;
 		}
 
 		public SqlGenericConstructorExpression(SqlGenericConstructorExpression basedOn) : this()
@@ -332,6 +334,7 @@ namespace LinqToDB.Expressions
 		public MethodInfo?      ConstructorMethod { get; private set; }
 		public CreateType       ConstructType     { get; private set; }
 		public Type             ObjectType        { get; private set; }
+		public IBuildContext?   BuildContext      { get; private set; }
 
 		public ReadOnlyCollection<Parameter>  Parameters  { get; private set; }
 		public ReadOnlyCollection<Assignment> Assignments { get; private set; }
@@ -402,6 +405,7 @@ namespace LinqToDB.Expressions
 				ConstructorMethod = ConstructorMethod,
 				ConstructType     = ConstructType,
 				NewExpression     = NewExpression,
+				BuildContext	  = BuildContext,
 			};
 
 			return result;
@@ -428,6 +432,7 @@ namespace LinqToDB.Expressions
 				ConstructorMethod = ConstructorMethod,
 				ConstructType     = ConstructType,
 				NewExpression     = NewExpression,
+				BuildContext      = BuildContext,
 			};
 
 			return result;
@@ -528,7 +533,7 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 			{
 				return false;
 			}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.Serialization;
 using System.Text;
@@ -638,6 +639,67 @@ namespace LinqToDB.Remote
 			{
 			}
 
+			class QuerySerializationVisitor : QueryElementVisitor
+			{
+				readonly QuerySerializer   _serializer;
+				readonly EvaluationContext _evaluationContext;
+
+				public QuerySerializationVisitor(QuerySerializer serializer, EvaluationContext evaluationContext) : base(VisitMode.ReadOnly)
+				{
+					_serializer        = serializer;
+					_evaluationContext = evaluationContext;
+				}
+
+				[return: NotNullIfNotNull(nameof(element))]
+				public override IQueryElement? Visit(IQueryElement? element)
+				{
+					if (element == null)
+						return null;
+
+					base.Visit(element);
+
+					RegisterInSerializer(element);
+
+					return element;
+				}
+
+				public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+				{
+					base.VisitSqlColumnExpression(column, expression);
+
+					RegisterInSerializer(column);
+
+					return expression;
+				}
+
+				public override IQueryElement VisitSqlTable(SqlTable element)
+				{
+					RegisterInSerializer(element.All);
+					VisitElementsReadOnly(element.Fields);
+					return base.VisitSqlTable(element);
+				}
+
+				public override IQueryElement VisitSqlCteTable(SqlCteTable element)
+				{
+					RegisterInSerializer(element.All);
+					VisitElementsReadOnly(element.Fields);
+					return base.VisitSqlCteTable(element);
+				}
+
+				public override IQueryElement VisitSqlRawSqlTable(SqlRawSqlTable element)
+				{
+					RegisterInSerializer(element.All);
+					VisitElementsReadOnly(element.Fields);
+					return base.VisitSqlRawSqlTable(element);
+				}
+
+				void RegisterInSerializer(IQueryElement element)
+				{
+					if (!_serializer.ObjectIndices.ContainsKey(element))
+						_serializer.Visit(element, _evaluationContext);
+				}
+			}
+
 			public string Serialize(SqlStatement statement, IReadOnlyParameterValues? parameterValues, IReadOnlyCollection<string>? queryHints)
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
@@ -648,8 +710,9 @@ namespace LinqToDB.Remote
 					foreach (var hint in queryHints!)
 						Builder.AppendLine(hint);
 
-				statement.Visit((serializer: this, evaluationContext: new EvaluationContext(parameterValues)),
-					static (context, e) => context.serializer.Visit(e, context.evaluationContext));
+				var visitor = new QuerySerializationVisitor(this, new EvaluationContext(parameterValues));
+
+				visitor.Visit(statement);
 
 				if (DelayedObjects.Count > 0)
 					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");

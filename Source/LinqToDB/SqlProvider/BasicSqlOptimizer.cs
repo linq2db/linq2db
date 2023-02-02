@@ -2923,7 +2923,7 @@ namespace LinqToDB.SqlProvider
 			if (updateStatement.Update.Table == null)
 				throw new InvalidOperationException();
 
-			if (updateStatement.SelectQuery.From.Tables.Count == 1)
+			if (!updateStatement.SelectQuery.Select.HasModifier && updateStatement.SelectQuery.From.Tables.Count == 1)
 			{
 				var sqlTableSource = updateStatement.SelectQuery.From.Tables[0];
 				if (sqlTableSource.Source == updateStatement.Update.Table && sqlTableSource.Joins.Count == 0)

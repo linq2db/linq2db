@@ -1054,7 +1054,42 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		public virtual SqlCteTable VisitSqlCteTable(SqlCteTable sqlCteTable) => sqlCteTable;
+		public virtual IQueryElement VisitSqlCteTable(SqlCteTable element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var clause = (CteClause?)Visit(element.Cte);
+					if (ShouldReplace(element) || !ReferenceEquals(element.Cte, clause))
+					{
+						var newFields = element.Fields.Select(f => new SqlField(f));
+						var newTable  = new SqlCteTable(element, newFields, element.Cte!);
+
+						for (var index = 0; index < newTable.Fields.Count; index++)
+						{
+							NotifyReplaced(newTable.Fields[index], element.Fields[index]);
+						}
+
+						return NotifyReplaced(newTable, element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
 
 		public virtual IQueryElement VisitSqlWithClause(SqlWithClause element)
 		{
@@ -1879,7 +1914,7 @@ namespace LinqToDB.SqlQuery
 							selectQuery.QueryName,
 							selectQuery.DoNotSetAliases);
 
-						return nq;
+						return NotifyReplaced(nq, selectQuery);
 					}
 
 					break;
@@ -2403,7 +2438,6 @@ namespace LinqToDB.SqlQuery
 				{
 					break;
 				}
-
 				case VisitMode.Modify:
 				{
 					break;
@@ -2735,6 +2769,15 @@ namespace LinqToDB.SqlQuery
 				}
 				default:
 					throw CreateInvalidVisitModeException();
+			}
+		}
+
+		protected void VisitElementsReadOnly<T>(IEnumerable<T> elements)
+			where T : class, IQueryElement
+		{
+			foreach (var t in elements)
+			{
+				_ = Visit(t);
 			}
 		}
 

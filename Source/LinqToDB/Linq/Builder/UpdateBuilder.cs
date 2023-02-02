@@ -192,6 +192,13 @@ namespace LinqToDB.Linq.Builder
 											ctx.collectedTables.Add(tableCtx);
 										}
 									}
+									else if (e is SqlGenericConstructorExpression constructor)
+									{
+										if (constructor.BuildContext is ITableContext tableCtx && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
+										{
+											ctx.collectedTables.Add(tableCtx);
+										}
+									}
 								});
 							}
 
