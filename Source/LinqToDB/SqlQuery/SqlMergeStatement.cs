@@ -56,9 +56,7 @@ namespace LinqToDB.SqlQuery
 
 			sb
 				.AppendLine()
-				.AppendLine("USING")
-				.Append('(')
-				;
+				.Append("USING (");
 
 			Source.ToString(sb, dic);
 
