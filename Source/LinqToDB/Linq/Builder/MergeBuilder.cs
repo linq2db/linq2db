@@ -143,7 +143,9 @@ namespace LinqToDB.Linq.Builder
 				Sequence[0].SelectQuery.Select.Columns.Clear();
 				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
 				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
-				Sequence[3].SelectQuery = Sequence[1].SelectQuery;
+
+				if (sourceTable is not null)
+					Sequence[3].SelectQuery = Sequence[1].SelectQuery;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
