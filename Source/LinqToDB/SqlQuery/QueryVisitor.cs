@@ -604,6 +604,7 @@ namespace LinqToDB.SqlQuery
 		{
 			Visit(outputClause.DeletedTable);
 			Visit(outputClause.InsertedTable);
+			Visit(outputClause.SourceTable);
 			Visit(outputClause.OutputTable);
 
 			if (outputClause.HasOutputItems)

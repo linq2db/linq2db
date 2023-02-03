@@ -500,6 +500,7 @@ namespace LinqToDB.SqlQuery
 					{
 						DeletedTable  = output.DeletedTable,
 						InsertedTable = output.InsertedTable,
+						SourceTable   = output.SourceTable,
 						OutputTable   = output.OutputTable,
 					};
 

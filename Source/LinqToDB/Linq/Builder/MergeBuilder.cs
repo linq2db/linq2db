@@ -2,10 +2,10 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
@@ -14,7 +14,14 @@ namespace LinqToDB.Linq.Builder
 
 	internal sealed partial class MergeBuilder : MethodCallBuilder
 	{
-		static readonly MethodInfo[] _supportedMethods = {ExecuteMergeMethodInfo, MergeWithOutput, MergeWithOutputInto};
+		static readonly MethodInfo[] _supportedMethods =
+		{
+			ExecuteMergeMethodInfo,
+			MergeWithOutput,
+			MergeWithOutputSource,
+			MergeWithOutputInto,
+			MergeWithOutputIntoSource
+		};
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -25,29 +32,29 @@ namespace LinqToDB.Linq.Builder
 		{
 			Merge,
 			MergeWithOutput,
-			MergeWithOutputInto
+			MergeWithOutputSource,
+			MergeWithOutputInto,
+			MergeWithOutputIntoSource
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var kind = MergeKind.Merge;
+			var kind =
+				methodCall.IsSameGenericMethod(MergeWithOutput)           ? MergeKind.MergeWithOutput :
+				methodCall.IsSameGenericMethod(MergeWithOutputSource)     ? MergeKind.MergeWithOutputSource :
+				methodCall.IsSameGenericMethod(MergeWithOutputInto)       ? MergeKind.MergeWithOutputInto :
+				methodCall.IsSameGenericMethod(MergeWithOutputIntoSource) ? MergeKind.MergeWithOutputIntoSource :
+				                                                            MergeKind.Merge;
 
-			if (methodCall.IsSameGenericMethod(MergeWithOutputInto))
-				kind = MergeKind.MergeWithOutputInto;
-			else if (methodCall.IsSameGenericMethod(MergeWithOutput))
+			if (kind is not MergeKind.Merge)
 			{
-				kind = MergeKind.MergeWithOutput;
-			}
-
-			if (kind != MergeKind.Merge)
-			{
-				var objectType = methodCall.Method.GetGenericArguments()[0];
-
+				var args          = methodCall.Method.GetGenericArguments();
+				var objectType    = args[0];
 				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), "$action", false);
 				var insertedTable = SqlTable.Inserted(objectType);
-				var deletedTable  = SqlTable.Deleted(objectType);
+				var deletedTable  = SqlTable.Deleted (objectType);
 
 				mergeContext.Merge.Output = new SqlOutputClause()
 				{
@@ -57,11 +64,26 @@ namespace LinqToDB.Linq.Builder
 
 				var selectQuery = new SelectQuery();
 
-				var actionFieldContext  = new SingleExpressionContext(null, builder, actionField, selectQuery);
-				var deletedTableContext = new TableBuilder.TableContext(builder, selectQuery, deletedTable);
-				var insertedTableConext = new TableBuilder.TableContext(builder, selectQuery, insertedTable);
+				var actionFieldContext   = new SingleExpressionContext(null, builder, actionField, selectQuery);
+				var deletedTableContext  = new TableBuilder.TableContext(builder, selectQuery, deletedTable);
+				var insertedTableContext = new TableBuilder.TableContext(builder, selectQuery, insertedTable);
 
-				if (kind == MergeKind.MergeWithOutput)
+				TableBuilder.TableContext? sourceTableContext = null;
+
+				if (kind is MergeKind.MergeWithOutputSource or MergeKind.MergeWithOutputIntoSource)
+				{
+					var sourceTable = new SqlTable(args[1])
+					{
+						TableName    = new ("Source"),
+						SqlTableType = SqlTableType.SystemTable,
+					};
+
+					mergeContext.Merge.Output.SourceTable = sourceTable;
+
+					sourceTableContext = new (builder, selectQuery, sourceTable);
+				}
+
+				if (kind is MergeKind.MergeWithOutput or MergeKind.MergeWithOutputSource)
 				{
 					var outputExpression = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
@@ -71,7 +93,8 @@ namespace LinqToDB.Linq.Builder
 						mergeContext,
 						actionFieldContext,
 						deletedTableContext,
-						insertedTableConext
+						insertedTableContext,
+						sourceTableContext
 					);
 
 					return outputContext;
@@ -89,9 +112,9 @@ namespace LinqToDB.Linq.Builder
 						outputExpression,
 						destination,
 						mergeContext.Merge.Output.OutputItems,
-						actionFieldContext,
-						deletedTableContext,
-						insertedTableConext
+						sourceTableContext is null ?
+							new IBuildContext[] { actionFieldContext, deletedTableContext, insertedTableContext } :
+							new IBuildContext[] { actionFieldContext, deletedTableContext, insertedTableContext, sourceTableContext }
 					);
 
 					mergeContext.Merge.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
@@ -103,13 +126,24 @@ namespace LinqToDB.Linq.Builder
 
 		sealed class MergeOutputContext : SelectContext
 		{
-			public MergeOutputContext(IBuildContext? parent, LambdaExpression lambda, MergeContext mergeContext, IBuildContext emptyTable, IBuildContext deletedTable, IBuildContext insertedTable)
-				: base(parent, lambda, emptyTable, deletedTable, insertedTable)
+			public MergeOutputContext(
+				IBuildContext?   parent,
+				LambdaExpression lambda,
+				MergeContext     mergeContext,
+				IBuildContext    emptyTable,
+				IBuildContext    deletedTable,
+				IBuildContext    insertedTable,
+				IBuildContext?   sourceTable)
+				: base(parent, lambda,
+					sourceTable is not null?
+						new[] { emptyTable, deletedTable, insertedTable, sourceTable } :
+						new[] { emptyTable, deletedTable, insertedTable })
 			{
 				Statement = mergeContext.Statement;
 				Sequence[0].SelectQuery.Select.Columns.Clear();
 				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
 				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
+				Sequence[3].SelectQuery = Sequence[1].SelectQuery;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
@@ -161,7 +195,6 @@ namespace LinqToDB.Linq.Builder
 									return qe;
 								});
 						}
-
 					}
 				}
 			});
@@ -183,10 +216,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (secondContext != null)
 				{
-					var secondContextRefExpression =
-							new ContextRefExpression(condition.Parameters[1].Type, secondContext);
+					var secondContextRefExpression = new ContextRefExpression(condition.Parameters[1].Type, secondContext);
+					var newBody                    = condition.GetBody(targetParameter, secondContextRefExpression);
 
-					var newBody = condition.GetBody(targetParameter, secondContextRefExpression);
 					condition = Expression.Lambda(newBody, targetParameter);
 				}
 				else

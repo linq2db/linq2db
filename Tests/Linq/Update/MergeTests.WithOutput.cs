@@ -165,6 +165,40 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void MergeWithOutputSource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var outputRows = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutput((a, deleted, inserted, source) => new
+					{
+						source.Field1,
+						Filed1 = Sql.AsSql(source.Field1.ToString()),
+						a,
+						Id = Sql.AsSql(inserted.Id.ToString())
+					});
+
+				var result = outputRows.ToArray();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.a.Should().Be("INSERT");
+
+				record.Id.Should().Be("5");
+			}
+		}
+
+		[Test]
 		public void MergeWithOutputProjectedWithoutAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -195,6 +229,7 @@ namespace Tests.xUpdate
 			public string? Action    { get; set; }
 			public int     NewId     { get; set; }
 			public int?    DeletedId { get; set; }
+			public int?    SourceId  { get; set; }
 		}
 
 		[Test]
@@ -214,7 +249,13 @@ namespace Tests.xUpdate
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.MergeWithOutputInto(temp,
-						(a, deleted, inserted) => new InsertTempTable { Action = a, NewId = inserted.Id, DeletedId = deleted.Id }
+						(a, deleted, inserted, source) => new ()
+						{
+							Action    = a,
+							NewId     = inserted.Id,
+							DeletedId = deleted.Id,
+							SourceId  = source.Id + 1
+						}
 					);
 
 				affected.Should().Be(1);
@@ -222,14 +263,13 @@ namespace Tests.xUpdate
 				var result = temp.ToArray();
 
 				result.Should().HaveCount(1);
-				result.Should().HaveCount(1);
 
 				var record = result[0];
 
-				record.Action.Should().Be("INSERT");
-
-				record.NewId.Should().Be(5);
+				record.Action.   Should().Be("INSERT");
+				record.NewId.    Should().Be(5);
 				record.DeletedId.Should().BeNull();
+				record.SourceId. Should().Be(6);
 			}
 		}
 

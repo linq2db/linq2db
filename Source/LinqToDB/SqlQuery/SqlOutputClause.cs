@@ -10,6 +10,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlTable?             InsertedTable { get; set; }
 		public SqlTable?             DeletedTable  { get; set; }
+		public SqlTable?             SourceTable   { get; set; }
 		public SqlTable?             OutputTable   { get; set; }
 		public List<ISqlExpression>? OutputColumns { get; set; }
 
@@ -34,9 +35,10 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)DeletedTable )?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)DeletedTable) ?.Walk(options, context, func);
 			((ISqlExpressionWalkable?)InsertedTable)?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)OutputTable  )?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)SourceTable)  ?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)OutputTable)  ?.Walk(options, context, func);
 
 			if (HasOutputItems)
 				foreach (var t in OutputItems)

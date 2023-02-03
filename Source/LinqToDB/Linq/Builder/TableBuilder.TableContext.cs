@@ -765,7 +765,6 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject)
 			{
-
 				if (expression == null)
 				{
 					return BuildQuery(OriginalType, this, parentObject);

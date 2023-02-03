@@ -422,7 +422,8 @@ namespace LinqToDB.SqlProvider
 
 		private void BuildMergeSource(SqlMergeStatement merge)
 		{
-			StringBuilder.Append("USING ");
+			StringBuilder.AppendLine("USING");
+			AppendIndent();
 
 			if (merge.Source.SourceQuery != null)
 				BuildMergeSourceQuery(merge.Source);

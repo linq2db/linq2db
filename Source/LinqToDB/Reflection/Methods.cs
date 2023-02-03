@@ -310,21 +310,23 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo UpdateWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, bool>> p, Expression<Func<LW1, LW1>> s) => q.UpdateWhenNotMatchedBySourceAnd(p, s));
 				public static readonly MethodInfo DeleteWhenNotMatchedBySourceAndMethodInfo = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, bool>> p) => q.DeleteWhenNotMatchedBySourceAnd(p));
 
-				public static readonly MethodInfo ExecuteMergeMethodInfo  = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.Merge());
-				public static readonly MethodInfo MergeWithOutput         = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutput((_, _, _) => 0));
-				public static readonly MethodInfo MergeWithOutputInto     = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutputInto(null!, (_, _, _) => 0));
+				public static readonly MethodInfo ExecuteMergeMethodInfo    = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.Merge());
+				public static readonly MethodInfo MergeWithOutput           = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutput((_, _, _) => 0));
+				public static readonly MethodInfo MergeWithOutputSource     = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutput((_, _, _, _) => 0));
+				public static readonly MethodInfo MergeWithOutputInto       = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutputInto(null!, (_, _, _) => 0));
+				public static readonly MethodInfo MergeWithOutputIntoSource = MemberHelper.MethodOfGeneric<IMergeable<LW1, LW2>>(q => q.MergeWithOutputInto(null!, (_, _, _,_) => 0));
 			}
 
 			public static class MultiInsert
 			{
 				// Sadly member names must be different from their englobing type, this actually is `.MultiInsert()`
-				public static readonly MethodInfo Begin         = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.MultiInsert))!;
-				public static readonly MethodInfo Into          = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Into))!;
-				public static readonly MethodInfo When          = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.When))!;
-				public static readonly MethodInfo Else          = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Else))!;
-				public static readonly MethodInfo Insert        = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Insert))!;
-				public static readonly MethodInfo InsertAll     = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertAll))!;
-				public static readonly MethodInfo InsertFirst   = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertFirst))!;
+				public static readonly MethodInfo Begin       = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.MultiInsert))!;
+				public static readonly MethodInfo Into        = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Into))!;
+				public static readonly MethodInfo When        = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.When))!;
+				public static readonly MethodInfo Else        = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Else))!;
+				public static readonly MethodInfo Insert      = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.Insert))!;
+				public static readonly MethodInfo InsertAll   = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertAll))!;
+				public static readonly MethodInfo InsertFirst = typeof(MultiInsertExtensions).GetMethod(nameof(MultiInsertExtensions.InsertFirst))!;
 			}
 
 			public static class Tools

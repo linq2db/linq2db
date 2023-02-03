@@ -1450,7 +1450,7 @@ namespace LinqToDB.Remote
 					case QueryElementType.SqlRow:
 						{
 							var elem = (SqlRow)e;
-							
+
 							Append(elem.Values);
 
 							break;
@@ -1462,6 +1462,7 @@ namespace LinqToDB.Remote
 
 							Append(elem.DeletedTable);
 							Append(elem.InsertedTable);
+							Append(elem.SourceTable);
 							Append(elem.OutputTable);
 
 							if (elem.HasOutputItems)
@@ -1652,7 +1653,7 @@ namespace LinqToDB.Remote
 
 							obj = new SqlFunction(systemType, name, isAggregate, isPure, precedence, parameters)
 							{
-								CanBeNull = canBeNull, 
+								CanBeNull = canBeNull,
 								DoNotOptimize = doNotOptimize
 							};
 
@@ -1891,7 +1892,7 @@ namespace LinqToDB.Remote
 							var trueValue  = Read<ISqlExpression>()!;
 							var falseValue = Read<ISqlExpression>()!;
 							var withNull   = ReadInt();
-							
+
 							obj = new SqlPredicate.IsTrue(expr1, trueValue, falseValue, withNull == 3 ? null : withNull == 1, isNot);
 
 							break;
@@ -2389,9 +2390,10 @@ namespace LinqToDB.Remote
 					case QueryElementType.OutputClause:
 						{
 
-							var deleted  = Read<SqlTable>()!;
-							var inserted = Read<SqlTable>()!;
-							var output   = Read<SqlTable>()!;
+							var deleted  = Read<SqlTable>();
+							var inserted = Read<SqlTable>();
+							var source   = Read<SqlTable>();
+							var output   = Read<SqlTable>();
 							var items    = ReadArray<SqlSetExpression>()!;
 							var columns  = ReadList<ISqlExpression>();
 
@@ -2399,11 +2401,12 @@ namespace LinqToDB.Remote
 							{
 								DeletedTable  = deleted,
 								InsertedTable = inserted,
+								SourceTable   = source,
 								OutputTable   = output,
 								OutputColumns = columns
 							};
 
-							if (items != null && items.Length > 0)
+							if (items is { Length : > 0 })
 								c.OutputItems.AddRange(items);
 
 							obj = c;
