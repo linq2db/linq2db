@@ -22,8 +22,6 @@ namespace Tests.UserTests
 		[ActiveIssue("CreateTable(Guid)", Configurations = new[]
 		{
 			TestProvName.AllAccess,
-			ProviderName.DB2,
-			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
 			ProviderName.SqlCe,
 			TestProvName.AllSybase,

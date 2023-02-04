@@ -1363,10 +1363,9 @@ namespace Tests.Linq
 			}
 		}
 
-		// INFORMIX and DB2 need type hint in select
-		// CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null
+		// INFORMIX need type hint in select
 		[Test]
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, ProviderName.DB2 })]
+		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper

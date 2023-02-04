@@ -5,8 +5,8 @@ docker stop mariadb
 docker rm -f mariadb
 
 REM use pull to get latest layers (run will use cached layers)
-docker pull mariadb:10.8.3
-docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 3316:3306 mariadb:10.8.3
+docker pull mariadb:latest
+docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 3316:3306 mariadb:latest
 
 call wait-err mariadb "3306  mariadb.org"
 
