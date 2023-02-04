@@ -36,9 +36,11 @@ Don't use this package if you don't need database scaffolding functionality. Ins
   - [linq2db4iSeries](https://www.nuget.org/packages/linq2db4iSeries): Don't reference linq2db package explicitly. This package already references supported linq2db version
 - Firebird
   - [FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient)
-- MySQL and MariaDB
+- MySQL
   - [MySqlConnector](https://www.nuget.org/packages/MySqlConnector) (recommended)
   - [MySql.Data](https://www.nuget.org/packages/MySql.Data) (highly discouraged, low quality provider)
+- MariaDB
+  - [MySqlConnector](https://www.nuget.org/packages/MySqlConnector) (recommended)
 - Oracle
   - [Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess) (.NET Framework)
   - [Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core) (.NET Core)

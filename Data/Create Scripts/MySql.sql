@@ -179,9 +179,7 @@ CREATE TABLE `AllTypes`
 -- SKIP MySql BEGIN
 -- SKIP MySqlConnector BEGIN
 -- SKIP MariaDB BEGIN
--- SKIP MariaDBConnector BEGIN
 	year2DataType       year(2)                      NULL,
--- SKIP MariaDBConnector END
 -- SKIP MariaDB END
 -- SKIP MySqlConnector END
 -- SKIP MySql END
@@ -474,9 +472,7 @@ CREATE TABLE FullTextIndexTest (
 -- SKIP MySql BEGIN
 -- SKIP MySqlConnector BEGIN
 -- SKIP MariaDB BEGIN
--- SKIP MariaDBConnector BEGIN
 	ENGINE=MyISAM
--- SKIP MariaDBConnector END
 -- SKIP MariaDB END
 -- SKIP MySqlConnector END
 -- SKIP MySql END
@@ -651,15 +647,12 @@ CREATE PROCEDURE `Issue2313Results`(
 -- SKIP MySql55 BEGIN
 -- SKIP MySql55Connector BEGIN
 -- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
 	IN `Json` JSON,
--- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55Connector END
 -- SKIP MySql55 END
 -- SKIP MySql55 BEGIN
 -- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
 	IN `Geometry` GEOMETRY,
 	IN `Point` POINT,
 	IN `LineString` LINESTRING,
@@ -668,7 +661,6 @@ CREATE PROCEDURE `Issue2313Results`(
 	IN `MultiLineString` MULTILINESTRING,
 	IN `MultiPolygon` MULTIPOLYGON,
 	IN `GeometryCollection` GEOMETRYCOLLECTION,
--- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55 END
 
@@ -721,15 +713,12 @@ BEGIN
 -- SKIP MySql55 BEGIN
 -- SKIP MySql55Connector BEGIN
 -- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
 	,`Json`
--- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55Connector END
 -- SKIP MySql55 END
 -- SKIP MySql55 BEGIN
 -- SKIP MySql BEGIN
--- SKIP MariaDB BEGIN
 	,`Geometry`,
 	`Point`,
 	`LineString`,
@@ -738,7 +727,6 @@ BEGIN
 	`MultiLineString`,
 	`MultiPolygon`,
 	`GeometryCollection`
--- SKIP MariaDB END
 -- SKIP MySql END
 -- SKIP MySql55 END
 
