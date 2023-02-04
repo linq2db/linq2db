@@ -199,6 +199,71 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void MergeWithOutputSourceNoAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var outputRows = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutput((a, deleted, inserted, source) => new
+					{
+						source.Field1,
+						Filed1 = Sql.AsSql(source.Field1.ToString()),
+						Id = Sql.AsSql(inserted.Id.ToString())
+					});
+
+				var result = outputRows.ToArray();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Id.Should().Be("5");
+			}
+		}
+
+		[Test]
+		public void MergeWithOutputFromQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var outputRows = table
+					.Merge()
+					.Using(GetSource1(db))
+					.OnTargetKey()
+					.UpdateWhenMatchedAnd(
+						(t, s) => s.Id == 3,
+						(t, s) => new TestMapping1()
+						{
+							Field1 = t.Field1 + s.Field5
+						})
+					.MergeWithOutput((a, deleted, inserted, source) => new
+					{
+						// Field2 used only in output
+						source.Field2
+					});
+
+				var result = outputRows.ToArray();
+
+				result.Should().HaveCount(1);
+				var record = result[0];
+
+				record.Field2.Should().Be(3);
+			}
+		}
+
+		[Test]
 		public void MergeWithOutputProjectedWithoutAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
