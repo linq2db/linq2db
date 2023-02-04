@@ -199,7 +199,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputSourceNoAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
+		public void MergeWithOutputSourceNoAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -230,7 +230,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputFromQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird)] string context)
+		public void MergeWithOutputFromQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
