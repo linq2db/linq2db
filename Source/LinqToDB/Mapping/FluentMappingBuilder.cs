@@ -8,7 +8,6 @@ namespace LinqToDB.Mapping
 {
 	using Common;
 	using Expressions;
-	using Extensions;
 	using Metadata;
 
 	/// <summary>
@@ -21,6 +20,14 @@ namespace LinqToDB.Mapping
 		private List<MemberInfo>                               _orderedMembers   = new();
 
 		#region Init
+
+		/// <summary>
+		/// Creates new MappingSchema and fluent mapping builder for it.
+		/// </summary>
+		public FluentMappingBuilder()
+		{
+			MappingSchema = new ();
+		}
 
 		/// <summary>
 		/// Creates fluent mapping builder for specified mapping schema.
@@ -41,7 +48,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Adds configured mappings to builder's mapping schema.
 		/// </summary>
-		public void Build()
+		public FluentMappingBuilder Build()
 		{
 			if (_typeAttributes.Count > 0 || _memberAttributes.Count > 0)
 			{
@@ -50,6 +57,8 @@ namespace LinqToDB.Mapping
 				_memberAttributes.Clear();
 				_orderedMembers.Clear();
 			}
+
+			return this;
 		}
 
 		#region GetAtributes

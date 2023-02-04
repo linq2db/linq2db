@@ -143,8 +143,9 @@ namespace LinqToDB.Expressions
 				if (mapType != ex.Type)
 				{
 					// Use only defined convert
-					var econv = mappingSchema.GetConvertExpression(ex.Type, type,     false, false) ??
-					            mappingSchema.GetConvertExpression(ex.Type, mapType!, false)!;
+					var econv =
+						mappingSchema.GetConvertExpression(ex.Type, type,     false, false) ??
+						mappingSchema.GetConvertExpression(ex.Type, mapType!, false)!;
 
 					ex = InternalExtensions.ApplyLambdaToExpression(econv, ex);
 				}
@@ -163,8 +164,7 @@ namespace LinqToDB.Expressions
 			// Microsoft.Data.SQLite
 			// Oracle (group by columns)
 			// MySql.Data and some other providers enforce null check in IsDBNullAllowed implementation
-			if (converter?.HandlesNulls != true &&
-			    (forceNullCheck || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
+			if (converter?.HandlesNulls != true && (forceNullCheck || (dataContext.IsDBNullAllowed(dataReader, idx) ?? true)))
 			{
 				ex = Condition(
 					Call(dataReaderExpr, Methods.ADONet.IsDBNull, ExpressionInstances.Int32Array(idx)),
