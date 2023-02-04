@@ -1499,6 +1499,8 @@ namespace LinqToDB.DataProvider.Oracle
 				public void      Open         () => ((Action<OracleConnection>         )CompiledWrappers[0])(this);
 				public DbCommand CreateCommand() => ((Func<OracleConnection, DbCommand>)CompiledWrappers[1])(this);
 				public void      Dispose      () => ((Action<OracleConnection>         )CompiledWrappers[2])(this);
+
+				DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 			}
 
 			[Wrapper]

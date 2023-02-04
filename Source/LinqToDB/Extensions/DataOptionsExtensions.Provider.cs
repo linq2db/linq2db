@@ -35,7 +35,8 @@ namespace LinqToDB
 			SqlServerProvider provider                             = SqlServerProvider.AutoDetect,
 			Func<SqlServerOptions, SqlServerOptions>? optionSetter = null)
 		{
-			options = DataProvider.SqlServer.SqlServerTools.ProviderDetector.CreateOptions(options, connectionString, dialect, provider);
+			options = options.UseConnectionString(connectionString);
+			options = DataProvider.SqlServer.SqlServerTools.ProviderDetector.CreateOptions(options, dialect, provider);
 
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
@@ -81,7 +82,8 @@ namespace LinqToDB
 		public static DataOptions UseOracle(this DataOptions options, string connectionString, OracleVersion dialect, OracleProvider provider,
 			Func<OracleOptions, OracleOptions>? optionSetter = null)
 		{
-			options = OracleTools.ProviderDetector.CreateOptions(options, connectionString, dialect, provider);
+			options = options.UseConnectionString(connectionString);
+			options = OracleTools.ProviderDetector.CreateOptions(options, dialect, provider);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
@@ -96,7 +98,8 @@ namespace LinqToDB
 		public static DataOptions UseOracle(this DataOptions options, string connectionString, OracleProvider provider,
 			Func<OracleOptions, OracleOptions>? optionSetter = null)
 		{
-			options = OracleTools.ProviderDetector.CreateOptions(options, connectionString, OracleVersion.AutoDetect, provider);
+			options = options.UseConnectionString(connectionString);
+			options = OracleTools.ProviderDetector.CreateOptions(options, OracleVersion.AutoDetect, provider);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
@@ -139,7 +142,8 @@ namespace LinqToDB
 		public static DataOptions UsePostgreSQL(this DataOptions options, string connectionString, PostgreSQLVersion dialect,
 			Func<PostgreSQLOptions, PostgreSQLOptions>? optionSetter = null)
 		{
-			options =  PostgreSQLTools.ProviderDetector.CreateOptions(options, connectionString, dialect, default);
+			options = options.UseConnectionString(connectionString);
+			options =  PostgreSQLTools.ProviderDetector.CreateOptions(options, dialect, default);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 

@@ -171,7 +171,7 @@ namespace Tests.Linq
 			var animalsTableName = "Animals" + cnt;
 			var eyeTableName     = "Eyes"    + cnt;
 
-			var mappingBuilder = ms.GetFluentMappingBuilder();
+			var mappingBuilder = new FluentMappingBuilder(ms);
 
 			mappingBuilder.Entity<Animal>()
 				.HasTableName(animalsTableName)

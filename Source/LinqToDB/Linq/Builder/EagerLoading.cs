@@ -1890,7 +1890,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var mc = (MethodCallExpression)expr;
 
-						if (mc.IsQueryable())
+						if (mc.IsQueryable() && mc.Method.IsGenericMethod)
 						{
 							var methodGenericArguments  = mc.Method.GetGenericArguments();
 							var methodGenericDefinition = mc.Method.GetGenericMethodDefinition();

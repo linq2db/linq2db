@@ -42,6 +42,7 @@ namespace Tests.Remote.ServerContainer
 			var service = OpenHost(ms, interceptor, suppressSequentialAccess);
 
 			service.SuppressSequentialAccess = suppressSequentialAccess;
+
 			if (interceptor != null)
 			{
 				service.AddInterceptor(interceptor);
@@ -62,7 +63,10 @@ namespace Tests.Remote.ServerContainer
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
 
 			if (ms != null)
-				dx.MappingSchema = dx.MappingSchema == null ? ms : MappingSchema.CombineSchemas(dx.MappingSchema, ms);
+				dx.MappingSchema = MappingSchema.CombineSchemas(ms, dx.MappingSchema);
+
+			if (configuration.IsAnyOf(TestProvName.AllMariaDB))
+				dx.MappingSchema = MappingSchema.CombineSchemas(TestBase._mariaDBSchema, dx.MappingSchema);
 
 			return dx;
 		}
@@ -70,6 +74,7 @@ namespace Tests.Remote.ServerContainer
 		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
 		{
 			var port = GetPort();
+
 			if (_openHosts.TryGetValue(port, out var service))
 			{
 				service.MappingSchema = ms;
@@ -85,7 +90,7 @@ namespace Tests.Remote.ServerContainer
 				}
 
 				service = new TestGrpcLinqService(
-					new LinqService()
+					new TestLinqService()
 					{
 						AllowUpdates = true
 					},

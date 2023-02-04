@@ -476,8 +476,8 @@ namespace Tests
 
 				options = options.UseMappingSchema(ms == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(ms, _sequentialAccessSchema));
 			}
-			//else if (configuration == TestProvName.SqlServer2019FastExpressionCompiler)
-			//	res.AddMappingSchema(_fecSchema);
+			else if (configuration.IsAnyOf(TestProvName.AllMariaDB))
+				options = options.UseMappingSchema(ms == null ? _mariaDBSchema : MappingSchema.CombineSchemas(ms, _mariaDBSchema));
 
 			if (interceptor != null)
 				options = options.UseInterceptor(interceptor);
@@ -502,8 +502,8 @@ namespace Tests
 			return res;
 		}
 
-		private static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");
-		//private static readonly MappingSchema _fecSchema = new ();
+		private  static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");
+		internal static readonly MappingSchema _mariaDBSchema          = new (ProviderName.MariaDB);
 
 		protected static char GetParameterToken(string context)
 		{

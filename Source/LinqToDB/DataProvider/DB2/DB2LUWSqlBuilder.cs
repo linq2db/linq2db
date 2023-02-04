@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
@@ -69,6 +68,22 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
+		}
+
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		{
+			switch (type.Type.DataType)
+			{
+				case DataType.VarBinary:
+					// https://www.ibm.com/docs/en/db2/11.5?topic=list-binary-strings
+					StringBuilder
+						.Append("VARBINARY(")
+						.Append(type.Type.Length == null || type.Type.Length > 32672 || type.Type.Length < 1 ? 32672 : type.Type.Length)
+						.Append(')');
+					return;
+			}
+
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 	}
 }

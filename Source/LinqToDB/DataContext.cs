@@ -524,11 +524,6 @@ namespace LinqToDB
 			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters, preambles));
 		}
 
-		public FluentMappingBuilder GetFluentMappingBuilder()
-		{
-			return MappingSchema.GetFluentMappingBuilder();
-		}
-
 		sealed class QueryRunner : IQueryRunner
 		{
 			public QueryRunner(DataContext dataContext, IQueryRunner queryRunner)
@@ -609,7 +604,7 @@ namespace LinqToDB
 		{
 			public static void Apply(DataContext dataContext, ConnectionOptions options)
 			{
-				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory();
+				var dataProvider = options.DataProviderFactory == null ? options.DataProvider : options.DataProviderFactory(options);
 
 				switch (
 				          options.ConfigurationString,

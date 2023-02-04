@@ -58,7 +58,7 @@ namespace Tests.Remote.ServerContainer
 			Debug.WriteLine(((IDataContext)dx).ConfigurationID, "Provider ");
 
 			if (ms != null)
-				dx.MappingSchema = dx.MappingSchema == null ? ms : MappingSchema.CombineSchemas(dx.MappingSchema, ms);
+				dx.MappingSchema = dx.MappingSchema == null ? ms : MappingSchema.CombineSchemas(ms, dx.MappingSchema);
 
 			return dx;
 		}
@@ -66,6 +66,7 @@ namespace Tests.Remote.ServerContainer
 		private TestWcfLinqService OpenHost(MappingSchema? ms)
 		{
 			var port = GetPort();
+
 			if (_openHosts.TryGetValue(port, out var service))
 			{
 				service.MappingSchema = ms;
@@ -80,7 +81,8 @@ namespace Tests.Remote.ServerContainer
 					return service;
 				}
 
-				var host = new ServiceHost(service = new TestWcfLinqService(new LinqService(), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
+				var host = new ServiceHost(service = new TestWcfLinqService(new TestLinqService(), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
+
 				if (ms != null)
 					service.MappingSchema = ms;
 

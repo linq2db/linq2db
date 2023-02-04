@@ -55,11 +55,10 @@ namespace Tests.UserTests
 			[ValueSource(nameof(DateTimePairs))] Tuple<DateTimeQuantifiers, DateTimeQuantifiers> quantifiers)
 		{
 			var ms = new MappingSchema();
-			ms
-				.GetFluentMappingBuilder()
-					.Entity<DateTimeTestTable>()
-						.Property(t => t.DateTimeField)
-							.HasDbType($"datetime {GetQuantifierName(quantifiers.Item1)} to {GetQuantifierName(quantifiers.Item2)}")
+			new FluentMappingBuilder(ms)
+				.Entity<DateTimeTestTable>()
+					.Property(t => t.DateTimeField)
+						.HasDbType($"datetime {GetQuantifierName(quantifiers.Item1)} to {GetQuantifierName(quantifiers.Item2)}")
 				.Build();
 
 			var isIDS = IsIDSProvider(context);
