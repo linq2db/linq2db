@@ -2003,7 +2003,7 @@ namespace LinqToDB.SqlQuery
 		public static void OptimizeSelectQuery(this SelectQuery selectQuery, IQueryElement root, SqlProviderFlags providerFlags, DataOptions dataOptions)
 		{
 			new SelectQueryOptimizer(providerFlags, dataOptions, new EvaluationContext(), root, selectQuery, 0)
-				.FinalizeAndValidate(providerFlags.IsApplyJoinSupported);
+				.FinalizeAndValidate();
 		}
 
 		[return: NotNullIfNotNull(nameof(sqlExpression))]

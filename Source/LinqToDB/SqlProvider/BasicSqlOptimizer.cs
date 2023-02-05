@@ -54,8 +54,7 @@ namespace LinqToDB.SqlProvider
 						return expr;
 
 					var selectQuery = (SelectQuery)expr;
-					new SelectQueryOptimizer(context.SqlProviderFlags, context.dataOptions, context.evaluationContext, context.statement, selectQuery, 0).FinalizeAndValidate(
-						context.SqlProviderFlags.IsApplyJoinSupported);
+					new SelectQueryOptimizer(context.SqlProviderFlags, context.dataOptions, context.evaluationContext, context.statement, selectQuery, 0).FinalizeAndValidate();
 
 					return selectQuery;
 				}

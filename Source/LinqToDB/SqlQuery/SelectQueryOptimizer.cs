@@ -27,7 +27,7 @@ namespace LinqToDB.SqlQuery
 		readonly int               _level;
 		readonly IQueryElement[]   _dependencies;
 
-		public void FinalizeAndValidate(bool isApplySupported)
+		public void FinalizeAndValidate()
 		{
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
@@ -48,7 +48,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 			OptimizeUnions();
-			FinalizeAndValidateInternal(isApplySupported);
+			FinalizeAndValidateInternal();
 
 #if DEBUG
 			// ReSharper disable once RedundantAssignment
@@ -181,16 +181,16 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		void FinalizeAndValidateInternal(bool isApplySupported)
+		void FinalizeAndValidateInternal()
 		{
-			_selectQuery.Visit((optimizer: this, isApplySupported), static (context, e) =>
+			_selectQuery.Visit(this, static (context, e) =>
 			{
-				if (e is SelectQuery sql && sql != context.optimizer._selectQuery)
+				if (e is SelectQuery sql && sql != context._selectQuery)
 				{
-					sql.ParentSelect = context.optimizer._selectQuery;
+					sql.ParentSelect = context._selectQuery;
 
 					if (sql.IsParameterDependent)
-						context.optimizer._selectQuery.IsParameterDependent = true;
+						context._selectQuery.IsParameterDependent = true;
 				}
 			});
 
@@ -199,9 +199,9 @@ namespace LinqToDB.SqlQuery
 			OptimizeGroupBy();
 			OptimizeColumns();
 			MoveOuterJoinsToSubQuery(_selectQuery);
-			OptimizeApplies   (isApplySupported);
-			OptimizeSubQueries(isApplySupported);
-			OptimizeApplies   (isApplySupported);
+			OptimizeApplies   (_flags.IsApplyJoinSupported);
+			OptimizeSubQueries(_flags.IsApplyJoinSupported);
+			OptimizeApplies   (_flags.IsApplyJoinSupported);
 			RemoveEmptyJoins();
 
 			OptimizeGroupBy();
