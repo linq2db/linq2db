@@ -309,7 +309,7 @@ jobs:
             enabled: false
 
         - name: MariaDB
-          title: MariaDB (both providers)
+          title: MariaDB
           config_win: mariadb
           config_linux: mariadb
           config_macos: mariadb

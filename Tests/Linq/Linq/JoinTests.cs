@@ -2897,7 +2897,6 @@ namespace Tests.Linq
 
 		[ActiveIssue(1224, Configurations = new[]
 		{
-			TestProvName.AllSQLite,
 			TestProvName.AllAccess,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,

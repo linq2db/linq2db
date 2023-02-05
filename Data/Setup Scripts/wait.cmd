@@ -3,7 +3,7 @@ SET tries=0
 
 :repeat
 
-docker logs %1 | FINDSTR /C:%2
+docker logs %1 2>nul | FINDSTR /C:%2
 
 IF %ERRORLEVEL% NEQ 0 (
     SET /a tries=tries+1
