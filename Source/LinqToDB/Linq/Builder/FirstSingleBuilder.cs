@@ -282,7 +282,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						foreach (var member in sc.Members.Values)
 						{
-							if (member is MethodCallExpression mc && context.Builder.IsSubQuery(ctx, mc))
+							if (member is MethodCallExpression mc
+								&& (context.Builder.IsSubQuery(ctx, mc) || EagerLoading.IsChainContainsNotSupported(mc)))
 							{
 								return true;
 							}

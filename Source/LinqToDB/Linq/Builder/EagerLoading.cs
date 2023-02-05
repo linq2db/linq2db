@@ -302,7 +302,7 @@ namespace LinqToDB.Linq.Builder
 			"GroupBy"
 		};
 
-		static bool IsChainContainsNotSupported(Expression expression)
+		internal static bool IsChainContainsNotSupported(Expression expression)
 		{
 			var current = expression;
 			while (current?.NodeType == ExpressionType.Call)
