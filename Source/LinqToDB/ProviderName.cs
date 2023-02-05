@@ -115,7 +115,7 @@ namespace LinqToDB
 		/// </summary>
 		public const string MySqlConnector = "MySqlConnector";
 		/// <summary>
-		/// MySql provider.
+		/// MariaDB provider.
 		/// Used as an additional configuration name for MySql mapping schema <see cref="DataProvider.MySql.MySqlMappingSchema"/>.
 		/// </summary>
 		public const string MariaDB       = "MariaDB";

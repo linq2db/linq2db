@@ -1376,9 +1376,8 @@ namespace Tests.Linq
 			var res = first.Concat(second).Concat(third).ToList();
 		}
 
-		[ActiveIssue(2932)]
 		[Test(Description = "invalid SQL for Any() subquery")]
-		public void Issue2932_Broken([DataSources] string context)
+		public void Issue2932_Broken([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 

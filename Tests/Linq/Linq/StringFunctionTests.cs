@@ -160,7 +160,7 @@ namespace Tests.Linq
 			// Correct start
 			Assert.AreEqual("12356784", Sql.Stuff("1234",        4,    0,    "5678"));
 
-			// Correct length												 
+			// Correct length
 			Assert.AreEqual("125678",   Sql.Stuff("1234",        3,    5,    "5678"));
 		}
 
@@ -470,9 +470,9 @@ namespace Tests.Linq
 				var nameToCheck = firstName.Substring(0, 3);
 				switch (comparison)
 				{
-					case StringComparison.OrdinalIgnoreCase : 
-					case StringComparison.InvariantCultureIgnoreCase : 
-					case StringComparison.CurrentCultureIgnoreCase : 
+					case StringComparison.OrdinalIgnoreCase :
+					case StringComparison.InvariantCultureIgnoreCase :
+					case StringComparison.CurrentCultureIgnoreCase :
 						nameToCheck = nameToCheck.ToUpperInvariant();
 						break;
 				}
@@ -482,9 +482,9 @@ namespace Tests.Linq
 
 				switch (comparison)
 				{
-					case StringComparison.Ordinal : 
-					case StringComparison.CurrentCulture : 
-					case StringComparison.InvariantCulture : 
+					case StringComparison.Ordinal :
+					case StringComparison.CurrentCulture :
+					case StringComparison.InvariantCulture :
 					{
 						nameToCheck = firstName.Substring(0, 3);
 						nameToCheck = nameToCheck.ToUpperInvariant();
@@ -730,7 +730,7 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(data))
 			{
 				var str   = "some";
-				
+
 				var result = table.Where(t =>
 						t.CharColumn.StartsWith(str)  &&
 						t.NCharColumn.StartsWith(str) &&

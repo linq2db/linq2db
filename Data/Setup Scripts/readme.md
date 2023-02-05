@@ -9,6 +9,7 @@ Contains database setup scripts for local testing
 - `informix.cmd` : Windows script to create or update docker container with Informix instance
 - `mariadb.cmd` : Windows script to create or update docker container with MariaDB instance
 - `oracle11.cmd` : Windows script to create or update docker container with Oracle 11 instance
+- `oracle21.cmd` : Windows script to create or update docker container with Oracle 21 instance
 - `pgsql92.cmd` : Windows script to create or update docker container with PostgreSQL 9.2 instance
 - `pgsql93.cmd` : Windows script to create or update docker container with PostgreSQL 9.3 instance
 - `pgsql95.cmd` : Windows script to create or update docker container with PostgreSQL 9.5 instance

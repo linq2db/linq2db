@@ -509,9 +509,9 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Adds configured mappings to builder's mapping schema.
 		/// </summary>
-		public void Build()
+		public FluentMappingBuilder Build()
 		{
-			_entity.Build();
+			return _entity.Build();
 		}
 	}
 }

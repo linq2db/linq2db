@@ -77,7 +77,6 @@ Legend:
 |MySQL 5.6<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.2.5|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL (latest)<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.32|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.2.5|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MariaDB (latest)<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/) 8.0.32|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MariaDB (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/) 0.69.10/1.3.14/2.2.5|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 10<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 7.0.1 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/) 7.0.1 |:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -134,8 +133,7 @@ Legend:
 |`ProviderName.MySqlConnector`|Latest MySQL using MySqlConnector||
 |`TestProvName.MySql55`|MySQL 5.5 using MySQL.Data||
 |`TestProvName.MySql55Connector`|MySQL 5.5 using MySqlConnector||
-|`TestProvName.MariaDB`|Latest MariaDB using MySQL.Data||
-|`TestProvName.MariaDBConnector`|Latest MariaDB using MySqlConnector||
+|`TestProvName.MariaDB`|Latest MariaDB using MySqlConnector||
 |`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI|
 |`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI|
 |`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI|

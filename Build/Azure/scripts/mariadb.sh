@@ -1,9 +1,7 @@
 #!/bin/bash
 sudo systemctl stop mysql
 
-#docker pull mariadb:latest
-# temporary use 10.8.3 version due to regression in older versions
-docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mariadb:10.8.3
+docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 3306:3306 mariadb:latest
 docker ps -a
 
 retries=0
