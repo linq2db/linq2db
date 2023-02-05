@@ -79,6 +79,8 @@ namespace LinqToDB.Linq.Builder
 					return _cachedPlaceholder;
 
 				var placeholder = CreatePlaceholder(flags.SqlFlag());
+				if (placeholder == null)
+					return path;
 
 				if (!flags.IsTest())
 					_cachedPlaceholder = placeholder;
@@ -94,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			SqlPlaceholderExpression CreatePlaceholder(ProjectFlags flags)
+			SqlPlaceholderExpression? CreatePlaceholder(ProjectFlags flags)
 			{
 				var args  = _methodCall.Method.GetGenericArguments();
 				var param = Expression.Parameter(args[0], "param");
@@ -118,6 +120,9 @@ namespace LinqToDB.Linq.Builder
 					var condition = Expression.Lambda(ExpressionBuilder.Equal(Builder.MappingSchema, param, expr), param);
 					var sequence = Builder.BuildWhere(Parent, InnerSequence,
 						condition: condition, checkForSubQuery: true, enforceHaving: false, isTest: flags.IsTest());
+
+					if (sequence == null)
+						return null;
 
 					cond = new SqlCondition(false, new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery)));
 				}

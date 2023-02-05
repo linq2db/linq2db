@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 				|| rightNullableOnly  && methodCall.IsQueryable(RightNullableOnlyMethodNames)    && methodCall.Arguments.Count == 2;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var argument = methodCall.Arguments[0];
 			if (buildInfo.Parent != null)
@@ -71,6 +71,9 @@ namespace LinqToDB.Linq.Builder
 				var result = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition: condition, checkForSubQuery: false, enforceHaving: false,
 					isTest: buildInfo.AggregationTest);
+
+				if (result == null)
+					return null;
 
 				/*if (joinType == JoinType.Full)
 				{

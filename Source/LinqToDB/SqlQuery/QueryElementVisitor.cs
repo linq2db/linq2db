@@ -216,6 +216,8 @@ namespace LinqToDB.SqlQuery
 					Visit(element.Where);
 					Visit(element.WhereDelete);
 
+					VisitElements(element.Items, VisitMode.ReadOnly);
+
 					break;
 				}
 				case VisitMode.Modify:
@@ -667,6 +669,7 @@ namespace LinqToDB.SqlQuery
 					Visit(element.With);
 					Visit(element.SelectQuery);
 					Visit(element.Update);
+					Visit(element.Output);
 
 					break;
 				}
@@ -676,6 +679,7 @@ namespace LinqToDB.SqlQuery
 					element.With        = (SqlWithClause?)Visit(element.With);
 					element.SelectQuery = (SelectQuery?)Visit(element.SelectQuery);
 					element.Update      = (SqlUpdateClause)Visit(element.Update);
+					element.Output      = (SqlOutputClause?)Visit(element.Output);
 
 					break;
 				}
@@ -685,21 +689,25 @@ namespace LinqToDB.SqlQuery
 					var with        = (SqlWithClause?)Visit(element.With);
 					var selectQuery = (SelectQuery?)Visit(element.SelectQuery);
 					var update      = (SqlUpdateClause)Visit(element.Update);
+					var output      = (SqlOutputClause?)Visit(element.Output);
 
 					if (ShouldReplace(element)                             ||
 					    !ReferenceEquals(element.SelectQuery, selectQuery) ||
 					    !ReferenceEquals(element.Tag, tag)                 ||
 					    !ReferenceEquals(element.With, with)               ||
-					    !ReferenceEquals(element.Update, update)
+					    !ReferenceEquals(element.Update, update)           ||
+					    !ReferenceEquals(element.Output, output)
 					   )
 					{
-						return NotifyReplaced(new SqlUpdateStatement(selectQuery ?? element.SelectQuery)
-						{
-							Tag         = tag,
-							With        = with,
-							SelectQuery = selectQuery,
-							Update      = update
-						}, element);
+						return NotifyReplaced(
+							new SqlUpdateStatement(selectQuery ?? element.SelectQuery)
+							{
+								Tag         = tag,
+								With        = with,
+								SelectQuery = selectQuery,
+								Update      = update,
+								Output      = output
+							}, element);
 					}
 
 					break;
@@ -900,6 +908,11 @@ namespace LinqToDB.SqlQuery
 						VisitElements(element.OutputColumns, VisitMode.ReadOnly);
 					}
 
+					if (element.HasOutputItems)
+					{
+						VisitElementsReadOnly(element.OutputItems);
+					}
+
 					break;
 				}
 				case VisitMode.Modify:
@@ -1068,6 +1081,7 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Transform:
 				{
 					var clause = (CteClause?)Visit(element.Cte);
+
 					if (ShouldReplace(element) || !ReferenceEquals(element.Cte, clause))
 					{
 						var newFields = element.Fields.Select(f => new SqlField(f));
@@ -1808,6 +1822,8 @@ namespace LinqToDB.SqlQuery
 						if (uk != null ) 
 							selectQuery.UniqueKeys = uk;
 					}
+
+					selectQuery.ParentSelect = (SelectQuery?)Visit(selectQuery.ParentSelect);
 
 					break;
 				}

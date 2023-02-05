@@ -37,6 +37,11 @@ namespace LinqToDB.SqlProvider
 			FixEmptySelect(statement);
 			FinalizeCte   (statement);
 
+#if DEBUG
+			// ReSharper disable once NotAccessedVariable
+			var sqlText = statement.SqlText;
+#endif
+
 			var evaluationContext = new EvaluationContext(null);
 
 //statement.EnsureFindTables();

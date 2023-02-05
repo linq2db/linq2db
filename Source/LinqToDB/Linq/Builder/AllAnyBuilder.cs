@@ -18,9 +18,11 @@ namespace LinqToDB.Linq.Builder
 				methodCall.IsAsyncExtension(MethodNamesAsync);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { /*CopyTable = true,*/ CreateSubQuery = true, SelectQuery = new SelectQuery()});
+			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { /*CopyTable = true,*/ CreateSubQuery = true, SelectQuery = new SelectQuery()});
+			if (sequence == null)
+				return null;
 
 			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
 
@@ -40,6 +42,9 @@ namespace LinqToDB.Linq.Builder
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition: condition, checkForSubQuery: true, enforceHaving: false,
 					isTest: buildInfo.AggregationTest);
+
+				if (sequence == null)
+					return null;
 
 				sequence.SetAlias(condition.Parameters[0].Name);
 			}

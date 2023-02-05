@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(MethodNames);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var deleteType = methodCall.Method.Name switch
 			{
@@ -37,6 +37,9 @@ namespace LinqToDB.Linq.Builder
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition: (LambdaExpression)methodCall.Arguments[1].Unwrap(), checkForSubQuery: false,
 					enforceHaving: false, isTest: buildInfo.AggregationTest);
+
+				if (sequence == null)
+					return null;
 			}
 
 			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);

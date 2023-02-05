@@ -573,7 +573,7 @@ namespace LinqToDB.Linq.Builder
 				var expr = MakeSubQueryExpression(((ContextRefExpression)buildInfo.Expression).WithType(GetInterfaceGroupingType()));
 				expr = SequenceHelper.MoveToScopedContext(expr, this);
 
-				var ctx = Builder.BuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false});
+				var ctx = Builder.TryBuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false});
 
 				return ctx;
 			}

@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 			updateContext.LastBuildInfo = buildInfo;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var updateType = methodCall.Method.Name switch
 			{
@@ -107,6 +107,9 @@ namespace LinqToDB.Linq.Builder
 						sequence = builder.BuildWhere(buildInfo.Parent, sequence,
 							condition: methodCall.Arguments[1].UnwrapLambda(), checkForSubQuery: false,
 							enforceHaving: false, isTest: buildInfo.AggregationTest);
+
+						if (sequence == null)
+							return null;
 
 						setterExpr = methodCall.Arguments[2].Unwrap();
 					}

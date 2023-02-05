@@ -29,8 +29,8 @@ namespace LinqToDB.Linq.Builder
 
 		#region Build Where
 
-		public IBuildContext BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
-			bool checkForSubQuery, bool enforceHaving, bool isTest)
+		public IBuildContext? BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
+			bool                                        checkForSubQuery, bool enforceHaving, bool isTest)
 		{
 			if (sequence is not SubQueryContext)
 			{
@@ -46,7 +46,12 @@ namespace LinqToDB.Linq.Builder
 			if (isTest)
 				flags |= ProjectFlags.Test;
 
-			BuildSearchCondition(sequence, expr, flags, sc.Conditions);
+			if (!BuildSearchCondition(sequence, expr, flags, sc.Conditions, out var error))
+			{
+				if (!isTest)
+					throw error.CreateError();
+				return null;
+			}
 
 			if (!isTest)
 			{
@@ -536,7 +541,6 @@ namespace LinqToDB.Linq.Builder
 			public static IEqualityComparer<ColumnCacheKey> ColumnCacheKeyComparer { get; } = new ColumnCacheKeyEqualityComparer();
 		}
 
-		Dictionary<SqlCacheKey, Expression> _preciseCachedSql = new(SqlCacheKey.SqlCacheKeyComparer);
 		Dictionary<SqlCacheKey, Expression> _cachedSql        = new(SqlCacheKey.SqlCacheKeyComparer);
 
 		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
@@ -593,16 +597,15 @@ namespace LinqToDB.Linq.Builder
 			// remove keys flag. We can cache SQL
 			var cacheFlags = flags & ~ProjectFlags.Keys;
 
-			var cacheKey        = new SqlCacheKey(expression, null, columnDescriptor, null, cacheFlags);
-			var preciseCacheKey = new SqlCacheKey(expression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
-
-			if (_preciseCachedSql.TryGetValue(preciseCacheKey, out var sqlExpr))
-			{
-				return sqlExpr;
-			}
+			var cacheKey = new SqlCacheKey(expression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
 
 			var cache = expression is SqlPlaceholderExpression ||
 			            null != expression.Find(1, (_, e) => e is ContextRefExpression);
+
+			if (cache && _cachedSql.TryGetValue(cacheKey, out var sqlExpr))
+			{
+				return sqlExpr;
+			}
 
 			ISqlExpression? sql = null;
 			Expression?     result = null;
@@ -675,8 +678,6 @@ namespace LinqToDB.Linq.Builder
 			// nesting for Expressions updated in finalization
 			var updateNesting = !flags.HasFlag(ProjectFlags.Test);
 
-			_cachedSql[cacheKey] = result;
-
 			if (updateNesting)
 			{
 				result = UpdateNesting(context, result);
@@ -700,7 +701,7 @@ namespace LinqToDB.Linq.Builder
 					if (expression is not SqlPlaceholderExpression)
 						placeholder = placeholder.WithTrackingPath(expression);
 
-					_preciseCachedSql[preciseCacheKey] = placeholder;
+					_cachedSql[cacheKey] = placeholder;
 				}
 
 				result = placeholder;

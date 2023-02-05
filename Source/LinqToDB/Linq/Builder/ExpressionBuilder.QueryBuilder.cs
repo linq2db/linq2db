@@ -680,16 +680,17 @@ namespace LinqToDB.Linq.Builder
 			if (expression == null)
 				return null;
 
-			expression = MakeExpression(currentContext, expression, isAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
-
 			if (expression is MemberExpression memberExpression)
 			{
 				expression = GetRootContext(currentContext, memberExpression.Expression, isAggregation);
 			}
-
-			if (expression is MethodCallExpression mc && mc.IsQueryable())
+			else if (expression is MethodCallExpression mc && mc.IsQueryable())
 			{
 				expression = GetRootContext(currentContext, mc.Arguments[0], isAggregation);
+			}
+			else 
+			{
+				expression = MakeExpression(currentContext, expression, isAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
 			}
 
 			return expression as ContextRefExpression;
@@ -710,6 +711,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var rootQuery = GetRootContext(context, testExpression, false);
+			rootQuery ??= GetRootContext(context, expr, false);
 
 			if (rootQuery != null)
 			{

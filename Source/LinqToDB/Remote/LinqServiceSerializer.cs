@@ -693,6 +693,18 @@ namespace LinqToDB.Remote
 					return base.VisitSqlRawSqlTable(element);
 				}
 
+				public override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+				{
+					VisitElementsReadOnly(element.SourceFields);
+					return base.VisitSqlTableLikeSource(element);
+				}
+
+				public override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+				{
+					VisitElementsReadOnly(element.Fields);
+					return base.VisitSqlValuesTable(element);
+				}
+
 				void RegisterInSerializer(IQueryElement element)
 				{
 					if (!_serializer.ObjectIndices.ContainsKey(element))
