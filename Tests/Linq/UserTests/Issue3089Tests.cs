@@ -60,7 +60,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(3360)]
+		[ActiveIssue(3360, Configuration = TestProvName.AllPostgreSQL)]
 		[Test]
 		public void TestUnion3([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -80,7 +80,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(3360)]
+		[ActiveIssue(3360, Configuration = TestProvName.AllPostgreSQL)]
 		[Test]
 		public void TestUnion4([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
