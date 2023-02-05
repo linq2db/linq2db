@@ -197,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 				else
 					return path;
 
-				var sql = GetField(member, member.GetLevel(Builder.MappingSchema), false);
+				var sql = GetField(member, false);
 
 				if (sql != null)
 				{
@@ -283,10 +283,8 @@ namespace LinqToDB.Linq.Builder
 
 			#region Helpers
 
-			protected ISqlExpression? GetField(Expression expression, int level, bool throwException)
+			protected ISqlExpression? GetField(Expression expression, bool throwException)
 			{
-				expression = expression.SkipPathThrough();
-
 				if (expression.NodeType == ExpressionType.MemberAccess)
 				{
 					var memberExpression = (MemberExpression)expression;
@@ -321,7 +319,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+					var levelExpression = expression;
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{

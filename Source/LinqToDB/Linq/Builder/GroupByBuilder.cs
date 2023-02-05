@@ -494,9 +494,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (!SequenceHelper.IsSameContext(path, this) || !flags.HasFlag(ProjectFlags.SQL))
 				{
-					var root = Builder.GetRootObject(path);
-					if (root is ContextRefExpression contextRef &&
-					    typeof(IGrouping<,>).IsSameOrParentOf(contextRef.Type))
+					var root = Builder.GetRootContext(this, path, true);
+					if (root != null && typeof(IGrouping<,>).IsSameOrParentOf(root.Type))
 					{
 						return path;
 					}

@@ -950,23 +950,6 @@ namespace LinqToDB.Linq.Builder
 			return Expression.Equal(left, right);
 		}
 
-
-		Dictionary<Expression, Expression>? _rootExpressions;
-
-		[return: NotNullIfNotNull(nameof(expr))]
-		public Expression? GetRootObject(Expression? expr)
-		{
-			if (expr == null)
-				return null;
-
-			if (_rootExpressions != null && _rootExpressions.TryGetValue(expr, out var root))
-				return root;
-
-			root = InternalExtensions.GetRootObject(expr, MappingSchema);
-			(_rootExpressions ??= new()).Add(expr, root);
-			return root;
-		}
-
 		#endregion
 	}
 }

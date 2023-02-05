@@ -1823,8 +1823,6 @@ namespace LinqToDB.SqlQuery
 							selectQuery.UniqueKeys = uk;
 					}
 
-					selectQuery.ParentSelect = (SelectQuery?)Visit(selectQuery.ParentSelect);
-
 					break;
 				}
 				case VisitMode.Transform:
