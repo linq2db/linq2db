@@ -18,6 +18,9 @@ namespace LinqToDB.SqlProvider
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
+		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
+			new(() => new SelectQueryOptimizerVisitor(), v => v.Cleanup(), 100);
+
 		#region Init
 
 		protected BasicSqlOptimizer(SqlProviderFlags sqlProviderFlags)
@@ -37,28 +40,24 @@ namespace LinqToDB.SqlProvider
 			FixEmptySelect(statement);
 			FinalizeCte   (statement);
 
+			var evaluationContext = new EvaluationContext(null);
+
+			using var visitor = SelectOptimizer.Allocate();
+
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
 			var sqlText = statement.SqlText;
 #endif
 
-			var evaluationContext = new EvaluationContext(null);
+			statement = (SqlStatement)visitor.Value.OptimizeQueries(statement, SqlProviderFlags, dataOptions,
+				evaluationContext, statement, 0);
+
+#if DEBUG
+			// ReSharper disable once NotAccessedVariable
+			var newSqlText = statement.SqlText;
+#endif
 
 //statement.EnsureFindTables();
-
-			statement.Walk(WalkOptions.Default, 
-				(SqlProviderFlags, statement, dataOptions, evaluationContext),
-				static (context, expr) =>
-				{
-					if (expr.ElementType != QueryElementType.SqlQuery)
-						return expr;
-
-					var selectQuery = (SelectQuery)expr;
-					new SelectQueryOptimizer(context.SqlProviderFlags, context.dataOptions, context.evaluationContext, context.statement, selectQuery, 0).FinalizeAndValidate();
-
-					return selectQuery;
-				}
-			);
 
 			//statement.EnsureFindTables();
 
