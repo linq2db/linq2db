@@ -1201,12 +1201,19 @@ namespace LinqToDB.SqlQuery
 				var sql   = (SelectQuery)joinSource.Source;
 				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
+
+				isApplySupported = isApplySupported && (joinTable.JoinType == JoinType.CrossApply ||
+				                                        joinTable.JoinType == JoinType.OuterApply);
+
 				if (isApplySupported && sql.Select.HasModifier && _flags.IsSubQueryTakeSupported)
 					return;
 
-				if (isApplySupported || isAgg)
+				if (isApplySupported && isAgg)
 					return;
 
+				if (isAgg)
+					return;
+				
 				var skipValue = sql.Select.SkipValue;
 				var takeValue = sql.Select.TakeValue;
 
@@ -1434,6 +1441,40 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		bool IsColumnExpressionValid(SelectQuery parentQuery, SqlColumn column, ISqlExpression columnExpression)
+		{
+			if (columnExpression.ElementType == QueryElementType.Column ||
+			    columnExpression.ElementType == QueryElementType.SqlField)
+			{
+				return true;
+			}
+
+			var underlying = QueryHelper.UnwrapExpression(columnExpression, false);
+			if (!ReferenceEquals(underlying, columnExpression))
+			{
+				return IsColumnExpressionValid(parentQuery, column, underlying);
+			}
+
+			// check that column has at least one reference
+			//
+
+			var found = false;
+			parentQuery.VisitParentFirstAll(e =>
+			{
+				if (found || ReferenceEquals(e, parentQuery.Select))
+					return false;
+
+				if (ReferenceEquals(e, column))
+				{
+					found = true;
+				}
+
+				return !found;
+			});
+
+			return !found;
+		}
+
 		bool MoveSubQueryUp(SelectQuery selectQuery, SqlTableSource tableSource)
 		{
 			if (tableSource.Source is not SelectQuery subQuery)
@@ -1448,7 +1489,7 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.Select.HasModifier && selectQuery.Select.HasModifier)
 				return false;
 
-			if (!subQuery.GroupBy.IsEmpty || subQuery.Select.HasModifier || !selectQuery.Where.IsEmpty)
+			if (!subQuery.GroupBy.IsEmpty || subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
 			{
 				if (tableSource.Joins.Any(j => j.JoinType == JoinType.Right || j.JoinType == JoinType.RightApply ||
 				                               j.JoinType == JoinType.Full  || j.JoinType == JoinType.FullApply))
@@ -1457,7 +1498,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, c, c.Expression)))
 				return false;
 
 			// Actual modification starts from this point
@@ -1519,7 +1560,7 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		bool JoinMoveSubQueryUp(SqlJoinedTable joinTable)
+		bool JoinMoveSubQueryUp(SelectQuery selectQuery, SqlJoinedTable joinTable)
 		{
 			if (joinTable.Table.Source is not SelectQuery subQuery)
 				return false;
@@ -1542,7 +1583,7 @@ namespace LinqToDB.SqlQuery
 			if (joinTable.JoinType != JoinType.Inner && joinTable.JoinType != JoinType.Left)
 				return false;
 
-			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, c, c.Expression)))
 				return false;
 
 			// Actual modification starts from this point
@@ -1594,7 +1635,7 @@ namespace LinqToDB.SqlQuery
 				{
 					foreach (var join in tableSource.Joins)
 					{
-						if (JoinMoveSubQueryUp(join))
+						if (JoinMoveSubQueryUp(selectQuery, join))
 							replaced = true;
 					}
 				}
