@@ -151,7 +151,6 @@ namespace LinqToDB.SqlQuery
 						return
 							Find(((SqlOutputClause)element).DeletedTable)  ??
 							Find(((SqlOutputClause)element).InsertedTable) ??
-							Find(((SqlOutputClause)element).SourceTable)   ??
 							Find(((SqlOutputClause)element).OutputTable)   ??
 							Find(((SqlOutputClause)element).OutputColumns) ??
 							(((SqlOutputClause)element).HasOutputItems ? Find(((SqlOutputClause)element).OutputItems) : null);

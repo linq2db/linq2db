@@ -68,20 +68,10 @@ namespace LinqToDB.Linq.Builder
 				var deletedTableContext  = new TableBuilder.TableContext(builder, selectQuery, deletedTable);
 				var insertedTableContext = new TableBuilder.TableContext(builder, selectQuery, insertedTable);
 
-				TableBuilder.TableContext? sourceTableContext = null;
+				IBuildContext? sourceTableContext = null;
 
 				if (kind is MergeKind.MergeWithOutputSource or MergeKind.MergeWithOutputIntoSource)
-				{
-					var sourceTable = new SqlTable(args[1])
-					{
-						TableName    = new ("Source"),
-						SqlTableType = SqlTableType.SystemTable,
-					};
-
-					mergeContext.Merge.Output.SourceTable = sourceTable;
-
-					sourceTableContext = new (builder, selectQuery, sourceTable);
-				}
+					sourceTableContext = mergeContext.SourceContext;
 
 				if (kind is MergeKind.MergeWithOutput or MergeKind.MergeWithOutputSource)
 				{
@@ -143,9 +133,6 @@ namespace LinqToDB.Linq.Builder
 				Sequence[0].SelectQuery.Select.Columns.Clear();
 				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
 				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
-
-				if (sourceTable is not null)
-					Sequence[3].SelectQuery = Sequence[1].SelectQuery;
 			}
 
 			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
