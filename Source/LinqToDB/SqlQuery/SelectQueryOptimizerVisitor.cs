@@ -1489,6 +1489,12 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.Select.HasModifier && selectQuery.Select.HasModifier)
 				return false;
 
+			if (subQuery.Select.HasModifier)
+			{
+				if (tableSource.Joins.Count > 0)
+					return false;
+			};
+
 			if (!subQuery.GroupBy.IsEmpty || subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
 			{
 				if (tableSource.Joins.Any(j => j.JoinType == JoinType.Right || j.JoinType == JoinType.RightApply ||
