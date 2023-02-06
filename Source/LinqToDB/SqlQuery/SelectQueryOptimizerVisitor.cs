@@ -1493,6 +1493,8 @@ namespace LinqToDB.SqlQuery
 			{
 				if (tableSource.Joins.Count > 0)
 					return false;
+				if (selectQuery.From.Tables.Count > 1)
+					return false;
 			};
 
 			if (!subQuery.GroupBy.IsEmpty || subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)

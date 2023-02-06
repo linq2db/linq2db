@@ -2450,17 +2450,31 @@ namespace LinqToDB.SqlQuery
 			{
 				case VisitMode.ReadOnly:
 				{
+					if (element.TableArguments != null)
+						VisitElements(element.TableArguments, VisitMode.ReadOnly);
 					break;
 				}
 				case VisitMode.Modify:
 				{
+					if (element.TableArguments != null)
+						VisitElements(element.TableArguments, VisitMode.Modify);					
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					if (ShouldReplace(element))
+					var tableArguments = element.TableArguments != null
+						? VisitElements(element.TableArguments, VisitMode.Modify)
+						: null;
+
+					if (element.TableArguments != null)
+						VisitElements(element.TableArguments, VisitMode.Modify);	
+
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.TableArguments, tableArguments))
 					{
-						var newTable = new SqlTable(element);
+						var newTable =
+							new SqlTable(element) { TableArguments = tableArguments ?? element.TableArguments };
+
 						for (var index = 0; index < newTable.Fields.Count; index++)
 						{
 							NotifyReplaced(newTable.Fields[index], element.Fields[index]);
