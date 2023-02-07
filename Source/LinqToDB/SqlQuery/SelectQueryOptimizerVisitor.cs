@@ -1489,7 +1489,7 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.Select.HasModifier && selectQuery.Select.HasModifier)
 				return false;
 
-			if (subQuery.Select.HasModifier)
+			if (subQuery.Select.HasModifier || !subQuery.GroupBy.IsEmpty)
 			{
 				if (tableSource.Joins.Count > 0)
 					return false;
@@ -1497,7 +1497,7 @@ namespace LinqToDB.SqlQuery
 					return false;
 			};
 
-			if (!subQuery.GroupBy.IsEmpty || subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
+			if (subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
 			{
 				if (tableSource.Joins.Any(j => j.JoinType == JoinType.Right || j.JoinType == JoinType.RightApply ||
 				                               j.JoinType == JoinType.Full  || j.JoinType == JoinType.FullApply))
