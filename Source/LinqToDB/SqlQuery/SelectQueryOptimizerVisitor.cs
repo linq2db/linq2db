@@ -14,7 +14,8 @@ namespace LinqToDB.SqlQuery
 		int               _level             = default!;
 		IQueryElement[]   _dependencies      = default!;
 
-		SelectQuery? _parentSelect;
+		SelectQuery?    _parentSelect;
+		SqlSetOperator? _currentSetOperator;
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -59,110 +60,94 @@ namespace LinqToDB.SqlQuery
 			_parentSelect         = saveParent;
 			newQuery.ParentSelect = _parentSelect;
 
-			OptimizeUnions(newQuery);
 			FinalizeAndValidateInternal(newQuery);
 
 			return newQuery;
 		}
 
-		void OptimizeUnions(SelectQuery selectQuery)
+		void CorrectOrderBy(SelectQuery selectQuery)
 		{
-			return;
+			//if (_currentSetOperator?.SelectQuery == selectQuery &&
+			//    _currentSetOperator.Operation    != SetOperation.UnionAll)
+			//{
+			//	selectQuery.OrderBy.Items.Clear();
+			//}
 
-			if (null == selectQuery.Find(QueryElementType.SetOperator))
+			if (!selectQuery.HasSetOperators)
 				return;
 
-			var parentSetType = new Dictionary<ISqlExpression, SetOperation>();
-			selectQuery.Visit(parentSetType, static (parentSetType, e) =>
+			if (selectQuery.SetOperators[0].Operation != SetOperation.UnionAll)
 			{
-				if (e is SelectQuery sql && sql.HasSetOperators)
-				{
-					if (sql.From.Tables.Count > 0)
-						parentSetType.Add(sql.From.Tables[0].Source, sql.SetOperators[0].Operation);
+				selectQuery.OrderBy.Items.Clear();
+			}
 
-					foreach (var set in sql.SetOperators)
-						parentSetType.Add(set.SelectQuery, sql.SetOperators[0].Operation);
-				}
-			});
-
-			var exprs = new Dictionary<ISqlExpression,ISqlExpression>();
-
-			selectQuery.Visit((exprs, parentSetType), static (ctx, e) =>
+			foreach(var setOperator in selectQuery.SetOperators)
 			{
-				if (!(e is SelectQuery sql) || sql.From.Tables.Count != 1 || !sql.IsSimpleOrSet)
-					return;
-
-				var table = sql.From.Tables[0];
-
-				if (table.Joins.Count != 0 || !(table.Source is SelectQuery))
-					return;
-
-				var union = (SelectQuery)table.Source;
-
-				if (!union.HasSetOperators || sql.Select.Columns.Count != union.Select.Columns.Count)
-					return;
-
-				var operation = union.SetOperators[0].Operation;
-				if (sql.HasSetOperators && operation != sql.SetOperators[0].Operation)
-					return;
-				if (ctx.parentSetType.TryGetValue(sql, out var parentOp) && parentOp != operation)
-					return;
-
-				var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
-
-				for (var i = 0; i < sql.Select.Columns.Count; i++)
+				if (setOperator.Operation != SetOperation.UnionAll)
 				{
-					var scol = sql.Select.Columns[i];
-
-					newIndexes[scol.Expression] = i;
+					setOperator.SelectQuery.OrderBy.Items.Clear();
 				}
+			}
+		}
 
-				if (newIndexes.Count != union.Select.Columns.Count)
-					return;
+		public override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
+		{
+			var saveCurrent = _currentSetOperator;
+			_currentSetOperator = element;
+			base.VisitSqlSetOperator(element);
 
-				for (var i = 0; i < union.Select.Columns.Count; i++)
-				{
-					var ucol = union.Select.Columns[i];
+			_currentSetOperator = saveCurrent;
 
-					if (!newIndexes.ContainsKey(ucol))
-						return;
-				}
+			return element;
+		}
 
-				ctx.exprs.Add(union, sql);
+		void OptimizeUnions(SelectQuery selectQuery)
+		{
+			if (!selectQuery.HasSetOperators)
+				return;
 
-				UpdateSetIndexes(newIndexes, union);
-
-				for (var i = 0; i < sql.Select.Columns.Count; i++)
-				{
-					var scol = sql.Select.Columns[i];
-					var ucol = (SqlColumn)scol.Expression;
-
-					scol.Expression = ucol.Expression;
-					scol.RawAlias   = ucol.RawAlias;
-
-					if (!ctx.exprs.ContainsKey(ucol))
-						ctx.exprs.Add(ucol, scol);
-				}
-
-				for (var i = sql.Select.Columns.Count; i < union.Select.Columns.Count; i++)
-					sql.Select.ExprNew(union.Select.Columns[i].Expression);
-
-				sql.From.Tables.Clear();
-				sql.From.Tables.AddRange(union.From.Tables);
-
-				sql.Where.  SearchCondition.Conditions.AddRange(union.Where. SearchCondition.Conditions);
-				sql.Having. SearchCondition.Conditions.AddRange(union.Having.SearchCondition.Conditions);
-				sql.GroupBy.Items.                     AddRange(union.GroupBy.Items);
-				sql.OrderBy.Items.                     AddRange(union.OrderBy.Items);
-				sql.SetOperators.InsertRange(0, union.SetOperators);
-			});
-
-			if (exprs.Count > 0)
+			for (var index = 0; index < selectQuery.SetOperators.Count; index++)
 			{
-				selectQuery.Walk(
-					WalkOptions.WithProcessParent,
-					exprs,
-					static (exprs, expr) => exprs.TryGetValue(expr, out var e) ? e : expr);
+				var setOperator = selectQuery.SetOperators[index];
+
+				if (setOperator.SelectQuery.From.Tables.Count == 1 &&
+				    setOperator.SelectQuery.From.Tables[0].Source is SelectQuery { HasSetOperators: true } subQuery)
+				{
+					if (subQuery.SetOperators.All(so => so.Operation == setOperator.Operation))
+					{
+						var allColumns = setOperator.Operation != SetOperation.UnionAll;
+
+						if (allColumns)
+						{
+							if (subQuery.Select.Columns.Count != selectQuery.Select.Columns.Count)
+								continue;
+						}
+
+						var newIndexes =
+							new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>
+								.Default);
+
+						for (var i = 0; i < setOperator.SelectQuery.Select.Columns.Count; i++)
+						{
+							var scol = setOperator.SelectQuery.Select.Columns[i];
+
+							newIndexes[scol.Expression] = i;
+						}
+
+						if (allColumns)
+						{
+							if (!subQuery.Select.Columns.All(c => newIndexes.ContainsKey(c)))
+								continue;
+						}
+
+						UpdateSetIndexes(newIndexes, subQuery);
+
+						setOperator.Modify(subQuery);
+						selectQuery.SetOperators.InsertRange(index + 1, subQuery.SetOperators);
+						subQuery.SetOperators.Clear();
+						--index;
+					}
+				}
 			}
 		}
 
@@ -213,6 +198,9 @@ namespace LinqToDB.SqlQuery
 			//OptimizeSubQueries(selectQuery, _flags.IsApplyJoinSupported);
 			//OptimizeApplies(selectQuery,_flags.IsApplyJoinSupported);
 			RemoveEmptyJoins(selectQuery);
+
+			OptimizeUnions(selectQuery);
+			CorrectOrderBy(selectQuery);
 
 			OptimizeGroupBy(selectQuery);
 			OptimizeDistinct(selectQuery);
@@ -1461,7 +1449,7 @@ namespace LinqToDB.SqlQuery
 			var found = false;
 			parentQuery.VisitParentFirstAll(e =>
 			{
-				if (found || ReferenceEquals(e, parentQuery.Select))
+				if (e.ElementType == QueryElementType.SelectClause)
 					return false;
 
 				if (ReferenceEquals(e, column))
@@ -1483,6 +1471,24 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.From.Tables.Count != 1)
 				return false;
 
+			if (_currentSetOperator?.SelectQuery == selectQuery || selectQuery.HasSetOperators)
+			{
+				// processing parent query as part of Set operation
+				//
+
+				if (subQuery.Select.HasModifier)
+					return false;
+
+				if (!subQuery.Select.GroupBy.IsEmpty || !subQuery.Select.Where.IsEmpty)
+					return false;
+
+				if (!subQuery.Select.OrderBy.IsEmpty)
+				{
+					if (selectQuery.HasSetOperators && selectQuery.SetOperators[0].Operation == SetOperation.UnionAll)
+						return false;
+				}
+			}
+
 			if (!subQuery.GroupBy.IsEmpty && !selectQuery.GroupBy.IsEmpty)
 				return false;
 
@@ -1495,7 +1501,7 @@ namespace LinqToDB.SqlQuery
 					return false;
 				if (selectQuery.From.Tables.Count > 1)
 					return false;
-			};
+			}
 
 			if (subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
 			{
@@ -1512,40 +1518,73 @@ namespace LinqToDB.SqlQuery
 			// Actual modification starts from this point
 			//
 
-			if (!subQuery.Where.IsEmpty)
-			{
-				ConcatSearchCondition(selectQuery.Where, subQuery.Where);
-			}
-
-			if (!subQuery.GroupBy.IsEmpty)
-			{
-				selectQuery.GroupBy.Items.AddRange(subQuery.GroupBy.Items);
-			}
-
-			if (!subQuery.Having.IsEmpty)
-			{
-				ConcatSearchCondition(selectQuery.Having, subQuery.Having);
-			}
-
-			if (subQuery.Select.IsDistinct) 
-				selectQuery.Select.IsDistinct = true;
-
-			if (subQuery.Select.TakeValue != null)
-			{
-				selectQuery.Select.TakeValue = subQuery.Select.TakeValue;
-			}
-
-			if (subQuery.Select.SkipValue != null)
-			{
-				selectQuery.Select.SkipValue = subQuery.Select.SkipValue;
-			}
-
 			if (subQuery.HasSetOperators)
 			{
-				throw new NotImplementedException();
-				var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+				if (selectQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
+					return false;
+
+				if (!selectQuery.Select.Where.IsEmpty || !selectQuery.Select.Having.IsEmpty || selectQuery.Select.HasModifier)
+					return false;
+
+				var operation = subQuery.SetOperators[0].Operation;
+
+				if (_currentSetOperator != null && _currentSetOperator.Operation != operation)
+					return false;
+
+				if (!subQuery.SetOperators.All(so => so.Operation == operation))
+					return false;
+
+				if (selectQuery.HasSetOperators && !selectQuery.SetOperators.All(so => so.Operation == operation))
+					return false;
+
+				var newIndexes =
+					new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>
+						.Default);
+
+				for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+				{
+					var scol = selectQuery.Select.Columns[i];
+
+					newIndexes[scol.Expression] = i;
+				}
+
+				if (!subQuery.Select.Columns.All(c => newIndexes.ContainsKey(c)))
+					return false;
+
 				UpdateSetIndexes(newIndexes, subQuery);
-				selectQuery.SetOperators.AddRange(subQuery.SetOperators);
+
+				selectQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
+				subQuery.SetOperators.Clear();
+			}
+			else
+			{
+				if (!subQuery.Where.IsEmpty)
+				{
+					ConcatSearchCondition(selectQuery.Where, subQuery.Where);
+				}
+
+				if (!subQuery.GroupBy.IsEmpty)
+				{
+					selectQuery.GroupBy.Items.AddRange(subQuery.GroupBy.Items);
+				}
+
+				if (!subQuery.Having.IsEmpty)
+				{
+					ConcatSearchCondition(selectQuery.Having, subQuery.Having);
+				}
+
+				if (subQuery.Select.IsDistinct) 
+					selectQuery.Select.IsDistinct = true;
+
+				if (subQuery.Select.TakeValue != null)
+				{
+					selectQuery.Select.TakeValue = subQuery.Select.TakeValue;
+				}
+
+				if (subQuery.Select.SkipValue != null)
+				{
+					selectQuery.Select.SkipValue = subQuery.Select.SkipValue;
+				}
 			}
 
 			foreach (var column in subQuery.Select.Columns)

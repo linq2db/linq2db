@@ -42,9 +42,7 @@
 			}
 
 			writer.AppendLine();
-
-			using(writer.WithScope())
-				writer.AppendElement(SelectQuery);
+			writer.AppendElement(SelectQuery);
 
 			return writer;
 		}

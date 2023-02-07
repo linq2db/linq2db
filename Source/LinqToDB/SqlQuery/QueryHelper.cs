@@ -205,7 +205,10 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)expr;
-					return GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
+					var found = GetColumnDescriptor(binary.Expr1) ?? GetColumnDescriptor(binary.Expr2);
+					if (found?.GetDbDataType(true).SystemType != binary.SystemType)
+						return null;
+					return found;
 				}
 				case QueryElementType.SqlNullabilityExpression:
 				{
