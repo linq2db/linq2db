@@ -1188,8 +1188,8 @@ namespace LinqToDB.SqlQuery
 
 						if (
 							insertedT != null && !ReferenceEquals(output.InsertedTable, insertedT) ||
-							deletedT  != null && !ReferenceEquals(output.DeletedTable, deletedT)   ||
-							outputT   != null && !ReferenceEquals(output.OutputTable, outputT)     ||
+							deletedT  != null && !ReferenceEquals(output.DeletedTable,  deletedT)  ||
+							outputT   != null && !ReferenceEquals(output.OutputTable,   outputT)   ||
 							outputC   != null && !ReferenceEquals(output.OutputColumns, outputC)   ||
 							output.HasOutputItems && outputItems != null && !ReferenceEquals(output.OutputItems, outputItems)
 						)
@@ -1204,7 +1204,6 @@ namespace LinqToDB.SqlQuery
 
 							if (outputItems != null)
 								((SqlOutputClause)newElement).OutputItems.AddRange(outputItems);
-
 						}
 
 						break;

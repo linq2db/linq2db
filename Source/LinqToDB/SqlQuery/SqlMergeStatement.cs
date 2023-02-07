@@ -74,6 +74,9 @@ namespace LinqToDB.SqlQuery
 				sb.AppendLine();
 			}
 
+			if (Output?.HasOutput == true)
+				((IQueryElement)Output).ToString(sb, dic);
+
 			return sb;
 		}
 

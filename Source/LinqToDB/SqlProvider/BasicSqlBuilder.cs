@@ -960,8 +960,9 @@ namespace LinqToDB.SqlProvider
 
 				if (addAlias)
 				{
-					var ts = Statement.SelectQuery!.GetTableSource(insertClause.Into!);
+					var ts    = Statement.SelectQuery!.GetTableSource(insertClause.Into!);
 					var alias = GetTableAlias(ts!);
+
 					if (alias != null)
 					{
 						StringBuilder
@@ -1625,7 +1626,7 @@ namespace LinqToDB.SqlProvider
 			var tablePath = TablePath;
 
 			if (alias != null)
-		{
+			{
 				if (TablePath is { Length: > 0 })
 					TablePath += '.';
 				TablePath += alias;
