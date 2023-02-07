@@ -44,11 +44,11 @@ namespace Tests.UserTests.Test3840
 			{
 				new Test
 				{
-					StartDateTime    = DateTime.UtcNow,
+					StartDateTime    = TestData.DateTimeUtc,
 					PreNotification  = TimeSpan.FromSeconds(2000),
 					PreNotification2 = TimeSpan.FromSeconds(2000),
 					PreNotification3 = TimeSpan.FromSeconds(2000),
-					StrField         = DateTime.Today,
+					StrField         = TestData.Date,
 				}
 			});
 
