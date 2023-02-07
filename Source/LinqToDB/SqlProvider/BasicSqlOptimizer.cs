@@ -1170,7 +1170,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 
-			if (!expr.Expr1.CanBeNullable(nullability) && !expr.Expr2.CanBeNullable(nullability) && expr.Expr1.SystemType.IsSignedType() && expr.Expr2.SystemType.IsSignedType())
+			if (!nullability.IsEmpty && !expr.Expr1.CanBeNullable(nullability) && !expr.Expr2.CanBeNullable(nullability) && expr.Expr1.SystemType.IsSignedType() && expr.Expr2.SystemType.IsSignedType())
 			{
 				var newExpr = expr switch
 				{
@@ -1376,6 +1376,9 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.IsDistinctPredicate:
 				{
 					var expr = (SqlPredicate.IsDistinct)predicate;
+
+					if (nullability.IsEmpty)
+						return expr;
 
 					// Here, several optimisations would already have occured:
 					// - If both expressions could be evaluated, Sql.IsDistinct would have been evaluated client-side.
@@ -2140,7 +2143,10 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.ExprExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)predicate;
-					var reduced  = exprExpr.Reduce(visitor.Context.Nullability, visitor.Context.OptimizationContext.Context);
+
+					var reduced = visitor.Context.Nullability.IsEmpty
+						? exprExpr
+						: exprExpr.Reduce(visitor.Context.Nullability, visitor.Context.OptimizationContext.Context);
 
 					if (!ReferenceEquals(reduced, exprExpr))
 					{
@@ -2263,6 +2269,9 @@ namespace LinqToDB.SqlProvider
 
 		public virtual ISqlPredicate ConvertIsNullPredicate(NullabilityContext nullability, SqlPredicate.IsNull isNull)
 		{
+			if (nullability.IsEmpty)
+				return isNull;
+			
 			if (!nullability.CanBeNull(isNull.Expr1))
 				return new SqlPredicate.Expr(new SqlValue(isNull.IsNot));
 			return isNull;

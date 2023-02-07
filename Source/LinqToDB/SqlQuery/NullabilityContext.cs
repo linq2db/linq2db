@@ -30,6 +30,7 @@ namespace LinqToDB.SqlQuery
 		public SelectQuery      InQuery     { get; }
 		public ISqlTableSource? OuterSource { get; }
 		public ISqlTableSource? InnerSource { get; }
+		public bool             IsEmpty     => InQuery == null;
 
 		NullabilityCache? _nullabilityCache;
 

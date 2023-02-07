@@ -12,7 +12,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var optimizationContext = new OptimizationContext(context, aliases, false);
 
-			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+			var nullability = NullabilityContext.NonQuery;
 
 			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, dataOptions, statement, optimizationContext, nullability);
 
