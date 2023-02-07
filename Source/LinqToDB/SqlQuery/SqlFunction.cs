@@ -109,12 +109,16 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public bool CanBeNullable(NullabilityContext nullability)
+		{
+			return QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
+				Parameters.Select(p => p.CanBeNullable(nullability)));
+		}
 
-		bool? _canBeNull;
+		bool?       _canBeNull;
 		public  bool   CanBeNull
 		{
-			get => _canBeNull ?? true;
+			get => _canBeNull ?? NullabilityType != ParametersNullabilityType.NotNullable;
 			set => _canBeNull = value;
 		}
 
