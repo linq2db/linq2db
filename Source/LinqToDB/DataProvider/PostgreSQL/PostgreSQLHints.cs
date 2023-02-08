@@ -20,8 +20,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public const string ForShare       = "FOR SHARE";
 		public const string ForKeyShare    = "FOR KEY SHARE";
 
-		public const string NoWait     = "NOWAIT";
-		public const string SkipLocked = "SKIP LOCKED";
+		public const string NoWait         = "NOWAIT";
+		public const string SkipLocked     = "SKIP LOCKED";
 
 		sealed class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
 		{
@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				var hint = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 
 				if (hint is ForNoKeyUpdate or ForKeyShare && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL92))
-					return;
+					stringBuilder.Append("-- ");
 
 				stringBuilder.Append(hint);
 

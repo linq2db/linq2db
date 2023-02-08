@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Data.Common;
 using System.Reflection;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System.Data.Common;
 	using Common;
-	using Configuration;
 	using Data;
 
 	public static partial class MySqlTools
@@ -13,13 +12,13 @@ namespace LinqToDB.DataProvider.MySql
 		static readonly Lazy<IDataProvider> _mySqlDataProvider          = DataConnection.CreateDataProvider<MySqlDataProviderMySqlOfficial>();
 		static readonly Lazy<IDataProvider> _mySqlConnectorDataProvider = DataConnection.CreateDataProvider<MySqlDataProviderMySqlConnector>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
 			// ensure ClickHouse configuration over mysql protocol is not detected as mysql
-			if (css.IsGlobal || css.ProviderName?.Contains("ClickHouse") == true || css.Name.Contains("ClickHouse"))
+			if (options.ProviderName?.Contains("ClickHouse") == true || options.ConfigurationString?.Contains("ClickHouse") == true)
 				return null;
 
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case ProviderName.MySqlOfficial                :
 				case MySqlProviderAdapter.MySqlDataAssemblyName: return _mySqlDataProvider.Value;
@@ -27,15 +26,15 @@ namespace LinqToDB.DataProvider.MySql
 
 				case ""                         :
 				case null                       :
-					if (css.Name.Contains("MySql"))
+					if (options.ConfigurationString?.Contains("MySql") == true)
 						goto case ProviderName.MySql;
 					break;
 				case MySqlProviderAdapter.MySqlDataClientNamespace:
 				case ProviderName.MySql                           :
-					if (css.Name.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
+					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName) == true)
 						return _mySqlConnectorDataProvider.Value;
 
-					if (css.Name.Contains(MySqlProviderAdapter.MySqlDataAssemblyName))
+					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlDataAssemblyName) == true)
 						return _mySqlDataProvider.Value;
 
 					return GetDataProvider();

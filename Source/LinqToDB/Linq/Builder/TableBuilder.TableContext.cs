@@ -338,6 +338,7 @@ namespace LinqToDB.Linq.Builder
 								if (!sameType)
 								{
 									var members = SqlTable.ObjectType.GetInstanceMemberEx(levelMember.Member.Name);
+
 									foreach (var mi in members)
 									{
 										if (mi.DeclaringType == levelMember.Member.DeclaringType)
@@ -351,6 +352,7 @@ namespace LinqToDB.Linq.Builder
 								if (sameType || InheritanceMapping.Count > 0)
 								{
 									string? pathName = null;
+
 									foreach (var field in SqlTable.Fields)
 									{
 										var name = levelMember.Member.Name;
@@ -425,6 +427,7 @@ namespace LinqToDB.Linq.Builder
 
 									// do not add association columns
 									var flag = true;
+
 									foreach (var assoc in EntityDescriptor.Associations)
 									{
 										if (assoc.MemberInfo == memberExpression.Member)

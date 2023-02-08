@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Linq.Expressions;
+using System.Threading;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using System.Threading;
 	using Async;
 	using Linq;
 
@@ -139,9 +139,9 @@ namespace LinqToDB
 		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
-			this IQueryable<TEntity> source,
-			[InstantHandle] Expression<Func<TEntity, TProperty>> selector)
+		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
+			this            IQueryable<TEntity>                  source,
+			[InstantHandle] Expression<Func<TEntity,TProperty?>> selector)
 		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
@@ -154,7 +154,7 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(LoadWith, source, selector),
 					currentSource.Expression, Expression.Quote(selector)));
 
-			return new LoadWithQueryable<TEntity, TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
 		/// <summary>
@@ -227,10 +227,10 @@ namespace LinqToDB
 		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
-			this IQueryable<TEntity> source,
-			[InstantHandle] Expression<Func<TEntity, IEnumerable<TProperty>>> selector,
-			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
+		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
+			this            IQueryable<TEntity>                                           source,
+			[InstantHandle] Expression<Func<TEntity,IEnumerable<TProperty>?>>             selector,
+			[InstantHandle] Expression<Func<IQueryable<TProperty>,IQueryable<TProperty>>> loadFunc)
 		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
@@ -316,10 +316,10 @@ namespace LinqToDB
 		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ILoadWithQueryable<TEntity, TProperty> LoadWith<TEntity, TProperty>(
-			this IQueryable<TEntity> source,
-			[InstantHandle] Expression<Func<TEntity, TProperty>>                           selector,
-			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
+		public static ILoadWithQueryable<TEntity,TProperty> LoadWith<TEntity,TProperty>(
+			this            IQueryable<TEntity>                                           source,
+			[InstantHandle] Expression<Func<TEntity,TProperty?>>                          selector,
+			[InstantHandle] Expression<Func<IQueryable<TProperty>,IQueryable<TProperty>>> loadFunc)
 		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
@@ -332,7 +332,7 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(LoadWith, source, selector, loadFunc),
 					currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc)));
 
-			return new LoadWithQueryable<TEntity, TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
 		/// <summary>
@@ -374,22 +374,22 @@ namespace LinqToDB
 		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
-			this ILoadWithQueryable<TEntity, TPreviousProperty> source,
-			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>> selector)
+		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
+			this            ILoadWithQueryable<TEntity,TPreviousProperty>  source,
+			[InstantHandle] Expression<Func<TPreviousProperty,TProperty?>> selector)
 		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
-		
+
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
 					currentSource.Expression, Expression.Quote(selector)));
-		
-			return new LoadWithQueryable<TEntity, TProperty>(result);
+
+			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
 		/// <summary>
@@ -431,9 +431,9 @@ namespace LinqToDB
 		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure]
-		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
-			this ILoadWithQueryable<TEntity, IEnumerable<TPreviousProperty>> source,
-			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>>   selector)
+		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
+			this            ILoadWithQueryable<TEntity,IEnumerable<TPreviousProperty>> source,
+			[InstantHandle] Expression<Func<TPreviousProperty,TProperty?>>             selector)
 		where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
@@ -446,9 +446,8 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
 					new[] { currentSource.Expression, Expression.Quote(selector) }));
 
-			return new LoadWithQueryable<TEntity, TProperty>(result);
+			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
-
 
 		/// <summary>
 		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
@@ -499,21 +498,21 @@ namespace LinqToDB
 		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure] // ThenLoadFromSingleManyFilter
-		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
-			this ILoadWithQueryable<TEntity, TPreviousProperty> source,
-			[InstantHandle] Expression<Func<TPreviousProperty, IEnumerable<TProperty>>>    selector,
-			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
+		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
+			this            ILoadWithQueryable<TEntity,TPreviousProperty>                 source,
+			[InstantHandle] Expression<Func<TPreviousProperty,IEnumerable<TProperty>?>>   selector,
+			[InstantHandle] Expression<Func<IQueryable<TProperty>,IQueryable<TProperty>>> loadFunc)
 			where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
-		
+
 			var result = source.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
 					new[] { source.Expression, Expression.Quote(selector), Expression.Quote(loadFunc) }));
-		
-			return new LoadWithQueryable<TEntity, TProperty>(result);
+
+			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
 		/// <summary>
@@ -565,23 +564,23 @@ namespace LinqToDB
 		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure] // Methods.LinqToDB.ThenLoadFromSingleSingleFilter
-		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
-			this ILoadWithQueryable<TEntity, TPreviousProperty>                            source,
-			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>>                 selector,
-			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
+		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
+			this            ILoadWithQueryable<TEntity,TPreviousProperty>                 source,
+			[InstantHandle] Expression<Func<TPreviousProperty,TProperty?>>                selector,
+			[InstantHandle] Expression<Func<IQueryable<TProperty>,IQueryable<TProperty>>> loadFunc)
 			where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
-		
+
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
 					currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc)));
-		
-			return new LoadWithQueryable<TEntity, TProperty>(result);
+
+			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
 		/// <summary>
@@ -633,23 +632,23 @@ namespace LinqToDB
 		/// <returns>Returns new query with related data included.</returns>
 		[LinqTunnel]
 		[Pure] // // Methods.LinqToDB.ThenLoadFromManySingleFilter
-		public static ILoadWithQueryable<TEntity, TProperty> ThenLoad<TEntity, TPreviousProperty, TProperty>(
-			this ILoadWithQueryable<TEntity, IEnumerable<TPreviousProperty>> source,
-			[InstantHandle] Expression<Func<TPreviousProperty, TProperty>>                 selector,
-			[InstantHandle] Expression<Func<IQueryable<TProperty>, IQueryable<TProperty>>> loadFunc)
+		public static ILoadWithQueryable<TEntity,TProperty> ThenLoad<TEntity,TPreviousProperty,TProperty>(
+			this            ILoadWithQueryable<TEntity,IEnumerable<TPreviousProperty>>    source,
+			[InstantHandle] Expression<Func<TPreviousProperty,TProperty?>>                selector,
+			[InstantHandle] Expression<Func<IQueryable<TProperty>,IQueryable<TProperty>>> loadFunc)
 			where TEntity : class
 		{
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
-		
+
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
 
 			var result = currentSource.Provider.CreateQuery<TEntity>(
 				Expression.Call(null,
 					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
 					currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc)));
-		
-			return new LoadWithQueryable<TEntity, TProperty>(result);
+
+			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
 
@@ -720,6 +719,6 @@ namespace LinqToDB
 
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
-	
+
 	}
 }

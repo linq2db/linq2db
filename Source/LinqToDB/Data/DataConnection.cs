@@ -725,13 +725,6 @@ namespace LinqToDB.Data
 			_dataContextInterceptor?.OnClosed(new (this));
 		}
 
-		public FluentMappingBuilder GetFluentMappingBuilder()
-		{
-			if (MappingSchema.IsLockable)
-				MappingSchema = new(MappingSchema);
-			return MappingSchema.GetFluentMappingBuilder();
-		}
-
 		#endregion
 
 		#region Command
@@ -1420,6 +1413,7 @@ namespace LinqToDB.Data
 			Options             = options;
 		}
 
+		// TODO: v6: get rid of Clone as we shouldn't need to clone connection with new parser anymore
 		/// <summary>
 		/// Clones current connection.
 		/// </summary>

@@ -4,6 +4,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using LinqToDB.Expressions;
 	using Common;
 	using SqlQuery;
@@ -12,7 +13,14 @@ namespace LinqToDB.Linq.Builder
 
 	internal sealed partial class MergeBuilder : MethodCallBuilder
 	{
-		static readonly MethodInfo[] _supportedMethods = {ExecuteMergeMethodInfo, MergeWithOutput, MergeWithOutputInto};
+		static readonly MethodInfo[] _supportedMethods =
+		{
+			ExecuteMergeMethodInfo,
+			MergeWithOutput,
+			MergeWithOutputSource,
+			MergeWithOutputInto,
+			MergeWithOutputIntoSource
+		};
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -23,21 +31,21 @@ namespace LinqToDB.Linq.Builder
 		{
 			Merge,
 			MergeWithOutput,
-			MergeWithOutputInto
+			MergeWithOutputSource,
+			MergeWithOutputInto,
+			MergeWithOutputIntoSource
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var kind = MergeKind.Merge;
-
-			if (methodCall.IsSameGenericMethod(MergeWithOutputInto))
-				kind = MergeKind.MergeWithOutputInto;
-			else if (methodCall.IsSameGenericMethod(MergeWithOutput))
-			{
-				kind = MergeKind.MergeWithOutput;
-			}
+			var kind =
+				methodCall.IsSameGenericMethod(MergeWithOutput)           ? MergeKind.MergeWithOutput :
+				methodCall.IsSameGenericMethod(MergeWithOutputSource)     ? MergeKind.MergeWithOutputSource :
+				methodCall.IsSameGenericMethod(MergeWithOutputInto)       ? MergeKind.MergeWithOutputInto :
+				methodCall.IsSameGenericMethod(MergeWithOutputIntoSource) ? MergeKind.MergeWithOutputIntoSource :
+				                                                            MergeKind.Merge;
 
 			mergeContext.Kind = kind;
 
@@ -58,7 +66,12 @@ namespace LinqToDB.Linq.Builder
 				var selectQuery = outputContext.SelectQuery;
 				var actionFieldContext  = new SingleExpressionContext(builder, actionField, selectQuery);
 
-				if (kind == MergeKind.MergeWithOutput)
+				IBuildContext? sourceTableContext = null;
+
+				if (kind is MergeKind.MergeWithOutputSource or MergeKind.MergeWithOutputIntoSource)
+					sourceTableContext = mergeContext.SourceContext;
+
+				if (kind is MergeKind.MergeWithOutput or MergeKind.MergeWithOutputSource)
 				{
 					var outputLambda = methodCall.Arguments[1].UnwrapLambda();
 					var outputExpression = SequenceHelper.PrepareBody(outputLambda, actionFieldContext, deletedContext, insertedContext);

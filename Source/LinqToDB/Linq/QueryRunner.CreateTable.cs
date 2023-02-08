@@ -2,6 +2,7 @@
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Mapping;
 
 	static partial class QueryRunner
 	{
@@ -9,17 +10,18 @@
 			where T : notnull
 		{
 			public static ITable<T> Query(
-				IDataContext    dataContext,
-				string?         tableName,
-				string?         serverName,
-				string?         databaseName,
-				string?         schemaName,
-				string?         statementHeader,
-				string?         statementFooter,
-				DefaultNullable defaultNullable,
-				TableOptions    tableOptions)
+				IDataContext      dataContext,
+				EntityDescriptor? tableDescriptor,
+				string?           tableName,
+				string?           serverName,
+				string?           databaseName,
+				string?           schemaName,
+				string?           statementHeader,
+				string?           statementFooter,
+				DefaultNullable   defaultNullable,
+				TableOptions      tableOptions)
 			{
-				var sqlTable    = new SqlTable<T>(dataContext.MappingSchema);
+				var sqlTable    = new SqlTable<T>(tableDescriptor?.MappingSchema ?? dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
@@ -46,7 +48,7 @@
 
 				query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
 
-				ITable<T> table = new Table<T>(dataContext);
+				ITable<T> table = new Table<T>(dataContext, tableDescriptor);
 
 				if (sqlTable.TableName.Name     != null) table = table.TableName   (sqlTable.TableName.Name);
 				if (sqlTable.TableName.Server   != null) table = table.ServerName  (sqlTable.TableName.Server);
@@ -59,6 +61,7 @@
 
 			public static async Task<ITable<T>> QueryAsync(
 				IDataContext      dataContext,
+				EntityDescriptor? tableDescriptor,
 				string?           tableName,
 				string?           serverName,
 				string?           databaseName,
@@ -69,7 +72,7 @@
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
-				var sqlTable = new SqlTable<T>(dataContext.MappingSchema);
+				var sqlTable    = new SqlTable<T>(tableDescriptor?.MappingSchema ?? dataContext.MappingSchema);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
@@ -96,7 +99,7 @@
 
 				await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				ITable<T> table = new Table<T>(dataContext);
+				ITable<T> table = new Table<T>(dataContext, tableDescriptor);
 
 				if (sqlTable.TableName.Name     != null) table = table.TableName   (sqlTable.TableName.Name);
 				if (sqlTable.TableName.Server   != null) table = table.ServerName  (sqlTable.TableName.Server);

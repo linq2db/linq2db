@@ -629,5 +629,28 @@ namespace LinqToDB.DataProvider.MySql
 				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint);
 			}
 		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+			}
+		}
 	}
 }

@@ -21,12 +21,12 @@ namespace LinqToDB.Linq
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static IDataContext GetDataContext<T>(IQueryable<T> queryable)
+		public static IDataContext? GetDataContext<T>(IQueryable<T> queryable)
 		{
 			return queryable switch
 			{
 				IExpressionQuery query => query.DataContext,
-				_                      => default!,
+				_                      => null,
 			};
 		}
 
@@ -34,7 +34,7 @@ namespace LinqToDB.Linq
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static IDataContext GetDataContext<T>(IUpdatable<T> updatable)
+		public static IDataContext? GetDataContext<T>(IUpdatable<T> updatable)
 		{
 			return GetDataContext(((LinqExtensions.Updatable<T>)updatable).Query);
 		}
@@ -43,7 +43,7 @@ namespace LinqToDB.Linq
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static IDataContext GetDataContext<T>(IValueInsertable<T> insertable)
+		public static IDataContext? GetDataContext<T>(IValueInsertable<T> insertable)
 		{
 			return GetDataContext(((LinqExtensions.ValueInsertable<T>)insertable).Query);
 		}
@@ -52,7 +52,7 @@ namespace LinqToDB.Linq
 		/// This is internal API and is not intended for use by Linq To DB applications.
 		/// It may change or be removed without further notice.
 		/// </summary>
-		public static IDataContext GetDataContext<TSource, TTarget>(ISelectInsertable<TSource, TTarget> insertable)
+		public static IDataContext? GetDataContext<TSource, TTarget>(ISelectInsertable<TSource, TTarget> insertable)
 		{
 			return GetDataContext(((LinqExtensions.SelectInsertable<TSource, TTarget>)insertable).Query);
 		}

@@ -244,5 +244,80 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring($"SELECT /*+ {MySqlHints.Query.NoSemiJoin}(@qq FIRSTMATCH, LOOSESCAN)"));
 			Assert.That(LastQuery, Contains.Substring("\tSELECT /*+ QB_NAME(qq) */").Using(StringComparison.Ordinal));
 		}
+
+		[Test]
+		public void SubQueryHintTest([IncludeDataSources(true, TestProvName.AllMySqlServer57Plus)] string context,
+			[Values(
+				MySqlHints.SubQuery.ForUpdate,
+				MySqlHints.SubQuery.ForShare,
+				MySqlHints.SubQuery.LockInShareMode
+			)] string hint)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Person.SubQueryHint(hint)
+				where p.ID > 0
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{hint}").Using(StringComparison.Ordinal));
+		}
+
+		[Test]
+		public void SubQueryTableHintTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.Person.TableID("Pr")
+					.AsMySql()
+					.SubQueryTableHint(MySqlHints.SubQuery.ForUpdate, Sql.TableAlias("Pr"))
+				where p.ID > 0
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("FOR UPDATE OF p"));
+		}
+
+		[Test]
+		public void SubQueryTableHintTest2([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent.TableID("Pr")
+					join c in db.Child.TableID("Ch") on p.ParentID equals c.ParentID
+					select p
+				)
+				.AsMySql()
+				.SubQueryTableHint(MySqlHints.SubQuery.ForUpdate, MySqlHints.SubQuery.SkipLocked, Sql.TableAlias("Pr"), Sql.TableAlias("Ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("FOR UPDATE OF p, c_1 SKIP LOCKED"));
+		}
+
+		[Test]
+		public void SubQueryHintLockInShareModeTest([IncludeDataSources(true, TestProvName.AllMySql57Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					select p
+				)
+				.AsMySql()
+				.LockInShareModeHint();
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.LockInShareMode}"));
+		}
 	}
 }

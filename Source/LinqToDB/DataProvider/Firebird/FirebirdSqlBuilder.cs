@@ -17,6 +17,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
 	{
+		public override bool CteFirst => false;
+
 		public FirebirdSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
@@ -346,18 +348,6 @@ namespace LinqToDB.DataProvider.Firebird
 			else
 			{
 				base.BuildDeleteQuery(deleteStatement);
-			}
-		}
-
-		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
-		{
-			if (statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
-			{
-				BuildInsertQuery2(statement, insertClause, addAlias);
-			}
-			else
-			{
-				base.BuildInsertQuery(statement, insertClause, addAlias);
 			}
 		}
 

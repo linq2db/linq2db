@@ -101,7 +101,7 @@ namespace Tests.UserTests
 			};
 
 			var ms = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<DataClass>().Property(e => e.Value).HasConversion(v => v!.Value, s => new AnredeAuswahlliste(s)).Build();
 
 			using (var db = GetDataContext(context, ms))

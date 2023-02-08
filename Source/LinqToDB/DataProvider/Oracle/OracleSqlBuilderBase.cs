@@ -11,6 +11,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 	abstract partial class OracleSqlBuilderBase : BasicSqlBuilder<OracleOptions>
 	{
+		public override bool CteFirst => false;
+
 		protected OracleSqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
@@ -146,18 +148,6 @@ namespace LinqToDB.DataProvider.Oracle
 			else
 			{
 				base.BuildDeleteQuery(deleteStatement);
-			}
-		}
-
-		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
-		{
-			if (statement is SqlStatementWithQueryBase withQuery && withQuery.With?.Clauses.Count > 0)
-			{
-				BuildInsertQuery2(statement, insertClause, addAlias);
-			}
-			else
-			{
-				base.BuildInsertQuery(statement, insertClause, addAlias);
 			}
 		}
 

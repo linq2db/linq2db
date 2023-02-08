@@ -213,7 +213,7 @@ namespace LinqToDB.Remote
 				object? result = null;
 				if (ret != null)
 				{
-					var lsr = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
+					var lsr = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, _dataContext.MappingSchema, ret);
 					var value = lsr.Data[0][0];
 
 					if (!string.IsNullOrEmpty(value))
@@ -248,7 +248,7 @@ namespace LinqToDB.Remote
 
 				var ret = _client.ExecuteReader(_dataContext.Configuration, data);
 
-				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
+				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, _dataContext.MappingSchema, ret);
 
 				return new DataReaderWrapper(new RemoteDataReader(_dataContext.SerializationMappingSchema, result));
 			}
@@ -331,7 +331,7 @@ namespace LinqToDB.Remote
 
 				var ret = await _client.ExecuteReaderAsync(_dataContext.Configuration, data, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
+				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, _dataContext.MappingSchema, ret);
 				var reader = new RemoteDataReader(_dataContext.SerializationMappingSchema, result);
 
 				return new DataReaderAsync(reader);
@@ -365,7 +365,7 @@ namespace LinqToDB.Remote
 				object? result = null;
 				if (ret != null)
 				{
-					var lsr = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, ret);
+					var lsr = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, _dataContext.MappingSchema, ret);
 					var value = lsr.Data[0][0];
 					result = SerializationConverter.Deserialize(_dataContext.SerializationMappingSchema, lsr.FieldTypes[0], value);
 				}

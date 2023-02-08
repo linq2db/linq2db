@@ -81,42 +81,41 @@ namespace LinqToDB.DataProvider.SqlServer
 					SqlServerTypes.Configure(provider);
 		}
 
-		public override IDataProvider? DetectProvider(IConnectionStringSettings css, string connectionString)
+		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			var provider = css.ProviderName switch
+			var provider = options.ProviderName switch
 			{
 				SqlServerProviderAdapter.MicrosoftClientNamespace => SqlServerProvider.MicrosoftDataSqlClient,
 				SqlServerProviderAdapter.SystemClientNamespace    => SqlServerProvider.SystemDataSqlClient,
 				_                                                 => DetectProvider()
 			};
 
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case ""                      :
 				case null                    :
-					if (css.Name == "SqlServer")
+					if (options.ConfigurationString == "SqlServer")
 						goto case ProviderName.SqlServer;
 					break;
 					// SqlClient use dot prefix, as SqlClient itself used by some other providers
 				case var providerName when providerName.Contains("SqlServer") || providerName.Contains(".SqlClient"):
 				case ProviderName.SqlServer:
-					if (css.Name.Contains("2005") || css.ProviderName?.Contains("2005") == true) return GetDataProvider(provider, SqlServerVersion.v2005, null);
-					if (css.Name.Contains("2008") || css.ProviderName?.Contains("2008") == true) return GetDataProvider(provider, SqlServerVersion.v2008, null);
-					if (css.Name.Contains("2012") || css.ProviderName?.Contains("2012") == true) return GetDataProvider(provider, SqlServerVersion.v2012, null);
-					if (css.Name.Contains("2014") || css.ProviderName?.Contains("2014") == true) return GetDataProvider(provider, SqlServerVersion.v2014, null);
-					if (css.Name.Contains("2016") || css.ProviderName?.Contains("2016") == true) return GetDataProvider(provider, SqlServerVersion.v2016, null);
-					if (css.Name.Contains("2017") || css.ProviderName?.Contains("2017") == true) return GetDataProvider(provider, SqlServerVersion.v2017, null);
-					if (css.Name.Contains("2019") || css.ProviderName?.Contains("2019") == true) return GetDataProvider(provider, SqlServerVersion.v2019, null);
-					if (css.Name.Contains("2022") || css.ProviderName?.Contains("2022") == true) return GetDataProvider(provider, SqlServerVersion.v2022, null);
+					if (options.ConfigurationString?.Contains("2005") == true || options.ProviderName?.Contains("2005") == true) return GetDataProvider(options, provider, SqlServerVersion.v2005);
+					if (options.ConfigurationString?.Contains("2008") == true || options.ProviderName?.Contains("2008") == true) return GetDataProvider(options, provider, SqlServerVersion.v2008);
+					if (options.ConfigurationString?.Contains("2012") == true || options.ProviderName?.Contains("2012") == true) return GetDataProvider(options, provider, SqlServerVersion.v2012);
+					if (options.ConfigurationString?.Contains("2014") == true || options.ProviderName?.Contains("2014") == true) return GetDataProvider(options, provider, SqlServerVersion.v2014);
+					if (options.ConfigurationString?.Contains("2016") == true || options.ProviderName?.Contains("2016") == true) return GetDataProvider(options, provider, SqlServerVersion.v2016);
+					if (options.ConfigurationString?.Contains("2017") == true || options.ProviderName?.Contains("2017") == true) return GetDataProvider(options, provider, SqlServerVersion.v2017);
+					if (options.ConfigurationString?.Contains("2019") == true || options.ProviderName?.Contains("2019") == true) return GetDataProvider(options, provider, SqlServerVersion.v2019);
+					if (options.ConfigurationString?.Contains("2022") == true || options.ProviderName?.Contains("2022") == true) return GetDataProvider(options, provider, SqlServerVersion.v2022);
 
 					if (AutoDetectProvider)
 					{
 						try
 						{
-							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
-							var dv = DetectServerVersion(provider, cs);
+							var dv = DetectServerVersion(options, provider);
 
-							return dv != null ? GetDataProvider(provider, dv.Value, connectionString) : null;
+							return dv != null ? GetDataProvider(options, provider, dv.Value) : null;
 						}
 						catch
 						{
@@ -124,20 +123,20 @@ namespace LinqToDB.DataProvider.SqlServer
 						}
 					}
 
-					return GetDataProvider(provider, DefaultVersion, connectionString);
+					return GetDataProvider(options, provider, DefaultVersion);
 			}
 
 			return null;
 		}
 
-		public override IDataProvider GetDataProvider(SqlServerProvider provider, SqlServerVersion version, string? connectionString)
+		public override IDataProvider GetDataProvider(ConnectionOptions options, SqlServerProvider provider, SqlServerVersion version)
 		{
 			if (provider == SqlServerProvider.AutoDetect)
 				provider = DetectProvider();
 
 			return (provider, version) switch
 			{
-				(_,                                        SqlServerVersion.AutoDetect) => AutoDetectProvider(),
+				(_,                                        SqlServerVersion.AutoDetect) => GetDataProvider(options, provider, DetectServerVersion(options, provider) ?? DefaultVersion),
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2005)      => _sqlServerDataProvider2005Sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2008)      => _sqlServerDataProvider2008Sdc.Value,
 				(SqlServerProvider.SystemDataSqlClient,    SqlServerVersion.v2012)      => _sqlServerDataProvider2012Sdc.Value,
@@ -156,14 +155,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				(SqlServerProvider.MicrosoftDataSqlClient, SqlServerVersion.v2022)      => _sqlServerDataProvider2022Mdc.Value,
 				_                                                                       => _sqlServerDataProvider2008Sdc.Value,
 			};
-
-			IDataProvider AutoDetectProvider()
-			{
-				if (connectionString == null)
-					throw new InvalidOperationException("Connection string is not provided.");
-
-				return GetDataProvider(provider, DetectServerVersion(provider, connectionString) ?? DefaultVersion, null);
-			}
 		}
 
 		public static SqlServerProvider DetectProvider()
@@ -189,7 +180,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			cmd.CommandText = "SELECT compatibility_level FROM sys.databases WHERE name = db_name()";
 
-			var level = Common.Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
+			var level = Converter.ChangeTypeTo<int>(cmd.ExecuteScalar());
 
 			return level switch
 			{

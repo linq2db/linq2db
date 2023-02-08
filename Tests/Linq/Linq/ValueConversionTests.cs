@@ -136,7 +136,7 @@ namespace Tests.Linq
 		private static MappingSchema CreateMappingSchema()
 		{
 			var ms = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 
 			builder.Entity<MainClass>()
 				.Property(e => e.Value1)

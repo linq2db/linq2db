@@ -2,12 +2,12 @@
 using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Linq.Builder;
 
 namespace LinqToDB.Mapping
 {
 	using Common;
 	using Extensions;
+	using Linq.Builder;
 
 	/// <summary>
 	/// Stores association descriptor.

@@ -4,7 +4,6 @@ using System.Security;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Configuration;
 	using Data;
 
 	/// <summary>
@@ -15,23 +14,23 @@ namespace LinqToDB.DataProvider.Access
 		static readonly Lazy<IDataProvider> _accessOleDbDataProvider = DataConnection.CreateDataProvider<AccessOleDbDataProvider>();
 		static readonly Lazy<IDataProvider> _accessODBCDataProvider  = DataConnection.CreateDataProvider<AccessODBCDataProvider>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (connectionString.Contains("Microsoft.ACE.OLEDB") || connectionString.Contains("Microsoft.Jet.OLEDB"))
+			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true || options.ConnectionString?.Contains("Microsoft.Jet.OLEDB") == true)
 			{
 				return _accessOleDbDataProvider.Value;
 			}
 
-			if (css.ProviderName == ProviderName.AccessOdbc
-				|| css.Name.Contains("Access.Odbc"))
+			if (options.ProviderName == ProviderName.AccessOdbc
+				|| options.ConfigurationString?.Contains("Access.Odbc") == true)
 			{
 				return _accessODBCDataProvider.Value;
 			}
 
-			if (css.ProviderName == ProviderName.Access || (css.Name.Contains("Access") && !css.Name.Contains("DataAccess")))
+			if (options.ProviderName == ProviderName.Access || (options.ConfigurationString?.Contains("Access") == true && !options.ConfigurationString.Contains("DataAccess")))
 			{
-				if (connectionString.Contains("*.mdb")
-					|| connectionString.Contains("*.accdb"))
+				if (options.ConnectionString?.Contains("*.mdb") == true
+					|| options.ConnectionString?.Contains("*.accdb") == true)
 					return _accessODBCDataProvider.Value;
 
 				return _accessOleDbDataProvider.Value;

@@ -11,12 +11,12 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 		static readonly Lazy<IDataProvider> _sqlCeDataProvider = DataConnection.CreateDataProvider<SqlCeDataProvider>();
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (css.ProviderName?.Contains("SqlCe") == true
-				|| css.ProviderName?.Contains("SqlServerCe") == true
-				|| css.Name.Contains("SqlCe")
-				|| css.Name.Contains("SqlServerCe"))
+			if (options.ProviderName?.Contains("SqlCe") == true
+				|| options.ProviderName?.Contains("SqlServerCe") == true
+				|| options.ConfigurationString?.Contains("SqlCe") == true
+				|| options.ConfigurationString?.Contains("SqlServerCe") == true)
 				return _sqlCeDataProvider.Value;
 
 			return null;

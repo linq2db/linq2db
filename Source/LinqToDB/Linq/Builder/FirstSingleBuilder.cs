@@ -17,8 +17,13 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			return IsApplicable(methodCall);
+		}
+
+		private static bool IsApplicable(MethodCallExpression methodCall)
+		{
 			return
-				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 1 ||
+				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count == 1 ||
 				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
 		}
 

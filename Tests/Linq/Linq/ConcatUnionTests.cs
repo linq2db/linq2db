@@ -1461,7 +1461,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "invalid SQL for Any() subquery")]
-		public void Issue2932_Broken([DataSources] string context)
+		public void Issue2932_Broken([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 

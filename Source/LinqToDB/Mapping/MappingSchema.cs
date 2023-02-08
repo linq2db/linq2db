@@ -1213,17 +1213,6 @@ namespace LinqToDB.Mapping
 			return Schemas[0].MetadataReader?.GetDynamicColumns(type) ?? Array<MemberInfo>.Empty;
 		}
 
-		/// <summary>
-		/// Gets fluent mapping builder for current schema.
-		/// </summary>
-		/// <returns>Fluent mapping builder.</returns>
-		public FluentMappingBuilder GetFluentMappingBuilder()
-		{
-			if (!IsLocked)
-				return new (this);
-			throw new LinqToDBException("MappingSchema is locked. Fluent Mapping is not supported.");
-		}
-
 		#endregion
 
 		#region Configuration

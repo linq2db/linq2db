@@ -73,6 +73,8 @@ namespace LinqToDB.SqlQuery
 					.AppendLine();
 			}
 
+            if (Output?.HasOutput == true)
+                writer.AppendElement(Output);
 			return writer;
 		}
 

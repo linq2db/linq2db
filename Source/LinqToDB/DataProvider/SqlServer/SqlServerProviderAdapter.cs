@@ -350,6 +350,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			public DbCommand CreateCommand() => ((Func<SqlConnection, DbCommand>)CompiledWrappers[1])(this);
 			public void      Open()          => ((Action<SqlConnection>)CompiledWrappers[2])(this);
 			public void      Dispose()       => ((Action<SqlConnection>)CompiledWrappers[3])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]

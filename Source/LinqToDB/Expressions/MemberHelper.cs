@@ -159,6 +159,11 @@ namespace LinqToDB.Expressions
 			return (PropertyInfo)GetMemberInfo(func);
 		}
 
+		public static PropertyInfo PropertyOf(Expression<Func<object?>> func)
+		{
+			return (PropertyInfo)GetMemberInfo(func);
+		}
+
 		public static MethodInfo MethodOf<T>(Expression<Func<T,object?>> func)
 		{
 			var mi = GetMemberInfo(func);

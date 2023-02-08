@@ -178,6 +178,7 @@ namespace LinqToDB.CommandLine
 				case ProviderName.ClickHouseMySql   :
 				case ProviderName.ClickHouseClient  :
 				case ProviderName.ClickHouseOctonica:
+				case ProviderName.SqlServer         :
 					break;
 				case ProviderName.SQLite            :
 					provider = ProviderName.SQLiteClassic;

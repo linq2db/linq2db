@@ -45,9 +45,9 @@ namespace LinqToDB.SqlQuery
 
 		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)
 		{
-			((ISqlExpressionWalkable?)DeletedTable )?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)DeletedTable) ?.Walk(options, context, func);
 			((ISqlExpressionWalkable?)InsertedTable)?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)OutputTable  )?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)OutputTable)  ?.Walk(options, context, func);
 
 			if (HasOutputItems)
 				foreach (var t in OutputItems)

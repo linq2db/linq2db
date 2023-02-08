@@ -2,10 +2,10 @@
 
 namespace LinqToDB.SqlProvider
 {
-	using LinqToDB.Common;
+	using Common;
 	using SqlQuery;
 
-	public abstract partial class BasicSqlBuilder : ISqlBuilder
+	public abstract partial class BasicSqlBuilder
 	{
 		/// <summary>
 		/// If true, provider supports column aliases specification after table alias.

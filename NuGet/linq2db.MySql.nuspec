@@ -14,7 +14,7 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db"    version="5.0.0"  />
-			<dependency id="MySql.Data" version="8.0.32" />
+			<dependency id="MySql.Data" version="8.0.31" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />

@@ -13,6 +13,8 @@ namespace LinqToDB.DataProvider.DB2
 
 	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
+		public override bool CteFirst => false;
+
 		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{

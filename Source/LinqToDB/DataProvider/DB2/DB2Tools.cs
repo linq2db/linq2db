@@ -17,13 +17,13 @@ namespace LinqToDB.DataProvider.DB2
 
 		public static bool AutoDetectProvider { get; set; } = true;
 
-		internal static IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
 			// DB2 ODS provider could be used by informix
-			if (css.Name.Contains("Informix"))
+			if (options.ConfigurationString?.Contains("Informix") == true)
 				return null;
 
-			switch (css.ProviderName)
+			switch (options.ProviderName)
 			{
 				case ProviderName.DB2LUW: return _db2DataProviderLUW.Value;
 				case ProviderName.DB2zOS: return _db2DataProviderzOS.Value;
@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.DB2
 				case ""             :
 				case null           :
 
-					if (css.Name == "DB2")
+					if (options.ConfigurationString == "DB2")
 						goto case ProviderName.DB2;
 					break;
 
@@ -39,25 +39,23 @@ namespace LinqToDB.DataProvider.DB2
 				case DB2ProviderAdapter.NetFxClientNamespace:
 				case DB2ProviderAdapter.CoreClientNamespace :
 
-					if (css.Name.Contains("LUW"))
+					if (options.ConfigurationString?.Contains("LUW") == true)
 						return _db2DataProviderLUW.Value;
-					if (css.Name.Contains("z/OS") || css.Name.Contains("zOS"))
+					if (options.ConfigurationString?.Contains("z/OS") == true || options.ConfigurationString?.Contains("zOS") == true)
 						return _db2DataProviderzOS.Value;
 
-					if (AutoDetectProvider)
+					if (AutoDetectProvider && options.ConnectionString != null)
 					{
 						try
 						{
-							var cs = string.IsNullOrWhiteSpace(connectionString) ? css.ConnectionString : connectionString;
+							using var conn = DB2ProviderAdapter.Instance.CreateConnection(options.ConnectionString);
+							options.ConnectionInterceptor?.ConnectionOpening(new(null), ((IConnectionWrapper)conn).Connection);
+							conn.Open();
+							options.ConnectionInterceptor?.ConnectionOpened(new(null), ((IConnectionWrapper)conn).Connection);
 
-							using (var conn = DB2ProviderAdapter.Instance.CreateConnection(cs))
-							{
-								conn.Open();
+							var iszOS = conn.eServerType == DB2ProviderAdapter.DB2ServerTypes.DB2_390;
 
-								var iszOS = conn.eServerType == DB2ProviderAdapter.DB2ServerTypes.DB2_390;
-
-								return iszOS ? _db2DataProviderzOS.Value : _db2DataProviderLUW.Value;
-							}
+							return iszOS ? _db2DataProviderzOS.Value : _db2DataProviderLUW.Value;
 						}
 						catch
 						{
