@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 
 			var take = 0;
 
-			var forceOuter = buildInfo.Parent is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+			var forceOuter = buildInfo.IsSubQuery;
 			var methodKind = GetMethodKind(methodCall.Method.Name);
 
 			switch (methodKind)

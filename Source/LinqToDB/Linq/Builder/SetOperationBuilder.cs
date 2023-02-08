@@ -590,6 +590,16 @@ namespace LinqToDB.Linq.Builder
 				if (_type == null)
 					throw new InvalidOperationException();
 
+				//var ref1 = new ContextRefExpression(_type, _sequence1.SubQuery);
+				//var ref2 = new ContextRefExpression(_type, _sequence2.SubQuery);
+
+				//var leftSqlExpr  = SqlGenericConstructorExpression.Parse(Builder.ConvertToSqlExpr(_sequence1.SubQuery, ref1, ProjectFlags.Expression));
+				//var rightSqlExpr = SqlGenericConstructorExpression.Parse(Builder.ConvertToSqlExpr(_sequence2.SubQuery, ref2, ProjectFlags.Expression));
+
+				//return MakeConditionalConstructExpression(new ContextRefExpression(_type, this), 
+				//	leftSqlExpr,
+				//	rightSqlExpr);
+
 				return MakeConditionalConstructExpression(new ContextRefExpression(_type, this), 
 					_leftSqlExpr,
 					_rightSqlExpr);
@@ -753,7 +763,7 @@ namespace LinqToDB.Linq.Builder
 				
 				if (_body != null)
 				{
-					var projected = Builder.Project(this, path, null, -1, flags, _body, true);
+					var projected = Builder.Project(this, path, null, -1, flags, _body, flags.IsSql());
 
 					if (flags.HasFlag(ProjectFlags.Expression))
 					{

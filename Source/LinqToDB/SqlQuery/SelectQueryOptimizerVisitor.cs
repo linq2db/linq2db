@@ -1487,6 +1487,9 @@ namespace LinqToDB.SqlQuery
 					if (selectQuery.HasSetOperators && selectQuery.SetOperators[0].Operation == SetOperation.UnionAll)
 						return false;
 				}
+
+				if (QueryHelper.EnumerateAccessibleSources(subQuery).Skip(1).Take(2).Count() > 1)
+					return false;
 			}
 
 			if (!subQuery.GroupBy.IsEmpty && !selectQuery.GroupBy.IsEmpty)

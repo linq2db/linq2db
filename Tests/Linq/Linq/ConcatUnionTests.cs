@@ -527,15 +527,17 @@ namespace Tests.Linq
 					(from p2 in db.Parent select new Parent { Value1   = p2.Value1   })));
 		}
 
+		//TODO
 		[Test]
 		public void Union54([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
-					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })),
-					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
-					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() })));
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
+				(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() })),
+				(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
+				(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() })));
 		}
 
 		[Test]
