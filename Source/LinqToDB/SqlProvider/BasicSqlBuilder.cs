@@ -1814,6 +1814,12 @@ namespace LinqToDB.SqlProvider
 			{
 				if (ts.SqlTableType != SqlTableType.Expression)
 				{
+
+					if (buildName && ts.Source is SqlTable { SqlQueryExtensions : not null } t)
+					{
+						BuildTableNameExtensions(t);
+					}
+
 					if (buildName == false)
 						alias = GetTableAlias(ts);
 
@@ -1826,13 +1832,17 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			if (buildName && buildAlias && ts.Source is SqlTable table && table.SqlQueryExtensions is not null)
+			if (buildName && buildAlias && ts.Source is SqlTable { SqlQueryExtensions: not null } table)
 			{
 				BuildTableExtensions(table, alias!);
 			}
 		}
 
 		protected virtual void BuildTableExtensions(SqlTable table, string alias)
+		{
+		}
+
+		protected virtual void BuildTableNameExtensions(SqlTable table)
 		{
 		}
 
@@ -1843,6 +1853,21 @@ namespace LinqToDB.SqlProvider
 			[typeof(HintWithParameterExtensionBuilder)]  = new HintWithParameterExtensionBuilder(),
 			[typeof(HintWithParametersExtensionBuilder)] = new HintWithParametersExtensionBuilder(),
 		};
+
+		protected static ISqlExtensionBuilder GetExtensionBuilder(Type builderType)
+		{
+			return _extensionBuilders.GetOrAdd(
+				builderType,
+				type =>
+				{
+					var inst = Activator.CreateInstance(type);
+
+					if (inst is not ISqlExtensionBuilder builder)
+						throw new LinqToDBException($"Type '{builderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
+
+					return builder;
+				});
+		}
 
 		protected void BuildTableExtensions(
 			StringBuilder sb,
@@ -1875,17 +1900,7 @@ namespace LinqToDB.SqlProvider
 				{
 					if (ext.BuilderType != null)
 					{
-						var extensionBuilder = _extensionBuilders.GetOrAdd(
-							ext.BuilderType,
-							type =>
-							{
-								var inst = Activator.CreateInstance(type);
-
-								if (inst is not ISqlExtensionBuilder builder)
-									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
-
-								return builder;
-							});
+						var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
 
 						switch (extensionBuilder)
 						{
@@ -1924,17 +1939,7 @@ namespace LinqToDB.SqlProvider
 				{
 					if (ext.BuilderType != null)
 					{
-						var extensionBuilder = _extensionBuilders.GetOrAdd(
-							ext.BuilderType,
-							type =>
-							{
-								var inst = Activator.CreateInstance(type);
-
-								if (inst is not ISqlExtensionBuilder builder)
-									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
-
-								return builder;
-							});
+						var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
 
 						switch (extensionBuilder)
 						{
@@ -2913,7 +2918,7 @@ namespace LinqToDB.SqlProvider
 							var newParm = OptimizationContext.AddParameter(parm);
 							BuildParameter(newParm);
 						}
-				}
+					}
 
 					break;
 

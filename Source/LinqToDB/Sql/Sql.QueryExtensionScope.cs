@@ -12,7 +12,8 @@ namespace LinqToDB
 			IndexHint,
 			JoinHint,
 			SubQueryHint,
-			QueryHint
+			QueryHint,
+			TableNameHint
 		}
 	}
 }

@@ -819,5 +819,66 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		#endregion
+
+		#region TemporalTable
+
+		sealed class TemporalTableExtensionBuilder : ISqlQueryExtensionBuilder
+		{
+			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			{
+				var expression = (string)((SqlValue)sqlQueryExtension.Arguments["expression"]).Value!;
+				var dateTime   = sqlQueryExtension.Arguments["dateTime"];
+
+//				DateTime? dateTime2 = null;
+//
+//				if (sqlQueryExtension.Arguments.TryGetValue("dateTime", out var dt2))
+//					dateTime2 = (DateTime?)((SqlValue)dt2).Value;
+
+				stringBuilder
+					.Append(" FOR SYSTEM_TIME ")
+					.Append(expression)
+					.Append(' ')
+					;
+
+				sqlBuilder.BuildExpression(stringBuilder, dateTime, true);
+			}
+		}
+
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
+			this                ISqlServerSpecificTable<TSource> table,
+			[SqlQueryDependent] string                           expression,
+			[SqlQueryDependent] DateTime                         dateTime)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime),
+				table.Expression, Expression.Constant(expression), Expression.Constant(dateTime));
+
+			return table;
+		}
+
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
+			this                ISqlServerSpecificTable<TSource> table,
+			[SqlQueryDependent] string                           expression,
+			                    DateTime                         dateTime,
+			                    DateTime                         dateTime2)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime, dateTime2),
+				table.Expression, Expression.Constant(expression), Expression.Constant(dateTime), Expression.Constant(dateTime2));
+
+			return table;
+		}
+
+		#endregion
 	}
 }

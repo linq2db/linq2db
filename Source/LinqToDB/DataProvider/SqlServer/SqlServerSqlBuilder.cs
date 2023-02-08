@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (BuildStep == Step.Output)
 			{
 				return;
-		}
+			}
 
 			base.BuildOutputSubclause(output);
 		}
@@ -432,6 +432,25 @@ namespace LinqToDB.DataProvider.SqlServer
 				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 
+		protected override void BuildTableNameExtensions(SqlTable table)
+		{
+			var ext = table.SqlQueryExtensions?.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.TableNameHint);
+
+			if (ext is { BuilderType: not null })
+			{
+				var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
+
+				switch (extensionBuilder)
+				{
+					case ISqlQueryExtensionBuilder queryExtensionBuilder:
+						queryExtensionBuilder.Build(this, StringBuilder, ext);
+						break;
+					default:
+						throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlQueryExtensionBuilder).FullName}' interface.");
+				}
+			}
+		}
+
 		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
 		{
 			if (join.SqlQueryExtensions != null)
@@ -445,11 +464,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					switch (join.JoinType)
 					{
 						case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
-							                       StringBuilder.Append($"CROSS {h} JOIN "); return false;
-						case JoinType.Inner      : StringBuilder.Append($"INNER {h} JOIN "); return true;
-						case JoinType.Left       : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
-						case JoinType.Right      : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
-						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
+							                       StringBuilder.Append($"CROSS ").Append(h).Append(" JOIN "); return false;
+						case JoinType.Inner      : StringBuilder.Append($"INNER ").Append(h).Append(" JOIN "); return true;
+						case JoinType.Left       : StringBuilder.Append($"LEFT ") .Append(h).Append(" JOIN "); return true;
+						case JoinType.Right      : StringBuilder.Append($"RIGHT ").Append(h).Append(" JOIN "); return true;
+						case JoinType.Full       : StringBuilder.Append($"FULL ") .Append(h).Append(" JOIN "); return true;
 						default                  : throw new InvalidOperationException();
 					}
 				}
