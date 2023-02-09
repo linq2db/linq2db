@@ -570,8 +570,7 @@ namespace Tests.Linq
 			return value => value;
 		}
 
-		[ActiveIssue(Details = "InvalidOperationException : Code supposed to be unreachable")]
-		[Test]
+		[Test(Description = "InvalidOperationException : Code supposed to be unreachable")]
 		public void ExpressionCompilerCrash([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

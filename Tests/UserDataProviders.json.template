@@ -55,7 +55,6 @@
 			//"MySql55",
 			//"MySql55Connector",
 			//"MariaDB",
-			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -169,7 +168,6 @@
 			//"MySql55",
 			//"MySql55Connector",
 			//"MariaDB",
-			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -277,7 +275,6 @@
 			//"MySql55",
 			//"MySql55Connector",
 			//"MariaDB",
-			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -385,7 +382,6 @@
 			//"MySql55",
 			//"MySql55Connector",
 			//"MariaDB",
-			//"MariaDBConnector",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -580,12 +576,8 @@
 			},
 
 			"MariaDB": {
-				"Provider": "MySql",
-				"ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"
-			},
-			"MariaDBConnector": {
 				"Provider": "MySqlConnector",
-				"ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
+				"ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
 			},
 
 			"Oracle.11.Native": {

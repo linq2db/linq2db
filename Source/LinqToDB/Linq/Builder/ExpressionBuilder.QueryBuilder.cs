@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -164,6 +163,7 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								var l  = Expressions.ConvertMember(context.builder.MappingSchema, ma.Expression?.Type, ma.Member);
+
 								if (l != null)
 								{
 									// In Grouping KeyContext we have to perform calculation on server side
@@ -182,8 +182,9 @@ namespace LinqToDB.Linq.Builder
 									var prevCount  = ctx.SelectQuery.Select.Columns.Count;
 									var expression = ctx.BuildExpression(ma, 0, context.enforceServerSide);
 
-									if (expression.NodeType == ExpressionType.Extension && expression is DefaultValueExpression
-																						&& ma.Expression?.NodeType == ExpressionType.Parameter)
+									if (expression.NodeType == ExpressionType.Extension &&
+									    expression is DefaultValueExpression &&
+									    ma.Expression?.NodeType == ExpressionType.Parameter)
 									{
 										var objExpression = context.builder.BuildExpression(ctx, ma.Expression, context.enforceServerSide, context.alias);
 										var varTempVar    = objExpression.NodeType == ExpressionType.Parameter

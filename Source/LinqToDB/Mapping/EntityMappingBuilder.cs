@@ -188,10 +188,10 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			return Property( prop ).HasAttribute(new AssociationAttribute 
-			{ 
-				ThisKey             = thisKeyName, 
-				OtherKey            = otherKeyName, 
+			return Property( prop ).HasAttribute(new AssociationAttribute
+			{
+				ThisKey             = thisKeyName,
+				OtherKey            = otherKeyName,
 				ConfiguredCanBeNull = canBeNull,
 			});
 		}
@@ -220,10 +220,10 @@ namespace LinqToDB.Mapping
 			var thisKeyName  = MemberHelper.GetMemberInfo(thisKey).Name;
 			var otherKeyName = MemberHelper.GetMemberInfo(otherKey).Name;
 
-			return Property( prop ).HasAttribute(new AssociationAttribute 
-			{ 
-				ThisKey             = thisKeyName, 
-				OtherKey            = otherKeyName, 
+			return Property( prop ).HasAttribute(new AssociationAttribute
+			{
+				ThisKey             = thisKeyName,
+				OtherKey            = otherKeyName,
 				ConfiguredCanBeNull = canBeNull,
 			});
 		}
@@ -244,9 +244,9 @@ namespace LinqToDB.Mapping
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return Property( prop ).HasAttribute(new AssociationAttribute 
-			{ 
-				Predicate           = predicate, 
+			return Property( prop ).HasAttribute(new AssociationAttribute
+			{
+				Predicate           = predicate,
 				ConfiguredCanBeNull = canBeNull,
 			});
 		}
@@ -267,9 +267,9 @@ namespace LinqToDB.Mapping
 			if (prop      == null) throw new ArgumentNullException(nameof(prop));
 			if (predicate == null) throw new ArgumentNullException(nameof(predicate));
 
-			return Property( prop ).HasAttribute(new AssociationAttribute 
-			{ 
-				Predicate           = predicate, 
+			return Property( prop ).HasAttribute(new AssociationAttribute
+			{
+				Predicate           = predicate,
 				ConfiguredCanBeNull = canBeNull,
 			});
 		}
@@ -291,8 +291,8 @@ namespace LinqToDB.Mapping
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
 			return Property( prop ).HasAttribute(new AssociationAttribute
-			{ 
-				QueryExpression     = queryExpression, 
+			{
+				QueryExpression     = queryExpression,
 				ConfiguredCanBeNull = canBeNull,
 			});
 		}
@@ -313,9 +313,9 @@ namespace LinqToDB.Mapping
 			if (prop            == null) throw new ArgumentNullException(nameof(prop));
 			if (queryExpression == null) throw new ArgumentNullException(nameof(queryExpression));
 
-			return Property( prop ).HasAttribute(new AssociationAttribute 
-			{ 
-				QueryExpression     = queryExpression, 
+			return Property( prop ).HasAttribute(new AssociationAttribute
+			{
+				QueryExpression     = queryExpression,
 				ConfiguredCanBeNull = canBeNull,
 			});
 		}
@@ -756,9 +756,9 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Adds configured mappings to builder's mapping schema.
 		/// </summary>
-		public void Build()
+		public FluentMappingBuilder Build()
 		{
-			_builder.Build();
+			return _builder.Build();
 		}
 	}
 }

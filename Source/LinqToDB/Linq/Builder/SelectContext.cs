@@ -177,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				switch (levelExpression.NodeType)
-				{
+				{	
 					case ExpressionType.MemberAccess :
 						{
 							var memberInfo = ((MemberExpression)levelExpression).Member;

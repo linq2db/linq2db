@@ -18,8 +18,13 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			return IsApplicable(methodCall);
+		}
+
+		private static bool IsApplicable(MethodCallExpression methodCall)
+		{
 			return
-				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 1 ||
+				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count == 1 ||
 				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
 		}
 
@@ -282,11 +287,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						foreach (var member in sc.Members.Values)
 						{
-							if (member is MethodCallExpression mc && context.Builder.IsSubQuery(ctx, mc))
+							if (member is MethodCallExpression mc
+								&& !IsApplicable(mc)
+								&& (context.Builder.IsSubQuery(ctx, mc) || EagerLoading.IsChainContainsNotSupported(mc)))
 							{
 								return true;
 							}
-							return false;
 						}
 
 						return false;
