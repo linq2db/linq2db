@@ -1,3 +1,5 @@
+- name: LINQ to DB
+  href: linq2db/toc.yml
 - name: Release Notes
   href: https://github.com/linq2db/linq2db/wiki/Releases-and-Roadmap
 - name: Get Started
