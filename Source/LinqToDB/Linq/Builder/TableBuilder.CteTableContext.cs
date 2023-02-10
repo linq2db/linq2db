@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 					if (!flags.HasFlag(ProjectFlags.Test))
 					{
 						// replace tracking path back
-						translated = SequenceHelper.CorrectTrackingPath(translated, CteContext, this);
+						translated = SequenceHelper.CorrectTrackingPath(translated, path);
 
 						var placeholders = ExpressionBuilder.CollectPlaceholders(translated).Where(p =>
 							p.SelectQuery == CteContext.SubqueryContext?.SelectQuery && p.Index != null)

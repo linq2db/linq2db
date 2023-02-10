@@ -133,6 +133,7 @@ namespace LinqToDB.Linq.Builder
 			Expression                    _leftSqlExpr  = null!;
 			Expression                    _rightSqlExpr = null!;
 			SqlPlaceholderExpression?     _setIdPlaceholder;
+			Expression?                   _setIdReference;
 
 			readonly Dictionary<Expression, (
 				int idx,
@@ -447,123 +448,116 @@ namespace LinqToDB.Linq.Builder
 			const           string     ProjectionSetIdFieldName = "__projection__set_id__";
 			static readonly Expression _setIdFieldName          = Expression.Constant(ProjectionSetIdFieldName);
 
-			Expression CorrectAssignments(Expression root, SqlGenericConstructorExpression constructorExpression)
+			Expression CorrectAssignments(Expression root, Expression current)
 			{
-				if (constructorExpression.Assignments.Count > 0)
+				switch (current)
 				{
-					var newAssignments = new List<SqlGenericConstructorExpression.Assignment>(constructorExpression.Assignments.Count);
-					foreach (var assignment in constructorExpression.Assignments)
+					case SqlGenericConstructorExpression constructorExpression:
 					{
-						var currentRoot = root;
-
-						if (assignment.MemberInfo.DeclaringType != null)
+						if (constructorExpression.Assignments.Count > 0)
 						{
-							if (!assignment.MemberInfo.DeclaringType.IsSameOrParentOf(currentRoot.Type))
+							var newAssignments = new List<SqlGenericConstructorExpression.Assignment>(constructorExpression.Assignments.Count);
+							foreach (var assignment in constructorExpression.Assignments)
 							{
-								if (currentRoot is ContextRefExpression contextRef)
-									currentRoot = contextRef.WithType(assignment.MemberInfo.DeclaringType);
-								else
-									currentRoot = Expression.Convert(currentRoot, assignment.MemberInfo.DeclaringType);
-							}
-						}
+								var currentRoot = root;
 
-						Expression newExpression = Expression.MakeMemberAccess(currentRoot, assignment.MemberInfo);
-						if (assignment.Expression is SqlGenericConstructorExpression assignmentGeneric)
-						{
-							newExpression = CorrectAssignments(newExpression, assignmentGeneric);
-						}
-
-						newAssignments.Add(assignment.WithExpression(newExpression));
-					}
-
-					constructorExpression = constructorExpression.ReplaceAssignments(newAssignments);
-				}
-
-				if (constructorExpression.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
-				{
-					return Builder.TryConstruct(Builder.MappingSchema, constructorExpression, this, ProjectFlags.Expression);
-				}	
-
-				/*
-				if (constructorExpression.Parameters.Count > 0)
+								if (assignment.MemberInfo.DeclaringType != null)
 								{
-					var newParameters = new List<SqlGenericConstructorExpression.Parameter>(constructorExpression.Parameters.Count);
-
-					for (var i = 0; i < constructorExpression.Parameters.Count; i++)
-					{
-						var parameter = constructorExpression.Parameters[i];
-						var paramKey = new SqlGenericParamAccessExpression(root, i, parameter.ParamType);
-
-						/*
-						if (parameter.Expression is SqlGenericConstructorExpression assignmentGeneric)
-						{
-							newExpression = CorrectAssignments(newExpression, assignmentGeneric);
+									if (!assignment.MemberInfo.DeclaringType.IsSameOrParentOf(currentRoot.Type))
+									{
+										if (currentRoot is ContextRefExpression contextRef)
+											currentRoot = contextRef.WithType(assignment.MemberInfo.DeclaringType);
+										else
+											currentRoot = Expression.Convert(currentRoot, assignment.MemberInfo.DeclaringType);
+									}
 								}
 
-						newParameters.Add(parameter.WithExpression(newExpression));
-					#1#
+								Expression newExpression = Expression.MakeMemberAccess(currentRoot, assignment.MemberInfo);
+								newExpression = CorrectAssignments(newExpression, assignment.Expression);
+
+								newAssignments.Add(assignment.WithExpression(newExpression));
 							}
 
-					//constructorExpression.ReplaceParameters(newParameters);
+							constructorExpression = constructorExpression.ReplaceAssignments(newAssignments);
 						}
-				*/
 
-				return constructorExpression;
+
+						/*
+						if (constructorExpression.Parameters.Count > 0)
+										{
+							var newParameters = new List<SqlGenericConstructorExpression.Parameter>(constructorExpression.Parameters.Count);
+	
+							for (var i = 0; i < constructorExpression.Parameters.Count; i++)
+							{
+								var parameter = constructorExpression.Parameters[i];
+								var paramKey = new SqlGenericParamAccessExpression(root, i, parameter.ParamType);
+	
+								/*
+								if (parameter.Expression is SqlGenericConstructorExpression assignmentGeneric)
+								{
+									newExpression = CorrectAssignments(newExpression, assignmentGeneric);
+										}
+	
+								newParameters.Add(parameter.WithExpression(newExpression));
+							#1#
+									}
+	
+							//constructorExpression.ReplaceParameters(newParameters);
+								}
+						*/
+
+						return constructorExpression;
+					}
+					case ContextConstructionExpression ctxConstruct:
+						return CorrectAssignments(root, ctxConstruct.InnerExpression);
+					case ConditionalExpression conditional:
+					{
+						return CorrectAssignments(root, conditional.IfTrue);
+						return conditional.Update(CorrectAssignments(root, conditional.Test),
+							CorrectAssignments(root, conditional.IfTrue),
+							CorrectAssignments(root, conditional.IfFalse));
+					}
+					case SqlPlaceholderExpression placeholder:
+					{
+						if (placeholder.TrackingPath == null)
+							throw new InvalidOperationException();
+						return placeholder.TrackingPath;
+					}
+					default:
+						return root;
+				}
 			}
 
 			Expression MakeConditionalConstructExpression(Expression root, Expression leftExpression, Expression rightExpression)
 			{
-				if (leftExpression is not SqlGenericConstructorExpression)
-				{
-					if (leftExpression is SqlPlaceholderExpression placeholder && placeholder.Sql is SqlValue value && value.Value == null)
-						leftExpression = Expression.Default(leftExpression.Type);
-					else
-						throw new InvalidOperationException();
-				}
-
-				if (rightExpression is not SqlGenericConstructorExpression)
-				{
-					if (rightExpression is SqlPlaceholderExpression placeholder && placeholder.Sql is SqlValue value && value.Value == null)
-						rightExpression = Expression.Default(rightExpression.Type);
-					else
-						throw new InvalidOperationException();
-				}
-
 				var sequenceLeftSetId  = Builder.GenerateSetId(_sequence1.SubQuery.SelectQuery.SourceID);
 				var sequenceRightSetId = Builder.GenerateSetId(_sequence2.SubQuery.SelectQuery.SourceID);
 
-				if (_setIdPlaceholder == null)
+				if (_setIdReference == null)
 				{
 
 					var sqlValueLeft  = new SqlValue(sequenceLeftSetId);
 					var sqlValueRight = new SqlValue(sequenceRightSetId);
 
 					var thisRef  = new ContextRefExpression(_type, this);
+
+					_setIdReference = Expression.Call(_keySetIdMethosInfo, thisRef, Expression.Constant(ProjectionSetIdFieldName));
+
 					var leftRef  = new ContextRefExpression(_type, _sequence1);
 					var rightRef = new ContextRefExpression(_type, _sequence2);
 
 					var keyLeft  = Expression.Call(_keySetIdMethosInfo, leftRef, _setIdFieldName);
 					var keyRight = Expression.Call(_keySetIdMethosInfo, rightRef, _setIdFieldName);
 
-					var leftIdPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence1.SubQuery, sqlValueLeft,
-						keyLeft, alias: ProjectionSetIdFieldName);
-					leftIdPlaceholder = Builder.MakeColumn(_sequence1.SelectQuery, leftIdPlaceholder, asNew: true);
-					leftIdPlaceholder = leftIdPlaceholder.WithPath(thisRef);
-					leftIdPlaceholder = Builder.MakeColumn(SelectQuery, leftIdPlaceholder, asNew: true);
+					var leftIdPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence1, sqlValueLeft, keyLeft, alias: ProjectionSetIdFieldName);
+					leftIdPlaceholder = (SqlPlaceholderExpression)Builder.UpdateNesting(this, leftIdPlaceholder);
 
-					var rightIdPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence2.SubQuery, sqlValueRight,
+					var rightIdPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence2, sqlValueRight,
 						keyRight, alias: ProjectionSetIdFieldName);
-					rightIdPlaceholder = Builder.MakeColumn(_sequence2.SelectQuery, rightIdPlaceholder, asNew: true);
 					rightIdPlaceholder = Builder.MakeColumn(SelectQuery, rightIdPlaceholder, asNew: true);
 
-					_setIdPlaceholder = leftIdPlaceholder;
+					_setIdPlaceholder = leftIdPlaceholder.WithPath(_setIdReference).WithTrackingPath(_setIdReference);
 				}
-
-				if (leftExpression is SqlGenericConstructorExpression genericLeft)
-					leftExpression = CorrectAssignments(root, genericLeft);
-
-				if (rightExpression is SqlGenericConstructorExpression genericRight)
-					rightExpression = CorrectAssignments(root, genericRight);
 
 				if (leftExpression.Type != root.Type)
 				{
@@ -576,7 +570,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var resultExpr = Expression.Condition(
-					Expression.Equal(_setIdPlaceholder, Expression.Constant(sequenceLeftSetId)),
+					Expression.Equal(_setIdReference, Expression.Constant(sequenceLeftSetId)),
 					leftExpression,
 					rightExpression
 				);
@@ -590,15 +584,24 @@ namespace LinqToDB.Linq.Builder
 				if (_type == null)
 					throw new InvalidOperationException();
 
-				//var ref1 = new ContextRefExpression(_type, _sequence1.SubQuery);
-				//var ref2 = new ContextRefExpression(_type, _sequence2.SubQuery);
+				var ref1 = new ContextRefExpression(_type, _sequence1);
+				var ref2 = new ContextRefExpression(_type, _sequence2);
 
-				//var leftSqlExpr  = SqlGenericConstructorExpression.Parse(Builder.ConvertToSqlExpr(_sequence1.SubQuery, ref1, ProjectFlags.Expression));
-				//var rightSqlExpr = SqlGenericConstructorExpression.Parse(Builder.ConvertToSqlExpr(_sequence2.SubQuery, ref2, ProjectFlags.Expression));
+				var rightSqlExpr = Builder.ConvertToSqlExpr(_sequence2, ref2, ProjectFlags.Expression);
+				rightSqlExpr = Builder.BuildSqlExpression(_sequence1, rightSqlExpr, ProjectFlags.Expression);
 
-				//return MakeConditionalConstructExpression(new ContextRefExpression(_type, this), 
-				//	leftSqlExpr,
-				//	rightSqlExpr);
+				rightSqlExpr = SequenceHelper.CorrectTrackingPath(rightSqlExpr, this);
+				rightSqlExpr = SequenceHelper.ReplacePlaceholdersByTrackingPath(rightSqlExpr);
+
+				var leftSqlExpr = Builder.ConvertToSqlExpr(_sequence1, ref1, ProjectFlags.Expression);
+				leftSqlExpr = Builder.BuildSqlExpression(_sequence2, leftSqlExpr, ProjectFlags.Expression);
+
+				leftSqlExpr = SequenceHelper.CorrectTrackingPath(leftSqlExpr, this);
+				leftSqlExpr = SequenceHelper.ReplacePlaceholdersByTrackingPath(leftSqlExpr);
+
+				return MakeConditionalConstructExpression(new ContextRefExpression(_type, this),
+					leftSqlExpr,
+					rightSqlExpr);
 
 				return MakeConditionalConstructExpression(new ContextRefExpression(_type, this), 
 					_leftSqlExpr,
@@ -763,6 +766,11 @@ namespace LinqToDB.Linq.Builder
 				
 				if (_body != null)
 				{
+					if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))
+					{
+						return _setIdPlaceholder!;
+					}
+
 					var projected = Builder.Project(this, path, null, -1, flags, _body, flags.IsSql());
 
 					if (flags.HasFlag(ProjectFlags.Expression))

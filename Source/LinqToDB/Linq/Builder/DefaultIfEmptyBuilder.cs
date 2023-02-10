@@ -42,6 +42,7 @@ namespace LinqToDB.Linq.Builder
 				var expr = base.MakeExpression(path, flags);
 				expr = Builder.BuildSqlExpression(this, expr, flags);
 				expr = Builder.UpdateNesting(this, expr);
+				expr = SequenceHelper.CorrectTrackingPath(expr, this);
 
 				if (flags.HasFlag(ProjectFlags.Expression) && expr is not SqlPlaceholderExpression)
 				{
@@ -65,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 
 						var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
-						var notNullExpression = new SqlReaderIsNullExpression(notNull, true);
+						var notNullExpression = Expression.NotEqual(notNull, Expression.Constant(null, notNull.Type));
 						if (expr is ContextConstructionExpression construct)
 							expr = construct.InnerExpression;
 						expr = new ContextConstructionExpression(this, Expression.Condition(notNullExpression, expr, defaultValue));

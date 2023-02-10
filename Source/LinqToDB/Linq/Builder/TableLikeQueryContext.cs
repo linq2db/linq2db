@@ -243,7 +243,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!flags.IsTest())
 				{
-					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, SubqueryContext, this);
+					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, this);
 
 					var memberPath = TableLikeHelpers.GetMemberPath(isTargetAssociation ? path : subqueryPath);
 					correctedPath = Builder.UpdateNesting(SubqueryContext, correctedPath);

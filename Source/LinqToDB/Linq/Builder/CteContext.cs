@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!flags.HasFlag(ProjectFlags.Test))
 				{
-					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, SubqueryContext, this);
+					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, this);
 
 					var memberPath = TableLikeHelpers.GetMemberPath(subqueryPath);
 					correctedPath = Builder.UpdateNesting(SubqueryContext, correctedPath);

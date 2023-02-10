@@ -926,9 +926,9 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Extension:
 				{
-					if (expression is SqlPlaceholderExpression placeholder)
+					if (expression is SqlPlaceholderExpression)
 					{
-						return placeholder;
+						return expression;
 					}
 
 					if (expression is SqlGenericConstructorExpression genericConstructor)

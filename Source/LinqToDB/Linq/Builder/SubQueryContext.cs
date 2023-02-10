@@ -86,10 +86,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
-				if (result is SqlPlaceholderExpression placeholder)
-				{
-					result = placeholder.WithTrackingPath(path);
-				}
+				result = SequenceHelper.CorrectTrackingPath(result, path);
 
 				// correct all placeholders, they should target to appropriate SubQuery.SelectQuery
 				//

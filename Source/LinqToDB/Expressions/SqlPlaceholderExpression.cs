@@ -89,7 +89,7 @@ namespace LinqToDB.Expressions
 
 		public SqlPlaceholderExpression WithTrackingPath(Expression trackingPath)
 		{
-			if (ExpressionEqualityComparer.Instance.Equals(trackingPath, TrackingPath))
+			if (ReferenceEquals(trackingPath, TrackingPath) || ExpressionEqualityComparer.Instance.Equals(trackingPath, TrackingPath))
 				return this;
 
 			return new SqlPlaceholderExpression(SelectQuery, Sql, Path, Type, Alias, Index, trackingPath);
@@ -125,6 +125,11 @@ namespace LinqToDB.Expressions
 			if (Sql.CanBeNullable(NullabilityContext.NonQuery) && Sql is not SqlColumn)
 				sqlStr += "?";
 			result += $": {sqlStr} ({pathStr})";
+
+			if (TrackingPath != null)
+			{
+				result += " TP: " + TrackingPath;
+			}
 
 			return result;
 		}

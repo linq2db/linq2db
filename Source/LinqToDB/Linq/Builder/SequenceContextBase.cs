@@ -30,8 +30,10 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			path = SequenceHelper.CorrectExpression(path, this, Sequence);
-			return Builder.MakeExpression(Sequence, path, flags);
+			var newPath = SequenceHelper.CorrectExpression(path, this, Sequence);
+			var result = Builder.MakeExpression(Sequence, newPath, flags);
+			result = SequenceHelper.CorrectExpression(result, Sequence, this);
+			return result;
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

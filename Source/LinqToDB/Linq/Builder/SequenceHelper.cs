@@ -56,37 +56,150 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[return: NotNullIfNotNull("expression")]
-		public static Expression? CorrectTrackingPath(Expression? expression, IBuildContext current,
-			IBuildContext                                         underlying)
+		public static Expression? CorrectTrackingPath(Expression? expression, IBuildContext toContext)
 		{
-			if (expression != null)
+			if (expression == null || expression.Find(1, (_, e) => e is SqlPlaceholderExpression) == null)
+				return expression;
+
+			var contextRef = new ContextRefExpression(expression.Type, toContext);
+
+			var transformed = CorrectTrackingPath(expression, contextRef);
+
+			return transformed;
+		}
+
+		public static Expression CorrectTrackingPath(Expression expression, Expression toPath)
+		{
+			return CorrectTrackingPath(expression, null, toPath);
+		}
+
+
+		[return: NotNullIfNotNull("expression")]
+		public static Expression? CorrectTrackingPath(Expression? expression, Expression? except, Expression toPath)
+		{
+			if (expression == null)
+				return null;
+
+			if (toPath is not ContextRefExpression && toPath is not MemberExpression)
+				return expression;
+
+			if (expression is SqlGenericConstructorExpression generic)
 			{
-				var transformed = expression.Transform((current, underlying), static (ctx, e) =>
+				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
+
+				for (int i = 0; i < generic.Assignments.Count; i++)
 				{
-					if (e is SqlPlaceholderExpression placeholder && placeholder.TrackingPath != null)
+					var assignment = generic.Assignments[i];
+					var newExpression = CorrectTrackingPath(assignment.Expression,
+						Expression.MakeMemberAccess(toPath, assignment.MemberInfo));
+					if (!ReferenceEquals(assignment.Expression, newExpression))
 					{
-						e = placeholder.WithTrackingPath(CorrectExpression(placeholder.TrackingPath,
-							ctx.current,
-							ctx.underlying));
+						if (assignments == null)
+						{
+							assignments = new();
+							for (int j = 0; j < i; j++)
+							{
+								assignments.Add(generic.Assignments[j]);
+							}
+						}
+
+						assignments.Add(assignment.WithExpression(newExpression));
 					}
+					else
+						assignments?.Add(assignment);
+				}
 
-					return e;
-				});
+				if (assignments != null)
+				{
+					return generic.ReplaceAssignments(assignments);
+				}
 
-				return transformed;
+				return generic;
+			}
+
+			if (expression is NewExpression or MemberInitExpression)
+			{
+				return CorrectTrackingPath(SqlGenericConstructorExpression.Parse(expression), toPath);
+			}
+
+			if (expression is SqlPlaceholderExpression placeholder)
+			{
+				if (!placeholder.Type.IsAssignableFrom(toPath.Type))
+				{
+					toPath = Expression.MakeMemberAccess(toPath, ((MemberExpression)placeholder.Path).Member);
+				}
+				return placeholder.WithTrackingPath(toPath);
+			}
+
+			/*
+			if (expression == except)
+				return expression;
+
+			var transformed = expression.Transform(toPath, (t, e) => CorrectTrackingPath(e, e, t));
+			return transformed;
+			*/
+
+			if (expression is ConstantExpression)
+				return expression;
+
+			if (expression is ConditionalExpression conditional)
+			{
+				return conditional.Update(
+					CorrectTrackingPath(conditional.Test, toPath),
+					CorrectTrackingPath(conditional.IfTrue, toPath),
+					CorrectTrackingPath(conditional.IfFalse, toPath));
+			}
+
+			if (expression is ContextConstructionExpression construct)
+			{
+				return construct.Update(construct.BuildContext, CorrectTrackingPath(construct.InnerExpression, toPath));
+			}
+
+			if (expression is BinaryExpression binary)
+			{
+				return binary.Update(CorrectTrackingPath(binary.Left, toPath), binary.Conversion, CorrectTrackingPath(binary.Right, toPath));
+			}
+
+			if (expression is UnaryExpression unary)
+			{
+				return unary.Update(CorrectTrackingPath(unary.Operand, toPath));
 			}
 
 			return expression;
+		}
+
+		public static Expression ReplacePlaceholdersByTrackingPath(Expression expression)
+		{
+			var transformed = expression.Transform(e =>
+			{
+				if (e is SqlPlaceholderExpression { TrackingPath: { } } placeholder)
+				{
+					var path = placeholder.TrackingPath;
+					if (e.Type != path.Type)
+						path = Expression.Convert(path, e.Type);
+					return path;
+				}
+
+				return e;
+			});
+
+			return transformed;
 		}
 
 		public static Expression ReplaceContext(Expression expression, IBuildContext current, IBuildContext onContext)
 		{
 			var newExpression = expression.Transform((expression, current, onContext), (ctx, e) =>
 			{
-				if (e.NodeType              == ExpressionType.Extension && e is ContextRefExpression contextRef &&
-				    contextRef.BuildContext == ctx.current)
+				if (e is ContextRefExpression contextRef)
 				{
-					return new ContextRefExpression(contextRef.Type, ctx.onContext, contextRef.Alias);
+					if (contextRef.BuildContext == ctx.current)
+						return new ContextRefExpression(contextRef.Type, ctx.onContext, contextRef.Alias);
+				}
+
+				if (e is SqlPlaceholderExpression { TrackingPath: { } } placeholder)
+				{
+					return placeholder.WithTrackingPath(ReplaceContext(placeholder.TrackingPath, ctx.current,
+						ctx.onContext));
 				}
 
 				return e;
