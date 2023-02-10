@@ -83,31 +83,6 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="tableDescriptor">Temporary table entity descriptor.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
-		public TempTable(IDataContext db,
-			IEnumerable<T>   items,
-			EntityDescriptor tableDescriptor,
-			BulkCopyOptions? options      = default,
-			string?          tableName    = default,
-			string?          databaseName = default,
-			string?          schemaName   = default,
-			string?          serverName   = default,
-			TableOptions     tableOptions = default)
-			: this(db, tableDescriptor, items, options, tableName, databaseName, schemaName, serverName, tableOptions)
-		{
-		}
-
-		/// <summary>
 		/// Internal API to support table creation using custom entity descriptor <paramref name="tableDescriptor"/>.
 		/// Creates new temporary table and populate it using BulkCopy.
 		/// </summary>
@@ -362,32 +337,6 @@ namespace LinqToDB
 			CancellationToken cancellationToken = default)
 		{
 			return CreateAsync(db, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
-		}
-
-		/// <summary>
-		/// Creates new temporary table and populate it using BulkCopy.
-		/// </summary>
-		/// <param name="db">Database connection instance.</param>
-		/// <param name="items">Initial records to insert into created table.</param>
-		/// <param name="options">Optional BulkCopy options.</param>
-		/// <param name="tableName">Optional name of temporary table. If not specified, value from mapping will be used.</param>
-		/// <param name="databaseName">Optional name of table's database. If not specified, value from mapping will be used.</param>
-		/// <param name="schemaName">Optional name of table schema/owner. If not specified, value from mapping will be used.</param>
-		/// <param name="serverName">Optional name of linked server. If not specified, value from mapping will be used.</param>
-		/// <param name="tableOptions">Optional Table options. If not specified, value from mapping will be used.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
-		public static Task<TempTable<T>> CreateAsync(IDataContext db,
-			IEnumerable<T>    items,
-			EntityDescriptor  tableDescriptor,
-			BulkCopyOptions?  options           = default,
-			string?           tableName         = default,
-			string?           databaseName      = default,
-			string?           schemaName        = default,
-			string?           serverName        = default,
-			TableOptions      tableOptions      = default,
-			CancellationToken cancellationToken = default)
-		{
-			return CreateAsync(db, tableDescriptor, tableName, items, options, databaseName, schemaName, serverName, tableOptions, cancellationToken);
 		}
 
 		/// <summary>

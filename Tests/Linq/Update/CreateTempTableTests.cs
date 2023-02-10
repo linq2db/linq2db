@@ -440,7 +440,7 @@ namespace Tests.xUpdate
 		{
 			await using var db = GetDataContext(context);
 
-			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
+			await db.DropTableAsync<int>("TempTable", tableOptions:TableOptions.CheckExistence | TableOptions.IsTemporary);
 
 			await using var tmp = await db.CreateTempTableAsync(
 				"TempTable",
@@ -449,7 +449,7 @@ namespace Tests.xUpdate
 					.Property(p => p.Name)
 						.HasLength(20)
 						.IsNotNull(),
-				tableOptions:TableOptions.CheckExistence);
+				tableOptions:TableOptions.CheckExistence | TableOptions.IsTemporary);
 
 			if (db is DataConnection dc)
 				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
