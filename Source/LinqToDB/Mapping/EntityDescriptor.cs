@@ -213,6 +213,8 @@ namespace LinqToDB.Mapping
 						aa.QueryExpressionMethod, 
 						aa.QueryExpression,
 						aa.Storage,
+						aa.SetExpressionMethod,
+						aa.SetExpression,
 						aa.ConfiguredCanBeNull,
 						aa.AliasName));
 					continue;

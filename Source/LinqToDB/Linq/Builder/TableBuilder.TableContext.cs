@@ -213,11 +213,23 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							exprs.Add(Expression.Assign(
-								attr?.Storage != null
-									? ExpressionHelper.PropertyOrField(parentObject, attr.Storage)
-									: Expression.MakeMemberAccess(parentObject, member.Info.MemberInfo),
-								ex));
+							var storageMember = attr?.Storage != null
+								? ExpressionHelper.PropertyOrField(parentObject, attr.Storage)
+								: Expression.MakeMemberAccess(parentObject, member.Info.MemberInfo);
+
+							if (attr?.SetExpression != null || attr?.SetExpressionMethod != null)
+							{
+								var descriptor = GetAssociationDescriptor(member.Info.MemberInfo, EntityDescriptor);
+								if (descriptor == null)
+									throw new LinqToDBException("Could not find association descriptor for " + member.Info.MemberInfo.Name);
+								
+								var setMethod = descriptor.GetSetterMethod(storageMember.Type, ex.Type)!;
+								exprs.Add(setMethod.GetBody(storageMember, ex));
+							}
+							else
+							{
+								exprs.Add(Expression.Assign(storageMember, ex));
+							}
 						}
 					}
 				}
@@ -1736,6 +1748,8 @@ namespace LinqToDB.Linq.Builder
 							attribute.QueryExpressionMethod,
 							attribute.QueryExpression,
 							attribute.Storage,
+							attribute.SetExpressionMethod,
+							attribute.SetExpression,
 							attribute.ConfiguredCanBeNull,
 							attribute.AliasName
 						);
@@ -1753,6 +1767,20 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return descriptor;
+			}
+
+			AssociationDescriptor? GetAssociationDescriptor(MemberInfo memberInfo, EntityDescriptor entityDescriptor)
+			{
+				foreach (var ed in entityDescriptor.Associations)
+					if (ed.MemberInfo.EqualsTo(memberInfo))
+						return ed;
+
+				foreach (var m in entityDescriptor.InheritanceMapping)
+					foreach (var ed in Builder.MappingSchema.GetEntityDescriptor(m.Type).Associations)
+						if (ed.MemberInfo.EqualsTo(memberInfo))
+							return ed;
+
+				return null;
 			}
 
 			#endregion

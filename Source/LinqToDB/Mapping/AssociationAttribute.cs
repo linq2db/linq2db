@@ -103,6 +103,44 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public string?      Storage             { get; set; }
 
+		/// <summary>
+		/// Specifies static property or method without parameters, that returns a setter expression. 
+		/// If is set, it will be used to set the storage member when using LoadWith().
+		/// Result of method should be Action which takes two parameters: the storage member and the value to assign to it.
+		/// <para>
+		/// <example>
+		/// <code>
+		/// public class SomeEntity
+		/// {
+		///     [Association(SetExpressionMethod = nameof(OtherImpl), CanBeNull = true)]
+		///     public SomeOtherEntity Other { get; set; }
+		/// 
+		///     public static Expression&lt;Action&lt;SomeContainerType,SomeOtherEntity&gt;&gt; OtherImpl()
+		///     {
+		///         return (container, value) =&gt; container.Value = value;
+		///     }
+		/// }
+		/// </code>
+		/// </example>
+		/// </para>
+		/// </summary>
+		public string? SetExpressionMethod { get; set; }
+
+		/// <summary>
+		/// Specifies a set expression. If is set, it will be used to set the storage member when using LoadWith().
+		/// Action takes two parameters: the storage member and the value to assign to it.
+		/// <para>
+		/// <example>
+		/// <code>
+		/// var Expression&lt;Action&lt;SomeContainerType,SomeOtherEntity&gt;&gt; setContainerValue;
+		/// <para />
+		/// setContainerValue = (container, value) =&gt; container.Value = value;
+		/// </code>
+		/// </example>
+		/// </para>
+		/// </summary>
+		public Expression? SetExpression { get; set; }
+
 		internal bool?      ConfiguredCanBeNull;
 		/// <summary>
 		/// Defines type of join:
@@ -137,7 +175,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{SetExpressionMethod}.{IdentifierBuilder.GetObjectID(SetExpression)}.{(CanBeNull?1:0)}.{AliasName}.";
 		}
 	}
 }
