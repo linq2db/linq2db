@@ -69,13 +69,11 @@
 		-->
 		<!--remote targets + remote examples targets-->
 		<!--source-->
-		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"         />
 		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.51.0"        />
 		<!--examples-->
 		<PackageVersion Include="linq2db.t4models"                                      Version="4.3.0"         />
 		<!--tests-->
 		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="7.0.0"         />
-		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.1.1"         />
 		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.2"        />
 	</ItemGroup>
 	
@@ -94,6 +92,8 @@
 		<PackageVersion Include="System.Data.OleDb"                                     Version="6.0.0"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="6.0.0"         />
 		<PackageVersion Include="System.Text.Json"                                      Version="6.0.7"         />
+		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.179"       />
+		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.0.179"       />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
@@ -121,6 +121,11 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<PackageVersion Include="MySqlConnector"                                        Version="2.2.5"         />
+	</ItemGroup>
+	
+	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"         />
+		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.1.1"         />
 	</ItemGroup>
 
 </Project>
