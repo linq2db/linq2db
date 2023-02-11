@@ -320,9 +320,6 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 36)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
-		[DataMember(Order = 37)]
-		public bool DoesNotSupportExists { get; set; }
-
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -364,7 +361,6 @@ namespace LinqToDB.SqlProvider
 				^ OutputDeleteUseSpecialTable                  .GetHashCode()
 				^ OutputInsertUseSpecialTable                  .GetHashCode()
 				^ OutputUpdateUseSpecialTables                 .GetHashCode()
-				^ DoesNotSupportExists                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -406,7 +402,6 @@ namespace LinqToDB.SqlProvider
 				&& OutputDeleteUseSpecialTable          == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable          == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables         == other.OutputUpdateUseSpecialTables
-				&& DoesNotSupportExists                 == other.DoesNotSupportExists
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

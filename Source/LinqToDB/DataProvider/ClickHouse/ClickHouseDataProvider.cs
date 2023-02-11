@@ -48,7 +48,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCountDistinctSupported          = true;
-			SqlProviderFlags.DoesNotSupportExists              = true;
 
 			// unconfigured flags
 			// 1. ClickHouse doesn't support correlated subqueries at all so this flag's value doesn't make difference
