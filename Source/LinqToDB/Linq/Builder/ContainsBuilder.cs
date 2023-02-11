@@ -24,7 +24,8 @@ namespace LinqToDB.Linq.Builder
 			var buildInStatement = false;
 
 			if (sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null)
+			    sequence.SelectQuery.Select.SkipValue != null ||
+			    builder.DataContext.SqlProviderFlags.DoesNotSupportExists)
 			{
 				sequence         = new SubQueryContext(sequence);
 				buildInStatement = true;
