@@ -27,8 +27,8 @@ namespace LinqToDB.Mapping
 		/// <param name="expressionQueryMethod">Optional name of query method.</param>
 		/// <param name="expressionQuery">Optional query expression.</param>
 		/// <param name="storage">Optional association value storage field or property name.</param>
-		/// <param name="setExpressionMethod">Optional name of setter method.</param>
-		/// <param name="setExpression">Optional setter expression.</param>
+		/// <param name="associationSetterExpressionMethod">Optional name of setter method.</param>
+		/// <param name="associationSetterExpression">Optional setter expression.</param>
 		/// <param name="canBeNull">If <c>true</c>, association will generate outer join, otherwise - inner join.</param>
 		/// <param name="aliasName">Optional alias for representation in SQL.</param>
 		public AssociationDescriptor(
@@ -41,8 +41,8 @@ namespace LinqToDB.Mapping
 			string?     expressionQueryMethod,
 			Expression? expressionQuery,
 			string?     storage,
-			string?     setExpressionMethod,
-			Expression? setExpression,
+			string?     associationSetterExpressionMethod,
+			Expression? associationSetterExpression,
 			bool?       canBeNull,
 			string?     aliasName)
 		{
@@ -59,18 +59,18 @@ namespace LinqToDB.Mapping
 				throw new ArgumentException(
 					$"Association '{type.Name}.{memberInfo.Name}' has different number of keys for parent and child objects.");
 
-			MemberInfo            = memberInfo;
-			ThisKey               = thisKey;
-			OtherKey              = otherKey;
-			ExpressionPredicate   = expressionPredicate;
-			Predicate             = predicate;
-			ExpressionQueryMethod = expressionQueryMethod;
-			ExpressionQuery       = expressionQuery;
-			Storage               = storage;
-			SetExpressionMethod   = setExpressionMethod;
-			SetExpression         = setExpression;
-			CanBeNull             = canBeNull ?? AnalyzeCanBeNull();
-			AliasName             = aliasName;
+			MemberInfo                        = memberInfo;
+			ThisKey                           = thisKey;
+			OtherKey                          = otherKey;
+			ExpressionPredicate               = expressionPredicate;
+			Predicate                         = predicate;
+			ExpressionQueryMethod             = expressionQueryMethod;
+			ExpressionQuery                   = expressionQuery;
+			Storage                           = storage;
+			AssociationSetterExpressionMethod = associationSetterExpressionMethod;
+			AssociationSetterExpression       = associationSetterExpression;
+			CanBeNull                         = canBeNull ?? AnalyzeCanBeNull();
+			AliasName                         = aliasName;
 		}
 
 		/// <summary>
@@ -108,11 +108,11 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets optional setter method source property or method.
 		/// </summary>
-		public string? SetExpressionMethod { get; }
+		public string? AssociationSetterExpressionMethod { get; }
 		/// <summary>
 		/// Gets optional setter expression.
 		/// </summary>
-		public Expression? SetExpression { get; }
+		public Expression? AssociationSetterExpression { get; }
 		/// <summary>
 		/// Gets join type, generated for current association.
 		/// If <c>true</c>, association will generate outer join, otherwise - inner join.
@@ -324,21 +324,21 @@ namespace LinqToDB.Mapping
 			return lambda;
 		}
 
-		public bool HasSetterMethod()
+		public bool HasAssociationSetterMethod()
 		{
-			return SetExpression != null || !string.IsNullOrEmpty(SetExpressionMethod);
+			return AssociationSetterExpression != null || !string.IsNullOrEmpty(AssociationSetterExpressionMethod);
 		}
 
 		/// <summary>
-		/// Loads setter method expression from <see cref="SetExpression"/> member.
+		/// Loads setter method expression from <see cref="AssociationSetterExpression"/> member.
 		/// </summary>
 		/// <param name="memberType">Type of the storage member that declares association</param>
 		/// <param name="objectType">Type of object associated with setter method expression</param>
 		/// <returns><c>null</c> if association has no custom setter method expression specified
-		/// by <see cref="SetExpressionMethod"/> member.</returns>
-		public LambdaExpression? GetSetterMethod(Type memberType, Type objectType)
+		/// by <see cref="AssociationSetterExpressionMethod"/> member.</returns>
+		public LambdaExpression? GetAssociationSetterMethod(Type memberType, Type objectType)
 		{
-			if (!HasSetterMethod())
+			if (!HasAssociationSetterMethod())
 				return null;
 
 			Expression setExpression;
@@ -348,25 +348,25 @@ namespace LinqToDB.Mapping
 			if (type == null)
 				throw new ArgumentException($"Member '{MemberInfo.Name}' has no declaring type");
 
-			if (!string.IsNullOrEmpty(SetExpressionMethod))
-				setExpression = type.GetExpressionFromExpressionMember<Expression>(SetExpressionMethod!);
+			if (!string.IsNullOrEmpty(AssociationSetterExpressionMethod))
+				setExpression = type.GetExpressionFromExpressionMember<Expression>(AssociationSetterExpressionMethod!);
 			else
-				setExpression = SetExpression!;
+				setExpression = AssociationSetterExpression!;
 
 			var lambda = setExpression as LambdaExpression;
 			if (lambda == null || lambda.Parameters.Count != 2)
-				if (!string.IsNullOrEmpty(SetExpressionMethod))
+				if (!string.IsNullOrEmpty(AssociationSetterExpressionMethod))
 					throw new LinqToDBException(
-						$"Invalid set expression in {type.Name}.{SetExpressionMethod}. Expected: Expression<Action<{memberType.Name}, {objectType.Name}>>");
+						$"Invalid setter expression in {type.Name}.{AssociationSetterExpressionMethod}. Expected: Expression<Action<{memberType.Name}, {objectType.Name}>>");
 				else
 					throw new LinqToDBException(
-						$"Invalid set expression in {type.Name}. Expected: Expression<Action<{memberType.Name}, {objectType.Name}>>");
+						$"Invalid setter expression in {type.Name}. Expected: Expression<Action<{memberType.Name}, {objectType.Name}>>");
 
 			if (!lambda.Parameters[0].Type.IsSameOrParentOf(memberType))
-				throw new LinqToDBException($"First parameter of set expression should be '{memberType.Name}'");
+				throw new LinqToDBException($"First parameter of setter expression should be '{memberType.Name}'");
 
 			if (lambda.ReturnType != typeof(void))
-				throw new LinqToDBException("Result type of set expression should be 'void'");
+				throw new LinqToDBException("Result type of setter expression should be 'void'");
 
 			return lambda;
 		}

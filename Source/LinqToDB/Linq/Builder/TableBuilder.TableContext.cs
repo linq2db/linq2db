@@ -217,13 +217,13 @@ namespace LinqToDB.Linq.Builder
 								? ExpressionHelper.PropertyOrField(parentObject, attr.Storage)
 								: Expression.MakeMemberAccess(parentObject, member.Info.MemberInfo);
 
-							if (attr?.SetExpression != null || attr?.SetExpressionMethod != null)
+							if (attr?.AssociationSetterExpression != null || attr?.AssociationSetterExpressionMethod != null)
 							{
-								var descriptor = GetAssociationDescriptor(member.Info.MemberInfo, EntityDescriptor);
+								var descriptor = GetFieldOrPropAssociationDescriptor(member.Info.MemberInfo, EntityDescriptor);
 								if (descriptor == null)
 									throw new LinqToDBException("Could not find association descriptor for " + member.Info.MemberInfo.Name);
 								
-								var setMethod = descriptor.GetSetterMethod(storageMember.Type, ex.Type)!;
+								var setMethod = descriptor.GetAssociationSetterMethod(storageMember.Type, ex.Type)!;
 								exprs.Add(setMethod.GetBody(storageMember, ex));
 							}
 							else
@@ -1730,14 +1730,12 @@ namespace LinqToDB.Linq.Builder
 
 			AssociationDescriptor? GetAssociationDescriptor(AccessorMember accessorMember, EntityDescriptor entityDescriptor)
 			{
-				AssociationDescriptor? descriptor = null;
-
 				if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
 				{
 					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo);
 
 					if (attribute != null)
-						descriptor = new AssociationDescriptor
+						return new AssociationDescriptor
 						(
 							entityDescriptor.ObjectType,
 							accessorMember.MemberInfo,
@@ -1748,28 +1746,21 @@ namespace LinqToDB.Linq.Builder
 							attribute.QueryExpressionMethod,
 							attribute.QueryExpression,
 							attribute.Storage,
-							attribute.SetExpressionMethod,
-							attribute.SetExpression,
+							attribute.AssociationSetterExpressionMethod,
+							attribute.AssociationSetterExpression,
 							attribute.ConfiguredCanBeNull,
 							attribute.AliasName
 						);
 				}
 				else if (accessorMember.MemberInfo.MemberType == MemberTypes.Property || accessorMember.MemberInfo.MemberType == MemberTypes.Field)
 				{
-					foreach (var ed in entityDescriptor.Associations)
-						if (ed.MemberInfo.EqualsTo(accessorMember.MemberInfo))
-							return ed;
-
-					foreach (var m in entityDescriptor.InheritanceMapping)
-						foreach (var ed in Builder.MappingSchema.GetEntityDescriptor(m.Type).Associations)
-							if (ed.MemberInfo.EqualsTo(accessorMember.MemberInfo))
-								return ed;
+					return GetFieldOrPropAssociationDescriptor(accessorMember.MemberInfo, entityDescriptor);
 				}
 
-				return descriptor;
+				return null;
 			}
 
-			AssociationDescriptor? GetAssociationDescriptor(MemberInfo memberInfo, EntityDescriptor entityDescriptor)
+			AssociationDescriptor? GetFieldOrPropAssociationDescriptor(MemberInfo memberInfo, EntityDescriptor entityDescriptor)
 			{
 				foreach (var ed in entityDescriptor.Associations)
 					if (ed.MemberInfo.EqualsTo(memberInfo))

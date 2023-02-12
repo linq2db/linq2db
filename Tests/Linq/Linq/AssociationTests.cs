@@ -672,12 +672,15 @@ namespace Tests.Linq
 
 			ParentContainer _parent = new ParentContainer();
 
-			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false, Storage = "_parent", SetExpressionMethod = nameof(SetParentValue))]
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false, Storage = "_parent", AssociationSetterExpressionMethod = nameof(SetParentValue))]
 			public Parent? Parent
 			{
 				get => _parent.Value;
 				set => throw new InvalidOperationException();
 			}
+
+			[Association(ThisKey = "Parent2ID", OtherKey = "ParentID", CanBeNull = false)]
+			public Parent? Parent2 { get; set; }
 
 			public static Expression<Action<ParentContainer, Parent>> SetParentValue()
 			{
@@ -691,6 +694,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var value = db.GetTable<SetExpressionTestClass>().LoadWith(x => x.Parent).First();
+				var value2 = db.GetTable<SetExpressionTestClass>().LoadWith(x => x.Parent).LoadWith(x => x.Parent2).First();
 
 				Assert.That(value.Parent, Is.Not.Null);
 			}

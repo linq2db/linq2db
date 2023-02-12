@@ -88,7 +88,7 @@ namespace LinqToDB.Mapping
 		/// <para>
 		/// <example>
 		/// <code>
-		/// var Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; associationQuery;
+		/// Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; associationQuery;
 		/// <para />
 		/// associationQuery = (e, db) =&gt; db.GetTable&lt;SomeOtherEntity&gt;().Where(se =&gt; se.Id == e.Id);
 		/// </code>
@@ -124,22 +124,22 @@ namespace LinqToDB.Mapping
 		/// </example>
 		/// </para>
 		/// </summary>
-		public string? SetExpressionMethod { get; set; }
+		public string? AssociationSetterExpressionMethod { get; set; }
 
 		/// <summary>
-		/// Specifies a set expression. If is set, it will be used to set the storage member when using LoadWith().
+		/// Specifies a setter expression. If is set, it will be used to set the storage member when using LoadWith().
 		/// Action takes two parameters: the storage member and the value to assign to it.
 		/// <para>
 		/// <example>
 		/// <code>
-		/// var Expression&lt;Action&lt;SomeContainerType,SomeOtherEntity&gt;&gt; setContainerValue;
+		/// Expression&lt;Action&lt;SomeContainerType,SomeOtherEntity&gt;&gt; setContainerValue;
 		/// <para />
 		/// setContainerValue = (container, value) =&gt; container.Value = value;
 		/// </code>
 		/// </example>
 		/// </para>
 		/// </summary>
-		public Expression? SetExpression { get; set; }
+		public Expression? AssociationSetterExpression { get; set; }
 
 		internal bool?      ConfiguredCanBeNull;
 		/// <summary>
@@ -175,7 +175,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{SetExpressionMethod}.{IdentifierBuilder.GetObjectID(SetExpression)}.{(CanBeNull?1:0)}.{AliasName}.";
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{AssociationSetterExpressionMethod}.{IdentifierBuilder.GetObjectID(AssociationSetterExpression)}.{(CanBeNull?1:0)}.{AliasName}.";
 		}
 	}
 }
