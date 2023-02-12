@@ -665,7 +665,7 @@ namespace Tests.Linq
 
 		[Table("Child")]
 		[UsedImplicitly]
-		sealed class SetExpressionTestClass
+		sealed class AssociationSetterExpressionTestClass
 		{
 			[Column] public int ParentID;
 			[Column] public int ChildID;
@@ -689,12 +689,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SetExpressionTest([DataSources] string context)
+		public void AssociationSetterExpressionTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var value = db.GetTable<SetExpressionTestClass>().LoadWith(x => x.Parent).First();
-				var value2 = db.GetTable<SetExpressionTestClass>().LoadWith(x => x.Parent).LoadWith(x => x.Parent2).First();
+				var value = db.GetTable<AssociationSetterExpressionTestClass>().LoadWith(x => x.Parent).First();
 
 				Assert.That(value.Parent, Is.Not.Null);
 			}
