@@ -62,7 +62,7 @@ namespace Tests.Linq
 
 			public ISqlExpression ToSql(Expression expression)
 			{
-				return new SqlTable(typeof(T))
+				return new SqlTable(MappingSchema.Default.GetEntityDescriptor(typeof(T), null))
 				{
 					TableName = new (_table.TableName)
 				};

@@ -66,7 +66,7 @@ namespace LinqToDB.Tools.EntityServices
 			{
 				if (_mapper != null) return;
 
-				var entityDesc = mappingSchema.GetEntityDescriptor(typeof(T));
+				var entityDesc = mappingSchema.GetEntityDescriptor(typeof(T), null);
 
 				_keyColumns = entityDesc.Columns.Where (c => c.IsPrimaryKey).Select(c => c.MemberAccessor).ToList();
 

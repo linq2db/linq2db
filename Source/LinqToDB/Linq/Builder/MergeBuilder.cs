@@ -52,9 +52,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				var args          = methodCall.Method.GetGenericArguments();
 				var objectType    = args[0];
+				var ed            = builder.MappingSchema.GetEntityDescriptor(objectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), "$action", false);
-				var insertedTable = SqlTable.Inserted(objectType);
-				var deletedTable  = SqlTable.Deleted (objectType);
+				var insertedTable = SqlTable.Inserted(ed);
+				var deletedTable  = SqlTable.Deleted (ed);
 
 				mergeContext.Merge.Output = new SqlOutputClause()
 				{

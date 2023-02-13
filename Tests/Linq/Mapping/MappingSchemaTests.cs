@@ -332,7 +332,7 @@ namespace Tests.Mapping
 		[Test]
 		public void DoNotUseComplexAttributes()
 		{
-			var ed = MappingSchema.Default.GetEntityDescriptor(typeof(FkTable));
+			var ed = MappingSchema.Default.GetEntityDescriptor(typeof(FkTable), null);
 			var c  = ed.Columns.Single(_ => _.ColumnName == "ParentId");
 
 			Assert.False(c.IsPrimaryKey);

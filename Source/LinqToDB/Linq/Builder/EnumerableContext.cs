@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 			Expression        = buildInfo.Expression;
 			SelectQuery       = query;
 			_elementType      = elementType;
-			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType);
+			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			Table             = BuildValuesTable();
 
 			foreach (var field in Table.Fields)
@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 				knownMembers.AddRange(members.Keys);
 			}
 
-			var ed = Builder.MappingSchema.GetEntityDescriptor(_elementType);
+			var ed = Builder.MappingSchema.GetEntityDescriptor(_elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 			var builtRows = new List<ISqlExpression[]>(arrayExpression.Expressions.Count);
 
@@ -474,7 +474,7 @@ namespace LinqToDB.Linq.Builder
 				return _variable;
 
 			var recordType       = RecordsHelper.GetRecordType(objectType);
-			var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType);
+			var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 			// choosing type that can be instantiated
 			/*if ((objectType.IsInterface || objectType.IsAbstract) && !(ObjectType.IsInterface || ObjectType.IsAbstract))

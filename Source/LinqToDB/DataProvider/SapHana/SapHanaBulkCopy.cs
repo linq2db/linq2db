@@ -105,7 +105,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rc             = new BulkCopyRowsCopied();
 
@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rc             = new BulkCopyRowsCopied();
 

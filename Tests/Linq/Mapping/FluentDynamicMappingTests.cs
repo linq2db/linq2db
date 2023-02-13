@@ -42,7 +42,7 @@ namespace Tests.Mapping
 
 			mb.HasAttribute<MyClass>(x => Sql.Property<int>(x, "ID"), new PrimaryKeyAttribute()).Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.IsTrue(ed["ID"]!.IsPrimaryKey);
 		}
@@ -55,7 +55,7 @@ namespace Tests.Mapping
 
 			mb.HasAttribute<MyClass>(x => Sql.Property<int>(x, "ID2"), new PrimaryKeyAttribute()).Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.IsTrue(ed["ID2"]!.IsPrimaryKey);
 		}
@@ -70,7 +70,7 @@ namespace Tests.Mapping
 				.Property(x => Sql.Property<int>(x, "ID")).IsPrimaryKey()
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.IsTrue(ed["ID"]!.IsPrimaryKey);
 		}
@@ -85,7 +85,7 @@ namespace Tests.Mapping
 				.Property(x => Sql.Property<int>(x, "ID2")).IsPrimaryKey()
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.IsTrue(ed["ID2"]!.IsPrimaryKey);
 		}
@@ -100,7 +100,7 @@ namespace Tests.Mapping
 				.Association(x => Sql.Property<MyClass>(x, "Parent"), x => Sql.Property<int>(x, "ID1"), x => Sql.Property<int>(x, "ID"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.AreEqual(ed.Associations.Single().MemberInfo.Name, "Parent");
 			Assert.AreEqual(ed.Associations.Single().ThisKey.Single(), "ID1");
@@ -117,7 +117,7 @@ namespace Tests.Mapping
 				.Association(x => Sql.Property<MyClass>(x, "Parent2"), x => Sql.Property<int>(x, "ID2"), x => Sql.Property<int>(x, "ID3"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.AreEqual(ed.Associations.Single().MemberInfo.Name, "Parent2");
 			Assert.AreEqual(ed.Associations.Single().ThisKey.Single(), "ID2");
@@ -134,7 +134,7 @@ namespace Tests.Mapping
 				.HasPrimaryKey(x => Sql.Property<int>(x, "ID"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.IsTrue(ed["ID"]!.IsPrimaryKey);
 		}
@@ -149,7 +149,7 @@ namespace Tests.Mapping
 				.HasPrimaryKey(x => Sql.Property<int>(x, "ID2"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.IsTrue(ed["ID2"]!.IsPrimaryKey);
 		}
@@ -164,7 +164,7 @@ namespace Tests.Mapping
 				.HasIdentity(x => Sql.Property<int>(x, "ID"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.IsTrue(ed["ID"]!.IsIdentity);
 		}
@@ -179,7 +179,7 @@ namespace Tests.Mapping
 				.HasIdentity(x => Sql.Property<int>(x, "ID2"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.IsTrue(ed["ID2"]!.IsIdentity);
 		}
@@ -194,7 +194,7 @@ namespace Tests.Mapping
 				.HasColumn(x => Sql.Property<int>(x, "ID"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.NotNull(ed["ID"]);
 		}
@@ -209,7 +209,7 @@ namespace Tests.Mapping
 				.HasColumn(x => Sql.Property<int>(x, "ID2"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.NotNull(ed["ID2"]);
 		}
@@ -224,7 +224,7 @@ namespace Tests.Mapping
 				.Ignore(x => Sql.Property<int>(x, "ID"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.IsNull(ed["ID"]);
 		}
@@ -234,7 +234,7 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.AreEqual(ed.DynamicColumnsStore!.MemberName, nameof(MyClass.ExtendedColumns));
 			Assert.IsFalse(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedColumns)));
@@ -246,7 +246,7 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema(ProviderName.SQLite);
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.AreEqual(ed.DynamicColumnsStore!.MemberName, nameof(MyClass.ExtendedSQLiteColumns));
 			Assert.IsFalse(ed.Columns.Any(c => c.MemberName == nameof(MyClass.ExtendedColumns)));
@@ -263,7 +263,7 @@ namespace Tests.Mapping
 				.Inheritance(x => Sql.Property<byte>(x, "RowType"), 1, typeof(MyClass2))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.AreEqual(ed.InheritanceMapping.Single().DiscriminatorName, "RowType");
 		}
@@ -278,7 +278,7 @@ namespace Tests.Mapping
 				.Inheritance(x => Sql.Property<byte>(x, "RowType2"), 1, typeof(MyClass2))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.AreEqual(ed.InheritanceMapping.Single().DiscriminatorName, "RowType2");
 		}

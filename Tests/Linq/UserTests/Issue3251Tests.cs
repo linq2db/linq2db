@@ -41,8 +41,8 @@ namespace Tests.UserTests
 			mb2.Entity<Class2>().HasTableName("Class2Table").Build();
 			using (var db = new DataConnection("SQLite.MS", newMs))
 			{
-				var ed1 = newMs.GetEntityDescriptor(typeof(Class2));
-				var ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Class2));
+				var ed1 = newMs.GetEntityDescriptor(typeof(Class2), null);
+				var ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Class2), null);
 
 				Assert.AreEqual("Class2Table", ed1.Name.Name);
 				Assert.AreEqual("Class2Table", ed2.Name.Name);

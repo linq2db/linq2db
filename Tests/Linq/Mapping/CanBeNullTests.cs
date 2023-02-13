@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -83,7 +83,7 @@ namespace Tests.Mapping
 		{
 			Configuration.UseNullableTypesMetadata = true;
 			var ms = new MappingSchema();
-			var e = ms.GetEntityDescriptor(typeof(Enabled));
+			var e = ms.GetEntityDescriptor(typeof(Enabled), null);
 			Check(e, new[] 
 			{ 
 				("A",  'C', false),
@@ -102,7 +102,7 @@ namespace Tests.Mapping
 		{
 			Configuration.UseNullableTypesMetadata = true;
 			var ms = new MappingSchema();
-			var e = ms.GetEntityDescriptor(typeof(Override));
+			var e = ms.GetEntityDescriptor(typeof(Override), null);
 			Check(e, new[] 
 			{ 
 				("A1", 'C', true),
@@ -123,7 +123,7 @@ namespace Tests.Mapping
 		{
 			Configuration.UseNullableTypesMetadata = true;
 			var ms = new MappingSchema();
-			var e = ms.GetEntityDescriptor(typeof(Disabled));
+			var e = ms.GetEntityDescriptor(typeof(Disabled), null);
 			Check(e, new[]
 			{ 
 				("A",  'C', false),
@@ -138,7 +138,7 @@ namespace Tests.Mapping
 		public void DefaultValues()
 		{
 			var ms = new MappingSchema();
-			var e = ms.GetEntityDescriptor(typeof(Enabled));
+			var e = ms.GetEntityDescriptor(typeof(Enabled), null);
 			Check(e, new[] 
 			{ 
 				("A",  'C', false),

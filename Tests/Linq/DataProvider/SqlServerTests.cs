@@ -1117,7 +1117,7 @@ namespace Tests.DataProvider
 		void CompareObject<T>(MappingSchema mappingSchema, T actual, T test)
 			where T : notnull
 		{
-			var ed = mappingSchema.GetEntityDescriptor(typeof(T));
+			var ed = mappingSchema.GetEntityDescriptor(typeof(T), null);
 
 			foreach (var column in ed.Columns)
 			{

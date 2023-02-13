@@ -100,7 +100,7 @@ namespace Tests.Mapping
 			var ms = new MappingSchema();
 			var mb = new FluentMappingBuilder(ms);
 
-			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
+			MappingSchema.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
 			{
 				entityDescriptor.TableName = entityDescriptor.TableName.ToLowerInvariant();
 				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
@@ -109,12 +109,19 @@ namespace Tests.Mapping
 				}
 			};
 
-			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn().Build();
+			try
+			{
+				mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn().Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+				var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
-			Assert.That(ed.Name.Name, Is.EqualTo("newname"));
-			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
+				Assert.That(ed.Name.Name, Is.EqualTo("newname"));
+				Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
+			}
+			finally
+			{
+				MappingSchema.EntityDescriptorCreatedCallback = null;
+			}
 		}
 
 		[Test]
@@ -126,12 +133,12 @@ namespace Tests.Mapping
 			mb.HasAttribute<MyClass>(new TableAttribute("NewName"))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed.Name.Name, Is.EqualTo("NewName"));
 
 			var ms2 = new MappingSchema();
-			var ed2 = ms2.GetEntityDescriptor(typeof(MyClass));
+			var ed2 = ms2.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed2.Name.Name, Is.EqualTo("MyClass"));
 		}
@@ -144,7 +151,7 @@ namespace Tests.Mapping
 
 			mb.HasAttribute<MyClass>(new TableAttribute("NewName") { Configuration = "Test"}).Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed.Name.Name, Is.EqualTo("MyClass"));
 		}
@@ -157,7 +164,7 @@ namespace Tests.Mapping
 
 			mb.Entity<MyClass>().HasPrimaryKey(e => e.ID).Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed["ID"]!.IsPrimaryKey);
 		}
@@ -170,7 +177,7 @@ namespace Tests.Mapping
 
 			mb.Entity<MyClass>().HasPrimaryKey(e => e.ID1, 3).Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed["ID1"]!.IsPrimaryKey);
 			Assert.That(ed["ID1"]!.PrimaryKeyOrder, Is.EqualTo(3));
@@ -184,7 +191,7 @@ namespace Tests.Mapping
 
 			mb.Entity<MyClass>().HasPrimaryKey(e => new { e.ID, e.ID1 }, 3).Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed["ID"]!. IsPrimaryKey);
 			Assert.That(ed["ID"]!. PrimaryKeyOrder, Is.EqualTo(3));
@@ -200,7 +207,7 @@ namespace Tests.Mapping
 
 			mb.Entity<MyClass>().Property(e => e.ID).IsPrimaryKey().Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed["ID"]!.IsPrimaryKey);
 		}
@@ -217,7 +224,7 @@ namespace Tests.Mapping
 					.IsIdentity()
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed["ID"]!.IsPrimaryKey);
 			Assert.That(ed["ID"]!.IsIdentity);
@@ -234,7 +241,7 @@ namespace Tests.Mapping
 				.HasSchemaName("Schema")
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed.Name.Name,   Is.EqualTo("Table"));
 			Assert.That(ed.Name.Schema, Is.EqualTo("Schema"));
@@ -251,7 +258,7 @@ namespace Tests.Mapping
 					.HasAttribute(new AssociationAttribute { ThisKey = "ID", OtherKey = "ID1" })
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed.Associations, Is.Not.EqualTo(0));
 		}
@@ -268,7 +275,7 @@ namespace Tests.Mapping
 				.Property(e => e.Class3)
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass2));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass2), null);
 
 			Assert.That(ed["Class3"], Is.Not.Null);
 		}
@@ -283,7 +290,7 @@ namespace Tests.Mapping
 				.Association( e => e.Parent, e => e.ID, o => o!.ID1 )
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
 		}
@@ -298,7 +305,7 @@ namespace Tests.Mapping
 				.Association( e => e.Parent, (e, o) => e.ID == o!.ID1 )
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.That(ed.Associations, Is.Not.EqualTo( 0 ) );
 		}
@@ -313,7 +320,7 @@ namespace Tests.Mapping
 				.Association( e => e.Assosiations, (e, o) => e.Id == o.ID1 )
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass), null);
 
 			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
 		}
@@ -347,7 +354,7 @@ namespace Tests.Mapping
 				.Inheritance(e => e.Gender, Gender.Female, typeof(TestInheritanceFemale))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson));
+			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson), null);
 
 			Assert.That(ed.InheritanceMapping.Count, Is.Not.EqualTo(0));
 
@@ -373,7 +380,7 @@ namespace Tests.Mapping
 				.Inheritance(e => e.Gender, Gender.Female, typeof(TestInheritanceFemale))
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson));
+			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson), null);
 
 			Assert.That(ed.InheritanceMapping.Count, Is.Not.EqualTo(0));
 
@@ -438,13 +445,13 @@ namespace Tests.Mapping
 
 			b.Entity<MyClass>().HasTableName("Name1").Build();
 
-			var od1 = ms.GetEntityDescriptor(typeof(MyClass));
+			var od1 = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.AreEqual("Name1", od1.Name.Name);
 
 			b.Entity<MyClass>().HasTableName("Name2").Build();
 
-			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
+			var od2 = ms.GetEntityDescriptor(typeof(MyClass), null);
 
 			Assert.AreEqual("Name2", od2.Name.Name);
 		}
@@ -461,7 +468,7 @@ namespace Tests.Mapping
 				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"})
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass), null);
 			Assert.AreEqual(2, ed.Associations.Count);
 		}
 
@@ -477,7 +484,7 @@ namespace Tests.Mapping
 				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"})
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass), null);
 			Assert.AreEqual(2, ed.Associations.Count);
 			Assert.AreEqual(1, ed.Columns.Count(_ => _.IsPrimaryKey));
 
@@ -495,11 +502,11 @@ namespace Tests.Mapping
 				.Property(_ => _.Assosiations).HasAttribute(new AssociationAttribute() {ThisKey = "Id",             OtherKey = "ID1"})
 				.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass2));
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass2), null);
 			Assert.AreEqual(2, ed.Associations.Count);
 			Assert.AreEqual(1, ed.Columns.Count(_ => _.IsPrimaryKey));
 
-			var ed1 = ms.GetEntityDescriptor(typeof(MyBaseClass));
+			var ed1 = ms.GetEntityDescriptor(typeof(MyBaseClass), null);
 			Assert.AreEqual(0, ed1.Associations.Count);
 			Assert.AreEqual(0, ed1.Columns.Count(_ => _.IsPrimaryKey));
 
@@ -523,7 +530,7 @@ namespace Tests.Mapping
 
 			b.Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass4));
+			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass4), null);
 
 			Assert.AreEqual(nameof(IInterfaceBase), ed.Name.Name);
 

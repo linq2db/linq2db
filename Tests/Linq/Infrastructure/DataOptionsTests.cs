@@ -1,9 +1,12 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlClient;
 
@@ -11,8 +14,6 @@ using NUnit.Framework;
 
 namespace Tests.Infrastructure
 {
-	using System.Net;
-	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]
@@ -255,6 +256,84 @@ namespace Tests.Infrastructure
 
 				Assert.AreEqual(2, beforeCallCnt);
 				Assert.AreEqual(2, afterCallCnt);
+			}
+		}
+
+		sealed class EntityDescriptorTable
+		{
+			public int Id { get; }
+		}
+
+		[Test]
+		public void OnEntityDescriptorCreatedTest([DataSources(false)] string context)
+		{
+			var globalTriggered = false;
+			var localTriggrered = false;
+
+			MappingSchema.EntityDescriptorCreatedCallback = (_, _) =>
+			{
+				globalTriggered = true;
+			};
+
+			try
+
+			{
+				// global handler set
+				using (var db = GetDataContext(context))
+				{
+					db.GetTable<EntityDescriptorTable>().ToString();
+				}
+
+				Assert.True(globalTriggered);
+				Assert.False(localTriggrered);
+				globalTriggered = false;
+
+				// local handler set
+				MappingSchema.ClearCache();
+				using (var db = GetDataContext(context, options => options.UseOnEntityDescriptorCreated((_, _) =>
+				{
+					localTriggrered = true;
+				})))
+				{
+					db.GetTable<EntityDescriptorTable>().ToString();
+				}
+
+				Assert.False(globalTriggered);
+				Assert.True(localTriggrered);
+				localTriggrered = false;
+
+				// descriptor cached
+				using (var db = GetDataContext(context))
+				{
+					db.GetTable<EntityDescriptorTable>().ToString();
+				}
+
+				Assert.False(globalTriggered);
+				Assert.False(localTriggrered);
+
+				// cache miss
+				using (var db = GetDataContext(context, new MappingSchema("name1")))
+				{
+					db.GetTable<EntityDescriptorTable>().ToString();
+				}
+
+				Assert.True(globalTriggered);
+				Assert.False(localTriggrered);
+				globalTriggered = false;
+
+				// no handlers
+				MappingSchema.EntityDescriptorCreatedCallback = null;
+				using (var db = GetDataContext(context, new MappingSchema("name2")))
+				{
+					db.GetTable<EntityDescriptorTable>().ToString();
+				}
+
+				Assert.False(globalTriggered);
+				Assert.False(localTriggrered);
+			}
+			finally
+			{
+				MappingSchema.EntityDescriptorCreatedCallback = null;
 			}
 		}
 	}
