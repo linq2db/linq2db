@@ -30,7 +30,7 @@ namespace LinqToDB.Tools
 			if (columnPredicate == null) throw new ArgumentNullException(nameof(columnPredicate));
 
 			var cols = new HashSet<MemberAccessor>(
-				mappingSchema.GetEntityDescriptor(typeof(T), null).Columns
+				mappingSchema.GetEntityDescriptor(typeof(T)).Columns
 					.Where(columnPredicate).Select(c => c.MemberAccessor));
 
 			return ComparerBuilder.GetEqualityComparer<T>(cols.Contains);
@@ -49,7 +49,7 @@ namespace LinqToDB.Tools
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
 			var cols = new HashSet<MemberAccessor>(
-				mappingSchema.GetEntityDescriptor(typeof(T), null).Columns
+				mappingSchema.GetEntityDescriptor(typeof(T)).Columns
 					.Select(c => c.MemberAccessor));
 
 			return ComparerBuilder.GetEqualityComparer<T>(cols.Contains);
@@ -68,7 +68,7 @@ namespace LinqToDB.Tools
 			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
 
 			var cols = new HashSet<MemberAccessor>(
-				mappingSchema.GetEntityDescriptor(typeof(T), null).Columns
+				mappingSchema.GetEntityDescriptor(typeof(T)).Columns
 					.Where(c => c.IsPrimaryKey).Select(c => c.MemberAccessor));
 
 			if (cols.Count > 0)

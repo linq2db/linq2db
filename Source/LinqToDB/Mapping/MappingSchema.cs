@@ -1716,7 +1716,7 @@ namespace LinqToDB.Mapping
 		/// <param name="onEntityDescriptorCreated">Action, called when new descriptor instance created.
 		/// When set to <c>null</c>, <see cref="EntityDescriptorCreatedCallback" /> callback used.</param>
 		/// <returns>Mapping descriptor.</returns>
-		public EntityDescriptor GetEntityDescriptor(Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
+		public EntityDescriptor GetEntityDescriptor(Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated = null)
 		{
 			var ed = EntityDescriptorsCache.GetOrCreate(
 				(entityType: type, ((IConfigurationID)this).ConfigurationID),

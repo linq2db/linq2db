@@ -67,7 +67,7 @@ namespace Tests.Samples
 					if (updateTable == null)
 						return statement;
 
-					var descriptor = MappingSchema.GetEntityDescriptor(updateTable.ObjectType, null);
+					var descriptor = MappingSchema.GetEntityDescriptor(updateTable.ObjectType);
 					if (descriptor == null)
 						return statement;
 
@@ -101,7 +101,7 @@ namespace Tests.Samples
 				else if (statement.QueryType == QueryType.Insert || statement.QueryType == QueryType.InsertOrUpdate)
 				{
 					var source          = statement.RequireInsertClause().Into!;
-					var descriptor      = MappingSchema.GetEntityDescriptor(source.ObjectType, null);
+					var descriptor      = MappingSchema.GetEntityDescriptor(source.ObjectType);
 					var rowVersion      = descriptor.Columns.SingleOrDefault(c => c.MemberAccessor.MemberInfo.HasAttribute<RowVersionAttribute>());
 
 					if (rowVersion == null)

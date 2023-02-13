@@ -83,7 +83,7 @@ namespace Tests.Mapping
 		{
 			Configuration.UseNullableTypesMetadata = true;
 			var ms = new MappingSchema();
-			var e = ms.GetEntityDescriptor(typeof(Enabled), null);
+			var e = ms.GetEntityDescriptor(typeof(Enabled));
 			Check(e, new[] 
 			{ 
 				("A",  'C', false),
@@ -102,7 +102,7 @@ namespace Tests.Mapping
 		{
 			Configuration.UseNullableTypesMetadata = true;
 			var ms = new MappingSchema();
-			var e = ms.GetEntityDescriptor(typeof(Override), null);
+			var e = ms.GetEntityDescriptor(typeof(Override));
 			Check(e, new[] 
 			{ 
 				("A1", 'C', true),
@@ -123,7 +123,7 @@ namespace Tests.Mapping
 		{
 			Configuration.UseNullableTypesMetadata = true;
 			var ms = new MappingSchema();
-			var e = ms.GetEntityDescriptor(typeof(Disabled), null);
+			var e = ms.GetEntityDescriptor(typeof(Disabled));
 			Check(e, new[]
 			{ 
 				("A",  'C', false),
@@ -138,7 +138,7 @@ namespace Tests.Mapping
 		public void DefaultValues()
 		{
 			var ms = new MappingSchema();
-			var e = ms.GetEntityDescriptor(typeof(Enabled), null);
+			var e = ms.GetEntityDescriptor(typeof(Enabled));
 			Check(e, new[] 
 			{ 
 				("A",  'C', false),

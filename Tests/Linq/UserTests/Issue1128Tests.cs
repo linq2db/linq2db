@@ -49,10 +49,10 @@ namespace Tests.UserTests
 		{
 			var ms = SetFluentMappings();
 
-			var ed1 = ms.GetEntityDescriptor(typeof(FluentBase), null);
-			var ed2 = ms.GetEntityDescriptor(typeof(FluentDerived), null);
-			var ed3 = ms.GetEntityDescriptor(typeof(AttributeBase), null);
-			var ed4 = ms.GetEntityDescriptor(typeof(AttributeBase), null);
+			var ed1 = ms.GetEntityDescriptor(typeof(FluentBase));
+			var ed2 = ms.GetEntityDescriptor(typeof(FluentDerived));
+			var ed3 = ms.GetEntityDescriptor(typeof(AttributeBase));
+			var ed4 = ms.GetEntityDescriptor(typeof(AttributeBase));
 
 			Assert.AreEqual(ed1.Name.Name, ed2.Name.Name);
 			Assert.AreEqual(ed3.Name.Name, ed4.Name.Name);

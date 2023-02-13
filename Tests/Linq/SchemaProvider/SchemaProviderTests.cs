@@ -123,7 +123,7 @@ namespace Tests.SchemaProvider
 
 		static void AssertType<T>(MappingSchema mappingSchema, DatabaseSchema dbSchema)
 		{
-			var e = mappingSchema.GetEntityDescriptor(typeof(T), null);
+			var e = mappingSchema.GetEntityDescriptor(typeof(T));
 
 			var schemaTable = dbSchema.Tables.FirstOrDefault(_ => _.TableName!.Equals(e.Name.Name, StringComparison.OrdinalIgnoreCase))!;
 			Assert.IsNotNull(schemaTable, e.Name.Name);

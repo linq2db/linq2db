@@ -46,12 +46,12 @@ namespace Tests.UserTests
 
 				db.CreateTable<Test1585>();
 				var data = db.GetTable<Test1585>();
-				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585), null);
+				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));
 			}
 			using (var db = GetDataContext(context, ms))
 			{
 				var data = db.GetTable<Test1585>();
-				ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585), null);
+				ed2 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));
 			}
 
 			Assert.AreEqual(ed1, ed2);

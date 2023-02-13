@@ -88,7 +88,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			_wrappedImporter = typeMapper.Wrap<Wrapped.NpgsqlBinaryImporter>(_originalImporter);
 
-			var ed        = MappingSchema.GetEntityDescriptor(typeof(TestEntity), null);
+			var ed        = MappingSchema.GetEntityDescriptor(typeof(TestEntity));
 			_columns      = ed.Columns.ToArray();
 
 			var generator = new ExpressionGenerator(typeMapper);
