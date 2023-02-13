@@ -436,7 +436,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false)] string context)
+		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false, TestProvName.AllSqlServerCS)] string context)
 		{
 			await using var db = GetDataContext(context);
 
