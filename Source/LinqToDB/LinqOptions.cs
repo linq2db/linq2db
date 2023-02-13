@@ -135,6 +135,17 @@ namespace LinqToDB
 	/// Proper approach is to create single <see cref="Mapping.MappingSchema"/> instance once, configure mappings for it and use this <see cref="Mapping.MappingSchema"/> instance for all context instances.
 	/// Default value: <c>false</c>.
 	/// </param>
+	/// <param name="PreferExistsForScalar">
+	/// If <c>true</c>, EXISTS operator will be generated instead of IN operator for scalar values.
+	/// <code>
+	/// SELECT Value FROM MyEntity e WHERE EXISTS(SELECT * FROM MyEntity2 e2 WHERE e2.Value = e.Value)
+	/// </code>
+	/// vs
+	/// <code>
+	/// SELECT Value FROM MyEntity e WHERE Value IN (SELECT Value FROM MyEntity2 e2)
+	/// </code>
+	/// Default value: <c>false</c>.
+	/// </param>
 	public sealed record LinqOptions
 	(
 		bool      PreloadGroups           = false,
@@ -150,7 +161,8 @@ namespace LinqToDB
 		bool      PreferApply             = true,
 		bool      KeepDistinctOrdered     = true,
 		bool      ParameterizeTakeSkip    = true,
-		bool      EnableContextSchemaEdit = false
+		bool      EnableContextSchemaEdit = false,
+		bool      PreferExistsForScalar   = false
 	)
 		: IOptionSet
 	{
@@ -174,6 +186,7 @@ namespace LinqToDB
 			KeepDistinctOrdered     = original.KeepDistinctOrdered;
 			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
 			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
+			PreferExistsForScalar   = original.PreferExistsForScalar;
 		}
 
 		int? _configurationID;
@@ -199,6 +212,7 @@ namespace LinqToDB
 						.Add(KeepDistinctOrdered)
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
+						.Add(PreferExistsForScalar)
 						.CreateID();
 				}
 

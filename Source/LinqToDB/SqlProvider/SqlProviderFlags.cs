@@ -321,7 +321,7 @@ namespace LinqToDB.SqlProvider
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
 		[DataMember(Order = 37)]
-		public bool DoesNotSupportExists { get; set; }
+		public bool DoesNotSupportCorrelatedSubquery { get; set; }
 
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
@@ -364,7 +364,7 @@ namespace LinqToDB.SqlProvider
 				^ OutputDeleteUseSpecialTable                  .GetHashCode()
 				^ OutputInsertUseSpecialTable                  .GetHashCode()
 				^ OutputUpdateUseSpecialTables                 .GetHashCode()
-				^ DoesNotSupportExists                         .GetHashCode()
+				^ DoesNotSupportCorrelatedSubquery             .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -406,7 +406,7 @@ namespace LinqToDB.SqlProvider
 				&& OutputDeleteUseSpecialTable          == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable          == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables         == other.OutputUpdateUseSpecialTables
-				&& DoesNotSupportExists                 == other.DoesNotSupportExists
+				&& DoesNotSupportCorrelatedSubquery     == other.DoesNotSupportCorrelatedSubquery
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

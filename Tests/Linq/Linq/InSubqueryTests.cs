@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB.Data;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
@@ -21,6 +22,9 @@ namespace Tests.Linq
 				select c;
 
 			_ = q.ToList();
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
 		}
 
 		[Test]
@@ -34,6 +38,9 @@ namespace Tests.Linq
 				select c;
 
 			_ = q.ToList();
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
 		}
 
 		[Test]
