@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -27,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 			if (sequence.SelectQuery.Select.TakeValue != null ||
 			    sequence.SelectQuery.Select.SkipValue != null ||
 			    builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery ||
-			    builder.DataOptions.LinqOptions.PreferExistsForScalar == false && methodCall.Arguments[1].Type.IsScalar())
+			    builder.DataOptions.LinqOptions.PreferExistsForScalar == false && builder.MappingSchema.IsScalarType(methodCall.Arguments[1].Type))
 			{
 				sequence         = new SubQueryContext(sequence);
 				buildInStatement = true;
