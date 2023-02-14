@@ -267,6 +267,7 @@ namespace Tests.Infrastructure
 		[Test]
 		public void OnEntityDescriptorCreatedTest([DataSources(false)] string context)
 		{
+			MappingSchema.ClearCache();
 			var globalTriggered = false;
 			var localTriggrered = false;
 

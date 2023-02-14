@@ -429,6 +429,14 @@ namespace Tests
 
 			var options = new DataOptions().UseConfigurationString(configuration);
 
+			if (configuration.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
+			{
+				//if (!suppressSequentialAccess)
+				options = options.UseInterceptor(SequentialAccessCommandInterceptor.Instance);
+
+				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _sequentialAccessSchema));
+			}
+			else
 			if (configuration.IsAnyOf(TestProvName.AllMariaDB))
 				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _mariaDBSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _mariaDBSchema));
 
