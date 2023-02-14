@@ -160,14 +160,16 @@ namespace LinqToDB
 			return ((IConfigurationID)this).ConfigurationID;
 		}
 
-		public static bool operator ==(DataOptions t1, DataOptions t2)
+		public static bool operator ==(DataOptions? t1, DataOptions? t2)
 		{
+			if (ReferenceEquals(t1, t2))
+				return true;
+			if (t1 is null || t2 is null)
+				return false;
+
 			return t1.Equals(t2);
 		}
 
-		public static bool operator !=(DataOptions t1, DataOptions t2)
-		{
-			return !t1.Equals(t2);
-		}
+		public static bool operator !=(DataOptions? t1, DataOptions? t2) => !(t1 == t2);
 	}
 }
