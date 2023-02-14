@@ -87,11 +87,21 @@ namespace LinqToDB.Linq.Builder
 			{
 				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
 
+				var contextRef = toPath as ContextRefExpression;
+
 				for (int i = 0; i < generic.Assignments.Count; i++)
 				{
 					var assignment = generic.Assignments[i];
+
+					var currentPath = toPath;
+					if (contextRef != null && assignment.MemberInfo.DeclaringType != null && !assignment.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
+					{
+						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
+					}
+
 					var newExpression = CorrectTrackingPath(assignment.Expression,
-						Expression.MakeMemberAccess(toPath, assignment.MemberInfo));
+						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo));
+
 					if (!ReferenceEquals(assignment.Expression, newExpression))
 					{
 						if (assignments == null)
@@ -168,6 +178,7 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
+
 		public static Expression ReplacePlaceholdersByTrackingPath(Expression expression)
 		{
 			var transformed = expression.Transform(e =>
@@ -185,6 +196,68 @@ namespace LinqToDB.Linq.Builder
 
 			return transformed;
 		}
+
+		[return: NotNullIfNotNull("expression")]
+		public static Expression? RemapToNewPath(Expression? expression, Expression toPath)
+		{
+			if (expression == null)
+				return null;
+
+			if (toPath is not ContextRefExpression && toPath is not MemberExpression)
+				return expression;
+
+			if (expression is SqlGenericConstructorExpression generic)
+			{
+				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
+
+				var contextRef = toPath as ContextRefExpression;
+
+				for (int i = 0; i < generic.Assignments.Count; i++)
+				{
+					var assignment = generic.Assignments[i];
+
+					var currentPath = toPath;
+					if (contextRef != null && assignment.MemberInfo.DeclaringType != null && !assignment.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
+					{
+						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
+					}
+
+					var newExpression = RemapToNewPath(assignment.Expression,
+						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo));
+
+					if (!ReferenceEquals(assignment.Expression, newExpression))
+					{
+						if (assignments == null)
+						{
+							assignments = new();
+							for (int j = 0; j < i; j++)
+							{
+								assignments.Add(generic.Assignments[j]);
+							}
+						}
+
+						assignments.Add(assignment.WithExpression(newExpression));
+					}
+					else
+						assignments?.Add(assignment);
+				}
+
+				if (assignments != null)
+				{
+					return generic.ReplaceAssignments(assignments);
+				}
+
+				return generic;
+			}
+
+			if (expression is NewExpression or MemberInitExpression)
+			{
+				return RemapToNewPath(SqlGenericConstructorExpression.Parse(expression), toPath);
+			}
+
+			return toPath;
+		}
+
 
 		public static Expression ReplaceContext(Expression expression, IBuildContext current, IBuildContext onContext)
 		{

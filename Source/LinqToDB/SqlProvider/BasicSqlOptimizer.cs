@@ -729,11 +729,11 @@ namespace LinqToDB.SqlProvider
 
 		static void CorrectEmptyCte(CteClause cte)
 		{
-			if (cte.Fields.Count == 0)
+			/*if (cte.Fields.Count == 0)
 			{
 				cte.Fields.Add(new SqlField(new DbDataType(typeof(int)), "any", false));
 				cte.Body!.Select.AddNew(new SqlValue(1), "any");
-			}
+			}*/
 		}
 
 		protected static bool HasParameters(ISqlExpression expr)

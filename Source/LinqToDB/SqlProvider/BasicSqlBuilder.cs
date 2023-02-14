@@ -462,10 +462,6 @@ namespace LinqToDB.SqlProvider
 				BuildGetIdentity(nullability, insertClause);
 			else
 				BuildOutputSubclause(nullability, statement.GetOutputClause());
-
-			--Indent;
-
-			AppendIndent().AppendLine(")");
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)

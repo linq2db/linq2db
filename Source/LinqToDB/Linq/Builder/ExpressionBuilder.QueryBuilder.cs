@@ -404,10 +404,7 @@ namespace LinqToDB.Linq.Builder
 
 							newExpr = context.builder.MakeExpression(context.context, ma, context.flags);
 
-							if (!ReferenceEquals(newExpr, ma))
-								return new TransformInfo(newExpr, false, true);
-
-							break;
+							return new TransformInfo(newExpr);
 						}
 
 						case ExpressionType.Call:
@@ -627,7 +624,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (e is SqlGenericConstructorExpression generic)
 					{
-						return ctx.builder.TryConstruct(ctx.builder.MappingSchema, generic, ctx.context,
+						return ctx.builder.Construct(ctx.builder.MappingSchema, generic, ctx.context,
 							ProjectFlags.Expression);
 					}
 

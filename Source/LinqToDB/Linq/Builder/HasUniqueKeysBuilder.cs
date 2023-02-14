@@ -16,9 +16,9 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
-			var keyContext  = new SelectContext(buildInfo.Parent, keySelector, sequence, false);
 
-			var keySql = builder.ConvertToSqlExpr(keyContext, new ContextRefExpression(keySelector.Parameters[0].Type, keyContext));
+			var keyExpr = SequenceHelper.PrepareBody(keySelector, sequence);
+			var keySql  = builder.ConvertToSqlExpr(sequence, keyExpr);
 
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(keySql);
 

@@ -130,8 +130,8 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
 		{
-			if (oldElement.ElementType == QueryElementType.Column ||
-				oldElement.ElementType == QueryElementType.SqlField ||
+			if (oldElement.ElementType == QueryElementType.Column    ||
+				oldElement.ElementType == QueryElementType.SqlField  ||
 				oldElement.ElementType == QueryElementType.CteClause)
 			{
 				AddReplacement(oldElement, newElement);

@@ -390,7 +390,19 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public Expression TryConstructFullEntity(IBuildContext context, SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
+		public Expression ConstructFullEntity(IBuildContext context,
+			SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
+		{
+			var constructed = TryConstructFullEntity(context, constructorExpression, flags, checkInheritance);
+
+			if (constructed == null)
+				throw new InvalidOperationException(
+					$"Cannot construct full object '{constructorExpression.ObjectType}'. No suitable constructors found.");
+
+			return constructed;
+		}
+
+		public Expression? TryConstructFullEntity(IBuildContext context, SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
 		{
 			var entityType           = constructorExpression.ObjectType;
 			var entityDescriptor     = MappingSchema.GetEntityDescriptor(entityType);
@@ -409,12 +421,12 @@ namespace LinqToDB.Linq.Builder
 						if (defaultDescriptor.Type != constructorExpression.Type)
 						{
 							var subConstructor = BuildFullEntityExpression(context, defaultDescriptor.Type, flags);
-							defaultExpression = TryConstructFullEntity(context, subConstructor, flags, false);
+							defaultExpression = ConstructFullEntity(context, subConstructor, flags, false);
 							defaultExpression = Expression.Convert(defaultExpression, constructorExpression.Type);
 						}
 						else
 						{
-							defaultExpression = TryConstructFullEntity(context, constructorExpression, flags, false);
+							defaultExpression = ConstructFullEntity(context, constructorExpression, flags, false);
 						}
 					}
 					else
@@ -498,7 +510,10 @@ namespace LinqToDB.Linq.Builder
 
 						var subConstructor = BuildFullEntityExpression(context, inheritance.Type, flags);
 
-						var tableExpr = Expression.Convert(TryConstructFullEntity(context, subConstructor, flags, false), current.Type);
+						var fullEntity = TryConstructFullEntity(context, subConstructor, flags, false);
+						if (fullEntity == null)
+							return null;
+						var tableExpr = Expression.Convert(fullEntity, current.Type);
 
 						current = Expression.Condition(test, tableExpr, current);
 					}
@@ -507,11 +522,14 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return ConstructObject(MappingSchema, constructorExpression);
+			return TryConstructObject(MappingSchema, constructorExpression);
 		}
 
-		public Expression ConstructObject(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression)
+		public Expression? TryConstructObject(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression)
 		{
+			if (constructorExpression.ObjectType.IsAbstract)
+				return null;
+
 			var typeAccessor = TypeAccessor.GetAccessor(constructorExpression.ObjectType);
 
 			if (constructorExpression.Constructor != null)
@@ -532,7 +550,8 @@ namespace LinqToDB.Linq.Builder
 					return instantiation;
 			}
 
-			throw new NotImplementedException("ConstructObject all code paths");
+			return null;
+			//throw new NotImplementedException("ConstructObject all code paths");
 
 			/*
 			for (int i = 0; i < constructors.Length; i++)
@@ -548,22 +567,33 @@ namespace LinqToDB.Linq.Builder
 		*/
 		}
 
-		public Expression TryConstruct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression, IBuildContext context,  ProjectFlags flags)
+		public Expression Construct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression,
+			IBuildContext                         context,       ProjectFlags                    flags)
+		{
+			var constructed = TryConstruct(mappingSchema, constructorExpression, context, flags);
+			if (constructed == null)
+			{
+				throw new InvalidOperationException(
+					$"Cannot construct object '{constructorExpression.ObjectType}'. No suitable constructors found.");
+			}
+
+			return constructed;
+		}
+
+		public Expression? TryConstruct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression, IBuildContext context,  ProjectFlags flags)
 		{
 			switch (constructorExpression.ConstructType)
 			{
 				case SqlGenericConstructorExpression.CreateType.Full:
 				{
-					var expr = TryConstructFullEntity(context, constructorExpression, flags);
-
-					return expr;
+					return TryConstructFullEntity(context, constructorExpression, flags);
 				}
 				case SqlGenericConstructorExpression.CreateType.MemberInit:
 				case SqlGenericConstructorExpression.CreateType.Auto:
 				case SqlGenericConstructorExpression.CreateType.Keys:
 				case SqlGenericConstructorExpression.CreateType.New:
 				{
-					return ConstructObject(mappingSchema, constructorExpression);
+					return TryConstructObject(mappingSchema, constructorExpression);
 				}
 				default:
 					throw new NotImplementedException();

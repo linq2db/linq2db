@@ -95,7 +95,7 @@ namespace LinqToDB.Expressions
 			return new SqlPlaceholderExpression(SelectQuery, Sql, Path, Type, Alias, Index, trackingPath);
 		}
 
-		public Expression WithAlias(string? alias)
+		public SqlPlaceholderExpression WithAlias(string? alias)
 		{
 			if (Equals(Alias, alias))
 				return this;
@@ -126,10 +126,10 @@ namespace LinqToDB.Expressions
 				sqlStr += "?";
 			result += $": {sqlStr} ({pathStr})";
 
-			if (TrackingPath != null)
+			/*if (TrackingPath != null)
 			{
 				result += " TP: " + TrackingPath;
-			}
+			}*/
 
 			return result;
 		}

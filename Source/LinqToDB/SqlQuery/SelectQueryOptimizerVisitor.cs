@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using LinqToDB.Common;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery.Visitors;
@@ -1479,8 +1480,10 @@ namespace LinqToDB.SqlQuery
 				if (subQuery.Select.HasModifier)
 					return false;
 
+				/*
 				if (!subQuery.Select.GroupBy.IsEmpty || !subQuery.Select.Where.IsEmpty)
 					return false;
+					*/
 
 				if (!subQuery.Select.OrderBy.IsEmpty)
 				{
@@ -1488,8 +1491,10 @@ namespace LinqToDB.SqlQuery
 						return false;
 				}
 
+				/*
 				if (QueryHelper.EnumerateAccessibleSources(subQuery).Skip(1).Take(2).Count() > 1)
 					return false;
+			*/
 			}
 
 			if (!subQuery.GroupBy.IsEmpty && !selectQuery.GroupBy.IsEmpty)
@@ -1520,6 +1525,8 @@ namespace LinqToDB.SqlQuery
 
 			// Actual modification starts from this point
 			//
+
+			selectQuery.QueryName ??= subQuery.QueryName;
 
 			if (subQuery.HasSetOperators)
 			{
@@ -1559,34 +1566,43 @@ namespace LinqToDB.SqlQuery
 				selectQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
 				subQuery.SetOperators.Clear();
 			}
-			else
+
+			if (!subQuery.Where.IsEmpty)
 			{
-				if (!subQuery.Where.IsEmpty)
-				{
-					ConcatSearchCondition(selectQuery.Where, subQuery.Where);
-				}
+				ConcatSearchCondition(selectQuery.Where, subQuery.Where);
+			}
 
-				if (!subQuery.GroupBy.IsEmpty)
-				{
-					selectQuery.GroupBy.Items.AddRange(subQuery.GroupBy.Items);
-				}
+			if (!subQuery.GroupBy.IsEmpty)
+			{
+				selectQuery.GroupBy.Items.AddRange(subQuery.GroupBy.Items);
+			}
 
-				if (!subQuery.Having.IsEmpty)
-				{
-					ConcatSearchCondition(selectQuery.Having, subQuery.Having);
-				}
+			if (!subQuery.Having.IsEmpty)
+			{
+				ConcatSearchCondition(selectQuery.Having, subQuery.Having);
+			}
 
-				if (subQuery.Select.IsDistinct) 
-					selectQuery.Select.IsDistinct = true;
+			if (subQuery.Select.IsDistinct) 
+				selectQuery.Select.IsDistinct = true;
 
-				if (subQuery.Select.TakeValue != null)
-				{
-					selectQuery.Select.TakeValue = subQuery.Select.TakeValue;
-				}
+			if (subQuery.Select.TakeValue != null)
+			{
+				selectQuery.Select.TakeValue = subQuery.Select.TakeValue;
+			}
 
-				if (subQuery.Select.SkipValue != null)
+			if (subQuery.Select.SkipValue != null)
+			{
+				selectQuery.Select.SkipValue = subQuery.Select.SkipValue;
+			}
+
+			if (selectQuery.Select.Columns.Count == 0)
+			{
+				if (subQuery.Select.IsDistinct)
 				{
-					selectQuery.Select.SkipValue = subQuery.Select.SkipValue;
+					foreach(var column in subQuery.Select.Columns)
+					{
+						selectQuery.Select.AddColumn(column.Expression);
+					}
 				}
 			}
 
@@ -1599,6 +1615,11 @@ namespace LinqToDB.SqlQuery
 			tableSource.Joins.InsertRange(0, subQueryTableSource.Joins);
 
 			tableSource.Source = subQueryTableSource.Source;
+
+			if (subQuery.HasUniqueKeys)
+			{
+				subQueryTableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
+			}
 
 			ApplySubQueryExtensions(selectQuery, subQuery);
 

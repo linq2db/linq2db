@@ -90,6 +90,11 @@ namespace LinqToDB.Common
 			return Array<T>.Append(array, newElement);
 		}
 
+		internal static T[] ArrayAppend<T>(this T[] array, T[] newElements)
+		{
+			return Array<T>.Append(array, newElements);
+		}
+
 		public static Assembly? TryLoadAssembly(string? assemblyName, string? providerFactory)
 		{
 			if (assemblyName != null)

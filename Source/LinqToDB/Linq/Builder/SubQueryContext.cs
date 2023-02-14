@@ -30,7 +30,6 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext SubQuery { get; }
 
 		protected virtual bool OptimizeColumns => true;
-		protected internal readonly Dictionary<int,int> ColumnIndexes = new ();
 
 		protected virtual int GetIndex(int index, ISqlExpression column)
 		{
