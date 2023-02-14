@@ -443,7 +443,7 @@ namespace LinqToDB.Linq.Builder
 
 						var entity           = ConvertExpression(expr.Arguments[0]);
 						var memberName       = (string)expr.Arguments[1].EvaluateExpression()!;
-						var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
+						var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type, DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 						var memberInfo = entityDescriptor[memberName]?.MemberInfo;
 						if (memberInfo == null)
@@ -662,7 +662,7 @@ namespace LinqToDB.Linq.Builder
 					// ReSharper restore HeuristicUnreachableCode
 					// ReSharper restore ConditionIsAlwaysTrueOrFalse
 
-					var ed = context.Builder.MappingSchema.GetEntityDescriptor(expr.Type);
+					var ed = context.Builder.MappingSchema.GetEntityDescriptor(expr.Type, context.Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 					if (expr.Arguments.Count == 0)
 						return Array<SqlInfo>.Empty;
 					var sqlInfos = new List<SqlInfo>();
@@ -688,7 +688,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.MemberInit:
 				{
 					var expr = (MemberInitExpression)expression;
-					var ed   = context.Builder.MappingSchema.GetEntityDescriptor(expr.Type);
+					var ed   = context.Builder.MappingSchema.GetEntityDescriptor(expr.Type, context.Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 					var dic  = TypeAccessor.GetAccessor(expr.Type).Members
 							.Select(static (m,i) => (m, i))
 							.ToDictionary(static _ => _.m.MemberInfo, static _ => _.i);

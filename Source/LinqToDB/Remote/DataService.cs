@@ -21,7 +21,7 @@ namespace LinqToDB.Remote
 
 		public DataService()
 		{
-			_defaultMetadata ??= Tuple.Create(default(T)!, new MetadataInfo(MappingSchema.Default));
+			_defaultMetadata ??= Tuple.Create(default(T)!, new MetadataInfo(new DataOptions(), MappingSchema.Default));
 
 			_metadata = new MetadataProvider(_defaultMetadata.Item2);
 			_query    = new QueryProvider   (_defaultMetadata.Item2);
@@ -30,12 +30,12 @@ namespace LinqToDB.Remote
 
 		static Tuple<T,MetadataInfo>? _defaultMetadata;
 
-		public DataService(MappingSchema mappingSchema)
+		public DataService(DataOptions options, MappingSchema mappingSchema)
 		{
 			lock (_cache)
 			{
 				if (!_cache.TryGetValue(mappingSchema, out var data))
-					data = Tuple.Create(default(T)!, new MetadataInfo(mappingSchema));
+					data = Tuple.Create(default(T)!, new MetadataInfo(options, mappingSchema));
 
 				_metadata = new MetadataProvider(data.Item2);
 				_query    = new QueryProvider   (data.Item2);
@@ -75,12 +75,14 @@ namespace LinqToDB.Remote
 
 		sealed class MetadataInfo
 		{
-			public MetadataInfo(MappingSchema mappingSchema)
+			public MetadataInfo(DataOptions options, MappingSchema mappingSchema)
 			{
+				_options       = options;
 				_mappingSchema = mappingSchema;
 				LoadMetadata();
 			}
 
+			readonly DataOptions   _options;
 			readonly MappingSchema _mappingSchema;
 
 			public readonly Dictionary<Type,TypeInfo>                   TypeDic     = new();
@@ -97,9 +99,9 @@ namespace LinqToDB.Remote
 					let t   = p.PropertyType
 					where typeof(ITable<>).IsSameOrParentOf(t)
 					let tt  = t.GetGenericArguments()[0]
-					let tbl = new SqlTable(_mappingSchema, tt)
+					let m   = _mappingSchema.GetEntityDescriptor(tt, _options.ConnectionOptions.OnEntityDescriptorCreated)
+					let tbl = new SqlTable(m)
 					where tbl.Fields.Any(f => f.IsPrimaryKey)
-					let m   = _mappingSchema.GetEntityDescriptor(tt)
 					select new
 					{
 						p.Name,
@@ -148,11 +150,12 @@ namespace LinqToDB.Remote
 					{
 						if (!TypeDic.ContainsKey(m.Type))
 						{
+							var ed = _mappingSchema.GetEntityDescriptor(item.Type, _options.ConnectionOptions.OnEntityDescriptorCreated);
 							GetTypeInfo(
 								m.Type,
 								item.Type,
-								new SqlTable(_mappingSchema, item.Type),
-								_mappingSchema.GetEntityDescriptor(item.Type));
+								new SqlTable(ed),
+								ed);
 						}
 					}
 				}

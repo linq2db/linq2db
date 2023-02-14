@@ -90,7 +90,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				return MultipleRowsCopy(table, options, source);
 
 			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
 			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
 
@@ -242,7 +242,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var sqlBuilder = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed         = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var tableName  = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
 			var columns    = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
 
@@ -348,7 +348,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var sqlBuilder  = (PostgreSQLSqlBuilder)_provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed          = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var tableName   = GetTableName(sqlBuilder, options.BulkCopyOptions, table);
 			var columns     = ed.Columns.Where(c => !c.SkipOnInsert || options.BulkCopyOptions.KeepIdentity == true && c.IsIdentity).ToArray();
 			var fields      = string.Join(", ", columns.Select(column => sqlBuilder.ConvertInline(column.ColumnName, ConvertType.NameToQueryField)));

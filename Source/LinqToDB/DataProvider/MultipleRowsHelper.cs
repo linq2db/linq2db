@@ -33,10 +33,10 @@ namespace LinqToDB.DataProvider
 					? dx.GetDataConnection()
 					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
 
-			MappingSchema = dataConnection.MappingSchema;
-			Options       = options;
-			SqlBuilder    = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema, DataConnection.Options);
-			Descriptor    = MappingSchema.GetEntityDescriptor(entityType);
+			MappingSchema  = dataConnection.MappingSchema;
+			Options        = options;
+			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema, DataConnection.Options);
+			Descriptor     = MappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
 			Columns        = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.BulkCopyOptions.KeepIdentity == true)
 				.ToArray();

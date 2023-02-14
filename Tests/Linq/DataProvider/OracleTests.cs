@@ -2024,7 +2024,7 @@ namespace Tests.DataProvider
 					new { field1 = 2, field2 = "22" },
 				};
 
-				var xmlData = OracleTools.GetXmlData(conn.MappingSchema, data);
+				var xmlData = OracleTools.GetXmlData(conn.Options, conn.MappingSchema, data);
 
 				var list = conn.OracleXmlTable<XmlData>(xmlData)
 					.Select(t => new { t.Field1, t.Field2 })
@@ -2049,7 +2049,7 @@ namespace Tests.DataProvider
 					new { field1 = 2, field2 = "22" },
 				};
 
-				var xmlData = OracleTools.GetXmlData(conn.MappingSchema, data);
+				var xmlData = OracleTools.GetXmlData(conn.Options, conn.MappingSchema, data);
 
 				var list = conn.OracleXmlTable<XmlData>(() => xmlData)
 					.Select(t => new { t.Field1, t.Field2 })

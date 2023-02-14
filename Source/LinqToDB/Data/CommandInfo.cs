@@ -1363,7 +1363,7 @@ namespace LinqToDB.Data
 		}
 
 		private static readonly MethodInfo _convertParameterValueMethodInfo =
-			MemberHelper.MethodOf(() => ConvertParameterValue(1, MappingSchema.Default)).GetGenericMethodDefinition();
+			MemberHelper.MethodOf(() => ConvertParameterValue(1, null!)).GetGenericMethodDefinition();
 
 		static object? ConvertParameterValue(object? value, MappingSchema mappingSchema)
 		{
@@ -1421,12 +1421,12 @@ namespace LinqToDB.Data
 			var func = _parameterReaders.GetOrCreate(
 				(type: parameters.GetType(), ((IConfigurationID)dataConnection).ConfigurationID),
 				dataConnection,
-				static (o, ctx) =>
+				static (o, dataConnection) =>
 			{
-				o.SlidingExpiration = ctx.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+				o.SlidingExpiration = dataConnection.Options.LinqOptions.CacheSlidingExpirationOrDefault;
 
 				var type = o.Key.type;
-				var td   = ctx.MappingSchema.GetEntityDescriptor(type);
+				var td   = dataConnection.MappingSchema.GetEntityDescriptor(type, dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 				var p    = Expression.Parameter(typeof(object), "p");
 				var obj  = Expression.Parameter(type,           "obj");
 
@@ -1469,7 +1469,7 @@ namespace LinqToDB.Data
 
 									var memberType  = column.MemberType.ToNullableUnderlying();
 									var valueGetter = ExpressionHelper.PropertyOrField(obj, column.MemberName) as Expression;
-									var mapper      = ctx.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
+									var mapper      = dataConnection.MappingSchema.GetConvertExpression(memberType, typeof(DataParameter), createDefault : false);
 
 									if (mapper != null)
 									{
@@ -1481,8 +1481,8 @@ namespace LinqToDB.Data
 
 									if (memberType.IsEnum)
 									{
-										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(ctx.MappingSchema, memberType)!;
-										var convExpr = ctx.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
+										var mapType  = ConvertBuilder.GetDefaultMappingFromEnumType(dataConnection.MappingSchema, memberType)!;
+										var convExpr = dataConnection.MappingSchema.GetConvertExpression(column.MemberType, mapType)!;
 
 										memberType  = mapType;
 										valueGetter = convExpr.GetBody(valueGetter);
@@ -1490,7 +1490,7 @@ namespace LinqToDB.Data
 
 									var columnDbDataType = new DbDataType(memberType, column.DataType, column.DbType, column.Length, column.Precision, column.Scale);
 									if (columnDbDataType.DataType == DataType.Undefined)
-										columnDbDataType = columnDbDataType.WithDataType(ctx.MappingSchema.GetDataType(memberType).Type.DataType);
+										columnDbDataType = columnDbDataType.WithDataType(dataConnection.MappingSchema.GetDataType(memberType).Type.DataType);
 
 									return (Expression)Expression.MemberInit(
 										Expression.New(typeof(DataParameter)),
@@ -1657,7 +1657,7 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				var td = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T));
+				var td = dataConnection.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (td.InheritanceMapping.Count > 0 || td.HasComplexColumns)
 				{

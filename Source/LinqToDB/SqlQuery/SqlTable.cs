@@ -53,17 +53,13 @@ namespace LinqToDB.SqlQuery
 
 		#region Init from type
 
-		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
-			: this(objectType, null, new(String.Empty))
+		public SqlTable(EntityDescriptor entityDescriptor, string? physicalName = null)
+			: this(entityDescriptor.ObjectType, (int?)null, new(string.Empty))
 		{
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
+			TableName    = physicalName != null && entityDescriptor.Name.Name != physicalName ? entityDescriptor.Name with { Name = physicalName } : entityDescriptor.Name;
+			TableOptions = entityDescriptor.TableOptions;
 
-			var ed = mappingSchema.GetEntityDescriptor(objectType);
-
-			TableName    = physicalName != null && ed.Name.Name != physicalName ? ed.Name with { Name = physicalName } : ed.Name;
-			TableOptions = ed.TableOptions;
-
-			foreach (var column in ed.Columns)
+			foreach (var column in entityDescriptor.Columns)
 			{
 				var field = new SqlField(column);
 
@@ -71,11 +67,11 @@ namespace LinqToDB.SqlQuery
 
 				if (field.Type.DataType == DataType.Undefined)
 				{
-					var dataType = mappingSchema.GetDataType(field.Type.SystemType);
+					var dataType = entityDescriptor.MappingSchema.GetDataType(field.Type.SystemType);
 
 					if (dataType.Type.DataType == DataType.Undefined)
 					{
-						dataType = mappingSchema.GetUnderlyingDataType(field.Type.SystemType, out var canBeNull);
+						dataType = entityDescriptor.MappingSchema.GetUnderlyingDataType(field.Type.SystemType, out var canBeNull);
 
 						if (canBeNull)
 							field.CanBeNull = true;
@@ -88,11 +84,11 @@ namespace LinqToDB.SqlQuery
 					{
 						try
 						{
-							var converter = mappingSchema.GetConverter(
+							var converter = entityDescriptor.MappingSchema.GetConverter(
 								field.Type,
 								new DbDataType(typeof(DataParameter)), true);
 
-							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type.SystemType, mappingSchema));
+							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
 							if (parameter != null)
 								field.Type = field.Type.WithDataType(parameter.DataType);
 						}
@@ -112,14 +108,9 @@ namespace LinqToDB.SqlQuery
 
 			if (identityField != null)
 			{
-				var cd = ed[identityField.Name]!;
+				var cd = entityDescriptor[identityField.Name]!;
 				SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
 			}
-		}
-
-		public SqlTable(Type objectType)
-			: this(MappingSchema.Default, objectType)
-		{
 		}
 
 		#endregion
@@ -347,20 +338,26 @@ namespace LinqToDB.SqlQuery
 
 		#region System tables
 
-		internal static SqlTable Inserted(Type objectType)
-			=> new (objectType)
+		internal static SqlTable Inserted(EntityDescriptor entityDescriptor)
+			=> new (entityDescriptor)
 			{
 				TableName    = new ("INSERTED"),
 				SqlTableType = SqlTableType.SystemTable,
 			};
 
-		internal static SqlTable Deleted(Type objectType)
-			=> new (objectType)
+		internal static SqlTable Deleted(EntityDescriptor entityDescriptor)
+			=> new (entityDescriptor)
 			{
 				TableName    = new ("DELETED"),
 				SqlTableType = SqlTableType.SystemTable,
 			};
 
 		#endregion
+
+		internal static SqlTable Create<T>(IDataContext dataContext)
+		{
+			return new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
+		}
+
 	}
 }
