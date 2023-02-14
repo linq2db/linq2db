@@ -4,9 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -345,6 +346,122 @@ namespace Tests.xUpdate
 			Assert.AreEqual("value", records2[0].Value);
 			Assert.AreEqual(2, records2[1].Id);
 			Assert.AreEqual("renamed 2", records2[1].Value);
+		}
+
+		[Test]
+		public void CreateTableEnumerableWithDescriptionTest([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+
+			using var tmp = db.CreateTempTable(
+				new[] { new { Name = "John" } },
+				m => m
+					.HasTableName("TempTable")
+					.Property(p => p.Name)
+						.HasLength(20)
+						.IsNotNull(),
+				tableOptions:TableOptions.CheckExistence);
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
+
+			var list =
+			(
+				from p in db.Person
+				join t in tmp on p.FirstName equals t.Name
+				select t
+			).ToList();
+
+			Assert.That(list.Count, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void CreateTableEnumerableWithNameAndDescriptionTest([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+
+			using var tmp = db.CreateTempTable(
+				"TempTable",
+				new[] { new { Name = "John" } },
+				m => m
+					.Property(p => p.Name)
+						.HasLength(20)
+						.IsNotNull(),
+				tableOptions:TableOptions.CheckExistence);
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
+
+			var list =
+			(
+				from p in db.Person
+				join t in tmp on p.FirstName equals t.Name
+				select t
+			).ToList();
+
+			Assert.That(list.Count, Is.EqualTo(1));
+		}
+
+		[Test]
+		public async Task CreateTableEnumerableWithDescriptionAsyncTest([DataSources(false)] string context)
+		{
+			await using var db = GetDataContext(context);
+
+			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
+
+			await using var tmp = await db.CreateTempTableAsync(
+				new[] { new { Name = "John" } },
+				m => m
+					.HasTableName("TempTable")
+					.Property(p => p.Name)
+						.HasLength(20)
+						.IsNotNull(),
+				tableOptions:TableOptions.CheckExistence);
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
+
+			var list = await
+			(
+				from p in db.Person
+				join t in tmp on p.FirstName equals t.Name
+				select t
+			).ToListAsync();
+
+			Assert.That(list.Count, Is.EqualTo(1));
+		}
+
+		[Test]
+		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false, TestProvName.AllSqlServerCS)] string context)
+		{
+			await using var db = GetDataContext(context);
+
+			await db.DropTableAsync<int>("TempTable", tableOptions:TableOptions.CheckExistence | TableOptions.IsTemporary);
+
+			await using var tmp = await db.CreateTempTableAsync(
+				"TempTable",
+				new[] { new { Name = "John" } },
+				m => m
+					.Property(p => p.Name)
+						.HasLength(20)
+						.IsNotNull(),
+				tableOptions:TableOptions.CheckExistence | TableOptions.IsTemporary);
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
+
+			var list = await
+			(
+				from p in db.Person
+				join t in tmp on p.FirstName equals t.Name
+				select t
+			).ToListAsync();
+
+			Assert.That(list.Count, Is.EqualTo(1));
 		}
 	}
 }
