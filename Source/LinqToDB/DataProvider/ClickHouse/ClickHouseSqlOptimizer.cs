@@ -244,6 +244,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 					}
 				}
 
+				case SqlFunction(_, "CASE", [_, SqlValue(true), SqlValue(false)]) f :
+					return new SqlFunction(f.SystemType, f.Name, f.Parameters[0], new SqlValue(1), new SqlValue(0));
+
 				default: return expression;
 			}
 		}

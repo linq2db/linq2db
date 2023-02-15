@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Tools;
 
@@ -12,9 +13,9 @@ namespace Tests.Linq
 	public class InSubqueryTests : TestBase
 	{
 		[Test]
-		public void InTest([DataSources] string context)
+		public void InTest([DataSources] string context, [Values(true, false)] bool preferExists)
 		{
-			using var db  = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
 
 			var q =
 				from c in db.Child
@@ -23,14 +24,30 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			if (db is DataConnection dc)
+			if (!preferExists && db is DataConnection dc)
 				Assert.That(dc.LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
 		}
 
 		[Test]
-		public void InWithTakeTest([DataSources] string context)
+		public void InNullTest([DataSources] string context, [Values(true, false)] bool preferExists)
 		{
-			using var db  = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
+
+			var q =
+				from c in db.Parent
+				where db.Parent.Select(p => p.Value1).Contains(null)
+				select c;
+
+			_ = q.ToList();
+
+			if (!preferExists && db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
+		}
+
+		[Test]
+		public void InWithTakeTest([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
 
 			var q =
 				from c in db.Child
@@ -39,14 +56,14 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			if (db is DataConnection dc)
+			if (!preferExists && db is DataConnection dc)
 				Assert.That(dc.LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
 		}
 
 		[Test]
-		public void ObjectInTest([DataSources(TestProvName.AllClickHouse)] string context)
+		public void ObjectInTest([DataSources(TestProvName.AllClickHouse)] string context, [Values(true, false)] bool preferExists)
 		{
-			using var db  = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
 
 			var q =
 				from c in db.Child
@@ -57,9 +74,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ObjectInWithTakeTest([DataSources(TestProvName.AllClickHouse)] string context)
+		public void ObjectInWithTakeTest([DataSources(TestProvName.AllClickHouse)] string context, [Values(true, false)] bool preferExists)
 		{
-			using var db  = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
 
 			var q =
 				from c in db.Child
@@ -67,6 +84,24 @@ namespace Tests.Linq
 				select c;
 
 			_ = q.ToList();
+		}
+
+		[Test]
+		public void ContainsTest([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
+
+			var res = db.Child.Select(c => c.ParentID).Contains(1);
+
+			Assert.IsTrue(res);
+		}
+
+		[Test]
+		public void ContainsNullTest([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
+
+			_ = db.Parent.Select(c => c.Value1).Contains(null);
 		}
 	}
 }
