@@ -20,11 +20,17 @@ namespace LinqToDB.Linq.Builder
 		// Returns
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...)
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...).DefaultIfEmpty
-		public static LambdaExpression CreateAssociationQueryLambda(ExpressionBuilder builder, AccessorMember onMember, AssociationDescriptor association,
+		public static LambdaExpression CreateAssociationQueryLambda(
+			ExpressionBuilder builder,
+			AccessorMember onMember,
+			AssociationDescriptor association,
 			Type parentOriginalType,
 			Type parentType,
-			Type objectType, bool inline, bool enforceDefault,
-			List<LoadWithInfo[]>? loadWith, out bool isLeft)
+			Type objectType,
+			bool inline,
+			bool enforceDefault,
+			List<LoadWithInfo[]>? loadWith,
+			out bool isLeft)
 		{
 			var dataContextConstant = Expression.Constant(builder.DataContext, builder.DataContext.GetType());
 
@@ -132,7 +138,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (inline && !shouldAddDefaultIfEmpty)
 				{
-					var ed = builder.MappingSchema.GetEntityDescriptor(objectType);
+					var ed = builder.MappingSchema.GetEntityDescriptor(objectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 					if (ed.QueryFilterFunc != null)
 					{
 						shouldAddDefaultIfEmpty = true;
@@ -237,7 +243,7 @@ namespace LinqToDB.Linq.Builder
 			if (parentOriginalType != parentType)
 			{
 				// add discriminator filter
-				var ed = builder.MappingSchema.GetEntityDescriptor(parentOriginalType);
+				var ed = builder.MappingSchema.GetEntityDescriptor(parentOriginalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				foreach (var inheritanceMapping in ed.InheritanceMapping)
 				{
 					if (inheritanceMapping.Type == parentType)

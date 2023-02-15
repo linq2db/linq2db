@@ -86,10 +86,9 @@ namespace LinqToDB.Linq.Builder
 
 				deleteStatement.Output = new SqlOutputClause();
 
-				var deletedTable = builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable ? SqlTable.Deleted(methodCall.Method.GetGenericArguments()[0]) : deleteStatement.GetDeleteTable();
-
-				if (deletedTable == null)
-					throw new InvalidOperationException("Cannot find target table for DELETE statement");
+				var deletedTable = builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable
+					? SqlTable.Deleted(builder.MappingSchema.GetEntityDescriptor(methodCall.Method.GetGenericArguments()[0], builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
+					: deleteStatement.GetDeleteTable() ?? throw new InvalidOperationException("Cannot find target table for DELETE statement");
 
 				outputContext = new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable);
 

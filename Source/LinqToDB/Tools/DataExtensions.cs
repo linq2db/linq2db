@@ -38,7 +38,7 @@ namespace LinqToDB.Tools
 
 			IList<T>? sourceList = null;
 
-			var entityDescriptor = context.MappingSchema.GetEntityDescriptor(typeof(T));
+			var entityDescriptor = context.MappingSchema.GetEntityDescriptor(typeof(T), context.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			foreach (var column in entityDescriptor.Columns)
 			{

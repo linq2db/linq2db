@@ -51,7 +51,7 @@ namespace LinqToDB.Data
 			if (buildBlock && _variable != null)
 				return _variable;
 
-			var entityDescriptor = MappingSchema.GetEntityDescriptor(objectType);
+			var entityDescriptor = MappingSchema.GetEntityDescriptor(objectType, DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			var recordType = RecordsHelper.GetRecordType(objectType);
 			var expr = recordType == RecordType.NotRecord
@@ -335,7 +335,7 @@ namespace LinqToDB.Data
 				return new ConvertFromDataReaderExpression(ObjectType, 0, null, DataReaderLocal, DataContext);
 			}
 
-			var entityDescriptor   = MappingSchema.GetEntityDescriptor(ObjectType);
+			var entityDescriptor   = MappingSchema.GetEntityDescriptor(ObjectType, DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var inheritanceMapping = entityDescriptor.InheritanceMapping;
 
 			if (inheritanceMapping.Count == 0)
@@ -379,7 +379,7 @@ namespace LinqToDB.Data
 				if (mapping.m == defaultMapping)
 					continue;
 
-				var ed     = MappingSchema.GetEntityDescriptor(mapping.m.Type);
+				var ed     = MappingSchema.GetEntityDescriptor(mapping.m.Type, DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 				var dindex = GetReaderIndex(ed, null, mapping.m.DiscriminatorName);
 
 				if (dindex >= 0)
