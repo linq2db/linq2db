@@ -637,8 +637,11 @@ namespace LinqToDB.Linq.Builder
 
 				var convertFlags = flags;
 
-				var sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags.TestFlag());
-				var sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags.TestFlag());
+				var descriptor = Builder.SuggestColumnDescriptor(_sequence1, path1, flags);
+				descriptor ??= Builder.SuggestColumnDescriptor(_sequence2, path2, flags);
+
+				var sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags, columnDescriptor: descriptor);
+				var sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags, columnDescriptor: descriptor);
 
 				if (flags.IsExpression())
 				{
@@ -657,23 +660,27 @@ namespace LinqToDB.Linq.Builder
 
 				convertFlags = convertFlags.SqlFlag();
 
-				// convert again
-				sql1         = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags);
-				sql2         = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags);
+				if (convertFlags != flags)
+				{
+					// convert again
+
+					descriptor =   Builder.SuggestColumnDescriptor(_sequence1, path1, convertFlags);
+					descriptor ??= Builder.SuggestColumnDescriptor(_sequence2, path2, convertFlags);
+
+					sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags, columnDescriptor: descriptor);
+					sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags, columnDescriptor: descriptor);
+				}
+
 				placeholder1 = sql1 as SqlPlaceholderExpression;
 				placeholder2 = sql2 as SqlPlaceholderExpression;
 
-				if (placeholder1 == null)
+				if (placeholder1 == null || ((SqlColumn)placeholder1.Sql).Expression.IsNullValue() && placeholder2 != null)
 				{
-					placeholder2 = (SqlPlaceholderExpression)Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags);
-					placeholder1 = ExpressionBuilder.CreatePlaceholder(_sequence1,
-						new SqlValue(QueryHelper.GetDbDataType(placeholder2.Sql), null), path1);
+					placeholder1 = ExpressionBuilder.CreatePlaceholder(_sequence1, new SqlValue(QueryHelper.GetDbDataType(placeholder2.Sql), null), path1);
 				}
-				else if (placeholder2 == null)
+				else if (placeholder2 == null || ((SqlColumn)placeholder2.Sql).Expression.IsNullValue() && placeholder1 != null)
 				{
-					placeholder1 = (SqlPlaceholderExpression)Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags);
-					placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2.SubQuery,
-						new SqlValue(QueryHelper.GetDbDataType(placeholder1.Sql), null), path2);
+					placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2.SubQuery, new SqlValue(QueryHelper.GetDbDataType(placeholder1.Sql), null), path2);
 				}
 
 				placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);

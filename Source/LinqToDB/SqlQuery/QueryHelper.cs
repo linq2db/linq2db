@@ -478,9 +478,9 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public static bool IsNullValue(ISqlExpression expr)
+		public static bool IsNullValue(this ISqlExpression expr)
 		{
-			if (expr is SqlValue value && value.Value == null)
+			if (expr is SqlValue { Value: null })
 				return true;
 			return false;
 		}
