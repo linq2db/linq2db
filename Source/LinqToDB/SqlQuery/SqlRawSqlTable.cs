@@ -16,11 +16,10 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression[] Parameters { get; }
 
 		public SqlRawSqlTable(
-			MappingSchema    mappingSchema,
-			Type             objectType,
+			EntityDescriptor endtityDescriptor,
 			string           sql,
 			ISqlExpression[] parameters)
-			: base(mappingSchema, objectType)
+			: base(endtityDescriptor)
 		{
 			SQL        = sql        ?? throw new ArgumentNullException(nameof(sql));
 			Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters));

@@ -490,6 +490,14 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Sets OnEntityDescriptorCreated option.
+		/// </summary>
+		public static ConnectionOptions WithOnEntityDescriptorCreated(this ConnectionOptions options, Action<MappingSchema, IEntityChangeDescriptor> onEntityDescriptorCreated)
+		{
+			return options with { OnEntityDescriptorCreated = onEntityDescriptorCreated };
+		}
+
+		/// <summary>
 		/// Sets DataProviderFactory option.
 		/// </summary>
 		public static ConnectionOptions WithDataProviderFactory(this ConnectionOptions options, Func<ConnectionOptions, IDataProvider> dataProviderFactory)
@@ -656,6 +664,14 @@ namespace LinqToDB
 		public static DataOptions UseConnectionFactory(this DataOptions options, Func<DataOptions, DbConnection> connectionFactory)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionFactory = connectionFactory });
+		}
+
+		/// <summary>
+		/// Defines entity descriptor creation callback to use with DataOptions.
+		/// </summary>
+		public static DataOptions UseOnEntityDescriptorCreated(this DataOptions options, Action<MappingSchema, IEntityChangeDescriptor> onEntityDescriptorCreated)
+		{
+			return options.WithOptions<ConnectionOptions>(o => o with { OnEntityDescriptorCreated = onEntityDescriptorCreated });
 		}
 
 		/// <summary>

@@ -40,7 +40,7 @@ namespace LinqToDB.Linq
 		{
 			Init(dataContext, expression);
 
-			var ed = tableDescriptor ?? dataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed = tableDescriptor ?? dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			_name         = ed.Name;
 			_tableOptions = ed.TableOptions;

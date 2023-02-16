@@ -100,7 +100,7 @@ namespace Tests.Mapping
 			var ms = new MappingSchema();
 			var mb = new FluentMappingBuilder(ms);
 
-			ms.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
+			MappingSchema.EntityDescriptorCreatedCallback = (mappingSchema, entityDescriptor) =>
 			{
 				entityDescriptor.TableName = entityDescriptor.TableName.ToLowerInvariant();
 				foreach (var entityDescriptorColumn in entityDescriptor.Columns)
@@ -109,12 +109,19 @@ namespace Tests.Mapping
 				}
 			};
 
-			mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn().Build();
+			try
+			{
+				mb.Entity<MyClass>().HasTableName("NewName").Property(x => x.ID1).IsColumn().Build();
 
-			var ed = ms.GetEntityDescriptor(typeof(MyClass));
+				var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.Name.Name, Is.EqualTo("newname"));
-			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
+				Assert.That(ed.Name.Name, Is.EqualTo("newname"));
+				Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
+			}
+			finally
+			{
+				MappingSchema.EntityDescriptorCreatedCallback = null;
+			}
 		}
 
 		[Test]

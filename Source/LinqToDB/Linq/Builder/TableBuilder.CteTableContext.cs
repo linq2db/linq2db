@@ -86,10 +86,10 @@ namespace LinqToDB.Linq.Builder
 			private          IBuildContext? _cteQueryContext;
 
 			public CteTableContext(ExpressionBuilder builder, BuildInfo buildInfo, CteClause cte, Expression cteExpression)
-				: base(builder, buildInfo, new SqlCteTable(builder.MappingSchema, cte))
+				: base(builder, buildInfo, new SqlCteTable(cte, builder.MappingSchema.GetEntityDescriptor(cte.ObjectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated)))
 			{
-				_cte             = cte;
-				_cteExpression   = cteExpression;
+				_cte           = cte;
+				_cteExpression = cteExpression;
 			}
 
 			IBuildContext? GetQueryContext()

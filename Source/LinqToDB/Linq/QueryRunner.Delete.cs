@@ -23,7 +23,7 @@ namespace LinqToDB.Linq
 				TableOptions tableOptions,
 				Type         type)
 			{
-				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
+				var sqlTable = new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
 				{
