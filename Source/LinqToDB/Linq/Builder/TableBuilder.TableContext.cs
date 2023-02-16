@@ -213,23 +213,11 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var storageMember = attr?.Storage != null
-								? ExpressionHelper.PropertyOrField(parentObject, attr.Storage)
-								: Expression.MakeMemberAccess(parentObject, member.Info.MemberInfo);
+							var descriptor = GetFieldOrPropAssociationDescriptor(member.Info.MemberInfo, EntityDescriptor);
+							if (descriptor == null)
+								throw new LinqToDBException("Could not find association descriptor for " + member.Info.MemberInfo.Name);
 
-							if (attr?.AssociationSetterExpression != null || attr?.AssociationSetterExpressionMethod != null)
-							{
-								var descriptor = GetFieldOrPropAssociationDescriptor(member.Info.MemberInfo, EntityDescriptor);
-								if (descriptor == null)
-									throw new LinqToDBException("Could not find association descriptor for " + member.Info.MemberInfo.Name);
-								
-								var setMethod = descriptor.GetAssociationSetterMethod(storageMember.Type, ex.Type)!;
-								exprs.Add(setMethod.GetBody(storageMember, ex));
-							}
-							else
-							{
-								exprs.Add(Expression.Assign(storageMember, ex));
-							}
+							exprs.Add(descriptor.GetAssociationAssignmentExpression(parentObject, ex, member.Info.MemberInfo));
 						}
 					}
 				}
@@ -1762,14 +1750,15 @@ namespace LinqToDB.Linq.Builder
 
 			AssociationDescriptor? GetFieldOrPropAssociationDescriptor(MemberInfo memberInfo, EntityDescriptor entityDescriptor)
 			{
-				foreach (var ed in entityDescriptor.Associations)
-					if (ed.MemberInfo.EqualsTo(memberInfo))
-						return ed;
+				if (entityDescriptor.FindAssociationDescriptor(memberInfo) is AssociationDescriptor associationDescriptor)
+					return associationDescriptor;
 
 				foreach (var m in entityDescriptor.InheritanceMapping)
-					foreach (var ed in Builder.MappingSchema.GetEntityDescriptor(m.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Associations)
-						if (ed.MemberInfo.EqualsTo(memberInfo))
-							return ed;
+				{
+					var ed = Builder.MappingSchema.GetEntityDescriptor(m.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+					if (ed.FindAssociationDescriptor(memberInfo) is AssociationDescriptor inheritedAssociationDescriptor)
+						return inheritedAssociationDescriptor;
+				}	
 
 				return null;
 			}

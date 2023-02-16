@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -9,6 +10,7 @@ namespace LinqToDB.Mapping
 	using Common;
 	using Extensions;
 	using Linq.Builder;
+	using Expressions;
 
 	/// <summary>
 	/// Stores association descriptor.
@@ -324,7 +326,20 @@ namespace LinqToDB.Mapping
 			return lambda;
 		}
 
-		public bool HasAssociationSetterMethod()
+		private bool AnalyzeCanBeNull()
+		{
+			// Note that nullability of Collections can't be determined from types.
+			// OUTER JOIN are usually materialized in non-nullable, but empty, collections.
+			// For example, `IList<Product> Products` might well require an OUTER JOIN.
+			// Neither `IList<Product>?` nor `IList<Product?>` would be correct.
+			return Configuration.UseNullableTypesMetadata && !IsList && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable)
+				? isNullable
+				: true;
+		}
+
+		#region Assignment helpers
+
+		bool HasAssociationSetterMethod()
 		{
 			return AssociationSetterExpression != null || !string.IsNullOrEmpty(AssociationSetterExpressionMethod);
 		}
@@ -336,7 +351,7 @@ namespace LinqToDB.Mapping
 		/// <param name="objectType">Type of object associated with setter method expression</param>
 		/// <returns><c>null</c> if association has no custom setter method expression specified
 		/// by <see cref="AssociationSetterExpressionMethod"/> member.</returns>
-		public LambdaExpression? GetAssociationSetterMethod(Type memberType, Type objectType)
+		LambdaExpression? GetAssociationSetterMethod(Type memberType, Type objectType)
 		{
 			if (!HasAssociationSetterMethod())
 				return null;
@@ -371,15 +386,60 @@ namespace LinqToDB.Mapping
 			return lambda;
 		}
 
-		private bool AnalyzeCanBeNull()
+		/// <summary>
+		/// Get the association assignment expression, accounting for <see cref="Storage"/> and <see cref="AssociationSetterExpression" />
+		/// </summary>
+		/// <param name="parentObject">Parent object expression</param>
+		/// <param name="value">Association value expression</param>
+		/// <param name="memberInfo">Member info</param>
+		/// <returns></returns>
+		internal Expression GetAssociationAssignmentExpression(Expression parentObject, Expression value, MemberInfo memberInfo)
 		{
-			// Note that nullability of Collections can't be determined from types.
-			// OUTER JOIN are usually materialized in non-nullable, but empty, collections.
-			// For example, `IList<Product> Products` might well require an OUTER JOIN.
-			// Neither `IList<Product>?` nor `IList<Product?>` would be correct.
-			return Configuration.UseNullableTypesMetadata && !IsList && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable)
-				? isNullable
-				: true;
+			var storageMember = Storage != null
+				? ExpressionHelper.PropertyOrField(parentObject, Storage)
+				: Expression.MakeMemberAccess(parentObject, memberInfo);
+
+			if (HasAssociationSetterMethod())
+			{
+				var setMethod = GetAssociationSetterMethod(storageMember.Type, value.Type)!;
+				return setMethod.GetBody(storageMember, value);
+			}
+			else
+			{
+				return Expression.Assign(storageMember, value);
+			}
 		}
+
+		/// <summary>
+		/// Gets the desired type for the association value to be used by the assignment expression
+		/// returned by <see cref="GetAssociationAssignmentExpression" />
+		/// </summary>
+		/// <param name="memberInfo"></param>
+		/// <param name="parentType"></param>
+		/// <param name="objectType"></param>
+		/// <returns></returns>
+		internal Type GetAssociationDesiredAssignmentType(MemberInfo memberInfo, Type parentType, Type objectType)
+		{
+			var storageMember = Storage != null
+				? ExpressionHelper.GetPropertyOrFieldMemberInfo(parentType, Storage)
+				: memberInfo;
+
+			if (HasAssociationSetterMethod())
+			{
+				var defaultSetterValueType = IsList
+					? typeof(IEnumerable<>).MakeGenericType(objectType)
+					: objectType;
+
+				var setterMethod = GetAssociationSetterMethod(
+					storageMember.GetMemberType(),
+					defaultSetterValueType)!;
+
+				return setterMethod.Parameters[1].Type;
+			}
+
+			return storageMember.GetMemberType();
+		}
+
+		#endregion
 	}
 }
