@@ -78,5 +78,13 @@ namespace LinqToDB.Expressions
 		{
 			return $"Error: {Expression}";
 		}
+
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitSqlErrorExpression(this);
+			return base.Accept(visitor);
+		}
+
 	}
 }

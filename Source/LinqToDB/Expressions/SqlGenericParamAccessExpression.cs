@@ -85,5 +85,13 @@ namespace LinqToDB.Expressions
 		{
 			return !Equals(left, right);
 		}
+
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitSqlGenericParamAccessExpression(this);
+			return base.Accept(visitor);
+		}
+
 	}
 }

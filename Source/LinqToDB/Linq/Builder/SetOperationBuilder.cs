@@ -1,5 +1,5 @@
-﻿using System.Linq.Expressions;
-using System.Reflection;
+﻿using System.Reflection;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Reflection;
 	using SqlQuery;
-	using System.Collections.Generic;
+    using Common;
 
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
@@ -138,6 +138,7 @@ namespace LinqToDB.Linq.Builder
 			Expression?                   _setIdReference;
 
 			readonly Dictionary<Expression, SqlPlaceholderExpression> _createdSQL = new(ExpressionEqualityComparer.Instance);
+			readonly Dictionary<Expression, Expression> _generatedExpressions = new(ExpressionEqualityComparer.Instance);
 
 
 			static string? GenerateColumnAlias(Expression expr)
@@ -156,14 +157,35 @@ namespace LinqToDB.Linq.Builder
 				return alias;
 			}
 
-			static MethodInfo _keySetIdMethosInfo =
-				Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(typeof(int));
+			static MethodInfo _keySetIdMethosInfo = Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(typeof(int));
 
 			const           string     ProjectionSetIdFieldName = "__projection__set_id__";
 			static readonly Expression _setIdFieldName          = Expression.Constant(ProjectionSetIdFieldName);
 
-			Expression MakeConditionalConstructExpression(Type type, Expression leftExpression, Expression rightExpression)
+			Expression EnsureSQL(Expression expr, ProjectFlags flags)
 			{
+				do
+				{
+					var newExpr = Builder.BuildSqlExpression(this, expr, flags.SqlFlag());
+					if (ReferenceEquals(expr, newExpr))
+						break;
+
+					expr = newExpr;
+				} while (true);
+
+				return expr;
+			}
+
+			Expression MakeConditionalConstructExpression(Expression path, Expression leftExpression, Expression rightExpression, ProjectFlags flags)
+			{
+				leftExpression  = SequenceHelper.RemapToNewPath(this, leftExpression, path, flags.ExpressionFlag());
+
+				leftExpression = EnsureSQL(leftExpression, flags);
+
+				rightExpression = SequenceHelper.RemapToNewPath(this, rightExpression, path, flags.ExpressionFlag());
+
+				rightExpression = EnsureSQL(rightExpression, flags);
+
 				var sequenceLeftSetId  = Builder.GenerateSetId(_sequence1.SubQuery.SelectQuery.SourceID);
 				var sequenceRightSetId = Builder.GenerateSetId(_sequence2.SubQuery.SelectQuery.SourceID);
 
@@ -193,14 +215,14 @@ namespace LinqToDB.Linq.Builder
 					_setIdPlaceholder = leftIdPlaceholder.WithPath(_setIdReference).WithTrackingPath(_setIdReference);
 				}
 
-				if (leftExpression.Type != type)
+				if (leftExpression.Type != path.Type)
 				{
-					leftExpression = Expression.Convert(leftExpression, type);
+					leftExpression = Expression.Convert(leftExpression, path.Type);
 				}
 
-				if (rightExpression.Type != type)
+				if (rightExpression.Type != path.Type)
 				{
-					rightExpression = Expression.Convert(rightExpression, type);
+					rightExpression = Expression.Convert(rightExpression, path.Type);
 				}
 
 				var resultExpr = Expression.Condition(
@@ -222,12 +244,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				var correctedPath = SequenceHelper.ReplaceContext(path, this, context);
 
-				var projectionExpression = Builder.ConvertToSqlExpr(context, correctedPath, projectFlags.SqlFlag());
-				projectionExpression = Builder.BuildSqlExpression(context, projectionExpression, projectFlags.SqlFlag());
+				var projectionExpression = Builder.ConvertToSqlExpr(context, correctedPath, projectFlags);
+				projectionExpression = Builder.BuildSqlExpression(context, projectionExpression, projectFlags);
 
-				var remaped = SequenceHelper.RemapToNewPath(projectionExpression, path);
+				var remapped = SequenceHelper.RemapToNewPath(this, projectionExpression, path, projectFlags);
 
-				return remaped;
+				return remapped;
 			}
 
 			// For Set we have to ensure hat columns are not optimized
@@ -481,8 +503,45 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 			}
 
+			public bool IsCompatibleForCommonProjection(SqlGenericConstructorExpression projection,
+				SqlGenericConstructorExpression                                         generated)
+			{
+				foreach (var generatedAssignment in generated.Assignments)
+				{
+					var found = projection.Assignments.FirstOrDefault(a =>
+						MemberInfoEqualityComparer.Default.Equals(a.MemberInfo, generatedAssignment.MemberInfo));
+
+					if (found == null)
+					{
+						if (generatedAssignment.Expression is SqlGenericConstructorExpression)
+							return false;
+					}
+					else
+					{
+						if (generatedAssignment.Expression is SqlGenericConstructorExpression subGenerated)
+						{
+							if (found.Expression is SqlGenericConstructorExpression subProjection)
+							{
+								if (!IsCompatibleForCommonProjection(subProjection, subGenerated))
+									return false;
+							}
+							else
+								return false;
+						}
+
+						if (!IsEqualProjections(found.Expression, generatedAssignment.Expression))
+							return false;
+					}
+				}
+
+				return true;
+			}
+
+
 			Expression MatchConstructors(Expression path, Expression expr1, Expression expr2,  ProjectFlags flags)
 			{
+				Expression resultExpr;
+
 				if (ExpressionEqualityComparer.Instance.Equals(expr1, path))
 				{
 					expr1 = Expression.Default(expr1.Type);
@@ -501,30 +560,46 @@ namespace LinqToDB.Linq.Builder
 					if (IsEqualProjections(expr1, expr2))
 						return expr1;
 
-					if (IsIncompatible(expr1) || IsIncompatible(expr2))
-					{
-						return MakeConditionalExpression(path, expr1, expr2);
-					}
+					//if (IsIncompatible(expr1) || IsIncompatible(expr2))
+					//{
+					//	return MakeConditionalExpression(path, expr1, expr2);
+					//}
 
 					var incompatible = false;
-					var sqlExpr = MergeProjections(path.Type, CollectDataExpressions(expr1).Concat(CollectDataExpressions(expr2)), ref incompatible);
-					if (sqlExpr is SqlGenericConstructorExpression generic)
+					resultExpr = MergeProjections(path.Type, CollectDataExpressions(expr1).Concat(CollectDataExpressions(expr2)), ref incompatible);
+					if (resultExpr is SqlGenericConstructorExpression generic)
 					{
+						if (expr1 is SqlGenericConstructorExpression contructor1 &&
+						    expr2 is SqlGenericConstructorExpression contructor2)
+						{
+							incompatible = !IsCompatibleForCommonProjection(contructor1, generic) ||
+							               !IsCompatibleForCommonProjection(contructor2, generic);
+						}
+
+						if (expr1 is not SqlGenericConstructorExpression ||
+						    expr2 is not SqlGenericConstructorExpression)
+						{
+							incompatible = !ExpressionEqualityComparer.Instance.Equals(expr1, expr2);
+						}
+
 						if (incompatible || Builder.TryConstruct(Builder.MappingSchema, generic, this, flags) == null)
 						{
 							// fallback to set
-							return MakeConditionalExpression(path, expr1, expr2);
+							resultExpr = MakeConditionalExpression(path, expr1, expr2, flags);
 						}
 					}
-					return sqlExpr;
 				}
 				else
 				{
 					var incompatible = false;
-					var sqlExpr = MergeProjections(path.Type, CollectDataExpressions(expr1).Concat(CollectDataExpressions(expr2)), ref incompatible);
-
-					return sqlExpr;
+					resultExpr = MergeProjections(path.Type, CollectDataExpressions(expr1).Concat(CollectDataExpressions(expr2)), ref incompatible);
 				}
+
+
+				if (flags.IsExpression())
+					_generatedExpressions[path] = resultExpr;
+
+				return resultExpr;
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -535,11 +610,14 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (flags.HasFlag(ProjectFlags.Root))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.IsExpand())
 					return path;
 
 				if (_createdSQL.TryGetValue(path, out var foundPlaceholder))
 					return foundPlaceholder;
+
+				if (flags.IsExpression() && _generatedExpressions.TryGetValue(path, out var alreadyGenerated))
+					return alreadyGenerated;
 
 				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))
 				{
@@ -557,19 +635,27 @@ namespace LinqToDB.Linq.Builder
 				var path1 = SequenceHelper.ReplaceContext(path, this, _sequence1);
 				var path2 = SequenceHelper.ReplaceContext(path, this, _sequence2);
 
-				var convertFlags = flags.SqlFlag();
+				var convertFlags = flags;
 
 				var sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags.TestFlag());
 				var sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags.TestFlag());
 
+				if (flags.IsExpression())
+				{
+					if (sql1.Find(1, (_, e) => e is SqlGenericConstructorExpression) != null ||
+						sql2.Find(1, (_, e) => e is SqlGenericConstructorExpression) != null)
+					{
+						return MatchConstructors(path, sql1, sql2, flags);
+					}
+				}
+
 				var placeholder1 = sql1 as SqlPlaceholderExpression;
 				var placeholder2 = sql2 as SqlPlaceholderExpression;
 
-				if (placeholder1 == null && placeholder2 == null)
-					return path;
-
 				if (flags.IsTest())
 					return placeholder1 ?? placeholder2!;
+
+				convertFlags = convertFlags.SqlFlag();
 
 				// convert again
 				sql1         = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags);
@@ -589,37 +675,30 @@ namespace LinqToDB.Linq.Builder
 					placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2.SubQuery,
 						new SqlValue(QueryHelper.GetDbDataType(placeholder1.Sql), null), path2);
 				}
-				else
-				{
-					placeholder1 = (SqlPlaceholderExpression)Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags);
-					placeholder2 = (SqlPlaceholderExpression)Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags);
-				}
 
-				placeholder1 =
-					(SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
-				placeholder2 =
-					(SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
+				placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
+				placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
 
 				var alias   = GenerateColumnAlias(path1);
 				var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
 				var column2 = Builder.MakeColumn(SelectQuery, placeholder2.WithAlias(alias), true);
 
-				var resultPlaceholder = column1;
+				var resultPlaceholder = column1.WithPath(path);
 
 				_createdSQL.Add(path, resultPlaceholder);
 
 				return resultPlaceholder;
 			}
 
-			Expression MakeConditionalExpression(Expression path, Expression expr1, Expression expr2)
+			Expression MakeConditionalExpression(Expression path, Expression expr1, Expression expr2, ProjectFlags flags)
 			{
 				if (_setOperation != SetOperation.UnionAll)
 				{
 					throw new LinqToDBException(
-						$"Could not decide which construction typer to use `query.Select(x => new {expr1.Type.Name} {{ ... }})` to specify projection.");
+						$"Could not decide which construction type to use `query.Select(x => new {expr1.Type.Name} {{ ... }})` to specify projection.");
 				}
 
-				return MakeConditionalConstructExpression(path.Type, expr1, expr2);
+				return MakeConditionalConstructExpression(path, expr1, expr2, flags);
 			}
 		}
 

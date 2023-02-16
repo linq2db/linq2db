@@ -1162,9 +1162,11 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		void OptimizeApply(SelectQuery parentQuery, HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported)
+		bool OptimizeApply(SelectQuery parentQuery, HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported)
 		{
 			var joinSource = joinTable.Table;
+
+			var optimized = false;
 
 			if (joinSource.Joins.Count > 0)
 			{
@@ -1175,7 +1177,8 @@ namespace LinqToDB.SqlQuery
 				{
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
 					{
-						OptimizeApply(parentQuery, joinSources, joinSource, join, isApplySupported);
+						if (OptimizeApply(parentQuery, joinSources, joinSource, join, isApplySupported))
+							optimized = true;
 					}
 
 					joinSources.AddRange(QueryHelper.EnumerateAccessibleSources(join.Table));
@@ -1183,7 +1186,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			if (!joinTable.CanConvertApply)
-				return;
+				return optimized;
 
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
@@ -1195,13 +1198,13 @@ namespace LinqToDB.SqlQuery
 				                                        joinTable.JoinType == JoinType.OuterApply);
 
 				if (isApplySupported && sql.Select.HasModifier && _flags.IsSubQueryTakeSupported)
-					return;
+					return optimized;
 
 				if (isApplySupported && isAgg)
-					return;
+					return optimized;
 
 				if (isAgg)
-					return;
+					return optimized;
 				
 				var skipValue = sql.Select.SkipValue;
 				var takeValue = sql.Select.TakeValue;
@@ -1291,7 +1294,7 @@ namespace LinqToDB.SqlQuery
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
 				if (QueryHelper.IsDependsOnSources(sql, parentTableSources, whereToIgnore))
-					return;
+					return optimized;
 
 				var searchCondition = new List<SqlCondition>();
 
@@ -1390,6 +1393,7 @@ namespace LinqToDB.SqlQuery
 				joinTable.JoinType = newJoinType;
 				joinTable.Condition.Conditions.AddRange(searchCondition);
 
+				optimized = true;
 				/*
 				if (newJoinType == JoinType.Full)
 				{
@@ -1397,6 +1401,8 @@ namespace LinqToDB.SqlQuery
 				}
 				*/
 			}
+
+			return optimized;
 		}
 
 		static void ConcatSearchCondition(SqlWhereClause where1, SqlWhereClause where2)
@@ -1682,7 +1688,8 @@ namespace LinqToDB.SqlQuery
 			element = (SqlFromClause)base.VisitSqlFromClause(element);
 
 			OptimizeSubQueries(element.SelectQuery);
-			OptimizeApplies(element.SelectQuery, _flags.IsApplyJoinSupported);
+			if (OptimizeApplies(element.SelectQuery, _flags.IsApplyJoinSupported))
+				OptimizeSubQueries(element.SelectQuery);
 
 			return element;
 		}
@@ -1719,9 +1726,11 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		void OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)
+		bool OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)
 		{
 			var tableSources = new HashSet<ISqlTableSource>();
+
+			var optimized = false;
 
 			foreach (var table in selectQuery.From.Tables)
 			{
@@ -1733,7 +1742,10 @@ namespace LinqToDB.SqlQuery
 				foreach (var join in table.Joins)
 				{
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply|| join.JoinType == JoinType.RightApply)
-						OptimizeApply(selectQuery, tableSources, table, join, isApplySupported);
+					{
+						if (OptimizeApply(selectQuery, tableSources, table, join, isApplySupported))
+							optimized = true;
+					}
 
 					join.Visit(tableSources, static (tableSources, e) =>
 					{
@@ -1742,6 +1754,8 @@ namespace LinqToDB.SqlQuery
 					});
 				}
 			}
+
+			return optimized;
 		}
 
 		void RemoveEmptyJoins(SelectQuery selectQuery)

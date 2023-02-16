@@ -52,6 +52,13 @@ namespace LinqToDB.Expressions
 			return new ContextRefExpression(Type, BuildContext, alias);
 		}
 
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitContextRefExpression(this);
+			return base.Accept(visitor);
+		}
+
 		#region Equality members
 
 		public bool Equals(ContextRefExpression? other)

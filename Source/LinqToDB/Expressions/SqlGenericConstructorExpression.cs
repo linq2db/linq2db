@@ -332,6 +332,7 @@ namespace LinqToDB.Expressions
 		public Expression?      NewExpression     { get; private set; }
 		public ConstructorInfo? Constructor       { get; private set; }
 		public MethodInfo?      ConstructorMethod { get; private set; }
+		public Expression?      ConstructionRoot  { get; private set; }
 		public CreateType       ConstructType     { get; private set; }
 		public Type             ObjectType        { get; private set; }
 		public IBuildContext?   BuildContext      { get; private set; }
@@ -405,7 +406,8 @@ namespace LinqToDB.Expressions
 				ConstructorMethod = ConstructorMethod,
 				ConstructType     = ConstructType,
 				NewExpression     = NewExpression,
-				BuildContext	  = BuildContext,
+				BuildContext      = BuildContext,
+				ConstructionRoot  = ConstructionRoot
 			};
 
 			return result;
@@ -433,6 +435,28 @@ namespace LinqToDB.Expressions
 				ConstructType     = ConstructType,
 				NewExpression     = NewExpression,
 				BuildContext      = BuildContext,
+				ConstructionRoot  = ConstructionRoot
+			};
+
+			return result;
+		}
+
+		public SqlGenericConstructorExpression WithConstructionRoot(Expression constructionRoot)
+		{
+			if (ConstructionRoot == constructionRoot)
+				return this;
+
+			var result = new SqlGenericConstructorExpression
+			{
+				Assignments       = Assignments,
+				Parameters        = Parameters,
+				ObjectType        = ObjectType,
+				Constructor       = Constructor,
+				ConstructorMethod = ConstructorMethod,
+				ConstructType     = ConstructType,
+				NewExpression     = NewExpression,
+				BuildContext      = BuildContext,
+				ConstructionRoot  = constructionRoot
 			};
 
 			return result;
@@ -565,5 +589,13 @@ namespace LinqToDB.Expressions
 		{
 			return !Equals(left, right);
 		}
+
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitSqlGenericConstructorExpression(this);
+			return base.Accept(visitor);
+		}
+
 	}
 }

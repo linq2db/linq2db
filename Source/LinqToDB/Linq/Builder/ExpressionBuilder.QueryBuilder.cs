@@ -843,16 +843,23 @@ namespace LinqToDB.Linq.Builder
 			Expression          expression)
 		{
 			Expression? rowCounter = null;
-			var toRead = expression.Transform(e =>
+
+			var simplified = expression.Transform(e =>
 			{
 				if (e.NodeType == ExpressionType.Convert)
 				{
 					if (((UnaryExpression)e).Operand is SqlPlaceholderExpression convertPlaceholder)
 					{
-						return new TransformInfo(convertPlaceholder.WithType(e.Type), false, true);
+						return convertPlaceholder.WithType(e.Type);
 					}
 				}
-				else if (e is SqlPlaceholderExpression placeholder)
+
+				return e;
+			});
+
+			var toRead = simplified.Transform(e =>
+			{
+				if (e is SqlPlaceholderExpression placeholder)
 				{
 					if (placeholder.Sql == null)
 						throw new InvalidOperationException();
@@ -883,6 +890,19 @@ namespace LinqToDB.Linq.Builder
 					return new TransformInfo(readerExpression);
 				}
 
+				if (e.NodeType == ExpressionType.Equal || e.NodeType == ExpressionType.NotEqual)
+				{
+					var binary = (BinaryExpression)e;
+					if (binary.Left.IsNullValue() && binary.Right is SqlPlaceholderExpression placeholderRight)
+					{
+						return new TransformInfo(new SqlReaderIsNullExpression(placeholderRight, e.NodeType == ExpressionType.NotEqual), false, true);
+					}
+					if (binary.Right.IsNullValue() && binary.Left is SqlPlaceholderExpression placeholderLeft)
+					{
+						return new TransformInfo(new SqlReaderIsNullExpression(placeholderLeft, e.NodeType == ExpressionType.NotEqual), false, true);
+					}
+				}
+
 				if (e is SqlReaderIsNullExpression isNullExpression)
 				{
 					if (isNullExpression.Placeholder.Index == null)
@@ -891,6 +911,7 @@ namespace LinqToDB.Linq.Builder
 					Expression nullCheck = Expression.Call(
 						DataReaderParam,
 						ReflectionHelper.DataReader.IsDBNull,
+						// ReSharper disable once CoVariantArrayConversion
 						ExpressionInstances.Int32Array(isNullExpression.Placeholder.Index.Value));
 
 					if (isNullExpression.IsNot)

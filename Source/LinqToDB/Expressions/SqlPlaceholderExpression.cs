@@ -6,7 +6,7 @@ namespace LinqToDB.Expressions
 	using Extensions;
 	using SqlQuery;
 
-	sealed class SqlPlaceholderExpression : Expression
+	public sealed class SqlPlaceholderExpression : Expression
 	{
 		public SqlPlaceholderExpression(SelectQuery? selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
@@ -180,6 +180,14 @@ namespace LinqToDB.Expressions
 				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
 			return this;
 		}
+
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitSqlPlaceholderExpression(this);
+			return base.Accept(visitor);
+		}
+
 	}
 
 }

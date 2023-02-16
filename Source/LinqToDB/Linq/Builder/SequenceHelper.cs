@@ -198,7 +198,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[return: NotNullIfNotNull("expression")]
-		public static Expression? RemapToNewPath(Expression? expression, Expression toPath)
+		public static Expression? RemapToNewPath(IBuildContext buildContext, Expression? expression, Expression toPath, ProjectFlags flags)
 		{
 			if (expression == null)
 				return null;
@@ -222,8 +222,8 @@ namespace LinqToDB.Linq.Builder
 						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
 					}
 
-					var newExpression = RemapToNewPath(assignment.Expression,
-						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo));
+					var newExpression = RemapToNewPath(buildContext, assignment.Expression,
+						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo), flags);
 
 					if (!ReferenceEquals(assignment.Expression, newExpression))
 					{
@@ -244,15 +244,87 @@ namespace LinqToDB.Linq.Builder
 
 				if (assignments != null)
 				{
-					return generic.ReplaceAssignments(assignments);
+					generic = generic.ReplaceAssignments(assignments);
 				}
+
+				generic = generic.WithConstructionRoot(toPath);
 
 				return generic;
 			}
 
 			if (expression is NewExpression or MemberInitExpression)
 			{
-				return RemapToNewPath(SqlGenericConstructorExpression.Parse(expression), toPath);
+				return RemapToNewPath(buildContext, SqlGenericConstructorExpression.Parse(expression), toPath, flags);
+			}
+
+			if (expression is ContextConstructionExpression contextConstructionExpression)
+			{
+				return contextConstructionExpression.Update(buildContext,
+					RemapToNewPath(buildContext, contextConstructionExpression.InnerExpression, toPath, flags));
+			}
+
+			if (expression is SqlPlaceholderExpression placeholder)
+			{
+				if (placeholder.Type == toPath.Type)
+				{
+					return toPath;
+				}
+
+				if (placeholder.Path is MemberExpression me && me.Expression?.Type == toPath.Type)
+				{
+					var newExpr = (Expression)Expression.MakeMemberAccess(toPath, me.Member);
+					if (placeholder.Type != newExpr.Type)
+					{
+						newExpr = Expression.Convert(newExpr, placeholder.Type);
+					}
+
+					return newExpr;
+				}
+			}
+
+			if (expression is BinaryExpression binary && toPath.Type != binary.Type)
+			{
+				var left  = binary.Left;
+				var right = binary.Right;
+
+				if (left is SqlPlaceholderExpression)
+				{
+					left = RemapToNewPath(buildContext, left, toPath, flags);
+				}
+
+				if (right is SqlPlaceholderExpression)
+				{
+					right = RemapToNewPath(buildContext, right, toPath, flags);
+				}
+
+				return binary.Update(left, binary.Conversion, right);
+			}
+
+			if (expression is ConditionalExpression conditional)
+			{
+				return conditional.Update(RemapToNewPath(buildContext, conditional.Test, toPath, flags),
+					RemapToNewPath(buildContext, conditional.IfTrue, toPath, flags),
+					RemapToNewPath(buildContext, conditional.IfFalse, toPath, flags));
+			}
+
+			if (flags.IsExpression())
+			{
+				if (expression is DefaultValueExpression)
+				{
+					return expression;
+				}
+				if (!expression.Type.IsValueType)
+				{
+					if (expression is DefaultExpression)
+					{
+						return expression;
+					}
+
+					if (expression is ConstantExpression constant && constant.Value == null)
+					{
+						return expression;
+					}
+				}
 			}
 
 			return toPath;

@@ -134,4 +134,8 @@
 		<PackageReference Include="Microsoft.CSharp" />
 		<PackageReference Include="System.ComponentModel.Annotations" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Linq\Builder\Visitors\" />
+	</ItemGroup>
 </Project>

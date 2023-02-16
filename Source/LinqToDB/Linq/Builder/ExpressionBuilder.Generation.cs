@@ -63,9 +63,7 @@ namespace LinqToDB.Linq.Builder
 					else
 					{
 						var declaringType = column.MemberInfo.DeclaringType!;
-						var objExpression = currentPath;
-						if (declaringType != objExpression.Type)
-							objExpression = Expression.Convert(objExpression, declaringType);
+						var objExpression = EnsureType(currentPath, declaringType);
 
 						// Target ReflectedType to DeclaringType for better caching
 						//
@@ -186,14 +184,13 @@ namespace LinqToDB.Linq.Builder
 			Update
 		}
 
-		public SqlGenericConstructorExpression BuildFullEntityExpression(IBuildContext context, Type entityType, ProjectFlags flags)
+		public SqlGenericConstructorExpression BuildFullEntityExpression(IBuildContext context, Expression refExpression, Type entityType, ProjectFlags flags)
 		{
 			entityType = GetTypeForInstantiation(entityType);
 
-			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
+			refExpression = EnsureType(refExpression, entityType);
 
-			var objectType    = entityDescriptor.ObjectType;
-			var refExpression = new ContextRefExpression(objectType, context);
+			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 
 			var generic = BuildGenericFromMembers(context, entityDescriptor.Columns, flags, refExpression, 0, FullEntityPurpose.Default);
 
@@ -402,11 +399,31 @@ namespace LinqToDB.Linq.Builder
 			return constructed;
 		}
 
+		static Expression EnsureType(Expression expr, Type type)
+		{
+			if (expr.Type != type)
+			{
+				expr = expr.UnwrapConvert();
+				if (expr.Type != type)
+				{
+					if (expr is ContextRefExpression refExpression)
+						return refExpression.WithType(type);
+					return Expression.Convert(expr, type);
+				}
+
+				return expr;
+			}
+
+			return expr;
+		}
+
 		public Expression? TryConstructFullEntity(IBuildContext context, SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
 		{
 			var entityType           = constructorExpression.ObjectType;
 			var entityDescriptor     = MappingSchema.GetEntityDescriptor(entityType);
-			var contextRefExpression = new ContextRefExpression(entityType, context);
+			var rootReference        = constructorExpression.ConstructionRoot ?? new ContextRefExpression(entityType, context);
+
+			rootReference = EnsureType(rootReference, entityType);
 
 			if (checkInheritance && flags.HasFlag(ProjectFlags.Expression))
 			{
@@ -420,7 +437,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (defaultDescriptor.Type != constructorExpression.Type)
 						{
-							var subConstructor = BuildFullEntityExpression(context, defaultDescriptor.Type, flags);
+							var subConstructor = BuildFullEntityExpression(context, rootReference, defaultDescriptor.Type, flags);
 							defaultExpression = ConstructFullEntity(context, subConstructor, flags, false);
 							defaultExpression = Expression.Convert(defaultExpression, constructorExpression.Type);
 						}
@@ -446,7 +463,7 @@ namespace LinqToDB.Linq.Builder
 								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
 								code, et);
 
-						var access = Expression.MakeMemberAccess(contextRefExpression.WithType(onType), firstMapping.Discriminator.MemberInfo);
+						var access = Expression.MakeMemberAccess(EnsureType(rootReference, onType), firstMapping.Discriminator.MemberInfo);
 
 						var codeExpr = Expression.Convert(access, typeof(object));
 
@@ -473,15 +490,15 @@ namespace LinqToDB.Linq.Builder
 
 						var onType = discriminatorMemberInfo.DeclaringType ?? inheritance.Type;
 
-						var contextRef = contextRefExpression.WithType(onType);
-						var member     = contextRef.Type.GetMemberEx(discriminatorMemberInfo);
+						var currentRef = EnsureType(rootReference, onType);
+						var member     = currentRef.Type.GetMemberEx(discriminatorMemberInfo);
 						member = discriminatorMemberInfo;
 						if (false)
 						{
 							//TODO: strange behaviour, Member of inheritance has no Discriminator column
 
 							var dynamicPropCall = Expression.Call(Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(discriminatorMemberInfo.GetMemberType()),
-								contextRef, Expression.Constant(discriminatorMemberInfo.Name));
+								currentRef, Expression.Constant(discriminatorMemberInfo.Name));
 
 							var dynamicSql = ConvertToSqlPlaceholder(context, dynamicPropCall, columnDescriptor: inheritance.Discriminator);
 
@@ -492,7 +509,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var memberAccess = Expression.MakeMemberAccess(contextRef, member);
+							var memberAccess = Expression.MakeMemberAccess(currentRef, member);
 
 							if (inheritance.Code == null)
 							{
@@ -508,7 +525,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						var subConstructor = BuildFullEntityExpression(context, inheritance.Type, flags);
+						var subConstructor = BuildFullEntityExpression(context, currentRef, inheritance.Type, flags);
 
 						var fullEntity = TryConstructFullEntity(context, subConstructor, flags, false);
 						if (fullEntity == null)

@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	sealed class ChangeTypeExpression : Expression
+	public sealed class ChangeTypeExpression : Expression
 	{
 		public const ExpressionType ChangeTypeType = (ExpressionType)1000;
 
@@ -28,6 +28,14 @@ namespace LinqToDB.Expressions
 		bool Equals(ChangeTypeExpression other)
 		{
 			return _type == other._type && Expression.Equals(other.Expression);
+		}
+
+		public ChangeTypeExpression Update(Expression expression)
+		{
+			if (ReferenceEquals(Expression, expression))
+				return this;
+
+			return new ChangeTypeExpression(expression, _type);
 		}
 
 		public override bool Equals(object? obj)
@@ -56,6 +64,13 @@ namespace LinqToDB.Expressions
 			{
 				return (_type.GetHashCode() * 397) ^ Expression.GetHashCode();
 			}
+		}
+
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitChangeTypeExpression(this);
+			return base.Accept(visitor);
 		}
 	}
 }

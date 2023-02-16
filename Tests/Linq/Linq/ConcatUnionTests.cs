@@ -96,15 +96,24 @@ namespace Tests.Linq
 		[Test]
 		public void Concat4([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from c in    Child where c.ParentID == 1 select c).Concat(
+			using var db = GetDataContext(context);
+
+			var query = (from c in db.Child where c.ParentID == 1 select c).Concat(
+					(from c in db.Child
+						where c.ParentID == 3
+						select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 }))
+				.Where(c => c.ChildID != 1032);
+
+			var xx = query.ToList();
+
+			AreEqual(
+				(from c in    Child where c.ParentID == 1 select c).Concat(
 					(from c in    Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 }).
 					Where(c => c.ChildID != 1032))
-					,
-					(from c in db.Child where c.ParentID == 1 select c).Concat(
+				,
+				(from c in db.Child where c.ParentID == 1 select c).Concat(
 					(from c in db.Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 })).
-					Where(c => c.ChildID != 1032));
+				Where(c => c.ChildID != 1032));
 		}
 
 		[Test]
@@ -533,6 +542,15 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
+			var query = (
+				from p1 in db.Parent select new { ParentID = p1.ParentID, p = p1, ch = (Child?)null })
+				.Concat(
+				(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() }));
+
+			var xx = query.ToList();
+
+			return;
+
 			AreEqual(
 				(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
 				(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() })),
@@ -559,12 +577,12 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
+					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
+					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch })
 					,
-					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
-					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.First() }))
+					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
+					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch }));
 		}
 

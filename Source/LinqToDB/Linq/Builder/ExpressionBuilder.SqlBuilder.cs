@@ -3876,6 +3876,13 @@ namespace LinqToDB.Linq.Builder
 
 			if (path is MemberExpression memberExpression && memberExpression.Expression != null)
 			{
+				var declaringType = memberExpression.Member.DeclaringType;
+				if (declaringType != null && declaringType != memberExpression.Expression.Type)
+				{
+					memberExpression = memberExpression.Update(EnsureType(memberExpression.Expression, declaringType));
+					return MakeExpression(currentContext, memberExpression, flags);
+				}
+
 				if (memberExpression.Member.IsNullableValueMember())
 				{
 					var corrected = MakeExpression(currentContext, memberExpression.Expression, flags);
@@ -3921,6 +3928,19 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var root = MakeExpression(currentContext, memberExpression.Expression, flags.RootFlag());
+
+				if (!flags.IsRoot() && root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
+				{
+					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags.IsTest());
+					if (subqueryExpression != null)
+					{
+						root = subqueryExpression;
+						if (subqueryExpression.Type != root.Type)
+						{
+							root = new SqlAdjustTypeExpression(root, root.Type, MappingSchema);
+						}
+					}
+				}
 
 				var newPath = memberExpression.Update(root);
 

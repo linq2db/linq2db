@@ -67,5 +67,13 @@ namespace LinqToDB.Expressions
 				return ((_mappingSchema != null ? _mappingSchema.GetHashCode() : 0) * 397) ^ _type.GetHashCode();
 			}
 		}
+
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitDefaultValueExpression(this);
+			return base.Accept(visitor);
+		}
+
 	}
 }

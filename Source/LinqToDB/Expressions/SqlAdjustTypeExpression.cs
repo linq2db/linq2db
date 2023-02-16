@@ -40,5 +40,13 @@ namespace LinqToDB.Expressions
 
 			return new SqlAdjustTypeExpression(expression, Type, MappingSchema);
 		}
+
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitSqlAdjustTypeExpression(this);
+			return base.Accept(visitor);
+		}
+
 	}
 }

@@ -18,6 +18,11 @@ namespace LinqToDB.Linq.Builder
 			return (flags & FlagsToPreserve) | ProjectFlags.Root;
 		}
 
+		public static ProjectFlags ExpressionFlag(this ProjectFlags flags)
+		{
+			return (flags & FlagsToPreserve) | ProjectFlags.Expression;
+		}
+
 		public static ProjectFlags ExpandFlag(this ProjectFlags flags)
 		{
 			return (flags & FlagsToPreserve) | ProjectFlags.Expand;
@@ -76,5 +81,12 @@ namespace LinqToDB.Linq.Builder
 		{
 			return (flags & ProjectFlags.Table) != 0;
 		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsExpand(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.Expand) != 0;
+		}
+
 	}
 }

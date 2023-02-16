@@ -179,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 					if (!ObjectType.IsSameOrParentOf(path.Type) && flags.HasFlag(ProjectFlags.Expression))
 						return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
 
-					return Builder.BuildFullEntityExpression(this, path.Type, flags);
+					return Builder.BuildFullEntityExpression(this, path, path.Type, flags);
 				}
 
 				Expression member;

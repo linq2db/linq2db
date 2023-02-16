@@ -366,5 +366,12 @@ namespace LinqToDB.Expressions
 			return this;
 		}
 
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitConvertFromDataReaderExpression(this);
+			return base.Accept(visitor);
+		}
+
 	}
 }

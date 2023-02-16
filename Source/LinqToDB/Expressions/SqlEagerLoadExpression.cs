@@ -25,5 +25,12 @@ namespace LinqToDB.Expressions
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
 		public override Type           Type     => Path.Type;
+
+		protected override Expression Accept(ExpressionVisitor visitor)
+		{
+			if (visitor is ExpressionVisitorBase baseVisitor)
+				return baseVisitor.VisitSqlEagerLoadExpression(this);
+			return base.Accept(visitor);
+		}
 	}
 }
