@@ -589,19 +589,7 @@ namespace LinqToDB.Mapping
 			{
 				var param = Expression.Parameter(getterExpr.Type, "v");
 
-				var current = EntityDescriptor;
-				do
-				{
-					if (current.InheritanceMapping.Count > 0)
-						break;
-
-					if (current.ObjectType.BaseType == typeof(object) || current.ObjectType.BaseType == null)
-						break;
-
-					current = MappingSchema.GetEntityDescriptor(current.ObjectType.BaseType!);
-
-				} while (true);
-
+				var current = EntityDescriptor.InheritanceRoot ?? EntityDescriptor;
 
 				if (current.InheritanceMapping.Count > 0)
 				{

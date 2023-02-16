@@ -22,7 +22,25 @@ namespace LinqToDB
 		#region UseSqlServer
 
 		/// <summary>
-		/// Configure connection to use specific SQL Server provider, dialect and connection string.
+		/// Configure connection to use specific SQL Server provider, dialect and provider-specific options.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="provider">SQL Server provider to use.</param>
+		/// <param name="dialect">SQL Server dialect support level.</param>
+		/// <param name="optionSetter">Optional <see cref="SqlServerOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseSqlServer(this DataOptions options,
+			SqlServerVersion  dialect                              = SqlServerVersion. AutoDetect,
+			SqlServerProvider provider                             = SqlServerProvider.AutoDetect,
+			Func<SqlServerOptions, SqlServerOptions>? optionSetter = null)
+		{
+			options = DataProvider.SqlServer.SqlServerTools.ProviderDetector.CreateOptions(options, dialect, provider);
+
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure connection to use specific SQL Server provider, dialect, connection string and provider-specific options.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
 		/// <param name="connectionString">SQL Server connection string.</param>
@@ -71,6 +89,23 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Configure connection to use specific Oracle provider, dialect and provider-specific options.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="dialect">Oracle dialect support level.</param>
+		/// <param name="provider">ADO.NET provider to use.</param>
+		/// <param name="optionSetter">Optional <see cref="OracleOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseOracle(this DataOptions options,
+			OracleVersion dialect,
+			OracleProvider provider,
+			Func<OracleOptions, OracleOptions>? optionSetter = null)
+		{
+			options = OracleTools.ProviderDetector.CreateOptions(options, dialect, provider);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
 		/// Configure connection to use specific Oracle provider, dialect and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
@@ -79,7 +114,9 @@ namespace LinqToDB
 		/// <param name="provider">ADO.NET provider to use.</param>
 		/// <param name="optionSetter">Optional <see cref="OracleOptions"/> configuration callback.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public static DataOptions UseOracle(this DataOptions options, string connectionString, OracleVersion dialect, OracleProvider provider,
+		public static DataOptions UseOracle(this DataOptions options, string connectionString,
+			OracleVersion dialect,
+			OracleProvider provider,
 			Func<OracleOptions, OracleOptions>? optionSetter = null)
 		{
 			options = options.UseConnectionString(connectionString);
@@ -132,14 +169,30 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Configure connection to use PostgreSQL Npgsql provider, specific dialect and connection string.
+		/// Configure connection to use PostgreSQL Npgsql provider, specific dialect and provider-specific options.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="dialect">PostgreSQL dialect support level.</param>
+		/// <param name="optionSetter">Optional <see cref="PostgreSQLOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UsePostgreSQL(this DataOptions options,
+			PostgreSQLVersion dialect = PostgreSQLVersion.AutoDetect,
+			Func<PostgreSQLOptions, PostgreSQLOptions>? optionSetter = null)
+		{
+			options = PostgreSQLTools.ProviderDetector.CreateOptions(options, dialect, default);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure connection to use PostgreSQL Npgsql provider, specific dialect, provider-specific options and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
 		/// <param name="connectionString">PostgreSQL connection string.</param>
 		/// <param name="dialect">PostgreSQL dialect support level.</param>
 		/// <param name="optionSetter">Optional <see cref="PostgreSQLOptions"/> configuration callback.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
-		public static DataOptions UsePostgreSQL(this DataOptions options, string connectionString, PostgreSQLVersion dialect,
+		public static DataOptions UsePostgreSQL(this DataOptions options, string connectionString,
+			PostgreSQLVersion dialect = PostgreSQLVersion.AutoDetect,
 			Func<PostgreSQLOptions, PostgreSQLOptions>? optionSetter = null)
 		{
 			options = options.UseConnectionString(connectionString);
@@ -150,6 +203,24 @@ namespace LinqToDB
 		#endregion
 
 		#region UseMySql
+
+		/// <summary>
+		/// Configure connection to use MySql default provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="MySqlOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		/// <remarks>
+		/// <para>
+		/// Default provider will be chosen by probing current folder for provider assembly and if it is not found, default to <c>MySql.Data</c> provider.
+		/// </para>
+		/// </remarks>
+		public static DataOptions UseMySql(this DataOptions options,
+			Func<MySqlOptions, MySqlOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.MySql);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
 
 		/// <summary>
 		/// Configure connection to use MySql default provider and connection string.
@@ -171,6 +242,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Configure connection to use <c>MySql.Data</c> MySql provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="MySqlOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseMySqlData(this DataOptions options,
+			Func<MySqlOptions, MySqlOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.MySqlOfficial);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
 		/// Configure connection to use <c>MySql.Data</c> MySql provider and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
@@ -181,6 +265,19 @@ namespace LinqToDB
 			Func<MySqlOptions, MySqlOptions>? optionSetter = null)
 		{
 			options = options.UseConnectionString(ProviderName.MySqlOfficial, connectionString);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure connection to use <c>MySqlConnector</c> MySql provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="MySqlOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseMySqlConnector(this DataOptions options,
+			Func<MySqlOptions, MySqlOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.MySqlConnector);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
@@ -203,6 +300,25 @@ namespace LinqToDB
 		#region UseSQLite
 
 		/// <summary>
+		/// Configure connection to use SQLite default provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="SQLiteOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		/// <remarks>
+		/// <para>
+		/// Default provider will be chosen by probing current folder for provider assembly and if it is not found, default to <c>System.Data.Sqlite</c> provider.
+		/// </para>
+		/// For more fine-grained configuration see <see cref="UseSQLiteOfficial(DataOptions, string, Func{SQLiteOptions, SQLiteOptions}?)"/> and <see cref="UseSQLiteMicrosoft(DataOptions, string, Func{SQLiteOptions, SQLiteOptions}?)"/> methods.
+		/// </remarks>
+		public static DataOptions UseSQLite(this DataOptions options,
+			Func<SQLiteOptions, SQLiteOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.SQLite);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
 		/// Configure connection to use SQLite default provider and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
@@ -223,6 +339,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Configure connection to use <c>System.Data.Sqlite</c> SQLite provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="SQLiteOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseSQLiteOfficial(this DataOptions options,
+			Func<SQLiteOptions, SQLiteOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.SQLiteClassic);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
 		/// Configure connection to use <c>System.Data.Sqlite</c> SQLite provider and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
@@ -233,6 +362,19 @@ namespace LinqToDB
 			Func<SQLiteOptions, SQLiteOptions>? optionSetter = null)
 		{
 			options = options.UseConnectionString(ProviderName.SQLiteClassic, connectionString);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure connection to use <c>Microsoft.Data.Sqlite</c> SQLite provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="SQLiteOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseSQLiteMicrosoft(this DataOptions options,
+			Func<SQLiteOptions, SQLiteOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.SQLiteMS);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
@@ -265,12 +407,25 @@ namespace LinqToDB
 		/// <para>
 		/// Default provider determined by inspecting connection string for OleDb or ODBC-specific markers and otherwise defaults to OleDb provider.
 		/// </para>
-		/// For more fine-grained configuration see <see cref="UseAccessOleDb(DataOptions, string, Func{AccessOptions, AccessOptions}?)"/> and <see cref="UseAccessOdbc"/> methods.
+		/// For more fine-grained configuration see <see cref="UseAccessOleDb(DataOptions, string, Func{AccessOptions, AccessOptions}?)"/> and <see cref="UseAccessOdbc(DataOptions, Func{AccessOptions, AccessOptions}?)"/> methods.
 		/// </remarks>
 		public static DataOptions UseAccess(this DataOptions options, string connectionString,
 			Func<AccessOptions, AccessOptions>? optionSetter = null)
 		{
-			options = options.UseConnectionString(AccessTools.GetDataProvider(ProviderName.Access), connectionString);
+			options = options.UseConnectionString(ProviderName.Access, connectionString);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure connection to use Access OleDb provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="AccessOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseAccessOleDb(this DataOptions options,
+			Func<AccessOptions, AccessOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.Access);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
@@ -284,7 +439,20 @@ namespace LinqToDB
 		public static DataOptions UseAccessOleDb(this DataOptions options, string connectionString,
 			Func<AccessOptions, AccessOptions>? optionSetter = null)
 		{
-			options = options.UseConnectionString(AccessTools.GetDataProvider(ProviderName.Access), connectionString);
+			options = options.UseConnectionString(ProviderName.Access, connectionString);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure connection to use Access ODBC provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="AccessOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseAccessOdbc(this DataOptions options,
+			Func<AccessOptions, AccessOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.AccessOdbc);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
@@ -298,7 +466,7 @@ namespace LinqToDB
 		public static DataOptions UseAccessOdbc(this DataOptions options, string connectionString,
 			Func<AccessOptions, AccessOptions>? optionSetter = null)
 		{
-			options = options.UseConnectionString(AccessTools.GetDataProvider(ProviderName.AccessOdbc), connectionString);
+			options = options.UseConnectionString(ProviderName.AccessOdbc, connectionString);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
@@ -331,6 +499,20 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Configure connection to use specific DB2 provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="version">DB2 server version.</param>
+		/// <param name="optionSetter">Optional <see cref="DB2Options"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseDB2(this DataOptions options, DB2Version version,
+			Func<DB2Options, DB2Options>? optionSetter = null)
+		{
+			options = options.UseDataProvider(DB2Tools.GetDataProvider(version));
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
 		/// Configure connection to use specific DB2 provider and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
@@ -350,6 +532,19 @@ namespace LinqToDB
 		#region UseFirebird
 
 		/// <summary>
+		/// Configure connection to use Firebird provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="FirebirdOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseFirebird(this DataOptions options,
+			Func<FirebirdOptions, FirebirdOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.Firebird);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
 		/// Configure connection to use Firebird provider and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
@@ -366,6 +561,25 @@ namespace LinqToDB
 		#endregion
 
 		#region UseInformix
+
+		/// <summary>
+		/// Configure connection to use Informix default provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="InformixOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		/// <remarks>
+		/// <para>
+		/// Default provider will be chosen by probing current folder for provider assembly and if it is not found, default to <c>IBM.Data.DB2</c> provider.
+		/// This is not applicable to .NET Core applications as they always use <c>IBM.Data.DB2</c> provider.
+		/// </para>
+		/// </remarks>
+		public static DataOptions UseInformix(this DataOptions options,
+			Func<InformixOptions, InformixOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.Informix);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
 
 		/// <summary>
 		/// Configure connection to use Informix default provider and connection string.
@@ -411,6 +625,24 @@ namespace LinqToDB
 		#region UseSapHana
 
 		/// <summary>
+		/// Configure connection to use SAP HANA default provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="SapHanaOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		/// <remarks>
+		/// <para>
+		/// Default provider will be <c>Sap.Data.Hana</c> native provider for .NET Framework and .NET Core applications and ODBC provider for .NET STANDARD builds.
+		/// </para>
+		/// </remarks>
+		public static DataOptions UseSapHana(this DataOptions options,
+			Func<SapHanaOptions, SapHanaOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.SapHana);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
 		/// Configure connection to use SAP HANA default provider and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
@@ -430,6 +662,19 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Configure connection to use native SAP HANA provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="SapHanaOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseSapHanaNative(this DataOptions options,
+			Func<SapHanaOptions, SapHanaOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.SapHanaNative);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
 		/// Configure connection to use native SAP HANA provider and connection string.
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
@@ -439,9 +684,20 @@ namespace LinqToDB
 		public static DataOptions UseSapHanaNative(this DataOptions options, string connectionString,
 			Func<SapHanaOptions, SapHanaOptions>? optionSetter = null)
 		{
-			options = options.UseConnectionString(
-				SapHanaTools.GetDataProvider(ProviderName.SapHanaNative),
-				connectionString);
+			options = options.UseConnectionString(ProviderName.SapHanaNative, connectionString);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
+		/// <summary>
+		/// Configure connection to use SAP HANA ODBC provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="SapHanaOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseSapHanaODBC(this DataOptions options,
+			Func<SapHanaOptions, SapHanaOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.SapHanaOdbc);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
@@ -455,15 +711,26 @@ namespace LinqToDB
 		public static DataOptions UseSapHanaODBC(this DataOptions options, string connectionString,
 			Func<SapHanaOptions, SapHanaOptions>? optionSetter = null)
 		{
-			options = options.UseConnectionString(
-				SapHanaTools.GetDataProvider(ProviderName.SapHanaOdbc),
-				connectionString);
+			options = options.UseConnectionString(ProviderName.SapHanaOdbc, connectionString);
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
 		}
 
 		#endregion
 
 		#region UseSqlCe
+
+		/// <summary>
+		/// Configure connection to use SQL CE provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="SqlCeOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseSqlCe(this DataOptions options,
+			Func<SqlCeOptions, SqlCeOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.SqlCe);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
 
 		/// <summary>
 		/// Configure connection to use SQL CE provider and connection string.
@@ -482,6 +749,27 @@ namespace LinqToDB
 		#endregion
 
 		#region UseAse
+
+		/// <summary>
+		/// Configure connection to use SAP/Sybase ASE default provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="optionSetter">Optional <see cref="SybaseOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		/// <remarks>
+		/// <para>
+		/// Provider selection available only for .NET Framework applications.
+		/// </para>
+		/// <para>
+		/// Default provider will be choosen by probing current folder for provider assembly and if it is not found, default to official <c>Sybase.AdoNet45.AseClient</c> provider.
+		/// </para>
+		/// </remarks>
+		public static DataOptions UseAse(this DataOptions options,
+			Func<SybaseOptions, SybaseOptions>? optionSetter = null)
+		{
+			options = options.UseProvider(ProviderName.Sybase);
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
 
 		/// <summary>
 		/// Configure connection to use SAP/Sybase ASE default provider and connection string.
@@ -527,6 +815,21 @@ namespace LinqToDB
 		#endregion
 
 		#region UseClickHouse
+
+		/// <summary>
+		/// Configure connection to use UseClickHouse provider.
+		/// </summary>
+		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
+		/// <param name="provider">ClickHouse provider.</param>
+		/// <param name="optionSetter">Optional <see cref="ClickHouseOptions"/> configuration callback.</param>
+		/// <returns>The builder instance so calls can be chained.</returns>
+		public static DataOptions UseClickHouse(this DataOptions options, ClickHouseProvider provider,
+			Func<ClickHouseOptions, ClickHouseOptions>? optionSetter = null)
+		{
+			options = options.UseDataProvider(ClickHouseTools.GetDataProvider(provider));
+			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+		}
+
 		/// <summary>
 		/// Configure connection to use UseClickHouse provider and connection string.
 		/// </summary>

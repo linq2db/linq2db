@@ -148,11 +148,11 @@ namespace LinqToDB.Linq.Builder
 							{
 								var objType = arg.Type;
 
-								var ed   = builder.MappingSchema.GetEntityDescriptor(objType);
+								var ed   = builder.MappingSchema.GetEntityDescriptor(objType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 								var into = sequence;
 								var ctx  = new TableBuilder.TableContext(builder, buildInfo, objType);
 
-								var table = new SqlTable(objType);
+								var table = new SqlTable(ed);
 
 								foreach (var c in ed.Columns.Where(c => !c.SkipOnInsert))
 								{
@@ -180,7 +180,9 @@ namespace LinqToDB.Linq.Builder
 
 					insertStatement.Output = new SqlOutputClause();
 
-					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable ? SqlTable.Inserted(outputExpression.Parameters[0].Type) : insertStatement.Insert.Into;
+					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable
+						? SqlTable.Inserted(builder.MappingSchema.GetEntityDescriptor(outputExpression.Parameters[0].Type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
+						: insertStatement.Insert.Into;
 
 					if (insertedTable == null)
 						throw new InvalidOperationException("Cannot find target table for INSERT statement");

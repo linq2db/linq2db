@@ -352,7 +352,7 @@ namespace LinqToDB.Linq.Builder
 												var memberExpression = GetMemberExpression(
 															member, levelExpression == expression, levelExpression.Type, expression);
 
-												var ed = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
+												var ed = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 												var descriptor = ed.FindColumnDescriptor(member);
 
 												sql = ConvertExpressions(memberExpression, flags, descriptor).Clone(member);
@@ -375,7 +375,7 @@ namespace LinqToDB.Linq.Builder
 														ColumnDescriptor? descriptor = null;
 														if (mex is MemberExpression ma)
 														{
-															var ed     = context.context.Builder.MappingSchema.GetEntityDescriptor(ma.Expression!.Type);
+															var ed     = context.context.Builder.MappingSchema.GetEntityDescriptor(ma.Expression!.Type, context.context.Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 															descriptor = ed.FindColumnDescriptor(ma.Member);
 														}
 														return context.context.ConvertExpressions(buildExpression, context.flags, descriptor);
@@ -426,7 +426,7 @@ namespace LinqToDB.Linq.Builder
 
 		SqlInfo[] ConvertMember(MemberInfo member, Expression expression, ConvertFlags flags)
 		{
-			var ed         = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!);
+			var ed         = Builder.MappingSchema.GetEntityDescriptor(member.DeclaringType!, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var descriptor = ed.FindColumnDescriptor(member);
 
 			return ConvertExpressions(expression, flags, descriptor).Clone(member);
@@ -1344,7 +1344,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (Body.NodeType == ExpressionType.MemberInit)
 					{
-						var ed = Builder.MappingSchema.GetEntityDescriptor(Body.Type);
+						var ed = Builder.MappingSchema.GetEntityDescriptor(Body.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 						if (ed.Aliases != null)
 						{
