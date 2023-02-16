@@ -699,6 +699,66 @@ namespace Tests.Linq
 			}
 		}
 
+		// at the moment it must be generic because linq2db will infer entity type from generic arguments
+		sealed class ChildrenContainer<T> : IEnumerable<T> where T : Child
+		{
+			public List<T>? Value;
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				return ((IEnumerable<T>)Value!).GetEnumerator();
+			}
+
+			public void SetValue(IEnumerable<T> value)
+			{
+				Value = value.ToList();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return ((IEnumerable)Value!).GetEnumerator();
+			}
+		}
+
+		[Table("Parent")]
+		[UsedImplicitly]
+		sealed class ListAssociationSetterExpressionTestClass
+		{
+			[Column] public int ParentID;
+
+			ChildrenContainer<Child> _children = new();
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", Storage = "_children", AssociationSetterExpressionMethod = nameof(SetChildrenValue))]
+			public ChildrenContainer<Child> Children
+			{
+				get => _children;
+				set => throw new InvalidOperationException();
+			}
+
+			public static Expression<Action<ChildrenContainer<Child>, IEnumerable<Child>>> SetChildrenValue()
+			{
+				return static (ChildrenContainer<Child> container, IEnumerable<Child> value) => container.SetValue(value);
+			}
+		}
+
+		[Test]
+		public void ListAssociationSetterExpressionTest([DataSources] string context)
+		{				
+			using (var db = GetDataContext(context))
+			{
+				// we want to make sure the conversion is not possible because we want to bypass
+				// that conversion if the setter value parameter type (IEnumerable<Child> in this case)
+				// does not match the member type (ChildrenContainer<Child> in this case)
+				Assert.Throws<LinqToDB.Common.LinqToDBConvertException>(() =>
+					db.MappingSchema.ChangeType(new List<Child>(0), typeof(ChildrenContainer<Child>)),
+					"List<Child> should not be convertible to ChildrenContainer<Child>");
+
+				var value = db.GetTable<ListAssociationSetterExpressionTestClass>().LoadWith(x => x.Children).First();
+
+				Assert.That(value.Children, Is.Not.Null);
+			}
+		}
+		
 		[Test]
 		public void TestGenericAssociation1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
