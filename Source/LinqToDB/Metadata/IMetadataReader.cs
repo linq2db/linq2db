@@ -39,6 +39,12 @@ namespace LinqToDB.Metadata
 		/// <returns>All dynamic columns defined on given type.</returns>
 		MemberInfo[] GetDynamicColumns(Type type);
 
+		/// <summary>
+		/// Should return a unique ID for cache purposes. If the implemented Metadata reader returns instance-specific
+		/// data you'll need to calculate a unique value based on content. Otherwise just use a static const
+		/// e.g. $".{nameof(YourMetadataReader)}."
+		/// </summary>
+		/// <returns>The object ID as string</returns>
 		string GetObjectID();
 	}
 }
