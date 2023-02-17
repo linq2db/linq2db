@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 					var targetType       = statement.Target.SystemType!;
 					var pTarget          = Expression.Parameter(targetType, "t");
 					var pSource          = Expression.Parameter(targetType, "s");
-					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType);
+					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 					Expression? ex = null;
 

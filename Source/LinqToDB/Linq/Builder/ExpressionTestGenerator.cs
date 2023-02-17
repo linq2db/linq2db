@@ -515,7 +515,7 @@ namespace LinqToDB.Linq.Builder
 
 		readonly StringBuilder _typeBuilder = new ();
 
-		void BuildType(Type type, MappingSchema mappingSchema)
+		void BuildType(Type type, MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			if (!IsUserType(type) ||
 				IsAnonymous(type) ||
@@ -576,7 +576,7 @@ namespace LinqToDB.Linq.Builder
 			var members = type.GetFields().Intersect(_usedMembers.OfType<FieldInfo>()).Select(f =>
 			{
 				var attr = "";
-				var ed = mappingSchema.GetEntityDescriptor(type);
+				var ed = mappingSchema.GetEntityDescriptor(type, dataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				if (ed != null)
 				{
 					var colum = ed.Columns.FirstOrDefault(x => x.MemberInfo == f);
@@ -603,7 +603,7 @@ namespace LinqToDB.Linq.Builder
 				type.GetPropertiesEx().Intersect(_usedMembers.OfType<PropertyInfo>()).Select(p =>
 				{
 					var attr = "";
-					var ed = mappingSchema.GetEntityDescriptor(type);
+					var ed = mappingSchema.GetEntityDescriptor(type, dataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 					if (ed != null)
 					{
 						var colum = ed.Columns.FirstOrDefault(x => x.MemberInfo == p);
@@ -651,7 +651,7 @@ namespace LinqToDB.Linq.Builder
 
 			{
 				var attr = "";
-				var ed = mappingSchema.GetEntityDescriptor(type);
+				var ed = mappingSchema.GetEntityDescriptor(type, dataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				if (ed != null && !type.IsInterface)
 				{
 					attr += "\t[Table(" + (string.IsNullOrEmpty(ed.Name.Name) ? "" : "\"" + ed.Name.Name + "\"") + ")]" + Environment.NewLine;
@@ -1006,7 +1006,7 @@ namespace LinqToDB.Linq.Builder
 				_typeBuilder.AppendLine("{");
 				foreach (var type in typeNamespaceList.OrderBy(t => t.Name))
 				{
-					BuildType(type, _dataContext!.MappingSchema);
+					BuildType(type, _dataContext!.MappingSchema, _dataContext.Options);
 				}
 				_typeBuilder.AppendLine("}");
 			}

@@ -107,7 +107,7 @@ namespace LinqToDB.DataProvider.DB2
 			Action<DataConnection, Func<string>, Func<int>> traceAction)
 			where T : notnull
 		{
-			var descriptor = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var descriptor = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns    = descriptor.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rd         = new BulkCopyReader<T>(dataConnection, columns, source);
 			var rc         = new BulkCopyRowsCopied();

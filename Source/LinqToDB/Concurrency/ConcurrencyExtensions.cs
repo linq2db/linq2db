@@ -75,7 +75,7 @@ namespace LinqToDB.Concurrency
 			where T : class
 		{
 			var objType = typeof(T);
-			var ed      = dc.MappingSchema.GetEntityDescriptor(objType);
+			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			    query   = MakeConcurrentFilter(query, obj, objType, ed);
 
 			var updatable       = query.AsUpdatable();
@@ -112,7 +112,7 @@ namespace LinqToDB.Concurrency
 			where T : class
 		{
 			var objType = typeof(T);
-			var ed      = dc.MappingSchema.GetEntityDescriptor(objType);
+			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var query   = MakeConcurrentFilter(source, obj, objType, ed);
 
 			return query;

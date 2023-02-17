@@ -11,9 +11,9 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db"           version="5.0.0"   />
-				<dependency id="Grpc.Net.Client"   version="2.49.0"  />
-				<dependency id="protobuf-net.Grpc" version="1.0.179" />
+				<dependency id="linq2db"           version="5.0.0"  />
+				<dependency id="Grpc.Net.Client"   version="2.51.0" />
+				<dependency id="protobuf-net.Grpc" version="1.1.1"  />
 			</group>
 		</dependencies>
 	</metadata>

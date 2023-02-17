@@ -1,10 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
 	using Mapping;
 
 	public class SqlCteTable : SqlTable
@@ -18,9 +15,10 @@ namespace LinqToDB.SqlQuery
 			set { }
 		}
 
-		public SqlCteTable(Type objectType,
-			CteClause     cte)
-			: base(objectType, null, new SqlObjectName(""))
+		public SqlCteTable(
+			CteClause           cte, 
+            EntityDescriptor    entityDescriptor)
+			: base(entityDescriptor, cte.Name)
 		{
 			Cte = cte;
 		}

@@ -14,6 +14,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
+	using Data;
 	using Common;
 	using Common.Internal;
 	using Common.Internal.Cache;
@@ -1703,10 +1704,11 @@ namespace LinqToDB.Mapping
 		#region EntityDescriptor
 
 		/// <summary>
-		/// Gets or sets action, called when the EntityDescriptor is created.
+		/// Gets or sets application-wide action, called when the EntityDescriptor is created.
 		/// Could be used to adjust created descriptor before use.
+		/// Not called, when connection has connection-level callback defined (<see cref="ConnectionOptions.OnEntityDescriptorCreated" />).
 		/// </summary>
-		public Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
+		public static Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
 		internal static MemoryCache<(Type entityType, int schemaId),EntityDescriptor> EntityDescriptorsCache { get; } = new (new ());
 
@@ -1714,17 +1716,19 @@ namespace LinqToDB.Mapping
 		/// Returns mapped entity descriptor.
 		/// </summary>
 		/// <param name="type">Mapped type.</param>
+		/// <param name="onEntityDescriptorCreated">Action, called when new descriptor instance created.
+		/// When set to <c>null</c>, <see cref="EntityDescriptorCreatedCallback" /> callback used.</param>
 		/// <returns>Mapping descriptor.</returns>
-		public EntityDescriptor GetEntityDescriptor(Type type)
+		public EntityDescriptor GetEntityDescriptor(Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated = null)
 		{
 			var ed = EntityDescriptorsCache.GetOrCreate(
 				(entityType: type, ((IConfigurationID)this).ConfigurationID),
-				this,
+				(mappingSchema: this, callback: onEntityDescriptorCreated ?? EntityDescriptorCreatedCallback),
 				static (o, context) =>
 				{
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-					var edNew = new EntityDescriptor(context, o.Key.entityType);
-					context.EntityDescriptorCreatedCallback?.Invoke(context, edNew);
+					var edNew = new EntityDescriptor(context.mappingSchema, o.Key.entityType, context.callback);
+					context.callback?.Invoke(context.mappingSchema, edNew);
 					return edNew;
 				});
 

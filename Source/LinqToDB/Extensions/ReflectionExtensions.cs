@@ -27,25 +27,35 @@ namespace LinqToDB.Extensions
 		public static MemberInfo[] GetPublicInstanceValueMembers(this Type type)
 		{
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
-				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0);
+				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0)
+				.ToArray();
 
 			var baseType = type.BaseType;
 			if (baseType == null || baseType == typeof(object) || baseType == typeof(ValueType))
-				return members.ToArray();
+				return members;
+			
+			// in the case of inheritance, we want to:
+			//  - list base class members first
+			//  - remove shadowed members (new modifier)
+			//	- preserve the order of GetMembers() inside the same type declared type
 
-			var results = new LinkedList<MemberInfo>();
-			var names   = new HashSet<string>();
+			var results = new List<MemberInfo>(members.Length);
+			var seen = new HashSet<string>();
 			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseType!)
 			{
-				foreach (var m in members.Where(_ => _.DeclaringType == t))
+				// iterating in reverse order because we will reverse it
+				// again in the end to list base class members first
+				for (var j = members.Length - 1; j >= 0; j--)
 				{
-					if (!names.Contains(m.Name))
+					var m = members[j];
+					if (m.DeclaringType == t && seen.Add(m.Name))
 					{
-						results.AddFirst(m);
-						names.Add(m.Name);
+						results.Add(m);
 					}
 				}
 			}
+
+			results.Reverse();
 
 			return results.ToArray();
 		}

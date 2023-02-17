@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			Parent            = buildInfo.Parent;
 			_elementType      = elementType;
-			_entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType);
+            _entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			Table             = BuildValuesTable(buildInfo.Expression);
 			Expression        = buildInfo.Expression;
 
@@ -67,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 				knownMembers.AddRange(members.Keys);
 			}
 
-			var ed = Builder.MappingSchema.GetEntityDescriptor(_elementType);
+			var ed = Builder.MappingSchema.GetEntityDescriptor(_elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 			var builtRows = new List<ISqlExpression[]>(arrayExpression.Expressions.Count);
 

@@ -72,7 +72,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				Parent     = parent;
 				CteContext = cteContext;
-				CteTable   = new SqlCteTable(objectType, CteContext.CteClause);
+				CteTable = new SqlCteTable(CteContext.CteClause,
+					builder.MappingSchema.GetEntityDescriptor(objectType,
+						builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated));
 
 				if (!isTest)
 					SelectQuery.From.Table(CteTable);

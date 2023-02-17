@@ -364,6 +364,15 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
+		/// Sets whether a column can contain <c>NULL</c> values.
+		/// </summary>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<TEntity, TProperty> IsNotNull()
+		{
+			return SetColumn(a => a.CanBeNull = false);
+		}
+
+		/// <summary>
 		/// Sets current member to be excluded from mapping.
 		/// </summary>
 		/// <returns>Returns current mapping builder.</returns>

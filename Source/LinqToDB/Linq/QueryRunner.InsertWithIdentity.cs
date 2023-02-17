@@ -23,7 +23,7 @@ namespace LinqToDB.Linq
 				TableOptions           tableOptions,
 				Type                   type)
 			{
-				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
+				var sqlTable = new SqlTable(descriptor);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
 				{
@@ -85,7 +85,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type             = GetType<T>(obj!, dataContext);
-				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
@@ -126,7 +126,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type             = GetType<T>(obj!, dataContext);
-				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
 					? CreateQuery(dataContext, entityDescriptor, obj!, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)

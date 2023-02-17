@@ -17,7 +17,7 @@ namespace LinqToDB.Data
 
 			return dataConnection
 				.MappingSchema
-				.GetEntityDescriptor(typeof(T))
+				.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated)
 				.Columns
 				.Any(c => !c.IsPrimaryKey && !c.IsIdentity && !c.SkipOnUpdate);
 		}

@@ -179,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 
 						var entity           = ConvertExpression(expr.Arguments[0]);
 						var memberName       = (string)expr.Arguments[1].EvaluateExpression()!;
-						var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type);
+						var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type, DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 						var memberInfo = entityDescriptor[memberName]?.MemberInfo;
 						if (memberInfo == null)

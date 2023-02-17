@@ -24,7 +24,7 @@ namespace LinqToDB.Linq
 				Type                           type)
 			{
 				var fieldDic = new Dictionary<SqlField, ParameterAccessor>();
-				var sqlTable = new SqlTable(dataContext.MappingSchema, type);
+				var sqlTable = new SqlTable(descriptor);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
 				{
@@ -156,7 +156,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type             = GetType<T>(obj!, dataContext);
-				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				var cacheDisabled =
 					dataContext.Options.LinqOptions.DisableQueryCache                       ||
@@ -203,7 +203,7 @@ namespace LinqToDB.Linq
 					return 0;
 
 				var type             = GetType<T>(obj!, dataContext);
-				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type);
+				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				var cacheDisabled =
 					dataContext.Options.LinqOptions.DisableQueryCache                       ||

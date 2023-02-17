@@ -40,8 +40,8 @@ namespace LinqToDB.Linq.Builder
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
-				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				SqlTable         = new SqlTable(EntityDescriptor);
 
 				if (!buildInfo.IsTest)
 					SelectQuery.From.Table(SqlTable);
@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
@@ -98,12 +98,12 @@ namespace LinqToDB.Linq.Builder
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
-				SqlTable         = new SqlTable(builder.MappingSchema, ObjectType);
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType);
+				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				SqlTable         = new SqlTable(EntityDescriptor);
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable((context: this, builder), builder.DataContext.CreateSqlProvider(), Builder.MappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSql(context.context, a));
+				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), Builder.MappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSql(context.context, a));
 
 				Init(true);
 			}
@@ -112,7 +112,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				for (var type = OriginalType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 				{
-					var mapping = Builder.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
+					var mapping = Builder.MappingSchema.GetEntityDescriptor(type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping;
 
 					if (mapping.Count > 0)
 						return type;
@@ -417,7 +417,7 @@ namespace LinqToDB.Linq.Builder
 
 								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
 									foreach (var mapping in InheritanceMapping)
-										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type).Columns)
+										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
 

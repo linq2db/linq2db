@@ -108,11 +108,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -139,11 +140,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+			
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -172,11 +174,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -207,11 +210,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -273,11 +277,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -308,11 +313,12 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
+				using var db = CreateDataContext(configuration);
+
+				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
@@ -443,13 +449,14 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
-				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, r)).ToArray();
+				using var db = CreateDataContext(configuration);
+
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				db.BeginTransaction();
@@ -479,13 +486,14 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, queryData);
-				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, r)).ToArray();
+				using var db = CreateDataContext(configuration);
+
+				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
+				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
 
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-				using var db = CreateDataContext(configuration);
 				using var _  = db.DataProvider.ExecuteScope(db);
 
 				await db.BeginTransactionAsync(cancellationToken)

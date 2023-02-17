@@ -23,12 +23,12 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="mappingSchema">Mapping schema, associated with descriptor.</param>
 		/// <param name="type">Mapping class type.</param>
-		public EntityDescriptor(MappingSchema mappingSchema, Type type)
+		public EntityDescriptor(MappingSchema mappingSchema, Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
 		{
 			MappingSchema = mappingSchema;
 			TypeAccessor  = TypeAccessor.GetAccessor(type);
 
-			Init();
+			Init(onEntityDescriptorCreated);
 		}
 
 		internal MappingSchema MappingSchema { get; }
@@ -136,6 +136,11 @@ namespace LinqToDB.Mapping
 		public IReadOnlyList<InheritanceMapping> InheritanceMapping => _inheritanceMappings;
 
 		/// <summary>
+		/// For entity descriptor with inheritance mapping gets descriptor of root (base) entity.
+		/// </summary>
+		public EntityDescriptor? InheritanceRoot { get; private set; }
+
+		/// <summary>
 		/// Gets mapping class type.
 		/// </summary>
 		public Type ObjectType => TypeAccessor.Type;
@@ -152,7 +157,7 @@ namespace LinqToDB.Mapping
 			return TypeAccessor.Type.BaseType != null && MappingSchema.HasAttribute<InheritanceMappingAttribute>(TypeAccessor.Type.BaseType);
 		}
 
-		void Init()
+		void Init(Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
 		{
 			var hasInheritanceMapping = HasInheritanceMapping();
 			var ta = MappingSchema.GetAttribute<TableAttribute>(TypeAccessor.Type);
@@ -211,6 +216,8 @@ namespace LinqToDB.Mapping
 						aa.QueryExpressionMethod, 
 						aa.QueryExpression,
 						aa.Storage,
+						aa.AssociationSetterExpressionMethod,
+						aa.AssociationSetterExpression,
 						aa.ConfiguredCanBeNull,
 						aa.AliasName));
 					continue;
@@ -280,7 +287,7 @@ namespace LinqToDB.Mapping
 			SkipModificationFlags = Columns.Aggregate(SkipModification.None, (s, c) => s | c.SkipModificationFlags);
 
 			if (!hasInheritanceMapping)
-				InitInheritanceMapping();
+				InitInheritanceMapping(onEntityDescriptorCreated);
 		}
 
 		void SetColumn(ColumnAttribute attr, bool hasInheritanceMapping)
@@ -333,7 +340,7 @@ namespace LinqToDB.Mapping
 			}
 		}
 
-		void InitInheritanceMapping()
+		void InitInheritanceMapping(Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated)
 		{
 			var mappingAttrs = MappingSchema.GetAttributes<InheritanceMappingAttribute>(ObjectType);
 
@@ -341,6 +348,7 @@ namespace LinqToDB.Mapping
 				return;
 
 			_inheritanceMappings = new InheritanceMapping[mappingAttrs.Length];
+			InheritanceRoot      = this;
 
 			for (var i = 0; i < mappingAttrs.Length; i++)
 			{
@@ -366,7 +374,10 @@ namespace LinqToDB.Mapping
 				if (m.Type == ObjectType)
 					continue;
 
-				foreach (var cd in MappingSchema.GetEntityDescriptor(m.Type).Columns)
+				var ed = MappingSchema.GetEntityDescriptor(m.Type, onEntityDescriptorCreated);
+				ed.InheritanceRoot = this;
+
+				foreach (var cd in ed.Columns)
 					if (allColumnMemberNames.Add(cd.MemberName))
 						AddColumn(cd);
 			}

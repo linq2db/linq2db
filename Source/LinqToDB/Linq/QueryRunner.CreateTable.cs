@@ -21,7 +21,7 @@
 				DefaultNullable   defaultNullable,
 				TableOptions      tableOptions)
 			{
-				var sqlTable    = new SqlTable<T>(tableDescriptor?.MappingSchema ?? dataContext.MappingSchema);
+				var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor) : SqlTable.Create<T>(dataContext);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
@@ -72,7 +72,7 @@
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
-				var sqlTable    = new SqlTable<T>(tableDescriptor?.MappingSchema ?? dataContext.MappingSchema);
+				var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor) : SqlTable.Create<T>(dataContext);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)

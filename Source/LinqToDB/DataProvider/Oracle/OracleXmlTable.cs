@@ -76,9 +76,9 @@ namespace LinqToDB.DataProvider.Oracle
 				return sb.Value.AppendLine("</t>").ToString();
 			}
 
-			internal static Func<object,string> GetXmlConverter(MappingSchema mappingSchema, SqlTable sqlTable)
+			internal static Func<object,string> GetXmlConverter(DataOptions options, MappingSchema mappingSchema, SqlTable sqlTable)
 			{
-				var ed  = mappingSchema.GetEntityDescriptor(sqlTable.ObjectType);
+				var ed  = mappingSchema.GetEntityDescriptor(sqlTable.ObjectType, options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				var converters = new Action<StringBuilder,object>[ed.Columns.Count];
 				for (var i = 0; i < ed.Columns.Count; i++)
@@ -110,11 +110,11 @@ namespace LinqToDB.DataProvider.Oracle
 				return o => ValueConverter(converters, o);
 			}
 
-			public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var exp = methodCall.Arguments[1];
 				var arg = converter(context, exp, null);
-				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType);
+				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType, options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (arg is SqlParameter p)
 				{
@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.Oracle
 						if (constExpr.Value is Func<string>)
 							p.ValueConverter = static l => ((Func<string>)l!)();
 						else
-							p.ValueConverter = GetXmlConverter(mappingSchema, table)!;
+							p.ValueConverter = GetXmlConverter(options, mappingSchema, table)!;
 					}
 					else if (exp is LambdaExpression)
 					{
@@ -164,15 +164,15 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-		public static string GetXmlData<T>(MappingSchema mappingSchema, IEnumerable<T> data)
+		public static string GetXmlData<T>(DataOptions options, MappingSchema mappingSchema, IEnumerable<T> data)
 		{
-			var sqlTable = new SqlTable(mappingSchema, typeof(T));
-			return GetXmlData(mappingSchema, sqlTable, data);
+			var sqlTable = new SqlTable(mappingSchema.GetEntityDescriptor(typeof(T), options.ConnectionOptions.OnEntityDescriptorCreated));
+			return GetXmlData(options, mappingSchema, sqlTable, data);
 		}
 
-		static string GetXmlData<T>(MappingSchema mappingSchema, SqlTable sqlTable, IEnumerable<T> data)
+		static string GetXmlData<T>(DataOptions options, MappingSchema mappingSchema, SqlTable sqlTable, IEnumerable<T> data)
 		{
-			var converter  = OracleXmlTableAttribute.GetXmlConverter(mappingSchema, sqlTable);
+			var converter  = OracleXmlTableAttribute.GetXmlConverter(options, mappingSchema, sqlTable);
 			return converter(data);
 		}
 

@@ -656,6 +656,52 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class ParentContainer
+		{
+			public Parent? Value;
+
+			public void SetValue(Parent? value)
+			{
+				Value = value;
+			}
+		}
+
+		[Table("Child")]
+		[UsedImplicitly]
+		sealed class AssociationSetterExpressionTestClass
+		{
+			[Column] public int ParentID;
+			[Column] public int ChildID;
+
+			ParentContainer _parent = new ParentContainer();
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false, Storage = "_parent", AssociationSetterExpressionMethod = nameof(SetParentValue))]
+			public Parent? Parent
+			{
+				get => _parent.Value;
+				set => throw new InvalidOperationException();
+			}
+
+			[Association(ThisKey = "Parent2ID", OtherKey = "ParentID", CanBeNull = false)]
+			public Parent? Parent2 { get; set; }
+
+			public static Expression<Action<ParentContainer, Parent>> SetParentValue()
+			{
+				return static (ParentContainer container, Parent value) => container.SetValue(value);
+			}
+		}
+
+		[Test]
+		public void AssociationSetterExpressionTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var value = db.GetTable<AssociationSetterExpressionTestClass>().LoadWith(x => x.Parent).First();
+
+				Assert.That(value.Parent, Is.Not.Null);
+			}
+		}
+
 		[Test]
 		public void TestGenericAssociation1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{

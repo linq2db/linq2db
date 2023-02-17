@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					for (var type = toType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 					{
-						var mapping = builder.MappingSchema.GetEntityDescriptor(type).InheritanceMapping;
+						var mapping = builder.MappingSchema.GetEntityDescriptor(type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping;
 
 						if (mapping.Count > 0)
 						{
@@ -69,8 +69,8 @@ namespace LinqToDB.Linq.Builder
 
 		static ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
 		{
-			var table          = new SqlTable(builder.MappingSchema, fromType);
-			var mapper         = builder.MappingSchema.GetEntityDescriptor(fromType);
+			var mapper         = builder.MappingSchema.GetEntityDescriptor(fromType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			var table          = new SqlTable(mapper);
 			var discriminators = mapper.InheritanceMapping;
 
 			return builder.MakeIsPredicate((context, table), context, discriminators, toType,

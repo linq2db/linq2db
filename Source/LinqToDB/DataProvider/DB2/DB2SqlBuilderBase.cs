@@ -360,6 +360,15 @@ END");
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
+			var table = createTable.Table;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
+					? "ON COMMIT DELETE ROWS"
+					: "ON COMMIT PRESERVE ROWS");
+			}
+
 			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
 				Indent--;

@@ -168,7 +168,9 @@ namespace LinqToDB.Linq.Builder
 					insertStatement.Output = new SqlOutputClause();
 					insertContext.OutputExpression = outputExpression;
 
-					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable ? SqlTable.Inserted(outputExpression.Parameters[0].Type) : null;
+					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable 
+                        ? SqlTable.Inserted(builder.MappingSchema.GetEntityDescriptor(outputExpression.Parameters[0].Type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
+                        : null;
 
 					if (insertedTable == null && insertContext.Into != null)
 					{

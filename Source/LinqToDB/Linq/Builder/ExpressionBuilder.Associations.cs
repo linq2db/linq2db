@@ -90,6 +90,8 @@ namespace LinqToDB.Linq.Builder
 						attribute.QueryExpressionMethod,
 						attribute.QueryExpression,
 						attribute.Storage,
+						attribute.AssociationSetterExpressionMethod,
+						attribute.AssociationSetterExpression,
 						attribute.CanBeNull,
 						attribute.AliasName
 					);

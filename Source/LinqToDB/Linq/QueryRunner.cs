@@ -336,7 +336,7 @@ namespace LinqToDB.Linq
 		static Type GetType<T>(T obj, IDataContext db)
 			//=> typeof(T);
 			//=> obj.GetType();
-			=> db.MappingSchema.GetEntityDescriptor(typeof(T)).InheritanceMapping?.Count > 0 ? obj!.GetType() : typeof(T);
+			=> db.MappingSchema.GetEntityDescriptor(typeof(T), db.Options.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping?.Count > 0 ? obj!.GetType() : typeof(T);
 
 		#endregion
 

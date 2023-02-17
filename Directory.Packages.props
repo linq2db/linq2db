@@ -43,7 +43,7 @@
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="6.0.0.300"     />
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="2.2.9"         />
 		<PackageVersion Include="Npgsql"                                                Version="7.0.1"         />
-		<PackageVersion Include="ClickHouse.Client"                                     Version="6.3.0"         />
+		<PackageVersion Include="ClickHouse.Client"                                     Version="6.4.0"         />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="7.0.2"         />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.1000.6"    />
 		<!--tests support-->
@@ -62,20 +62,18 @@
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.0.4"         />
 		<PackageVersion Include="NodaTime"                                              Version="3.1.6"         />
 		<PackageVersion Include="Humanizer.Core"                                        Version="2.14.1"        />
-		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.2.24"        />
+		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.2.25"        />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"         />
 		<!--
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"         />
 		-->
 		<!--remote targets + remote examples targets-->
 		<!--source-->
-		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.179"       />
 		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.51.0"        />
 		<!--examples-->
 		<PackageVersion Include="linq2db.t4models"                                      Version="4.3.0"         />
 		<!--tests-->
 		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="7.0.0"         />
-		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.0.179"       />
 		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.2"        />
 	</ItemGroup>
 	
@@ -94,6 +92,8 @@
 		<PackageVersion Include="System.Data.OleDb"                                     Version="6.0.0"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="6.0.0"         />
 		<PackageVersion Include="System.Text.Json"                                      Version="6.0.7"         />
+		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.179"       />
+		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.0.179"       />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
@@ -121,6 +121,11 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<PackageVersion Include="MySqlConnector"                                        Version="2.2.5"         />
+	</ItemGroup>
+	
+	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
+		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"         />
+		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.1.1"         />
 	</ItemGroup>
 
 </Project>
