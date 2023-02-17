@@ -88,5 +88,11 @@ namespace LinqToDB.Linq.Builder
 			return (flags & ProjectFlags.Expand) != 0;
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsTraverse(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.Traverse) != 0;
+		}
+
 	}
 }

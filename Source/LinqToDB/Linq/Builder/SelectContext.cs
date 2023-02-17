@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand) || flags.HasFlag(ProjectFlags.Table))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand) || flags.HasFlag(ProjectFlags.Table) || flags.HasFlag(ProjectFlags.Traverse))
 				{
 					if (Body is ContextRefExpression bodyRef)
 					{
@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (!flags.HasFlag(ProjectFlags.Table))
 					{
-						if (flags.HasFlag(ProjectFlags.Root) &&
+						if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.Traverse) &&
 						    !(result is ContextRefExpression || result is MemberExpression ||
 						      result is MethodCallExpression))
 						{

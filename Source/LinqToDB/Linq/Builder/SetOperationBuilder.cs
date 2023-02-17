@@ -140,6 +140,100 @@ namespace LinqToDB.Linq.Builder
 			readonly Dictionary<Expression, SqlPlaceholderExpression> _createdSQL = new(ExpressionEqualityComparer.Instance);
 			readonly Dictionary<Expression, Expression> _generatedExpressions = new(ExpressionEqualityComparer.Instance);
 
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this) &&
+				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
+				{
+					return path;
+				}
+
+				if (flags.IsRoot() || flags.IsExpand() || flags.IsTraverse())
+					return path;
+
+				if (_createdSQL.TryGetValue(path, out var foundPlaceholder))
+					return foundPlaceholder;
+
+				if (flags.IsExpression() && _generatedExpressions.TryGetValue(path, out var alreadyGenerated))
+					return alreadyGenerated;
+
+				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))
+				{
+					return _setIdPlaceholder!;
+				}
+
+				var expr1 = BuildProjectionExpression(path, _sequence1, flags);
+				var expr2 = BuildProjectionExpression(path, _sequence2, flags);
+
+				if (expr1 is SqlGenericConstructorExpression || expr2 is SqlGenericConstructorExpression)
+				{
+					return MatchConstructors(path, expr1, expr2, flags);
+				}
+
+				var path1 = SequenceHelper.ReplaceContext(path, this, _sequence1);
+				var path2 = SequenceHelper.ReplaceContext(path, this, _sequence2);
+
+				var convertFlags = flags;
+
+				var descriptor = Builder.SuggestColumnDescriptor(_sequence1, path1, flags);
+				descriptor ??= Builder.SuggestColumnDescriptor(_sequence2, path2, flags);
+
+				var sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags, columnDescriptor: descriptor);
+				var sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags, columnDescriptor: descriptor);
+
+				if (flags.IsExpression())
+				{
+					if (sql1.Find(1, (_, e) => e is SqlGenericConstructorExpression) != null ||
+						sql2.Find(1, (_, e) => e is SqlGenericConstructorExpression) != null)
+					{
+						return MatchConstructors(path, sql1, sql2, flags);
+					}
+				}
+
+				var placeholder1 = sql1 as SqlPlaceholderExpression;
+				var placeholder2 = sql2 as SqlPlaceholderExpression;
+
+				if (flags.IsTest())
+					return placeholder1 ?? placeholder2!;
+
+				convertFlags = convertFlags.SqlFlag();
+
+				if (convertFlags != flags)
+				{
+					// convert again
+
+					descriptor =   Builder.SuggestColumnDescriptor(_sequence1, path1, convertFlags);
+					descriptor ??= Builder.SuggestColumnDescriptor(_sequence2, path2, convertFlags);
+
+					sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags, columnDescriptor: descriptor);
+					sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags, columnDescriptor: descriptor);
+				}
+
+				placeholder1 = sql1 as SqlPlaceholderExpression;
+				placeholder2 = sql2 as SqlPlaceholderExpression;
+
+				if (placeholder1 == null || ((SqlColumn)placeholder1.Sql).Expression.IsNullValue() && placeholder2 != null)
+				{
+					placeholder1 = ExpressionBuilder.CreatePlaceholder(_sequence1, new SqlValue(QueryHelper.GetDbDataType(placeholder2.Sql), null), path1);
+				}
+				else if (placeholder2 == null || ((SqlColumn)placeholder2.Sql).Expression.IsNullValue() && placeholder1 != null)
+				{
+					placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2.SubQuery, new SqlValue(QueryHelper.GetDbDataType(placeholder1.Sql), null), path2);
+				}
+
+				placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
+				placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
+
+				var alias   = GenerateColumnAlias(path1);
+				var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
+				var column2 = Builder.MakeColumn(SelectQuery, placeholder2.WithAlias(alias), true);
+
+				var resultPlaceholder = column1.WithPath(path);
+
+				_createdSQL.Add(path, resultPlaceholder);
+
+				return resultPlaceholder;
+			}
 
 			static string? GenerateColumnAlias(Expression expr)
 			{
@@ -240,12 +334,37 @@ namespace LinqToDB.Linq.Builder
 				return BuildProjectionExpression(thisRef, context, projectFlags);
 			}
 
+
+			Expression ExpandExpression(SubQueryContext context, Expression expression)
+			{
+				var prev = expression;
+				do
+				{
+					var expanded = prev.Transform(e =>
+					{
+						var newExpr = Builder.MakeExpression(context, e, ProjectFlags.Expand);
+						if (ExpressionEqualityComparer.Instance.Equals(newExpr, e))
+							return e;
+						return newExpr;
+					});
+
+					if (ReferenceEquals(prev, expanded))
+						break;
+
+					prev = expanded;
+
+				} while (true);
+
+				return prev;
+			}
+
 			Expression BuildProjectionExpression(Expression path, SubQueryContext context, ProjectFlags projectFlags)
 			{
 				var correctedPath = SequenceHelper.ReplaceContext(path, this, context);
 
-				var projectionExpression = Builder.ConvertToSqlExpr(context, correctedPath, projectFlags);
-				projectionExpression = Builder.BuildSqlExpression(context, projectionExpression, projectFlags);
+				var projectionExpression = Builder.ConvertToSqlExpr(context.SubQuery, correctedPath, projectFlags);
+
+				projectionExpression = Builder.BuildSqlExpression(context.SubQuery, projectionExpression, projectFlags);
 
 				var remapped = SequenceHelper.RemapToNewPath(this, projectionExpression, path, projectFlags);
 
@@ -600,101 +719,6 @@ namespace LinqToDB.Linq.Builder
 					_generatedExpressions[path] = resultExpr;
 
 				return resultExpr;
-			}
-
-			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-			{
-				if (SequenceHelper.IsSameContext(path, this) &&
-				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
-				{
-					return path;
-				}
-
-				if (flags.HasFlag(ProjectFlags.Root) || flags.IsExpand())
-					return path;
-
-				if (_createdSQL.TryGetValue(path, out var foundPlaceholder))
-					return foundPlaceholder;
-
-				if (flags.IsExpression() && _generatedExpressions.TryGetValue(path, out var alreadyGenerated))
-					return alreadyGenerated;
-
-				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))
-				{
-					return _setIdPlaceholder!;
-				}
-
-				var expr1 = BuildProjectionExpression(path, _sequence1, flags);
-				var expr2 = BuildProjectionExpression(path, _sequence2, flags);
-
-				if (expr1 is SqlGenericConstructorExpression || expr2 is SqlGenericConstructorExpression)
-				{
-					return MatchConstructors(path, expr1, expr2, flags);
-				}
-
-				var path1 = SequenceHelper.ReplaceContext(path, this, _sequence1);
-				var path2 = SequenceHelper.ReplaceContext(path, this, _sequence2);
-
-				var convertFlags = flags;
-
-				var descriptor = Builder.SuggestColumnDescriptor(_sequence1, path1, flags);
-				descriptor ??= Builder.SuggestColumnDescriptor(_sequence2, path2, flags);
-
-				var sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags, columnDescriptor: descriptor);
-				var sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags, columnDescriptor: descriptor);
-
-				if (flags.IsExpression())
-				{
-					if (sql1.Find(1, (_, e) => e is SqlGenericConstructorExpression) != null ||
-						sql2.Find(1, (_, e) => e is SqlGenericConstructorExpression) != null)
-					{
-						return MatchConstructors(path, sql1, sql2, flags);
-					}
-				}
-
-				var placeholder1 = sql1 as SqlPlaceholderExpression;
-				var placeholder2 = sql2 as SqlPlaceholderExpression;
-
-				if (flags.IsTest())
-					return placeholder1 ?? placeholder2!;
-
-				convertFlags = convertFlags.SqlFlag();
-
-				if (convertFlags != flags)
-				{
-					// convert again
-
-					descriptor =   Builder.SuggestColumnDescriptor(_sequence1, path1, convertFlags);
-					descriptor ??= Builder.SuggestColumnDescriptor(_sequence2, path2, convertFlags);
-
-					sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags, columnDescriptor: descriptor);
-					sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags, columnDescriptor: descriptor);
-				}
-
-				placeholder1 = sql1 as SqlPlaceholderExpression;
-				placeholder2 = sql2 as SqlPlaceholderExpression;
-
-				if (placeholder1 == null || ((SqlColumn)placeholder1.Sql).Expression.IsNullValue() && placeholder2 != null)
-				{
-					placeholder1 = ExpressionBuilder.CreatePlaceholder(_sequence1, new SqlValue(QueryHelper.GetDbDataType(placeholder2.Sql), null), path1);
-				}
-				else if (placeholder2 == null || ((SqlColumn)placeholder2.Sql).Expression.IsNullValue() && placeholder1 != null)
-				{
-					placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2.SubQuery, new SqlValue(QueryHelper.GetDbDataType(placeholder1.Sql), null), path2);
-				}
-
-				placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
-				placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
-
-				var alias   = GenerateColumnAlias(path1);
-				var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
-				var column2 = Builder.MakeColumn(SelectQuery, placeholder2.WithAlias(alias), true);
-
-				var resultPlaceholder = column1.WithPath(path);
-
-				_createdSQL.Add(path, resultPlaceholder);
-
-				return resultPlaceholder;
 			}
 
 			Expression MakeConditionalExpression(Expression path, Expression expr1, Expression expr2, ProjectFlags flags)

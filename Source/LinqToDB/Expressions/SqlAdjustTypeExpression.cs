@@ -5,7 +5,7 @@ namespace LinqToDB.Expressions
 	using Linq.Builder;
 	using Mapping;
 
-	class SqlAdjustTypeExpression: Expression
+	class SqlAdjustTypeExpression: Expression, IEquatable<SqlAdjustTypeExpression>
 	{
 		readonly Type          _type;
 		public   Expression    Expression    { get; }
@@ -39,6 +39,59 @@ namespace LinqToDB.Expressions
 				return this;
 
 			return new SqlAdjustTypeExpression(expression, Type, MappingSchema);
+		}
+
+		public bool Equals(SqlAdjustTypeExpression? other)
+		{
+			if (ReferenceEquals(null, other))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, other))
+			{
+				return true;
+			}
+
+			return _type.Equals(other._type) && ExpressionEqualityComparer.Instance.Equals(Expression, other.Expression);
+		}
+
+		public override bool Equals(object? obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((SqlAdjustTypeExpression)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				return (_type.GetHashCode() * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(Expression);
+			}
+		}
+
+		public static bool operator ==(SqlAdjustTypeExpression? left, SqlAdjustTypeExpression? right)
+		{
+			return Equals(left, right);
+		}
+
+		public static bool operator !=(SqlAdjustTypeExpression? left, SqlAdjustTypeExpression? right)
+		{
+			return !Equals(left, right);
 		}
 
 		protected override Expression Accept(ExpressionVisitor visitor)

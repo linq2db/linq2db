@@ -841,6 +841,26 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ConcatDefaultIfEmpty([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 =
+				from p in db.Parent.LoadWith(p => p.Children)
+				where p.ParentID == 1
+				select p.Children.FirstOrDefault();
+
+			var query2 =
+				from p in db.Parent
+				where p.ParentID != 1
+				select (Child?)null;
+
+			var query = query1.Concat(query2);
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void UnionWithObjects([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

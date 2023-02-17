@@ -75,10 +75,14 @@ namespace LinqToDB.Linq.Builder
 			if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
 				return path;
 
-			var result = SequenceHelper.CorrectExpression(path, this, SubQuery);
-			result = Builder.MakeExpression(SubQuery, result, flags);
+			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
+
+			var result = Builder.MakeExpression(SubQuery, corrected, flags);
 
 			if (flags.HasFlag(ProjectFlags.Table))
+				return result;
+
+			if (flags.HasFlag(ProjectFlags.Traverse))
 				return result;
 
 			result = Builder.ConvertToSqlExpr(SubQuery, result, flags);

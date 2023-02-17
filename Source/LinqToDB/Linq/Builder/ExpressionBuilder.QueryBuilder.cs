@@ -658,18 +658,18 @@ namespace LinqToDB.Linq.Builder
 					return mc.Update(null, args);
 				}
 			}
-			else if (expr is ContextRefExpression { BuildContext: ScopeContext sc })
-			{
-				return CorrectRoot(sc.Context, new ContextRefExpression(expr.Type, sc.Context));
-			}
 			else if (expr is ContextRefExpression { BuildContext: DefaultIfEmptyBuilder.DefaultIfEmptyContext di })
 			{
 				return CorrectRoot(di.Sequence, new ContextRefExpression(expr.Type, di.Sequence));
 			}
-			else
-				expr = MakeExpression(currentContext, expr, ProjectFlags.Root);
 
-			return expr;
+			var newExpr = MakeExpression(currentContext, expr, ProjectFlags.Traverse);
+			if (!ExpressionEqualityComparer.Instance.Equals(newExpr, expr))
+			{
+				newExpr = CorrectRoot(currentContext, newExpr);
+			}
+
+			return newExpr;
 		}
 
 		public ContextRefExpression? GetRootContext(IBuildContext? currentContext, Expression? expression, bool isAggregation)
@@ -685,7 +685,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				expression = GetRootContext(currentContext, mc.Arguments[0], isAggregation);
 			}
-			else 
+			else if (expression is ContextRefExpression)
 			{
 				expression = MakeExpression(currentContext, expression, isAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
 			}
@@ -693,20 +693,22 @@ namespace LinqToDB.Linq.Builder
 			return expression as ContextRefExpression;
 		}
 
-		List<SubQueryContextInfo>? _buildContextCache;
+		Dictionary<Expression, SubQueryContextInfo>? _buildContextCache;
+		Dictionary<Expression, SubQueryContextInfo>? _testbuildContextCache;
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext context, Expression expr, bool isTest)
 		{
 			var testExpression = CorrectRoot(context, expr);
 
-			_buildContextCache ??= new List<SubQueryContextInfo>();
+			if (_buildContextCache?.TryGetValue(testExpression, out var item) == true)
+				return item;
 
-			foreach (var item in _buildContextCache)
+			if (isTest)
 			{
-				if (testExpression.EqualsTo(item.SequenceExpression, OptimizationContext.GetSimpleEqualsToContext(false)))
-					return item;
+				if (_testbuildContextCache?.TryGetValue(testExpression, out var testItem) == true)
+					return testItem;
 			}
-
+			
 			var rootQuery = GetRootContext(context, testExpression, false);
 			rootQuery ??= GetRootContext(context, expr, false);
 
@@ -728,9 +730,15 @@ namespace LinqToDB.Linq.Builder
 
 			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx };
 
-			if (!isTest)
+			if (isTest)
 			{
-				_buildContextCache.Add(info);
+				_testbuildContextCache ??= new(ExpressionEqualityComparer.Instance);
+				_testbuildContextCache[testExpression] = info;
+			}
+			else
+			{
+				_buildContextCache ??= new(ExpressionEqualityComparer.Instance);
+				_buildContextCache[testExpression] = info;
 			}
 
 			return info;
@@ -738,6 +746,9 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, bool isTest)
 		{
+			if (expr is ContextConstructionExpression or SqlGenericConstructorExpression or ConstantExpression)
+				return null;
+
 			var unwrapped = expr.Unwrap();
 			var info = GetSubQueryContext(context, unwrapped, isTest);
 

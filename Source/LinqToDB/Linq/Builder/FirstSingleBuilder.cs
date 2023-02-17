@@ -118,18 +118,19 @@ namespace LinqToDB.Linq.Builder
 				isOuter  = true;
 			}
 
-			return new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, isOuter);
+			return new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, isOuter, buildInfo.IsTest);
 		}
 
 		public sealed class FirstSingleContext : SequenceContextBase
 		{
-			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodKind methodKind, bool isSubQuery, bool isAssociation, bool isOuter)
+			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodKind methodKind, bool isSubQuery, bool isAssociation, bool isOuter, bool isTest)
 				: base(parent, sequence, null)
 			{
 				_methodKind   = methodKind;
 				IsSubQuery    = isSubQuery;
 				IsAssociation = isAssociation;
 				IsOuter       = isOuter;
+				IsTest        = isTest;
 			}
 
 			readonly MethodKind _methodKind;
@@ -137,6 +138,7 @@ namespace LinqToDB.Linq.Builder
 			public bool IsSubQuery    { get; }
 			public bool IsAssociation { get; }
 			public bool IsOuter       { get; }
+			public bool IsTest        { get; }
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
@@ -199,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// sequence created in test mode and there can be no tables.
 				//
-				if (Parent!.SelectQuery.From.Tables.Count == 0)
+				if (IsTest || Parent!.SelectQuery.From.Tables.Count == 0)
 					return;
 
 				if (!_isJoinCreated)
@@ -297,7 +299,7 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new FirstSingleContext(null, context.CloneContext(Sequence),
-					_methodKind, IsSubQuery, IsAssociation, IsOuter)
+					_methodKind, IsSubQuery, IsAssociation, IsOuter, false)
 				{
 					_isJoinCreated = _isJoinCreated
 				};

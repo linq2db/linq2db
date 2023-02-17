@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 			if (!IsSequence(testInfo))
 				return null;
 			
-			var info = new BuildInfo(context, inScopeExpr, new SelectQuery {ParentSelect = context.SelectQuery})
+			var info = new BuildInfo(context, inScopeExpr, new SelectQuery {ParentSelect = context.SelectQuery })
 			{
 				CreateSubQuery = true,
 				IsTest         = isTest
@@ -3929,7 +3929,7 @@ namespace LinqToDB.Linq.Builder
 
 				var root = MakeExpression(currentContext, memberExpression.Expression, flags.RootFlag());
 
-				if (!flags.IsRoot() && root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
+				if (root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
 				{
 					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags.IsTest());
 					if (subqueryExpression != null)
@@ -3946,7 +3946,7 @@ namespace LinqToDB.Linq.Builder
 
 				path = newPath;
 
-				if (IsAssociation(newPath))
+				if (!flags.IsTraverse() && IsAssociation(newPath))
 				{
 					if (root is ContextRefExpression contextRef)
 					{
