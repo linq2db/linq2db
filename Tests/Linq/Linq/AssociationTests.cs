@@ -723,7 +723,7 @@ namespace Tests.Linq
 
 		[Table("Parent")]
 		[UsedImplicitly]
-		sealed class ListAssociationSetterExpressionTestClass
+		sealed class Issue3975TestClass
 		{
 			[Column] public int ParentID;
 
@@ -743,7 +743,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ListAssociationSetterExpressionTest([DataSources] string context)
+		public void Issue3975Test([DataSources] string context)
 		{				
 			using (var db = GetDataContext(context))
 			{
@@ -754,9 +754,9 @@ namespace Tests.Linq
 					db.MappingSchema.ChangeType(new List<Child>(0), typeof(ChildrenContainer<Child>)),
 					"List<Child> should not be convertible to ChildrenContainer<Child>");
 
-				var value = db.GetTable<ListAssociationSetterExpressionTestClass>().LoadWith(x => x.Children).First();
+				var value = db.GetTable<Issue3975TestClass>().LoadWith(x => x.Children).First();
 
-				Assert.That(value.Children, Is.Not.Null);
+				Assert.That(value.Children.Value, Is.Not.Null);
 			}
 		}
 		
