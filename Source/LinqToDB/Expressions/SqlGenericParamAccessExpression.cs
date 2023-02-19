@@ -42,7 +42,7 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			return Constructor.Equals(other.Constructor) && ParamIndex == other.ParamIndex && ParamType.Equals(other.ParamType);
+			return ExpressionEqualityComparer.Instance.Equals(Constructor, other.Constructor) && ParamIndex == other.ParamIndex && ParamType.Equals(other.ParamType);
 		}
 
 		public override bool Equals(object? obj)
@@ -69,7 +69,7 @@ namespace LinqToDB.Expressions
 		{
 			unchecked
 			{
-				var hashCode = Constructor.GetHashCode();
+				var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(Constructor);
 				hashCode = (hashCode * 397) ^ ParamIndex;
 				hashCode = (hashCode * 397) ^ ParamType.GetHashCode();
 				return hashCode;
