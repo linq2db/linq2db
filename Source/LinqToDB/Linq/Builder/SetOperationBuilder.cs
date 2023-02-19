@@ -212,14 +212,17 @@ namespace LinqToDB.Linq.Builder
 				placeholder1 = sql1 as SqlPlaceholderExpression;
 				placeholder2 = sql2 as SqlPlaceholderExpression;
 
-				if (placeholder1 == null || ((SqlColumn)placeholder1.Sql).Expression.IsNullValue() && placeholder2 != null)
+				if ((placeholder1 == null || ((SqlColumn)placeholder1.Sql).Expression.IsNullValue()) && placeholder2 != null)
 				{
 					placeholder1 = ExpressionBuilder.CreatePlaceholder(_sequence1, new SqlValue(QueryHelper.GetDbDataType(placeholder2.Sql), null), path1);
 				}
-				else if (placeholder2 == null || ((SqlColumn)placeholder2.Sql).Expression.IsNullValue() && placeholder1 != null)
+				else if ((placeholder2 == null || ((SqlColumn)placeholder2.Sql).Expression.IsNullValue()) && placeholder1 != null)
 				{
 					placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2.SubQuery, new SqlValue(QueryHelper.GetDbDataType(placeholder1.Sql), null), path2);
 				}
+
+				if (placeholder1 is null || placeholder2 is null)
+					return path;
 
 				placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
 				placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
@@ -358,11 +361,27 @@ namespace LinqToDB.Linq.Builder
 				return prev;
 			}
 
+			Expression EnsureGenericConstructor(Expression expression)
+			{
+				var transformed = expression.Transform(e =>
+				{
+					var newExpr = SqlGenericConstructorExpression.Parse(e);
+					if (newExpr != e)
+						return new TransformInfo(newExpr, false, true);
+
+					return new TransformInfo(e);
+				});
+
+				return transformed;
+			}
+
 			Expression BuildProjectionExpression(Expression path, SubQueryContext context, ProjectFlags projectFlags)
 			{
 				var correctedPath = SequenceHelper.ReplaceContext(path, this, context);
 
 				var projectionExpression = Builder.ConvertToSqlExpr(context.SubQuery, correctedPath, projectFlags);
+
+				projectionExpression = EnsureGenericConstructor(projectionExpression);
 
 				projectionExpression = Builder.BuildSqlExpression(context.SubQuery, projectionExpression, projectFlags);
 
@@ -509,9 +528,14 @@ namespace LinqToDB.Linq.Builder
 					if (e is MemberExpression me)
 					{
 						var current = e;
-						while (current is MemberExpression cm)
+						while (true)
 						{
-							current = cm.Expression;
+							if (current is MemberExpression cm)
+								current = cm.Expression;
+							else if (current is SqlGenericParamAccessExpression gp)
+								current = gp.Constructor;
+							else
+								break;
 						}
 
 						if (current is ContextRefExpression)
@@ -676,6 +700,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (flags.HasFlag(ProjectFlags.Expression))
 				{
+					if (_setOperation == SetOperation.Except || _setOperation == SetOperation.ExceptAll)
+						return expr1;
+
 					if (IsEqualProjections(expr1, expr2))
 						return expr1;
 

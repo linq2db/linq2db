@@ -203,12 +203,13 @@ namespace LinqToDB.Linq.Builder
 			if (expression == null)
 				return null;
 
-			if (toPath is not ContextRefExpression && toPath is not MemberExpression)
+			if (toPath is not ContextRefExpression && toPath is not MemberExpression && toPath is not SqlGenericParamAccessExpression)
 				return expression;
 
 			if (expression is SqlGenericConstructorExpression generic)
 			{
 				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
+				List<SqlGenericConstructorExpression.Parameter>? parameters = null;
 
 				var contextRef = toPath as ContextRefExpression;
 
@@ -242,9 +243,45 @@ namespace LinqToDB.Linq.Builder
 						assignments?.Add(assignment);
 				}
 
+				for (int i = 0; i < generic.Parameters.Count; i++)
+				{
+					var parameter = generic.Parameters[i];
+
+					var currentPath = toPath;
+					if (contextRef != null && parameter.MemberInfo.DeclaringType != null && !parameter.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
+					{
+						currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
+					}
+
+					var paramAccess = new SqlGenericParamAccessExpression(currentPath, i, parameter.ParamType);
+
+					var newExpression = RemapToNewPath(buildContext, parameter.Expression, paramAccess, flags);
+
+					if (!ReferenceEquals(parameter.Expression, newExpression))
+					{
+						if (parameters == null)
+						{
+							parameters = new();
+							for (int j = 0; j < i; j++)
+							{
+								parameters.Add(generic.Parameters[j]);
+							}
+						}
+
+						parameters.Add(parameter.WithExpression(newExpression));
+					}
+					else
+						parameters?.Add(parameter);
+				}
+
 				if (assignments != null)
 				{
 					generic = generic.ReplaceAssignments(assignments);
+				}
+
+				if (parameters != null)
+				{
+					generic = generic.ReplaceParameters(parameters);
 				}
 
 				generic = generic.WithConstructionRoot(toPath);

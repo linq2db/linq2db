@@ -3379,8 +3379,27 @@ namespace LinqToDB.Linq.Builder
 				{
 					member = me.Member;
 				}
-				else if (next is SqlGenericParamAccessExpression)
+				else if (next is SqlGenericParamAccessExpression paramAccess)
 				{
+					if (body.NodeType == ExpressionType.New)
+					{
+						var newExpr = (NewExpression)body;
+						if (paramAccess.ParamIndex < newExpr.Arguments.Count)
+						{
+							return Project(context, null, nextPath, nextIndex - 1, flags,
+								newExpr.Arguments[paramAccess.ParamIndex], strict);
+						}
+					}
+					else if (body.NodeType == ExpressionType.Call)
+					{
+						var methodCall = (MethodCallExpression)body;
+						if (paramAccess.ParamIndex < methodCall.Arguments.Count)
+						{
+							return Project(context, null, nextPath, nextIndex - 1, flags,
+								methodCall.Arguments[paramAccess.ParamIndex], strict);
+						}
+					}
+
 					// nothing to do right now
 				}
 				else
