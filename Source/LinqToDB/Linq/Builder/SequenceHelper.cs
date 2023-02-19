@@ -278,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					assignments = generic.Assignments.ToList();
+					assignments ??= generic.Assignments.ToList();
 
 					for (int i = 0; i < generic.Parameters.Count; i++)
 					{
