@@ -127,6 +127,15 @@ namespace LinqToDB.Expressions
 		}
 
 		/// <summary>
+		/// Enumerates the expression tree and returns the <paramref name="exprToFind"/> if it's
+		/// contained within the <paramref name="expr"/>.
+		/// </summary>
+		public static Expression? Find(this Expression? expr, Expression exprToFind, IEqualityComparer<Expression> comparer)
+		{
+			return expr.Find((exprToFind, comparer), static (ctx, e) => ctx.comparer.Equals(e, ctx.exprToFind));
+		}
+
+		/// <summary>
 		/// Enumerates the given <paramref name="expr"/> and returns the first sub-expression
 		/// which matches the given <paramref name="func"/>. If no expression was found, null is returned.
 		/// </summary>

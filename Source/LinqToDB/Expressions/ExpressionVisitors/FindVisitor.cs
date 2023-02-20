@@ -274,6 +274,11 @@ namespace LinqToDB.Expressions
 						return Find(adjustType.Expression);
 					}
 
+					if (expr is SqlGenericParamAccessExpression paramAccess)
+					{
+						return Find(paramAccess.Constructor);
+					}
+
 					if (expr.CanReduce)
 						return Find(expr.Reduce());
 

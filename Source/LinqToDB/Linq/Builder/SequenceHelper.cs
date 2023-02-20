@@ -5,6 +5,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using static LinqToDB.Linq.ReflectionHelper;
 
 	internal static class SequenceHelper
 	{
@@ -243,60 +244,35 @@ namespace LinqToDB.Linq.Builder
 						assignments?.Add(assignment);
 				}
 
-				if (generic.Parameters.Any(p => p.MemberInfo == null || generic.Assignments.Any(a => a.MemberInfo == p.MemberInfo)))
+				for (int i = 0; i < generic.Parameters.Count; i++)
 				{
-					for (int i = 0; i < generic.Parameters.Count; i++)
+					var parameter = generic.Parameters[i];
+
+					var currentPath = toPath;
+					if (contextRef != null && parameter.MemberInfo?.DeclaringType != null && !parameter.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
 					{
-						var parameter = generic.Parameters[i];
+						currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
+					}
 
-						var currentPath = toPath;
-						if (contextRef != null && parameter.MemberInfo?.DeclaringType != null && !parameter.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
+					var paramAccess = new SqlGenericParamAccessExpression(currentPath, parameter.ParameterInfo);
+
+					var newExpression = RemapToNewPath(buildContext, parameter.Expression, paramAccess, flags);
+
+					if (!ReferenceEquals(parameter.Expression, newExpression))
+					{
+						if (parameters == null)
 						{
-							currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
-						}
-
-						var paramAccess = new SqlGenericParamAccessExpression(currentPath, i, parameter.ParamType);
-
-						var newExpression = RemapToNewPath(buildContext, parameter.Expression, paramAccess, flags);
-
-						if (!ReferenceEquals(parameter.Expression, newExpression))
-						{
-							if (parameters == null)
+							parameters = new();
+							for (int j = 0; j < i; j++)
 							{
-								parameters = new();
-								for (int j = 0; j < i; j++)
-								{
-									parameters.Add(generic.Parameters[j]);
-								}
+								parameters.Add(generic.Parameters[j]);
 							}
-
-							parameters.Add(parameter.WithExpression(newExpression));
-						}
-						else
-							parameters?.Add(parameter);
-					}
-				}
-				else
-				{
-					assignments ??= generic.Assignments.ToList();
-
-					for (int i = 0; i < generic.Parameters.Count; i++)
-					{
-						var parameter = generic.Parameters[i];
-
-						var currentPath = toPath;
-						if (contextRef != null && parameter.MemberInfo?.DeclaringType != null && !parameter.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
-						{
-							currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
 						}
 
-						var paramAccess = Expression.MakeMemberAccess(currentPath, parameter.MemberInfo!);
-
-						var newExpression = RemapToNewPath(buildContext, parameter.Expression, paramAccess, flags);
-
-						var assignment = new SqlGenericConstructorExpression.Assignment(parameter.MemberInfo!, newExpression, false, false);
-						assignments.Add(assignment);
+						parameters.Add(parameter.WithExpression(newExpression));
 					}
+					else
+						parameters?.Add(parameter);
 				}
 
 				if (assignments != null)
@@ -373,6 +349,21 @@ namespace LinqToDB.Linq.Builder
 			{
 				var unary = (UnaryExpression)expression;
 				return unary.Update(RemapToNewPath(buildContext, unary.Operand, toPath, flags));
+			}
+
+			if (expression is MethodCallExpression mc)
+			{
+				return mc.Update(mc.Object, mc.Arguments.Select(a => RemapToNewPath(buildContext, a, toPath, flags)));
+			}
+
+			if (expression is SqlAdjustTypeExpression adjust)
+			{
+				return adjust.Update(RemapToNewPath(buildContext, adjust.Expression, toPath, flags));
+			}
+
+			if (expression is SqlEagerLoadExpression eager)
+			{
+				return eager;
 			}
 
 			if (flags.IsExpression())

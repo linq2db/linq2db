@@ -92,22 +92,23 @@ namespace LinqToDB.Expressions
 		{
 			public static ReadOnlyCollection<Parameter> EmptyCollection = new (new List<Parameter>());
 
-			public Parameter(Expression expression, Type paramType, MemberInfo? memberInfo)
+			public Parameter(Expression expression, ParameterInfo parameterInfo, MemberInfo? memberInfo)
 			{
-				MemberInfo = memberInfo;
-				Expression = expression;
-				ParamType  = paramType;
+				MemberInfo    = memberInfo;
+				Expression    = expression;
+				ParameterInfo = parameterInfo;
 			}
 
-			public MemberInfo? MemberInfo { get; }
-			public Expression  Expression { get; }
-			public Type        ParamType  { get; }
+			public MemberInfo?   MemberInfo    { get; }
+			public Expression    Expression    { get; }
+			public ParameterInfo ParameterInfo { get; }
+			public Type          ParameterType => ParameterInfo.ParameterType;
 
 			public Parameter WithExpression(Expression expression)
 			{
 				if (ReferenceEquals(expression, Expression))
 					return this;
-				return new Parameter(expression, ParamType, MemberInfo);
+				return new Parameter(expression, ParameterInfo, MemberInfo);
 			}
 
 			public override string ToString()
@@ -141,7 +142,7 @@ namespace LinqToDB.Expressions
 						return false;
 					}
 
-					return Equals(x.MemberInfo, y.MemberInfo) && x.ParamType.Equals(y.ParamType) &&
+					return Equals(x.MemberInfo, y.MemberInfo) && x.ParameterInfo.Equals(y.ParameterInfo) &&
 					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
 				}
 
@@ -151,7 +152,7 @@ namespace LinqToDB.Expressions
 					{
 						var hashCode = (obj.MemberInfo != null ? obj.MemberInfo.GetHashCode() : 0);
 						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = (hashCode * 397) ^ obj.ParamType.GetHashCode();
+						hashCode = (hashCode * 397) ^ obj.ParameterInfo.GetHashCode();
 						return hashCode;
 					}
 				}
@@ -289,7 +290,7 @@ namespace LinqToDB.Expressions
 			for (int i = 0; i < arguments.Count; i++)
 			{
 				var methodParameter = methodParameters[i];
-				parameters.Add(new Parameter(arguments[i], methodParameter.ParameterType,
+				parameters.Add(new Parameter(arguments[i], methodParameter,
 					FindMember(method.GetMemberType(), methodParameter)));
 			}
 

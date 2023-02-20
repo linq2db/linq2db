@@ -105,7 +105,8 @@ namespace LinqToDB.Linq.Builder
 
 				var noConvert = corrected.UnwrapConvert();
 
-				if (EntityType != noConvert.Type
+				if (SequenceHelper.IsSameContext(path, this) 
+				    && EntityType != noConvert.Type
 				    && noConvert is SqlGenericConstructorExpression { ConstructType: SqlGenericConstructorExpression.CreateType.Full })
 				{
 					corrected = Builder.BuildFullEntityExpression(Context, path, EntityType, flags);

@@ -3384,7 +3384,7 @@ namespace LinqToDB.Linq.Builder
 					if (body.NodeType == ExpressionType.New)
 					{
 						var newExpr = (NewExpression)body;
-						if (paramAccess.ParamIndex < newExpr.Arguments.Count)
+						if (newExpr.Constructor == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < newExpr.Arguments.Count)
 						{
 							return Project(context, null, nextPath, nextIndex - 1, flags,
 								newExpr.Arguments[paramAccess.ParamIndex], strict);
@@ -3393,7 +3393,7 @@ namespace LinqToDB.Linq.Builder
 					else if (body.NodeType == ExpressionType.Call)
 					{
 						var methodCall = (MethodCallExpression)body;
-						if (paramAccess.ParamIndex < methodCall.Arguments.Count)
+						if (methodCall.Method == paramAccess.ParameterInfo.Member && paramAccess.ParamIndex < methodCall.Arguments.Count)
 						{
 							return Project(context, null, nextPath, nextIndex - 1, flags,
 								methodCall.Arguments[paramAccess.ParamIndex], strict);
@@ -3540,7 +3540,7 @@ namespace LinqToDB.Linq.Builder
 							var newMember = body.Type.GetMemberEx(nextMember.Member);
 							if (newMember != null)
 							{
-								var newMemberAccess = Expression.MakeMemberAccess(nextMember.Expression, newMember);
+								var newMemberAccess = Expression.MakeMemberAccess(body, newMember);
 								return Project(context, path, nextPath, nextIndex - 1, flags, newMemberAccess, strict);
 							}
 						}

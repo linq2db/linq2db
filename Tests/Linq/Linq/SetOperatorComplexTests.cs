@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	[TestFixture]
-	public class SetOperatorLoadWithTests : TestBase
+	public class SetOperatorComplexTests : TestBase
 	{
 		class Author
 		{
@@ -180,13 +180,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcatEqualLoadWith([DataSources] string context)
+		public void ConcatInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
 			using var disposal = InitTestData(db);
 
 			var authorTable = db.GetTable<Author>();
-			var bookTable = db.GetTable<Book>();
 
 			var query1 = 
 				from a in authorTable.LoadWith(a => a.Books)
@@ -200,10 +199,97 @@ namespace Tests.Linq
 
 			var query = query1.Concat(query2);
 
-			var result = query.ToArray();
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ExceptInheritance([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 = 
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Roman>()
+				select (Book)b;
+
+			var query2 = 
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Novel>()
+				select b;
+
+			var query = query1.Except(query2);
 
 			AssertQuery(query);
 		}
-		
+
+		[Test]
+		public void IntersectInheritance([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 = 
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Roman>()
+				select new
+				{
+					b.Id,
+					b.BookName
+				};
+
+			var query2 = 
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Novel>()
+				select new
+				{
+					b.Id,
+					b.BookName
+				};
+
+			var query = query1.Intersect(query2);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConcatEager([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 = 
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Roman>()
+				select new
+				{
+					b.Id,
+					b.BookName,
+					Authors = b.Authors.ToList()
+				};
+
+			var query2 = 
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Novel>()
+				select new
+				{
+					b.Id,
+					b.BookName,
+					Authors = b.Authors.ToList()
+				};
+
+			var query = query1.Concat(query2);
+
+			var result = query.ToArray();
+
+			//AssertQuery(query);
+		}
+
 	}
 }

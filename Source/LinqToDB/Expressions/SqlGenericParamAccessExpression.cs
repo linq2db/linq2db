@@ -1,18 +1,19 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
 	public class SqlGenericParamAccessExpression : Expression, IEquatable<SqlGenericParamAccessExpression>
 	{
-		public Expression Constructor { get; }
-		public int        ParamIndex  { get; }
-		public Type       ParamType   { get; }
+		public Expression    Constructor   { get; }
+		public ParameterInfo ParameterInfo { get; }
+		public int           ParamIndex    => ParameterInfo.Position;
+		public Type          ParamType     => ParameterInfo.ParameterType;
 
-		public SqlGenericParamAccessExpression(Expression constructor, int paramIndex, Type paramType)
+		public SqlGenericParamAccessExpression(Expression constructor, ParameterInfo parameterInfo)
 		{
-			Constructor = constructor;
-			ParamIndex  = paramIndex;
-			ParamType   = paramType;
+			Constructor        = constructor;
+			ParameterInfo = parameterInfo;
 		}
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
@@ -22,7 +23,7 @@ namespace LinqToDB.Expressions
 		{
 			if (ReferenceEquals(Constructor, constructor))
 				return this;
-			return new SqlGenericParamAccessExpression(constructor, ParamIndex, ParamType);
+			return new SqlGenericParamAccessExpression(constructor, ParameterInfo);
 		}
 
 		public override string ToString()
@@ -42,7 +43,7 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			return ExpressionEqualityComparer.Instance.Equals(Constructor, other.Constructor) && ParamIndex == other.ParamIndex && ParamType.Equals(other.ParamType);
+			return ExpressionEqualityComparer.Instance.Equals(Constructor, other.Constructor) && ParameterInfo.Equals(other.ParameterInfo);
 		}
 
 		public override bool Equals(object? obj)
@@ -70,8 +71,7 @@ namespace LinqToDB.Expressions
 			unchecked
 			{
 				var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(Constructor);
-				hashCode = (hashCode * 397) ^ ParamIndex;
-				hashCode = (hashCode * 397) ^ ParamType.GetHashCode();
+				hashCode = (hashCode * 397) ^ ParameterInfo.GetHashCode();
 				return hashCode;
 			}
 		}

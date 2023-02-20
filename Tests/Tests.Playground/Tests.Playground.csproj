@@ -16,7 +16,7 @@
 		<Compile Include="..\Linq\Linq\MathFunctionTests.cs" Link="MathFunctionTests.cs" />
 		<Compile Include="..\Linq\Linq\QueryableAssociationTests.cs" Link="QueryableAssociationTests.cs" />
 		<Compile Include="..\Linq\Linq\SelectScalarTests.cs" Link="SelectScalarTests.cs" />
-		<Compile Include="..\Linq\Linq\SetOperatorLoadWithTests.cs" Link="SetOperatorLoadWithTests.cs" />
+		<Compile Include="..\Linq\Linq\SetOperatorComplexTests.cs" Link="SetOperatorComplexTests.cs" />
 		<Compile Include="..\Linq\Linq\SetOperatorTests.cs" Link="SetOperatorTests.cs" />
 		<Compile Include="..\Linq\Linq\SqlRowTests.cs" Link="SqlRowTests.cs" />
 		<Compile Include="..\Linq\Linq\TagTests.cs" Link="TagTests.cs" />
