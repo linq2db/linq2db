@@ -981,12 +981,7 @@ namespace LinqToDB.Mapping
 				}
 
 				if (readers != null)
-				{
-					if (readers.Count == 1)
-						Schemas[0].MetadataReader = readers[0];
-					else
-						Schemas[0].MetadataReader = new MetadataReader(readers.ToArray());
-				}
+					Schemas[0].MetadataReader = new MetadataReader(readers.ToArray());
 
 				void AddMetadataReaderInternal(IMetadataReader reader)
 				{
@@ -1013,18 +1008,18 @@ namespace LinqToDB.Mapping
 			lock (_syncRoot)
 			{
 				var currentReader = Schemas[0].MetadataReader;
-				if (currentReader is MetadataReader metadataReader)
+				if (currentReader != null)
 				{
-					var readers = new IMetadataReader[metadataReader.Readers.Count + 1];
+					var readers = new IMetadataReader[currentReader.Readers.Count + 1];
 
 					readers[0] = reader;
-					for (var i = 0; i < metadataReader.Readers.Count; i++)
-						readers[i + 1] = metadataReader.Readers[i];
+					for (var i = 0; i < currentReader.Readers.Count; i++)
+						readers[i + 1] = currentReader.Readers[i];
 
 					Schemas[0].MetadataReader = new MetadataReader(readers);
 				}
 				else
-					Schemas[0].MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
+					Schemas[0].MetadataReader = new MetadataReader(reader);
 
 				(_cache, _firstOnlyCache) = CreateAttributeCaches();
 
@@ -1358,7 +1353,7 @@ namespace LinqToDB.Mapping
 			{
 				public DefaultMappingSchemaInfo() : base("")
 				{
-					MetadataReader = Metadata.MetadataReader.Default;
+					MetadataReader = MetadataReader.Default;
 				}
 
 				protected override int GenerateID()
