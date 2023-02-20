@@ -3,7 +3,7 @@ title: Installing LINQ To DB
 author: sdanyliv
 ---
 
-# Installing LINQ To DB from Nuget
+# Install LINQ To DB from Nuget
 
 You can develop many different types of applications that target .NET (Core), .NET Framework, or other platforms supported by LINQ To DB.
 
