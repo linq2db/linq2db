@@ -39,6 +39,8 @@ namespace LinqToDB.Linq.Builder
 					throw new ArgumentException($"Invalid method name {methodCall.Method.Name}.");
 			}
 
+			var elementType = methodCall.Method.GetGenericArguments()[0];
+
 			var needsEmulation = !builder.DataContext.SqlProviderFlags.IsAllSetOperationsSupported &&
 			                     (setOperation == SetOperation.ExceptAll || setOperation == SetOperation.IntersectAll)
 			                     ||
@@ -65,24 +67,12 @@ namespace LinqToDB.Linq.Builder
 				else
 					sql.Where.Exists(except);
 
-				throw new NotImplementedException();
-				/*builder.ConvertCompareExpression(query, ExpressionType.Equal, ...)
+				var searchCondition = builder.GenerateComparison(query, new ContextRefExpression(elementType, sequence), new ContextRefExpression(elementType, query),
+					buildInfo.GetFlags());
 
-				var keys1 = sequence.ConvertToSql(null, 0, ConvertFlags.All);
-				var keys2 = query.   ConvertToSql(null, 0, ConvertFlags.All);
+				except.Where.EnsureConjunction().ConcatSearchCondition(searchCondition);
 
-				if (keys1.Length != keys2.Length)
-					throw new InvalidOperationException();
-
-				for (var i = 0; i < keys1.Length; i++)
-				{
-					except.Where
-						.Expr(keys1[i].Sql)
-						.Equal
-						.Expr(keys2[i].Sql);
-				}
-
-				return sequence;*/
+				return sequence;
 			}
 
 			var set1 = new SubQueryContext(sequence1);
@@ -97,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (setOperation != SetOperation.UnionAll)
 			{
-				var sqlExpr = builder.BuildSqlExpression(setContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], setContext), buildInfo.GetFlags());
+				var sqlExpr         = builder.BuildSqlExpression(setContext, new ContextRefExpression(elementType, setContext), buildInfo.GetFlags());
 			}
 
 			return setContext;
