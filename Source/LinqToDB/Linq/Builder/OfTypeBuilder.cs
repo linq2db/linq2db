@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var toType   = methodCall.Type.GetGenericArguments()[0];
-				var gargs    = methodCall.Arguments[0].Type.GetGenericArguments(typeof(IQueryable<>));
+				var gargs    = methodCall.Arguments[0].Type.GetGenericArguments(typeof(IEnumerable<>));
 				var fromType = gargs == null ? typeof(object) : gargs[0];
 
 				if (toType.IsSubclassOf(fromType))

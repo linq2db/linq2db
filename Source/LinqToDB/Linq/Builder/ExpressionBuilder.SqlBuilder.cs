@@ -832,8 +832,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (UnaryExpression)expression;
 
-					if (!TryConvertToSql(context, flags, e.Operand, columnDescriptor, out var o, out var oError))
-						return oError;
+					if (!TryConvertToSql(context, flags, e.Operand, columnDescriptor, out var o, out _))
+						return e;
 
 					if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
 						return CreatePlaceholder(context, o, expression, alias: alias);
@@ -3531,16 +3531,18 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.MemberAccess:
 				{
-					var ma = (MemberExpression)body;
 					if (member != null)
 					{
 
 						var nextMember = nextPath[nextIndex] as MemberExpression;
-						if (nextMember != null && nextMember.Expression.Type.IsSameOrParentOf(body.Type))
+						if (nextMember != null && body.Type.IsSameOrParentOf(nextMember.Expression.Type))
 						{
-							var newMember = nextMember.Update(body);
-
-							return Project(context, null, nextPath, nextIndex - 1, flags, newMember, strict);
+							var newMember = body.Type.GetMemberEx(nextMember.Member);
+							if (newMember != null)
+							{
+								var newMemberAccess = Expression.MakeMemberAccess(nextMember.Expression, newMember);
+								return Project(context, path, nextPath, nextIndex - 1, flags, newMemberAccess, strict);
+							}
 						}
 					}
 
@@ -3804,6 +3806,19 @@ namespace LinqToDB.Linq.Builder
 
 					return conditional;
 				}
+
+				case ExpressionType.Convert:
+				{
+					var unaryExpression = (UnaryExpression)body;
+
+					if (unaryExpression.Operand is ContextRefExpression contextRef)
+					{
+						contextRef = contextRef.WithType(unaryExpression.Type);
+						return Project(context, path, nextPath, nextIndex, flags, contextRef, strict);
+					}
+
+					break;
+				}
 			}
 
 			return CreateSqlError(context, next);
@@ -3880,7 +3895,7 @@ namespace LinqToDB.Linq.Builder
 
 			var key = new SqlCacheKey(path, null, null, null, flags);
 
-			if (_expressionCache.TryGetValue(key, out var expression) && expression.Type == path.Type)
+			if (_expressionCache.TryGetValue(key, out var expression) && expression.Type == path.Type && expression is not SqlErrorExpression)
 			{
 #if DEBUG
 				DebugCacheHit(currentContext, path, expression, flags);
@@ -3961,7 +3976,11 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var newPath = memberExpression.Update(root);
+				var newPath = memberExpression;
+				if (!ReferenceEquals(root, memberExpression.Expression))
+				{
+					newPath = memberExpression.Update(EnsureType(root, memberExpression.Expression.Type));
+				}
 
 				path = newPath;
 

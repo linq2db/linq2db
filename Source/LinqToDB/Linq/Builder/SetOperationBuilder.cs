@@ -165,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 				var expr1 = BuildProjectionExpression(path, _sequence1, flags);
 				var expr2 = BuildProjectionExpression(path, _sequence2, flags);
 
-				if (expr1 is SqlGenericConstructorExpression || expr2 is SqlGenericConstructorExpression)
+				if (expr1.UnwrapConvert() is SqlGenericConstructorExpression || expr2.UnwrapConvert() is SqlGenericConstructorExpression)
 				{
 					return MatchConstructors(path, expr1, expr2, flags);
 				}

@@ -369,6 +369,12 @@ namespace LinqToDB.Linq.Builder
 					RemapToNewPath(buildContext, conditional.IfFalse, toPath, flags));
 			}
 
+			if (expression.NodeType == ExpressionType.Convert)
+			{
+				var unary = (UnaryExpression)expression;
+				return unary.Update(RemapToNewPath(buildContext, unary.Operand, toPath, flags));
+			}
+
 			if (flags.IsExpression())
 			{
 				if (expression is DefaultValueExpression)

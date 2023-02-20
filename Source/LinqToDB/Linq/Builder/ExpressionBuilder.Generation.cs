@@ -329,7 +329,7 @@ namespace LinqToDB.Linq.Builder
 				if (loadedColumns.Contains(i))
 					continue;
 
-				var assignment     = constructorExpression.Assignments[i];
+				var assignment = constructorExpression.Assignments[i];
 
 				// handling inheritance
 				if (assignment.MemberInfo.DeclaringType?.IsAssignableFrom(typeAccessor.Type) == true)
@@ -390,7 +390,7 @@ namespace LinqToDB.Linq.Builder
 		public Expression ConstructFullEntity(IBuildContext context,
 			SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
 		{
-			var constructed = TryConstructFullEntity(context, constructorExpression, flags, checkInheritance);
+			var constructed = TryConstructFullEntity(context, constructorExpression, constructorExpression.ObjectType, flags, checkInheritance);
 
 			if (constructed == null)
 				throw new InvalidOperationException(
@@ -417,7 +417,17 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		public Expression? TryConstructFullEntity(IBuildContext context, SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
+		static Expression GetMemberExpression(SqlGenericConstructorExpression constructorExpression, MemberInfo memberInfo)
+		{
+			var me = constructorExpression.Assignments.FirstOrDefault(a =>
+				MemberInfoComparer.Instance.Equals(memberInfo, a.MemberInfo));
+
+			if (me == null)
+				throw new InvalidOperationException();
+			return me.Expression;
+		}
+
+		public Expression? TryConstructFullEntity(IBuildContext context, SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance = true)
 		{
 			var entityType           = constructorExpression.ObjectType;
 			var entityDescriptor     = MappingSchema.GetEntityDescriptor(entityType);
@@ -453,7 +463,7 @@ namespace LinqToDB.Linq.Builder
 						var onType = firstMapping.Discriminator.MemberInfo.DeclaringType;
 						if (onType == null)
 						{
-							throw new LinqToDBException("Could not get discriminator ReflectedType.");
+							throw new LinqToDBException("Could not get discriminator DeclaringType.");
 						}
 
 						var generator    = new ExpressionGenerator();
@@ -463,7 +473,8 @@ namespace LinqToDB.Linq.Builder
 								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
 								code, et);
 
-						var access = Expression.MakeMemberAccess(EnsureType(rootReference, onType), firstMapping.Discriminator.MemberInfo);
+						//var access = Expression.MakeMemberAccess(EnsureType(rootReference, onType), firstMapping.Discriminator.MemberInfo);
+						var access = GetMemberExpression(constructorExpression, firstMapping.Discriminator.MemberInfo);
 
 						var codeExpr = Expression.Convert(access, typeof(object));
 
@@ -509,7 +520,8 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var memberAccess = Expression.MakeMemberAccess(currentRef, member);
+							//var memberAccess = Expression.MakeMemberAccess(currentRef, member);
+							var memberAccess = GetMemberExpression(constructorExpression, member);
 
 							if (inheritance.Code == null)
 							{
@@ -525,9 +537,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						var subConstructor = BuildFullEntityExpression(context, currentRef, inheritance.Type, flags);
-
-						var fullEntity = TryConstructFullEntity(context, subConstructor, flags, false);
+						var fullEntity = TryConstructFullEntity(context, constructorExpression, inheritance.Type, flags, false);
 						if (fullEntity == null)
 							return null;
 						var tableExpr = Expression.Convert(fullEntity, current.Type);
@@ -539,15 +549,16 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return TryConstructObject(MappingSchema, constructorExpression);
+			return TryConstructObject(MappingSchema, constructorExpression, constructType);
 		}
 
-		public Expression? TryConstructObject(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression)
+		public Expression? TryConstructObject(MappingSchema mappingSchema,
+			SqlGenericConstructorExpression constructorExpression, Type constructType)
 		{
-			if (constructorExpression.ObjectType.IsAbstract)
+			if (constructType.IsAbstract)
 				return null;
 
-			var typeAccessor = TypeAccessor.GetAccessor(constructorExpression.ObjectType);
+			var typeAccessor = TypeAccessor.GetAccessor(constructType);
 
 			if (constructorExpression.Constructor != null)
 			{
@@ -556,7 +567,7 @@ namespace LinqToDB.Linq.Builder
 					return instantiation;
 			}
 
-			var constructors = constructorExpression.ObjectType
+			var constructors = constructType
 				.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 				.OrderBy(c => c.GetParameters().Length);
 
@@ -603,14 +614,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				case SqlGenericConstructorExpression.CreateType.Full:
 				{
-					return TryConstructFullEntity(context, constructorExpression, flags);
+					return TryConstructFullEntity(context, constructorExpression, constructorExpression.ObjectType, flags);
 				}
 				case SqlGenericConstructorExpression.CreateType.MemberInit:
 				case SqlGenericConstructorExpression.CreateType.Auto:
 				case SqlGenericConstructorExpression.CreateType.Keys:
 				case SqlGenericConstructorExpression.CreateType.New:
 				{
-					return TryConstructObject(mappingSchema, constructorExpression);
+					return TryConstructObject(mappingSchema, constructorExpression, constructorExpression.ObjectType);
 				}
 				default:
 					throw new NotImplementedException();
