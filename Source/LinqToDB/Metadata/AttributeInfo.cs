@@ -44,7 +44,7 @@ namespace LinqToDB.Metadata
 										member,
 										Expression.Constant(Converter.ChangeType(k.Value, mtype), mtype));
 								})),
-							typeof(Attribute)));
+							typeof(MappingAttribute)));
 
 					_func = expr.CompileExpression();
 				}
