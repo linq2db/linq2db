@@ -7,7 +7,7 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 	using Extensions;
-	using LinqToDB.Mapping;
+	using Mapping;
 
 	sealed class AttributeInfo
 	{
