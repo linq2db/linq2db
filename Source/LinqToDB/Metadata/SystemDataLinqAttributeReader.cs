@@ -21,92 +21,80 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class SystemDataLinqAttributeReader : IMetadataReader
 	{
-		public T[] GetAttributes<T>(Type type)
-			where T : MappingAttribute
+		public MappingAttribute[] GetAttributes(Type type)
 		{
-			if (typeof(T).IsAssignableFrom(typeof(TableAttribute)))
+			var t = type.GetAttribute<System.Data.Linq.Mapping.TableAttribute>   ();
+			var d = type.GetAttribute<System.Data.Linq.Mapping.DatabaseAttribute>();
+
+			if (t != null || d != null)
 			{
-				var t = type.GetAttribute<System.Data.Linq.Mapping.TableAttribute>   ();
-				var d = type.GetAttribute<System.Data.Linq.Mapping.DatabaseAttribute>();
+				var attr = new TableAttribute();
 
-				if (t != null || d != null)
+				if (t != null)
 				{
-					var attr = new TableAttribute();
+					var name = t.Name;
 
-					if (t != null)
+					if (name != null)
 					{
-						var name = t.Name;
+						var names = name.Replace("[", "").Replace("]", "").Split('.');
 
-						if (name != null)
+						switch (names.Length)
 						{
-							var names = name.Replace("[", "").Replace("]", "").Split('.');
-
-							switch (names.Length)
-							{
-								case 0  : break;
-								case 1  : attr.Name = names[0]; break;
-								case 2  :
-									attr.Name   = names[1];
-									attr.Schema = names[0];
-									break;
-								default :
-									throw new MetadataException($"Invalid table name '{name}' of type '{type.FullName}'");
-							}
+							case 0: break;
+							case 1: attr.Name = names[0]; break;
+							case 2:
+								attr.Name   = names[1];
+								attr.Schema = names[0];
+								break;
+							default:
+								throw new MetadataException($"Invalid table name '{name}' of type '{type.FullName}'");
 						}
 					}
-
-					if (d != null)
-						attr.Database = d.Name;
-
-					return new[] { (T)(Attribute)attr };
 				}
+
+				if (d != null)
+					attr.Database = d.Name;
+
+				return new MappingAttribute[] { attr };
 			}
 
-			return Array<T>.Empty;
+			return Array<MappingAttribute>.Empty;
 		}
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : MappingAttribute
+		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
-			if (typeof(T).IsAssignableFrom(typeof(ColumnAttribute)))
+			List<MappingAttribute>? results = null;
+			var c = memberInfo.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();
+
+			if (c != null)
 			{
-				var c = memberInfo.GetAttribute<System.Data.Linq.Mapping.ColumnAttribute>();
-
-				if (c != null)
+				var attr = new ColumnAttribute()
 				{
-					var attr = new ColumnAttribute()
-					{
-						Name            = c.Name,
-						DbType          = c.DbType,
-						CanBeNull       = c.CanBeNull,
-						Storage         = c.Storage,
-						IsPrimaryKey    = c.IsPrimaryKey,
-						IsIdentity      = c.IsDbGenerated,
-						IsDiscriminator = c.IsDiscriminator,
-					};
+					Name            = c.Name,
+					DbType          = c.DbType,
+					CanBeNull       = c.CanBeNull,
+					Storage         = c.Storage,
+					IsPrimaryKey    = c.IsPrimaryKey,
+					IsIdentity      = c.IsDbGenerated,
+					IsDiscriminator = c.IsDiscriminator,
+				};
 
-					return new[] { (T)(Attribute)attr };
-				}
+				(results ??= new()).Add(attr);
 			}
-			
-			if (typeof(T).IsAssignableFrom(typeof(AssociationAttribute)))
+
+			if (memberInfo.DeclaringType.HasAttribute<System.Data.Linq.Mapping.TableAttribute>())
 			{
-				if (memberInfo.DeclaringType.HasAttribute<System.Data.Linq.Mapping.TableAttribute>())
+				var attrs = memberInfo.GetAttributes<System.Data.Linq.Mapping.AssociationAttribute>();
+				if (attrs.Length > 0)
 				{
-					var attrs = memberInfo.GetAttributes<System.Data.Linq.Mapping.AssociationAttribute>();
-					if (attrs.Length > 0)
-					{
-						var associations = new T[attrs.Length];
+					results ??= new(attrs.Length);
 
-						for (var i = 0; i < attrs.Length; i++)
-							associations[i] = (T)(Attribute)new AssociationAttribute { ThisKey = attrs[i].ThisKey, OtherKey = attrs[i].OtherKey, Storage = attrs[i].Storage };
-
-						return associations;
-					}
+					for (var i = 0; i < attrs.Length; i++)
+						results.Add(new AssociationAttribute { ThisKey = attrs[i].ThisKey, OtherKey = attrs[i].OtherKey, Storage = attrs[i].Storage });
 				}
 			}
 
-			return Array<T>.Empty;
+			return results?.ToArray() ?? Array<MappingAttribute>.Empty;
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
