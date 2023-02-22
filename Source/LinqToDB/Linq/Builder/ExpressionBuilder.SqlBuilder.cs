@@ -3950,20 +3950,23 @@ namespace LinqToDB.Linq.Builder
 					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) &&
 						corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
-						corrected = MakeExpression(rootContext.BuildContext, corrected, flags);
+						var newCorrected = MakeExpression(rootContext.BuildContext, corrected, flags);
 
-						if (corrected is SqlPlaceholderExpression placeholder)
+						if (newCorrected is SqlPlaceholderExpression placeholder)
 						{
-							corrected = placeholder.WithTrackingPath(path);
+							newCorrected = placeholder.WithTrackingPath(path);
 						}
 
-						return corrected;
+						if (ExpressionEqualityComparer.Instance.Equals(corrected, newCorrected))
+							return corrected;
+
+						return MakeExpression(rootContext.BuildContext, newCorrected, flags);
 					}
 				}
 
 				var root = MakeExpression(currentContext, memberExpression.Expression, flags.RootFlag());
 
-				if (root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
+				if (!flags.IsExpose() && root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
 				{
 					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags.IsTest());
 					if (subqueryExpression != null)

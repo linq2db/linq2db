@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand) || flags.HasFlag(ProjectFlags.Table) || flags.HasFlag(ProjectFlags.Traverse))
+				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) /*|| flags.HasFlag(ProjectFlags.Expand)*/ || flags.HasFlag(ProjectFlags.Table) || flags.HasFlag(ProjectFlags.Traverse))
 				{
 					if (Body is ContextRefExpression bodyRef)
 					{
@@ -80,13 +80,11 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (flags.IsExpression())
+				if (!(path.Type.IsSameOrParentOf(Body.Type) || Body.Type.IsSameOrParentOf(path.Type)))
 				{
-					if (!(path.Type.IsSameOrParentOf(Body.Type) || Body.Type.IsSameOrParentOf(path.Type)))
-					{
-						return new SqlEagerLoadExpression((ContextRefExpression)path, path,
-							GetEagerLoadExpression(path));
-					}
+					if (flags.IsExpression())
+						return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
+					return ExpressionBuilder.CreateSqlError(this, path);
 				}
 
 				if (Body.NodeType == ExpressionType.TypeAs)

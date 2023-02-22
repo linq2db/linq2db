@@ -30,6 +30,13 @@ namespace LinqToDB.Linq.Builder
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ProjectFlags ExposeFlag(this ProjectFlags flags)
+		{
+			return (flags & FlagsToPreserve) | ProjectFlags.Expose;
+		}
+
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ProjectFlags SqlFlag(this ProjectFlags flags)
 		{
 			return (flags & FlagsToPreserve) | ProjectFlags.SQL;
@@ -103,6 +110,13 @@ namespace LinqToDB.Linq.Builder
 		public static bool IsTraverse(this ProjectFlags flags)
 		{
 			return (flags & ProjectFlags.Traverse) != 0;
+		}
+
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsExpose(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.Expose) != 0;
 		}
 
 	}

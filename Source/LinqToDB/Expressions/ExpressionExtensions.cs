@@ -167,6 +167,15 @@ namespace LinqToDB.Expressions
 				static (context, e) => context.equalityComparer.Equals(e, context.toReplace) ? context.replacedBy : e);
 		}
 
+		public static Expression Replace(this Expression expression, IReadOnlyDictionary<Expression, Expression> replaceMap)
+		{
+			return Transform(
+				expression,
+				replaceMap,
+				static (map, e) => map.TryGetValue(e, out var newExpression) ? newExpression : e);
+		}
+
+
 		/// <summary>
 		/// Returns the body of <paramref name="lambda"/> but replaces the first parameter of that
 		/// lambda expression with the <paramref name="exprToReplaceParameter"/> expression.

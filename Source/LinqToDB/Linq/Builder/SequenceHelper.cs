@@ -5,7 +5,6 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
-	using static LinqToDB.Linq.ReflectionHelper;
 
 	internal static class SequenceHelper
 	{

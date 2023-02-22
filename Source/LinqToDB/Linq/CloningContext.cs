@@ -147,6 +147,11 @@ namespace LinqToDB.Linq
 			return (TContext)CloneRaw(buildContext);
 		}
 
+		public void RegisterCloned(IBuildContext oldContext, IBuildContext newContext)
+		{
+			_buildContexts[oldContext] = newContext;
+		}
+
 		[return: NotNullIfNotNull("buildContext")]
 		public IBuildContext? CloneRaw(IBuildContext? buildContext)
 		{

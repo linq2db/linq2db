@@ -176,8 +176,13 @@ namespace LinqToDB.Linq.Builder
 						return path;
 
 					// trying to access Queryable variant
-					if (!ObjectType.IsSameOrParentOf(path.Type) && flags.HasFlag(ProjectFlags.Expression))
-						return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
+					if (!ObjectType.IsSameOrParentOf(path.Type))
+					{
+						if (flags.IsExpression())
+							return new SqlEagerLoadExpression((ContextRefExpression)path, path,
+								Builder.GetSequenceExpression(this));
+						return ExpressionBuilder.CreateSqlError(this, path);
+					}
 
 					return Builder.BuildFullEntityExpression(this, path, path.Type, flags);
 				}

@@ -32,5 +32,7 @@
 		/// Specify that we expect real expression under hidden by Selects chain 
 		/// </summary>
 		Traverse = 0x400,	
+
+		Expose = 0x800,	
 	}
 }

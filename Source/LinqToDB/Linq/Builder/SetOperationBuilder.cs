@@ -82,12 +82,12 @@ namespace LinqToDB.Linq.Builder
 
 			set1.SelectQuery.SetOperators.Add(setOperator);
 
-			var setContext = new SetOperationContext(setOperation, set1, set2, methodCall);
-
+			var setContext = new SetOperationContext(setOperation, new SelectQuery(), set1, set2, methodCall);
 
 			if (setOperation != SetOperation.UnionAll)
 			{
-				var sqlExpr         = builder.BuildSqlExpression(setContext, new ContextRefExpression(elementType, setContext), buildInfo.GetFlags());
+				var sqlExpr = builder.BuildSqlExpression(setContext, new ContextRefExpression(elementType, setContext),
+					buildInfo.GetFlags());
 			}
 
 			return setContext;
@@ -105,9 +105,9 @@ namespace LinqToDB.Linq.Builder
 
 		sealed class SetOperationContext : SubQueryContext
 		{
-			public SetOperationContext(SetOperation setOperation, SubQueryContext sequence1, SubQueryContext sequence2,
+			public SetOperationContext(SetOperation setOperation, SelectQuery selectQuery, SubQueryContext sequence1, SubQueryContext sequence2,
 				MethodCallExpression                methodCall)
-				: base(sequence1)
+				: base(sequence1, selectQuery, true)
 			{
 				_setOperation = setOperation;
 				_sequence1    = sequence1;
@@ -129,6 +129,15 @@ namespace LinqToDB.Linq.Builder
 
 			readonly Dictionary<Expression, SqlPlaceholderExpression> _createdSQL = new(ExpressionEqualityComparer.Instance);
 			readonly Dictionary<Expression, Expression> _generatedExpressions = new(ExpressionEqualityComparer.Instance);
+
+			readonly HashSet<SqlPlaceholderExpression> _eagerPlaceholders1 = new();
+			readonly HashSet<SqlPlaceholderExpression> _eagerPlaceholders2 = new();
+
+
+			static bool IsMatchingNeeded(Expression expr)
+			{
+				return expr.Find(1, (_, e) => e is SqlGenericConstructorExpression or SqlEagerLoadExpression) != null;
+			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
@@ -155,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 				var expr1 = BuildProjectionExpression(path, _sequence1, flags);
 				var expr2 = BuildProjectionExpression(path, _sequence2, flags);
 
-				if (expr1.UnwrapConvert() is SqlGenericConstructorExpression || expr2.UnwrapConvert() is SqlGenericConstructorExpression)
+				if (IsMatchingNeeded(expr1) || IsMatchingNeeded(expr2))
 				{
 					return MatchConstructors(path, expr1, expr2, flags);
 				}
@@ -173,8 +182,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (flags.IsExpression())
 				{
-					if (sql1.Find(1, (_, e) => e is SqlGenericConstructorExpression) != null ||
-						sql2.Find(1, (_, e) => e is SqlGenericConstructorExpression) != null)
+					if (IsMatchingNeeded(sql1) || IsMatchingNeeded(sql2))
 					{
 						return MatchConstructors(path, sql1, sql2, flags);
 					}
@@ -220,6 +228,15 @@ namespace LinqToDB.Linq.Builder
 
 						sql1 = EnsureBuilt(sql1, flags);
 						sql2 = EnsureBuilt(sql2, flags);
+
+						if (sql1.UnwrapConvert().Find(1, (_, e) => e is SqlEagerLoadExpression) != null ||
+						    sql2.UnwrapConvert().Find(1, (_, e) => e is SqlEagerLoadExpression) != null)
+						{
+							var thisRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(_type), this);
+							var eager   = (Expression)new SqlEagerLoadExpression(thisRef, path, path);
+
+							return eager;
+						}
 					}
 
 					return path;
@@ -371,6 +388,50 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(newExpr, false, true);
 
 					return new TransformInfo(e);
+				});
+
+				return transformed;
+			}
+
+			List<SqlEagerLoadExpression> CollectEagerLoadExpressions(Expression expression)
+			{
+				var result = new List<SqlEagerLoadExpression>();
+				expression.Visit(result, (result, e) =>
+				{
+					if (e is SqlEagerLoadExpression eager)
+						result.Add(eager);
+				});
+
+				return result;
+			}
+
+			List<ContextRefExpression> CollectContexts(Expression expression)
+			{
+				var result = new List<ContextRefExpression>();
+				expression.Visit(result, (result, e) =>
+				{
+					if (e is ContextRefExpression contextRef)
+						result.Add(contextRef);
+				});
+
+				return result;
+			}
+
+			Expression ResolveReferences(IBuildContext context, Expression expression, ProjectFlags flags, HashSet<SqlPlaceholderExpression> placeholders)
+			{
+				var transformed = expression.Transform(e =>
+				{
+					if (e.NodeType == ExpressionType.MemberAccess)
+					{
+						var newExpr = Builder.ConvertToSqlExpr(context, e, flags.SqlFlag());
+						if (newExpr is SqlPlaceholderExpression placeholder)
+							placeholders.Add(placeholder);
+						if (newExpr is SqlErrorExpression)
+							return e;
+						return newExpr;
+					}
+
+					return e;
 				});
 
 				return transformed;
@@ -833,10 +894,117 @@ namespace LinqToDB.Linq.Builder
 				return true;
 			}
 
+			Expression ProcessEagerExpressions(Expression expr, IBuildContext context, ProjectFlags projectFlags, HashSet<SqlPlaceholderExpression> placeholders)
+			{
+				var thisRef      = new ContextRefExpression(_type, this);
+
+				var transformed = expr.Transform(e =>
+				{
+					if (e is SqlEagerLoadExpression eager)
+					{
+						var newSequence = ResolveReferences(context, eager.SequenceExpression, projectFlags, placeholders);
+						return new SqlEagerLoadExpression(thisRef.WithType(eager.Path.Type), eager.Path, newSequence);
+					}
+
+					return e;
+				});
+
+				return transformed;
+			}
+
+			Expression? GetFieldExpressionBySql(ISqlExpression sql)
+			{
+				foreach (var pair in _createdSQL)
+				{
+					if (ReferenceEquals(pair.Value.Sql, sql))
+					{
+						return pair.Key;
+					}
+
+					if (pair.Value.Sql is SqlColumn column)
+					{
+						if (column.Parent?.HasSetOperators != true)
+							throw new InvalidOperationException();
+
+						var idx = column.Parent.Select.Columns.IndexOf(column);
+
+						if (ReferenceEquals(column.Parent.SetOperators[0].SelectQuery.Select.Columns[idx], sql))
+							return pair.Key;
+					}
+				}
+
+				return null;
+			}
+
+			record PlaceholderMatch(SqlPlaceholderExpression Placeholder, SqlColumn? Column, Expression? ReferenceExpression);
+
+			List<PlaceholderMatch> MatchEagerPlaceholdersWithCurrent(HashSet<SqlPlaceholderExpression> eagerPlaceholders, IBuildContext sequence)
+			{
+				var matchQuery =
+					from p in eagerPlaceholders
+					join c in sequence.SelectQuery.Select.Columns on p.Sql equals c.Expression into gj
+					from c in gj.DefaultIfEmpty()
+					select new PlaceholderMatch(p, c, c == null ? null : GetFieldExpressionBySql(c));
+
+				return matchQuery.ToList();
+			}
+
+			Expression CorrectEagerLoadingExpression(Expression expr,
+				IReadOnlyDictionary<Expression, Expression> replaceMap)
+			{
+				var transformed = expr.Transform(replaceMap, (map, e) =>
+				{
+					if (e is SqlEagerLoadExpression eager)
+					{
+						var newSequence = eager.SequenceExpression.Replace(map);
+						if (newSequence != eager.SequenceExpression)
+						{
+							return new SqlEagerLoadExpression(eager.ContextRef.WithType(eager.Path.Type), eager.Path, newSequence);
+						}
+					}
+
+					return e;
+				});
+
+				return transformed;
+			}
+
+			void GenerateAllFields(Expression path, ref Expression expr1, ref Expression expr2, ProjectFlags flags, out bool additionalFieldsAdded)
+			{
+				var foundPathes = CollectDataPathes(expr1, path)
+					.Concat(CollectDataPathes(expr2, path))
+					.Distinct(ExpressionEqualityComparer.Instance)
+					.ToList();
+
+				var sqlFlag = flags.SqlFlag();
+				foreach (var dataPath in foundPathes)
+				{
+					var generated = MakeExpression(dataPath, sqlFlag);
+				}
+
+				var match1 = MatchEagerPlaceholdersWithCurrent(_eagerPlaceholders1, _sequence1);
+				var match2 = MatchEagerPlaceholdersWithCurrent(_eagerPlaceholders2, _sequence2);
+
+				var transformMap = match1.Concat(match2).ToDictionary(m => (Expression)m.Placeholder, m => m.ReferenceExpression!);
+
+				expr1 = CorrectEagerLoadingExpression(expr1, transformMap);
+				expr2 = CorrectEagerLoadingExpression(expr2, transformMap);
+
+				//TODO: fill missing references
+				additionalFieldsAdded = false;
+			}
 
 			Expression MatchConstructors(Expression path, Expression expr1, Expression expr2,  ProjectFlags flags)
 			{
 				Expression resultExpr;
+
+				expr1 = ProcessEagerExpressions(expr1, _sequence1, flags, _eagerPlaceholders1);
+				expr2 = ProcessEagerExpressions(expr2, _sequence2, flags, _eagerPlaceholders2);
+
+				if (_eagerPlaceholders1.Count > 0 || _eagerPlaceholders2.Count > 0)
+				{
+					GenerateAllFields(path, ref expr1, ref expr2, flags, out var fieldsAdded);
+				}
 
 				if (ExpressionEqualityComparer.Instance.Equals(expr1, path))
 				{
@@ -911,6 +1079,45 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return MakeConditionalConstructExpression(path, expr1, expr2, flags);
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				var cloned = new SetOperationContext(_setOperation, context.CloneElement(SelectQuery),
+					context.CloneContext(_sequence1), context.CloneContext(_sequence2),
+					context.CloneExpression(_methodCall));
+
+				// for correct updating self-references below
+				context.RegisterCloned(this, cloned);
+
+				cloned._setIdReference = context.CloneExpression(_setIdReference);
+				
+				foreach(var generated in _createdSQL)
+				{
+					cloned._createdSQL[context.CloneExpression(generated.Key)] = context.CloneExpression(generated.Value);
+				}
+
+				foreach (var generated in _generatedExpressions)
+				{
+					cloned._generatedExpressions[context.CloneExpression(generated.Key)] = context.CloneExpression(generated.Value);
+				}
+
+				foreach (var generated in _eagerPlaceholders1)
+				{
+					cloned._eagerPlaceholders1.Add(context.CloneExpression(generated));
+				}
+
+				foreach (var generated in _eagerPlaceholders2)
+				{
+					cloned._eagerPlaceholders2.Add(context.CloneExpression(generated));
+				}
+
+				return cloned;
+			}
+
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
+			{
+				return this;
 			}
 		}
 

@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 				expr = Builder.UpdateNesting(this, expr);
 				expr = SequenceHelper.CorrectTrackingPath(expr, this);
 
-				if (flags.IsExpression() && expr is not SqlPlaceholderExpression)
+				if (flags.IsExpression() && expr is not SqlPlaceholderExpression && expr.UnwrapConvert() is not SqlEagerLoadExpression)
 				{
 					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
 

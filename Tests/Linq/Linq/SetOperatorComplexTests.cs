@@ -265,7 +265,7 @@ namespace Tests.Linq
 			var authorTable = db.GetTable<Author>();
 
 			var query1 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
 				from b in a.Books.OfType<Roman>()
 				select new
 				{
@@ -275,7 +275,7 @@ namespace Tests.Linq
 				};
 
 			var query2 = 
-				from a in authorTable.LoadWith(a => a.Books)
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
 				from b in a.Books.OfType<Novel>()
 				select new
 				{
@@ -285,6 +285,8 @@ namespace Tests.Linq
 				};
 
 			var query = query1.Concat(query2);
+
+			var authors = authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).ToArray();
 
 			var result = query.ToArray();
 
