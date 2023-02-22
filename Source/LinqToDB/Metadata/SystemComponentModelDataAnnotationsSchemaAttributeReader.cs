@@ -16,63 +16,55 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	public class SystemComponentModelDataAnnotationsSchemaAttributeReader : IMetadataReader
 	{
-		public T[] GetAttributes<T>(Type type)
-			where T : MappingAttribute
+		public MappingAttribute[] GetAttributes(Type type)
 		{
-			if (typeof(T).IsAssignableFrom(typeof(TableAttribute)))
+			var t = type.GetAttribute<System.ComponentModel.DataAnnotations.Schema.TableAttribute>();
+
+			if (t != null)
 			{
-				var t = type.GetAttribute<System.ComponentModel.DataAnnotations.Schema.TableAttribute>();
+				var attr = new TableAttribute();
 
-				if (t != null)
+				var name = t.Name;
+
+				if (name != null)
 				{
-					var attr = new TableAttribute();
+					var names = name.Replace("[", "").Replace("]", "").Split('.');
 
-					var name = t.Name;
-
-					if (name != null)
+					switch (names.Length)
 					{
-						var names = name.Replace("[", "").Replace("]", "").Split('.');
-
-						switch (names.Length)
-						{
-							case 0  : break;
-							case 1  : attr.Name = names[0]; break;
-							case 2  :
-								attr.Name   = names[0];
-								attr.Schema = names[1];
-								break;
-							default :
-								throw new MetadataException($"Invalid table name '{name}' of type '{type.FullName}'");
-						}
+						case 0: break;
+						case 1: attr.Name = names[0]; break;
+						case 2:
+							attr.Name   = names[0];
+							attr.Schema = names[1];
+							break;
+						default:
+							throw new MetadataException($"Invalid table name '{name}' of type '{type.FullName}'");
 					}
-
-					return new[] { (T)(Attribute)attr };
 				}
+
+				return new MappingAttribute[] { attr };
 			}
 
-			return Array<T>.Empty;
+			return Array<MappingAttribute>.Empty;
 		}
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : MappingAttribute
+		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
-			if (typeof(T).IsAssignableFrom(typeof(ColumnAttribute)))
+			var c = memberInfo.GetAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>();
+
+			if (c != null)
 			{
-				var c = memberInfo.GetAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>();
-
-				if (c != null)
+				var attr = new ColumnAttribute()
 				{
-					var attr = new ColumnAttribute()
-					{
-						Name   = c.Name,
-						DbType = c.TypeName
-					};
+					Name   = c.Name,
+					DbType = c.TypeName
+				};
 
-					return new[] { (T)(Attribute)attr };
-				}
+				return new MappingAttribute[] { attr };
 			}
 
-			return Array<T>.Empty;
+			return Array<MappingAttribute>.Empty;
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
