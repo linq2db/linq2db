@@ -162,7 +162,7 @@ namespace LinqToDB
 		bool      KeepDistinctOrdered     = true,
 		bool      ParameterizeTakeSkip    = true,
 		bool      EnableContextSchemaEdit = false,
-		bool      PreferExistsForScalar   = false
+		bool      PreferExistsForScalar   = default
 	)
 		: IOptionSet
 	{

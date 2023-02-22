@@ -97,6 +97,17 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ContainsExprTest([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
+
+			var n = 1;
+			var q = from p in db.Parent where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) select p;
+
+			_ = q.ToList();
+		}
+
+		[Test]
 		public void ContainsNullTest([DataSources] string context, [Values(true, false)] bool preferExists)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
