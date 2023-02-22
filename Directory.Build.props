@@ -36,6 +36,8 @@
 
 		<!--required for SkipLocalInit-->
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
