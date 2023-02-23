@@ -801,7 +801,8 @@ namespace LinqToDB.Linq.Builder
 
 				detailQuery = associationLambda.GetBody(detailQuery);
 
-				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
+				var desiredType = association.GetAssociationDesiredAssignmentType(associationMember.MemberInfo, parentType, objectType);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, desiredType, out detailQuery, out finalExpression, out replaceParam);
 
 				var masterKeys   = prevKeys.Concat(subMasterKeys).ToArray();
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, detailQuery, mainQuery, builder);
@@ -849,8 +850,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					masterKeys.AddRange(ExtractKeys(extractContext, masterParam));
 				}
-
-				ExtractNotSupportedPart(mappingSchema, detailQuery, associationMember.MemberInfo.GetMemberType(), out detailQuery, out finalExpression, out replaceParam);
+				
+				var desiredType = association.GetAssociationDesiredAssignmentType(associationMember.MemberInfo, parentType, objectType);
+				ExtractNotSupportedPart(mappingSchema, detailQuery, desiredType, out detailQuery, out finalExpression, out replaceParam);
 
 				resultExpression = GeneratePreambleExpression(masterKeys, masterParam, detailQuery, mainQuery, builder);
 			}
