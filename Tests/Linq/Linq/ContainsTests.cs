@@ -286,6 +286,7 @@ namespace Tests.Linq
 			new string?[] { "123", "Ko", null },
 			new string?[] { null, "123", "Ko" },
 			new string?[] { null, null },
+			Array.Empty<string?>()
 		};
 
 		[Test]
@@ -295,8 +296,13 @@ namespace Tests.Linq
 
 			var result = db.Person.Where(r => r.ID == 3 && values.Contains(r.MiddleName)).ToArray();
 
-			Assert.AreEqual(1, result.Length);
-			Assert.AreEqual(3, result[0].ID);
+			if (values.Length == 0)
+				Assert.AreEqual(0, result.Length);
+			else
+			{
+				Assert.AreEqual(1, result.Length);
+				Assert.AreEqual(3, result[0].ID);
+			}
 		}
 
 		private static readonly string?[][] _issue3986Cases2 = new string?[][]
@@ -310,6 +316,7 @@ namespace Tests.Linq
 			new string?[] { "123", "222", null },
 			new string?[] { null, "123", "222" },
 			new string?[] { null, null },
+			Array.Empty<string?>()
 		};
 
 		[Test]
