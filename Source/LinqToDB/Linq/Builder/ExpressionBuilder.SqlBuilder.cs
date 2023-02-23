@@ -501,33 +501,35 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(ConvertExpression(expr));
 					}
 
-					if (ma.Member.DeclaringType == typeof(TimeSpan))
+					if (!Configuration.MappedTimeSpanToIntervalType)
 					{
-						switch (ma.Expression!.NodeType)
+						if (ma.Member.DeclaringType == typeof(TimeSpan))
 						{
-							case ExpressionType.Subtract:
-							case ExpressionType.SubtractChecked:
+							switch (ma.Expression!.NodeType)
+							{
+								case ExpressionType.Subtract:
+								case ExpressionType.SubtractChecked:
 
-								Sql.DateParts datePart;
+									Sql.DateParts datePart;
 
-								switch (ma.Member.Name)
-								{
-									case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
-									case "TotalSeconds"     : datePart = Sql.DateParts.Second;      break;
-									case "TotalMinutes"     : datePart = Sql.DateParts.Minute;      break;
-									case "TotalHours"       : datePart = Sql.DateParts.Hour;        break;
-									case "TotalDays"        : datePart = Sql.DateParts.Day;         break;
-									default                 : return new TransformInfo(e);
-								}
+									switch (ma.Member.Name)
+									{
+										case "TotalMilliseconds": datePart = Sql.DateParts.Millisecond; break;
+										case "TotalSeconds": datePart = Sql.DateParts.Second; break;
+										case "TotalMinutes": datePart = Sql.DateParts.Minute; break;
+										case "TotalHours": datePart = Sql.DateParts.Hour; break;
+										case "TotalDays": datePart = Sql.DateParts.Day; break;
+										default: return new TransformInfo(e);
+									}
 
-								var ex = (BinaryExpression)ma.Expression;
-								if (ex.Left.Type == typeof(DateTime)
-									&& ex.Right.Type == typeof(DateTime))
-								{
-									var method = MemberHelper.MethodOf(
+									var ex = (BinaryExpression)ma.Expression;
+									if (ex.Left.Type == typeof(DateTime)
+										&& ex.Right.Type == typeof(DateTime))
+									{
+										var method = MemberHelper.MethodOf(
 												() => Sql.DateDiff(Sql.DateParts.Day, DateTime.MinValue, DateTime.MinValue));
 
-									var call   =
+										var call   =
 												Expression.Convert(
 													Expression.Call(
 														null,
@@ -537,14 +539,14 @@ namespace LinqToDB.Linq.Builder
 														Expression.Convert(ex.Left,  typeof(DateTime?))),
 													typeof(double));
 
-									return new TransformInfo(ConvertExpression(call));
-								}
-								else
-								{
-									var method = MemberHelper.MethodOf(
+										return new TransformInfo(ConvertExpression(call));
+									}
+									else
+									{
+										var method = MemberHelper.MethodOf(
 												() => Sql.DateDiff(Sql.DateParts.Day, DateTimeOffset.MinValue, DateTimeOffset.MinValue));
 
-									var call   =
+										var call   =
 												Expression.Convert(
 													Expression.Call(
 														null,
@@ -554,12 +556,101 @@ namespace LinqToDB.Linq.Builder
 														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
 													typeof(double));
 
-									return new TransformInfo(ConvertExpression(call));
-								}
+										return new TransformInfo(ConvertExpression(call));
+									}
+							}
 						}
 					}
 
 					break;
+				}
+
+				case ExpressionType.Add:
+				case ExpressionType.AddChecked:
+				case ExpressionType.Subtract:
+				case ExpressionType.SubtractChecked:
+				{
+					if (!Configuration.MappedTimeSpanToIntervalType)
+						goto default;
+
+					var ex = (BinaryExpression)e;
+					var leftType = (Nullable.GetUnderlyingType(ex.Left.Type) ?? ex.Left.Type);
+					var righttype = (Nullable.GetUnderlyingType(ex.Right.Type) ?? ex.Right.Type);
+					
+					if (leftType == typeof(DateTime) && righttype == typeof(TimeSpan))
+					{
+						var method = MemberHelper.MethodOf(
+												() => Sql.DateAdd(Sql.DateParts.Millisecond, 0, DateTime.MinValue));
+
+						Expression value = Expression.Convert(Expression.Property(Expression.Convert(ex.Right,  typeof(TimeSpan)), "TotalMilliseconds"), typeof(double?));
+						
+						if (ex.NodeType == ExpressionType.Subtract || ex.NodeType == ExpressionType.SubtractChecked)
+							value = Expression.Convert(Expression.Multiply(Expression.Convert(value, typeof(double)), Expression.Constant((double)-1)), typeof(double?));
+
+						var call   = Expression.Convert(
+													Expression.Call(
+														null,
+														method,
+														Expression.Constant(Sql.DateParts.Millisecond),
+														value,
+														Expression.Convert(ex.Left, typeof(DateTime?))),
+													 typeof(DateTime?));
+
+						return new TransformInfo(ConvertExpression(call));
+					}
+
+					if (leftType == typeof(DateTimeOffset) && righttype == typeof(TimeSpan))
+					{
+						var method = MemberHelper.MethodOf(
+												() => Sql.DateAdd(Sql.DateParts.Millisecond, 0, DateTimeOffset.MinValue));
+
+						Expression value = Expression.Convert(Expression.Property(Expression.Convert(ex.Right,  typeof(TimeSpan)), "TotalMilliseconds"), typeof(double?));
+
+						if (ex.NodeType == ExpressionType.Subtract || ex.NodeType == ExpressionType.SubtractChecked)
+							value = Expression.Convert(Expression.Multiply(Expression.Convert(value, typeof(double)), Expression.Constant((double)-1)), typeof(double?));
+
+						var call   = Expression.Convert(
+													Expression.Call(
+														null,
+														method,
+														Expression.Constant(Sql.DateParts.Millisecond),
+														value,
+														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
+													 typeof(DateTimeOffset?));
+
+						return new TransformInfo(ConvertExpression(call));
+					}
+
+					if (leftType == typeof(DateTime) && righttype == typeof(DateTime))
+					{
+						var method = MemberHelper.MethodOf(
+												() => Sql.DateDiffInterval(DateTime.MinValue, DateTime.MinValue));
+						var call   =			Expression.Convert(
+													Expression.Call(
+														null,
+														method,
+														Expression.Convert(ex.Right, typeof(DateTime?)),
+														Expression.Convert(ex.Left,  typeof(DateTime?))),
+													typeof(TimeSpan));
+
+						return new TransformInfo(ConvertExpression(call));
+					}
+
+					if (leftType == typeof(DateTimeOffset) && righttype == typeof(DateTimeOffset))
+					{
+						var method = MemberHelper.MethodOf(
+												() => Sql.DateDiffInterval(DateTimeOffset.MinValue, DateTimeOffset.MinValue));
+						var call   =            Expression.Convert(
+													Expression.Call(
+														null,
+														method,
+														Expression.Convert(ex.Right, typeof(DateTimeOffset?)),
+														Expression.Convert(ex.Left,  typeof(DateTimeOffset?))),
+													typeof(TimeSpan));
+
+						return new TransformInfo(ConvertExpression(call));
+					}
+					goto default;
 				}
 
 				default:

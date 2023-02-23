@@ -53,6 +53,42 @@ namespace LinqToDB.Common
 	public static class Configuration
 	{
 		/// <summary>
+		/// Enables TimespanMapping to an Interval Type (instead of the Time Type in the datbases)
+		/// If you do so, you need to also add a mapping according the interval type of your database
+		/// in your mapping schema, with
+		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Int64);
+		/// or
+		/// mappingSchema.AddScalarType(typeof(TimeSpan), DataType.Interval);
+		/// </summary>
+		public static void MapTimeSpanToIntervalType()
+		{
+			MappedTimeSpanToIntervalType = true;
+
+			Expressions.MapMember<TimeSpan>(p => p.Days, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Days, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalDays, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalDays, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Hours, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Hours, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalHours, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalHours, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Minutes, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Minutes, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalMinutes, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalMinutes, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Seconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Seconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalSeconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalSeconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Milliseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Milliseconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalMilliseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalMilliseconds, p)!.Value));
+
+#if NET7_0_OR_GREATER
+			Expressions.MapMember<TimeSpan>(p => p.Microseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Microseconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalMicroseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalMicroseconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.Nanoseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.Nanoseconds, p)!.Value));
+			Expressions.MapMember<TimeSpan>(p => p.TotalNanoseconds, (Expression<Func<TimeSpan, long>>)(p => LinqToDB.Sql.TimeSpanPart(LinqToDB.Sql.TimeSpanParts.TotalNanoseconds, p)!.Value));
+#endif
+		}
+
+		/// <summary>
+		/// Fixes wrong TimespanMapping and uses a Interval Type if the Database has one (if not it uses Int64)
+		/// </summary>
+		internal static bool MappedTimeSpanToIntervalType;
+
+		/// <summary>
 		/// If <c>true</c> - non-primitive and non-enum value types (structures) will be treated as scalar types (e.g. <see cref="DateTime"/>) during mapping;
 		/// otherwise they will be treated the same way as classes.
 		/// Default value: <c>true</c>.

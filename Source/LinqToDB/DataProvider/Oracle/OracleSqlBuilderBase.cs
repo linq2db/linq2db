@@ -94,6 +94,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (type.Type.DataType)
 			{
+				case DataType.Interval       : StringBuilder.Append("interval day (9) to second (9)"); break;
 				case DataType.Date           :
 				case DataType.DateTime       : StringBuilder.Append("date");                      break;
 				case DataType.DateTime2      :

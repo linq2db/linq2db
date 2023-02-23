@@ -62,6 +62,8 @@ namespace LinqToDB
 			Minute      =  8,
 			Second      =  9,
 			Millisecond = 10,
+			Microsecond = 11,
+			Nanosecond  = 12,
 		}
 
 		#region DatePart
@@ -93,6 +95,8 @@ namespace LinqToDB
 					DateParts.Minute        => "minute",
 					DateParts.Second        => "second",
 					DateParts.Millisecond   => "millisecond",
+					DateParts.Microsecond   => "microsecond",
+					DateParts.Nanosecond    => "nanosecond",
 					_                       => throw new InvalidOperationException($"Unexpected datepart: {part}")
 				};
 			}
@@ -748,8 +752,16 @@ namespace LinqToDB
 						break;
 					case DateParts.Second      : function = "Add_Seconds"; break;
 					case DateParts.Millisecond:
-						function = "Add_Seconds";
-						number = builder.Div(number, 1000);
+						function = "Add_Nano100";
+						number = builder.Mul(number, 10000);
+						break;
+					case DateParts.Microsecond:
+						function = "Add_Nano100";
+						number = builder.Mul(number, 10);
+						break;
+					case DateParts.Nanosecond:
+						function = "Add_Nano100";
+						number = builder.Div(number, 100);
 						break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
@@ -856,11 +868,17 @@ namespace LinqToDB
 				DateParts.Minute        => date.Value.AddMinutes(number.Value),
 				DateParts.Second        => date.Value.AddSeconds(number.Value),
 				DateParts.Millisecond   => date.Value.AddMilliseconds(number.Value),
+#if NET7_0_OR_GREATER
+				DateParts.Microsecond   => date.Value.AddMicroseconds(number.Value),
+#else
+				DateParts.Microsecond   => date.Value.AddTicks((long)number.Value * 10000),
+#endif
+				DateParts.Nanosecond    => date.Value.AddTicks((long)number.Value / 100),
 				_                       => throw new InvalidOperationException(),
 			};
 		}
 
-		#endregion
+#endregion
 
 		#region DateDiff
 
@@ -894,6 +912,8 @@ namespace LinqToDB
 					case DateParts.Minute     : funcName = "Seconds_Between"; divider = 60;    break;
 					case DateParts.Second     : funcName = "Seconds_Between";                  break;
 					case DateParts.Millisecond: funcName = "Nano100_Between"; divider = 10000; break;
+					case DateParts.Microsecond: funcName = "Nano100_Between"; divider = 10;    break;
+					case DateParts.Nanosecond : funcName = "Nano100_Between";                  break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
@@ -901,6 +921,9 @@ namespace LinqToDB
 				ISqlExpression func = new SqlFunction(typeof(int), funcName, startdate, endDate);
 				if (divider != 1)
 					func = builder.Div(func, divider);
+
+				if (part == DateParts.Nanosecond)
+					func = builder.Mul(func, 100);
 
 				builder.ResultExpression = func;
 			}
@@ -939,6 +962,14 @@ namespace LinqToDB
 									new SqlFunction(typeof(int), "MICROSECOND", endDate),
 									new SqlFunction(typeof(int), "MICROSECOND", startDate)),
 								1000));
+						break;
+					case DateParts.Microsecond:
+						resultExpr = builder.Add<int>(
+							builder.Mul(resultExpr, 1000000),
+							builder.Sub<int>(
+								new SqlFunction(typeof(int), "MICROSECOND", endDate),
+								new SqlFunction(typeof(int), "MICROSECOND", startDate))
+							);
 						break;
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
@@ -1077,7 +1108,6 @@ namespace LinqToDB
 					case DateParts.Hour   : unit = "hour"   ; break;
 					case DateParts.Minute : unit = "minute" ; break;
 					case DateParts.Second : unit = "second" ; break;
-
 					case DateParts.Millisecond:
 						builder.ResultExpression = new SqlExpression(
 							typeof(long?),
@@ -1086,7 +1116,7 @@ namespace LinqToDB
 							startDate,
 							endDate);
 						break;
-
+					
 					default:
 						throw new InvalidOperationException($"Unexpected datepart: {part}");
 				}
@@ -1097,15 +1127,21 @@ namespace LinqToDB
 		}
 
 		[CLSCompliant(false)]
-		[Extension(               "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.MySql,      "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
-		[Extension(PN.DB2,        "",              BuilderType = typeof(DateDiffBuilderDB2))]
-		[Extension(PN.SapHana,    "",              BuilderType = typeof(DateDiffBuilderSapHana))]
-		[Extension(PN.SQLite,     "",              BuilderType = typeof(DateDiffBuilderSQLite))]
-		[Extension(PN.Oracle,     "",              BuilderType = typeof(DateDiffBuilderOracle))]
-		[Extension(PN.PostgreSQL, "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
-		[Extension(PN.Access,     "",              BuilderType = typeof(DateDiffBuilderAccess))]
-		[Extension(PN.ClickHouse, "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
+		[Extension(                 "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer,    "DateDiff_Big",  BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlCe,        "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2005,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2008,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2012,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2014,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.MySql,        "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.DB2,          "",              BuilderType = typeof(DateDiffBuilderDB2))]
+		[Extension(PN.SapHana,      "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Extension(PN.SQLite,       "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Extension(PN.Oracle,       "",              BuilderType = typeof(DateDiffBuilderOracle))]
+		[Extension(PN.PostgreSQL,   "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Extension(PN.Access,       "",              BuilderType = typeof(DateDiffBuilderAccess))]
+		[Extension(PN.ClickHouse,   "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
 		public static int? DateDiff(DateParts part, DateTime? startDate, DateTime? endDate)
 		{
 			if (startDate == null || endDate == null)
@@ -1118,8 +1154,230 @@ namespace LinqToDB
 				DateParts.Minute      => (int)(endDate - startDate).Value.TotalMinutes,
 				DateParts.Second      => (int)(endDate - startDate).Value.TotalSeconds,
 				DateParts.Millisecond => (int)(endDate - startDate).Value.TotalMilliseconds,
-				_                     => throw new InvalidOperationException(),
+#if NET7_0_OR_GREATER
+				DateParts.Microsecond => (int)(endDate - startDate).Value.TotalMicroseconds,
+				DateParts.Nanosecond  => (int)(endDate - startDate).Value.TotalNanoseconds,
+#endif
+				_ => throw new InvalidOperationException(),
 			};
+		}
+
+		[CLSCompliant(false)]
+		[Extension(                 "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer,    "DateDiff_Big",  BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlCe,        "DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2005,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2008,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2012,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.SqlServer2014,"DateDiff",      BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.MySql,        "TIMESTAMPDIFF", BuilderType = typeof(DateDiffBuilder))]
+		[Extension(PN.DB2,          "",              BuilderType = typeof(DateDiffBuilderDB2))]
+		[Extension(PN.SapHana,      "",              BuilderType = typeof(DateDiffBuilderSapHana))]
+		[Extension(PN.SQLite,       "",              BuilderType = typeof(DateDiffBuilderSQLite))]
+		[Extension(PN.Oracle,       "",              BuilderType = typeof(DateDiffBuilderOracle))]
+		[Extension(PN.PostgreSQL,   "",              BuilderType = typeof(DateDiffBuilderPostgreSql))]
+		[Extension(PN.Access,       "",              BuilderType = typeof(DateDiffBuilderAccess))]
+		[Extension(PN.ClickHouse,   "",              BuilderType = typeof(DateDiffBuilderClickHouse))]
+		public static long? DateDiffLong(DateParts part, DateTime? startDate, DateTime? endDate)
+		{
+			if (startDate == null || endDate == null)
+				return null;
+
+			return part switch
+			{
+				DateParts.Day         => (long)(endDate - startDate).Value.TotalDays,
+				DateParts.Hour        => (long)(endDate - startDate).Value.TotalHours,
+				DateParts.Minute      => (long)(endDate - startDate).Value.TotalMinutes,
+				DateParts.Second      => (long)(endDate - startDate).Value.TotalSeconds,
+				DateParts.Millisecond => (long)(endDate - startDate).Value.TotalMilliseconds,
+#if NET7_0_OR_GREATER
+				DateParts.Microsecond => (long)(endDate - startDate).Value.TotalMicroseconds,
+				DateParts.Nanosecond  => (long)(endDate - startDate).Value.TotalNanoseconds,
+#endif
+				_ => throw new InvalidOperationException(),
+			};
+		}
+
+
+		#endregion
+
+		#region DateDiffInterval
+
+		sealed class DateDiffIntervalBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startdate = builder.GetExpression(0);
+				var endDate   = builder.GetExpression(1);
+
+				builder.ResultExpression = new SqlExpression(typeof(int), builder.Expression + "(nanosecond, {0}, {1}) / 100", startdate, endDate);
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderSapHana : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startdate  = builder.GetExpression(0);
+				var endDate    = builder.GetExpression(1);
+
+				ISqlExpression func = new SqlFunction(typeof(int), "Nano100_Between", startdate, endDate);
+				func = builder.Mul(func, 100);
+				builder.ResultExpression = func;
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderMySql : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startdate = builder.GetExpression(0);
+				var endDate   = builder.GetExpression(1);
+
+				builder.ResultExpression = new SqlExpression(typeof(int), builder.Expression + "(MICROSECOND, {0}, {1}) * 10", startdate, endDate);
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderSybase : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startdate = builder.GetExpression(0);
+				var endDate   = builder.GetExpression(1);
+
+				builder.ResultExpression = new SqlExpression(typeof(int), builder.Expression + "(microsecond, {0}, {1}) * 10", startdate, endDate);
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderFirebird : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startdate = builder.GetExpression(0);
+				var endDate   = builder.GetExpression(1);
+
+				builder.ResultExpression = new SqlExpression(typeof(int), builder.Expression + "(millisecond, {0}, {1}) * 10000", startdate, endDate);
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderDB2 : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startDate  = builder.GetExpression(0);
+				var endDate    = builder.GetExpression(1);
+
+				var secondsExpr = builder.Mul<int>(builder.Sub<int>(
+						new SqlFunction(typeof(int), "Days", endDate),
+						new SqlFunction(typeof(int), "Days", startDate)),
+					new SqlValue(86400));
+
+				var midnight = builder.Sub<int>(
+					new SqlFunction(typeof(int), "MIDNIGHT_SECONDS", endDate),
+					new SqlFunction(typeof(int), "MIDNIGHT_SECONDS", startDate));
+
+				var resultExpr = builder.Add<int>(secondsExpr, midnight);
+
+				resultExpr = builder.Add<int>(
+					builder.Mul(resultExpr, 10000000),
+					builder.Mul(
+						builder.Sub<int>(
+							new SqlFunction(typeof(int), "MICROSECOND", endDate),
+							new SqlFunction(typeof(int), "MICROSECOND", startDate)),
+						10));
+
+				builder.ResultExpression = resultExpr;
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderSQLite : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startDate = builder.GetExpression(0);
+				var endDate = builder.GetExpression(1);
+
+				var expStr = "round((julianday({1}) - julianday({0})) * 864000000000)";
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderPostgreSql : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startDate = builder.GetExpression(0);
+				var endDate = builder.GetExpression(1);
+				var expStr =  "({1}::timestamp - {0}::timestamp)";
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, Precedence.Multiplicative, startDate, endDate);
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderAccess : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startDate = builder.GetExpression(0);
+				var endDate = builder.GetExpression(1);
+
+				var expStr = "DATEDIFF('s', {0}, {1}) * 10000000";
+
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderOracle : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startDate = builder.GetExpression(0);
+				var endDate = builder.GetExpression(1);
+				var expStr = "(CAST ({1} as TIMESTAMP) - CAST ({0} as TIMESTAMP))";
+				builder.ResultExpression = new SqlExpression(typeof(int), expStr, startDate, endDate);
+			}
+		}
+
+		sealed class DateDiffIntervalBuilderClickHouse : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var startDate  = builder.GetExpression(0);
+				var endDate    = builder.GetExpression(1);
+
+				builder.ResultExpression = new SqlExpression(
+					typeof(long?),
+					"(toUnixTimestamp64Milli(toDateTime64({1}, 3)) - toUnixTimestamp64Milli(toDateTime64({0}, 3))) * 10000",
+					Precedence.Subtraction,
+					startDate,
+					endDate);
+			}
+		}
+
+		[CLSCompliant(false)]
+		[Extension(                 "DateDiff",      BuilderType = typeof(DateDiffIntervalBuilder))]
+		[Extension(PN.SqlServer,    "DateDiff_Big",  BuilderType = typeof(DateDiffIntervalBuilder))]
+		[Extension(PN.SqlCe,        "DateDiff",      BuilderType = typeof(DateDiffIntervalBuilder))]
+		[Extension(PN.SqlServer2005,"DateDiff",      BuilderType = typeof(DateDiffIntervalBuilder))]
+		[Extension(PN.SqlServer2008,"DateDiff",      BuilderType = typeof(DateDiffIntervalBuilder))]
+		[Extension(PN.SqlServer2012,"DateDiff",      BuilderType = typeof(DateDiffIntervalBuilder))]
+		[Extension(PN.SqlServer2014,"DateDiff",      BuilderType = typeof(DateDiffIntervalBuilder))]
+		[Extension(PN.MySql,        "TIMESTAMPDIFF", BuilderType = typeof(DateDiffIntervalBuilderMySql))]
+		[Extension(PN.DB2,          "",              BuilderType = typeof(DateDiffIntervalBuilderDB2))]
+		[Extension(PN.SapHana,      "",              BuilderType = typeof(DateDiffIntervalBuilderSapHana))]
+		[Extension(PN.Firebird,     "",              BuilderType = typeof(DateDiffIntervalBuilderFirebird))]
+		[Extension(PN.Sybase,       "",              BuilderType = typeof(DateDiffIntervalBuilderFirebird))]
+		[Extension(PN.SQLite,       "",              BuilderType = typeof(DateDiffIntervalBuilderSQLite))]
+		[Extension(PN.Oracle,       "",              BuilderType = typeof(DateDiffIntervalBuilderOracle))]
+		[Extension(PN.PostgreSQL,   "",              BuilderType = typeof(DateDiffIntervalBuilderPostgreSql))]
+		[Extension(PN.Access,       "",              BuilderType = typeof(DateDiffIntervalBuilderAccess))]
+		[Extension(PN.ClickHouse,   "",              BuilderType = typeof(DateDiffIntervalBuilderClickHouse))]
+		/* Returns the Native Database Interval type, or the Timespan Ticks (100ns) */
+		public static TimeSpan? DateDiffInterval(DateTime? startDate, DateTime? endDate)
+		{
+			if (startDate == null || endDate == null)
+				return null;
+
+			return endDate - startDate;
 		}
 
 		#endregion
