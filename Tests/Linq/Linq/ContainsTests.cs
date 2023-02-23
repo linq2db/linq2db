@@ -274,5 +274,60 @@ namespace Tests.Linq
 			Value3,
 			Value4,
 		}
+
+		private static readonly string?[][] _issue3986Cases1 = new string?[][]
+		{
+			new string?[] { null, "Ko" },
+			new string?[] { "Ko", null },
+			new string?[] { null, "Ko", null },
+			new string?[] { "Ko", null, null },
+			new string?[] { null, null, "Ko" },
+			new string?[] { "123", null, "Ko" },
+			new string?[] { "123", "Ko", null },
+			new string?[] { null, "123", "Ko" },
+			new string?[] { null, null },
+			Array.Empty<string?>()
+		};
+
+		[Test]
+		public void Issue3986Test1([DataSources] string context, [ValueSource(nameof(_issue3986Cases1))] string?[] values)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person.Where(r => r.ID == 3 && values.Contains(r.MiddleName)).ToArray();
+
+			if (values.Length == 0)
+				Assert.AreEqual(0, result.Length);
+			else
+			{
+				Assert.AreEqual(1, result.Length);
+				Assert.AreEqual(3, result[0].ID);
+			}
+		}
+
+		private static readonly string?[][] _issue3986Cases2 = new string?[][]
+		{
+			new string?[] { null, "222" },
+			new string?[] { "222", null },
+			new string?[] { null, "222", null },
+			new string?[] { "222", null, null },
+			new string?[] { null, null, "222" },
+			new string?[] { "123", null, "222" },
+			new string?[] { "123", "222", null },
+			new string?[] { null, "123", "222" },
+			new string?[] { null, null },
+			Array.Empty<string?>()
+		};
+
+		[Test]
+		public void Issue3986Test2([DataSources] string context, [ValueSource(nameof(_issue3986Cases2))] string?[] values)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person.Where(r => r.ID == 4 && !values.Contains(r.MiddleName)).ToArray();
+
+			Assert.AreEqual(1, result.Length);
+			Assert.AreEqual(4, result[0].ID);
+		}
 	}
 }
