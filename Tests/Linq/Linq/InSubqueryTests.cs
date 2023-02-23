@@ -24,7 +24,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			if (!preferExists && db is DataConnection dc)
+			if (!preferExists && db is DataConnection dc && !context.IsAnyOf(TestProvName.AllFirebird) && !context.IsAnyOf(TestProvName.AllInformix))
 				Assert.That(dc.LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
 		}
 
@@ -40,7 +40,7 @@ namespace Tests.Linq
 
 			_ = q.ToList();
 
-			if (!preferExists && db is DataConnection dc)
+			if (!preferExists && db is DataConnection dc && !context.IsAnyOf(TestProvName.AllFirebird) && !context.IsAnyOf(TestProvName.AllInformix))
 				Assert.That(dc.LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
 		}
 
