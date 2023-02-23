@@ -135,13 +135,10 @@ namespace LinqToDB.SqlQuery
 							newIndexes[scol.Expression] = i;
 						}
 
-						if (allColumns)
-						{
-							if (!subQuery.Select.Columns.All(c => newIndexes.ContainsKey(c)))
-								continue;
-						}
+						if (!CheckSetColumns(newIndexes, subQuery, setOperator.Operation))
+							continue;
 
-						UpdateSetIndexes(newIndexes, subQuery);
+						UpdateSetIndexes(newIndexes, subQuery, setOperator.Operation);
 
 						setOperator.Modify(subQuery);
 						selectQuery.SetOperators.InsertRange(index + 1, subQuery.SetOperators);
@@ -152,13 +149,42 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		static void UpdateSetIndexes(Dictionary<ISqlExpression, int> newIndexes, SelectQuery setQuery)
+		static void UpdateSetIndexes(Dictionary<ISqlExpression, int> newIndexes, SelectQuery setQuery, SetOperation setOperation)
 		{
+			if (setOperation == SetOperation.UnionAll)
+			{
+				for (var index = 0; index < setQuery.Select.Columns.Count; index++)
+				{
+					var column = setQuery.Select.Columns[index];
+					if (!newIndexes.ContainsKey(column))
+					{
+						setQuery.Select.Columns.RemoveAt(index);
+
+						foreach (var op in setQuery.SetOperators)
+						{
+							op.SelectQuery.Select.Columns.RemoveAt(index);
+						}
+
+						--index;
+					}
+				}
+			}
+
 			foreach (var pair in newIndexes.OrderBy(x => x.Value))
 			{
 				var currentIndex = setQuery.Select.Columns.FindIndex(c => ReferenceEquals(c, pair.Key));
 				if (currentIndex < 0)
-					throw new InvalidOperationException();
+				{
+					if (setOperation != SetOperation.UnionAll)
+						throw new InvalidOperationException();
+
+					foreach (var op in setQuery.SetOperators)
+					{
+						op.SelectQuery.Select.Columns.Insert(pair.Value, new SqlColumn(op.SelectQuery, pair.Key));
+					}
+
+					continue;
+				}
 
 				var newIndex = pair.Value;
 				if (currentIndex != newIndex)
@@ -178,6 +204,24 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		static bool CheckSetColumns(Dictionary<ISqlExpression, int> newIndexes, SelectQuery setQuery, SetOperation setOperation)
+		{
+			foreach (var pair in newIndexes.OrderBy(x => x.Value))
+			{
+				var currentIndex = setQuery.Select.Columns.FindIndex(c => ReferenceEquals(c, pair.Key));
+				if (currentIndex < 0)
+				{
+					if (setOperation != SetOperation.UnionAll)
+						return false;
+
+					if (!QueryHelper.IsConstantFast(pair.Key))
+						return false;
+				}
+			}
+
+			return true;
+		}
+
 		void FinalizeAndValidateInternal(SelectQuery selectQuery)
 		{
 			selectQuery.Visit((this, selectQuery), static (context, e) =>
@@ -191,7 +235,6 @@ namespace LinqToDB.SqlQuery
 				}
 			});
 
-			ResolveWeakJoins(selectQuery);
 			RemoveEmptyJoins(selectQuery);
 			OptimizeGroupBy(selectQuery);
 			MoveOuterJoinsToSubQuery(selectQuery);
@@ -1139,9 +1182,9 @@ namespace LinqToDB.SqlQuery
 			if (query.HasSetOperators)
 			{
 				throw new NotImplementedException();
-				var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
-				UpdateSetIndexes(newIndexes, query);
-				parentQuery.SetOperators.AddRange(query.SetOperators);
+				/*var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
+				UpdateSetIndexes(newIndexes, query, );
+				parentQuery.SetOperators.AddRange(query.SetOperators);*/
 
 			}
 
@@ -1537,7 +1580,10 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.HasSetOperators)
 			{
 				if (selectQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
-					return false;
+				{
+					if (subQuery.SetOperators.Any(so => so.Operation != SetOperation.UnionAll))
+						return false;
+				}
 
 				if (!selectQuery.Select.Where.IsEmpty || !selectQuery.Select.Having.IsEmpty || selectQuery.Select.HasModifier)
 					return false;
@@ -1564,10 +1610,10 @@ namespace LinqToDB.SqlQuery
 					newIndexes[scol.Expression] = i;
 				}
 
-				if (!subQuery.Select.Columns.All(c => newIndexes.ContainsKey(c)))
+				if (!CheckSetColumns(newIndexes, subQuery, operation))
 					return false;
 
-				UpdateSetIndexes(newIndexes, subQuery);
+				UpdateSetIndexes(newIndexes, subQuery, operation);
 
 				selectQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
 				subQuery.SetOperators.Clear();
@@ -1690,6 +1736,8 @@ namespace LinqToDB.SqlQuery
 			OptimizeSubQueries(element.SelectQuery);
 			if (OptimizeApplies(element.SelectQuery, _flags.IsApplyJoinSupported))
 				OptimizeSubQueries(element.SelectQuery);
+
+			ResolveWeakJoins(element.SelectQuery);
 
 			return element;
 		}
