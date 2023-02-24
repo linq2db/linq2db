@@ -43,27 +43,15 @@ namespace System.Data.Linq
 
 		public static bool operator ==(Binary? binary1, Binary? binary2)
 		{
-			if (binary1 is null && binary2 is null)
+			if (ReferenceEquals(binary1, binary2))
 				return true;
 			if (binary1 is null || binary2 is null)
 				return false;
-			if (ReferenceEquals(binary1, binary2))
-				return true;
 
-			return binary1.EqualsTo(binary2);
+			return binary1.Equals(binary2);
 		}
 
-		public static bool operator !=(Binary? binary1, Binary? binary2)
-		{
-			if (binary1 is null && binary2 is null)
-				return false;
-			if (binary1 is null || binary2 is null)
-				return true;
-			if (ReferenceEquals(binary1, binary2))
-				return false;
-
-			return !binary1.EqualsTo(binary2);
-		}
+		public static bool operator !=(Binary? binary1, Binary? binary2) => !(binary1 == binary2);
 
 		public override bool Equals(object? obj) => EqualsTo(obj as Binary);
 

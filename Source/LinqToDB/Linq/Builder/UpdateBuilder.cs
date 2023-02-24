@@ -167,8 +167,9 @@ namespace LinqToDB.Linq.Builder
 			if (updateType == UpdateType.Update)
 				return new UpdateContext(buildInfo.Parent, sequence);
 
-			var insertedTable = builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables ? SqlTable.Inserted(objectType) : updateStatement.GetUpdateTable();
-			var deletedTable  = SqlTable.Deleted(objectType);
+			var ed            = builder.MappingSchema.GetEntityDescriptor(objectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			var insertedTable = builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables ? SqlTable.Inserted(ed) : updateStatement.GetUpdateTable();
+			var deletedTable  = SqlTable.Deleted(ed);
 
 			if (insertedTable == null)
 				throw new InvalidOperationException("Cannot find target table for UPDATE statement");

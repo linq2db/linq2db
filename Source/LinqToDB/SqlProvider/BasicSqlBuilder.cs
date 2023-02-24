@@ -2695,7 +2695,7 @@ namespace LinqToDB.SqlProvider
 			 		}
 				}
 
-				if (multipleParts && !hasNull)
+				if (multipleParts)
 					StringBuilder.Insert(len, "(").Append(')');
 			}
 		}

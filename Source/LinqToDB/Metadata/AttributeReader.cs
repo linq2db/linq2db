@@ -18,13 +18,11 @@ namespace LinqToDB.Metadata
 				return res.Length == 0 ? Array<MappingAttribute>.Empty : res is MappingAttribute[] attrRes ? attrRes : res.Cast<MappingAttribute>().ToArray();
 			});
 
-		public T[] GetAttributes<T>(Type type)
-			where T : MappingAttribute
-			=> _cache.GetMappingAttributes<T>(type);
+		public MappingAttribute[] GetAttributes(Type type)
+			=> _cache.GetMappingAttributes<MappingAttribute>(type);
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : MappingAttribute
-			=> _cache.GetMappingAttributes<T>(type, memberInfo);
+		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+			=> _cache.GetMappingAttributes<MappingAttribute>(type, memberInfo);
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;

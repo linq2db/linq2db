@@ -18,6 +18,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
+	using Data;
 	using Common;
 	using Common.Internal;
 	using Common.Internal.Cache;
@@ -980,12 +981,7 @@ namespace LinqToDB.Mapping
 				}
 
 				if (readers != null)
-				{
-					if (readers.Count == 1)
-						Schemas[0].MetadataReader = readers[0];
-					else
-						Schemas[0].MetadataReader = new MetadataReader(readers.ToArray());
-				}
+					Schemas[0].MetadataReader = new MetadataReader(readers.ToArray());
 
 				void AddMetadataReaderInternal(IMetadataReader reader)
 				{
@@ -1012,18 +1008,18 @@ namespace LinqToDB.Mapping
 			lock (_syncRoot)
 			{
 				var currentReader = Schemas[0].MetadataReader;
-				if (currentReader is MetadataReader metadataReader)
+				if (currentReader != null)
 				{
-					var readers = new IMetadataReader[metadataReader.Readers.Count + 1];
+					var readers = new IMetadataReader[currentReader.Readers.Count + 1];
 
 					readers[0] = reader;
-					for (var i = 0; i < metadataReader.Readers.Count; i++)
-						readers[i + 1] = metadataReader.Readers[i];
+					for (var i = 0; i < currentReader.Readers.Count; i++)
+						readers[i + 1] = currentReader.Readers[i];
 
 					Schemas[0].MetadataReader = new MetadataReader(readers);
 				}
 				else
-					Schemas[0].MetadataReader = currentReader == null ? reader : new MetadataReader(reader, currentReader);
+					Schemas[0].MetadataReader = new MetadataReader(reader);
 
 				(_cache, _firstOnlyCache) = CreateAttributeCaches();
 
@@ -1357,7 +1353,7 @@ namespace LinqToDB.Mapping
 			{
 				public DefaultMappingSchemaInfo() : base("")
 				{
-					MetadataReader = Metadata.MetadataReader.Default;
+					MetadataReader = MetadataReader.Default;
 				}
 
 				protected override int GenerateID()
@@ -1700,10 +1696,11 @@ namespace LinqToDB.Mapping
 		#region EntityDescriptor
 
 		/// <summary>
-		/// Gets or sets action, called when the EntityDescriptor is created.
+		/// Gets or sets application-wide action, called when the EntityDescriptor is created.
 		/// Could be used to adjust created descriptor before use.
+		/// Not called, when connection has connection-level callback defined (<see cref="ConnectionOptions.OnEntityDescriptorCreated" />).
 		/// </summary>
-		public Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
+		public static Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
 		internal static MemoryCache<(Type entityType, int schemaId),EntityDescriptor> EntityDescriptorsCache { get; } = new (new ());
 
@@ -1711,17 +1708,19 @@ namespace LinqToDB.Mapping
 		/// Returns mapped entity descriptor.
 		/// </summary>
 		/// <param name="type">Mapped type.</param>
+		/// <param name="onEntityDescriptorCreated">Action, called when new descriptor instance created.
+		/// When set to <c>null</c>, <see cref="EntityDescriptorCreatedCallback" /> callback used.</param>
 		/// <returns>Mapping descriptor.</returns>
-		public EntityDescriptor GetEntityDescriptor(Type type)
+		public EntityDescriptor GetEntityDescriptor(Type type, Action<MappingSchema, IEntityChangeDescriptor>? onEntityDescriptorCreated = null)
 		{
 			var ed = EntityDescriptorsCache.GetOrCreate(
 				(entityType: type, ((IConfigurationID)this).ConfigurationID),
-				this,
+				(mappingSchema: this, callback: onEntityDescriptorCreated ?? EntityDescriptorCreatedCallback),
 				static (o, context) =>
 				{
 					o.SlidingExpiration = Configuration.Linq.CacheSlidingExpiration;
-					var edNew = new EntityDescriptor(context, o.Key.entityType);
-					context.EntityDescriptorCreatedCallback?.Invoke(context, edNew);
+					var edNew = new EntityDescriptor(context.mappingSchema, o.Key.entityType, context.callback);
+					context.callback?.Invoke(context.mappingSchema, edNew);
 					return edNew;
 				});
 

@@ -50,7 +50,7 @@ namespace LinqToDB.Metadata
 			"Microsoft.SqlServer.Server.SqlMethodAttribute, Microsoft.SqlServer.Server",
 			"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, Microsoft.SqlServer.Server");
 
-		readonly ConcurrentDictionary<(MemberInfo memberInfo,Type attributeType),object> _cache = new ();
+		readonly ConcurrentDictionary<(MemberInfo memberInfo,Type attributeType), MappingAttribute[]> _cache = new ();
 		readonly Type   _sqlMethodAttribute;
 		readonly Type   _sqlUserDefinedTypeAttribute;
 		readonly string _objectId;
@@ -93,26 +93,21 @@ namespace LinqToDB.Metadata
 			return null;
 		}
 
-		public T[] GetAttributes<T>(Type type)
-			where T : MappingAttribute
-		{
-			return Array<T>.Empty;
-		}
+		public MappingAttribute[] GetAttributes(Type type) => Array<MappingAttribute>.Empty;
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : MappingAttribute
+		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
 			// HACK: we use _sqlMethodAttribute/_sqlUserDefinedTypeAttribute as cache key part instead of typeof(T) to avoid closure generation for lambda
 			// this is valid approach for current code but if we will add more attributes support we will need to add typeof(T) to key too
 			// (which probably will never happen anyways)
 
-			T[]? result = null;
-			if (typeof(T).IsAssignableFrom(typeof(Sql.ExpressionAttribute)) && (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx()))
+			MappingAttribute[]? result = null;
+			if (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx())
 			{
 #if NET45 || NET46 || NETSTANDARD2_0
 #else
 #endif
-				result = (T[])_cache.GetOrAdd(
+				result = _cache.GetOrAdd(
 					(memberInfo, _sqlMethodAttribute),
 #if NET45 || NET46 || NETSTANDARD2_0
 					key =>
@@ -151,7 +146,7 @@ namespace LinqToDB.Metadata
 										string.Join(", ", ps.Select((_, i) => '{' + (i + 1).ToString() + '}')));
 								}
 
-								return new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
+								return new MappingAttribute[] { new Sql.ExpressionAttribute(ex) { ServerSideOnly = true } };
 							}
 						}
 						else
@@ -167,12 +162,12 @@ namespace LinqToDB.Metadata
 								{
 									var ex = $"{{0}}.{nameGetter(attr) ?? key.memberInfo.Name}";
 
-									return new[] { (T)(Attribute)new Sql.ExpressionAttribute(ex) { ServerSideOnly = true, ExpectExpression = true } };
+									return new MappingAttribute[] { new Sql.ExpressionAttribute(ex) { ServerSideOnly = true, ExpectExpression = true } };
 								}
 							}
 						}
 
-						return Array<T>.Empty;
+						return Array<MappingAttribute>.Empty;
 #if NET45 || NET46 || NETSTANDARD2_0
 					});
 #else
@@ -180,47 +175,44 @@ namespace LinqToDB.Metadata
 #endif
 			}
 
-			if (typeof(T).IsAssignableFrom(typeof(DataTypeAttribute)))
-			{
-				var res = (T[])_cache.GetOrAdd(
-					(memberInfo, _sqlUserDefinedTypeAttribute),
+			var res = _cache.GetOrAdd(
+				(memberInfo, _sqlUserDefinedTypeAttribute),
 #if NET45 || NET46 || NETSTANDARD2_0
-					key =>
-					{
-						var nameGetter = _typeNameGetter;
+				key =>
+				{
+					var nameGetter = _typeNameGetter;
 #else
-					static (key, nameGetter) =>
-					{
+				static (key, nameGetter) =>
+				{
 #endif
-						var c = FindAttribute(key.memberInfo.GetMemberType(), key.attributeType);
+					var c = FindAttribute(key.memberInfo.GetMemberType(), key.attributeType);
 
-						if (c != null)
-						{
-							var n = nameGetter(c) ?? key.memberInfo.GetMemberType().Name;
+					if (c != null)
+					{
+						var n = nameGetter(c) ?? key.memberInfo.GetMemberType().Name;
 
-							if (n.ToLowerInvariant().StartsWith("sql"))
-								n = n.Substring(3);
+						if (n.ToLowerInvariant().StartsWith("sql"))
+							n = n.Substring(3);
 
-							var attr = new DataTypeAttribute(DataType.Udt, n);
+						var attr = new DataTypeAttribute(DataType.Udt, n);
 
-							return new[] { (T)(Attribute)attr };
-						}
+						return new MappingAttribute[] { attr };
+					}
 
-						return Array<T>.Empty;
+					return Array<MappingAttribute>.Empty;
 #if NET45 || NET46 || NETSTANDARD2_0
-					});
+				});
 #else
-					}, _typeNameGetter);
+				}, _typeNameGetter);
 #endif
 
-				result = result == null || result.Length == 0
-					? res
-					: res.Length == 0
-						? result
-						: result.Concat(res).ToArray();
-			}
+			result = result == null || result.Length == 0
+				? res
+				: res.Length == 0
+					? result
+					: result.Concat(res).ToArray();
 
-			return result ?? Array<T>.Empty;
+			return result ?? Array<MappingAttribute>.Empty;
 		}
 
 		private static Attribute? FindAttribute(ICustomAttributeProvider source, Type attributeType)

@@ -21,7 +21,7 @@ namespace LinqToDB.Linq
 				bool?        ifExists,
 				TableOptions tableOptions)
 			{
-				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
+				var sqlTable  = SqlTable.Create<T>(dataContext);
 				var dropTable = new SqlDropTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
@@ -57,7 +57,7 @@ namespace LinqToDB.Linq
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
-				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
+				var sqlTable  = SqlTable.Create<T>(dataContext);
 				var dropTable = new SqlDropTableStatement(sqlTable);
 
 				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)

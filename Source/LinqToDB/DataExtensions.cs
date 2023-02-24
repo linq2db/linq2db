@@ -1268,7 +1268,7 @@ namespace LinqToDB
 			{
 				QueryRunner.DropTable<T>.Query(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions);
 			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || new SqlTable<T>(dataContext.MappingSchema).TableOptions.HasDropIfExists())
+			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists())
 			{
 				// ignore
 			}
@@ -1311,7 +1311,7 @@ namespace LinqToDB
 					!throwExceptionIfNotExists,
 					tableOptions.IsSet() ? tableOptions : table.TableOptions);
 			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || new SqlTable<T>(table.DataContext.MappingSchema).TableOptions.HasDropIfExists())
+			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists())
 			{
 				// ignore
 			}
@@ -1351,7 +1351,7 @@ namespace LinqToDB
 					.QueryAsync(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions, token)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || new SqlTable<T>(dataContext.MappingSchema).TableOptions.HasDropIfExists())
+			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists())
 			{
 				// ignore
 			}
@@ -1401,7 +1401,7 @@ namespace LinqToDB
 						token)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
-			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || new SqlTable<T>(table.DataContext.MappingSchema).TableOptions.HasDropIfExists())
+			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists())
 			{
 				// ignore
 			}

@@ -136,7 +136,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var data           = new List<List<object?>>(columns.Count);
@@ -241,7 +241,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var data           = new List<List<object?>>(columns.Count);
@@ -349,7 +349,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var data           = new List<List<object?>>(columns.Count);
@@ -464,7 +464,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
-			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert).ToList();
 			var rc             = new BulkCopyRowsCopied();
 			var copyOptions    = options.BulkCopyOptions;

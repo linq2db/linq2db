@@ -22,7 +22,7 @@ steps:
   displayName: 'Install .NET 7'
   inputs:
     packageType: sdk
-    version: 7.x
+    version: 7.0.102
   condition: and(variables.title, succeeded())
 
 - task: CmdLine@2

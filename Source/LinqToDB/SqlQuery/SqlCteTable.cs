@@ -19,9 +19,9 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlCteTable(
-			MappingSchema mappingSchema,
-			CteClause     cte)
-			: base(mappingSchema, cte.ObjectType, cte.Name)
+			CteClause        cte,
+			EntityDescriptor entityDescriptor)
+			: base(entityDescriptor, cte.Name)
 		{
 			Cte = cte;
 

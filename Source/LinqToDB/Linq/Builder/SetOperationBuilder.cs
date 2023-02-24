@@ -659,7 +659,7 @@ namespace LinqToDB.Linq.Builder
 
 									if (!_members.TryGetValue(ma.Member, out var member))
 									{
-										var ed = Builder.MappingSchema.GetEntityDescriptor(_type!);
+										var ed = Builder.MappingSchema.GetEntityDescriptor(_type!, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 										if (ed.Aliases != null && ed.Aliases.ContainsKey(ma.Member.Name))
 										{
