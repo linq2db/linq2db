@@ -4,38 +4,38 @@
 
 	internal partial class ExpressionBuilder
 	{
-		Dictionary<IBuildContext, List<LoadWithInfo[]>>? _loadWithInformation;
-
-		public List<LoadWithInfo[]>? GetLoadWith(IBuildContext sequence)
+		public List<LoadWithInfo> GetTableLoadWith(ITableContext table)
 		{
-			if (_loadWithInformation == null || !_loadWithInformation.TryGetValue(sequence, out var loadWithInfo))
-				return null;
-
-			return loadWithInfo;
-		}
-
-		public void RegisterLoadWith(IBuildContext sequence, LoadWithInfo[] loadWithInfo, bool appendToLast)
-		{
-			_loadWithInformation ??= new();
-
-			if (!_loadWithInformation.TryGetValue(sequence, out var current))
+			var loadWith = table.LoadWithRoot;
+			if (table.LoadWithPath != null)
 			{
-				current = new List<LoadWithInfo[]>();
+				foreach (var memberInfo in table.LoadWithPath)
+				{
+					var found = loadWith.NextInfos?.FirstOrDefault(li =>
+						MemberInfoEqualityComparer.Default.Equals(li.MemberInfo, memberInfo));
 
-				_loadWithInformation[sequence] = current;
+					if (found != null)
+					{
+						loadWith = found;
+					}
+					else
+					{
+						loadWith.NextInfos ??= new();
+						var newInfo = new LoadWithInfo(memberInfo, false);
+						loadWith.NextInfos.Add(newInfo);
+
+						loadWith = newInfo;
+					}
+				}
+
+				if (loadWith.NextInfos != null)
+					return loadWith.NextInfos;
 			}
 
-			if (appendToLast)
-			{
-				if (current.Count == 0)
-					throw new InvalidOperationException();
+			loadWith.NextInfos ??= new();
 
-				current[current.Count - 1] = Array<LoadWithInfo>.Append(current[current.Count - 1], loadWithInfo);
-			}
-			else
-			{
-				current.Add(loadWithInfo);
-			}
+			// ToList() is important here
+			return loadWith.NextInfos.ToList();
 		}
 	}
 }

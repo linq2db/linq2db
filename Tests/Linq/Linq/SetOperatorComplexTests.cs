@@ -12,7 +12,7 @@ namespace Tests.Linq
 		class Author
 		{
 			[PrimaryKey]
-			public int Id { get;             set; }
+			public int AuthorId { get;             set; }
 
 			public string AuthorName { get; set; } = default!;
 
@@ -22,7 +22,7 @@ namespace Tests.Linq
 			static Expression<Func<Author, IDataContext, IQueryable<Book>>> BooksImpl()
 			{
 				return (author, db) =>
-					db.GetTable<BookAuthor>().Where(ba => ba.AuthorId == author.Id).Select(ba => ba.Book);
+					db.GetTable<BookAuthor>().Where(ba => ba.FkAuthorId == author.AuthorId).Select(ba => ba.Book);
 			}
 
 			[Association(QueryExpressionMethod = nameof(CoAuthorsImpl))]
@@ -33,7 +33,7 @@ namespace Tests.Linq
 				return author =>
 					from b in author.Books
 					from a in b.Authors
-					where a.Id != author.Id
+					where a.AuthorId != author.AuthorId
 					select a;
 			}
 
@@ -44,17 +44,17 @@ namespace Tests.Linq
 		abstract class Book
 		{
 			[PrimaryKey]
-			public int Id { get; set; }
+			public int BookId { get; set; }
 
 			[Column(IsDiscriminator = true)]
 			public abstract string Discriminator { get; }
 
 			public string BookName { get; set; } = default!;
 
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(Chapter.BookId))]
+			[Association(ThisKey = nameof(BookId), OtherKey = nameof(Chapter.FkBookId))]
 			public List<Chapter> Chapters { get; set; } = default!;
 
-			[Association(ThisKey = nameof(Id), OtherKey = nameof(Article.BookId))]
+			[Association(ThisKey = nameof(BookId), OtherKey = nameof(Article.FkBookId))]
 			public List<Article> Articles { get; set; } = default!;
 
 			[Association(QueryExpressionMethod = nameof(AuthorsImpl))]
@@ -62,20 +62,20 @@ namespace Tests.Linq
 
 			static Expression<Func<Book, IDataContext, IQueryable<Author>>> AuthorsImpl()
 			{
-				return (author, db) =>
-					db.GetTable<BookAuthor>().Where(ba => ba.AuthorId == author.Id).Select(ba => ba.Author);
+				return (book, db) =>
+					db.GetTable<BookAuthor>().Where(ba => ba.FkBookId == book.BookId).Select(ba => ba.Author);
 			}
 		}
 
 		class BookAuthor
 		{
-			public int BookId   { get; set; }
-			public int AuthorId { get; set; }
+			public int FkBookId   { get; set; }
+			public int FkAuthorId { get; set; }
 
-			[Association(ThisKey = nameof(BookId), OtherKey = "Id")]
+			[Association(ThisKey = nameof(FkBookId), OtherKey = "BookId")]
 			public Book   Book   { get; set; } = default!;
 
-			[Association(ThisKey = nameof(AuthorId), OtherKey = "Id")]
+			[Association(ThisKey = nameof(FkAuthorId), OtherKey = "AuthorId")]
 			public Author Author { get; set; } = default!;
 		}
 
@@ -92,29 +92,29 @@ namespace Tests.Linq
 		class Chapter
 		{
 			[PrimaryKey]
-			public int Id { get; set; }
+			public int ChaperId { get; set; }
 
-			public int BookId { get; set; }
+			public int FkBookId { get; set; }
 
 			public string ChapterName { get; set; } = default!;
 
-			[Association(ThisKey = nameof(BookId), OtherKey = nameof(Id))]
+			[Association(ThisKey = nameof(FkBookId), OtherKey = nameof(ChaperId))]
 			public Book Book { get; set; } = default!;
 		}
 
 		class Article
 		{
 			[PrimaryKey]
-			public int Id { get; set; }
+			public int ArticleId { get; set; }
 
-			public int    BookId      { get; set; }
-			public int    AuthorId    { get; set; }
+			public int    FkBookId    { get; set; }
+			public int    FkAuthorId  { get; set; }
 			public string ArticleName { get; set; } = default!;
 
-			[Association(ThisKey = nameof(BookId), OtherKey = "Id")]
+			[Association(ThisKey = nameof(FkBookId), OtherKey = "BookId")]
 			public Book Book { get; set; } = default!;
 
-			[Association(ThisKey = nameof(AuthorId), OtherKey = "Id")]
+			[Association(ThisKey = nameof(FkAuthorId), OtherKey = "AutorId")]
 			public Author Author { get; set; } = default!;
 		}
 
@@ -138,39 +138,39 @@ namespace Tests.Linq
 		{
 			var authors = new[]
 			{
-				new Author { Id = 1, AuthorName = "Stephen King" }, 
-				new Author { Id = 2, AuthorName = "Harry Harrison" }, 
-				new Author { Id = 3, AuthorName = "Roger Joseph Zelazny" }, 
+				new Author { AuthorId = 1, AuthorName = "Stephen King" }, 
+				new Author { AuthorId = 2, AuthorName = "Harry Harrison" }, 
+				new Author { AuthorId = 3, AuthorName = "Roger Joseph Zelazny" }, 
 			};
 
 			var books = new Book[]
 			{
-				new Roman {Id = 11, BookName = "Lisey's Story["},
-				new Novel {Id = 12, BookName = "Duma Key"},
-				new Roman {Id = 13, BookName = "Just After Sunset"},
+				new Roman {BookId = 11, BookName = "Lisey's Story["},
+				new Novel {BookId = 12, BookName = "Duma Key"},
+				new Roman {BookId = 13, BookName = "Just After Sunset"},
 						  
-				new Roman {Id = 21, BookName = "Deathworld"},
-				new Novel {Id = 22, BookName = "The Stainless Steel Rat"},
-				new Roman {Id = 23, BookName = "Planet of the Damned"},
+				new Roman {BookId = 21, BookName = "Deathworld"},
+				new Novel {BookId = 22, BookName = "The Stainless Steel Rat"},
+				new Roman {BookId = 23, BookName = "Planet of the Damned"},
 						  
-				new Roman {Id = 31, BookName = "Blood of Amber"},
-				new Novel {Id = 32, BookName = "Knight of Shadows"},
-				new Roman {Id = 33, BookName = "The Chronicles of Amber"}
+				new Roman {BookId = 31, BookName = "Blood of Amber"},
+				new Novel {BookId = 32, BookName = "Knight of Shadows"},
+				new Roman {BookId = 33, BookName = "The Chronicles of Amber"}
 			};
 
 			var bookAuthor = new BookAuthor[]
 			{
-				new (){AuthorId = 1, BookId = 11},
-				new (){AuthorId = 1, BookId = 12},
-				new (){AuthorId = 1, BookId = 13},
+				new (){FkAuthorId = 1, FkBookId = 11},
+				new (){FkAuthorId = 1, FkBookId = 12},
+				new (){FkAuthorId = 1, FkBookId = 13},
 
-				new (){AuthorId = 2, BookId = 21},
-				new (){AuthorId = 2, BookId = 22},
-				new (){AuthorId = 2, BookId = 23},
+				new (){FkAuthorId = 2, FkBookId = 21},
+				new (){FkAuthorId = 2, FkBookId = 22},
+				new (){FkAuthorId = 2, FkBookId = 23},
 
-				new (){AuthorId = 3, BookId = 31},
-				new (){AuthorId = 3, BookId = 32},
-				new (){AuthorId = 3, BookId = 33},
+				new (){FkAuthorId = 3, FkBookId = 31},
+				new (){FkAuthorId = 3, FkBookId = 32},
+				new (){FkAuthorId = 3, FkBookId = 33},
 			};
 
 			return new TablesDisposal(
@@ -238,7 +238,7 @@ namespace Tests.Linq
 				from b in a.Books.OfType<Roman>()
 				select new
 				{
-					b.Id,
+					Id = b.BookId,
 					b.BookName
 				};
 
@@ -247,7 +247,7 @@ namespace Tests.Linq
 				from b in a.Books.OfType<Novel>()
 				select new
 				{
-					b.Id,
+					Id = b.BookId,
 					b.BookName
 				};
 
@@ -269,7 +269,7 @@ namespace Tests.Linq
 				from b in a.Books.OfType<Roman>()
 				select new
 				{
-					b.Id,
+					Id = b.BookId,
 					b.BookName,
 					Authors = b.Authors.ToList()
 				};
@@ -279,18 +279,14 @@ namespace Tests.Linq
 				from b in a.Books.OfType<Novel>()
 				select new
 				{
-					b.Id,
+					Id = b.BookId,
 					b.BookName,
 					Authors = b.Authors.ToList()
 				};
 
 			var query = query1.Concat(query2);
 
-			var authors = authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors).ToArray();
-
-			var result = query.ToArray();
-
-			//AssertQuery(query);
+			AssertQuery(query);
 		}
 
 	}

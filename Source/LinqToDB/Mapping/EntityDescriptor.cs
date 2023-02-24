@@ -15,7 +15,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity descriptor.
 	/// </summary>
-	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{TableName.Name}\")")]
+	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{Name}\")")]
 	public class EntityDescriptor : IEntityChangeDescriptor
 	{
 		/// <summary>

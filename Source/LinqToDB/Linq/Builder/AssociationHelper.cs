@@ -12,22 +12,23 @@ namespace LinqToDB.Linq.Builder
 
 	static class AssociationHelper
 	{
-		private static readonly MethodInfo[] DefaultIfEmptyMethods = new [] { Methods.Queryable.DefaultIfEmpty, Methods.Queryable.DefaultIfEmptyValue };
+		static readonly MethodInfo[] DefaultIfEmptyMethods = new [] { Methods.Queryable.DefaultIfEmpty, Methods.Queryable.DefaultIfEmptyValue };
 
 		// Returns
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...)
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...).DefaultIfEmpty
 		public static LambdaExpression CreateAssociationQueryLambda(
-			ExpressionBuilder builder,
-			AccessorMember onMember,
+			ExpressionBuilder     builder,
+			AccessorMember        onMember,
 			AssociationDescriptor association,
-			Type parentOriginalType,
-			Type parentType,
-			Type objectType,
-			bool inline,
-			bool enforceDefault,
-			List<LoadWithInfo[]>? loadWith,
-			out bool isLeft)
+			Type                  parentOriginalType,
+			Type                  parentType,
+			Type                  objectType,
+			bool                  inline,
+			bool                  enforceDefault,
+			LoadWithInfo?         loadWith,
+			MemberInfo[]?         loadWithPath, 
+			out bool              isLeft)
 		{
 			var dataContextConstant = Expression.Constant(builder.DataContext, builder.DataContext.GetType());
 
@@ -180,15 +181,34 @@ namespace LinqToDB.Linq.Builder
 
 			if (loadWith != null)
 			{
-				var associationLoadWith = GetLoadWith(loadWith)
-					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, association.MemberInfo));
+				var newPath = new[] { association.MemberInfo };
+				var path = loadWithPath == null || loadWithPath.Length == 0
+					? newPath
+					: loadWithPath.Concat(newPath).ToArray();
+
+				var body = definedQueryMethod.Body;
+
+				body = Expression.Call(
+					Methods.LinqToDB.LoadWithInternal.MakeGenericMethod(body.Type),
+					body,
+					Expression.Constant(loadWith),
+					Expression.Constant(path, typeof(MemberInfo[])));
+
+				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
+			}
+
+			if (loadWith != null)
+			{
+				var associationLoadWith = loadWith.NextInfos?
+					.FirstOrDefault(li =>
+						MemberInfoEqualityComparer.Default.Equals(li.MemberInfo, association.MemberInfo));
 
 				if (associationLoadWith != null &&
-				    (associationLoadWith.Info.MemberFilter != null || associationLoadWith.Info.FilterFunc != null))
+				    (associationLoadWith.MemberFilter != null || associationLoadWith.FilterFunc != null))
 				{
 					var body = definedQueryMethod.Body.Unwrap();
 
-					var memberFilter = associationLoadWith.Info.MemberFilter;
+					var memberFilter = associationLoadWith.MemberFilter;
 					if (memberFilter != null)
 					{
 						var elementType = EagerLoading.GetEnumerableElementType(memberFilter.Parameters[0].Type,
@@ -199,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 							Methods.Enumerable.AsQueryable.MakeGenericMethod(objectType), filterBody);
 					}
 
-					var loadWithFunc = associationLoadWith.Info.FilterFunc;
+					var loadWithFunc = associationLoadWith.FilterFunc;
 
 					if (loadWithFunc != null)
 					{
@@ -228,13 +248,6 @@ namespace LinqToDB.Linq.Builder
 					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
 
 				}
-
-				if (associationLoadWith?.NextLoadWith != null && associationLoadWith.NextLoadWith.Count > 0)
-				{
-					definedQueryMethod = (LambdaExpression)EnrichTablesWithLoadWith(builder.DataContext, definedQueryMethod, objectType,
-						associationLoadWith.NextLoadWith, builder.MappingSchema);
-				}
-
 			}
 
 			if (parentOriginalType != parentType)
@@ -299,186 +312,18 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext, 
-			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, List<LoadWithInfo[]>? loadwith, ref bool isOuter)
+			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
 
 			var queryMethod = CreateAssociationQueryLambda(
 				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
-				inline, isOuter, loadwith, out isOuter);
+				inline, isOuter, loadwith, loadWithPath, out isOuter);
 
 			var body = queryMethod.GetBody(tableContext);
 
 			return body;
-		}
-
-		public static Expression EnrichTablesWithLoadWith(IDataContext dataContext, Expression expression, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
-		{
-			var tableType     = typeof(ITable<>).MakeGenericType(entityType);
-			var newExpression = expression.Transform(
-				(tableType, dataContext, entityType, loadWith, mappingSchema),
-				static (context, e) =>
-				{
-					if (e.NodeType == ExpressionType.Call)
-					{
-						var mc = (MethodCallExpression)e;
-						if (mc.IsQueryable("GetTable") && context.tableType.IsSameOrParentOf(mc.Type))
-							e = EnrichLoadWith(context.dataContext, mc, context.entityType, context.loadWith, context.mappingSchema);
-					}
-
-					return e;
-				});
-
-			return newExpression;
-		}
-
-		public static Expression EnrichLoadWith(IDataContext dataContext, Expression table, Type entityType, List<LoadWithInfo[]> loadWith, MappingSchema mappingSchema)
-		{
-			var args = new List<Expression>(2);
-			var currentObj = table;
-			foreach (var members in loadWith)
-			{
-				var currentEntityType = entityType;
-				var isPrevEnumerable = false;
-				Type? prevMemberType = null;
-
-				foreach (var member in members)
-				{
-					args.Clear();
-					args.Add(currentObj);
-
-					var memberType = member.MemberInfo.GetMemberType();
-					var isEnumerableMember =
-						EagerLoading.IsEnumerableType(memberType, mappingSchema);
-
-					var desiredType = member.MemberInfo.IsMethodEx() ? currentEntityType : member.MemberInfo.DeclaringType!;
-
-					var entityParam = Expression.Parameter(currentEntityType, "e");
-					var loadBody    = desiredType == currentEntityType
-						? (Expression)entityParam
-						: Expression.Convert(entityParam, desiredType);
-
-					loadBody = Expression.MakeMemberAccess(loadBody, member.MemberInfo);
-					if (member.MemberFilter != null)
-						loadBody = member.MemberFilter.GetBody(loadBody);
-
-					var hasFilterFunc = member.FilterFunc != null;
-
-					if (isEnumerableMember && hasFilterFunc)
-					{
-						var propType = EagerLoading.GetEnumerableElementType(memberType, mappingSchema);
-						var enumerableType = typeof(IEnumerable<>).MakeGenericType(propType);
-						if (loadBody.Type != enumerableType)
-							loadBody = Expression.Convert(loadBody, enumerableType);
-					}
-
-					args.Add(Expression.Quote(Expression.Lambda(loadBody, entityParam)));
-
-					if (hasFilterFunc)
-						args.Add(member.FilterFunc!);
-
-					MethodInfo method;
-					if (prevMemberType == null)
-					{
-						method = !hasFilterFunc
-							? Methods.LinqToDB.LoadWith
-							: isEnumerableMember
-								? Methods.LinqToDB.LoadWithManyFilter
-								: Methods.LinqToDB.LoadWithSingleFilter;
-
-
-						var propType = memberType;
-						if (hasFilterFunc && isEnumerableMember)
-						{
-							propType = EagerLoading.GetEnumerableElementType(propType, mappingSchema);
-						}
-						method = method.MakeGenericMethod(entityType, propType);
-					}
-					else
-					{
-						if (isPrevEnumerable)
-						{
-							if (!hasFilterFunc)
-								method = Methods.LinqToDB.ThenLoadFromMany;
-							else if (isEnumerableMember)
-								method = Methods.LinqToDB.ThenLoadFromManyManyFilter;
-							else
-								method = Methods.LinqToDB.ThenLoadFromManySingleFilter;
-						}
-						else
-						{
-							if (!hasFilterFunc)
-								method = Methods.LinqToDB.ThenLoadFromSingle;
-							else if (isEnumerableMember)
-								method = Methods.LinqToDB.ThenLoadFromSingleManyFilter;
-							else
-								method = Methods.LinqToDB.ThenLoadFromSingleSingleFilter;
-						}
-
-						var propType = memberType;
-						if (hasFilterFunc && isEnumerableMember)
-						{
-							propType = EagerLoading.GetEnumerableElementType(propType, mappingSchema);
-						}
-						method = method.MakeGenericMethod(entityType, prevMemberType, propType);
-					}
-
-					currentObj = Expression.Call(method, args);
-
-					isPrevEnumerable  = isEnumerableMember && !hasFilterFunc;
-
-					if (isEnumerableMember)
-						memberType = EagerLoading.GetEnumerableElementType(memberType, mappingSchema);
-
-					prevMemberType    = memberType;
-					currentEntityType = memberType;
-				}
-
-			}
-
-			return currentObj;
-		}
-
-		public static Delegate? GetLoadWithFunc(List<LoadWithInfo[]>? loadWith, MemberInfo memberInfo)
-		{
-			Delegate? loadWithFunc = null;
-			if (loadWith != null)
-			{
-				loadWithFunc = GetLoadWith(loadWith)?
-					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, memberInfo))?.Info.FilterFunc?.EvaluateExpression() as Delegate;
-			}
-
-			return loadWithFunc;
-		}
-
-		public sealed class LoadWithItem
-		{
-			public LoadWithInfo Info  = null!;
-			public List<LoadWithInfo[]> NextLoadWith = null!;
-		}
-
-
-		public static List<LoadWithItem> GetLoadWith(List<LoadWithInfo[]> infos)
-		{
-			var result =
-			(
-				from lw in infos
-				select new
-				{
-					head = lw.First(),
-					tail = lw.Skip(1).ToArray()
-				}
-				into info
-				group info by info.head into gr
-				select new LoadWithItem
-				{
-					Info = gr.Key,
-					NextLoadWith = (from i in gr where i.tail.Length > 0 select i.tail).ToList()
-				}
-			).ToList();
-
-			return result;
 		}
 
 	}

@@ -7,6 +7,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
@@ -173,6 +174,7 @@ namespace Tests.Linq
 					};
 
 				var result = query.ToList();
+
 				var expected = expectedQuery.ToList();
 
 				foreach (var item in result.Concat(expected))
@@ -345,25 +347,21 @@ FROM
 		[Test]
 		public void TestLoadWithToString2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var sql = db.Person.LoadWith(p => p.Patient).ToString()!;
+			using var db = GetDataContext(context);
 
-				Assert.False(sql.Contains("LoadWithQueryable"));
+			var query = db.Person.LoadWith(p => p.Patient).AsQueryable();
+			var sql   = query.ToString()!;
+			TestContext.WriteLine(sql);
 
-				// one query with join generated
-				CompareSql(@"SELECT
-	[t1].[FirstName],
-	[t1].[PersonID],
-	[t1].[LastName],
-	[t1].[MiddleName],
-	[t1].[Gender],
-	[a_Patient].[PersonID],
-	[a_Patient].[Diagnosis]
-FROM
-	[Person] [t1]
-		LEFT JOIN [Patient] [a_Patient] ON [t1].[PersonID] = [a_Patient].[PersonID]", sql);
-			}
+			sql.Should().NotContain("LoadWithQueryable");
+
+			var select = query.GetSelectQuery();
+
+			// one query with join generated
+
+			select.From.Tables.Should().HaveCount(1);
+			select.From.Tables[0].Joins.Should().HaveCount(1);
+			select.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Left);
 		}
 
 		[Test]

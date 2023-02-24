@@ -126,30 +126,33 @@ namespace LinqToDB.Linq.Builder
 				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
 			}
 
-			if (level == 0 && context != null && purpose == FullEntityPurpose.Default)
+			if (level == 0 && context != null && purpose == FullEntityPurpose.Default && context is ITableContext table)
 			{
-				var loadWith = GetLoadWith(context);
+				var loadWith = GetTableLoadWith(table);
 
-				if (loadWith != null)
+				if (loadWith.Count > 0)
 				{
 					var assignedMembers = new HashSet<MemberInfo>(MemberInfoComparer.Instance);
 
 					foreach (var info in loadWith)
 					{
-						var memberInfo = info[0].MemberInfo;
+						var memberInfo = info.MemberInfo;
 
-						if (!assignedMembers.Add(memberInfo))
+						if (memberInfo == null || !assignedMembers.Add(memberInfo))
 							continue;
 
 						var expression = Expression.MakeMemberAccess(currentPath, memberInfo);
 						var ad         = GetAssociationDescriptor(expression, out var accessorMember);
 						if (ad != null)
 						{
-							if (!string.IsNullOrEmpty(ad.Storage))
+							if (flags.IsExpression() && !string.IsNullOrEmpty(ad.Storage))
 							{
 								memberInfo = memberInfo.ReflectedType!.GetMember(ad.Storage!,
 									BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy |
 									BindingFlags.NonPublic).SingleOrDefault();
+
+								if (memberInfo == null)
+									throw new LinqToDBException($"Storage member '{info.MemberInfo!.ReflectedType!.Name}.{ad.Storage}' not found.");
 							}
 						}
 

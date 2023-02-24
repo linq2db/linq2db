@@ -44,8 +44,10 @@ namespace LinqToDB.Linq.Builder
 			if (alias.Contains('<'))
 				return;
 
-			if (SelectQuery.From.Tables[0].Alias == null)
-				SelectQuery.From.Tables[0].Alias = alias;
+			var table = SelectQuery.From.Tables.FirstOrDefault();
+
+			if (table is { Alias: null })  
+				table.Alias = alias;
 		}
 
 		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)

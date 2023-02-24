@@ -6,10 +6,11 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
+	using Common;
 
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
-		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable" };
+		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable", "LoadWithInternal" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -28,61 +29,130 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqException("Invalid filter function usage.");
 		}
 
+		static LoadWithInfo CorrectLastPath(LoadWithInfo lastPath, MemberInfo[]? loadWithPath)
+		{
+			if (loadWithPath?.Length > 0)
+			{
+				var current = lastPath;
+				foreach (var memberInfo in loadWithPath)
+				{
+					var found = current.NextInfos?.FirstOrDefault(li =>
+						MemberInfoEqualityComparer.Default.Equals(li.MemberInfo, memberInfo));
+					if (found == null)
+						throw new InvalidOperationException();
+					current = found;
+				}
+
+				lastPath = current;
+			}
+
+			return lastPath;
+		}
+
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var selector = methodCall.Arguments[1].UnwrapLambda();
+			ITableContext table;
 
-			// reset LoadWith sequence
-			if (methodCall.IsQueryable("LoadWith"))
+			LoadWithInfo lastLoadWith;
+
+			if (methodCall.Method.Name == "LoadWithInternal")
 			{
-				for(;;)
+				table = SequenceHelper.GetTableOrCteContext(sequence) ?? throw new InvalidOperationException();
+
+				var loadWith     = methodCall.Arguments[1].EvaluateExpression<LoadWithInfo>();
+				var loadWithPath = methodCall.Arguments[2].EvaluateExpression<MemberInfo[]>();
+
+				table.LoadWithRoot = loadWith!;
+				table.LoadWithPath = loadWithPath;
+				lastLoadWith       = loadWith!;
+			}
+			else
+			{
+				var selector = methodCall.Arguments[1].UnwrapLambda();
+
+				// reset LoadWith sequence
+				if (methodCall.IsQueryable("LoadWith"))
 				{
-					if (sequence is LoadWithContext lw)
-						sequence = lw.Context;
-					else
-						break;
+					for(;;)
+					{
+						if (sequence is LoadWithContext lw)
+							sequence = lw.Context;
+						else
+							break;
+					}
 				}
+				
+				var path = SequenceHelper.PrepareBody(selector, sequence);
+
+				var extractResult = ExtractAssociations(builder, path, null);
+
+				if (extractResult == null)
+					throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector}'");
+
+				var associations = extractResult.Value.info.Length <= 1
+					? extractResult.Value.info
+					: extractResult.Value.info
+						.Reverse()
+						.ToArray();
+
+				if (associations.Length == 0)
+					throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
+
+				table = extractResult.Value.context ?? throw new LinqToDBException("Unable to find table for LoadWith association.");
+
+				var tableLoadWith = table.LoadWithRoot;
+
+				if (methodCall.Method.Name == "ThenLoad")
+				{
+					var prevSequence = (LoadWithContext)sequence;
+					if (prevSequence.LastLoadWithInfo == null)
+						throw new InvalidOperationException();
+
+					// append to the last member chain
+					var lastPath = CorrectLastPath(prevSequence.LastLoadWithInfo, table.LoadWithPath);
+					if (lastPath == null)
+						throw new LinqToDBException($"ThenLoad function should be followed after LoadWith. Can not find previous property for '{path}'.");
+
+					lastLoadWith = MergeLoadWith(lastPath, associations);
+
+					if (methodCall.Arguments.Count == 3)
+					{
+						var lastElement = associations[associations.Length - 1];
+						lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
+						if (lastElement.MemberInfo != null)
+							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
+					}
+				}
+				else if (methodCall.Method.Name == "LoadWith" || methodCall.Method.Name == "LoadWithAsTable")
+				{
+					var lastPath = CorrectLastPath(tableLoadWith, table.LoadWithPath);
+
+					if (tableLoadWith == null)
+						throw new InvalidOperationException();
+
+					if (methodCall.Arguments.Count == 3)
+					{
+						var lastElement = associations[associations.Length - 1];
+						lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
+						if (lastElement.MemberInfo != null)
+							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
+					}
+
+					lastLoadWith = MergeLoadWith(lastPath, associations);
+				}
+				else
+					throw new InvalidOperationException();
 			}
 
-			var path = SequenceHelper.PrepareBody(selector, sequence);
-
-			var extractResult = ExtractAssociations(builder, path, null);
-
-			if (extractResult == null)
-				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector}'");
-
-			var associations = extractResult.Value.info.Length <= 1
-				? extractResult.Value.info
-				: extractResult.Value.info
-					.Reverse()
-					.ToArray();
-
-			if (associations.Length == 0)
-				throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{path}'");
-
-
-			if (methodCall.Arguments.Count == 3)
-			{
-				var lastElement = associations[associations.Length - 1];
-				lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
-				CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
-			}
-
-			var registerContext = extractResult.Value.context;
-
-			if (registerContext is LoadWithContext lwContext)
-				registerContext = lwContext.RegisterContext;
-
-			builder.RegisterLoadWith(registerContext, associations, methodCall.Method.Name == "ThenLoad");
-
-			var loadWithSequence = sequence as LoadWithContext ?? new LoadWithContext(sequence, registerContext);
+			var loadWithSequence = sequence as LoadWithContext ?? new LoadWithContext(sequence, table);
+			loadWithSequence.LastLoadWithInfo = lastLoadWith;
 
 			return loadWithSequence;
 		}
 
-		static (IBuildContext context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
+		static (ITableContext? context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
 
@@ -111,15 +181,15 @@ namespace LinqToDB.Linq.Builder
 				return default;
 
 			var loadWithInfos = members
-				.Select((m, i) => new LoadWithInfo(m) { MemberFilter = i == 0 ? filterExpression : null })
+				.Select((m, i) => new LoadWithInfo(m, true) { MemberFilter = i == 0 ? filterExpression : null })
 				.ToArray();
 
 			return (context, loadWithInfos);
 		}
 
-		static (IBuildContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
+		static (ITableContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
 		{
-			IBuildContext? context    = null;
+			ITableContext? context    = null;
 			MemberInfo?    lastMember = null;
 
 			var members = new List<MemberInfo>();
@@ -235,7 +305,7 @@ namespace LinqToDB.Linq.Builder
 								else
 								{
 									stop    = true;
-									context = contextRef.BuildContext;
+									context = contextRef.BuildContext as ITableContext;
 								}
 
 								break;
@@ -260,9 +330,45 @@ namespace LinqToDB.Linq.Builder
 			return (context, members);
 		}
 
+		static LoadWithInfo MergeLoadWith(LoadWithInfo loadWith, LoadWithInfo[] defined)
+		{
+			var current = loadWith;
+
+			for (var index = 0; index < defined.Length; index++)
+			{
+				current.NextInfos ??= new List<LoadWithInfo>();
+
+				var d = defined[index];
+				var found = current.NextInfos.FirstOrDefault(lw =>
+					MemberInfoEqualityComparer.Default.Equals(lw.MemberInfo, d.MemberInfo));
+
+				if (found != null)
+				{
+					found.ShouldLoad = true;
+
+					if (index == defined.Length - 1)
+					{
+						// reassign everything
+						found.FilterFunc   = d.FilterFunc;
+						found.MemberFilter = d.MemberFilter;
+					}
+
+					current = found;
+				}
+				else
+				{
+					current.NextInfos.Add(d);
+					current = d;
+				}
+			}
+
+			return current;
+		}
+
 		internal sealed class LoadWithContext : PassThroughContext
 		{
 			public IBuildContext RegisterContext { get; }
+			public LoadWithInfo? LastLoadWithInfo { get; set; }
 
 			public LoadWithContext(IBuildContext context, IBuildContext registerContext) : base(context)
 			{
@@ -287,6 +393,10 @@ namespace LinqToDB.Linq.Builder
 				return new LoadWithContext(context.CloneContext(Context), context.CloneContext(RegisterContext));
 			}
 
+			public override void SetAlias(string? alias)
+			{
+				base.SetAlias(alias);
+			}
 		}
 	}
 }

@@ -133,7 +133,14 @@ namespace LinqToDB.Linq.Builder
 			if (associationDescriptor == null || memberInfo == null)
 				return expression;
 
-			var loadWith = GetLoadWith(rootContext.BuildContext);
+			LoadWithInfo? loadWith     = null;
+			MemberInfo[]? loadWithPath = null;
+
+			if (rootContext.BuildContext is ITableContext table)
+			{
+				loadWith     = table.LoadWithRoot;
+				loadWithPath = table.LoadWithPath;
+			}
 
 			bool isOuter = flags.HasFlag(ProjectFlags.ForceOuterAssociation);
 
@@ -147,7 +154,8 @@ namespace LinqToDB.Linq.Builder
 				isOuter = isOuter || associationDescriptor.CanBeNull || _isOuterAssociations?.Contains(rootContext) == true;
 			}
 
-			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo, associationDescriptor, !associationDescriptor.IsList, loadWith, ref isOuter);
+			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo,
+				associationDescriptor, !associationDescriptor.IsList, loadWith, loadWithPath, ref isOuter);
 
 			associationExpression = association;
 
@@ -239,36 +247,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return result;
-		}
-
-		public Expression CreateCollectionAssociation(Expression expression, ContextRefExpression rootContext)
-		{
-			if (!IsAssociation(expression))
-				return expression;
-
-			AccessorMember? memberInfo;
-
-			var associationDescriptor = GetAssociationDescriptor(expression, out memberInfo);
-			if (associationDescriptor == null || memberInfo == null)
-				return expression;
-
-			if (!associationDescriptor.IsList)
-			{
-				throw new InvalidOperationException();
-			}
-
-			var elementType     = associationDescriptor.GetElementType(MappingSchema);
-			var parentExactType = associationDescriptor.GetParentElementType();
-
-			var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
-				this, memberInfo, associationDescriptor, elementType/*OriginalType*/, parentExactType, elementType,
-				false, false, null/*GetLoadWith()*/, out _);
-			;
-			var expr = queryMethod.GetBody(rootContext);
-
-			return expr;
-
-			//return associationExpression;
 		}
 
 	}

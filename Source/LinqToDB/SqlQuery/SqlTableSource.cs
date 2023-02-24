@@ -194,6 +194,14 @@ namespace LinqToDB.SqlQuery
 				.Append(" as t")
 				.Append(SourceID);
 
+			if (Alias != null)
+			{
+				writer
+					.Append("(")
+					.Append(Alias)
+					.Append(")");
+			}
+
 			writer.UnIndent();
 
 			var joinWriter = writer.WithOuterSource(Source);

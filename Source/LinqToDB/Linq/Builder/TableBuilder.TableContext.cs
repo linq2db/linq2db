@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -22,8 +23,10 @@ namespace LinqToDB.Linq.Builder
 			public Type             OriginalType;
 			public EntityDescriptor EntityDescriptor;
 
-			public Type     ObjectType { get; set; }
-			public SqlTable SqlTable   { get; set; }
+			public Type          ObjectType   { get; set; }
+			public SqlTable      SqlTable     { get; set; }
+			public LoadWithInfo  LoadWithRoot { get; set; } = new();
+			public MemberInfo[]? LoadWithPath { get; set; }
 
 			public bool IsSubQuery { get; }
 

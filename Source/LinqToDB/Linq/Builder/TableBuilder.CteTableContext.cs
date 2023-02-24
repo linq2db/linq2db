@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Common;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Common;
 
 	partial class TableBuilder
 	{
@@ -65,8 +66,10 @@ namespace LinqToDB.Linq.Builder
 			public CteContext  CteContext { get; }
 			public SqlCteTable CteTable   { get; }
 
-			public Type     ObjectType => CteTable.ObjectType;
-			public SqlTable SqlTable   => CteTable;
+			public Type          ObjectType   => CteTable.ObjectType;
+			public SqlTable      SqlTable     => CteTable;
+			public LoadWithInfo  LoadWithRoot { get; set; } = new();
+			public MemberInfo[]? LoadWithPath { get; set; }
 
 			public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest) : base(builder, selectQuery)
 			{

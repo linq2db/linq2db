@@ -37,6 +37,8 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 			}
 
+			sequence.SetAlias(condition.Parameters[0].Name);
+
 			var body = SequenceHelper.PrepareBody(condition, sequence);
 			var expr = ConvertExpression(body.Unwrap());
 

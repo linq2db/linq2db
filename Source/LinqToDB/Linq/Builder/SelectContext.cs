@@ -120,7 +120,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			return new SelectContext(null, Builder, context.CloneExpression(Body), context.CloneElement(SelectQuery), IsSubQuery);
+			var sc = context.CloneElement(SelectQuery);
+			return new SelectContext(null, Builder, context.CloneExpression(Body), sc, IsSubQuery);
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

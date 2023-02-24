@@ -7,8 +7,10 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using System.Reflection;
 	using Async;
 	using Linq;
+	using LinqToDB.Linq.Builder;
 
 	public partial class LinqExtensions
 	{
@@ -57,7 +59,7 @@ namespace LinqToDB
 			return table;
 		}
 
-		sealed class LoadWithQueryable<TEntity, TProperty> : ILoadWithQueryable<TEntity, TProperty>
+		sealed class LoadWithQueryable<TEntity, TProperty> : ILoadWithQueryable<TEntity, TProperty>, IExpressionQuery
 		{
 			private readonly IQueryable<TEntity> _query;
 
@@ -72,9 +74,11 @@ namespace LinqToDB
 			IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken) =>
 				((IAsyncEnumerable<TEntity>)_query).GetAsyncEnumerator(cancellationToken);
 
-			public Expression Expression   => _query.Expression;
-			public Type ElementType        => _query.ElementType;
-			public IQueryProvider Provider => _query.Provider;
+			public Expression     Expression  => _query.Expression;
+			public string         SqlText     => (_query as IExpressionQuery)?.SqlText ?? string.Empty;
+			public IDataContext   DataContext => (_query as IExpressionQuery)?.DataContext!;
+			public Type           ElementType => _query.ElementType;
+			public IQueryProvider Provider    => _query.Provider;
 
 			public override string ToString() => _query.ToString()!;
 		}
@@ -720,5 +724,15 @@ namespace LinqToDB
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
+		[LinqTunnel]
+		[Pure] 
+		internal static TSource LoadWithInternal<TSource>(
+			this TSource             source,
+			LoadWithInfo             loadWith,
+			MemberInfo[]?            loadWithPath)
+			where TSource : class
+		{
+			throw new InvalidOperationException();
+		}
 	}
 }

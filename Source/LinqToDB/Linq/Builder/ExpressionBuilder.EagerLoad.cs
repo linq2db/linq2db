@@ -125,7 +125,8 @@ namespace LinqToDB.Linq.Builder
 
 					var newExpr = ctx.builder.MakeExpression(ctx.currentContext, e, ProjectFlags.Expand);
 
-					return new TransformInfo(newExpr, false);
+					if (!ExpressionEqualityComparer.Instance.Equals(e, newExpr))
+						return new TransformInfo(newExpr, false);
 				}
 
 				return new TransformInfo(e);
@@ -199,6 +200,16 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		static Expression UnwrapDefaultIfEmpty(Expression expression)
+		{
+			while (expression is MethodCallExpression mc && mc.IsQueryable(nameof(Enumerable.DefaultIfEmpty)))
+			{
+				expression = mc.Arguments[0];
+			}
+
+			return expression;
+		}
+
 		Expression ProcessEagerLoadingExpression(
 			IBuildContext          buildContext,  
 			SqlEagerLoadExpression eagerLoad,
@@ -211,7 +222,7 @@ namespace LinqToDB.Linq.Builder
 			
 			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
-			var sequenceExpression = eagerLoad.SequenceExpression;
+			var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression);
 
 			sequenceExpression = ExpandContexts(buildContext, sequenceExpression);
 
@@ -330,7 +341,10 @@ namespace LinqToDB.Linq.Builder
 				_cachedSql       = saveSqlCache;
 			}
 
-			resultExpression = AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
+			if (resultExpression.Type != eagerLoad.Type)
+			{
+				resultExpression = new SqlAdjustTypeExpression(resultExpression, eagerLoad.Type, MappingSchema);
+			}
 
 			return resultExpression;
 		}

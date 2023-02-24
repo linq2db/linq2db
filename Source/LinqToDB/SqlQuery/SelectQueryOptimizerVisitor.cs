@@ -1725,6 +1725,8 @@ namespace LinqToDB.SqlQuery
 			var subQueryTableSource = subQuery.From.Tables[0];
 			joinTable.Table.Joins.AddRange(subQueryTableSource.Joins);
 			joinTable.Table.Source = subQueryTableSource.Source;
+			if (joinTable.Table.RawAlias == null && subQueryTableSource.RawAlias != null)
+				joinTable.Table.Alias = subQueryTableSource.RawAlias;
 
 			return true;
 		}
