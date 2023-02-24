@@ -114,7 +114,7 @@ namespace Tests.Linq
 			[Association(ThisKey = nameof(FkBookId), OtherKey = "BookId")]
 			public Book Book { get; set; } = default!;
 
-			[Association(ThisKey = nameof(FkAuthorId), OtherKey = "AutorId")]
+			[Association(ThisKey = nameof(FkAuthorId), OtherKey = "AuthorId")]
 			public Author Author { get; set; } = default!;
 		}
 

@@ -53,13 +53,16 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			ITableContext table;
+			ITableContext? table;
 
 			LoadWithInfo lastLoadWith;
 
 			if (methodCall.Method.Name == "LoadWithInternal")
 			{
-				table = SequenceHelper.GetTableOrCteContext(sequence) ?? throw new InvalidOperationException();
+				table = SequenceHelper.GetTableOrCteContext(sequence);
+
+				if (table == null)
+					return sequence;
 
 				var loadWith     = methodCall.Arguments[1].EvaluateExpression<LoadWithInfo>();
 				var loadWithPath = methodCall.Arguments[2].EvaluateExpression<MemberInfo[]>();
