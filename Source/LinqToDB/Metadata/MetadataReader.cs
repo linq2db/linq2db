@@ -43,29 +43,35 @@ namespace LinqToDB.Metadata
 						return Array<MappingAttribute>.Empty;
 					if (_readers.Length == 1)
 						if (type != null)
-							return _readers[0].GetAttributes<MappingAttribute>(type, (MemberInfo)source);
+							return _readers[0].GetAttributes(type, (MemberInfo)source);
 						else
-							return _readers[0].GetAttributes<MappingAttribute>((Type)source);
+							return _readers[0].GetAttributes((Type)source);
 
 					var attrs = new MappingAttribute[_readers.Length][];
 
 					for (var i = 0; i < _readers.Length; i++)
 						if (type != null)
-							attrs[i] = _readers[i].GetAttributes<MappingAttribute>(type, (MemberInfo)source);
+							attrs[i] = _readers[i].GetAttributes(type, (MemberInfo)source);
 						else
-							attrs[i] = _readers[i].GetAttributes<MappingAttribute>((Type)source);
+							attrs[i] = _readers[i].GetAttributes((Type)source);
 
 					return attrs.Flatten();
 				});
 		}
 
-		public T[] GetAttributes<T>(Type type)
+		internal T[] GetAttributes<T>(Type type)
 			where T : MappingAttribute
 			=> _cache.GetMappingAttributes<T>(type);
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : MappingAttribute
+		internal T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
+			where T: MappingAttribute
 			=> _cache.GetMappingAttributes<T>(type, memberInfo);
+
+		MappingAttribute[] IMetadataReader.GetAttributes(Type type)
+			=> _cache.GetMappingAttributes<MappingAttribute>(type);
+
+		MappingAttribute[] IMetadataReader.GetAttributes(Type type, MemberInfo memberInfo)
+			=> _cache.GetMappingAttributes<MappingAttribute>(type, memberInfo);
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
 		public MemberInfo[] GetDynamicColumns(Type type)

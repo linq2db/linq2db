@@ -55,17 +55,15 @@ namespace LinqToDB.Metadata
 				return _members.TryGetValue((MemberInfo)attributeProvider, out var memberAttributes) ? memberAttributes : Array<MappingAttribute>.Empty;
 		}
 
-		public T[] GetAttributes<T>(Type type)
-			where T : MappingAttribute
-			=> _cache.GetMappingAttributes<T>(type);
+		public MappingAttribute[] GetAttributes(Type type)
+			=> _cache.GetMappingAttributes<MappingAttribute>(type);
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : MappingAttribute
+		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
 			if (memberInfo.ReflectedType != type)
 				memberInfo = type.GetMemberEx(memberInfo) ?? memberInfo;
 
-			return _cache.GetMappingAttributes<T>(type, memberInfo);
+			return _cache.GetMappingAttributes<MappingAttribute>(type, memberInfo);
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>

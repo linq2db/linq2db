@@ -5,6 +5,7 @@ namespace LinqToDB.Metadata
 {
 	using Common;
 	using Extensions;
+	using Mapping;
 
 	sealed class AttributeInfo
 	{
@@ -17,9 +18,9 @@ namespace LinqToDB.Metadata
 		public Type                       Type;
 		public Dictionary<string,object?> Values;
 
-		Func<Attribute>? _func;
+		Func<MappingAttribute>? _func;
 
-		public Attribute MakeAttribute()
+		public MappingAttribute MakeAttribute()
 		{
 			if (_func == null)
 			{
@@ -28,7 +29,7 @@ namespace LinqToDB.Metadata
 
 				if (ctor != null)
 				{
-					var expr = Expression.Lambda<Func<Attribute>>(
+					var expr = Expression.Lambda<Func<MappingAttribute>>(
 						Expression.Convert(
 							Expression.MemberInit(
 								Expression.New(ctor),
@@ -41,7 +42,7 @@ namespace LinqToDB.Metadata
 										member,
 										Expression.Constant(Converter.ChangeType(k.Value, mtype), mtype));
 								})),
-							typeof(Attribute)));
+							typeof(MappingAttribute)));
 
 					_func = expr.CompileExpression();
 				}

@@ -14,10 +14,5 @@ namespace LinqToDB.Metadata
 		public string                            Name;
 		public Dictionary<string,MetaMemberInfo> Members;
 		public AttributeInfo[]                   Attributes;
-
-		public AttributeInfo[] GetAttribute(Type type)
-		{
-			return Attributes.Where(a => type.IsAssignableFrom(a.Type)).ToArray();
-		}
 	}
 }

@@ -1,4 +1,5 @@
-﻿using LinqToDB.Expressions;
+﻿using System.Linq;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 
@@ -21,7 +22,8 @@ namespace Tests.Metadata
 		public void TypeAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<TableAttribute>(typeof(TestEntity));
+			var attrs = rd.GetAttributes(typeof(TestEntity))
+				.OfType<TableAttribute>().ToArray();
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);
@@ -32,7 +34,8 @@ namespace Tests.Metadata
 		public void FieldAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Field1));
+			var attrs = rd.GetAttributes(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Field1))
+				.OfType<ColumnAttribute>().ToArray();
 
 			Assert.AreEqual(0, attrs.Length);
 		}
@@ -41,7 +44,8 @@ namespace Tests.Metadata
 		public void PropertyAttribute()
 		{
 			var rd    = new AttributeReader();
-			var attrs = rd.GetAttributes<ColumnAttribute>(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Property1));
+			var attrs = rd.GetAttributes(typeof(TestEntity), MemberHelper.MemberOf<TestEntity>(a => a.Property1))
+				.OfType<ColumnAttribute>().ToArray();
 
 			Assert.NotNull (attrs);
 			Assert.AreEqual(1, attrs.Length);

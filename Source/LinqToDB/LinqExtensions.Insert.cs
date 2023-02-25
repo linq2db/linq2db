@@ -353,7 +353,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable, outputExpression),
-					query.Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression,
+					query.Expression, Expression.Quote(setter), ((IQueryable<TOutput>)outputTable).Expression,
 					Expression.Quote(outputExpression)));
 		}
 
@@ -395,7 +395,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable, outputExpression),
-					query.Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression,
+					query.Expression, Expression.Quote(setter), ((IQueryable<TOutput>)outputTable).Expression,
 					Expression.Quote(outputExpression));
 
 			if (query is IQueryProviderAsync queryAsync)
@@ -709,7 +709,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable, outputExpression),
 					currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter),
-					((IQueryable<TTarget>)outputTable).Expression, Expression.Quote(outputExpression)));
+					((IQueryable<TOutput>)outputTable).Expression, Expression.Quote(outputExpression)));
 		}
 
 		/// <summary>
@@ -756,7 +756,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable, outputExpression),
 					currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter),
-					((IQueryable<TTarget>)outputTable).Expression, Expression.Quote(outputExpression));
+					((IQueryable<TOutput>)outputTable).Expression, Expression.Quote(outputExpression));
 
 			if (currentSource is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);

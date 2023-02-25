@@ -407,6 +407,16 @@ namespace LinqToDB.Mapping
 			return Columns.FirstOrDefault(c => c.MemberInfo == memberInfo);
 		}
 
+		/// <summary>
+		/// Returns association descriptor based on its MemberInfo
+		/// </summary>
+		/// <param name="memberInfo"></param>
+		/// <returns></returns>
+		public AssociationDescriptor? FindAssociationDescriptor(MemberInfo memberInfo)
+		{
+			return Associations.FirstOrDefault(a => a.MemberInfo.EqualsTo(memberInfo));
+		}
+
 		#region Dynamic Columns
 		/// <summary>
 		/// Gets the dynamic columns store descriptor.

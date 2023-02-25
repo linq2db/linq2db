@@ -251,27 +251,23 @@ namespace LinqToDB.Metadata
 			.ToDictionary(t => t.Name);
 		}
 
-		public T[] GetAttributes<T>(Type type)
-			where T : MappingAttribute
+		public MappingAttribute[] GetAttributes(Type type)
 		{
-			if (_types.TryGetValue(type.FullName!, out var t) || _types.TryGetValue(type.Name, out t))
-				return t.GetAttribute(typeof(T)).Select(a => (T)a.MakeAttribute()).ToArray();
+			if ((_types.TryGetValue(type.FullName!, out var t) || _types.TryGetValue(type.Name, out t)) && t.Attributes.Length > 0)
+				return t.Attributes.Select(a => a.MakeAttribute()).ToArray();
 
-			return Array<T>.Empty;
+			return Array<MappingAttribute>.Empty;
 		}
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo)
-			where T : MappingAttribute
+		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
 			if (_types.TryGetValue(type.FullName!, out var t) || _types.TryGetValue(type.Name, out t))
 			{
-				if (t.Members.TryGetValue(memberInfo.Name, out var m))
-				{
-					return m.GetAttribute(typeof(T)).Select(a => (T)a.MakeAttribute()).ToArray();
-				}
+				if (t.Members.TryGetValue(memberInfo.Name, out var m) && m.Attributes.Length > 0)
+					return m.Attributes.Select(a => a.MakeAttribute()).ToArray();
 			}
 
-			return Array<T>.Empty;
+			return Array<MappingAttribute>.Empty;
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>

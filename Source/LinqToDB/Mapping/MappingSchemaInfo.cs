@@ -20,9 +20,9 @@ namespace LinqToDB.Mapping
 		}
 
 		public  string           Configuration;
-		private IMetadataReader? _metadataReader;
+		private MetadataReader? _metadataReader;
 
-		public IMetadataReader? MetadataReader
+		public MetadataReader? MetadataReader
 		{
 			get => _metadataReader;
 			set
@@ -277,15 +277,7 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		public IEnumerable<Type> GetRegisteredTypes()
-		{
-			switch (MetadataReader)
-			{
-				case FluentMetadataReader fr : return fr.GetRegisteredTypes();
-				case MetadataReader mr       : return mr.GetRegisteredTypes();
-				default                      : return Array<Type>.Empty;
-			}
-		}
+		public IEnumerable<Type> GetRegisteredTypes() => MetadataReader?.GetRegisteredTypes() ?? Array<Type>.Empty;
 
 		#endregion
 
