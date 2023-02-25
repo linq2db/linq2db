@@ -1589,7 +1589,12 @@ namespace LinqToDB.Linq.Builder
 
 					var predicateExpr = ConvertCompareExpression(context, nodeType, leftAssignment.Expression, rightExpression, flags);
 					if (predicateExpr is not SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
-						return predicateExpr;
+					{
+						if (strict)
+							return predicateExpr;
+						continue;
+					}
+
 					searchCondition.Conditions.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
 				}
 
@@ -1608,7 +1613,12 @@ namespace LinqToDB.Linq.Builder
 
 					var predicateExpr = ConvertCompareExpression(context, nodeType, leftExpression, rightAssignment.Expression, flags);
 					if (predicateExpr is not SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
-						return predicateExpr;
+					{
+						if (strict)
+							return predicateExpr;
+						continue;
+					}
+
 					searchCondition.Conditions.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
 				}
 

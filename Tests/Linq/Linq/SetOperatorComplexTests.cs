@@ -2,6 +2,7 @@
 using System.Net;
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -256,8 +257,29 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		static IQueryable<T> Combine<T>(IQueryable<T> query1, IQueryable<T> query2, SetOperation operation)
+		{
+			switch (operation)
+			{
+				case SetOperation.Union:
+					return query1.Union(query2);
+				case SetOperation.UnionAll:
+					return query1.UnionAll(query2);
+				case SetOperation.Except:
+					return query1.Except(query2);
+				case SetOperation.ExceptAll:
+					return query1.ExceptAll(query2);
+				case SetOperation.Intersect:
+					return query1.Intersect(query2);
+				case SetOperation.IntersectAll:
+					return query1.IntersectAll(query2);
+				default:
+					throw new ArgumentOutOfRangeException(nameof(operation), operation, null);
+			}
+		}
+
 		[Test]
-		public void ConcatEager([DataSources] string context)
+		public void EagerSameDetails([DataSources] string context, [Values] SetOperation operation)
 		{
 			using var db       = GetDataContext(context);
 			using var disposal = InitTestData(db);
@@ -284,7 +306,40 @@ namespace Tests.Linq
 					Authors = b.Authors.ToList()
 				};
 
-			var query = query1.Concat(query2);
+			var query = Combine(query1, query2, operation);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void UnionEagerSameDetails([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 = 
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from b in a.Books.OfType<Roman>()
+				select new
+				{
+					Id = b.BookId,
+					b.BookName,
+					Authors = b.Authors.ToList()
+				};
+
+			var query2 = 
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from b in a.Books.OfType<Novel>()
+				select new
+				{
+					Id = b.BookId,
+					b.BookName,
+					Authors = b.Authors.ToList()
+				};
+
+			var query = query1.Union(query2);
 
 			AssertQuery(query);
 		}
