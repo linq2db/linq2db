@@ -65,11 +65,11 @@ namespace Tests.DataProvider
 		 * 9.  Decimals with precision > 29 lack support from Octonica provider
 		 *
 		 * 10. DateTime/DateTime64 with precision > 8 lack of suitable type to store such precision
-		 * 
+		 *
 		 * 11. Timezone qualifier for datetime types not covered
-		 * 
+		 *
 		 * 12. Enums lack type generation from mappings
-		 * 
+		 *
 		 * 13. JSON type doesn't look usable outside of DB
 		 *
 		 */

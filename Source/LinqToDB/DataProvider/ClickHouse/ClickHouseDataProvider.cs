@@ -50,6 +50,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 			SqlProviderFlags.IsCountDistinctSupported          = true;
 			SqlProviderFlags.DoesNotSupportCorrelatedSubquery  = true;
 
+			if (this is ClickHouseOctonicaDataProvider or ClickHouseMySqlDataProvider)
+				SqlProviderFlags.IsProjectionBoolSupported = false;
+
 			// unconfigured flags
 			// 1. ClickHouse doesn't support correlated subqueries at all so this flag's value doesn't make difference
 			//SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
