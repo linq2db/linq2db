@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Data;
 	using Common;
-
+	using Data;
 	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
 
 	// must be public to allow reuse by iSeries provider
@@ -17,12 +14,12 @@ namespace LinqToDB.DataProvider.DB2
 	public static class DB2BulkCopyShared
 	{
 		public static BulkCopyRowsCopied ProviderSpecificCopyImpl<T>(
-			ITable<T> table,
-			BulkCopyOptions options,
-			IEnumerable<T> source,
-			DataConnection dataConnection,
-			DbConnection connection,
-			DB2ProviderAdapter.BulkCopyAdapter bulkCopy,
+			ITable<T>                                       table,
+			BulkCopyOptions                                 options,
+			IEnumerable<T>                                  source,
+			DataConnection                                  dataConnection,
+			DbConnection                                    connection,
+			DB2ProviderAdapter.BulkCopyAdapter              bulkCopy,
 			Action<DataConnection, Func<string>, Func<int>> traceAction)
 			where T : notnull
 		{
