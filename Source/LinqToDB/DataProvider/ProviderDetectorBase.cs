@@ -71,11 +71,11 @@ namespace LinqToDB.DataProvider
 
 		public DataOptions CreateOptions(DataOptions options, TVersion dialect, TProvider provider)
 		{
-			if (options.ConnectionOptions.ConnectionString == null)
-				throw new InvalidOperationException("Connection string is not provided.");
-
 			if (dialect.Equals(AutoDetectVersion))
 			{
+				if (options.ConnectionOptions.ConnectionString == null)
+					throw new InvalidOperationException("Connection string is not provided.");
+
 				if (TryGetCachedServerVersion(options.ConnectionOptions.ConnectionString, out var version))
 					dialect = version ?? DefaultVersion;
 				else
