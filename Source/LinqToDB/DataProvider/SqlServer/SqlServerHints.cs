@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 
 using JetBrains.Annotations;
+using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -840,7 +841,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					.Append(' ')
 					;
 
-				sqlBuilder.BuildExpression(stringBuilder, dateTime, true);
+				sqlBuilder.BuildExpression(stringBuilder, dateTime, true, this);
 			}
 		}
 
@@ -850,7 +851,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
 			this                ISqlServerSpecificTable<TSource> table,
 			[SqlQueryDependent] string                           expression,
-			[SqlQueryDependent] DateTime                         dateTime)
+			                    DateTime                         dateTime)
 			where TSource : notnull
 		{
 			table.Expression = Expression.Call(

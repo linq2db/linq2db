@@ -3062,9 +3062,13 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.Append(')');
 		}
 
-		void ISqlBuilder.BuildExpression(StringBuilder sb, ISqlExpression expr, bool buildTableName)
+		protected object? BuildExpressionContext;
+
+		void ISqlBuilder.BuildExpression(StringBuilder sb, ISqlExpression expr, bool buildTableName, object? context)
 		{
+			BuildExpressionContext = context;
 			WithStringBuilder(sb, static ctx => ctx.this_.BuildExpression(ctx.expr, ctx.buildTableName, true), (this_: this, expr, buildTableName));
+			BuildExpressionContext = null;
 		}
 
 		#endregion
