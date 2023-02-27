@@ -180,5 +180,12 @@ namespace LinqToDB.SqlQuery
 		{
 			name = Name;
 		}
+
+		public void Deconstruct(out Type systemType, out string name, out ISqlExpression[] parameters)
+		{
+			systemType = SystemType;
+			name       = Name;
+			parameters = Parameters;
+		}
 	}
 }
