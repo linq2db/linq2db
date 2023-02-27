@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -320,6 +321,15 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 36)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
+		[DataMember(Order = 37)]
+		public bool DoesNotSupportCorrelatedSubquery { get; set; }
+
+		[DataMember(Order = 38)]
+		public bool IsExistsPreferableForContains   { get; set; }
+
+		[DataMember(Order = 39)]
+		public bool IsProjectionBoolSupported { get; set; } = true;
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -361,6 +371,9 @@ namespace LinqToDB.SqlProvider
 				^ OutputDeleteUseSpecialTable                  .GetHashCode()
 				^ OutputInsertUseSpecialTable                  .GetHashCode()
 				^ OutputUpdateUseSpecialTables                 .GetHashCode()
+				^ DoesNotSupportCorrelatedSubquery             .GetHashCode()
+				^ IsExistsPreferableForContains                .GetHashCode()
+				^ IsProjectionBoolSupported                    .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -402,6 +415,9 @@ namespace LinqToDB.SqlProvider
 				&& OutputDeleteUseSpecialTable          == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable          == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables         == other.OutputUpdateUseSpecialTables
+				&& DoesNotSupportCorrelatedSubquery     == other.DoesNotSupportCorrelatedSubquery
+				&& IsExistsPreferableForContains        == other.IsExistsPreferableForContains
+				&& IsProjectionBoolSupported            == other.IsProjectionBoolSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

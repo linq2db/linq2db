@@ -1,13 +1,13 @@
 ﻿<Project>
 	<!--
 	Known issues:
-	
+
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
 	-->
 	<ItemGroup>
 		<!--as stated in issue 1 -  packages in this item group shouldn't be duplicated in other groups-->
-		
+
 		<!--generic packages for source projects-->
 		<PackageVersion Include="System.Data.DataSetExtensions"                         Version="4.5.0"         />
 		<PackageVersion Include="Microsoft.CSharp"                                      Version="4.7.0"         />
@@ -76,7 +76,7 @@
 		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="7.0.0"         />
 		<PackageVersion Include="Newtonsoft.Json"                                       Version="13.0.2"        />
 	</ItemGroup>
-	
+
 	<!--linq2db source-->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net45' OR '$(TargetFramework)' == 'net46' ">
 		<!--downgrade-->
@@ -105,7 +105,7 @@
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="6.0.1"         />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="6.0.3"         />
 	</ItemGroup>
-	
+
 	<!--test dependencies-->
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
 		<!--test v0.x compatibility, required for Pomelo EF.Core provider v3 -->
@@ -122,7 +122,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<PackageVersion Include="MySqlConnector"                                        Version="2.2.5"         />
 	</ItemGroup>
-	
+
 	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"         />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.1.1"         />
