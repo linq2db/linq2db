@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	public static partial class SqlServerTools
 	{
 		[LinqTunnel, Pure]
-		[LinqToDB.Sql.QueryExtension(null, LinqToDB.Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificTable<TSource> AsSqlServer<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		[LinqTunnel, Pure]
-		[LinqToDB.Sql.QueryExtension(null, LinqToDB.Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> AsSqlServer<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
 		{

@@ -2903,13 +2903,13 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlParameter:
 					{
-						var parm = (SqlParameter)expr;
-
+						var parm     = (SqlParameter)expr;
 						var inlining = !parm.IsQueryParameter;
+
 						if (inlining)
 						{
 							var paramValue = parm.GetParameterValue(OptimizationContext.Context.ParameterValues);
-							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), DataOptions, paramValue.ProviderValue))
+							if (!TryConvertParameterToSql(paramValue))
 								inlining = false;
 						}
 
@@ -2967,6 +2967,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return StringBuilder;
+		}
+
+		protected virtual bool TryConvertParameterToSql(SqlParameterValue paramValue)
+		{
+			return MappingSchema.TryConvertToSql(StringBuilder, new (paramValue.DbDataType), DataOptions, paramValue.ProviderValue);
 		}
 
 		protected virtual void BuildParameter(SqlParameter parameter)

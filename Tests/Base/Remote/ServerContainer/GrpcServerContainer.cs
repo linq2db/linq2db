@@ -58,7 +58,7 @@ namespace Tests.Remote.ServerContainer
 					if (interceptor != null)
 						service.RemoveInterceptor();
 				})
-			{ Configuration = configuration };
+			{ ConfigurationString = configuration };
 
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
 

@@ -125,6 +125,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		public static class TemporalTable
+		{
+			public const string All         = "ALL";
+			public const string AsOf        = "AS OF";
+			public const string FromTo      = "FROM";
+			public const string Between     = "BETWEEN";
+			public const string ContainedIn = "CONTAINED IN (";
+		}
+
 		#region SqlServerSpecific Hints
 
 		[ExpressionMethod(nameof(WithIndexImpl))]
@@ -828,12 +837,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var expression = (string)((SqlValue)sqlQueryExtension.Arguments["expression"]).Value!;
-				var dateTime   = sqlQueryExtension.Arguments["dateTime"];
-
-//				DateTime? dateTime2 = null;
-//
-//				if (sqlQueryExtension.Arguments.TryGetValue("dateTime", out var dt2))
-//					dateTime2 = (DateTime?)((SqlValue)dt2).Value;
 
 				stringBuilder
 					.Append(" FOR SYSTEM_TIME ")
@@ -841,8 +844,51 @@ namespace LinqToDB.DataProvider.SqlServer
 					.Append(' ')
 					;
 
-				sqlBuilder.BuildExpression(stringBuilder, dateTime, true, this);
+				if (expression == TemporalTable.ContainedIn)
+					stringBuilder.Length--;
+
+				var b2016 = sqlBuilder as SqlServer2016SqlBuilder;
+
+				if (b2016 != null)
+					b2016.ConvertDateTimeAsLiteral = true;
+
+				if (sqlQueryExtension.Arguments.TryGetValue("dateTime", out var dt))
+					sqlBuilder.BuildExpression(stringBuilder, dt, true, this);
+
+				if (sqlQueryExtension.Arguments.TryGetValue("dateTime2", out dt))
+				{
+					switch (expression)
+					{
+						case TemporalTable.FromTo      : stringBuilder.Append(" TO ");  break;
+						case TemporalTable.Between     : stringBuilder.Append(" AND "); break;
+						case TemporalTable.ContainedIn : stringBuilder.Append(", ");    break;
+					}
+
+					sqlBuilder.BuildExpression(stringBuilder, dt, true, this);
+
+					if (expression == TemporalTable.ContainedIn)
+						stringBuilder.Append(')');
+				}
+
+				if (b2016 != null)
+					b2016.ConvertDateTimeAsLiteral = true;
 			}
+		}
+
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
+			this                ISqlServerSpecificTable<TSource> table,
+			[SqlQueryDependent] string                           expression)
+			where TSource : notnull
+		{
+			table.Expression = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(TemporalTableHint, table, expression),
+				table.Expression, Expression.Constant(expression));
+
+			return table;
 		}
 
 		[LinqTunnel, Pure]
@@ -878,6 +924,76 @@ namespace LinqToDB.DataProvider.SqlServer
 				table.Expression, Expression.Constant(expression), Expression.Constant(dateTime), Expression.Constant(dateTime2));
 
 			return table;
+		}
+
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableAllImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableAll<TSource>(this ISqlServerSpecificTable<TSource> table)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.All);
+		}
+
+		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> TemporalTableAllImpl<TSource>()
+			where TSource : notnull
+		{
+			return table => table.TemporalTableHint(TemporalTable.All);
+		}
+
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableAsOfImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableAsOf<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.AsOf, dateTime);
+		}
+
+		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableAsOfImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, dateTime) => table.TemporalTableHint(TemporalTable.AsOf, dateTime);
+		}
+
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableFromToImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableFromTo<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime, DateTime dateTime2)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.FromTo, dateTime, dateTime2);
+		}
+
+		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableFromToImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, dateTime, dateTime2) => table.TemporalTableHint(TemporalTable.FromTo, dateTime, dateTime2);
+		}
+
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableBetweenImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableBetween<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime, DateTime dateTime2)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.Between, dateTime, dateTime2);
+		}
+
+		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableBetweenImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, dateTime, dateTime2) => table.TemporalTableHint(TemporalTable.Between, dateTime, dateTime2);
+		}
+
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableContainedInImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableContainedIn<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime, DateTime dateTime2)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.ContainedIn, dateTime, dateTime2);
+		}
+
+		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableContainedInImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, dateTime, dateTime2) => table.TemporalTableHint(TemporalTable.ContainedIn, dateTime, dateTime2);
 		}
 
 		#endregion

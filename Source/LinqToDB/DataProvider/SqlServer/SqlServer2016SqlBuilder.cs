@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.DataProvider.SqlServer
+﻿using System;
+using LinqToDB.Common;
+
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using Mapping;
 	using SqlProvider;
@@ -26,5 +29,17 @@
 		}
 
 		public override string Name => ProviderName.SqlServer2016;
+
+		public bool ConvertDateTimeAsLiteral;
+
+		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)
+		{
+			// SQL Server FOR SYSTEM_TIME clause does not support expressions. Parameters or literals only.
+			//
+			if (ConvertDateTimeAsLiteral && paramValue.ProviderValue is DateTime)
+				return base.TryConvertParameterToSql(new (paramValue.ProviderValue, new (typeof(DateTime), DataType.Char)));
+
+			return base.TryConvertParameterToSql(paramValue);
+		}
 	}
 }

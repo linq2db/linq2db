@@ -68,7 +68,7 @@ namespace LinqToDB.Remote.Wcf
 			return new WcfDataContext()
 			{
 				MappingSchema              = MappingSchema,
-				Configuration              = Configuration,
+				ConfigurationString        = ConfigurationString,
 				Binding                    = Binding,
 				_endpointConfigurationName = _endpointConfigurationName,
 				_remoteAddress             = _remoteAddress,
