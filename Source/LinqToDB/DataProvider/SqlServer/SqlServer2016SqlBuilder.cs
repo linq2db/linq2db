@@ -1,5 +1,4 @@
 ﻿using System;
-using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

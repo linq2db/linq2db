@@ -17,7 +17,7 @@ namespace Tests.Linq
 	[TestFixture]
 	public class TemporalTableTests : TestBase
 	{
-		class TemporalTest
+		public class TemporalTest
 		{
 			[PrimaryKey]
 			public int      ID;
