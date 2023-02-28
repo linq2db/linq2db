@@ -38,6 +38,7 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
