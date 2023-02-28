@@ -11,7 +11,7 @@ namespace Tests.Model.Remote.Wcf
 	{
 		private readonly Action? _onDispose;
 
-		public TestWcfDataContext(int port, Action? onDispose = null) : base(
+		public TestWcfDataContext(int port, Action? onDispose = null, Func<DataOptions,DataOptions>? optionBuilder = null) : base(
 			new NetTcpBinding(SecurityMode.None)
 			{
 				MaxReceivedMessageSize = 10000000,
@@ -22,7 +22,8 @@ namespace Tests.Model.Remote.Wcf
 				ReceiveTimeout         = new TimeSpan(00, 10, 00),
 				SendTimeout            = new TimeSpan(00, 10, 00),
 			},
-			new EndpointAddress("net.tcp://localhost:" + port + "/LinqOverWcf"))
+			new EndpointAddress("net.tcp://localhost:" + port + "/LinqOverWcf"),
+			optionBuilder)
 		{
 			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;
 			_onDispose = onDispose;

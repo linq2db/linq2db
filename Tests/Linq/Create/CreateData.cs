@@ -112,9 +112,6 @@ public class a_CreateData : TestBase
 				}
 			}
 
-			if (exception != null)
-				throw exception;
-
 			if (DataConnection.TraceSwitch.TraceInfo)
 				TestContext.WriteLine("\nBulkCopy LinqDataTypes\n");
 
@@ -231,6 +228,9 @@ public class a_CreateData : TestBase
 				});
 
 			action?.Invoke(db.Connection);
+
+			if (exception != null)
+				throw exception;
 		}
 	}
 
