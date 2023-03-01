@@ -464,11 +464,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					switch (join.JoinType)
 					{
 						case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
-							                       StringBuilder.Append($"CROSS ").Append(h).Append(" JOIN "); return false;
-						case JoinType.Inner      : StringBuilder.Append($"INNER ").Append(h).Append(" JOIN "); return true;
-						case JoinType.Left       : StringBuilder.Append($"LEFT ") .Append(h).Append(" JOIN "); return true;
-						case JoinType.Right      : StringBuilder.Append($"RIGHT ").Append(h).Append(" JOIN "); return true;
-						case JoinType.Full       : StringBuilder.Append($"FULL ") .Append(h).Append(" JOIN "); return true;
+							                       StringBuilder.Append($"CROSS {h} JOIN "); return false;
+						case JoinType.Inner      : StringBuilder.Append($"INNER {h} JOIN "); return true;
+						case JoinType.Left       : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
+						case JoinType.Right      : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
+						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
 						default                  : throw new InvalidOperationException();
 					}
 				}

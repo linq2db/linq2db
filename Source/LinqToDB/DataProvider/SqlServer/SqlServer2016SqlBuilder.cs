@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public override string Name => ProviderName.SqlServer2016;
 
-		public bool ConvertDateTimeAsLiteral;
+		internal bool ConvertDateTimeAsLiteral;
 
 		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)
 		{
