@@ -39,5 +39,10 @@ namespace LinqToDB.Linq.Builder
 
 			return GetBuilder(builder, info).IsSequence(builder, info);
 		}
+
+		public Expression Expand(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			return buildInfo.Expression;
+		}
 	}
 }

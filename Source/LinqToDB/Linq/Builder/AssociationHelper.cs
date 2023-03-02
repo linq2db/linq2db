@@ -123,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (expressionPredicate != null)
 				{
-					shouldAddDefaultIfEmpty = association.CanBeNull || inline;
+					shouldAddDefaultIfEmpty = shouldAddDefaultIfEmpty || association.CanBeNull && inline;
 					shouldAddCacheCheck     = true;
 
 					var replacedBody = expressionPredicate.GetBody(parentParam, childParam);

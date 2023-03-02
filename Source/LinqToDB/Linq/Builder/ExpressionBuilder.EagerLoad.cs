@@ -108,6 +108,29 @@ namespace LinqToDB.Linq.Builder
 			return genericType.GetGenericArguments()[0];
 		}
 
+		Expression ExpandLambdas(IBuildContext currentContext, Expression expression)
+		{
+			var result = expression.Transform((builder: this, currentContext), static (ctx, e) =>
+			{
+				if (e.NodeType == ExpressionType.Lambda)
+				{
+					var lambda  = (LambdaExpression)e;
+					if (lambda.Body.Find(1, (_, x) => x is ContextRefExpression) != null)
+					{
+						var newBody = ctx.builder.ExpandContexts(ctx.currentContext, lambda.Body);
+						if (!ExpressionEqualityComparer.Instance.Equals(lambda.Body, newBody))
+						{
+							return new TransformInfo(Expression.Lambda(newBody, lambda.Parameters), false);
+						}
+					}
+				}
+
+				return new TransformInfo(e);
+			});
+
+			return result;
+		}
+
 		Expression ExpandContexts(IBuildContext currentContext, Expression expression)
 		{
 			var result = expression.Transform((builder: this, currentContext), static (ctx, e) =>
@@ -115,14 +138,6 @@ namespace LinqToDB.Linq.Builder
 				if (e.NodeType == ExpressionType.Extension || e.NodeType == ExpressionType.MemberAccess ||
 				    e.NodeType == ExpressionType.Call)
 				{
-					if (e.NodeType == ExpressionType.MemberAccess)
-					{
-						if (null != e.Find(e, (_, e) => e.NodeType == ExpressionType.Parameter))
-						{
-							return new TransformInfo(e);
-						}
-					}
-
 					var newExpr = ctx.builder.MakeExpression(ctx.currentContext, e, ProjectFlags.Expand);
 
 					if (!ExpressionEqualityComparer.Instance.Equals(e, newExpr))
@@ -219,16 +234,16 @@ namespace LinqToDB.Linq.Builder
 		{
 			var cloningContext       = new CloningContext();
 			var clonedParentContext  = cloningContext.CloneContext(buildContext);
+			clonedParentContext = new EagerContext(clonedParentContext);
 			
 			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
-			var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression);
+			var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression.Unwrap());
 
 			sequenceExpression = ExpandContexts(buildContext, sequenceExpression);
 
 			var correctedSequence    = cloningContext.CloneExpression(sequenceExpression);
 
-			var clonedMainContextRef = cloningContext.CloneExpression(eagerLoad.ContextRef);
 			CollectDependencies(sequenceExpression, dependencies);
 
 			dependencies.AddRange(previousKeys);
@@ -248,7 +263,7 @@ namespace LinqToDB.Linq.Builder
 
 			Expression resultExpression;
 
-			var mainType   = GetEnumerableElementType(clonedMainContextRef.Type);
+			var mainType   = clonedParentContext.ElementType;
 			var detailType = GetEnumerableElementType(eagerLoad.Type);
 
 			if (dependencies.Count == 0)
@@ -276,7 +291,7 @@ namespace LinqToDB.Linq.Builder
 					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Key)), detailKeyExpression),
 					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail)), detailParameter));
 
-				var clonedParentContextRef = new ContextRefExpression(clonedMainContextRef.Type, clonedParentContext);
+				var clonedParentContextRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(clonedParentContext.ElementType), clonedParentContext);
 
 				Expression sourceQuery = clonedParentContextRef;
 
@@ -318,6 +333,16 @@ namespace LinqToDB.Linq.Builder
 							cloningContext.CorrectElement(p.Key.ParentQuery)),
 					p => cloningContext.CorrectExpression(p.Value), ColumnCacheKey.ColumnCacheKeyComparer);
 
+				var saveAssociationsCache = _associations;
+
+				_associations = _associations?.ToDictionary(p =>
+						new SqlCacheKey(
+							cloningContext.CorrectExpression(p.Key.Expression),
+							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
+							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
+
+					p => cloningContext.CorrectExpression(p.Value), SqlCacheKey.SqlCacheKeyComparer);
+				
 				var saveSqlCache = _cachedSql;
 
 				_cachedSql = _cachedSql.ToDictionary(p =>
@@ -339,6 +364,7 @@ namespace LinqToDB.Linq.Builder
 				_expressionCache = saveExpressionCache;
 				_columnCache     = saveColumnsCache;
 				_cachedSql       = saveSqlCache;
+				_associations    = saveAssociationsCache;
 			}
 
 			if (resultExpression.Type != eagerLoad.Type)

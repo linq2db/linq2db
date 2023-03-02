@@ -33,6 +33,11 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
+		public Expression Expand(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			return buildInfo.Expression;
+		}
+
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		sealed class ScalarSelectContext : BuildContextBase
 		{
@@ -40,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression Body { get; }
 
-			public ScalarSelectContext(ExpressionBuilder builder, Expression body, SelectQuery selectQuery) : base(builder, selectQuery)
+			public ScalarSelectContext(ExpressionBuilder builder, Expression body, SelectQuery selectQuery) : base(builder, body.Type, selectQuery)
 			{
 				Body = body;
 			}

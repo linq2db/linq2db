@@ -1488,7 +1488,6 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssue(2966)]
 		[Test(Description = "association over set query")]
 		public void Issue2966([DataSources] string context)
 		{
@@ -1653,6 +1652,7 @@ namespace Tests.Linq
 					})
 				}
 			}).Where(a => a.ParentTest == null || a.ParentTest.Children.Any(a => a.ChildID == 11)).ToArray();
+
 			var expected = Parent.Select(a => new
 			{
 				a.ParentID,

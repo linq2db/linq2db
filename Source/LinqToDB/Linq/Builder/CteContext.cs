@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 		ContextRefExpression CteContextRef { get; }
 
 		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression) 
-			: base(builder, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
+			: base(builder, cteClause.ObjectType, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
 		{
 			CteInnerQueryContext = cteInnerQueryContext; 
 			CteClause            = cteClause;

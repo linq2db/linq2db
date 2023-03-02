@@ -128,6 +128,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (level == 0 && context != null && purpose == FullEntityPurpose.Default && context is ITableContext table)
 			{
+				var ed = MappingSchema.GetEntityDescriptor(table.ObjectType,
+					DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+
 				var loadWith = GetTableLoadWith(table);
 
 				if (loadWith.Count > 0)
@@ -142,19 +145,6 @@ namespace LinqToDB.Linq.Builder
 							continue;
 
 						var expression = Expression.MakeMemberAccess(currentPath, memberInfo);
-						var ad         = GetAssociationDescriptor(expression, out var accessorMember);
-						if (ad != null)
-						{
-							if (flags.IsExpression() && !string.IsNullOrEmpty(ad.Storage))
-							{
-								memberInfo = memberInfo.ReflectedType!.GetMember(ad.Storage!,
-									BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy |
-									BindingFlags.NonPublic).SingleOrDefault();
-
-								if (memberInfo == null)
-									throw new LinqToDBException($"Storage member '{info.MemberInfo!.ReflectedType!.Name}.{ad.Storage}' not found.");
-							}
-						}
 
 						members.Add(
 							new SqlGenericConstructorExpression.Assignment(memberInfo, expression, false, true));
@@ -175,6 +165,22 @@ namespace LinqToDB.Linq.Builder
 
 			return generic;
 		}
+
+		AssociationDescriptor? GetFieldOrPropAssociationDescriptor(MemberInfo memberInfo, EntityDescriptor entityDescriptor)
+		{
+			if (entityDescriptor.FindAssociationDescriptor(memberInfo) is AssociationDescriptor associationDescriptor)
+				return associationDescriptor;
+
+			foreach (var m in entityDescriptor.InheritanceMapping)
+			{
+				var ed = MappingSchema.GetEntityDescriptor(m.Type, DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				if (ed.FindAssociationDescriptor(memberInfo) is AssociationDescriptor inheritedAssociationDescriptor)
+					return inheritedAssociationDescriptor;
+			}	
+
+			return null;
+		}
+
 
 		#endregion Entity Construction
 
@@ -326,6 +332,7 @@ namespace LinqToDB.Linq.Builder
 			var ed = mappingSchema.GetEntityDescriptor(typeAccessor.Type);
 
 			List<SqlGenericConstructorExpression.Assignment>? dynamicProperties = null;
+			List<LambdaExpression>? additionalSteps = null;
 
 			for (int i = 0; i < constructorExpression.Assignments.Count; i++)
 			{
@@ -346,6 +353,20 @@ namespace LinqToDB.Linq.Builder
 					{
 						var memberAccessor = typeAccessor[assignment.MemberInfo.Name];
 
+						var memberInfo = assignment.MemberInfo;
+						var descriptor = GetFieldOrPropAssociationDescriptor(memberInfo, ed);
+						if (descriptor != null)
+						{
+							var expr = descriptor.GetAssociationAssignmentLambda(assignment.Expression.Unwrap(), memberInfo);
+							if (expr != null)
+							{
+								additionalSteps ??= new();
+								additionalSteps.Add(expr);
+
+								continue;
+							}
+						}
+						
 						if (!memberAccessor.HasSetter)
 						{
 							if (assignment.IsMandatory)
@@ -365,21 +386,34 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (loadedColumns.Count + bindings.Count + ignored + (dynamicProperties?.Count ?? 0) != constructorExpression.Assignments.Count)
+			if (loadedColumns.Count + bindings.Count + ignored + (dynamicProperties?.Count ?? 0) + (additionalSteps?.Count ?? 0) 
+			    != constructorExpression.Assignments.Count)
+			{
 				return null;
+			}
 
 			Expression result = Expression.MemberInit(newExpression, bindings);
 
-			//TODO: we can make it in MemberInit
-			if (dynamicProperties?.Count > 0 && ed.DynamicColumnSetter != null)
+			if (additionalSteps != null || dynamicProperties?.Count > 0 && ed.DynamicColumnSetter != null)
 			{
 				var generator   = new ExpressionGenerator();
 				var objVariable = generator.AssignToVariable(result, "obj");
 
-				foreach (var d in dynamicProperties)
+				if (dynamicProperties != null)
 				{
-					generator.AddExpression(
-						ed.DynamicColumnSetter.GetBody(objVariable, Expression.Constant(d.MemberInfo.Name), d.Expression));
+					//TODO: we can make it in MemberInit
+					foreach (var d in dynamicProperties)
+					{
+						generator.AddExpression(ed.DynamicColumnSetter!.GetBody(objVariable, Expression.Constant(d.MemberInfo.Name), d.Expression));
+					}
+				}
+
+				if (additionalSteps != null)
+				{
+					foreach(var lambda in additionalSteps)
+					{
+						generator.AddExpression(lambda.GetBody(objVariable));
+					}
 				}
 
 				generator.AddExpression(objVariable);

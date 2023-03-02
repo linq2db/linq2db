@@ -52,20 +52,17 @@ namespace LinqToDB.Linq.Builder
 			public GroupJoinInnerContext(IBuildContext? parent, SelectQuery outerQuery, ExpressionBuilder builder, Type elementType,
 				Expression outerKey, LambdaExpression innerKeyLambda,
 				Expression innerExpression)
-			:base(builder, outerQuery)
+			:base(builder, elementType, outerQuery)
 			{
-				_elementType = elementType;
-				Parent            = parent;
-				OuterKey          = outerKey;
-				InnerKeyLambda    = innerKeyLambda;
-				InnerExpression   = innerExpression;
+				Parent          = parent;
+				OuterKey        = outerKey;
+				InnerKeyLambda  = innerKeyLambda;
+				InnerExpression = innerExpression;
 			}
 
 			Expression       OuterKey        { get; }
 			LambdaExpression InnerKeyLambda  { get; }
 			Expression       InnerExpression { get; }
-
-			readonly Type _elementType;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
@@ -75,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Expression) || flags.HasFlag(ProjectFlags.Expand)) 
-				                                             && !path.Type.IsAssignableFrom(_elementType))
+				                                             && !path.Type.IsAssignableFrom(ElementType))
 				{
 					var result = GetGroupJoinCall();
 					return result;
@@ -86,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new GroupJoinInnerContext(null, context.CloneElement(SelectQuery), Builder, _elementType,
+				return new GroupJoinInnerContext(null, context.CloneElement(SelectQuery), Builder, ElementType,
 					context.CloneExpression(OuterKey), context.CloneExpression(InnerKeyLambda), context.CloneExpression(InnerExpression));
 			}
 

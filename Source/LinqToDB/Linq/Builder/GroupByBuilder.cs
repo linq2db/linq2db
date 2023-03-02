@@ -467,7 +467,7 @@ namespace LinqToDB.Linq.Builder
 
 					assignments.Add(new SqlGenericConstructorExpression.Assignment(
 						groupingType.GetProperty(nameof(Grouping<int, int>.Items))!,
-						new SqlEagerLoadExpression(groupingPath, groupingPath, eagerLoadingExpression), true, false));
+						eagerLoadingExpression, true, false));
 
 					return new SqlGenericConstructorExpression(
 						SqlGenericConstructorExpression.CreateType.Auto,

@@ -31,6 +31,7 @@ namespace LinqToDB.SqlQuery
 		public bool                     IsWeak             { get; set; }
 		public bool                     CanConvertApply    { get; set; }
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
+		public SourceCardinality        Cardinality        { get; set; }
 
 #if OVERRIDETOSTRING
 
@@ -83,6 +84,9 @@ namespace LinqToDB.SqlQuery
 				case JoinType.RightApply : writer.Append("RIGHT APPLY "); break;
 				default                  : writer.Append("SOME JOIN ");   break;
 			}
+
+			if (Cardinality != SourceCardinality.Unknown)
+				writer.Append(" (" + Cardinality + ") ");
 
 			writer
 				.AppendElement(Table)

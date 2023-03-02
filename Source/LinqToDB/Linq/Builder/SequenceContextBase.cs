@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
+using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -9,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	abstract class SequenceContextBase : BuildContextBase
 	{
 		protected SequenceContextBase(IBuildContext? parent, IBuildContext[] sequences, LambdaExpression? lambda)
-			: base(sequences[0].Builder, sequences[0].SelectQuery)
+			: base(sequences[0].Builder, sequences[0].ElementType, sequences[0].SelectQuery)
 		{
 			Parent          = parent;
 			Sequences       = sequences;
@@ -32,6 +33,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			var newPath = SequenceHelper.CorrectExpression(path, this, Sequence);
 			var result = Builder.MakeExpression(Sequence, newPath, flags);
+
+			if (ExpressionEqualityComparer.Instance.Equals(newPath, result))
+				return path;
+
 			result = SequenceHelper.CorrectExpression(result, Sequence, this);
 			return result;
 		}

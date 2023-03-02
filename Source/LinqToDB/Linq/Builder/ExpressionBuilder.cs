@@ -278,6 +278,18 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
+		public Expression ExpandSequenceExpression(BuildInfo buildInfo)
+		{
+			buildInfo.Expression = buildInfo.Expression.Unwrap();
+			buildInfo.Expression = MakeExpression(buildInfo.Parent, buildInfo.Expression, ProjectFlags.Expand);
+
+			foreach (var builder in _builders)
+				if (builder.CanBuild(this, buildInfo))
+					return builder.Expand(this, buildInfo);
+
+			return buildInfo.Expression;
+		}
+
 		public bool IsSequence(BuildInfo buildInfo)
 		{
 			buildInfo.Expression = buildInfo.Expression.Unwrap();

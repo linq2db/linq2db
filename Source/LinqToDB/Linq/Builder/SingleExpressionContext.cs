@@ -7,7 +7,8 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class SingleExpressionContext : BuildContextBase
 	{
-		public SingleExpressionContext(ExpressionBuilder builder, ISqlExpression sqlExpression, SelectQuery selectQuery) : base(builder, selectQuery)
+		public SingleExpressionContext(ExpressionBuilder builder, ISqlExpression sqlExpression, SelectQuery selectQuery) 
+			: base(builder, sqlExpression.SystemType ?? typeof(object), selectQuery)
 		{
 			SqlExpression = sqlExpression;
 		}

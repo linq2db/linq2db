@@ -58,6 +58,13 @@ namespace LinqToDB.Linq.Builder
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ProjectFlags TraverseFlag(this ProjectFlags flags)
+		{
+			return (flags & FlagsToPreserve) | ProjectFlags.Traverse;
+		}
+
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsTest(this ProjectFlags flags)
 		{
 			return (flags & ProjectFlags.Test) != 0;
@@ -68,6 +75,13 @@ namespace LinqToDB.Linq.Builder
 		public static bool IsRoot(this ProjectFlags flags)
 		{
 			return (flags & ProjectFlags.Root) != 0;
+		}
+
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsAggregationRoot(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.AggregationRoot) != 0;
 		}
 
 		[DebuggerStepThrough]

@@ -404,6 +404,12 @@ namespace LinqToDB.Linq.Builder
 
 							newExpr = context.builder.MakeExpression(context.context, ma, context.flags);
 
+							if (!ReferenceEquals(expr, newExpr))
+							{
+								if (!context.flags.IsTest())
+									newExpr = context.builder.UpdateNesting(context.context, newExpr);
+							}
+
 							return new TransformInfo(newExpr);
 						}
 
@@ -413,6 +419,9 @@ namespace LinqToDB.Linq.Builder
 
 							if (!ReferenceEquals(newExpr, expr))
 							{
+								if (!context.flags.IsTest())
+									newExpr = context.builder.UpdateNesting(context.context, newExpr);
+
 								return new TransformInfo(newExpr, false, true);
 							}
 
@@ -687,7 +696,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else if (expression is ContextRefExpression)
 			{
-				expression = MakeExpression(currentContext, expression, isAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
+				expression = MakeExpression(currentContext, expression, isAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.AssociationRoot);
 			}
 
 			return expression as ContextRefExpression;
@@ -696,14 +705,17 @@ namespace LinqToDB.Linq.Builder
 		Dictionary<Expression, SubQueryContextInfo>? _buildContextCache;
 		Dictionary<Expression, SubQueryContextInfo>? _testbuildContextCache;
 
-		SubQueryContextInfo GetSubQueryContext(IBuildContext context, Expression expr, bool isTest)
+		SubQueryContextInfo GetSubQueryContext(IBuildContext inContext, ref IBuildContext context, Expression expr, ProjectFlags flags)
 		{
+			context = inContext;
 			var testExpression = CorrectRoot(context, expr);
 
-			if (_buildContextCache?.TryGetValue(testExpression, out var item) == true)
+			var shouldCache = flags.IsSql() || flags.IsExpression() || flags.IsExpand() || flags.IsRoot();
+			
+			if (shouldCache && _buildContextCache?.TryGetValue(testExpression, out var item) == true)
 				return item;
 
-			if (isTest)
+			if (flags.IsTest())
 			{
 				if (_testbuildContextCache?.TryGetValue(testExpression, out var testItem) == true)
 					return testItem;
@@ -726,34 +738,49 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var ctx = GetSubQuery(context, testExpression, isTest);
+			var ctx = GetSubQuery(context, testExpression, flags);
 
 			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx };
 
-			if (isTest)
+			if (shouldCache)
 			{
-				_testbuildContextCache ??= new(ExpressionEqualityComparer.Instance);
-				_testbuildContextCache[testExpression] = info;
-			}
-			else
-			{
-				_buildContextCache ??= new(ExpressionEqualityComparer.Instance);
-				_buildContextCache[testExpression] = info;
+				if (flags.IsTest())
+				{
+					_testbuildContextCache ??= new(ExpressionEqualityComparer.Instance);
+					_testbuildContextCache[testExpression] = info;
+				}
+				else
+				{
+					_buildContextCache ??= new(ExpressionEqualityComparer.Instance);
+					_buildContextCache[testExpression] = info;
+				}
 			}
 
 			return info;
 		}
 
-		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, bool isTest)
+		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, ProjectFlags flags)
 		{
 			if (expr is ContextConstructionExpression or SqlGenericConstructorExpression or ConstantExpression)
 				return null;
 
+			if (expr is ContextRefExpression contextRef && contextRef.BuildContext.ElementType == expr.Type)
+				return null;
+
 			var unwrapped = expr.Unwrap();
-			var info = GetSubQueryContext(context, unwrapped, isTest);
+			var info = GetSubQueryContext(context, ref context, unwrapped, flags);
 
 			if (info.Context == null)
 				return null;
+
+			if (expr.Type.IsEnumerableType(info.Context.ElementType) && !flags.IsExpand())
+			{
+				var eager = (Expression)new SqlEagerLoadExpression(unwrapped);
+				if (expr.Type != eager.Type)
+					eager = new SqlAdjustTypeExpression(eager, expr.Type, MappingSchema);
+
+				return eager;
+			}
 
 			var resultExpr = (Expression)new ContextRefExpression(unwrapped.Type, info.Context);
 

@@ -84,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
-		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, bool isTest)
+		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags)
 		{
 			var inScopeExpr = SequenceHelper.MoveAllToScopedContext(expr, context);
 
@@ -93,11 +93,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (!IsSequence(testInfo))
 				return null;
-			
+
 			var info = new BuildInfo(context, inScopeExpr, new SelectQuery {ParentSelect = context.SelectQuery })
 			{
 				CreateSubQuery = true,
-				IsTest         = isTest
+				IsTest         = flags.IsTest()
 			};
 
 			var ctx = TryBuildSequence(info);
@@ -1641,6 +1641,9 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left,  flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
 
+			leftExpr  = RemoveNullPropagation(leftExpr, true);
+			rightExpr = RemoveNullPropagation(rightExpr, true);
+
 			if (leftExpr is SqlErrorExpression leftError)
 				return leftError.WithType(typeof(bool));
 
@@ -1697,6 +1700,8 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
+						rightExpr = BuildSqlExpression(context, rightExpr, flags);
+
 						var rightPlaceholders = CollectDistinctPlaceholders(rightExpr);
 						return GenerateNullComparison(rightPlaceholders, isNot);
 					}
@@ -1718,6 +1723,8 @@ namespace LinqToDB.Linq.Builder
 								return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, (ISqlPredicate)isnull.Invert())), GetOriginalExpression());
 							}
 						}
+
+						leftExpr = BuildSqlExpression(context, leftExpr, flags);
 
 						var leftPlaceholders = CollectDistinctPlaceholders(leftExpr);
 						return GenerateNullComparison(leftPlaceholders, isNot);
@@ -3852,14 +3859,16 @@ namespace LinqToDB.Linq.Builder
 			static Expression ExecuteMake(IBuildContext context, Expression expression, ProjectFlags projectFlags)
 			{
 				var result = context.MakeExpression(expression, projectFlags);
+
 				return result;
 			}
 
 			static void DebugCacheHit(IBuildContext context, Expression original, Expression cached, ProjectFlags projectFlags)
 			{
+				Debug.WriteLine($"Cache hit for: {original}, {projectFlags}");
+
 				if (!projectFlags.IsTest() && (projectFlags.IsExpression() || projectFlags.IsSql()))
 				{
-					var i = 1;
 				}
 			}
 
@@ -3919,6 +3928,11 @@ namespace LinqToDB.Linq.Builder
 			expression = null;
 
 			ContextRefExpression? rootContext = null;
+
+			if (!flags.IsTest() && flags.IsExpression() && path is MethodCallExpression tmc && tmc.Method.Name == nameof(Enumerable.FirstOrDefault))
+			{
+
+			}
 
 			if (path is MemberExpression memberExpression && memberExpression.Expression != null)
 			{
@@ -3980,7 +3994,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!flags.IsExpose() && root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
 				{
-					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags.IsTest());
+					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags);
 					if (subqueryExpression != null)
 					{
 						root = subqueryExpression;
@@ -4109,10 +4123,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					currentContext = rootContext.BuildContext;
 					expression     = ExecuteMake(currentContext, path, flags);
-					if (expression is SqlEagerLoadExpression eager && rootContext.BuildContext != eager.ContextRef.BuildContext)
-					{
-						expression = new SqlEagerLoadExpression(rootContext, path, GetSequenceExpression(rootContext.BuildContext));
-					}
 				}	
 				else
 					expression = path;
@@ -4204,8 +4214,7 @@ namespace LinqToDB.Linq.Builder
 						var ctx = rootContext?.BuildContext ?? currentContext;
 						if (ctx != null)
 						{
-							var subqueryExpression =
-								TryGetSubQueryExpression(ctx, path, null, flags.HasFlag(ProjectFlags.Test));
+							var subqueryExpression = TryGetSubQueryExpression(ctx, path, null, flags);
 							if (subqueryExpression != null)
 							{
 								expression = MakeExpression(ctx, subqueryExpression, flags);

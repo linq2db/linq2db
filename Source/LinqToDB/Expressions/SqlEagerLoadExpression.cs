@@ -2,29 +2,22 @@
 
 namespace LinqToDB.Expressions
 {
-	using Linq.Builder;
-
 	class SqlEagerLoadExpression: Expression
 	{
-		public ContextRefExpression ContextRef { get; }
-		public Expression           Path       { get; }
+		public Expression SequenceExpression { get; }
 
-		public Expression    SequenceExpression { get; }
-
-		public SqlEagerLoadExpression(ContextRefExpression contextRef, Expression path, Expression sequenceExpression)
+		public SqlEagerLoadExpression(Expression sequenceExpression)
 		{
-			ContextRef         = contextRef;
-			Path               = path;
-			SequenceExpression = sequenceExpression;
+			SequenceExpression   = sequenceExpression;
 		}
 
 		public override string ToString()
 		{
-			return $"Eager({BuildContextDebuggingHelper.GetContextInfo(ContextRef.BuildContext)}: {ContextRef.Type.Name})";
+			return $"Eager({SequenceExpression})::{Type.Name}";
 		}
 
 		public override ExpressionType NodeType => ExpressionType.Extension;
-		public override Type           Type     => Path.Type;
+		public override Type           Type     => SequenceExpression.Type;
 
 		protected override Expression Accept(ExpressionVisitor visitor)
 		{

@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 		Expression SelfTargetPropAccess { get; }
 
 		public TableLikeQueryContext(ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef) 
-			: base(sourceContextRef.BuildContext.Builder, sourceContextRef.BuildContext.SelectQuery)
+			: base(sourceContextRef.BuildContext.Builder, targetContextRef.ElementType, sourceContextRef.BuildContext.SelectQuery)
 		{
 			TargetContextRef  = targetContextRef;
 			SourceContextRef  = sourceContextRef;

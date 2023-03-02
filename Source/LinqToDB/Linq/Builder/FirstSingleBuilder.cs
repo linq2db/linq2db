@@ -85,23 +85,35 @@ namespace LinqToDB.Linq.Builder
 
 			var take = 0;
 
-			var forceOuter = buildInfo.IsSubQuery;
-			var methodKind = GetMethodKind(methodCall.Method.Name);
+			var cardinality = SourceCardinality.One;
+			var methodKind  = GetMethodKind(methodCall.Method.Name);
 
 			switch (methodKind)
 			{
 				case MethodKind.First          :
-				case MethodKind.FirstOrDefault :
-					take = 1;
+				{
+					take        = 1;
 					break;
-
+				}
+				case MethodKind.FirstOrDefault :
+				{
+					cardinality |= SourceCardinality.Zero;
+					take        = 1;
+					break;
+				}
 				case MethodKind.Single          :
 				case MethodKind.SingleOrDefault :
+				{
+					if (methodKind == MethodKind.SingleOrDefault)
+						cardinality |= SourceCardinality.Zero;
+
 					if (!buildInfo.IsSubQuery)
-						if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
+						if (buildInfo.SelectQuery.Select.TakeValue == null ||
+						    buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
 							take = 2;
 
 					break;
+				}
 			}
 
 			if (take != 0)
@@ -110,35 +122,38 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
-			var isOuter = false;
+			var canBeWeak = false;
 
-			if (forceOuter || methodCall.Method.Name.Contains("OrDefault"))
+			if (methodCall.Method.Name.Contains("OrDefault"))
 			{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, allowNullField: true);
-				isOuter  = true;
+				canBeWeak = true;
 			}
 
-			return new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, isOuter, buildInfo.IsTest);
+			return new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest);
 		}
 
 		public sealed class FirstSingleContext : SequenceContextBase
 		{
-			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodKind methodKind, bool isSubQuery, bool isAssociation, bool isOuter, bool isTest)
+			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodKind methodKind,
+				bool isSubQuery, bool isAssociation, bool canBeWeak, SourceCardinality cardinality, bool isTest)
 				: base(parent, sequence, null)
 			{
 				_methodKind   = methodKind;
 				IsSubQuery    = isSubQuery;
 				IsAssociation = isAssociation;
-				IsOuter       = isOuter;
+				CanBeWeak     = canBeWeak;
+				Cardinality   = cardinality;
 				IsTest        = isTest;
 			}
 
 			readonly MethodKind _methodKind;
 
-			public bool IsSubQuery    { get; }
-			public bool IsAssociation { get; }
-			public bool IsOuter       { get; }
-			public bool IsTest        { get; }
+			public bool              IsSubQuery    { get; }
+			public bool              IsAssociation { get; }
+			public bool              CanBeWeak     { get; }
+			public bool              IsTest        { get; }
+			public SourceCardinality Cardinality   { get; set; }
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
@@ -208,8 +223,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					_isJoinCreated = true;
 
-					var join = IsOuter ? SelectQuery.OuterApply() : SelectQuery.CrossApply();
-					join.JoinedTable.IsWeak = true;
+					var join = CanBeWeak ? SelectQuery.OuterApply() : SelectQuery.CrossApply();
+					join.JoinedTable.IsWeak      = Cardinality.HasFlag(SourceCardinality.Zero);
+					join.JoinedTable.Cardinality = Cardinality;
 
 					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
@@ -217,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if ((flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Root)) && SequenceHelper.IsSameContext(path, this))
+				if ((flags.IsAssociationRoot() || flags.IsRoot()) && SequenceHelper.IsSameContext(path, this))
 				{
 					return path;
 				}
@@ -244,10 +260,7 @@ namespace LinqToDB.Linq.Builder
 									var sequenceExpression = GetEagerLoadingExpression(false);
 
 									var resultType    = typeof(IEnumerable<>).MakeGenericType(path.Type);
-									var refExpression = (ContextRefExpression)path;
-									var result = (Expression)new SqlEagerLoadExpression(refExpression,
-										refExpression.WithType(resultType),
-										sequenceExpression);
+									var result = (Expression)new SqlEagerLoadExpression(sequenceExpression);
 
 									var methodInfo = _methodKind switch
 									{
@@ -299,7 +312,7 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new FirstSingleContext(null, context.CloneContext(Sequence),
-					_methodKind, IsSubQuery, IsAssociation, IsOuter, false)
+					_methodKind, IsSubQuery, IsAssociation, CanBeWeak, Cardinality, false)
 				{
 					_isJoinCreated = _isJoinCreated
 				};

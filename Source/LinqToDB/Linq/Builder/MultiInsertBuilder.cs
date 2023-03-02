@@ -193,7 +193,7 @@ namespace LinqToDB.Linq.Builder
 		sealed class MultiInsertContext : BuildContextBase
 		{
 			public MultiInsertContext(TableLikeQueryContext source)
-				: base(source.Builder, source.SelectQuery)
+				: base(source.Builder, source.ElementType, source.SelectQuery)
 			{
 				MultiInsertStatement = new SqlMultiInsertStatement(source.Source);
 				QuerySource          = source;

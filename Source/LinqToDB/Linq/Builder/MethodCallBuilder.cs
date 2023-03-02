@@ -40,6 +40,29 @@ namespace LinqToDB.Linq.Builder
 			return builder.IsSequence(new BuildInfo(buildInfo, mc.Arguments[0]));
 		}
 
+		public Expression Expand(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			var mc = (MethodCallExpression)buildInfo.Expression;
+
+			var queryArgument = mc.Arguments[0];
+			var corrected = builder.ExpandSequenceExpression(new BuildInfo(buildInfo, queryArgument));
+
+			if (ReferenceEquals(corrected, queryArgument))
+				return mc;
+
+			if (corrected.Type != queryArgument.Type)
+			{
+				corrected = new SqlAdjustTypeExpression(corrected, queryArgument.Type, builder.MappingSchema);
+			}
+
+			var args = new Expression[mc.Arguments.Count];
+			args[0] = corrected;
+			for (var i = 1; i < args.Length; i++) 
+				args[i] = mc.Arguments[i];
+
+			return mc.Update(mc.Object, args);
+		}
+
 		public virtual bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo) => false;
 
 		protected abstract bool                 CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);

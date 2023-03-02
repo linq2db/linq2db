@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext UpTo       { get; }
 		public bool          OnlyForSql { get; }
 
-		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context.Builder, upTo.SelectQuery)
+		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context.Builder, context.ElementType, upTo.SelectQuery)
 		{
 			Context = context;
 			UpTo    = upTo;

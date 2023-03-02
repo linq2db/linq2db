@@ -502,7 +502,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static TableBuilder.TableContext? GetTableContext(IBuildContext context)
 		{
-			var contextRef = new ContextRefExpression(typeof(object), context);
+			var contextRef = new ContextRefExpression(context.ElementType, context);
 
 			var rootContext =
 				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
@@ -514,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static TableBuilder.CteTableContext? GetCteContext(IBuildContext context)
 		{
-			var contextRef = new ContextRefExpression(typeof(object), context);
+			var contextRef = new ContextRefExpression(context.ElementType, context);
 
 			var rootContext =
 				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
@@ -526,7 +526,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static ITableContext? GetTableOrCteContext(IBuildContext context)
 		{
-			var contextRef = new ContextRefExpression(typeof(object), context);
+			var contextRef = new ContextRefExpression(context.ElementType, context);
 
 			var rootContext =
 				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;

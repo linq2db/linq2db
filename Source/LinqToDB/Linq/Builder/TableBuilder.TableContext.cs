@@ -18,10 +18,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			#region Properties
 
-			public override Expression? Expression { get; }
+			public override Expression? Expression  { get; }
+			public override Type        ElementType => ObjectType;
 
-			public Type             OriginalType;
-			public EntityDescriptor EntityDescriptor;
+			public          Type             OriginalType;
+			public          EntityDescriptor EntityDescriptor;
 
 			public Type          ObjectType   { get; set; }
 			public SqlTable      SqlTable     { get; set; }
@@ -34,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 
 			#region Init
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType) : base (builder, buildInfo.SelectQuery)
+			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType) : base (builder, originalType, buildInfo.SelectQuery)
 			{
 				Parent      = buildInfo.Parent;
 				Expression  = buildInfo.Expression;
@@ -52,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table) : base (builder, buildInfo.SelectQuery)
+			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table) : base (builder, table.ObjectType, buildInfo.SelectQuery)
 			{
 				Parent      = buildInfo.Parent;
 				Expression  = buildInfo.Expression;
@@ -70,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table) : base(builder, selectQuery)
+			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table) : base(builder, table.ObjectType, selectQuery)
 			{
 				Parent     = null;
 				Expression = null;
@@ -87,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo) : base (builder, buildInfo.SelectQuery)
+			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo) : base (builder, typeof(object), buildInfo.SelectQuery)
 			{
 				Parent     = buildInfo.Parent;
 				Expression = buildInfo.Expression;
@@ -178,13 +179,10 @@ namespace LinqToDB.Linq.Builder
 					if (flags.HasFlag(ProjectFlags.Table))
 						return path;
 
-					// trying to access Queryable variant
-					if (!ObjectType.IsSameOrParentOf(path.Type))
+					// Eager load case
+					if (flags.IsExpand() && !ElementType.IsAssignableFrom(path.Type))
 					{
-						if (flags.IsExpression())
-							return new SqlEagerLoadExpression((ContextRefExpression)path, path,
-								Builder.GetSequenceExpression(this));
-						return ExpressionBuilder.CreateSqlError(this, path);
+						return path;
 					}
 
 					return Builder.BuildFullEntityExpression(this, path, path.Type, flags);

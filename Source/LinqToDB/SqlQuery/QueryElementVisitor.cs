@@ -1940,7 +1940,7 @@ namespace LinqToDB.SqlQuery
 			return selectQuery;
 		}
 
-		IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		public virtual IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
 		{
 			switch (GetVisitMode(element))
 			{

@@ -463,7 +463,7 @@ namespace LinqToDB.Linq
 			}
 #else
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
-				{
+			{
 				using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
 				using var dr     = runner.ExecuteReader();
 
@@ -472,12 +472,12 @@ namespace LinqToDB.Linq
 				cancellationToken.ThrowIfCancellationRequested();
 
 				if (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-					{
+				{
 					var origDataReader = _dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(_dataContext, dataReader) ?? dataReader;
 					var mapperInfo     = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
 
-						do
-						{
+					do
+					{
 						T res;
 
 						try
@@ -492,14 +492,14 @@ namespace LinqToDB.Linq
 								throw;
 
 							res = _mapper.ReMapOnException(_dataContext, runner, origDataReader, ref mapperInfo, ex);
-					}
+						}
 
 						yield return res;
 						cancellationToken.ThrowIfCancellationRequested();
-				}
+					}
 					while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+				}
 			}
-		}
 #endif
 
 			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)

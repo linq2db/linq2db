@@ -15,18 +15,15 @@ namespace LinqToDB.Linq.Builder
 	//TODO: review
 	sealed class EnumerableContext : BuildContextBase
 	{
-		readonly Type _elementType;
-
 		readonly EntityDescriptor _entityDescriptor;
 
 		public override Expression?    Expression { get; }
 		public          SqlValuesTable Table      { get; }
 
 		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType)
-			: base(builder, query)
+			: base(builder, elementType, query)
 		{
 			Parent            = buildInfo.Parent;
-			_elementType      = elementType;
             _entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			Table             = BuildValuesTable(buildInfo.Expression);
 			Expression        = buildInfo.Expression;
@@ -50,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 
 		SqlValuesTable BuildValuesTableFromArray(NewArrayExpression arrayExpression)
 		{
-			if (Builder.MappingSchema.IsScalarType(_elementType))
+			if (Builder.MappingSchema.IsScalarType(ElementType))
 			{
 				var rows  = arrayExpression.Expressions.Select(e => new[] {Builder.ConvertToSql(Parent, e)}).ToList();
 				var field = new SqlField(Table, "item");
@@ -67,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 				knownMembers.AddRange(members.Keys);
 			}
 
-			var ed = Builder.MappingSchema.GetEntityDescriptor(_elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			var ed = Builder.MappingSchema.GetEntityDescriptor(ElementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 			var builtRows = new List<ISqlExpression[]>(arrayExpression.Expressions.Count);
 
@@ -91,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var nullValue = Expression.Constant(Builder.MappingSchema.GetDefaultValue(_elementType), _elementType);
+						var nullValue = Expression.Constant(Builder.MappingSchema.GetDefaultValue(ElementType), ElementType);
 						sql = Builder.ConvertToSql(Parent, nullValue, columnDescriptor: column);
 					}
 
@@ -126,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			foreach (var column in _entityDescriptor.Columns)
 			{
-				if (!column.MemberInfo.EqualsTo(path.Member, _elementType))
+				if (!column.MemberInfo.EqualsTo(path.Member, ElementType))
 				{
 					continue;
 				}
@@ -169,7 +166,7 @@ namespace LinqToDB.Linq.Builder
 				var param = Expression.Parameter(typeof(object), "e");
 
 				var body = generator.Build();
-				body = body.Replace(getter.Parameters[0], Expression.Convert(param, _elementType));
+				body = body.Replace(getter.Parameters[0], Expression.Convert(param, ElementType));
 
 				var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
 				var getterFunc   = getterLambda.Compile();
@@ -187,9 +184,11 @@ namespace LinqToDB.Linq.Builder
 				if (flags.HasFlag(ProjectFlags.Root))
 					return path;
 
+				/*
 				// trying to access Queryable variant
-				if (path.Type != _elementType && flags.HasFlag(ProjectFlags.Expression))
+				if (path.Type != ElementType && flags.HasFlag(ProjectFlags.Expression))
 					return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
+					*/
 
 				if (flags.HasFlag(ProjectFlags.Expression))
 					return Expression!; // do nothing

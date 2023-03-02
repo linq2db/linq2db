@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 
 	abstract class PassThroughContext : BuildContextBase
 	{
-		protected PassThroughContext(IBuildContext context, SelectQuery selectQuery) : base(context.Builder, selectQuery)
+		protected PassThroughContext(IBuildContext context, SelectQuery selectQuery) : base(context.Builder, context.ElementType, selectQuery)
 		{
 			Context = context;
 			Parent  = context.Parent;
@@ -23,8 +23,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			path = SequenceHelper.CorrectExpression(path, this, Context);
-			return Builder.MakeExpression(Context, path, flags);
+			var corrected = SequenceHelper.CorrectExpression(path, this, Context);
+			return Builder.MakeExpression(Context, corrected, flags);
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

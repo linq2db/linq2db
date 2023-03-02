@@ -88,5 +88,9 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
+		public Expression Expand(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			return buildInfo.Expression;
+		}
 	}
 }

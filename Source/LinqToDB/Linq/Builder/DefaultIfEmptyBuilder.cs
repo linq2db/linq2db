@@ -40,12 +40,29 @@ namespace LinqToDB.Linq.Builder
 					return path;
 
 				var expr = base.MakeExpression(path, flags);
+
+				if (flags.IsTraverse())
+					return expr;
+
 				expr = Builder.BuildSqlExpression(this, expr, flags);
 				expr = Builder.UpdateNesting(this, expr);
 				expr = SequenceHelper.CorrectTrackingPath(expr, this);
 
-				if (flags.IsExpression() && expr is not SqlPlaceholderExpression && expr.UnwrapConvert() is not SqlEagerLoadExpression)
+				if (flags.IsExpression() && expr.UnwrapConvert() is not SqlEagerLoadExpression)
 				{
+					if (expr is SqlPlaceholderExpression placeholder)
+					{
+						var nullablePlaceholder = placeholder.MakeNullable();
+						if (path.Type != placeholder.Type)
+						{
+							return Expression.Condition(
+								Expression.NotEqual(nullablePlaceholder, Expression.Default(placeholder.Type)),
+								placeholder, Expression.Default(path.Type));
+						}
+
+						return placeholder;
+					}
+
 					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
 
 					var notNull = placeholders

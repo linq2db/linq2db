@@ -104,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 			public SqlInsertOrUpdateStatement InsertOrUpdateStatement { get; }
 
 			public InsertOrUpdateContext(ExpressionBuilder buider, SelectQuery selectQuery,
-				SqlInsertOrUpdateStatement insertOrUpdateStatement) : base(buider, selectQuery)
+				SqlInsertOrUpdateStatement insertOrUpdateStatement) : base(buider, typeof(object), selectQuery)
 			{
 				InsertOrUpdateStatement = insertOrUpdateStatement;
 			}

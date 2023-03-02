@@ -3,6 +3,7 @@
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
 
 	sealed class ContextRefBuilder : ISequenceBuilder
 	{
@@ -40,7 +41,17 @@ namespace LinqToDB.Linq.Builder
 			if (!ReferenceEquals(root, buildInfo.Expression))
 				return builder.IsSequence(new BuildInfo(buildInfo, root) {IsTest = true});
 
-			return root is ContextRefExpression;
+			if (root is not ContextRefExpression contextRef)
+				return false;
+
+			var enumerableType = typeof(IEnumerable<>).GetGenericType(contextRef.Type);
+			if (enumerableType == null)
+				return false;
+
+			if (!contextRef.Type.IsEnumerableType(contextRef.BuildContext.ElementType))
+				return false;
+
+			return true;
 		}
 
 		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -75,6 +86,11 @@ namespace LinqToDB.Linq.Builder
 				return builder.IsSequence(new BuildInfo(buildInfo, root));
 
 			return contextRef.BuildContext.GetContext(buildInfo.Expression, buildInfo) != null;
+		}
+
+		public Expression Expand(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

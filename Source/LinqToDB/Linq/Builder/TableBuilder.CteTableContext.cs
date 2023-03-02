@@ -71,7 +71,8 @@ namespace LinqToDB.Linq.Builder
 			public LoadWithInfo  LoadWithRoot { get; set; } = new();
 			public MemberInfo[]? LoadWithPath { get; set; }
 
-			public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest) : base(builder, selectQuery)
+			public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest) 
+				: base(builder, objectType, selectQuery)
 			{
 				Parent     = parent;
 				CteContext = cteContext;

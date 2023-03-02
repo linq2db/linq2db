@@ -233,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 						    sql2.UnwrapConvert().Find(1, (_, e) => e is SqlEagerLoadExpression) != null)
 						{
 							var thisRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(_type), this);
-							var eager   = (Expression)new SqlEagerLoadExpression(thisRef, path, path);
+							var eager   = (Expression)new SqlEagerLoadExpression(path);
 
 							return eager;
 						}
@@ -567,7 +567,7 @@ namespace LinqToDB.Linq.Builder
 						return true;
 					}
 
-					if (obj.GetType() != this.GetType())
+					if (obj.GetType() != GetType())
 					{
 						return false;
 					}
@@ -903,7 +903,7 @@ namespace LinqToDB.Linq.Builder
 					if (e is SqlEagerLoadExpression eager)
 					{
 						var newSequence = ResolveReferences(context, eager.SequenceExpression, projectFlags, placeholders);
-						return new SqlEagerLoadExpression(thisRef.WithType(eager.Path.Type), eager.Path, newSequence);
+						return new SqlEagerLoadExpression(newSequence);
 					}
 
 					return e;
@@ -959,7 +959,7 @@ namespace LinqToDB.Linq.Builder
 						var newSequence = eager.SequenceExpression.Replace(map);
 						if (newSequence != eager.SequenceExpression)
 						{
-							return new SqlEagerLoadExpression(eager.ContextRef.WithType(eager.Path.Type), eager.Path, newSequence);
+							return new SqlEagerLoadExpression(newSequence);
 						}
 					}
 

@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, Expression body, SelectQuery selectQuery, bool isSubQuery)
-			: base(builder, selectQuery)
+			: base(builder, body.Type, selectQuery)
 		{
 			Parent     = parent;
 			IsSubQuery = isSubQuery;
@@ -57,6 +57,12 @@ namespace LinqToDB.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
+				// Eager load case
+				if ((flags.IsExpand() || flags.IsSql() || flags.IsExpression()) && !ElementType.IsAssignableFrom(path.Type))
+				{
+					return path;
+				}
+
 				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) /*|| flags.HasFlag(ProjectFlags.Expand)*/ || flags.HasFlag(ProjectFlags.Table) || flags.HasFlag(ProjectFlags.Traverse))
 				{
 					if (Body is ContextRefExpression bodyRef)
@@ -80,12 +86,14 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
+				/*
 				if (!(path.Type.IsSameOrParentOf(Body.Type) || Body.Type.IsSameOrParentOf(path.Type)))
 				{
 					if (flags.IsExpression())
 						return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
 					return ExpressionBuilder.CreateSqlError(this, path);
 				}
+				*/
 
 				if (Body.NodeType == ExpressionType.TypeAs)
 				{
@@ -103,9 +111,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (!ReferenceEquals(result, Body))
 				{
-					if (!flags.HasFlag(ProjectFlags.Table))
+					if (!flags.IsTable())
 					{
-						if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.Traverse) &&
+						if ((flags.IsRoot() || flags.IsTraverse()) &&
 						    !(result is ContextRefExpression || result is MemberExpression ||
 						      result is MethodCallExpression))
 						{

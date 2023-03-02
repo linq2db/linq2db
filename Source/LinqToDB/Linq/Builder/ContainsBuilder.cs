@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 			readonly bool                 _buildInStatement;
 
 			public ContainsContext(IBuildContext? parent, MethodCallExpression methodCall, SelectQuery outerQuery, IBuildContext innerSequence, bool buildInStatement)
-				:base(innerSequence.Builder, outerQuery)
+				:base(innerSequence.Builder, typeof(bool), outerQuery)
 			{
 				Parent            = parent;
 				OuterQuery        = outerQuery;

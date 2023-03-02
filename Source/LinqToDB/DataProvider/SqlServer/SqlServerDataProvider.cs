@@ -289,7 +289,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						&& (value is DataTable
 						|| value is DbDataReader
 							|| value is IEnumerable<DbDataRecord>
-							|| value.GetType().IsEnumerableTType(Adapter.SqlDataRecordType)))
+							|| value.GetType().IsEnumerableType(Adapter.SqlDataRecordType)))
 					{
 						dataType = dataType.WithDataType(DataType.Structured);
 					}
