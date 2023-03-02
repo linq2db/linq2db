@@ -324,20 +324,20 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 37)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
-		[DataMember(Order = 37)]
+		[DataMember(Order = 38)]
 		public bool DoesNotSupportCorrelatedSubquery { get; set; }
 
-		[DataMember(Order = 38)]
+		[DataMember(Order = 39)]
 		public bool IsExistsPreferableForContains   { get; set; }
 
-		[DataMember(Order = 39)]
+		[DataMember(Order = 40)]
 		public bool IsProjectionBoolSupported { get; set; } = true;
 
-        /// <summary>
-        /// Provider supports ROW_NUMBER OVER () without ORDER BY
-        /// </summary>
-        [DataMember(Order = 38)]
-        public bool SupportsRowNumberWithoutOrderBy { get; set; } = true;
+		/// <summary>
+		/// Provider supports ROW_NUMBER OVER () without ORDER BY
+		/// </summary>
+		[DataMember(Order = 41)]
+		public bool SupportsRowNumberWithoutOrderBy { get; set; } = true;
 
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
