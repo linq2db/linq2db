@@ -17,7 +17,7 @@
 		<PackageVersion Include="Nullability.Source"                                    Version="2.1.0"         />
 		<!--build support-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.3.4"         />
-		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="7.0.0"         />
+		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="7.0.1-preview1.23061.1" />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="1.1.1"         />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.3.1"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.4.0"         />
