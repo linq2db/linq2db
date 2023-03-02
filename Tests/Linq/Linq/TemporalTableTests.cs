@@ -71,6 +71,7 @@ namespace Tests.Linq
 		[Test]
 		public void AsOfTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context, [Values(true, false)] bool inlinParameters)
 		{
+			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -91,6 +92,7 @@ namespace Tests.Linq
 		[Test]
 		public void AsOfTest2([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context, [Values(true, false)] bool inlinParameters)
 		{
+			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -117,6 +119,7 @@ namespace Tests.Linq
 			[Values(SqlServerHints.TemporalTable.FromTo, SqlServerHints.TemporalTable.Between, SqlServerHints.TemporalTable.ContainedIn)] string hint,
 			[Values(true, false)] bool inlinParameters)
 		{
+			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -138,6 +141,7 @@ namespace Tests.Linq
 		[Test]
 		public void FromToTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
+			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -157,6 +161,7 @@ namespace Tests.Linq
 		[Test]
 		public void BetweenTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
+			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
@@ -181,6 +186,7 @@ namespace Tests.Linq
 		[Test]
 		public void ContainedInTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
+			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
 
 			var data = CreateTestTable(db);
