@@ -89,7 +89,7 @@ namespace LinqToDB.Linq
 				var value = await query.GetElementAsync(DataContext, expression, Parameters, Preambles, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			return (TResult)value!;
+				return (TResult)value!;
 			}
 		}
 
@@ -278,6 +278,10 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
+#if METRICS
+			using var m = Tools.Metrics.QueryProviderExecuteT.Start();
+#endif
+
 			var query = GetQuery(ref expression, false, out _);
 
 			using (StartLoadTransaction(query))
@@ -293,6 +297,10 @@ namespace LinqToDB.Linq
 
 		object? IQueryProvider.Execute(Expression expression)
 		{
+#if METRICS
+			using var m = Tools.Metrics.QueryProviderExecute.Start();
+#endif
+
 			var query = GetQuery(ref expression, false, out _);
 
 			using (StartLoadTransaction(query))

@@ -474,6 +474,12 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
+#if METRICS
+			using var mt = LinqToDB.Tools.Metrics.GetQueryTotal.Start();
+
+			var mf  = LinqToDB.Tools.Metrics.GetQueryFind.      Start();
+			var mfe = LinqToDB.Tools.Metrics.GetQueryFindExpose.Start();
+#endif
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
 			expr = optimizationContext.ExpandExpression(expr);
@@ -486,6 +492,11 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
+#if METRICS
+			mfe.Dispose();
+			var mff = LinqToDB.Tools.Metrics.GetQueryFindFind.Start();
+#endif
+
 			var dataOptions = dataContext.Options;
 
 			if (dataOptions.LinqOptions.DisableQueryCache)
@@ -494,8 +505,17 @@ namespace LinqToDB.Linq
 			var queryFlags = dataContext.GetQueryFlags();
 			var query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
 
+#if METRICS
+			mff.Dispose();
+			mf. Dispose();
+#endif
+
 			if (query == null)
 			{
+#if METRICS
+				using var mc = LinqToDB.Tools.Metrics.GetQueryCreate.Start();
+#endif
+
 				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 				if (!query.DoNotCache)
@@ -508,6 +528,7 @@ namespace LinqToDB.Linq
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)
 		{
 			var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
+
 			if (linqOptions.GenerateExpressionTest)
 			{
 				var testFile = new ExpressionTestGenerator().GenerateSource(expr);

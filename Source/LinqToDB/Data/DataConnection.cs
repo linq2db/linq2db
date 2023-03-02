@@ -484,6 +484,10 @@ namespace LinqToDB.Data
 		/// </summary>
 		void OnTraceInternal(TraceInfo info)
 		{
+#if METRICS
+			using var m = LinqToDB.Tools.Metrics.OnTraceInternal.Start();
+#endif
+
 			switch (info.TraceInfoStep)
 			{
 				case TraceInfoStep.BeforeExecute:

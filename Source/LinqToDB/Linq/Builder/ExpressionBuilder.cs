@@ -182,6 +182,10 @@ namespace LinqToDB.Linq.Builder
 
 		public Query<T> Build<T>()
 		{
+#if METRICS
+			using var m = LinqToDB.Tools.Metrics.Build.Start();
+#endif
+
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
 			if (_reorder)
@@ -204,14 +208,30 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(BuildInfo buildInfo)
 		{
+#if METRICS
+			using var m = LinqToDB.Tools.Metrics.BuildSequence.Start();
+#endif
+
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
 			var n = _builders[0].BuildCounter;
 
 			foreach (var builder in _builders)
 			{
-				if (builder.CanBuild(this, buildInfo))
+#if METRICS
+				var mc = LinqToDB.Tools.Metrics.BuildSequenceCanBuild.Start();
+#endif
+				var	canBuild = builder.CanBuild(this, buildInfo);
+#if METRICS
+				mc.Dispose();
+#endif
+
+				if (canBuild)
 				{
+#if METRICS
+					using var mb = LinqToDB.Tools.Metrics.BuildSequenceBuild.Start();
+#endif
+
 					var sequence = builder.BuildSequence(this, buildInfo);
 
 					lock (builder)

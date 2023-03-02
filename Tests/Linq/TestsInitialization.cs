@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Data.Common;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Tools;
+
 using NUnit.Framework;
+
 using Tests;
 
 /// <summary>
@@ -17,6 +22,10 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+#if METRICS
+		Metrics.TestTotal.Start();
+#endif
+
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
 
@@ -120,5 +129,25 @@ public class TestsInitialization
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
+#if METRICS
+		Metrics.TestTotal.Stop();
+
+		var str = Metrics.All.Select(m => new
+		{
+			m.Name,
+			m.Stopwatch.Elapsed,
+			m.CallCount,
+			TimePerCall = m.CallCount switch
+			{
+				0 => TimeSpan.Zero,
+				1 => m.Stopwatch.Elapsed,
+				_ => new TimeSpan(m.Stopwatch.Elapsed.Ticks / m.CallCount)
+			}
+		})
+		.ToDiagnosticString();
+
+		Console.WriteLine(str);
+		Debug.  WriteLine(str);
+#endif
 	}
 }

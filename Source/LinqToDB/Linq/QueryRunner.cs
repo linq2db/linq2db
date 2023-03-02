@@ -655,7 +655,13 @@ namespace LinqToDB.Linq
 			var mapper   = new Mapper<T>(expression);
 			var runQuery = executeQuery.Item1;
 
-			query.GetIEnumerable = (db, expr, ps, preambles) => runQuery(query, db, mapper, expr, ps, preambles, 0);
+			query.GetIEnumerable = (db, expr, ps, preambles) =>
+			{
+#if METRICS
+				using var m = LinqToDB.Tools.Metrics.GetIEnumerable.Start();
+#endif
+				return runQuery(query, db, mapper, expr, ps, preambles, 0);
+			};
 
 			var skipAction = executeQuery.Item2;
 			var takeAction = executeQuery.Item3;
@@ -800,6 +806,10 @@ namespace LinqToDB.Linq
 			object?[]?     ps,
 			object?[]?     preambles)
 		{
+#if METRICS
+			using var m = LinqToDB.Tools.Metrics.ExecuteElement.Start();
+#endif
+
 			using var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
 			using var dr     = runner.ExecuteReader();
 

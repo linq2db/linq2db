@@ -70,4 +70,11 @@
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
 
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>METRICS;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<DefineConstants>METRICS;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
 </Project>
