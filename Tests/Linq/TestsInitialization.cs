@@ -23,7 +23,7 @@ public class TestsInitialization
 	public void TestAssemblySetup()
 	{
 #if METRICS
-		Metrics.TestTotal.Start();
+		_testMetricWatcher = Metrics.TestTotal.Start();
 #endif
 
 		// required for tests expectations
@@ -126,26 +126,35 @@ public class TestsInitialization
 #endif
 	}
 
+#if METRICS
+	Metric.Watcher? _testMetricWatcher;
+#endif
+
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
 #if METRICS
-		Metrics.TestTotal.Stop();
+		_testMetricWatcher?.Dispose();
 
 		var str = Metrics.All.Select(m => new
 		{
 			m.Name,
-			m.Stopwatch.Elapsed,
+			m.Elapsed,
 			m.CallCount,
 			TimePerCall = m.CallCount switch
 			{
 				0 => TimeSpan.Zero,
-				1 => m.Stopwatch.Elapsed,
-				_ => new TimeSpan(m.Stopwatch.Elapsed.Ticks / m.CallCount)
+				1 => m.Elapsed,
+				_ => new TimeSpan(m.Elapsed.Ticks / m.CallCount)
 			}
 		})
 		.ToDiagnosticString();
 
+		Console.    WriteLine(str);
+		Debug.      WriteLine(str);
+		TestContext.WriteLine(str);
+#else
+		var str = "Metrics are off";
 		Console.    WriteLine(str);
 		Debug.      WriteLine(str);
 		TestContext.WriteLine(str);

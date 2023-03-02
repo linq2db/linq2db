@@ -2,7 +2,7 @@
 
 using System;
 using System.Diagnostics;
-using System.Text;
+using System.Threading;
 
 namespace LinqToDB.Tools
 {
@@ -12,35 +12,42 @@ namespace LinqToDB.Tools
 		{
 			Name = name;
 		}
-		public string    Name      { get; }
-		public Stopwatch Stopwatch { get; } = new();
-		public int       CallCount { get; private set; }
+		public string    Name    { get; }
 
-		public IDisposable Start()
+		private TimeSpan _elapsed;
+		public  TimeSpan Elapsed => _elapsed;
+
+		private int      _callCount;
+		public  int      CallCount => _callCount;
+
+		public Watcher Start()
 		{
-			Stopwatch.Start();
-			CallCount++;
-
-			return new Stopper(this);
+			return new(this);
 		}
 
-		public void Stop()
+		public void Stop(Stopwatch stopwatch)
 		{
-			Stopwatch.Stop();
+			Interlocked.Increment(ref _callCount);
+
+			lock (this)
+				_elapsed += stopwatch.Elapsed;
 		}
 
-		class Stopper : IDisposable
+		public class Watcher : IDisposable
 		{
-			readonly Metric _metric;
+			readonly Metric    _metric;
+			readonly Stopwatch _stopwatch = new();
 
-			public Stopper(Metric metric)
+			public Watcher(Metric metric)
 			{
+				_stopwatch.Start();
 				_metric = metric;
 			}
 
 			public void Dispose()
 			{
-				_metric.Stop();
+				_stopwatch.Stop();
+				_metric.Stop(_stopwatch);
 			}
 		}
 	}
