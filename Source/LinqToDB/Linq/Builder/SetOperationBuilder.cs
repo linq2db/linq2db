@@ -601,7 +601,7 @@ namespace LinqToDB.Linq.Builder
 					ParamIndex = paramIndex;
 				}
 
-				public readonly MethodInfo? Method = null;
+				public readonly MethodInfo? Method;
 				public readonly int         ParamIndex;
 			}
 

@@ -35,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 			       (expression is ContextRefExpression contextRef && contextRef.BuildContext == context);
 		}
 
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CorrectExpression(Expression? expression, IBuildContext current,
 			IBuildContext                                       underlying)
 		{
@@ -55,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CorrectTrackingPath(Expression? expression, IBuildContext toContext)
 		{
 			if (expression == null || expression.Find(1, (_, e) => e is SqlPlaceholderExpression) == null)
@@ -74,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CorrectTrackingPath(Expression? expression, Expression? except, Expression toPath)
 		{
 			if (expression == null)
@@ -197,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 			return transformed;
 		}
 
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]	
 		public static Expression? RemapToNewPath(IBuildContext buildContext, Expression? expression, Expression toPath, ProjectFlags flags)
 		{
 			if (expression == null)

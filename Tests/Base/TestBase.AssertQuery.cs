@@ -13,7 +13,7 @@ namespace Tests
 {
 	partial class TestBase
 	{
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CheckForNull(Expression? expression)
 		{
 			if (expression != null && expression.NodeType.NotIn(ExpressionType.Lambda, ExpressionType.Quote) &&
@@ -29,7 +29,7 @@ namespace Tests
 			return expression;
 		}
 
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CheckForNull(Expression? expression, Expression trueExpression, Expression falseExpression)
 		{
 			if (expression is MemberExpression me)

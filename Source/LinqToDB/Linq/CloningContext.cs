@@ -23,7 +23,7 @@ namespace LinqToDB.Linq
 			return _buildContexts.ContainsKey(buildContext);
 		}
 
-		[return: NotNullIfNotNull("context")]
+		[return: NotNullIfNotNull(nameof(context))]
 		public TContext? CorrectContext<TContext>(TContext? context)
 			where TContext : IBuildContext
 		{
@@ -36,7 +36,7 @@ namespace LinqToDB.Linq
 			return context;
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		public TElement? CorrectElement<TElement>(TElement? element)
 			where TElement : IQueryElement
 		{
@@ -46,7 +46,7 @@ namespace LinqToDB.Linq
 			return (TElement)CorrectRawElement(element);
 		}
 
-		[return: NotNullIfNotNull("element")]
+		[return: NotNullIfNotNull(nameof(element))]
 		IQueryElement? CorrectRawElement(IQueryElement? element)
 		{
 			if (element == null)
@@ -58,7 +58,7 @@ namespace LinqToDB.Linq
 			return element;
 		}
 
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public TExpression? CorrectExpression<TExpression>(TExpression? expression)
 			where TExpression : Expression
 		{
@@ -68,7 +68,7 @@ namespace LinqToDB.Linq
 			return (TExpression)CorrectExpressionRaw(expression);
 		}
 
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		Expression? CorrectExpressionRaw(Expression? expression)
 		{
 			if (expression == null)
@@ -97,7 +97,7 @@ namespace LinqToDB.Linq
 			return newExpression;
 		}
 
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		public TExpression? CloneExpression<TExpression>(TExpression? expression)
 			where TExpression : Expression
 		{
@@ -107,7 +107,7 @@ namespace LinqToDB.Linq
 			return (TExpression)CloneExpressionRaw(expression);
 		}
 
-		[return: NotNullIfNotNull("expression")]
+		[return: NotNullIfNotNull(nameof(expression))]
 		Expression? CloneExpressionRaw(Expression? expression)
 		{
 			if (expression == null)
@@ -137,7 +137,7 @@ namespace LinqToDB.Linq
 		}
 
 
-		[return: NotNullIfNotNull("buildContext")]
+		[return: NotNullIfNotNull(nameof(buildContext))]
 		public TContext? CloneContext<TContext>(TContext? buildContext)
 		where TContext : IBuildContext
 		{
@@ -152,7 +152,7 @@ namespace LinqToDB.Linq
 			_buildContexts[oldContext] = newContext;
 		}
 
-		[return: NotNullIfNotNull("buildContext")]
+		[return: NotNullIfNotNull(nameof(buildContext))]
 		public IBuildContext? CloneRaw(IBuildContext? buildContext)
 		{
 			if (buildContext == null)
@@ -173,7 +173,7 @@ namespace LinqToDB.Linq
 			return newContext;
 		}
 
-		[return: NotNullIfNotNull("queryElement")]
+		[return: NotNullIfNotNull(nameof(queryElement))]
 		public TElement? CloneElement<TElement>(TElement? queryElement)
 			where TElement : IQueryElement
 		{
@@ -183,7 +183,7 @@ namespace LinqToDB.Linq
 			return (TElement)Clone(queryElement);
 		}
 
-		[return: NotNullIfNotNull("queryElement")]
+		[return: NotNullIfNotNull(nameof(queryElement))]
 		IQueryElement? Clone(IQueryElement? queryElement)
 		{
 			if (queryElement == null)
