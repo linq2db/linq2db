@@ -324,11 +324,20 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 37)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
-		/// <summary>
-		/// Provider supports ROW_NUMBER OVER ()
-		/// </summary>
+		[DataMember(Order = 37)]
+		public bool DoesNotSupportCorrelatedSubquery { get; set; }
+
 		[DataMember(Order = 38)]
-		public bool SupportsRowNumberWithoutOrderBy { get; set; } = true;
+		public bool IsExistsPreferableForContains   { get; set; }
+
+		[DataMember(Order = 39)]
+		public bool IsProjectionBoolSupported { get; set; } = true;
+
+        /// <summary>
+        /// Provider supports ROW_NUMBER OVER () without ORDER BY
+        /// </summary>
+        [DataMember(Order = 38)]
+        public bool SupportsRowNumberWithoutOrderBy { get; set; } = true;
 
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
@@ -371,6 +380,10 @@ namespace LinqToDB.SqlProvider
 				^ OutputDeleteUseSpecialTable                  .GetHashCode()
 				^ OutputInsertUseSpecialTable                  .GetHashCode()
 				^ OutputUpdateUseSpecialTables                 .GetHashCode()
+				^ DoesNotSupportCorrelatedSubquery             .GetHashCode()
+				^ IsExistsPreferableForContains                .GetHashCode()
+				^ IsProjectionBoolSupported                    .GetHashCode()
+				^ SupportsRowNumberWithoutOrderBy              .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -412,6 +425,10 @@ namespace LinqToDB.SqlProvider
 				&& OutputDeleteUseSpecialTable          == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable          == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables         == other.OutputUpdateUseSpecialTables
+				&& DoesNotSupportCorrelatedSubquery     == other.DoesNotSupportCorrelatedSubquery
+				&& IsExistsPreferableForContains        == other.IsExistsPreferableForContains
+				&& IsProjectionBoolSupported            == other.IsProjectionBoolSupported
+				&& SupportsRowNumberWithoutOrderBy      == other.SupportsRowNumberWithoutOrderBy
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

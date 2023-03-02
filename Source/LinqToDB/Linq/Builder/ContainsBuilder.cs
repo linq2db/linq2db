@@ -22,11 +22,19 @@ namespace LinqToDB.Linq.Builder
 		{
 			var innerQuery = new SelectQuery();
 			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery));
+            sequence = new SubQueryContext(sequence);
 
 			var buildInStatement = false;
 
-			sequence         = new SubQueryContext(sequence);
-			buildInStatement = true;
+			if (sequence.SelectQuery.Select.TakeValue != null                              ||
+			    sequence.SelectQuery.Select.SkipValue != null                              ||
+			    builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery      ||
+			    builder.DataContext.SqlProviderFlags.IsExistsPreferableForContains == false &&
+			    builder.DataOptions.LinqOptions.PreferExistsForScalar == false              &&
+			    builder.MappingSchema.IsScalarType(methodCall.Arguments[1].Type))
+			{
+				buildInStatement = true;
+			}
 
 			return new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence, buildInStatement);
 		}

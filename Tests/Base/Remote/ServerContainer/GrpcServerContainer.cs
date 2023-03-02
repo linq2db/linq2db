@@ -37,7 +37,8 @@ namespace Tests.Remote.ServerContainer
 			MappingSchema? ms,
 			IInterceptor? interceptor,
 			bool suppressSequentialAccess,
-			string configuration)
+			string configuration,
+			Func<DataOptions,DataOptions>? optionBuilder)
 		{
 			var service = OpenHost(ms, interceptor, suppressSequentialAccess);
 
@@ -57,7 +58,8 @@ namespace Tests.Remote.ServerContainer
 					service.SuppressSequentialAccess = false;
 					if (interceptor != null)
 						service.RemoveInterceptor();
-				})
+				},
+				optionBuilder)
 			{ Configuration = configuration };
 
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");

@@ -404,7 +404,7 @@ namespace Tests
 			}
 
 			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
-			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str, null);
 		}
 
 		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
@@ -414,10 +414,8 @@ namespace Tests
 				return GetDataConnection(configuration, dbOptionsBuilder);
 			}
 
-			throw new NotImplementedException();
-
-			/*var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
-			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);*/
+			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+			return _serverContainer.Prepare(null, null, false, str, dbOptionsBuilder);
 		}
 
 		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)

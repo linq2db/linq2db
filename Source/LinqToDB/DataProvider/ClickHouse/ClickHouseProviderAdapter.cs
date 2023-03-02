@@ -52,10 +52,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 			Func<DbConnection, string, OctonicaWrappers.ClickHouseColumnWriter                         >? octonicaCreateWriter,
 			Func<DbConnection, string, CancellationToken, Task<OctonicaWrappers.ClickHouseColumnWriter>>? octonicaCreateWriterAsync,
 			Func<Type, OctonicaWrappers.ClickHouseColumnSettings                                       >? octonicaColumnSettings,
-			
+
 			Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? clientConnectionStringBuilder,
 			Func<string, DbConnection>?                                     connectionCreator,
-			
+
 			MappingSchema? mappingSchema)
 		{
 			ConnectionType = connectionType;
@@ -285,7 +285,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				createColumnWriter,
 				createColumnWriterAsync,
 				typeMapper.BuildWrappedFactory((Type columnType) => new OctonicaWrappers.ClickHouseColumnSettings(columnType)),
-				
+
 				null,
 				null,
 				null);

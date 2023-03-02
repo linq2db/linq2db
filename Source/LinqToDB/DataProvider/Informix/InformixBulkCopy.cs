@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Informix
 							connection,
 							_provider.Adapter.InformixBulkCopy);
 					else
-						return DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
+						return DB2.DB2BulkCopyShared.ProviderSpecificCopyImpl(
 							table,
 							options.BulkCopyOptions,
 							source,
@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.Informix
 							connection,
 							_provider.Adapter.InformixBulkCopy));
 					else
-						return Task.FromResult(DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
+						return Task.FromResult(DB2.DB2BulkCopyShared.ProviderSpecificCopyImpl(
 							table,
 							options.BulkCopyOptions,
 							source,
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.Informix
 								connection,
 								_provider.Adapter.InformixBulkCopy);
 						else
-							return DB2.DB2BulkCopy.ProviderSpecificCopyImpl(
+							return DB2.DB2BulkCopyShared.ProviderSpecificCopyImpl(
 								table,
 								options.BulkCopyOptions,
 								syncSource,
