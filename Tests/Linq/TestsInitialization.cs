@@ -146,8 +146,9 @@ public class TestsInitialization
 		})
 		.ToDiagnosticString();
 
-		Console.WriteLine(str);
-		Debug.  WriteLine(str);
+		Console.    WriteLine(str);
+		Debug.      WriteLine(str);
+		TestContext.WriteLine(str);
 #endif
 	}
 }
