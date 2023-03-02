@@ -6,6 +6,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System.Numerics;
 	using Common;
 	using Data;
 	using Mapping;
@@ -23,13 +24,14 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			AddScalarType(typeof(PhysicalAddress), DataType.Udt);
 
-			SetValueToSqlConverter(typeof(bool),     (sb, _,_,v) => sb.Append(v));
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(Guid),     (sb, _,_,v) => sb.AppendFormat("'{0:D}'::uuid", (Guid)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(bool),       (sb, _,_,v) => sb.Append(v));
+			SetValueToSqlConverter(typeof(string),     (sb, _,_,v) => ConvertStringToSql(sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),       (sb, _,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),     (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),     (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(Guid),       (sb, _,_,v) => sb.AppendFormat("'{0:D}'::uuid", (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime),   (sb,dt,_,v) => BuildDateTime(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(BigInteger), (sb, _,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 
 			// adds floating point special values support
 			SetValueToSqlConverter(typeof(float) , (sb,_,_,v) =>

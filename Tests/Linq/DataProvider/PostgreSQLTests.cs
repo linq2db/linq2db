@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Numerics;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -597,7 +598,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var table = LinqToDB.SqlQuery.SqlTable.Create<PostgreSQLSpecific.SequenceTest1>(db);
+				var table = SqlTable.Create<PostgreSQLSpecific.SequenceTest1>(db);
 				Assert.That(table.SequenceAttributes, Is.Not.Null);
 				Assert.That(table.SequenceAttributes!.Length, Is.EqualTo(1));
 
@@ -611,7 +612,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var table = LinqToDB.SqlQuery.SqlTable.Create<PostgreSQLSpecific.SequenceTest2>(db);
+				var table = SqlTable.Create<PostgreSQLSpecific.SequenceTest2>(db);
 				Assert.That(table.SequenceAttributes.IsNullOrEmpty());
 
 				db.Insert(new PostgreSQLSpecific.SequenceTest2 { Value = "SeqValue" });
@@ -2211,6 +2212,61 @@ namespace Tests.DataProvider
 				var res = db.GetTable<DataTypeBinaryMapping>().Select(_ => _.Binary).Single();
 
 				Assert.True(data.SequenceEqual(res));
+			}
+		}
+
+		[Table]
+		class BigIntegerTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 78, Scale = 0)]
+			public BigInteger  Value1 { get; set; }
+
+			[Column(DataType = DataType.Decimal, Precision = 78, Scale = 0)]
+			public BigInteger? Value2 { get; set; }
+		}
+
+		[Test]
+		public void TestBigInteger([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		{
+			// test direct/remote
+			using var db = GetDataContext(context);
+
+			// test parameter/literal
+			db.InlineParameters = inline;
+
+			using var table = db.CreateLocalTable<BigIntegerTable>();
+
+			var value1 = BigInteger.Parse("-12345678901234567890123456789012345678901234567890");
+			var value2 = BigInteger.Parse("-22345678901234567890123456789012345678901234567890");
+
+			// test write
+			db.Insert(new BigIntegerTable() { Id = 1, Value1 = value1, Value2 = value2 });
+
+			// test bulk copy
+			if (db is DataConnection dc)
+				dc.BulkCopy(
+					new BulkCopyOptions() { BulkCopyType = BulkCopyType.ProviderSpecific },
+					new[] { new BigIntegerTable() { Id = 2, Value1 = value2, Value2 = value1 } });
+
+			// test read
+			var data = table.OrderBy(r => r.Id).ToArray();
+
+			if (db is DataConnection)
+			{
+				Assert.AreEqual(2, data.Length);
+				Assert.AreEqual(value1, data[0].Value1);
+				Assert.AreEqual(value2, data[0].Value2);
+				Assert.AreEqual(value2, data[1].Value1);
+				Assert.AreEqual(value1, data[1].Value2);
+			}
+			else
+			{
+				Assert.AreEqual(1, data.Length);
+				Assert.AreEqual(value1, data[0].Value1);
+				Assert.AreEqual(value2, data[0].Value2);
 			}
 		}
 	}
