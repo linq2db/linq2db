@@ -2,11 +2,11 @@
 using System.Data.Linq;
 using System.Globalization;
 using System.Net.NetworkInformation;
+using System.Numerics;
 using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System.Numerics;
 	using Common;
 	using Data;
 	using Mapping;
