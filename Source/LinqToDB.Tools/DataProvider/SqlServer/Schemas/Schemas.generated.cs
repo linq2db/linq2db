@@ -20,7 +20,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 	/// <summary>
 	/// Database       : master
 	/// Data Source    : .
-	/// Server Version : 15.00.2080
+	/// Server Version : 15.00.2101
 	/// </summary>
 	public partial class SystemDB : LinqToDB.Data.DataConnection
 	{
