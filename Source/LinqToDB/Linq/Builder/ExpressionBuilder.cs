@@ -1368,7 +1368,7 @@ namespace LinqToDB.Linq.Builder
 					var mc = (MethodCallExpression)expression;
 					if (mc.Method.DeclaringType != null)
 					{
-						if (MappingSchema.GetAttributes<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method).Length > 0)
+						if (MappingSchema.HasAttribute<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method))
 							return mc;
 					}
 				}
