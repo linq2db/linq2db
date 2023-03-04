@@ -40,13 +40,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificTable<TSource> AsSqlServer<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			if (table is not Table<TSource> ts)
-				throw new InvalidOperationException();
-
-			var newTable = new Table<TSource>(ts.DataContext, Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsSqlServer, ts),
-				table.Expression));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSqlServer, table),
+					table.Expression)
+			);
 
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}

@@ -40,13 +40,11 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlSpecificTable<TSource> AsMySql<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			if (table is not Table<TSource> ts)
-				throw new InvalidOperationException();
-
-			var newTable = new Table<TSource>(ts.DataContext, Expression.Call(
+			var newTable = new Table<TSource>(table.DataContext, Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(AsMySql, ts),
-				table.Expression));
+				MethodHelper.GetMethodInfo(AsMySql, table),
+				table.Expression)
+			);
 
 			return new MySqlSpecificTable<TSource>(newTable);
 		}

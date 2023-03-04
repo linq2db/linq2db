@@ -54,12 +54,14 @@ namespace LinqToDB.DataProvider.SQLite
 		public static ISQLiteSpecificTable<TSource> TableHint<TSource>(this ISQLiteSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SQLiteSpecificTable<TSource>(newTable);
 		}
 	}
 }

@@ -40,13 +40,12 @@ namespace LinqToDB.DataProvider.Oracle
 		public static IOracleSpecificTable<TSource> AsOracle<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			if (table is not Table<TSource> ts)
-				throw new InvalidOperationException();
-
-			var newTable = new Table<TSource>(ts.DataContext, Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsOracle, ts),
-				table.Expression));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsOracle, table),
+					table.Expression)
+			);
 
 			return new OracleSpecificTable<TSource>(newTable);
 		}

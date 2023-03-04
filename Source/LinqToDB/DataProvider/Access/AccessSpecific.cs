@@ -40,12 +40,9 @@ namespace LinqToDB.DataProvider.Access
 		public static IAccessSpecificTable<TSource> AsAccess<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			if (table is not Table<TSource> ts)
-				throw new InvalidOperationException();
-
-			var newTable = new Table<TSource>(ts.DataContext, Expression.Call(
+			var newTable = new Table<TSource>(table.DataContext, Expression.Call(
 				null,
-				MethodHelper.GetMethodInfo(AsAccess, ts),
+				MethodHelper.GetMethodInfo(AsAccess, table),
 				table.Expression));
 
 			return new AccessSpecificTable<TSource>(newTable);
