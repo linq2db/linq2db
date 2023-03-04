@@ -843,6 +843,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					.Append(' ')
 					;
 
+				var lastLength = stringBuilder.Length;
+
 				if (expression == TemporalTable.ContainedIn)
 					stringBuilder.Length--;
 
@@ -871,6 +873,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (b2016 != null)
 					b2016.ConvertDateTimeAsLiteral = true;
+
+				if (lastLength == stringBuilder.Length)
+				{
+					--stringBuilder.Length;
+				}
 			}
 		}
 

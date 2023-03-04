@@ -1363,6 +1363,16 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
 			{
+				if (expression.NodeType == ExpressionType.Call)
+				{
+					var mc = (MethodCallExpression)expression;
+					if (mc.Method.DeclaringType != null)
+					{
+						if (MappingSchema.GetAttributes<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method).Length > 0)
+							return mc;
+					}
+				}
+
 				var p    = Expression.Parameter(typeof(Expression), "exp");
 				var exas = expression.GetExpressionAccessors(p);
 				var expr = _parametersContext.ReplaceParameter(exas, expression, forceConstant: false, null).ValueExpression;

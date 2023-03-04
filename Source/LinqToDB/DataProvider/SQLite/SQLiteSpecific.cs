@@ -28,12 +28,15 @@ namespace LinqToDB.DataProvider.SQLite
 		public static ISQLiteSpecificTable<TSource> AsSQLite<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsSQLite, table),
-				table.Expression);
+			if (table is not Table<TSource> ts)
+				throw new InvalidOperationException();
 
-			return new SQLiteSpecificTable<TSource>(table);
+			var newTable = new Table<TSource>(ts.DataContext, Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(AsSQLite, ts),
+				table.Expression));
+
+			return new SQLiteSpecificTable<TSource>(newTable);
 		}
 	}
 }
