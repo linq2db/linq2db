@@ -1366,11 +1366,8 @@ namespace LinqToDB.Linq.Builder
 				if (expression.NodeType == ExpressionType.Call)
 				{
 					var mc = (MethodCallExpression)expression;
-					if (mc.Method.DeclaringType != null)
-					{
-						if (MappingSchema.HasAttribute<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method))
-							return mc;
-					}
+					if (mc.Method.DeclaringType != null && MappingSchema.HasAttribute<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method))
+						return mc;
 				}
 
 				var p    = Expression.Parameter(typeof(Expression), "exp");
