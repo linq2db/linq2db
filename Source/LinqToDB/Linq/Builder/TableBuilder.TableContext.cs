@@ -1251,19 +1251,13 @@ namespace LinqToDB.Linq.Builder
 
 								var expr   = queryMethod.GetBody(ma);
 
-								buildInfo.IsAssociationBuilt = true;
-
-								DefaultIfEmptyBuilder.DefaultIfEmptyContext? defaultIfEmpty = null;
-								if (tableLevel.Context is TableContext tc)
-									defaultIfEmpty = tc.Parent as DefaultIfEmptyBuilder.DefaultIfEmptyContext;
-
-								if (defaultIfEmpty != null)
-									defaultIfEmpty.Disabled = true;
+								buildInfo.IsAssociationBuilt  = true;
+								var oldDefaultIfEmpty         = Builder.DisableDefaultIfEmpty;
+								Builder.DisableDefaultIfEmpty = true;
 
 								var result =  Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
-								if (defaultIfEmpty != null)
-									defaultIfEmpty.Disabled = false;
+								Builder.DisableDefaultIfEmpty = oldDefaultIfEmpty;
 
 								return result;
 							}
