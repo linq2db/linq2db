@@ -53,7 +53,7 @@ namespace LinqToDB.Concurrency
 		private static IQueryable<T> MakeConcurrentFilter<T>(IQueryable<T> source, T obj, Type objType, EntityDescriptor ed)
 			where T : class
 		{
-			var query   = FilterByPrimaryKey(source, obj, ed);
+			var query = FilterByPrimaryKey(source, obj, ed);
 
 			var concurrencyColumns = ed.Columns
 				.Select(c => new
@@ -264,6 +264,27 @@ namespace LinqToDB.Concurrency
 			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 
 			return MakeDeleteConcurrent(source, dc, obj).DeleteAsync(cancellationToken);
+		}
+
+		/// <summary>
+		/// Applies primary key and optimistic lock filters to query for specific record.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise only primary key filter will be applied to query.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Entity query.</param>
+		/// <param name="obj">Entity instance to take current lock field value from.</param>
+		/// <returns>Query with filter over lock field.</returns>
+		public static IQueryable<T> OptimisticFilter<T>(this IQueryable<T> source, T obj)
+			where T : class
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (obj    == null) throw new ArgumentNullException(nameof(obj));
+
+			var dc      = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var objType = typeof(T);
+			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
+
+			return MakeConcurrentFilter(source, obj, objType, ed);
 		}
 	}
 }
