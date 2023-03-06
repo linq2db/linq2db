@@ -149,7 +149,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <param name="options">Instance of <see cref="DataOptions"/>.</param>
 		/// <param name="connectionString">PostgreSQL connection string.</param>
-		/// <param name="optionSetter">Optional <see cref="PostgreSQLOptions"/> configuration callback.</param>
+		/// <param name="optionSetter"><see cref="PostgreSQLOptions"/> configuration callback.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		/// <remarks>
 		/// <para>
@@ -162,10 +162,11 @@ namespace LinqToDB
 		/// For more fine-grained configuration see <see cref="UsePostgreSQL(DataOptions, string, PostgreSQLVersion, Func{PostgreSQLOptions, PostgreSQLOptions}?)"/> overload.
 		/// </remarks>
 		public static DataOptions UsePostgreSQL(this DataOptions options, string connectionString,
-			Func<PostgreSQLOptions, PostgreSQLOptions>? optionSetter = null)
+			Func<PostgreSQLOptions, PostgreSQLOptions> optionSetter)
 		{
-			options = options.UseConnectionString(ProviderName.PostgreSQL, connectionString);
-			return optionSetter != null ? options.WithOptions(optionSetter) : options;
+			return options
+				.UseConnectionString(ProviderName.PostgreSQL, connectionString)
+				.WithOptions(optionSetter);
 		}
 
 		/// <summary>
