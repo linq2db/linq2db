@@ -98,7 +98,7 @@ public class Startup
                 //will configure the AppDataConnection to use
                 //sqite with the provided connection string
                 //there are methods for each supported database
-                .UseSQLite(Configuration.GetConnectionString("Default"))
+                .UseSQLite(Configuration.GetConnectionString("Default"), SQLiteProvider.Microsoft)
                 //default logging will log everything using the ILoggerFactory configured in the provider
                 .UseDefaultLogging(provider));
         //...

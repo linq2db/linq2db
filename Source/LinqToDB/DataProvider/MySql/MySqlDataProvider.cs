@@ -12,13 +12,18 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 
-	sealed class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
-	sealed class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
+	sealed class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial, MySqlProvider.MySqlData      )  {} }
+	sealed class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector, MySqlProvider.MySqlConnector) {} }
 
 	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
-		protected MySqlDataProvider(string name)
-			: base(name, GetMappingSchema(name), MySqlProviderAdapter.GetInstance(name))
+		protected MySqlDataProvider(string name, MySqlProvider provider)
+			: this(name, MySqlProviderAdapter.GetInstance(provider == MySqlProvider.AutoDetect ? provider = MySqlProviderDetector.DetectProvider() : provider))
+		{
+		}
+
+		private MySqlDataProvider(string name, MySqlProviderAdapter adapter)
+			: base(name, GetMappingSchema(name, adapter.MappingSchema), adapter)
 		{
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
@@ -74,12 +79,12 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
-		private static MappingSchema GetMappingSchema(string name)
+		private static MappingSchema GetMappingSchema(string name, MappingSchema adapterSchema)
 		{
 			return name switch
 			{
-				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(),
-				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(),
+				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(adapterSchema),
+				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(adapterSchema),
 			};
 		}
 

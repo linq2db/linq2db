@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
-	using LinqToDB.Expressions;
+	using Expressions;
 
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
@@ -30,7 +30,8 @@ namespace LinqToDB.DataProvider.Sybase
 			Type transactionType,
 			Action<DbParameter, AseDbType> dbTypeSetter,
 			Func  <DbParameter, AseDbType> dbTypeGetter,
-			BulkCopyAdapter? bulkCopy)
+			BulkCopyAdapter? bulkCopy,
+			Func<string, AseConnection> connectionFactory)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
@@ -42,6 +43,8 @@ namespace LinqToDB.DataProvider.Sybase
 			SetDbType = dbTypeSetter;
 
 			BulkCopy = bulkCopy;
+
+			CreateConnection = connectionFactory;
 		}
 
 		public Type ConnectionType  { get; }
@@ -54,6 +57,8 @@ namespace LinqToDB.DataProvider.Sybase
 		public Func  <DbParameter, AseDbType> GetDbType { get; }
 
 		public BulkCopyAdapter? BulkCopy { get; }
+
+		internal Func<string, AseConnection> CreateConnection { get; }
 
 		public class BulkCopyAdapter
 		{
@@ -69,9 +74,9 @@ namespace LinqToDB.DataProvider.Sybase
 			public Func<string, string, AseBulkCopyColumnMapping>                      CreateColumnMapping { get; }
 		}
 
-		public static SybaseProviderAdapter GetInstance(string name)
+		public static SybaseProviderAdapter GetInstance(SybaseProvider provider)
 		{
-			if (name == ProviderName.Sybase)
+			if (provider == SybaseProvider.Unmanaged)
 			{
 				if (_nativeInstance == null)
 					lock (_nativeSyncRoot)
@@ -137,6 +142,8 @@ namespace LinqToDB.DataProvider.Sybase
 			var paramMapper   = typeMapper.Type<AseParameter>();
 			var dbTypeBuilder = paramMapper.Member(p => p.AseDbType);
 
+			var connectionFactory = typeMapper.BuildWrappedFactory((string connectionString) => new AseConnection(connectionString));
+
 			return new SybaseProviderAdapter(
 				connectionType,
 				dataReaderType,
@@ -145,7 +152,8 @@ namespace LinqToDB.DataProvider.Sybase
 				transactionType,
 				dbTypeBuilder.BuildSetter<DbParameter>(),
 				dbTypeBuilder.BuildGetter<DbParameter>(),
-				bulkCopy);
+				bulkCopy,
+				connectionFactory);
 		}
 
 		[Wrapper]
@@ -192,8 +200,27 @@ namespace LinqToDB.DataProvider.Sybase
 		}
 
 		[Wrapper]
-		public class AseConnection
+		public sealed class AseConnection : TypeWrapper, IConnectionWrapper
 		{
+			private static LambdaExpression[] Wrappers { get; }
+				= new LambdaExpression[]
+			{
+					// [0]: Open
+					(Expression<Action<AseConnection>>)((AseConnection this_) => this_.Open()),
+					// [1]: Dispose
+					(Expression<Action<AseConnection>>)((AseConnection this_) => this_.Dispose()),
+			};
+
+			public AseConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
+			public AseConnection(string connectionString) => throw new NotImplementedException();
+
+			public void Open()    => ((Action<AseConnection>)CompiledWrappers[0])(this);
+			public void Dispose() => ((Action<AseConnection>)CompiledWrappers[1])(this);
+
+			DbConnection IConnectionWrapper.Connection => (DbConnection)instance_;
 		}
 
 		[Wrapper]

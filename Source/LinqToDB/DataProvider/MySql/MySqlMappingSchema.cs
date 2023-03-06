@@ -69,16 +69,16 @@ namespace LinqToDB.DataProvider.MySql
 
 		public sealed class MySqlOfficialMappingSchema : LockedMappingSchema
 		{
-			public MySqlOfficialMappingSchema()
-				: base(ProviderName.MySqlOfficial, MySqlProviderAdapter.GetInstance(ProviderName.MySqlOfficial).MappingSchema, Instance)
+			public MySqlOfficialMappingSchema(MappingSchema adapterSchema)
+				: base(ProviderName.MySqlOfficial, adapterSchema, Instance)
 			{
 			}
 		}
 
 		public sealed class MySqlConnectorMappingSchema : LockedMappingSchema
 		{
-			public MySqlConnectorMappingSchema()
-				: base(ProviderName.MySqlConnector, MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector).MappingSchema, Instance)
+			public MySqlConnectorMappingSchema(MappingSchema adapterSchema)
+				: base(ProviderName.MySqlConnector, adapterSchema, Instance)
 			{
 			}
 		}

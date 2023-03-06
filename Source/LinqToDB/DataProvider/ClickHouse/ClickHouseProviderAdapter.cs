@@ -62,7 +62,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			Func<Type, OctonicaWrappers.ClickHouseColumnSettings                                       >? octonicaColumnSettings,
 
 			Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? clientConnectionStringBuilder,
-			Func<string, DbConnection>?                                     connectionCreator,
+			Func<string, DbConnection>                                      connectionCreator,
 
 			MappingSchema? mappingSchema)
 		{
@@ -105,6 +105,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 			GetUInt16ReaderMethod = mySqlProviderAdapter.GetUInt16MethodName;
 			GetUInt32ReaderMethod = mySqlProviderAdapter.GetUInt32MethodName;
 			GetUInt64ReaderMethod = mySqlProviderAdapter.GetUInt64MethodName;
+
+			CreateConnection = cs => ((IConnectionWrapper)mySqlProviderAdapter.CreateConnection(cs)).Connection;
 		}
 
 		// IDynamicProviderAdapter
@@ -139,7 +141,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		// Client connection management
 		internal Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? CreateClientConnectionStringBuilder { get; }
-		internal Func<string, DbConnection                                    >? CreateConnection                    { get; }
+		internal Func<string, DbConnection                                    >  CreateConnection                    { get; }
 
 		public static ClickHouseProviderAdapter GetInstance(ClickHouseProvider provider)
 		{
@@ -155,7 +157,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (_mysqlAdapter == null)
 					lock (_mysqlSyncRoot)
-						_mysqlAdapter ??= new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector));
+						_mysqlAdapter ??= new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector));
 
 				return _mysqlAdapter;
 			}
@@ -271,6 +273,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			ClickHouseTransientExceptionDetector.RegisterExceptionType(sqlExceptionType, exceptionErrorsGettter);
 
+			var connectionFactory = typeMapper.BuildWrappedFactory((string connectionString) => new OctonicaWrappers.ClickHouseConnection() { ConnectionString = connectionString });
+
 			return new ClickHouseProviderAdapter(
 				connectionType,
 				dataReaderType,
@@ -295,7 +299,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				typeMapper.BuildWrappedFactory((Type columnType) => new OctonicaWrappers.ClickHouseColumnSettings(columnType)),
 
 				null,
-				null,
+				cs => (DbConnection)connectionFactory(cs).instance_,
 				null);
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => new[] { typeMapper.Wrap<OctonicaWrappers.ClickHouseException>(ex).ErrorCode };
@@ -434,9 +438,34 @@ namespace LinqToDB.DataProvider.ClickHouse
 		public static class OctonicaWrappers
 		{
 			[Wrapper]
-			internal sealed class ClickHouseConnection
+			public sealed class ClickHouseConnection : TypeWrapper, IDisposable
 			{
-				public ClickHouseColumnWriter       CreateColumnWriter(string insertFormatCommand)                                           => throw new NotImplementedException();
+				private static LambdaExpression[] Wrappers { get; }
+					= new LambdaExpression[]
+				{
+					// [0]: Dispose
+					(Expression<Action<ClickHouseConnection>>)((ClickHouseConnection this_) => ((IDisposable)this_).Dispose()),
+					// [1]: get ConnectionString
+					(Expression<Func<ClickHouseConnection, string>>)((ClickHouseConnection this_) => this_.ConnectionString),
+					// [2]: set ConnectionString
+					PropertySetter((ClickHouseConnection this_) => this_.ConnectionString),
+				};
+
+				public ClickHouseConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+				{
+				}
+
+				public ClickHouseConnection() => throw new NotImplementedException();
+
+				public string ConnectionString
+				{
+					get => ((Func  <ClickHouseConnection, string>)CompiledWrappers[1])(this);
+					set => ((Action<ClickHouseConnection, string>)CompiledWrappers[2])(this, value);
+				}
+
+				void IDisposable.Dispose() => ((Action<ClickHouseConnection>)CompiledWrappers[0])(this);
+
+				public ClickHouseColumnWriter       CreateColumnWriter     (string insertFormatCommand                                     ) => throw new NotImplementedException();
 				public Task<ClickHouseColumnWriter> CreateColumnWriterAsync(string insertFormatCommand, CancellationToken cancellationToken) => throw new NotImplementedException();
 			}
 
