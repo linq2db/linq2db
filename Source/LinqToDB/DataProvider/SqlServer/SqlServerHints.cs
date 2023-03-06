@@ -204,14 +204,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			params Expression<Func<TSource,object>>[] columns)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(WithForceSeek, table, indexName, columns),
-				table.Expression, Expression.Constant(indexName), Expression.NewArrayInit(
-					typeof(Expression<Func<TSource,object>>),
-					columns));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(WithForceSeek, table, indexName, columns),
+					table.Expression, Expression.Constant(indexName), Expression.NewArrayInit(
+						typeof(Expression<Func<TSource, object>>),
+						columns))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		[ExpressionMethod(nameof(WithSpatialWindowMaxCellsImpl))]
@@ -354,12 +356,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificTable<TSource> TableHint<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -380,12 +384,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] TParam            hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -406,14 +412,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] params TParam[]   hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]
@@ -427,12 +435,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificTable<TSource> TableHint2012Plus<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint2012Plus, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint2012Plus, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]
@@ -445,12 +455,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		static ISqlServerSpecificTable<TSource> TableHint2014Plus<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint2014Plus, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint2014Plus, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		#endregion
@@ -610,12 +622,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificTable<TSource> JoinHint<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(JoinHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(JoinHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -843,6 +857,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					.Append(' ')
 					;
 
+				var lastLength = stringBuilder.Length;
+
 				if (expression == TemporalTable.ContainedIn)
 					stringBuilder.Length--;
 
@@ -871,6 +887,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (b2016 != null)
 					b2016.ConvertDateTimeAsLiteral = true;
+
+				if (lastLength == stringBuilder.Length)
+				{
+					--stringBuilder.Length;
+				}
 			}
 		}
 
@@ -882,12 +903,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] string                           expression)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TemporalTableHint, table, expression),
-				table.Expression, Expression.Constant(expression));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableHint, table, expression),
+					table.Expression, Expression.Constant(expression))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]
@@ -899,12 +922,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			                    DateTime                         dateTime)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime),
-				table.Expression, Expression.Constant(expression), Expression.Constant(dateTime));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime),
+					table.Expression, Expression.Constant(expression), Expression.Constant(dateTime))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]
@@ -917,12 +942,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			                    DateTime                         dateTime2)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime, dateTime2),
-				table.Expression, Expression.Constant(expression), Expression.Constant(dateTime), Expression.Constant(dateTime2));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime, dateTime2),
+					table.Expression, Expression.Constant(expression), Expression.Constant(dateTime),
+					Expression.Constant(dateTime2))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>

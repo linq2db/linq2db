@@ -197,11 +197,7 @@ namespace Tests.xUpdate
 			Expression     IQueryable.      Expression  => throw new NotImplementedException();
 			IQueryProvider IQueryable.      Provider    => new FakeQueryProvider();
 
-			Expression IExpressionQuery<TEntity>.Expression
-			{
-				get => Expression.Constant((ITable<TEntity>)this);
-				set => throw new NotImplementedException();
-			}
+			Expression IExpressionQuery<TEntity>.Expression => Expression.Constant((ITable<TEntity>)this);
 
 			IQueryable IQueryProvider.CreateQuery(Expression expression)
 			{
