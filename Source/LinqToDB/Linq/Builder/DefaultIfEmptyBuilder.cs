@@ -40,15 +40,13 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression? DefaultValue { get; }
 
-			public bool Disabled { get; set; }
-
 			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
 			{
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
 
 				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
 
-				if (!Disabled && expression == null)
+				if (!Builder.DisableDefaultIfEmpty && expression == null)
 				{
 					var q =
 						from col in SelectQuery.Select.Columns
@@ -119,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 
 			private SqlInfo[] ForceNullability(SqlInfo[] sql)
 			{
-				if (Disabled || Builder.DisableDefaultIfEmpty)
+				if (Builder.DisableDefaultIfEmpty)
 					return sql;
 
 				// force nullability

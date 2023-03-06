@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -39,12 +40,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificTable<TSource> AsSqlServer<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsSqlServer, table),
-				table.Expression);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSqlServer, table),
+					table.Expression)
+			);
 
-			return new SqlServerSpecificTable<TSource>(table);
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]

@@ -23,14 +23,11 @@ namespace LinqToDB.Linq.Builder
 			var collectionSelector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			var resultSelector     = (LambdaExpression)methodCall.Arguments[2].Unwrap();
 
-			var expr           = collectionSelector.Body.Unwrap();
-			DefaultIfEmptyBuilder.DefaultIfEmptyContext? defaultIfEmpty = null;
+			var expr = collectionSelector.Body.Unwrap();
 			if (expr is MethodCallExpression mc && AllJoinsBuilder.IsMatchingMethod(mc, true))
 			{
-				defaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
-				sequence       = new SubQueryContext(defaultIfEmpty);
-
-				defaultIfEmpty.Disabled = true;
+				var defaultIfEmpty = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null);
+				sequence           = new SubQueryContext(defaultIfEmpty);
 			}
 			else if (sequence.SelectQuery.HasSetOperators || !sequence.SelectQuery.IsSimple || sequence.GetType() == typeof(SelectContext))
 				// TODO: we should create subquery unconditionally and let optimizer remove it later if it is not needed,
@@ -48,9 +45,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (resultSelector.Parameters.Count > 1)
 				collection.SetAlias(resultSelector.Parameters[1].Name);
-
-			if (defaultIfEmpty != null && (collectionInfo.JoinType == JoinType.Right || collectionInfo.JoinType == JoinType.Full))
-				defaultIfEmpty.Disabled = false;
 
 			var leftJoin       = SequenceHelper.UnwrapSubqueryContext(collection) is DefaultIfEmptyBuilder.DefaultIfEmptyContext || collectionInfo.JoinType == JoinType.Left;
 			var sql            = collection.SelectQuery;
