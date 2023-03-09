@@ -206,7 +206,7 @@ namespace LinqToDB.Concurrency
 			if (dc  == null) throw new ArgumentNullException(nameof(dc));
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeDeleteConcurrent(dc.GetTable<T>(), dc, obj).Delete();
+			return dc.GetTable<T>().WhereKeyOptimistic(obj).Delete();
 		}
 
 		/// <summary>
@@ -224,7 +224,7 @@ namespace LinqToDB.Concurrency
 			if (dc  == null) throw new ArgumentNullException(nameof(dc));
 			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeDeleteConcurrent(dc.GetTable<T>(), dc, obj).DeleteAsync(cancellationToken);
+			return dc.GetTable<T>().WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
 
 		/// <summary>
@@ -241,9 +241,7 @@ namespace LinqToDB.Concurrency
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
-
-			return MakeDeleteConcurrent(source, dc, obj).Delete();
+			return source.WhereKeyOptimistic(obj).Delete();
 		}
 
 		/// <summary>
@@ -261,9 +259,7 @@ namespace LinqToDB.Concurrency
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
-
-			return MakeDeleteConcurrent(source, dc, obj).DeleteAsync(cancellationToken);
+			return source.WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
 
 		/// <summary>
@@ -274,7 +270,7 @@ namespace LinqToDB.Concurrency
 		/// <param name="source">Entity query.</param>
 		/// <param name="obj">Entity instance to take current lock field value from.</param>
 		/// <returns>Query with filter over lock field.</returns>
-		public static IQueryable<T> OptimisticFilter<T>(this IQueryable<T> source, T obj)
+		public static IQueryable<T> WhereKeyOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));

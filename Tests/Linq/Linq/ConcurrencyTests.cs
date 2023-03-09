@@ -886,7 +886,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestFilterExtension([DataSources] string context)
+		public void TestFilterExtension([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
 			var ms      = new MappingSchema();
@@ -915,31 +915,31 @@ namespace Tests.Linq
 			AssertData(record);
 
 			record.Value = "value 1";
-			cnt = t.OptimisticFilter(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
+			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			record.Value = "value 2";
-			cnt = t.OptimisticFilter(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
+			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			AssertData(record);
 
 			var dbStamp = record.Stamp.ToArray();
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
-			cnt = t.OptimisticFilter(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
+			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
-			cnt = t.OptimisticFilter(record).Delete();
+			cnt = t.WhereKeyOptimistic(record).Delete();
 			Assert.AreEqual(0, cnt);
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
-			cnt = t.OptimisticFilter(record).Delete();
+			cnt = t.WhereKeyOptimistic(record).Delete();
 			if (!skipCnt) Assert.AreEqual(1, cnt);
 			Assert.AreEqual(0, t.ToArray().Length);
 
