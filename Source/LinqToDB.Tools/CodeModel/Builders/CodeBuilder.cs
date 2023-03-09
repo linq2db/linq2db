@@ -18,7 +18,7 @@ namespace LinqToDB.CodeModel
 		/// <summary>
 		/// Get new line element.
 		/// </summary>
-		public ITopLevelElement NewLine => CodeEmptyLine.Instance;
+		public CodeEmptyLine NewLine => CodeEmptyLine.Instance;
 
 		/// <summary>
 		/// Add new file code unit.

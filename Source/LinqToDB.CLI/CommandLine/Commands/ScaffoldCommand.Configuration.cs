@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;
@@ -113,6 +114,19 @@ namespace LinqToDB.CommandLine
 						default     : throw new InvalidOperationException($"Unsuppored value for option {DataModel.StoredProcedureTypes.Name}: {strVal}");
 					}
 				}
+			}
+
+			// Metadata source
+			if (options.Remove(DataModel.Metadata, out value))
+			{
+				var str = (string)value!;
+				settings.Metadata = str switch
+				{
+					"none"       => MetadataSource.None,
+					"attributes" => MetadataSource.Attributes,
+					"fluent"     => MetadataSource.FluentMapping,
+					_            => throw new InvalidOperationException($"Unsuppored value for option {DataModel.Metadata.Name}: {str}")
+				};
 			}
 
 			// Find method variants

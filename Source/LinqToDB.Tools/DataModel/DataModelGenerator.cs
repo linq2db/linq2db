@@ -24,7 +24,7 @@ namespace LinqToDB.DataModel
 		// language-specific services
 		private readonly ILanguageProvider           _languageProvider;
 		// data model metadata generator
-		private readonly IMetadataBuilder            _metadataBuilder;
+		private readonly IMetadataBuilder?           _metadataBuilder;
 		// used for full function name generation
 		private readonly ISqlBuilder                 _sqlBuilder;
 		// adjust parameter name according to naming rules for parameter
@@ -32,20 +32,7 @@ namespace LinqToDB.DataModel
 		// scaffolding options
 		private readonly ScaffoldOptions             _options;
 
-		// generated AST files
-		private readonly Dictionary<string, (CodeFile file, Dictionary<string, ClassGroup> classesPerNamespace)> _files = new ();
-		
-		// various lookups to map data model descriptors to corresponding generated AST objects or builders
-		//
-		// stores entity class AST builder for each entity
-		// used to map entity descriptor to generated class e.g. for association generation logic
-		private readonly Dictionary<EntityModel, ClassBuilder>    _entityBuilders   = new ();
-		// stores entity column AST builder for each entity column
-		// used to map entity column descriptor to generated class e.g. for association generation logic or Find method generator
-		private readonly Dictionary<ColumnModel, CodeProperty>    _columnProperties = new ();
-		// stores AST objects for additional/non-default schema descriptors
-		private readonly Dictionary<AdditionalSchemaModel, (ClassBuilder schemaWrapperClass, ClassBuilder schemaContextClass)> _schemaClasses = new ();
-
+		private readonly record struct TypeWithRegion(CodeClass Type, RegionGroup Region);
 
 		/// <summary>
 		/// Creates data model to AST generator instance.
@@ -59,7 +46,7 @@ namespace LinqToDB.DataModel
 		public DataModelGenerator(
 			ILanguageProvider    languageProvider,
 			DatabaseModel        dataModel,
-			IMetadataBuilder     metadataBuilder,
+			IMetadataBuilder?    metadataBuilder,
 			Func<string, string> findMethodParameterNameNormalizer,
 			ISqlBuilder          sqlBuilder,
 			ScaffoldOptions      options)
@@ -124,26 +111,15 @@ namespace LinqToDB.DataModel
 			// generate data context constructors
 			BuildDataContextConstructors(dataContextBuilder, initSchemasMethod?.Method.Name);
 
-			// extensions class builder (e.g. for association extensions, Find methods, etc)
-			ClassBuilder? extensionsClass  = null;
-			// method group for Find extension methods
-			MethodGroup?  findMethodsGroup = null;
-
 			// generate classes for entities from main data context
-			BuildEntities(
-				_dataModel.DataContext.Entities,
-				entity => DefineFileClass(entity.Class),
-				dataContextBuilder.Properties(true),
-				dataContextBuilder.Type.Type,
-				dataContextBuilder.Type.This,
-				() => findMethodsGroup ??= getExtensionsClass().Regions().New(FIND_METHODS_REGION).Methods(false));
+			BuildEntities(_dataModel.DataContext.Entities, entity => DefineFileClass(entity.Class));
 
 			// generate classes for entities for additional schemas alongside with other schema-related
 			// code (except associations and procedures/functions)
 			foreach (var schema in _dataModel.DataContext.AdditionalSchemas.Values)
 			{
 				// build schema classes and entities
-				var schemaContextType = BuildAdditionalSchema(schema, dataContextBuilder.Type.Type);
+				var schemaContextType = BuildAdditionalSchema(schema);
 
 				// add schema reference to data context class
 				var schemaProp = contextSchemaProperties!
@@ -161,19 +137,12 @@ namespace LinqToDB.DataModel
 			
 			// generate associations for all entities after all entity classes generated for both
 			// main context and additional schemas, as they need to reference entity classes and properties
-			BuildAssociations(getExtensionsClass);
+			BuildAssociations();
 
 			// generate functions and stored procedures last, as they can reference entity classes and properties
-			BuildAllFunctions(dataContextBuilder, contextIsDataConnection, getExtensionsClass);
+			BuildAllFunctions(dataContextBuilder, contextIsDataConnection);
 
-			// action to access extensions class builder with class declaration on first call
-			ClassBuilder getExtensionsClass()
-			{
-				return extensionsClass ??= dataContextBuilder
-					.Group
-						.New(AST.Name(EXTENSIONS_CLASS))
-							.SetModifiers(Modifiers.Public | Modifiers.Static | Modifiers.Partial);
-			}
+			_metadataBuilder?.Complete(context);
 		}
 	}
 }

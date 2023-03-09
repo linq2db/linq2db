@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataModel
 {
@@ -11,13 +10,11 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Generates data context constructors.
 		/// </summary>
-		/// <param name="contextBuilder">Data context class builder.</param>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="initSchemasMethodName">(Optional) additional schemas init method name.</param>
-		private void BuildDataContextConstructors(
-			ClassBuilder    contextBuilder,
-			CodeIdentifier? initSchemasMethodName)
+		private static void BuildDataContextConstructors(IDataModelGenerationContext context, CodeIdentifier? initSchemasMethodName)
 		{
-			var constructors = contextBuilder.Constructors();
+			var constructors = context.MainContextBuilder.Constructors();
 
 			var ctors = new List<BlockBuilder>();
 
@@ -29,14 +26,14 @@ namespace LinqToDB.DataModel
 
 			// first we generate empty constructors and then add body to all of them as they will have same code for body
 
-			if (_dataModel.DataContext.HasDefaultConstructor)
+			if (context.Model.DataContext.HasDefaultConstructor)
 				ctors.Add(constructors.New().SetModifiers(Modifiers.Public).Body());
 
-			if (_dataModel.DataContext.HasConfigurationConstructor)
+			if (context.Model.DataContext.HasConfigurationConstructor)
 			{
-				var configurationParam = AST.Parameter(
+				var configurationParam = context.AST.Parameter(
 					WellKnownTypes.System.String,
-					AST.Name(CONTEXT_CONSTRUCTOR_CONFIGURATION_PARAMETER),
+					context.AST.Name(CONTEXT_CONSTRUCTOR_CONFIGURATION_PARAMETER),
 					CodeParameterDirection.In);
 
 				ctors.Add(constructors
@@ -47,11 +44,11 @@ namespace LinqToDB.DataModel
 						.Body());
 			}
 
-			if (_dataModel.DataContext.HasUntypedOptionsConstructor)
+			if (context.Model.DataContext.HasUntypedOptionsConstructor)
 			{
-				var optionsParam = AST.Parameter(
+				var optionsParam = context.AST.Parameter(
 					WellKnownTypes.LinqToDB.Configuration.DataOptions,
-					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
+					context.AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
 					CodeParameterDirection.In);
 
 				ctors.Add(constructors
@@ -62,26 +59,26 @@ namespace LinqToDB.DataModel
 						.Body());
 			}
 
-			if (_dataModel.DataContext.HasTypedOptionsConstructor)
+			if (context.Model.DataContext.HasTypedOptionsConstructor)
 			{
-				var typedOptionsParam = AST.Parameter(
-					WellKnownTypes.LinqToDB.Configuration.DataOptionsWithType(contextBuilder.Type.Type),
-					AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
+				var typedOptionsParam = context.AST.Parameter(
+					WellKnownTypes.LinqToDB.Configuration.DataOptionsWithType(context.MainContextClass.Type),
+					context.AST.Name(CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
 					CodeParameterDirection.In);
 
 				ctors.Add(constructors
 					.New()
 						.Parameter(typedOptionsParam)
 						.SetModifiers(Modifiers.Public)
-						.Base(AST.Member(typedOptionsParam.Reference, WellKnownTypes.LinqToDB.Configuration.DataOptions_Options))
+						.Base(context.AST.Member(typedOptionsParam.Reference, WellKnownTypes.LinqToDB.Configuration.DataOptions_Options))
 						.Body());
 			}
 
 			// partial init method, called by all constructors, which could be used by user to add
 			// additional initialization logic
-			var initDataContext = contextBuilder
+			var initDataContext = context.MainContextBuilder
 				.Methods(true)
-					.New(AST.Name(CONTEXT_INIT_METHOD))
+					.New(context.AST.Name(CONTEXT_INIT_METHOD))
 						.SetModifiers(Modifiers.Partial);
 
 			foreach (var body in ctors)
@@ -91,9 +88,9 @@ namespace LinqToDB.DataModel
 				// InitDataContext(); // partial method for custom initialization
 
 				if (initSchemasMethodName != null)
-					body.Append(AST.Call(contextBuilder.Type.This, initSchemasMethodName));
+					body.Append(context.AST.Call(context.ContextReference, initSchemasMethodName));
 
-				body.Append(AST.Call(contextBuilder.Type.This, initDataContext.Method.Name));
+				body.Append(context.AST.Call(context.ContextReference, initDataContext.Method.Name));
 			}
 		}
 	}

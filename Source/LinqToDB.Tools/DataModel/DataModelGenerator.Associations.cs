@@ -14,78 +14,38 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Generates associations for all data model relations.
 		/// </summary>
-		/// <param name="getExtensionsClass">Class builder provider to get extensions class that
-		/// will contain assocation extension methods.</param>
-		private void BuildAssociations(Func<ClassBuilder> getExtensionsClass)
+		/// <param name="context">Model generation context.</param>
+		private void BuildAssociations(IDataModelGenerationContext context)
 		{
-			// stores assocation property group for each entity
-			var          entityAssociations          = new Dictionary<EntityModel, PropertyGroup>();
-			// stores association methods groupsfor each entity
-			var          extensionEntityAssociations = new Dictionary<EntityModel, MethodGroup>();
-			// region in extensions class with association extension methods
-			RegionGroup? extensionsRegion            = null;
-
-			foreach (var association in _dataModel.DataContext.Associations)
-			{
-				BuildAssociation(
-					association,
-					getExtensionAssociations,
-					entityAssociations,
-					extensionEntityAssociations);
-			}
-
-			// method to provide access to associations extensions region in extensions class
-			// creates new region if it is not created yet
-			RegionGroup getExtensionAssociations()
-			{
-				return extensionsRegion ??= getExtensionsClass()
-					.Regions()
-						.New(EXTENSIONS_ASSOCIATIONS_REGION)
-							.Regions();
-			}
+			foreach (var association in context.Model.DataContext.Associations)
+				BuildAssociation(context, association);
 		}
 
 		/// <summary>
-		/// Generates code (AST) for single association in both directions using properties and/or extension methods.
+		/// Generates code (context.AST) for single association in both directions using properties and/or extension methods.
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="association">Association model.</param>
-		/// <param name="extensionAssociations">Association extensions region provider.</param>
-		/// <param name="entityAssociations">Assocation property groups for each entity.</param>
-		/// <param name="extensionEntityAssociations">Association methods groupsfor each entity.</param>
-		private void BuildAssociation(
-			AssociationModel                       association,
-			Func<RegionGroup>                      extensionAssociations,
-			Dictionary<EntityModel, PropertyGroup> entityAssociations,
-			Dictionary<EntityModel, MethodGroup>   extensionEntityAssociations)
+		private static void BuildAssociation(IDataModelGenerationContext context, AssociationModel association)
 		{
-			// get source and target entities for association
-			// source is foreign key source table
-			// target is foreign key target table
-			if (!_entityBuilders.TryGetValue(association.Source, out var sourceBuilder)
-				|| !_entityBuilders.TryGetValue(association.Target, out var targetBuilder))
-			{
-				// data model misconfiguration (e.g. entity was removed from model, but not its associations)
-				throw new InvalidOperationException("Discovered association that connects tables, missing from current model.");
-			}
-
 			// build metadata keys for association
 			// (add fields used to define assocation to metadata)
-			BuildAssociationMetadataKey(association, false);
-			BuildAssociationMetadataKey(association, true);
+			BuildAssociationMetadataKey(context, association, false);
+			BuildAssociationMetadataKey(context, association, true);
 
 			// Type of assocation on source side.
 			// Nullable for nullable foreign key.
-			var sourceType = targetBuilder.Type.Type.WithNullability(association.SourceMetadata.CanBeNull);
+			var sourceType = context.GetEntityBuilder(association.Target).Type.Type.WithNullability(association.SourceMetadata.CanBeNull);
 
 			// Type of association on target side.
-			var tagetType = sourceBuilder.Type.Type;
+			var tagetType = context.GetEntityBuilder(association.Source).Type.Type;
 			if (association.ManyToOne)
 			{
 				// for many-to-one assocations has collection type, defined by user preferences
-				if (_options.DataModel.AssociationCollectionAsArray)
-					tagetType = AST.ArrayType(tagetType, false);
-				else if (_dataModel.AssociationCollectionType != null)
-					tagetType = _dataModel.AssociationCollectionType.WithTypeArguments(tagetType);
+				if (context.Options.DataModel.AssociationCollectionAsArray)
+					tagetType = context.AST.ArrayType(tagetType, false);
+				else if (context.Model.AssociationCollectionType != null)
+					tagetType = context.Model.AssociationCollectionType.WithTypeArguments(tagetType);
 				else
 					// default type is IEnumerable
 					tagetType = WellKnownTypes.System.Collections.Generic.IEnumerable(tagetType);
@@ -97,7 +57,7 @@ namespace LinqToDB.DataModel
 			if (association.Property != null)
 			{
 				BuildAssociationProperty(
-					entityAssociations,
+					context,
 					association.Source,
 					sourceType,
 					association.Property,
@@ -108,7 +68,7 @@ namespace LinqToDB.DataModel
 			if (association.BackreferenceProperty != null)
 			{
 				BuildAssociationProperty(
-					entityAssociations,
+					context,
 					association.Target,
 					tagetType,
 					association.BackreferenceProperty,
@@ -119,10 +79,7 @@ namespace LinqToDB.DataModel
 			if (association.Extension != null)
 			{
 				BuildAssociationExtension(
-					extensionEntityAssociations,
-					extensionAssociations,
-					sourceBuilder,
-					targetBuilder,
+					context,
 					sourceType,
 					association.Extension,
 					association.SourceMetadata,
@@ -134,10 +91,7 @@ namespace LinqToDB.DataModel
 			if (association.BackreferenceExtension != null)
 			{
 				BuildAssociationExtension(
-					extensionEntityAssociations,
-					extensionAssociations,
-					targetBuilder,
-					sourceBuilder,
+					context,
 					tagetType,
 					association.BackreferenceExtension,
 					association.TargetMetadata,
@@ -149,9 +103,10 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Generates assocation keys in metadata.
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="association">Association model.</param>
 		/// <param name="backReference">Association side.</param>
-		private void BuildAssociationMetadataKey(AssociationModel association, bool backReference)
+		private static void BuildAssociationMetadataKey(IDataModelGenerationContext context, AssociationModel association, bool backReference)
 		{
 			// metadata model to update with keys
 			var metadata = backReference ? association.TargetMetadata : association.SourceMetadata;
@@ -175,107 +130,88 @@ namespace LinqToDB.DataModel
 			var thisColumns  =  backReference ? association.ToColumns : association.FromColumns;
 			var otherColumns = !backReference ? association.ToColumns : association.FromColumns;
 
-			var thisBuilder = !backReference ? _entityBuilders[association.Source] : _entityBuilders[association.Target];
-			var otherBuilder = backReference ? _entityBuilders[association.Source] : _entityBuilders[association.Target];
+			var thisBuilder  = context.GetEntityBuilder(!backReference ? association.Source : association.Target);
+			var otherBuilder = context.GetEntityBuilder( backReference ? association.Source : association.Target);
 
 			// we generate keys using nameof operator to get property name to have refactoring-friendly mappings
 			// (T4 always used strings here)
-			var separator = association.FromColumns.Length > 1 ? AST.Constant(",", true) : null;
+			var separator = association.FromColumns.Length > 1 ? context.AST.Constant(",", true) : null;
 			for (var i = 0; i < association.FromColumns.Length; i++)
 			{
 				if (i > 0)
 				{
 					// add comma separator
-					metadata.ThisKeyExpression  = AST.Add(metadata.ThisKeyExpression! , separator!);
-					metadata.OtherKeyExpression = AST.Add(metadata.OtherKeyExpression!, separator!);
+					metadata.ThisKeyExpression  = context.AST.Add(metadata.ThisKeyExpression! , separator!);
+					metadata.OtherKeyExpression = context.AST.Add(metadata.OtherKeyExpression!, separator!);
 				}
 
 				// generate nameof() expressions for current key column
-				var thisKey  = AST.NameOf(AST.Member(thisBuilder .Type.Type, _columnProperties[thisColumns [i]].Reference));
-				var otherKey = AST.NameOf(AST.Member(otherBuilder.Type.Type, _columnProperties[otherColumns[i]].Reference));
+				var thisKey  = context.AST.NameOf(context.AST.Member(thisBuilder .Type.Type, context.GetColumnProperty(thisColumns [i]).Reference));
+				var otherKey = context.AST.NameOf(context.AST.Member(otherBuilder.Type.Type, context.GetColumnProperty(otherColumns[i]).Reference));
 
 				// append column name to key
-				metadata.ThisKeyExpression  = metadata.ThisKeyExpression  == null ? thisKey  : AST.Add(metadata.ThisKeyExpression , thisKey);
-				metadata.OtherKeyExpression = metadata.OtherKeyExpression == null ? otherKey : AST.Add(metadata.OtherKeyExpression, otherKey);
+				metadata.ThisKeyExpression  = metadata.ThisKeyExpression  == null ? thisKey  : context.AST.Add(metadata.ThisKeyExpression , thisKey);
+				metadata.OtherKeyExpression = metadata.OtherKeyExpression == null ? otherKey : context.AST.Add(metadata.OtherKeyExpression, otherKey);
 			}
 		}
 
 		/// <summary>
 		/// Generates association property in entity class for one side of association.
 		/// </summary>
-		/// <param name="entityAssociations">Lookup for association properties group in each entity.</param>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="owner">Assocation property owner entity.</param>
 		/// <param name="type">Association property type.</param>
 		/// <param name="propertyModel">Association property model.</param>
 		/// <param name="metadata">Association property metadata.</param>
-		private void BuildAssociationProperty(
-			Dictionary<EntityModel, PropertyGroup> entityAssociations,
-			EntityModel                            owner,
-			IType                                  type,
-			PropertyModel                          propertyModel,
-			AssociationMetadata                    metadata)
+		private static void BuildAssociationProperty(
+			IDataModelGenerationContext context,
+			EntityModel                 owner,
+			IType                       type,
+			PropertyModel               propertyModel,
+			AssociationMetadata         metadata)
 		{
-			// if entity class doesn't have assocation properties group yet
-			// (not created yet by previous associations) - create it
-			if (!entityAssociations.TryGetValue(owner, out var associations))
-				entityAssociations.Add(
-					owner,
-					associations = _entityBuilders[owner]
-						.Regions()
-							.New(ENTITY_ASSOCIATIONS_REGION)
-								.Properties(false));
-
 			// by default property type will be null here, but user could override it manually
 			// and we should respect it
 			propertyModel.Type ??= type;
 
 			// declare property
-			var propertyBuilder = DefineProperty(associations, propertyModel);
+			var propertyBuilder = DefineProperty(context, context.GetEntityAssociationsGroup(owner), propertyModel);
+
 			// and it's metadata
-			_metadataBuilder.BuildAssociationMetadata(metadata, propertyBuilder);
+			context.MetadataBuilder?.BuildAssociationMetadata(context, context.GetEntityBuilder(owner).Type, metadata, propertyBuilder);
 		}
 
 		/// <summary>
 		/// Generates association extension method in extensions class for one side of association.
 		/// </summary>
-		/// <param name="extensionEntityAssociations">Association methods groupsfor each entity.</param>
-		/// <param name="extensionAssociations">Association extensions region provider.</param>
-		/// <param name="thisEntity">Entity class for this side of assocation (used for extension <c>this</c> parameter).</param>
-		/// <param name="resultEntity">Entity class for other side of assocation (used for extension result type).</param>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="type">Association result type.</param>
 		/// <param name="extensionModel">Extension method model.</param>
 		/// <param name="metadata">Association methodo metadata.</param>
 		/// <param name="associationModel">Association model.</param>
 		/// <param name="backReference">Identifies current side of assocation.</param>
-		private void BuildAssociationExtension(
-			Dictionary<EntityModel, MethodGroup> extensionEntityAssociations,
-			Func<RegionGroup>                    extensionAssociations,
-			ClassBuilder                         thisEntity,
-			ClassBuilder                         resultEntity,
-			IType                                type,
-			MethodModel                          extensionModel,
-			AssociationMetadata                  metadata,
-			AssociationModel                     associationModel,
-			bool                                 backReference)
+		private static void BuildAssociationExtension(
+			IDataModelGenerationContext context,
+			IType                       type,
+			MethodModel                 extensionModel,
+			AssociationMetadata         metadata,
+			AssociationModel            associationModel,
+			bool                        backReference)
 		{
-			// create (if missing) assocations region for specific owner (this) entity
-			var key = backReference ? associationModel.Target : associationModel.Source;
+			var thisEntityType   = context.GetEntityBuilder( backReference ? associationModel.Target : associationModel.Source).Type.Type;
+			var resultEntityType = context.GetEntityBuilder(!backReference ? associationModel.Target : associationModel.Source).Type.Type;
 
-			if (!extensionEntityAssociations.TryGetValue(key, out var associations))
-				extensionEntityAssociations.Add(
-					key,
-					associations = extensionAssociations()
-						.New(string.Format(EXTENSIONS_ENTITY_ASSOCIATIONS_REGION, thisEntity.Type.Name.Name))
-							.Methods(false));
+			// create (if missing) assocations region for specific owner (this) entity
+			var associations = context.GetEntityAssociationExtensionsGroup(backReference ? associationModel.Target : associationModel.Source);
 
 			// define extension method
-			var  methodBuilder = DefineMethod(associations, extensionModel).Returns(type);
+			var  methodBuilder = DefineMethod(context, associations, extensionModel).Returns(type);
 			// and it's metadata
-			_metadataBuilder.BuildAssociationMetadata(metadata, methodBuilder);
+			context.MetadataBuilder?.BuildAssociationMetadata(context, context.ExtensionsClass.Type, metadata, methodBuilder);
 
 			// build method parameters...
-			var thisParam = AST.Parameter(thisEntity.Type.Type, AST.Name(EXTENSIONS_ENTITY_THIS_PARAMETER), CodeParameterDirection.In);
-			var ctxParam  = AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, AST.Name(EXTENSIONS_ENTITY_CONTEXT_PARAMETER), CodeParameterDirection.In);
+			var thisParam = context.AST.Parameter(thisEntityType, context.AST.Name(EXTENSIONS_ENTITY_THIS_PARAMETER), CodeParameterDirection.In);
+			var ctxParam  = context.AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, context.AST.Name(EXTENSIONS_ENTITY_CONTEXT_PARAMETER), CodeParameterDirection.In);
 
 			methodBuilder.Parameter(thisParam);
 			methodBuilder.Parameter(ctxParam);
@@ -287,10 +223,10 @@ namespace LinqToDB.DataModel
 				methodBuilder
 					.Body()
 						.Append(
-							AST.Throw(
-								AST.New(
+							context.AST.Throw(
+								context.AST.New(
 									WellKnownTypes.System.InvalidOperationException,
-									AST.Constant(EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
+									context.AST.Constant(EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
 			else
 			{
 				// generate association query for non-query invocation
@@ -298,9 +234,9 @@ namespace LinqToDB.DataModel
 				// As method body here could conflict with custom return type for many-to-one assocation
 				// we forcebly override return type here to IQueryable<T>
 				if (associationModel.ManyToOne && backReference)
-					methodBuilder.Returns(WellKnownTypes.System.Linq.IQueryable(resultEntity.Type.Type));
+					methodBuilder.Returns(WellKnownTypes.System.Linq.IQueryable(resultEntityType));
 
-				var lambdaParam = AST.LambdaParameter(AST.Name(EXTENSIONS_ASSOCIATION_FILTER_PARAMETER), resultEntity.Type.Type);
+				var lambdaParam = context.AST.LambdaParameter(context.AST.Name(EXTENSIONS_ASSOCIATION_FILTER_PARAMETER), resultEntityType);
 
 				// generate assocation key columns filter, which compare
 				// `this` entity parameter columns with return table entity columns
@@ -311,31 +247,31 @@ namespace LinqToDB.DataModel
 
 				for (var i = 0; i < associationModel.FromColumns.Length; i++)
 				{
-					var fromColumn = _columnProperties[associationModel.FromColumns[i]];
-					var toColumn   = _columnProperties[associationModel.ToColumns[i]];
+					var fromColumn = context.GetColumnProperty(associationModel.FromColumns[i]);
+					var toColumn   = context.GetColumnProperty(associationModel.ToColumns[i]);
 
-					var cond = AST.Equal(
-						AST.Member(fromObject.Reference, fromColumn.Reference),
-						AST.Member(toObject.Reference  , toColumn.Reference  ));
+					var cond = context.AST.Equal(
+						context.AST.Member(fromObject.Reference, fromColumn.Reference),
+						context.AST.Member(toObject.Reference  , toColumn.Reference  ));
 
-					filter = filter == null ? cond : AST.And(filter, cond);
+					filter = filter == null ? cond : context.AST.And(filter, cond);
 				}
 
 				// generate filter lambda function
-				var filterLambda = AST
+				var filterLambda = context.AST
 					.Lambda(
 						WellKnownTypes.System.Linq.Expressions.Expression(
-							WellKnownTypes.System.Func(WellKnownTypes.System.Boolean, resultEntity.Type.Type)),
+							WellKnownTypes.System.Func(WellKnownTypes.System.Boolean, resultEntityType)),
 						true)
 					.Parameter(lambdaParam);
-				filterLambda.Body().Append(AST.Return(filter!));
+				filterLambda.Body().Append(context.AST.Return(filter!));
 
 				// ctx.GetTable<ResultEntity>()
-				var body = AST.ExtCall(
+				var body = context.AST.ExtCall(
 						WellKnownTypes.LinqToDB.DataExtensions,
 						WellKnownTypes.LinqToDB.DataExtensions_GetTable,
-						WellKnownTypes.LinqToDB.ITable(resultEntity.Type.Type),
-						new[] { resultEntity.Type.Type },
+						WellKnownTypes.LinqToDB.ITable(resultEntityType),
+						new[] { resultEntityType },
 						false,
 						ctxParam.Reference);
 
@@ -348,11 +284,11 @@ namespace LinqToDB.DataModel
 					// .First(t => t.PK == thisEntity.PK)
 					// or
 					// .FirstOrDefault(t => t.PK == thisEntity.PK)
-					body = AST.ExtCall(
+					body = context.AST.ExtCall(
 						WellKnownTypes.System.Linq.Queryable,
 						optional ? WellKnownTypes.System.Linq.Queryable_FirstOrDefault : WellKnownTypes.System.Linq.Queryable_First,
-						resultEntity.Type.Type.WithNullability(optional),
-						new[] { resultEntity.Type.Type },
+						resultEntityType.WithNullability(optional),
+						new[] { resultEntityType },
 						true,
 						body,
 						filterLambda.Method);
@@ -360,17 +296,17 @@ namespace LinqToDB.DataModel
 				else
 				{
 					// .Where(t => t.PK == thisEntity.PK)
-					body = AST.ExtCall(
+					body = context.AST.ExtCall(
 						WellKnownTypes.System.Linq.Queryable,
 						WellKnownTypes.System.Linq.Queryable_Where,
-						WellKnownTypes.System.Linq.IQueryable(resultEntity.Type.Type),
-						new [] { resultEntity.Type.Type },
+						WellKnownTypes.System.Linq.IQueryable(resultEntityType),
+						new [] { resultEntityType },
 						true,
 						body,
 						filterLambda.Method);
 				}
 
-				methodBuilder.Body().Append(AST.Return(body));
+				methodBuilder.Body().Append(context.AST.Return(body));
 			}
 		}
 	}

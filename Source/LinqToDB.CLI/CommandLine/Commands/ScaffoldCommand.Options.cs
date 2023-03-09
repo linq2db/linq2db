@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using LinqToDB.Configuration;
 using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 
@@ -455,6 +455,23 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					_defaultOptions.DataModel.GenerateDefaultSchema,
 					_t4ModeOptions.DataModel.GenerateDefaultSchema);
+
+			/// <summary>
+			/// Specifies type of generated metadata source.
+			/// </summary>
+			public static readonly CliOption Metadata = new StringEnumCliOption(
+					"metadata",
+					null,
+					false,
+					false,
+					"specify type of generated metadata",
+					null,
+					null,
+					null,
+					false,
+					new StringEnumOption(_defaultOptions.DataModel.Metadata == MetadataSource.None         , _t4ModeOptions.DataModel.Metadata == MetadataSource.None         , "none"      , "don't emit metadata for model"         ),
+					new StringEnumOption(_defaultOptions.DataModel.Metadata == MetadataSource.Attributes   , _t4ModeOptions.DataModel.Metadata == MetadataSource.Attributes   , "attributes", "annotate model with mapping attributes"),
+					new StringEnumOption(_defaultOptions.DataModel.Metadata == MetadataSource.FluentMapping, _t4ModeOptions.DataModel.Metadata == MetadataSource.FluentMapping, "fluent"    , "annotate model using fluent mapping"   ));
 
 			/// <summary>
 			/// Base entity class option.

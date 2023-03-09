@@ -42,7 +42,7 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Name of Extension methods class (e.g. Find methods, associations, procedures or functions).
 		/// </summary>
-		private const string EXTENSIONS_CLASS                             = "ExtensionMethods";
+		internal const string EXTENSIONS_CLASS                             = "ExtensionMethods";
 
 		/// <summary>
 		/// Async method suffix.
@@ -81,7 +81,7 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Find extension methods region.
 		/// </summary>
-		private const string FIND_METHODS_REGION                          = "Table Extensions";
+		internal const string FIND_METHODS_REGION                          = "Table Extensions";
 
 		/// <summary>
 		/// Entity <see cref="IEquatable{T}"/> interface implementation.
@@ -99,16 +99,16 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Assocation properties region name.
 		/// </summary>
-		private const string ENTITY_ASSOCIATIONS_REGION                   = "Associations";
+		internal const string ENTITY_ASSOCIATIONS_REGION                   = "Associations";
 		/// <summary>
 		/// Association extensions region name.
 		/// </summary>
-		private const string EXTENSIONS_ASSOCIATIONS_REGION               = "Associations";
+		internal const string EXTENSIONS_ASSOCIATIONS_REGION               = "Associations";
 		/// <summary>
 		/// Assocation extensions region name template for specific entity.
 		/// Parameter: entity name.
 		/// </summary>
-		private const string EXTENSIONS_ENTITY_ASSOCIATIONS_REGION        = "{0} Associations";
+		internal const string EXTENSIONS_ENTITY_ASSOCIATIONS_REGION        = "{0} Associations";
 		/// <summary>
 		/// Association extension method <c>this</c> parameter name.
 		/// </summary>
@@ -124,23 +124,23 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Stored procedures extensions region name.
 		/// </summary>
-		private const string EXTENSIONS_STORED_PROCEDURES_REGION          = "Stored Procedures";
+		internal const string EXTENSIONS_STORED_PROCEDURES_REGION          = "Stored Procedures";
 		/// <summary>
 		/// Aggregate functions extension region name.
 		/// </summary>
-		private const string EXTENSIONS_AGGREGATES_REGION                 = "Aggregate Functions";
+		internal const string EXTENSIONS_AGGREGATES_REGION                 = "Aggregate Functions";
 		/// <summary>
 		/// Scalar functions extensions region name.
 		/// </summary>
-		private const string EXTENSIONS_SCALAR_FUNCTIONS_REGION           = "Scalar Functions";
+		internal const string EXTENSIONS_SCALAR_FUNCTIONS_REGION           = "Scalar Functions";
 		/// <summary>
 		/// Table functions mappings region name.
 		/// </summary>
-		private const string CONTEXT_TABLE_FUNCTIONS_REGION               = "Table Functions";
+		internal const string CONTEXT_TABLE_FUNCTIONS_REGION              = "Table Functions";
 		/// <summary>
 		/// Data context custom mapping schema property name.
 		/// </summary>
-		private const string CONTEXT_SCHEMA_PROPERTY                      = "ContextSchema";
+		internal const string CONTEXT_SCHEMA_PROPERTY                      = "ContextSchema";
 		/// <summary>
 		/// Exception message for client-side association extension method call.
 		/// </summary>
