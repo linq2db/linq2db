@@ -77,3 +77,11 @@ M:System.Reflection.Module.GetCustomAttributes(System.Boolean); Use AttributesEx
 M:System.Reflection.Module.GetCustomAttributes(System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
 M:System.Reflection.ParameterInfo.GetCustomAttributes(System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
 M:System.Reflection.ParameterInfo.GetCustomAttributes(System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.Assembly,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.Assembly,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.MemberInfo,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.MemberInfo,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.Module,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.Module,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.ParameterInfo,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.ParameterInfo,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
