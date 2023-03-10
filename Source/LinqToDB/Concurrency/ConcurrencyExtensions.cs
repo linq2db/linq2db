@@ -204,7 +204,6 @@ namespace LinqToDB.Concurrency
 			where T : class
 		{
 			if (dc  == null) throw new ArgumentNullException(nameof(dc));
-			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
 			return dc.GetTable<T>().WhereKeyOptimistic(obj).Delete();
 		}
@@ -222,7 +221,6 @@ namespace LinqToDB.Concurrency
 			where T : class
 		{
 			if (dc  == null) throw new ArgumentNullException(nameof(dc));
-			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
 			return dc.GetTable<T>().WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
@@ -238,9 +236,6 @@ namespace LinqToDB.Concurrency
 		public static int DeleteOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (obj    == null) throw new ArgumentNullException(nameof(obj));
-
 			return source.WhereKeyOptimistic(obj).Delete();
 		}
 
@@ -256,9 +251,6 @@ namespace LinqToDB.Concurrency
 		public static Task<int> DeleteOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (obj    == null) throw new ArgumentNullException(nameof(obj));
-
 			return source.WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
 
