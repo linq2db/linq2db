@@ -53,7 +53,7 @@ namespace LinqToDB.Concurrency
 		private static IQueryable<T> MakeConcurrentFilter<T>(IQueryable<T> source, T obj, Type objType, EntityDescriptor ed)
 			where T : class
 		{
-			var query   = FilterByPrimaryKey(source, obj, ed);
+			var query = FilterByPrimaryKey(source, obj, ed);
 
 			var concurrencyColumns = ed.Columns
 				.Select(c => new
@@ -204,9 +204,8 @@ namespace LinqToDB.Concurrency
 			where T : class
 		{
 			if (dc  == null) throw new ArgumentNullException(nameof(dc));
-			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeDeleteConcurrent(dc.GetTable<T>(), dc, obj).Delete();
+			return dc.GetTable<T>().WhereKeyOptimistic(obj).Delete();
 		}
 
 		/// <summary>
@@ -222,9 +221,8 @@ namespace LinqToDB.Concurrency
 			where T : class
 		{
 			if (dc  == null) throw new ArgumentNullException(nameof(dc));
-			if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-			return MakeDeleteConcurrent(dc.GetTable<T>(), dc, obj).DeleteAsync(cancellationToken);
+			return dc.GetTable<T>().WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
 		}
 
 		/// <summary>
@@ -238,12 +236,7 @@ namespace LinqToDB.Concurrency
 		public static int DeleteOptimistic<T>(this IQueryable<T> source, T obj)
 			where T : class
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (obj    == null) throw new ArgumentNullException(nameof(obj));
-
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
-
-			return MakeDeleteConcurrent(source, dc, obj).Delete();
+			return source.WhereKeyOptimistic(obj).Delete();
 		}
 
 		/// <summary>
@@ -258,12 +251,28 @@ namespace LinqToDB.Concurrency
 		public static Task<int> DeleteOptimisticAsync<T>(this IQueryable<T> source, T obj, CancellationToken cancellationToken = default)
 			where T : class
 		{
+			return source.WhereKeyOptimistic(obj).DeleteAsync(cancellationToken);
+		}
+
+		/// <summary>
+		/// Applies primary key and optimistic lock filters to query for specific record.
+		/// Entity should have column annotated with <see cref="OptimisticLockPropertyBaseAttribute" />, otherwise only primary key filter will be applied to query.
+		/// </summary>
+		/// <typeparam name="T">Entity type.</typeparam>
+		/// <param name="source">Entity query.</param>
+		/// <param name="obj">Entity instance to take current lock field value from.</param>
+		/// <returns>Query with filter over lock field.</returns>
+		public static IQueryable<T> WhereKeyOptimistic<T>(this IQueryable<T> source, T obj)
+			where T : class
+		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc      = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var objType = typeof(T);
+			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
-			return MakeDeleteConcurrent(source, dc, obj).DeleteAsync(cancellationToken);
+			return MakeConcurrentFilter(source, obj, objType, ed);
 		}
 	}
 }
