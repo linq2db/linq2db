@@ -140,7 +140,7 @@ namespace LinqToDB.CommandLine
 			var files      = generator.GenerateCodeModel(
 				sqlBuilder,
 				dataModel,
-				MetadataBuilders.GetMetadataBuilder(generator.Language, sqlBuilder, settings.DataModel.Metadata),
+				MetadataBuilders.GetMetadataBuilder(generator.Language, settings.DataModel.Metadata),
 				SqlBoolEqualityConverter.Create(generator.Language));
 			var sourceCode = generator.GenerateSourceCode(dataModel, files);
 

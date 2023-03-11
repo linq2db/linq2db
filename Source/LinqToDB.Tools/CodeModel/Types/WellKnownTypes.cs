@@ -499,11 +499,31 @@ namespace LinqToDB.CodeModel
 				public static CodeReference DataOptions_Options { get; } = PropertyOrField((DataOptions<DataConnection> o) => o.Options, false);
 
 				/// <summary>
+				/// <see cref="DataOptions.ConnectionOptions"/> property reference.
+				/// </summary>
+				public static CodeReference DataOptions_ConnectionOptions { get; } = PropertyOrField((DataOptions o) => o.ConnectionOptions, false);
+
+				/// <summary>
+				/// <see cref="ConnectionOptions.MappingSchema"/> property reference.
+				/// </summary>
+				public static CodeReference ConnectionOptions_MappingSchema { get; } = PropertyOrField((ConnectionOptions o) => o.MappingSchema, false);
+
+				/// <summary>
 				/// Returns <see cref="DataOptions{T}"/> type descriptor.
 				/// </summary>
 				/// <param name="contextType">Context type.</param>
 				/// <returns>Type descriptor.</returns>
 				public static IType DataOptionsWithType(IType contextType) => _dataOptionsT.WithTypeArguments(contextType);
+
+				/// <summary>
+				/// <see cref="DataOptionsExtensions.UseMappingSchema"/> method reference.
+				/// </summary>
+				public static CodeIdentifier DataOptionsExtensions_UseMappingSchema { get; } = new CodeIdentifier(nameof(DataOptionsExtensions.UseMappingSchema), true);
+
+				/// <summary>
+				/// <see cref="DataOptionsExtensions.UseConfiguration(global::LinqToDB.DataOptions, string, global::LinqToDB.Mapping.MappingSchema)"/> method reference.
+				/// </summary>
+				public static CodeIdentifier DataOptionsExtensions_UseConfiguration { get; } = new CodeIdentifier(nameof(DataOptionsExtensions.UseConfiguration), true);
 			}
 
 			public static class Mapping
@@ -577,6 +597,11 @@ namespace LinqToDB.CodeModel
 				/// <see cref="MappingSchema.SetConvertExpression(DbDataType, DbDataType, LambdaExpression, bool)"/> method reference.
 				/// </summary>
 				public static CodeIdentifier MappingSchema_SetConvertExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.MappingSchema.SetConvertExpression), true);
+
+				/// <summary>
+				/// <see cref="MappingSchema.CombineSchemas(global::LinqToDB.Mapping.MappingSchema, global::LinqToDB.Mapping.MappingSchema)"/> method reference.
+				/// </summary>
+				public static CodeIdentifier MappingSchema_CombineSchemas { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.MappingSchema.CombineSchemas), true);
 
 				/// <summary>
 				/// <see cref="MappingAttribute.Configuration"/> property reference.

@@ -37,14 +37,14 @@ namespace LinqToDB.DataModel
 			 */
 
 			var region = context.AddScalarFunctionRegion(function.Method.Name);
-			var method = DefineMethod(context, region.Methods(false), function.Method);
+			var method = context.DefineMethod(region.Methods(false), function.Method);
 
 			// scalar functions cannot be used outside of query context, so we throw exception from method
 			var body = method.Body().Append(
 				context.AST.Throw(
 					context.AST.New(
 						WellKnownTypes.System.InvalidOperationException,
-						context.AST.Constant(EXCEPTION_QUERY_ONLY_SCALAR_CALL, true))));
+						context.AST.Constant(DataModelConstants.EXCEPTION_QUERY_ONLY_SCALAR_CALL, true))));
 
 			// build mappings
 			context.MetadataBuilder?.BuildFunctionMetadata(context, function.Metadata, method);
@@ -54,7 +54,7 @@ namespace LinqToDB.DataModel
 			{
 				// generate custom record class for result tuple
 				// T4 generated this class inside of context class, here we move it to function region
-				var tupleClassBuilder = DefineClass(context, region.Classes(), function.ReturnTuple!.Class);
+				var tupleClassBuilder = context.DefineClass(region.Classes(), function.ReturnTuple!.Class);
 				var tuplePropsRegion  = tupleClassBuilder.Properties(true);
 
 				// mapping expression tuple fields converters
@@ -63,7 +63,7 @@ namespace LinqToDB.DataModel
 				// parameter of mapping expression to map tuple (returned as object[] from npgsql)
 				// to custom class
 				var lambdaParam = context.AST.LambdaParameter(
-					context.AST.Name(SCALAR_TUPLE_MAPPING_PARAMETER),
+					context.AST.Name(DataModelConstants.SCALAR_TUPLE_MAPPING_PARAMETER),
 					context.AST.ArrayType(WellKnownTypes.System.ObjectArrayNullable, false));
 
 				// generate tuple field property and mapping converter
@@ -71,7 +71,7 @@ namespace LinqToDB.DataModel
 				{
 					var field = function.ReturnTuple!.Fields[i];
 
-					var property = DefineProperty(context, tuplePropsRegion, field.Property);
+					var property = context.DefineProperty(tuplePropsRegion, field.Property);
 
 					initializers[i] = context.AST.Assign(
 						property.Property.Reference,
@@ -124,7 +124,7 @@ namespace LinqToDB.DataModel
 			};
 
 			foreach (var param in function.Parameters)
-				DefineParameter(context, method, param.Parameter);
+				context.DefineParameter(method, param.Parameter);
 		}
 	}
 }

@@ -47,6 +47,7 @@ namespace LinqToDB.CodeModel
 				case CodeElementType.MemberAccess        : newNode = Visit((CodeMember              )node); break;
 				case CodeElementType.Lambda              : newNode = Visit((CodeLambda              )node); break;
 				case CodeElementType.BinaryOperation     : newNode = Visit((CodeBinary              )node); break;
+				case CodeElementType.TernaryOperation    : newNode = Visit((CodeTernary             )node); break;
 				case CodeElementType.File                : newNode = Visit((CodeFile                )node); break;
 				case CodeElementType.Pragma              : newNode = Visit((CodePragma              )node); break;
 				case CodeElementType.Import              : newNode = Visit((CodeImport              )node); break;
@@ -379,6 +380,20 @@ namespace LinqToDB.CodeModel
 			if (left  != expression.Left ||
 				right != expression.Right)
 				return new CodeBinary(left, expression.Operation, right);
+
+			return expression;
+		}
+
+		protected virtual ICodeElement Visit(CodeTernary expression)
+		{
+			var condition = (ICodeExpression)Visit(expression.Condition);
+			var @true     = (ICodeExpression)Visit(expression.True     );
+			var @false    = (ICodeExpression)Visit(expression.False    );
+
+			if (condition != expression.Condition ||
+				@true     != expression.True      ||
+				@false    != expression.False)
+				return new CodeTernary(condition, @true, @false);
 
 			return expression;
 		}

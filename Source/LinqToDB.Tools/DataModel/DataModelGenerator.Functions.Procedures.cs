@@ -65,14 +65,14 @@ namespace LinqToDB.DataModel
 			if (storedProcedure.Error != null)
 			{
 				// if procedure resultset schema load failed, generate error pragma
-				if (context.Options.DataModel.GenerateProceduresSchemaError)
+				if (context.Options.GenerateProceduresSchemaError)
 					(region ??= context.AddStoredProcedureRegion(storedProcedure.Method.Name))
 						.Pragmas()
 							.Add(context.AST.Error(storedProcedure.Error));
 
 				// even with this error procedure generation could continue, as we still
 				// can invoke procedure, we just cannot get resultset from it
-				if (context.Options.DataModel.SkipProceduresWithSchemaErrors)
+				if (context.Options.SkipProceduresWithSchemaErrors)
 					return;
 			}
 
@@ -110,9 +110,9 @@ namespace LinqToDB.DataModel
 					returnElementType = context.GetEntityBuilder(mappedTable).Type.Type;
 			}
 
-			if (context.Options.DataModel.GenerateProcedureSync)
+			if (context.Options.GenerateProcedureSync)
 				BuildStoredProcedureMethod(context, storedProcedure, methodsGroup, useOrdinalMapping, customTable, returnElementType, customRecordProperties, classes, null, false);
-			if (context.Options.DataModel.GenerateProcedureAsync)
+			if (context.Options.GenerateProcedureAsync)
 				BuildStoredProcedureMethod(context, storedProcedure, methodsGroup, useOrdinalMapping, customTable, returnElementType, customRecordProperties, classes, asyncResult, true);
 		}
 
@@ -146,14 +146,13 @@ namespace LinqToDB.DataModel
 			// generate ToList materialization call or mark method async in two cases:
 			// - when return type of mapping is List<T>
 			// - when procedure has non-input parameters
-			var toListRequired        = context.Options.DataModel.GenerateProcedureResultAsList && storedProcedure.Results.Count == 1 && (storedProcedure.Results[0].Entity != null || storedProcedure.Results[0].CustomTable != null);
+			var toListRequired        = context.Options.GenerateProcedureResultAsList && storedProcedure.Results.Count == 1 && (storedProcedure.Results[0].Entity != null || storedProcedure.Results[0].CustomTable != null);
 			var toListOrAsyncRequired = toListRequired
 				|| storedProcedure.Return != null
 				|| storedProcedure.Parameters.Any(p => p.Parameter.Direction != CodeParameterDirection.In);
 
 			// declare mapping method
-			var method = DefineMethod(
-				context,
+			var method = context.DefineMethod(
 				methodsGroup,
 				storedProcedure.Method,
 				async,
@@ -163,7 +162,7 @@ namespace LinqToDB.DataModel
 			var ctxParam = context.AST.Parameter(
 					// see method notes above regarding type of this parameter
 					context.ProcedureContextParameterType,
-					context.AST.Name(STORED_PROCEDURE_CONTEXT_PARAMETER),
+					context.AST.Name(DataModelConstants.STORED_PROCEDURE_CONTEXT_PARAMETER),
 					CodeParameterDirection.In);
 			method.Parameter(ctxParam);
 			var body = method.Body();
@@ -183,7 +182,7 @@ namespace LinqToDB.DataModel
 
 				// DataParameter collection initialization
 				var parameterValues = new ICodeExpression[storedProcedure.Parameters.Count + (storedProcedure.Return != null ? 1 : 0)];
-				parametersVar       = context.AST.Variable(context.AST.Name(STORED_PROCEDURE_PARAMETERS_VARIABLE), WellKnownTypes.LinqToDB.Data.DataParameterArray, true);
+				parametersVar       = context.AST.Variable(context.AST.Name(DataModelConstants.STORED_PROCEDURE_PARAMETERS_VARIABLE), WellKnownTypes.LinqToDB.Data.DataParameterArray, true);
 
 				// build non-return parameters
 				for (var i = 0; i < storedProcedure.Parameters.Count; i++)
@@ -194,9 +193,9 @@ namespace LinqToDB.DataModel
 
 					CodeParameter param;
 					if (async && p.Parameter.Direction != CodeParameterDirection.In)
-						param = DefineParameter(context, method, p.Parameter.WithDirection(CodeParameterDirection.In));
+						param = context.DefineParameter(method, p.Parameter.WithDirection(CodeParameterDirection.In));
 					else
-						param = DefineParameter(context, method, p.Parameter);
+						param = context.DefineParameter(method, p.Parameter);
 
 					if (rebindRequired)
 						rebindTo = param.Reference;
@@ -227,7 +226,7 @@ namespace LinqToDB.DataModel
 				{
 					CodeParameter? param = null;
 					if (!async)
-						param = DefineParameter(context, method, storedProcedure.Return.Parameter);
+						param = context.DefineParameter(method, storedProcedure.Return.Parameter);
 
 					parameterValues[storedProcedure.Parameters.Count] = BuildProcedureParameter(
 						context,
@@ -235,7 +234,7 @@ namespace LinqToDB.DataModel
 						storedProcedure.Return.Parameter.Type,
 						System.Data.ParameterDirection.ReturnValue,
 						param?.Reference ?? context.AST.Variable(context.AST.Name("fake"), storedProcedure.Return.Parameter.Type, false).Reference,
-						storedProcedure.Return.DbName ?? STORED_PROCEDURE_DEFAULT_RETURN_PARAMETER,
+						storedProcedure.Return.DbName ?? DataModelConstants.STORED_PROCEDURE_DEFAULT_RETURN_PARAMETER,
 						storedProcedure.Return.DataType,
 						storedProcedure.Return.Type,
 						parametersVar,
@@ -253,10 +252,9 @@ namespace LinqToDB.DataModel
 
 			CodeParameter? cancellationTokenParameter = null;
 			if (async)
-				cancellationTokenParameter = DefineParameter(
-					context,
+				cancellationTokenParameter = context.DefineParameter(
 					method,
-					new ParameterModel(CANCELLATION_TOKEN_PARAMETER, WellKnownTypes.System.Threading.CancellationToken, CodeParameterDirection.In),
+					new ParameterModel(DataModelConstants.CANCELLATION_TOKEN_PARAMETER, WellKnownTypes.System.Threading.CancellationToken, CodeParameterDirection.In),
 					context.AST.Default(WellKnownTypes.System.Threading.CancellationToken, true));
 
 			ICodeExpression? returnValue = null;
@@ -289,7 +287,7 @@ namespace LinqToDB.DataModel
 					if (asyncResult != null)
 					{
 						var rowCountVar = context.AST.Variable(
-							context.AST.Name(STORED_PROCEDURE_RESULT_VARIABLE),
+							context.AST.Name(DataModelConstants.STORED_PROCEDURE_RESULT_VARIABLE),
 							WellKnownTypes.System.Int32,
 							true);
 						body.Append(context.AST.Assign(rowCountVar, context.AST.AwaitExpression(returnValue)));
@@ -330,7 +328,7 @@ namespace LinqToDB.DataModel
 					// TODO: switch to ColumnReader.GetValue in future to utilize more precise mapping
 					// based on column mapping attributes
 					var drParam            = context.AST.LambdaParameter(
-						context.AST.Name(STORED_PROCEDURE_CUSTOM_MAPPER_PARAMETER),
+						context.AST.Name(DataModelConstants.STORED_PROCEDURE_CUSTOM_MAPPER_PARAMETER),
 						// TODO: add IDataReader support here for linq2db v3
 						WellKnownTypes.System.Data.Common.DbDataReader);
 					var initializers       = new CodeAssignmentStatement[customTable!.Columns.Count];
@@ -385,7 +383,7 @@ namespace LinqToDB.DataModel
 				if (hasParameters)
 					queryProcParameters[^1] = parametersVar!.Reference;
 
-				returnType = context.Options.DataModel.GenerateProcedureResultAsList
+				returnType = context.Options.GenerateProcedureResultAsList
 					? WellKnownTypes.System.Collections.Generic.List(returnElementType!)
 					: WellKnownTypes.System.Collections.Generic.IEnumerable(returnElementType!);
 
@@ -416,7 +414,7 @@ namespace LinqToDB.DataModel
 					if (async)
 					{
 						var listVar = context.AST.Variable(
-							context.AST.Name(STORED_PROCEDURE_RESULT_VARIABLE),
+							context.AST.Name(DataModelConstants.STORED_PROCEDURE_RESULT_VARIABLE),
 							WellKnownTypes.System.Collections.Generic.List(returnElementType!),
 							true);
 						body.Append(context.AST.Assign(listVar, context.AST.AwaitExpression(returnValue)));
@@ -453,7 +451,7 @@ namespace LinqToDB.DataModel
 				{
 					// save API call to variable
 					var callProcVar = context.AST.Variable(
-						context.AST.Name(STORED_PROCEDURE_RETURN_VARIABLE),
+						context.AST.Name(DataModelConstants.STORED_PROCEDURE_RETURN_VARIABLE),
 						returnType,
 						true);
 						body.Append(context.AST.Assign(callProcVar, returnValue!));
@@ -463,19 +461,19 @@ namespace LinqToDB.DataModel
 				if (async && asyncResult != null)
 				{
 					// as async methods cannot have ref/out parameters, we generate result class to contain out/ref/return parameters and result set
-					var resultClassBuilder = DefineClass(classes, asyncResult.Class);
+					var resultClassBuilder = context.DefineClass(classes, asyncResult.Class);
 					var properties         = resultClassBuilder.Properties(true);
 					var initializers       = new CodeAssignmentStatement[parameterRebinds.Length + 1];
 
 					asyncResult.MainResult.Type = returnType;
-					var prop                    = DefineProperty(properties, asyncResult.MainResult);
+					var prop                    = context.DefineProperty(properties, asyncResult.MainResult);
 					initializers[0]             = context.AST.Assign(prop.Property.Reference, result);
 
 					// order parameters to always generate properties in same order
 					var idx = 0;
 					foreach (var parameter in asyncResult.ParameterProperties.OrderBy(k => k.Value.Name))
 					{
-						prop                  = DefineProperty(properties, parameter.Value);
+						prop                  = context.DefineProperty(properties, parameter.Value);
 						initializers[idx + 1] = context.AST.Assign(prop.Property.Reference, parameterRebinds[rebindedParametersIndexes![parameter.Key]].RValue);
 						idx++;
 					}
@@ -538,7 +536,7 @@ namespace LinqToDB.DataModel
 			// DataParameter constructor arguments
 			var ctorParams = new ICodeExpression[dataType != null ? 3 : 2];
 
-			ctorParams[0] = context.AST.Constant(parameterName ?? string.Format(STORED_PROCEDURE_PARAMETER_TEMPLATE, parameterIndex), true);
+			ctorParams[0] = context.AST.Constant(parameterName ?? string.Format(DataModelConstants.STORED_PROCEDURE_PARAMETER_TEMPLATE, parameterIndex), true);
 			// pass parameter value for in and inout parameters
 			// otherwise pass null
 			ctorParams[1] = direction == System.Data.ParameterDirection.Input || direction == System.Data.ParameterDirection.InputOutput
@@ -554,7 +552,7 @@ namespace LinqToDB.DataModel
 				initializersCount++;
 			if (dbType != null)
 			{
-				if (dbType.Name != null && context.Options.DataModel.GenerateProcedureParameterDbType)
+				if (dbType.Name != null && context.Options.GenerateProcedureParameterDbType)
 					initializersCount++;
 				if (dbType.Length != null && dbType.Length >= int.MinValue && dbType.Length <= int.MaxValue)
 					initializersCount++;
@@ -575,7 +573,7 @@ namespace LinqToDB.DataModel
 
 			if (dbType != null)
 			{
-				if (dbType.Name != null && context.Options.DataModel.GenerateProcedureParameterDbType)
+				if (dbType.Name != null && context.Options.GenerateProcedureParameterDbType)
 				{
 					ctorInitializers[initializersIdx] = context.AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_DbType, context.AST.Constant(dbType.Name!, true));
 					initializersIdx++;

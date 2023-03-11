@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.CodeModel;
 using LinqToDB.Metadata;
@@ -32,8 +31,6 @@ namespace LinqToDB.DataModel
 		// scaffolding options
 		private readonly ScaffoldOptions             _options;
 
-		private readonly record struct TypeWithRegion(CodeClass Type, RegionGroup Region);
-
 		/// <summary>
 		/// Creates data model to AST generator instance.
 		/// </summary>
@@ -59,90 +56,87 @@ namespace LinqToDB.DataModel
 			_options                           = options;
 		}
 
-		private CodeBuilder AST => _languageProvider.ASTBuilder;
-
 		/// <summary>
 		/// Performs conversion of data model to AST.
 		/// </summary>
 		/// <returns>Generated AST as collection of files.</returns>
 		public CodeFile[] ConvertToCodeModel()
 		{
+			IDataModelGenerationContext context = new DataModelGenerationContext(
+				_options.DataModel,
+				_languageProvider,
+				_dataModel,
+				_sqlBuilder,
+				_metadataBuilder,
+				_findMethodParameterNameNormalizer);
+
 			// generate AST
-			BuildDataContext();
+			BuildDataContext(context);
 
 			// correct file names to be unique
-			DeduplicateFileNames();
+			context.DeduplicateFileNames();
 
-			return _files.Values.Select(static _ => _.file).ToArray();
+			return context.Files.ToArray();
 		}
 
 		/// <summary>
 		/// Contains main (top-level) AST generation logic.
 		/// </summary>
-		private void BuildDataContext()
+		/// <param name="context">Model generation context.</param>
+		private static void BuildDataContext(IDataModelGenerationContext context)
 		{
-			var dataContextBuilder = DefineFileClass(_dataModel.DataContext.Class);
-
-			// check wether custom data context is inherited from DataConnection
-			// as it affects available APIs/generated code
-			var contextIsDataConnection = _dataModel.DataContext.Class.BaseType != null
-				&& _languageProvider.TypeEqualityComparerWithoutNRT.Equals(_dataModel.DataContext.Class.BaseType, WellKnownTypes.LinqToDB.Data.DataConnection);
-
 			// optional method to initialize references to additional schemas
 			MethodBuilder? initSchemasMethod       = null;
 			// optional region with properties to reference additional schemas
 			PropertyGroup? contextSchemaProperties = null;
 
 			// if we have additional schemas, create region with init method in data context for them
-			if (_dataModel.DataContext.AdditionalSchemas.Count > 0)
+			if (context.Model.DataContext.AdditionalSchemas.Count > 0)
 			{
-				var schemasRegion = dataContextBuilder
-					.Regions()
-						.New(SCHEMAS_CONTEXT_REGION);
-
-				initSchemasMethod = schemasRegion
+				initSchemasMethod = context.SchemasContextRegion
 					.Methods(false)
-						.New(AST.Name(SCHEMAS_INIT_METHOD))
+						.New(context.AST.Name(DataModelConstants.SCHEMAS_INIT_METHOD))
 							.SetModifiers(Modifiers.Public);
 
-				contextSchemaProperties = schemasRegion.Properties(true);
+				contextSchemaProperties = context.SchemasContextRegion.Properties(true);
 			}
 
-			// generate data context constructors
-			BuildDataContextConstructors(dataContextBuilder, initSchemasMethod?.Method.Name);
-
 			// generate classes for entities from main data context
-			BuildEntities(_dataModel.DataContext.Entities, entity => DefineFileClass(entity.Class));
+			BuildEntities(context, context.Model.DataContext.Entities, entity => context.DefineFileClass(entity.Class));
 
 			// generate classes for entities for additional schemas alongside with other schema-related
 			// code (except associations and procedures/functions)
-			foreach (var schema in _dataModel.DataContext.AdditionalSchemas.Values)
+			foreach (var schema in context.Model.DataContext.AdditionalSchemas.Values)
 			{
 				// build schema classes and entities
-				var schemaContextType = BuildAdditionalSchema(schema);
+				var schemaContextType = BuildAdditionalSchema(context, schema);
 
 				// add schema reference to data context class
 				var schemaProp = contextSchemaProperties!
-					.New(AST.Name(schema.DataContextPropertyName), schemaContextType)
+					.New(context.AST.Name(schema.DataContextPropertyName), schemaContextType)
 						.SetModifiers(Modifiers.Public)
 						.Default(true);
 
 				initSchemasMethod!
 					.Body()
 						.Append(
-							AST.Assign(
-								AST.Member(dataContextBuilder.Type.This, schemaProp.Property.Reference),
-								AST.New(schemaContextType, dataContextBuilder.Type.This)));
+							context.AST.Assign(
+								context.AST.Member(context.ContextReference, schemaProp.Property.Reference),
+								context.AST.New(schemaContextType, context.ContextReference)));
 			}
 			
 			// generate associations for all entities after all entity classes generated for both
 			// main context and additional schemas, as they need to reference entity classes and properties
-			BuildAssociations();
+			BuildAssociations(context);
 
 			// generate functions and stored procedures last, as they can reference entity classes and properties
-			BuildAllFunctions(dataContextBuilder, contextIsDataConnection);
+			BuildAllFunctions(context);
 
-			_metadataBuilder?.Complete(context);
+			context.MetadataBuilder?.Complete(context);
+
+			// generate data context constructors (at the end to add context mapping schema support if needed)
+			BuildDataContextConstructors(context, initSchemasMethod?.Method.Name);
+
 		}
 	}
 }

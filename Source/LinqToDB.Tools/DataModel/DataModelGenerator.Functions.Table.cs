@@ -32,7 +32,7 @@ namespace LinqToDB.DataModel
 			// if function schema load failed, generate error pragma with exception details
 			if (tableFunction.Error != null)
 			{
-				if (context.Options.DataModel.GenerateProceduresSchemaError)
+				if (context.Options.GenerateProceduresSchemaError)
 					region.Pragmas().Add(context.AST.Error($"Failed to load return table schema: {tableFunction.Error}"));
 
 				// as we cannot generate table function without knowing it's schema, we skip failed function
@@ -54,7 +54,7 @@ namespace LinqToDB.DataModel
 						.ReadOnly();
 
 			// generate mapping method with metadata
-			var method = DefineMethod(context, region.Methods(false), tableFunction.Method);
+			var method = context.DefineMethod(region.Methods(false), tableFunction.Method);
 			context.MetadataBuilder?.BuildTableFunctionMetadata(context, tableFunction.Metadata, method);
 
 			// generate method parameters, return type and body
@@ -69,15 +69,15 @@ namespace LinqToDB.DataModel
 			// set return type
 			// T4 used ITable<T> for return type, but there is no reason to use ITable<T> over IQueryable<T>
 			// Even more: ITable<T> is not correct return type here
-			var returnType = context.Options.DataModel.TableFunctionReturnsTable
+			var returnType = context.Options.TableFunctionReturnsTable
 				? WellKnownTypes.LinqToDB.ITable(returnEntity)
 				: WellKnownTypes.System.Linq.IQueryable(returnEntity);
 			method.Returns(returnType);
 
 			// parameters for GetTable call in mapping body
 			var parameters = new ICodeExpression[3 + tableFunction.Parameters.Count];
-			parameters[0] = context.CurrentContextClass.This; // `this` extension method parameter
-			parameters[1] = context.CurrentContextClass.This; // context parameter
+			parameters[0] = context.CurrentDataContext.Type.This; // `this` extension method parameter
+			parameters[1] = context.CurrentDataContext.Type.This; // context parameter
 			parameters[2] = methodInfo.Field.Reference; // method info field
 
 			// add table function parameters (if any)
@@ -89,7 +89,7 @@ namespace LinqToDB.DataModel
 				// - to mapping method
 				// - to GetTable call in mapping
 				// - to mapping call in MethodInfo initializer we add parameter's default value
-				var parameter = DefineParameter(context, method, param.Parameter);
+				var parameter = context.DefineParameter(method, param.Parameter);
 				parameters[i + 3] = parameter.Reference;
 				// TODO: potential issue: target-typed `default` could cause errors with overloads
 				fieldInitParameters[i] = context.AST.Default(param.Parameter.Type, true);
@@ -108,11 +108,11 @@ namespace LinqToDB.DataModel
 							parameters)));
 
 			// generate MethodInfo field initializer
-			var lambdaParam = context.AST.LambdaParameter(context.AST.Name(TABLE_FUNCTION_METHOD_INFO_CONTEXT_PARAMETER), context.CurrentContextClass.Type);
+			var lambdaParam = context.AST.LambdaParameter(context.AST.Name(DataModelConstants.TABLE_FUNCTION_METHOD_INFO_CONTEXT_PARAMETER), context.CurrentDataContext.Type.Type);
 
 			// Expression<Func<context, returnType>>
 			var lambda = context.AST
-				.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(returnType, context.CurrentContextClass.Type)), true)
+				.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(returnType, context.CurrentDataContext.Type.Type)), true)
 				.Parameter(lambdaParam);
 
 			lambda.Body()

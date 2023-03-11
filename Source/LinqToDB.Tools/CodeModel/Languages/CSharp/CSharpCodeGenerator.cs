@@ -156,6 +156,15 @@ namespace LinqToDB.CodeModel
 			Visit(expression.Right);
 		}
 
+		protected override void Visit(CodeTernary expression)
+		{
+			Visit(expression.Condition);
+			Write(" ? ");
+			Visit(expression.True);
+			Write(" : ");
+			Visit(expression.False);
+		}
+
 		protected override void Visit(CodeLambda method)
 		{
 			// XmlComment skipped, as C# doesn't support them on lambda functions

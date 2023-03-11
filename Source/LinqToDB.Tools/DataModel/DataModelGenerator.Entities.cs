@@ -48,7 +48,7 @@ namespace LinqToDB.DataModel
 			var columnsGroup = entityBuilder.Properties(true);
 			foreach (var columnModel in entity.Columns)
 			{
-				var columnBuilder = DefineProperty(context, columnsGroup, columnModel.Property);
+				var columnBuilder = context.DefineProperty(columnsGroup, columnModel.Property);
 
 				// register property in lookup for later use by associations generator
 				context.RegisterColumnProperty(columnModel, columnBuilder.Property);
@@ -82,7 +82,7 @@ namespace LinqToDB.DataModel
 
 			var keySelectors    = new ICodeExpression[pk.Length];
 			var lambdaType      = WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(WellKnownTypes.System.ObjectNullable, entityBuilder.Type.Type));
-			var entityParameter = context.AST.LambdaParameter(context.AST.Name(ENTITY_IEQUATABLE_COMPARER_LAMBDA_PARAMETER), entityBuilder.Type.Type);
+			var entityParameter = context.AST.LambdaParameter(context.AST.Name(DataModelConstants.ENTITY_IEQUATABLE_COMPARER_LAMBDA_PARAMETER), entityBuilder.Type.Type);
 
 			for (var i = 0; i < pk.Length; i++)
 			{
@@ -95,13 +95,13 @@ namespace LinqToDB.DataModel
 			}
 
 			// generate static field with comparer instance
-			var region = entityBuilder.Regions().New(ENTITY_IEQUATABLE_REGION);
+			var region = entityBuilder.Regions().New(DataModelConstants.ENTITY_IEQUATABLE_REGION);
 
 			var fieldType = WellKnownTypes.System.Collections.Generic.IEqualityComparer(entityBuilder.Type.Type);
 
 			var comparerField = region
 				.Fields(false)
-					.New(context.AST.Name(ENTITY_IEQUATABLE_COMPARER_FIELD), fieldType)
+					.New(context.AST.Name(DataModelConstants.ENTITY_IEQUATABLE_COMPARER_FIELD), fieldType)
 						.Private()
 						.Static()
 						.ReadOnly()
@@ -179,7 +179,7 @@ namespace LinqToDB.DataModel
 			else
 				throw new InvalidOperationException($"Entity {model.Class.Name} context property type is not valid");
 
-			var contextProperty = DefineProperty(context, context.ContextProperties, model.ContextProperty);
+			var contextProperty = context.DefineProperty(context.ContextProperties, model.ContextProperty);
 
 			// this.GetTable<Entity>() call
 			var getTableCall = context.AST.ExtCall(
@@ -267,8 +267,8 @@ namespace LinqToDB.DataModel
 			// extended parameter (table or context)
 			methodParameters.Add(
 				context.AST.Parameter(
-					onTable ? WellKnownTypes.LinqToDB.ITable(entityType) : context.MainContextClass.Type,
-					context.AST.Name(onTable ? FIND_TABLE_PARAMETER : FIND_CONTEXT_PARAMETER),
+					onTable ? WellKnownTypes.LinqToDB.ITable(entityType) : context.MainDataContext.Type.Type,
+					context.AST.Name(onTable ? DataModelConstants.FIND_TABLE_PARAMETER : DataModelConstants.FIND_CONTEXT_PARAMETER),
 					CodeParameterDirection.In));
 
 			// for composite primary key we generate comparison based on field order (ordinal) in primary key definition
@@ -279,24 +279,24 @@ namespace LinqToDB.DataModel
 
 			// sort in order for parameters
 			// sort for filter will be done later
-			if (context.Options.DataModel.OrderFindParametersByColumnOrdinal)
+			if (context.Options.OrderFindParametersByColumnOrdinal)
 				pks = pks.OrderBy(static c => c.Metadata.PrimaryKeyOrder);
 			else
 				pks = pks.OrderBy(static c => c.Property.Name);
 
 			// apply ordinal sort to primary key columns for parameters generation if by-name sort not
-			if (context.Options.DataModel.OrderFindParametersByColumnOrdinal)
+			if (context.Options.OrderFindParametersByColumnOrdinal)
 				pks = pks.OrderBy(static c => c.Metadata.PrimaryKeyOrder);
 
 			// filter parameter
-			var entityParameter = context.AST.LambdaParameter(context.AST.Name(FIND_ENTITY_FILTER_PARAMETER), entityType);
+			var entityParameter = context.AST.LambdaParameter(context.AST.Name(DataModelConstants.FIND_ENTITY_FILTER_PARAMETER), entityType);
 			// filter comparisons
 			var comparisons = new List<(int ordinal, ICodeExpression comparison)>();
 
 			ICodeExpression? recordReference = null;
 			if (byEntity)
 			{
-				var param       = context.AST.Parameter(entityType, context.AST.Name(FIND_ENTITY_PARAMETER), CodeParameterDirection.In);
+				var param       = context.AST.Parameter(entityType, context.AST.Name(DataModelConstants.FIND_ENTITY_PARAMETER), CodeParameterDirection.In);
 				recordReference = param.Reference;
 				methodParameters.Add(param);
 			}
@@ -331,7 +331,7 @@ namespace LinqToDB.DataModel
 			{
 				var param                  = context.AST.Parameter(
 					WellKnownTypes.System.Threading.CancellationToken,
-					context.AST.Name(CANCELLATION_TOKEN_PARAMETER),
+					context.AST.Name(DataModelConstants.CANCELLATION_TOKEN_PARAMETER),
 					CodeParameterDirection.In,
 					context.AST.Default(WellKnownTypes.System.Threading.CancellationToken, true));
 				cancellationTokenParameter = param.Reference;
@@ -364,11 +364,11 @@ namespace LinqToDB.DataModel
 					returnType = WellKnownTypes.System.Threading.Tasks.Task(returnType);
 			}
 
-			var methodName = onContext && byPK ? FIND_METHOD + entityType.Name!.Name : FIND_METHOD;
+			var methodName = onContext && byPK ? DataModelConstants.FIND_METHOD + entityType.Name!.Name : DataModelConstants.FIND_METHOD;
 			if (query)
-				methodName += FIND_QUERY_SUFFIX;
+				methodName += DataModelConstants.FIND_QUERY_SUFFIX;
 			if (async)
-				methodName += ASYNC_SUFFIX;
+				methodName += DataModelConstants.ASYNC_SUFFIX;
 
 			var find       = context.FindExtensionsGroup
 				.New(context.AST.Name(methodName))

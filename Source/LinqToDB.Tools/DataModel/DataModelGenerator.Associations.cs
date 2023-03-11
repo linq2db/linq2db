@@ -15,7 +15,7 @@ namespace LinqToDB.DataModel
 		/// Generates associations for all data model relations.
 		/// </summary>
 		/// <param name="context">Model generation context.</param>
-		private void BuildAssociations(IDataModelGenerationContext context)
+		private static void BuildAssociations(IDataModelGenerationContext context)
 		{
 			foreach (var association in context.Model.DataContext.Associations)
 				BuildAssociation(context, association);
@@ -42,7 +42,7 @@ namespace LinqToDB.DataModel
 			if (association.ManyToOne)
 			{
 				// for many-to-one assocations has collection type, defined by user preferences
-				if (context.Options.DataModel.AssociationCollectionAsArray)
+				if (context.Options.AssociationCollectionAsArray)
 					tagetType = context.AST.ArrayType(tagetType, false);
 				else if (context.Model.AssociationCollectionType != null)
 					tagetType = context.Model.AssociationCollectionType.WithTypeArguments(tagetType);
@@ -175,7 +175,7 @@ namespace LinqToDB.DataModel
 			propertyModel.Type ??= type;
 
 			// declare property
-			var propertyBuilder = DefineProperty(context, context.GetEntityAssociationsGroup(owner), propertyModel);
+			var propertyBuilder = context.DefineProperty(context.GetEntityAssociationsGroup(owner), propertyModel);
 
 			// and it's metadata
 			context.MetadataBuilder?.BuildAssociationMetadata(context, context.GetEntityBuilder(owner).Type, metadata, propertyBuilder);
@@ -205,13 +205,13 @@ namespace LinqToDB.DataModel
 			var associations = context.GetEntityAssociationExtensionsGroup(backReference ? associationModel.Target : associationModel.Source);
 
 			// define extension method
-			var  methodBuilder = DefineMethod(context, associations, extensionModel).Returns(type);
+			var  methodBuilder = context.DefineMethod(associations, extensionModel).Returns(type);
 			// and it's metadata
 			context.MetadataBuilder?.BuildAssociationMetadata(context, context.ExtensionsClass.Type, metadata, methodBuilder);
 
 			// build method parameters...
-			var thisParam = context.AST.Parameter(thisEntityType, context.AST.Name(EXTENSIONS_ENTITY_THIS_PARAMETER), CodeParameterDirection.In);
-			var ctxParam  = context.AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, context.AST.Name(EXTENSIONS_ENTITY_CONTEXT_PARAMETER), CodeParameterDirection.In);
+			var thisParam = context.AST.Parameter(thisEntityType, context.AST.Name(DataModelConstants.EXTENSIONS_ENTITY_THIS_PARAMETER), CodeParameterDirection.In);
+			var ctxParam  = context.AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, context.AST.Name(DataModelConstants.EXTENSIONS_ENTITY_CONTEXT_PARAMETER), CodeParameterDirection.In);
 
 			methodBuilder.Parameter(thisParam);
 			methodBuilder.Parameter(ctxParam);
@@ -226,7 +226,7 @@ namespace LinqToDB.DataModel
 							context.AST.Throw(
 								context.AST.New(
 									WellKnownTypes.System.InvalidOperationException,
-									context.AST.Constant(EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
+									context.AST.Constant(DataModelConstants.EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
 			else
 			{
 				// generate association query for non-query invocation
@@ -236,7 +236,7 @@ namespace LinqToDB.DataModel
 				if (associationModel.ManyToOne && backReference)
 					methodBuilder.Returns(WellKnownTypes.System.Linq.IQueryable(resultEntityType));
 
-				var lambdaParam = context.AST.LambdaParameter(context.AST.Name(EXTENSIONS_ASSOCIATION_FILTER_PARAMETER), resultEntityType);
+				var lambdaParam = context.AST.LambdaParameter(context.AST.Name(DataModelConstants.EXTENSIONS_ASSOCIATION_FILTER_PARAMETER), resultEntityType);
 
 				// generate assocation key columns filter, which compare
 				// `this` entity parameter columns with return table entity columns

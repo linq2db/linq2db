@@ -422,5 +422,14 @@ namespace LinqToDB.CodeModel
 		/// <param name="value">Expression to apply operator to.</param>
 		/// <returns>Operator expression.</returns>
 		public CodeSuppressNull SuppressNull(ICodeExpression value) => new (value);
+
+		/// <summary>
+		/// Creates ternary expression.
+		/// </summary>
+		/// <param name="condition">Condition expression.</param>
+		/// <param name="true">Condition true value.</param>
+		/// <param name="false">Condition false value.</param>
+		/// <returns>Ternary expression instance.</returns>
+		public CodeTernary IIF(ICodeExpression condition, ICodeExpression @true, ICodeExpression @false) => new(condition, @true, @false);
 	}
 }

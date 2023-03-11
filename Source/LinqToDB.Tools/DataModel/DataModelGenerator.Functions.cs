@@ -31,7 +31,7 @@ namespace LinqToDB.DataModel
 		/// <param name="context">Model generation context.</param>
 		private static void BuildFunctions(IDataModelGenerationContext context)
 		{
-			if (context.Options.DataModel.GenerateProcedureSync || context.Options.DataModel.GenerateProcedureAsync)
+			if (context.Options.GenerateProcedureSync || context.Options.GenerateProcedureAsync)
 			{
 				foreach (var proc in context.Schema.StoredProcedures)
 					BuildStoredProcedure(context, proc);
@@ -67,14 +67,14 @@ namespace LinqToDB.DataModel
 		{
 			var properties = new CodeProperty[model.Columns.Count];
 
-			var resultClassBuilder = DefineClass(context, classes, model.Class);
+			var resultClassBuilder = context.DefineClass(classes, model.Class);
 
 			var columnsGroup = resultClassBuilder.Properties(true);
 
 			for (var i = 0; i < model.Columns.Count; i++)
 			{
 				var columnModel = model.Columns[i];
-				var columnBuilder = DefineProperty(context, columnsGroup, columnModel.Property);
+				var columnBuilder = context.DefineProperty(columnsGroup, columnModel.Property);
 
 				if (withMapping)
 					context.MetadataBuilder?.BuildColumnMetadata(context, resultClassBuilder.Type, columnModel.Metadata, columnBuilder);

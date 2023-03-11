@@ -34,24 +34,25 @@ namespace LinqToDB.DataModel
 			 * }
 			 */
 
-			var schemaWrapper = DefineFileClass(context, schema.WrapperClass);
-			var schemaContext = DefineClass(context, schemaWrapper.Classes(), schema.ContextClass);
-			var childContext  = new NestedSchemaGenerationContext(context, schema, schemaWrapper, schemaContext);
-			context.RegisterChildContext(schema, childContext);
+			var schemaWrapper = context.DefineFileClass(schema.WrapperClass);
+			var schemaContext = context.DefineClass(schemaWrapper.Classes(), schema.ContextClass);
 
 			// schema data context field
 			var ctxField = schemaContext
 				.Fields(false)
-					.New(context.AST.Name(SCHEMA_CONTEXT_FIELD), WellKnownTypes.LinqToDB.IDataContext)
+					.New(context.AST.Name(DataModelConstants.SCHEMA_CONTEXT_FIELD), WellKnownTypes.LinqToDB.IDataContext)
 						.Private()
 						.ReadOnly();
 
+			var childContext  = new NestedSchemaGenerationContext(context, schema, schemaWrapper, schemaContext, ctxField.Field.Reference);
+			context.RegisterChildContext(schema, childContext);
+
 			// define schema table mappings as nested classes in wrapper class
 			var schemaEntities = schemaWrapper.Classes();
-			BuildEntities(childContext, schema.Entities, entity => DefineClass(context, schemaEntities, entity.Class));
+			BuildEntities(childContext, schema.Entities, entity => context.DefineClass(schemaEntities, entity.Class));
 
 			// add constructor to context-like class
-			var ctorParam = context.AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, context.AST.Name(SCHEMA_CONTEXT_CONSTRUCTOR_PARAMETER), CodeParameterDirection.In);
+			var ctorParam = context.AST.Parameter(WellKnownTypes.LinqToDB.IDataContext, context.AST.Name(DataModelConstants.SCHEMA_CONTEXT_CONSTRUCTOR_PARAMETER), CodeParameterDirection.In);
 			schemaContext
 				.Constructors()
 					.New()

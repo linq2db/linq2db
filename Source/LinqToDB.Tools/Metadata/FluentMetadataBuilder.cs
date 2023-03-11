@@ -16,9 +16,10 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	internal sealed class FluentMetadataBuilder : IMetadataBuilder
 	{
-		private readonly CodeVariable                           _builderVar;
-		private readonly Dictionary<CodeClass, ICodeExpression> _entityBuilders = new();
-		private readonly List<ICodeStatement>                   _builderCalls   = new();
+		private readonly CodeVariable                                                                                                 _builderVar;
+		private readonly List<ICodeStatement>                                                                                         _builderCalls = new();
+		// [T, (Attr, [Member, Attr])]
+		private readonly Dictionary<CodeClass, (ICodeExpression tableAttribute, Dictionary<CodeReference, ICodeExpression?> members)> _entities     = new();
 
 		public FluentMetadataBuilder(CodeBuilder builder)
 		{
@@ -59,31 +60,15 @@ namespace LinqToDB.Metadata
 
 			var attr = context.AST.New(WellKnownTypes.LinqToDB.Mapping.TableAttribute, parameters, initializers?.ToArray() ?? Array<CodeAssignmentStatement>.Empty);
 
-			var entityBuilderType = WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilderWithType(entityBuilder.Type.Type);
-
-			// builder.Entity<T>().HasAttribute(new TableAttribute("table") { ... })
-			_entityBuilders.Add(
-				entityBuilder.Type,
-				context.AST.Call(
-					context.AST.Call(
-						_builderVar.Reference,
-						WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
-						entityBuilderType,
-						new IType[] { entityBuilder.Type.Type },
-						false),
-					WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute,
-					entityBuilderType,
-					attr));
+			_entities.Add(entityBuilder.Type, (attr, new Dictionary<CodeReference, ICodeExpression?>()));
 		}
 
 		void IMetadataBuilder.BuildColumnMetadata(IDataModelGenerationContext context, CodeClass entityClass, ColumnMetadata metadata, PropertyBuilder propertyBuilder)
 		{
-			var builder = DefineEntityMember(context, entityClass, propertyBuilder.Property.Reference);
-
 			//.IsNotColumn()
 			if (!metadata.IsColumn)
 			{
-				_entityBuilders[entityClass] = context.AST.Call(builder, WellKnownTypes.LinqToDB.Mapping.PropertyMappingBuilder_IsNotColumn, builder.Type);
+				_entities[entityClass].members.Add(propertyBuilder.Property.Reference, null);
 				return;
 			}
 
@@ -137,16 +122,12 @@ namespace LinqToDB.Metadata
 
 			var attr = context.AST.New(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute, parameters, initializers?.ToArray() ?? Array<CodeAssignmentStatement>.Empty);
 
-			//.HasAttribute(attr)
-			_entityBuilders[entityClass] = context.AST.Call(builder, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, builder.Type, attr);
+			_entities[entityClass].members.Add(propertyBuilder.Property.Reference, attr);
 		}
 
 		void IMetadataBuilder.BuildAssociationMetadata(IDataModelGenerationContext context, CodeClass entityClass, AssociationMetadata metadata, PropertyBuilder propertyBuilder)
 		{
-			var builder = DefineEntityMember(context, entityClass, propertyBuilder.Property.Reference);
-
-			//.HasAttribute(attr)
-			_entityBuilders[entityClass] = context.AST.Call(builder, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, builder.Type, BuildAssociationAttribute(context, metadata));
+			_entities[entityClass].members.Add(propertyBuilder.Property.Reference, BuildAssociationAttribute(context, metadata));
 		}
 
 		void IMetadataBuilder.BuildAssociationMetadata(IDataModelGenerationContext context, CodeClass entityClass, AssociationMetadata metadata, MethodBuilder methodBuilder)
@@ -316,31 +297,6 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <summary>
-		/// Generates member builder accessor.
-		/// </summary>
-		/// <param name="owner">Owner entity class.</param>
-		/// <param name="memberReference">Entity member.</param>
-		private ICodeExpression DefineEntityMember(IDataModelGenerationContext context, CodeClass owner, CodeReference memberReference)
-		{
-			// generates:
-			// builder.Member(e => e.Prop)
-
-			var lambdaParam = context.AST.LambdaParameter(context.AST.Name("e"), owner.Type);
-			var lambda = context.AST
-				.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(memberReference.Referenced.Type.Type, owner.Type)), true)
-				.Parameter(lambdaParam);
-			lambda.Body().Append(context.AST.Return(context.AST.Member(lambdaParam.Reference, memberReference)));
-
-			var builder = _entityBuilders[owner];
-
-			return _entityBuilders[owner] = context.AST.Call(
-				builder,
-				WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_Member,
-				builder.Type,
-				lambda.Method);
-		}
-
-		/// <summary>
 		/// Generates <see cref="AssociationAttribute"/> on association property or method.
 		/// </summary>
 		/// <param name="metadata">Association metadata descriptor.</param>
@@ -424,31 +380,99 @@ namespace LinqToDB.Metadata
 
 		void IMetadataBuilder.Complete(IDataModelGenerationContext context)
 		{
-			// generate fluent builder setup in context static constructor:
-			/*
-			 * var fluentBuilder = new FluentMappingBuilder(ContextSchema);
-			 * ...
-			 * fluent configuration code
-			 * ...
-			 * 
-			 * flientBuilder.Build();
-			 */
+			// generate fluent builder setup in context static constructor
 
+			// var fluentBuilder = new FluentMappingBuilder(ContextSchema);
 			context.StaticInitializer.Append(context.AST.Assign(_builderVar, context.AST.New(WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder, context.ContextMappingSchema)));
 			context.StaticInitializer.Append(context.AST.NewLine);
 
-			// entity attributes (with properties)
-			if (_entityBuilders.Count > 0)
+			// add entity attributes (with properties)
+			foreach (var kvp in _entities)
 			{
-				foreach (var line in _entityBuilders.Values)
+				var isStatement       = kvp.Value.members.Count == 0;
+				var entityType        = kvp.Key.Type;
+				var entityBuilderType = WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilderWithType(entityType);
+
+
+				// builder.Entity<T>().HasAttribute(new TableAttribute("table") { ... })
+				if (isStatement)
 				{
-					context.StaticInitializer.Append(line);
+					context.StaticInitializer.Append(
+						// .HasAttribute(new TableAttribute("table") { ... })
+						context.AST.Call(
+							// builder.Entity<T>()
+							context.AST.Call(
+								_builderVar.Reference,
+								WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
+								entityBuilderType,
+								new IType[] { entityType },
+								false),
+							WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute,
+							kvp.Value.tableAttribute));
+
+					continue;
 				}
 
-				context.StaticInitializer.Append(context.AST.NewLine);
+				// .HasAttribute(new TableAttribute("table") { ... })
+				var expression = context.AST.Call(
+					// builder.Entity<T>()
+					context.AST.Call(
+						_builderVar.Reference,
+						WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
+						entityBuilderType,
+						new IType[] { entityType },
+						false),
+					WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute,
+					entityBuilderType,
+					kvp.Value.tableAttribute);
+
+				var cnt = 0;
+				foreach (var members in kvp.Value.members)
+				{
+					var member    = members.Key;
+					var attribute = members.Value;
+					cnt++;
+					var isLast = cnt == kvp.Value.members.Count;
+
+					// builder.Member(e => e.Prop)
+					var lambdaParam = context.AST.LambdaParameter(context.AST.Name("e"), entityType);
+					var lambda = context.AST
+						.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(member.Referenced.Type.Type, entityType)), true)
+						.Parameter(lambdaParam);
+					lambda.Body().Append(context.AST.Return(context.AST.Member(lambdaParam.Reference, member)));
+
+					expression = context.AST.Call(
+						expression,
+						WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_Member,
+						entityBuilderType,
+						lambda.Method);
+
+					if (attribute == null)
+					{
+						// .IsNotColumn()
+						if (isLast)
+						{
+							context.StaticInitializer.Append(context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.PropertyMappingBuilder_IsNotColumn));
+							break;
+						}
+						else
+							expression = context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.PropertyMappingBuilder_IsNotColumn, entityBuilderType);
+					}
+					else
+					{
+						// .HasAttribute()
+						if (isLast)
+						{
+							context.StaticInitializer.Append(context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, attribute));
+							break;
+						}
+						else
+							expression = context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, entityBuilderType, attribute);
+					}
+				}
 			}
 
-			// non-entity attributes (e.g. extension methods)
+			// add non-entity attributes (e.g. extension methods)
 			if (_builderCalls.Count > 0)
 			{
 				foreach (var line in _builderCalls)
@@ -459,6 +483,7 @@ namespace LinqToDB.Metadata
 				context.StaticInitializer.Append(context.AST.NewLine);
 			}
 
+			// flientBuilder.Build();
 			context.StaticInitializer.Append(context.AST.Call(_builderVar.Reference, WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Build));
 		}
 	}

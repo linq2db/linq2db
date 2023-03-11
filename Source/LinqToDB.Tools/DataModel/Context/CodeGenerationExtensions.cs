@@ -7,7 +7,7 @@ using LinqToDB.CodeModel;
 namespace LinqToDB.DataModel
 {
 	// contains basic code generation logic, not related to data model.
-	partial class DataModelGenerator
+	internal static class CodeGenerationExtensions
 	{
 		/// <summary>
 		/// Defines method parameter using pre-built parameter model.
@@ -17,7 +17,7 @@ namespace LinqToDB.DataModel
 		/// <param name="model">Parameter model.</param>
 		/// <param name="defaultValue">Optional default value for parameter.</param>
 		/// <returns>Created parameter AST node.</returns>
-		private static CodeParameter DefineParameter(IDataModelGenerationContext context, MethodBuilder method, ParameterModel model, ICodeExpression? defaultValue = null)
+		public static CodeParameter DefineParameter(this IDataModelGenerationContext context, MethodBuilder method, ParameterModel model, ICodeExpression? defaultValue = null)
 		{
 			var parameter = context.AST.Parameter(model.Type, context.AST.Name(model.Name), model.Direction, defaultValue);
 
@@ -43,7 +43,7 @@ namespace LinqToDB.DataModel
 		/// <param name="context">Model generation context.</param>
 		/// <param name="model">Class model.</param>
 		/// <returns>Class builder instance.</returns>
-		private static ClassBuilder DefineFileClass(IDataModelGenerationContext context, ClassModel model)
+		public static ClassBuilder DefineFileClass(this IDataModelGenerationContext context, ClassModel model)
 		{
 			if (model.FileName == null)
 				throw new InvalidOperationException($"{nameof(DefineFileClass)} called for class without {nameof(model.FileName)} set.");
@@ -94,7 +94,7 @@ namespace LinqToDB.DataModel
 		/// <param name="classes">Class group that owns new class.</param>
 		/// <param name="model">Class model.</param>
 		/// <returns>Class builder instance.</returns>
-		private static ClassBuilder DefineClass(IDataModelGenerationContext context, ClassGroup classes, ClassModel model)
+		public static ClassBuilder DefineClass(this IDataModelGenerationContext context, ClassGroup classes, ClassModel model)
 		{
 			var @class = classes.New(context.AST.Name(model.Name));
 
@@ -130,7 +130,7 @@ namespace LinqToDB.DataModel
 		/// <param name="propertyGroup">Property group that owns new property.</param>
 		/// <param name="property">Property model.</param>
 		/// <returns>Property builder instance.</returns>
-		private static PropertyBuilder DefineProperty(IDataModelGenerationContext context, PropertyGroup propertyGroup, PropertyModel property)
+		public static PropertyBuilder DefineProperty(this IDataModelGenerationContext context, PropertyGroup propertyGroup, PropertyModel property)
 		{
 			var propertyBuilder = propertyGroup.New(context.AST.Name(property.Name, null, propertyGroup.Members.Count + 1), property.Type!);
 
@@ -165,12 +165,12 @@ namespace LinqToDB.DataModel
 		/// <param name="context">Model generation context.</param>
 		/// <param name="methods">Methods group that owns new method.</param>
 		/// <param name="model">Method model.</param>
-		/// <param name="async">If <c>true</c>, append <see cref="ASYNC_SUFFIX"/> to method name.</param>
+		/// <param name="async">If <c>true</c>, append <see cref="DataModelConstants.ASYNC_SUFFIX"/> to method name.</param>
 		/// <param name="withAwait">If <c>true</c>, method contains <c>await</c> operations and should be marked with <c>async</c> modifier.</param>
 		/// <returns>Method builder instance.</returns>
-		private static MethodBuilder DefineMethod(IDataModelGenerationContext context, MethodGroup methods, MethodModel model, bool async = false, bool withAwait = false)
+		public static MethodBuilder DefineMethod(this IDataModelGenerationContext context, MethodGroup methods, MethodModel model, bool async = false, bool withAwait = false)
 		{
-			var builder = methods.New(context.AST.Name(async ? model.Name + ASYNC_SUFFIX : model.Name));
+			var builder = methods.New(context.AST.Name(async ? model.Name + DataModelConstants.ASYNC_SUFFIX : model.Name));
 
 			if (withAwait)
 				builder.SetModifiers(model.Modifiers | Modifiers.Async);
@@ -196,7 +196,7 @@ namespace LinqToDB.DataModel
 		/// Deduplicate generate file names to be unique within current model by adding counter to duplicates.
 		/// </summary>
 		/// <param name="context">Model generation context.</param>
-		private static void DeduplicateFileNames(IDataModelGenerationContext context)
+		public static void DeduplicateFileNames(this IDataModelGenerationContext context)
 		{
 			var fileNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -220,7 +220,7 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		/// <param name="context">Model generation context.</param>
 		/// <param name="fileName">Name for new file.</param>
-		private static FileData DefineFile(IDataModelGenerationContext context, string fileName)
+		public static FileData DefineFile(this IDataModelGenerationContext context, string fileName)
 		{
 			var fileData = context.AddFile(fileName);
 			var file     = fileData.File;
