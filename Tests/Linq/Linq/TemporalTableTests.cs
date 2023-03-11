@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-
+using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
@@ -209,5 +210,29 @@ namespace Tests.Linq
 
 			Assert.That(list[0].StartedOn, Is.EqualTo(data[0].StartedOn));
 		}
+
+		[Test]
+		public void TemporalNoOptimization([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from t in db.GetTable<TemporalTest>()
+				from p in db.GetTable<TemporalTest>()
+					.AsSqlServer()
+					.TemporalTableAsOf(TestData.DateTime)
+					.Where(p => p.ID == t.ID)
+					.DefaultIfEmpty()
+				select t;
+
+			TestContext.WriteLine(q.ToString());
+
+			var selectQuery = q.GetSelectQuery();
+
+			selectQuery.From.Tables.Should().HaveCount(1);
+			selectQuery.From.Tables[0].Joins.Should().HaveCount(1);
+			selectQuery.From.Tables[0].Joins[0].JoinType.Should().Be(JoinType.Left);
+		}
+
 	}
 }
