@@ -31,6 +31,7 @@ namespace LinqToDB.CodeModel
 			private static readonly IType _func1       = Parser.Parse(typeof(Func<,>));
 			private static readonly IType _func2       = Parser.Parse(typeof(Func<,,>));
 			private static readonly IType _iequatableT = Parser.Parse(typeof(IEquatable<>));
+			private static readonly IType _nullableT   = Parser.Parse(typeof(Nullable<>));
 
 			/// <summary>
 			/// <see cref="bool"/> type descriptor.
@@ -98,6 +99,18 @@ namespace LinqToDB.CodeModel
 			/// <param name="type">Compared type.</param>
 			/// <returns>Type descriptor.</returns>
 			public static IType IEquatable(IType type) => _iequatableT.WithTypeArguments(type);
+
+			/// <summary>
+			/// Returns <see cref="Nullable{T}"/> type descriptor.
+			/// </summary>
+			/// <param name="type">Compared type.</param>
+			/// <returns>Type descriptor.</returns>
+			public static IType Nullable(IType type) => _nullableT.WithTypeArguments(type);
+
+			/// <summary>
+			/// <see cref="Nullable{T}.Value"/> property reference.
+			/// </summary>
+			public static CodeReference Nullable_Value { get; } = PropertyOrField((int? v) => v!.Value, false);
 
 			/// <summary>
 			/// <see cref="IEquatable{T}.Equals(T)"/> method reference.
@@ -521,7 +534,7 @@ namespace LinqToDB.CodeModel
 				public static CodeIdentifier DataOptionsExtensions_UseMappingSchema { get; } = new CodeIdentifier(nameof(DataOptionsExtensions.UseMappingSchema), true);
 
 				/// <summary>
-				/// <see cref="DataOptionsExtensions.UseConfiguration(global::LinqToDB.DataOptions, string, global::LinqToDB.Mapping.MappingSchema)"/> method reference.
+				/// <see cref="DataOptionsExtensions.UseConfiguration(global::LinqToDB.DataOptions, string, MappingSchema)"/> method reference.
 				/// </summary>
 				public static CodeIdentifier DataOptionsExtensions_UseConfiguration { get; } = new CodeIdentifier(nameof(DataOptionsExtensions.UseConfiguration), true);
 			}

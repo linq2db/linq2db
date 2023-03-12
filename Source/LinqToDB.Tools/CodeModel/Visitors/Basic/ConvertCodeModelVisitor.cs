@@ -46,6 +46,7 @@ namespace LinqToDB.CodeModel
 				case CodeElementType.NameOf              : newNode = Visit((CodeNameOf              )node); break;
 				case CodeElementType.MemberAccess        : newNode = Visit((CodeMember              )node); break;
 				case CodeElementType.Lambda              : newNode = Visit((CodeLambda              )node); break;
+				case CodeElementType.UnaryOperation      : newNode = Visit((CodeUnary               )node); break;
 				case CodeElementType.BinaryOperation     : newNode = Visit((CodeBinary              )node); break;
 				case CodeElementType.TernaryOperation    : newNode = Visit((CodeTernary             )node); break;
 				case CodeElementType.File                : newNode = Visit((CodeFile                )node); break;
@@ -370,6 +371,16 @@ namespace LinqToDB.CodeModel
 			file.NameSource = nameSource;
 
 			return file;
+		}
+
+		protected virtual ICodeElement Visit(CodeUnary expression)
+		{
+			var argument = (ICodeExpression)Visit(expression.Argument);
+
+			if (argument != expression.Argument)
+				return new CodeUnary(argument, expression.Operation);
+
+			return expression;
 		}
 
 		protected virtual ICodeElement Visit(CodeBinary expression)

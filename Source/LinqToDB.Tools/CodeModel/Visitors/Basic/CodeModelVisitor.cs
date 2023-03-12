@@ -51,6 +51,7 @@ namespace LinqToDB.CodeModel
 				case CodeElementType.NameOf              : Visit((CodeNameOf              )node); break;
 				case CodeElementType.MemberAccess        : Visit((CodeMember              )node); break;
 				case CodeElementType.Lambda              : Visit((CodeLambda              )node); break;
+				case CodeElementType.UnaryOperation      : Visit((CodeUnary               )node); break;
 				case CodeElementType.BinaryOperation     : Visit((CodeBinary              )node); break;
 				case CodeElementType.TernaryOperation    : Visit((CodeTernary             )node); break;
 				case CodeElementType.File                : Visit((CodeFile                )node); break;
@@ -111,6 +112,7 @@ namespace LinqToDB.CodeModel
 		protected abstract void Visit(CodeImport               import    );
 		protected abstract void Visit(CodePragma               pragma    );
 		protected abstract void Visit(CodeFile                 file      );
+		protected abstract void Visit(CodeUnary                expression);
 		protected abstract void Visit(CodeBinary               expression);
 		protected abstract void Visit(CodeTernary              expression);
 		protected abstract void Visit(CodeLambda               method    );

@@ -11,9 +11,17 @@
 		/// </summary>
 		Equal,
 		/// <summary>
+		/// Inequality (!=).
+		/// </summary>
+		NotEqual,
+		/// <summary>
 		/// Logical AND (&amp;&amp;).
 		/// </summary>
 		And,
+		/// <summary>
+		/// Logical OR (||).
+		/// </summary>
+		Or,
 		/// <summary>
 		/// Addition (+).
 		/// </summary>

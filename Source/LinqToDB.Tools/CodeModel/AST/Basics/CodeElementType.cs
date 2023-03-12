@@ -172,6 +172,10 @@
 		/// </summary>
 		This,
 		/// <summary>
+		/// Unary operation.
+		/// </summary>
+		UnaryOperation,
+		/// <summary>
 		/// Binary operation.
 		/// </summary>
 		BinaryOperation,

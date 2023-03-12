@@ -75,6 +75,11 @@
 			Visit(expression.Task);
 		}
 
+		protected override void Visit(CodeUnary expression)
+		{
+			Visit(expression.Argument);
+		}
+
 		protected override void Visit(CodeBinary expression)
 		{
 			Visit(expression.Left);

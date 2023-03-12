@@ -11,13 +11,23 @@ namespace LinqToDB.CodeModel
 	internal sealed class CSharpCodeGenerator : CodeGenerationVisitor<CSharpCodeGenerator>
 	{
 		/// <summary>
+		/// Code fragments for unary operators.
+		/// </summary>
+		private static readonly IReadOnlyDictionary<UnaryOperation, string> _unaryOperators = new Dictionary<UnaryOperation, string>()
+		{
+			{ UnaryOperation.Not, "!" },
+		};
+
+		/// <summary>
 		/// Code fragments for binary operators.
 		/// </summary>
 		private static readonly IReadOnlyDictionary<BinaryOperation, string> _operators = new Dictionary<BinaryOperation, string>()
 		{
-			{ BinaryOperation.Equal, " == " },
-			{ BinaryOperation.And  , " && " },
-			{ BinaryOperation.Add  , " + "  },
+			{ BinaryOperation.Equal   , " == " },
+			{ BinaryOperation.NotEqual, " != " },
+			{ BinaryOperation.And     , " && " },
+			{ BinaryOperation.Or      , " || " },
+			{ BinaryOperation.Add     , " + "  },
 		};
 
 		// newline sequences according to language specs
@@ -142,6 +152,16 @@ namespace LinqToDB.CodeModel
 
 			_currentImports = file.Imports;
 			VisitList(file);
+		}
+
+		protected override void Visit(CodeUnary expression)
+		{
+			if (_unaryOperators.TryGetValue(expression.Operation, out var operatorCode))
+				Write(operatorCode);
+			else
+				throw new NotImplementedException($"Unary operator {expression.Operation} support missing from C# code generator");
+
+			Visit(expression.Argument);
 		}
 
 		protected override void Visit(CodeBinary expression)
