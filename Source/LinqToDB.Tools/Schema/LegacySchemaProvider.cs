@@ -526,6 +526,7 @@ namespace LinqToDB.Schema
 					case "NpgsqlCircle"  : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCircle"  , true); break;
 					case "NpgsqlLine"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlLine"    , true); break;
 					case "NpgsqlInet"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInet"    , true); break;
+					case "NpgsqlInterval": type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInterval", true); break;
 
 					// SQL Server spatial types
 					case "Microsoft.SqlServer.Types.SqlHierarchyId": type = WellKnownTypes.Microsoft.SqlServer.Types.SqlHierarchyId; break;
