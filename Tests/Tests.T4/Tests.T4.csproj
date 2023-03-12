@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="..\linq2db.TestProjects.props" />
+	
 	<PropertyGroup>
 		<AssemblyName>Tests.T4</AssemblyName>
 
@@ -7,10 +9,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Npgsql" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<PackageReference Update="MySql.Data" Aliases="" />
+		<PackageReference Update="MySqlConnector" Aliases="" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
@@ -18,18 +20,6 @@
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 		<Reference Include="WindowsBase" />
-		<PackageReference Include="Oracle.ManagedDataAccess" />
-		
-		<PackageReference Include="Microsoft.SqlServer.Types" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
-		<!--nuget doesn't have strong name, so we use local self-signed copy-->
-		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />-->
-		<Reference Include="Microsoft.SqlServer.Types">
-			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
-		</Reference>
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -57,6 +47,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+
+		<None Update="Cli\All.tt">
+		  <LastGenOutput>All.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 
 		<None Update="Cli\Default.tt">
 		  <LastGenOutput>Default.generated.cs</LastGenOutput>
@@ -251,6 +246,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Update="Cli\All.generated.cs">
+		  <DependentUpon>All.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
 		<Compile Update="Cli\Default.generated.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>

@@ -24,14 +24,15 @@
 		string  mode,
 		string? providerLocation           = null,
 		string? connectionString           = null,
-		string? additionalConnectionString = null)
+		string? additionalConnectionString = null,
+		string? extraOptions               = null)
 	{
 		if(Directory.Exists(targetFolder))
 			Directory.Delete(targetFolder, true);
 		Directory.CreateDirectory(targetFolder);
 
 		connectionString ??= GetConnectionString(connectionStringName!);
-		var arguments = $"linq2db scaffold -o {targetFolder} -p {providerName} -c \"{connectionString}\" -t {mode} --nrt true -n {namespaceName} --context-name TestDataDB";
+		var arguments = $"linq2db scaffold -o {targetFolder} -p {providerName} -c \"{connectionString}\" -t {mode} --nrt true -n {namespaceName} --context-name TestDataDB {extraOptions}";
 		if (providerLocation != null)
 		{
 			arguments += $" -l \"{providerLocation}\"";
@@ -48,7 +49,7 @@
 			process.StartInfo.FileName       = "dotnet";
 			process.StartInfo.Arguments      = arguments;
 			process.StartInfo.CreateNoWindow = true;
-			//process.StartInfo.WindowStyle    = ProcessWindowStyle.Hidden;
+			process.StartInfo.WindowStyle    = ProcessWindowStyle.Hidden;
 			using var waitHandle             = new ManualResetEvent(false);
 
 			if (process.Start())
