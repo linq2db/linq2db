@@ -14,23 +14,21 @@ namespace LinqToDB.Tools
 		}
 		public string    Name    { get; }
 
-		private TimeSpan _elapsed;
-		public  TimeSpan Elapsed => _elapsed;
+		private long _elapsedTicks;
+		public  TimeSpan Elapsed => new(_elapsedTicks);
 
-		private int      _callCount;
-		public  int      CallCount => _callCount;
+		private long     _callCount;
+		public  long     CallCount => _callCount;
 
 		public Watcher Start()
 		{
 			return new(this);
 		}
 
-		public void Stop(Stopwatch stopwatch)
+		void Stop(Stopwatch stopwatch)
 		{
 			Interlocked.Increment(ref _callCount);
-
-			lock (this)
-				_elapsed += stopwatch.Elapsed;
+			Interlocked.Add(ref _elapsedTicks, stopwatch.ElapsedTicks);
 		}
 
 		public class Watcher : IDisposable

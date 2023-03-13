@@ -320,6 +320,10 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
+#if METRICS
+			using var m = Tools.Metrics.QueryProviderGetEnumeratorT.Start();
+#endif
+
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
 
@@ -336,6 +340,10 @@ namespace LinqToDB.Linq
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
+#if METRICS
+			using var m = Tools.Metrics.QueryProviderGetEnumerator.Start();
+#endif
+
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
 
@@ -351,6 +359,5 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
-
 	}
 }

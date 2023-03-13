@@ -185,16 +185,23 @@ namespace LinqToDB.Linq.Builder
 #if METRICS
 			using var m = LinqToDB.Tools.Metrics.Build.Start();
 #endif
-
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
 			if (_reorder)
+			{
+#if METRICS
+				using var mr = LinqToDB.Tools.Metrics.ReorderBuilders.Start();
+#endif
 				lock (_sync)
 				{
-					_reorder = false;
+					_reorder          = false;
 					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToArray();
 				}
+			}
 
+#if METRICS
+			using var mq = LinqToDB.Tools.Metrics.BuildQuery.Start();
+#endif
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
 			var param = Expression.Parameter(typeof(Query<T>), "info");

@@ -397,6 +397,10 @@ namespace LinqToDB.Linq
 			object?[]?   preambles,
 			int          queryNumber)
 		{
+#if METRICS
+			using var m = LinqToDB.Tools.Metrics.ExecuteQuery.Start();
+#endif
+
 			using var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
 			using var dr     = runner.ExecuteReader();
 
