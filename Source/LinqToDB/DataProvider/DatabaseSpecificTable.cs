@@ -26,11 +26,7 @@ namespace LinqToDB.DataProvider
 			return ((IEnumerable)_table).GetEnumerator();
 		}
 
-		public Expression Expression
-		{
-			get => _table.Expression;
-			set => _table.Expression = value;
-		}
+		public Expression Expression => _table.Expression;
 
 		public string         SqlText     => _table.SqlText;
 		public IDataContext   DataContext => _table.DataContext;

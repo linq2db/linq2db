@@ -1,13 +1,12 @@
 ﻿using System;
+using System.Data.Common;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LinqToDB.Remote
 {
-	using System.Data.Common;
 	using Common.Internal;
+	using Data;
 	using Linq;
-	using LinqToDB.Data;
 	using SqlProvider;
 	using SqlQuery;
 #if !NATIVE_ASYNC
@@ -185,7 +184,7 @@ namespace LinqToDB.Remote
 
 				_client = _dataContext.GetClient();
 
-				return _client.ExecuteNonQuery(_dataContext.Configuration, data);
+				return _client.ExecuteNonQuery(_dataContext.ConfigurationString, data);
 			}
 
 			public override object? ExecuteScalar()
@@ -208,7 +207,7 @@ namespace LinqToDB.Remote
 
 				_client = _dataContext.GetClient();
 
-				var ret = _client.ExecuteScalar(_dataContext.Configuration, data);
+				var ret = _client.ExecuteScalar(_dataContext.ConfigurationString, data);
 
 				object? result = null;
 				if (ret != null)
@@ -246,7 +245,7 @@ namespace LinqToDB.Remote
 
 				_client = _dataContext.GetClient();
 
-				var ret = _client.ExecuteReader(_dataContext.Configuration, data);
+				var ret = _client.ExecuteReader(_dataContext.ConfigurationString, data);
 
 				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, _dataContext.MappingSchema, _dataContext.Options, ret);
 
@@ -329,7 +328,7 @@ namespace LinqToDB.Remote
 
 				_client = _dataContext.GetClient();
 
-				var ret = await _client.ExecuteReaderAsync(_dataContext.Configuration, data, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var ret = await _client.ExecuteReaderAsync(_dataContext.ConfigurationString, data, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, _dataContext.MappingSchema, _dataContext.Options, ret);
 				var reader = new RemoteDataReader(_dataContext.SerializationMappingSchema, result);
@@ -359,7 +358,7 @@ namespace LinqToDB.Remote
 
 				_client = _dataContext.GetClient();
 
-				var ret = await _client.ExecuteScalarAsync(_dataContext.Configuration, data, cancellationToken)
+				var ret = await _client.ExecuteScalarAsync(_dataContext.ConfigurationString, data, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 				object? result = null;
@@ -398,7 +397,7 @@ namespace LinqToDB.Remote
 
 				_client = _dataContext.GetClient();
 
-				return await _client.ExecuteNonQueryAsync(_dataContext.Configuration, data, cancellationToken)
+				return await _client.ExecuteNonQueryAsync(_dataContext.ConfigurationString, data, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}

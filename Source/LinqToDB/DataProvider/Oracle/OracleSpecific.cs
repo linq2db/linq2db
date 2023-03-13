@@ -39,12 +39,14 @@ namespace LinqToDB.DataProvider.Oracle
 		public static IOracleSpecificTable<TSource> AsOracle<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsOracle, table),
-				table.Expression);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsOracle, table),
+					table.Expression)
+			);
 
-			return new OracleSpecificTable<TSource>(table);
+			return new OracleSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]

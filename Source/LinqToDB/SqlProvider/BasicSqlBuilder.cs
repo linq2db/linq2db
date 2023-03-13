@@ -183,7 +183,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 
-				FinalizeBuildQuery(statement);
+				FinalizeBuildQuery(NullabilityContext.GetContext(statement.SelectQuery),  statement);
 			}
 			else
 			{
@@ -197,7 +197,7 @@ namespace LinqToDB.SqlProvider
 
 		List<Action>? _finalBuilders;
 
-		protected virtual void FinalizeBuildQuery(SqlStatement statement)
+		protected virtual void FinalizeBuildQuery(NullabilityContext nullability, SqlStatement statement)
 		{
 			if (_finalBuilders != null)
 				foreach (var builder in _finalBuilders)
@@ -317,7 +317,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OrderByClause;     BuildOrderByClause(nullability, deleteStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;       BuildOffsetLimit(nullability, deleteStatement.SelectQuery);
 			BuildStep = Step.Output;            BuildOutputSubclause(nullability, deleteStatement.GetOutputClause());
-			BuildStep = Step.QueryExtensions;   BuildQueryExtensions(deleteStatement);
+			BuildStep = Step.QueryExtensions;   BuildQueryExtensions(nullability, deleteStatement);
 		}
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
@@ -365,7 +365,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OrderByClause;   BuildOrderByClause(nullability, selectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(nullability, selectQuery);
 			BuildStep = Step.Output;          BuildOutputSubclause(nullability, statement.GetOutputClause());
-			BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+			BuildStep = Step.QueryExtensions; BuildQueryExtensions(nullability, statement);
 		}
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
@@ -390,7 +390,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.HavingClause;    BuildHavingClause(nullability, selectStatement.SelectQuery);
 			BuildStep = Step.OrderByClause;   BuildOrderByClause(nullability, selectStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(nullability, selectStatement.SelectQuery);
-			BuildStep = Step.QueryExtensions; BuildQueryExtensions(selectStatement);
+			BuildStep = Step.QueryExtensions; BuildQueryExtensions(nullability, selectStatement);
 
 			TablePath = tablePath;
 			QueryName = queryName;
@@ -425,7 +425,7 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.HavingClause;    BuildHavingClause(nullability, statement.SelectQuery);
 				BuildStep = Step.OrderByClause;   BuildOrderByClause(nullability, statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit(nullability, statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.QueryExtensions; BuildQueryExtensions(nullability, statement);
 			}
 
 			if (insertClause.WithIdentity)
@@ -455,7 +455,7 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.HavingClause;    BuildHavingClause(nullability, statement.SelectQuery);
 				BuildStep = Step.OrderByClause;   BuildOrderByClause(nullability, statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit(nullability, statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.QueryExtensions; BuildQueryExtensions(nullability, statement);
 			}
 
 			if (insertClause.WithIdentity)
@@ -1831,6 +1831,12 @@ namespace LinqToDB.SqlProvider
 			{
 				if (ts.SqlTableType != SqlTableType.Expression)
 				{
+
+					if (buildName && ts.Source is SqlTable { SqlQueryExtensions : not null } t)
+					{
+						BuildTableNameExtensions(nullability, t);
+					}
+
 					if (buildName == false)
 						alias = GetTableAlias(ts);
 
@@ -1843,13 +1849,17 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			if (buildName && buildAlias && ts.Source is SqlTable table && table.SqlQueryExtensions is not null)
+			if (buildName && buildAlias && ts.Source is SqlTable { SqlQueryExtensions: not null } table)
 			{
-				BuildTableExtensions(table, alias!);
+				BuildTableExtensions(nullability, table, alias!);
 			}
 		}
 
-		protected virtual void BuildTableExtensions(SqlTable table, string alias)
+		protected virtual void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
+		{
+		}
+
+		protected virtual void BuildTableNameExtensions(NullabilityContext nullability, SqlTable table)
 		{
 		}
 
@@ -1861,12 +1871,29 @@ namespace LinqToDB.SqlProvider
 			[typeof(HintWithParametersExtensionBuilder)] = new HintWithParametersExtensionBuilder(),
 		};
 
+		protected static ISqlExtensionBuilder GetExtensionBuilder(Type builderType)
+		{
+			return _extensionBuilders.GetOrAdd(
+				builderType,
+				type =>
+				{
+					var inst = Activator.CreateInstance(type);
+
+					if (inst is not ISqlExtensionBuilder builder)
+						throw new LinqToDBException($"Type '{builderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
+
+					return builder;
+				});
+		}
+
 		protected void BuildTableExtensions(
+			NullabilityContext nullability, 
 			StringBuilder sb,
 			SqlTable table, string alias,
 			string? prefix, string delimiter, string? suffix)
 		{
 			BuildTableExtensions(
+				nullability,
 				sb,
 				table,  alias,
 				prefix, delimiter, suffix,
@@ -1878,6 +1905,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected void BuildTableExtensions(
+			NullabilityContext nullability, 
 			StringBuilder sb,
 			SqlTable table, string alias,
 			string? prefix, string delimiter, string? suffix,
@@ -1892,25 +1920,15 @@ namespace LinqToDB.SqlProvider
 				{
 					if (ext.BuilderType != null)
 					{
-						var extensionBuilder = _extensionBuilders.GetOrAdd(
-							ext.BuilderType,
-							type =>
-							{
-								var inst = Activator.CreateInstance(type);
-
-								if (inst is not ISqlExtensionBuilder builder)
-									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
-
-								return builder;
-							});
+						var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
 
 						switch (extensionBuilder)
 						{
 							case ISqlQueryExtensionBuilder queryExtensionBuilder:
-								queryExtensionBuilder.Build(this, sb, ext);
+								queryExtensionBuilder.Build(nullability, this, sb, ext);
 								break;
 							case ISqlTableExtensionBuilder tableExtensionBuilder:
-								tableExtensionBuilder.Build(this, sb, ext, table, alias);
+								tableExtensionBuilder.Build(nullability, this, sb, ext, table, alias);
 								break;
 							default:
 								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
@@ -1928,6 +1946,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected void BuildQueryExtensions(
+			NullabilityContext nullability, 
 			StringBuilder sb,
 			List<SqlQueryExtension> sqlQueryExtensions,
 			string? prefix, string delimiter, string? suffix)
@@ -1941,22 +1960,12 @@ namespace LinqToDB.SqlProvider
 				{
 					if (ext.BuilderType != null)
 					{
-						var extensionBuilder = _extensionBuilders.GetOrAdd(
-							ext.BuilderType,
-							type =>
-							{
-								var inst = Activator.CreateInstance(type);
-
-								if (inst is not ISqlExtensionBuilder builder)
-									throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
-
-								return builder;
-							});
+						var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
 
 						switch (extensionBuilder)
 						{
 							case ISqlQueryExtensionBuilder queryExtensionBuilder:
-								queryExtensionBuilder.Build(this, sb, ext);
+								queryExtensionBuilder.Build(nullability, this, sb, ext);
 								break;
 							default:
 								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
@@ -2933,13 +2942,13 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlParameter:
 					{
-						var parm = (SqlParameter)expr;
-
+						var parm     = (SqlParameter)expr;
 						var inlining = !parm.IsQueryParameter;
+
 						if (inlining)
 						{
 							var paramValue = parm.GetParameterValue(OptimizationContext.Context.ParameterValues);
-							if (!MappingSchema.TryConvertToSql(StringBuilder, new SqlDataType(paramValue.DbDataType), DataOptions, paramValue.ProviderValue))
+							if (!TryConvertParameterToSql(paramValue))
 								inlining = false;
 						}
 
@@ -3017,6 +3026,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			BuildExpression(nullability, anchor.SqlExpression, false, false, null, ref addAlias, false);
+		}
+
+		protected virtual bool TryConvertParameterToSql(SqlParameterValue paramValue)
+		{
+			return MappingSchema.TryConvertToSql(StringBuilder, new (paramValue.DbDataType), DataOptions, paramValue.ProviderValue);
 		}
 
 		protected virtual void BuildParameter(SqlParameter parameter)
@@ -3112,9 +3126,12 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.Append(')');
 		}
 
-		void ISqlBuilder.BuildExpression(NullabilityContext nullability, StringBuilder sb, ISqlExpression expr, bool buildTableName)
+		protected object? BuildExpressionContext;
+
+		void ISqlBuilder.BuildExpression(NullabilityContext nullability, StringBuilder sb, ISqlExpression expr, bool buildTableName, object? context = null)
 		{
 			WithStringBuilder(sb, static ctx => ctx.this_.BuildExpression(ctx.nullability, ctx.expr, ctx.buildTableName, true), (this_: this, nullability, expr, buildTableName));
+			BuildExpressionContext = null;
 		}
 
 		#endregion
@@ -3875,7 +3892,7 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildQueryExtensions
 
-		protected virtual void BuildQueryExtensions(SqlStatement statement)
+		protected virtual void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
 		{
 		}
 

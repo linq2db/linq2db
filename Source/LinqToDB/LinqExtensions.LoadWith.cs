@@ -51,12 +51,14 @@ namespace LinqToDB
 		{
 			if (table == null) throw new ArgumentNullException(nameof(table));
 
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(LoadWithAsTable, table, selector),
-				new[] { table.Expression, Expression.Quote(selector) });
+			var newTable = new Table<T>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(LoadWithAsTable, table, selector),
+					new[] { table.Expression, Expression.Quote(selector) })
+			);
 
-			return table;
+			return newTable;
 		}
 
 		sealed class LoadWithQueryable<TEntity, TProperty> : ILoadWithQueryable<TEntity, TProperty>, IExpressionQuery

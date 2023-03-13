@@ -261,8 +261,18 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			switch (dt.Type.DataType, v2008plus, supportsFromParts)
 			{
+				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _)
+					when value.Hour == 0 && value.Minute == 0 && value.Second == 0 && value.Millisecond == 0 :
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+					break;
 				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _):
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
+					break;
+
+				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _)
+					when value.Hour == 0 && value.Minute == 0 && value.Second == 0 && value.Millisecond == 0 :
+					stringBuilder.Append('N');
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 					break;
 				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _):
 					stringBuilder.Append('N');

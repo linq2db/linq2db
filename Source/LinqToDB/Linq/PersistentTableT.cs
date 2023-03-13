@@ -29,11 +29,6 @@ namespace LinqToDB.Linq
 		}
 
 		public Expression Expression => _query.Expression;
-		Expression IExpressionQuery<T>.Expression
-		{
-			get => _query.Expression;
-			set => throw new NotImplementedException();
-		}
 
 		public string         SqlText     { get; } = null!;
 		public IDataContext   DataContext => null!;

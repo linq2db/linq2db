@@ -705,11 +705,7 @@ namespace LinqToDB
 
 		#region IExpressionQuery<T>
 
-		Expression IExpressionQuery<T>.Expression
-		{
-			get => _table.Expression;
-			set => _table.Expression = value;
-		}
+		Expression IExpressionQuery<T>.Expression => _table.Expression;
 
 		#endregion
 

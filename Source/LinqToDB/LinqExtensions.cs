@@ -139,12 +139,14 @@ namespace LinqToDB
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-			table.Expression = Expression.Call(
-				null,
-				Methods.LinqToDB.Table.WithTableExpression.MakeGenericMethod(typeof(T)),
-				table.Expression, Expression.Constant(expression));
+			var newTable = new Table<T>(table.DataContext,
+				Expression.Call(
+					null,
+					Methods.LinqToDB.Table.WithTableExpression.MakeGenericMethod(typeof(T)),
+					table.Expression, Expression.Constant(expression))
+			);
 
-			return table;
+			return newTable;
 		}
 
 		#endregion
@@ -165,12 +167,14 @@ namespace LinqToDB
 		public static ITable<TSource> With<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return newTable;
 		}
 
 		/// <summary>
@@ -187,12 +191,14 @@ namespace LinqToDB
 		public static ITable<TSource> TableHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return newTable;
 		}
 
 		/// <summary>
@@ -214,12 +220,14 @@ namespace LinqToDB
 			[SqlQueryDependent] TParam hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return newTable;
 		}
 
 		/// <summary>
@@ -241,14 +249,16 @@ namespace LinqToDB
 			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return newTable;
 		}
 
 		#endregion
@@ -353,12 +363,14 @@ namespace LinqToDB
 		public static ITable<TSource> IndexHint<TSource>(this ITable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(IndexHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(IndexHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return newTable;
 		}
 
 		/// <summary>
@@ -380,12 +392,14 @@ namespace LinqToDB
 			[SqlQueryDependent] TParam hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(IndexHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(IndexHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return newTable;
 		}
 
 		/// <summary>
@@ -407,14 +421,16 @@ namespace LinqToDB
 			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(IndexHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(IndexHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return newTable;
 		}
 
 		#endregion
@@ -4010,12 +4026,14 @@ namespace LinqToDB
 			if (table == null) throw new ArgumentNullException(nameof(table));
 			if (tagValue == null) throw new ArgumentNullException(nameof(tagValue));
 
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TagQuery, table, tagValue),
-				table.Expression, Expression.Constant(tagValue));
+			var newTable = new Table<T>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TagQuery, table, tagValue),
+					table.Expression, Expression.Constant(tagValue))
+			);
 
-			return table;
+			return newTable;
 		}
 
 		#endregion

@@ -107,7 +107,7 @@ namespace LinqToDB.Mapping
 
 			SkipOnInsert = columnAttribute?.HasSkipOnInsert() == true ? columnAttribute.SkipOnInsert : IsIdentity;
 			SkipOnUpdate = columnAttribute?.HasSkipOnUpdate() == true ? columnAttribute.SkipOnUpdate : IsIdentity;
-			
+
 			CanBeNull = AnalyzeCanBeNull(columnAttribute);
 
 			if (columnAttribute?.HasIsPrimaryKey() == true)
@@ -154,15 +154,15 @@ namespace LinqToDB.Mapping
 		{
 			if (columnAttribute?.HasCanBeNull() == true)
 				return columnAttribute.CanBeNull;
-			
+
 			var na = MappingSchema.GetAttribute<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 			if (na != null)
 				return na.CanBeNull;
-				
+
 			if (Configuration.UseNullableTypesMetadata && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable))
 				return isNullable;
 
-			if (IsIdentity) 
+			if (IsIdentity)
 				return false;
 
 			return MappingSchema.GetCanBeNull(MemberType);
@@ -739,7 +739,7 @@ namespace LinqToDB.Mapping
 				if (HasInheritanceMapping)
 				{
 					// Additional check that column member belong to proper entity
-					// 
+					//
 					getterExpr = Expression.Condition(Expression.TypeIs(objParam, MemberAccessor.TypeAccessor.Type),
 						getterExpr, GetDefaultDbValueExpression());
 				}

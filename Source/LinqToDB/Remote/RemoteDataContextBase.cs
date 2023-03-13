@@ -25,7 +25,14 @@ namespace LinqToDB.Remote
 			Options = options;
 		}
 
-		public string? Configuration { get; set; }
+		[Obsolete("Use ConfigurationString instead.")]
+		public string? Configuration
+		{
+			get => ConfigurationString;
+			set => ConfigurationString = value;
+		}
+
+		public string? ConfigurationString { get; set; }
 
 		sealed class ConfigurationInfo
 		{
@@ -60,13 +67,13 @@ namespace LinqToDB.Remote
 
 		ConfigurationInfo GetConfigurationInfo()
 		{
-			if (_configurationInfo == null && !_configurations.TryGetValue(Configuration ?? "", out _configurationInfo))
+			if (_configurationInfo == null && !_configurations.TryGetValue(ConfigurationString ?? "", out _configurationInfo))
 			{
 				var client = GetClient();
 
 				try
 				{
-					var info = client.GetInfo(Configuration);
+					var info = client.GetInfo(ConfigurationString);
 					var type = Type.GetType(info.MappingSchemaType)!;
 					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
 
@@ -87,13 +94,13 @@ namespace LinqToDB.Remote
 
 		async Task<ConfigurationInfo> GetConfigurationInfoAsync(CancellationToken cancellationToken)
 		{
-			if (_configurationInfo == null && !_configurations.TryGetValue(Configuration ?? "", out _configurationInfo))
+			if (_configurationInfo == null && !_configurations.TryGetValue(ConfigurationString ?? "", out _configurationInfo))
 			{
 				var client = GetClient();
 
 				try
 				{
-					var info = await client.GetInfoAsync(Configuration, cancellationToken)
+					var info = await client.GetInfoAsync(ConfigurationString, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					var type = Type.GetType(info.MappingSchemaType)!;
 					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
@@ -367,7 +374,7 @@ namespace LinqToDB.Remote
 				try
 				{
 					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch!.ToArray());
-					client.ExecuteBatch(Configuration, data);
+					client.ExecuteBatch(ConfigurationString, data);
 				}
 				finally
 				{
@@ -391,7 +398,7 @@ namespace LinqToDB.Remote
 				try
 				{
 					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch!.ToArray());
-					await client.ExecuteBatchAsync(Configuration, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await client.ExecuteBatchAsync(ConfigurationString, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 				finally
 				{

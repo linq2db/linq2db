@@ -68,12 +68,14 @@ namespace LinqToDB.DataProvider.SqlCe
 		public static ISqlCeSpecificTable<TSource> TableHint<TSource>(this ISqlCeSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlCeSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -94,12 +96,14 @@ namespace LinqToDB.DataProvider.SqlCe
 			[SqlQueryDependent] TParam            hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return new SqlCeSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -120,14 +124,16 @@ namespace LinqToDB.DataProvider.SqlCe
 			[SqlQueryDependent] params TParam[]   hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return new SqlCeSpecificTable<TSource>(newTable);
 		}
 
 		#endregion

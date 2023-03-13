@@ -175,10 +175,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(nullability, expr);
 
-		protected override void BuildTableExtensions(SqlTable table, string alias)
+		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions is not null)
-				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
+				BuildTableExtensions(nullability, StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 	}
 }

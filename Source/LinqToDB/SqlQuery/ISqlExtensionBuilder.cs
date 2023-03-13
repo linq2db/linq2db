@@ -11,11 +11,11 @@ namespace LinqToDB.SqlQuery
 
 	public interface ISqlQueryExtensionBuilder : ISqlExtensionBuilder
 	{
-		void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension);
+		void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension);
 	}
 
 	public interface ISqlTableExtensionBuilder : ISqlExtensionBuilder
 	{
-		void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias);
+		void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias);
 	}
 }

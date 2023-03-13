@@ -1229,6 +1229,9 @@ namespace LinqToDB.SqlProvider
 			if (join.JoinType != JoinType.Left)
 				return false;
 
+			if (join.Table.Source is SqlTable { SqlQueryExtensions.Count: > 0 })
+				return false;
+
 			var found = SearchForFields(null, join);
 
 			if (found == null)

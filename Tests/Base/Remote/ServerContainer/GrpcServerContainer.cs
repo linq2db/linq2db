@@ -60,7 +60,7 @@ namespace Tests.Remote.ServerContainer
 						service.RemoveInterceptor();
 				},
 				optionBuilder)
-			{ Configuration = configuration };
+			{ ConfigurationString = configuration };
 
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
 

@@ -423,7 +423,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
 		{
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
@@ -442,7 +442,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(nullability, StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
 			}
 		}
 	}

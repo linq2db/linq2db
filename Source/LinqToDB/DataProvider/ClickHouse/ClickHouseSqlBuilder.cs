@@ -442,7 +442,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				BuildStep = Step.HavingClause   ; BuildHavingClause   (nullability, statement.SelectQuery);
 				BuildStep = Step.OrderByClause  ; BuildOrderByClause  (nullability, statement.SelectQuery);
 				BuildStep = Step.OffsetLimit    ; BuildOffsetLimit    (nullability, statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.QueryExtensions; BuildQueryExtensions(nullability, statement);
 			}
 
 			if (insertClause.WithIdentity)

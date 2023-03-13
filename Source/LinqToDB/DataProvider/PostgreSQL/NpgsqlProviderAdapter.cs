@@ -48,6 +48,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			Type  npgsqlRangeTType,
 			Type? npgsqlIntervalType,
 
+			bool supportsBigInteger,
+
 			Expression? npgsqlIntervalReader,
 
 			Func<string, NpgsqlConnection> connectionCreator,
@@ -77,6 +79,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			NpgsqlDateTimeType = npgsqlDateTimeType;
 			NpgsqlRangeTType   = npgsqlRangeTType;
 			NpgsqlIntervalType = npgsqlIntervalType;
+
+			SupportsBigInteger = supportsBigInteger;
 
 			NpgsqlIntervalReader = npgsqlIntervalReader;
 
@@ -136,6 +140,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public Action<DbParameter, NpgsqlDbType> SetDbType { get; }
 		public Func  <DbParameter, NpgsqlDbType> GetDbType { get; }
 
+		public bool SupportsBigInteger { get;  }
+
 		public bool IsDbTypeSupported(NpgsqlDbType type) => _knownDbTypes.ContainsKey(type);
 
 		public NpgsqlDbType ApplyDbTypeFlags(NpgsqlDbType type, bool isArray, bool isRange, bool isMultiRange, bool convertAlways)
@@ -162,6 +168,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public Func<DbConnection, string, CancellationToken, Task<NpgsqlBinaryImporter>>? BeginBinaryImportAsync { get; }
 
 		public MappingSchema MappingSchema { get; }
+
+		// https://github.com/npgsql/npgsql/issues/3665
+		// 6.0.0
+		private static readonly Version MinBigIntegerVersion = new (6, 0);
 
 		public static NpgsqlProviderAdapter GetInstance()
 		{
@@ -194,6 +204,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						var npgsqlIntervalType = assembly.GetType($"{TypesNamespace}.NpgsqlInterval"     , false);
 
 						var npgsqlBinaryImporterType = assembly.GetType($"{ClientNamespace}.NpgsqlBinaryImporter", true)!;
+
+						var supportsBigInteger = assembly.GetName().Version >= MinBigIntegerVersion;
 
 						var typeMapper = new TypeMapper();
 						typeMapper.RegisterTypeWrapper<NpgsqlConnection>(connectionType);
@@ -370,6 +382,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							npgsqlDateTimeType,
 							npgsqlRangeTType,
 							npgsqlIntervalType,
+
+							supportsBigInteger,
 
 							npgsqlIntervalReader,
 

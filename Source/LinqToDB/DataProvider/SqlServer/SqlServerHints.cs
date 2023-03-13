@@ -123,6 +123,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		public static class TemporalTable
+		{
+			public const string All         = "ALL";
+			public const string AsOf        = "AS OF";
+			public const string FromTo      = "FROM";
+			public const string Between     = "BETWEEN";
+			public const string ContainedIn = "CONTAINED IN (";
+		}
+
 		#region SqlServerSpecific Hints
 
 		[ExpressionMethod(nameof(WithIndexImpl))]
@@ -153,10 +162,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class WithForceSeekExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
-				var nullability = NullabilityContext.NonQuery;
-
 				var value = (SqlValue)sqlQueryExtension.Arguments["indexName"];
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["columns.Count"]).Value!;
 
@@ -196,14 +203,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			params Expression<Func<TSource,object>>[] columns)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(WithForceSeek, table, indexName, columns),
-				table.Expression, Expression.Constant(indexName), Expression.NewArrayInit(
-					typeof(Expression<Func<TSource,object>>),
-					columns));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(WithForceSeek, table, indexName, columns),
+					table.Expression, Expression.Constant(indexName), Expression.NewArrayInit(
+						typeof(Expression<Func<TSource, object>>),
+						columns))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		[ExpressionMethod(nameof(WithSpatialWindowMaxCellsImpl))]
@@ -221,7 +230,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class ParamsExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["values.Count"]).Value!;
 
@@ -281,7 +290,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class TableParamsExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["values.Count"]).Value!;
 
@@ -346,12 +355,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificTable<TSource> TableHint<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -372,12 +383,14 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] TParam            hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -398,14 +411,16 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] params TParam[]   hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]
@@ -419,12 +434,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificTable<TSource> TableHint2012Plus<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint2012Plus, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint2012Plus, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]
@@ -437,12 +454,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		static ISqlServerSpecificTable<TSource> TableHint2014Plus<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint2014Plus, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint2014Plus, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		#endregion
@@ -602,12 +621,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificTable<TSource> JoinHint<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(JoinHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(JoinHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -817,6 +838,276 @@ namespace LinqToDB.DataProvider.SqlServer
 					null,
 					MethodHelper.GetMethodInfo(QueryHint2016Plus, source, hint),
 					currentSource.Expression, Expression.Constant(hint))));
+		}
+
+		#endregion
+
+		#region TemporalTable
+
+		sealed class TemporalTableExtensionBuilder : ISqlQueryExtensionBuilder
+		{
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			{
+				var expression = (string)((SqlValue)sqlQueryExtension.Arguments["expression"]).Value!;
+
+				stringBuilder
+					.Append(" FOR SYSTEM_TIME ")
+					.Append(expression)
+					.Append(' ')
+					;
+
+				var lastLength = stringBuilder.Length;
+
+				if (expression == TemporalTable.ContainedIn)
+					stringBuilder.Length--;
+
+				var b2016 = sqlBuilder as SqlServer2016SqlBuilder;
+
+				if (b2016 != null)
+					b2016.ConvertDateTimeAsLiteral = true;
+
+				if (sqlQueryExtension.Arguments.TryGetValue("dateTime", out var dt))
+					sqlBuilder.BuildExpression(nullability, stringBuilder, dt, true, this);
+
+				if (sqlQueryExtension.Arguments.TryGetValue("dateTime2", out dt))
+				{
+					switch (expression)
+					{
+						case TemporalTable.FromTo      : stringBuilder.Append(" TO ");  break;
+						case TemporalTable.Between     : stringBuilder.Append(" AND "); break;
+						case TemporalTable.ContainedIn : stringBuilder.Append(", ");    break;
+					}
+
+					sqlBuilder.BuildExpression(nullability, stringBuilder, dt, true, this);
+
+					if (expression == TemporalTable.ContainedIn)
+						stringBuilder.Append(')');
+				}
+
+				if (b2016 != null)
+					b2016.ConvertDateTimeAsLiteral = true;
+
+				if (lastLength == stringBuilder.Length)
+				{
+					--stringBuilder.Length;
+				}
+			}
+		}
+
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
+			this                ISqlServerSpecificTable<TSource> table,
+			[SqlQueryDependent] string                           expression)
+			where TSource : notnull
+		{
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableHint, table, expression),
+					table.Expression, Expression.Constant(expression))
+			);
+
+			return new SqlServerSpecificTable<TSource>(newTable);
+		}
+
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
+			this                ISqlServerSpecificTable<TSource> table,
+			[SqlQueryDependent] string                           expression,
+			                    DateTime                         dateTime)
+			where TSource : notnull
+		{
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime),
+					table.Expression, Expression.Constant(expression), Expression.Constant(dateTime))
+			);
+
+			return new SqlServerSpecificTable<TSource>(newTable);
+		}
+
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
+			this                ISqlServerSpecificTable<TSource> table,
+			[SqlQueryDependent] string                           expression,
+			                    DateTime                         dateTime,
+			                    DateTime                         dateTime2)
+			where TSource : notnull
+		{
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime, dateTime2),
+					table.Expression, Expression.Constant(expression), Expression.Constant(dateTime),
+					Expression.Constant(dateTime2))
+			);
+
+			return new SqlServerSpecificTable<TSource>(newTable);
+		}
+
+		/// <summary>
+		/// <para>
+		/// See <see href="https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables">Temporal table</see>
+		/// </para>
+		/// <b>Expression</b><br/><term/>
+		/// <b>ALL</b>
+		/// <br/>
+		/// <b>Qualifying Rows</b><br/><term/>
+		/// All rows
+		/// <br/>
+		/// <b>Note</b><br/>
+		/// Returns the union of rows that belong to the current and the history table.
+		/// </summary>
+		/// <typeparam name="TSource"></typeparam>
+		/// <param name="table"></param>
+		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME ALL</b> filter.</returns>
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableAllImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableAll<TSource>(this ISqlServerSpecificTable<TSource> table)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.All);
+		}
+		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> TemporalTableAllImpl<TSource>()
+			where TSource : notnull
+		{
+			return table => table.TemporalTableHint(TemporalTable.All);
+		}
+
+		/// <summary>
+		/// <para>
+		/// See <see href="https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables">Temporal table</see>
+		/// </para>
+		/// <b>Expression</b><br/><term/>
+		/// <b>AS OF</b> <i>dateTime</i>
+		/// <br/>
+		/// <b>Qualifying Rows</b><br/><term/>
+		/// <c>ValidFrom</c> &lt;= <i>dateTime</i> AND <c>ValidTo</c> &gt; <i>dateTime</i>
+		/// <br/>
+		/// <b>Note</b><br/>
+		/// Returns a table with rows containing the values that were current at the specified point in time in the past.
+		/// Internally, a union is performed between the temporal table and its history table and the results are filtered
+		/// to return the values in the row that was valid at the point in time specified by the <i>dateTime</i> parameter.
+		/// The value for a row is deemed valid if the <i>system_start_time_column_name</i> value is less than or equal to
+		/// the <i>dateTime</i> parameter value and the <i>system_end_time_column_name</i> value is greater than the <i>dateTime</i> parameter value.
+		/// </summary>
+		/// <typeparam name="TSource"></typeparam>
+		/// <param name="table"></param>
+		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME AS OF</b> <i>dateTime</i> filter.</returns>
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableAsOfImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableAsOf<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.AsOf, dateTime);
+		}
+		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableAsOfImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, dateTime) => table.TemporalTableHint(TemporalTable.AsOf, dateTime);
+		}
+
+		/// <summary>
+		/// <para>
+		/// See <see href="https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables">Temporal table</see>
+		/// </para>
+		/// <b>Expression</b><br/><term/>
+		/// <b>FROM</b> <i>dateTime</i> <b>TO</b> <i>dateTime2</i>
+		/// <br/>
+		/// <b>Qualifying Rows</b><br/><term/>
+		/// <c>ValidFrom</c> &lt; <i>dateTime2</i> AND <c>ValidTo</c> &gt; <i>dateTime</i>
+		/// <br/>
+		/// <b>Note</b><br/>
+		/// Returns a table with the values for all row versions that were active within the specified time range,
+		/// regardless of whether they started being active before the <i>dateTime</i> parameter value for the <b>FROM</b> argument or
+		/// ceased being active after the <i>dateTime2</i> parameter value for the <b>TO</b> argument.
+		/// Internally, a union is performed between the temporal table and its history table and the results are filtered
+		/// to return the values for all row versions that were active at any time during the time range specified.
+		/// Rows that stopped being active exactly on the lower boundary defined by the <b>FROM</b> endpoint aren't included,
+		/// and records that became active exactly on the upper boundary defined by the <b>TO</b> endpoint are also not included.
+		/// </summary>
+		/// <typeparam name="TSource"></typeparam>
+		/// <param name="table"></param>
+		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME FROM</b> <i>dateTime</i> <b>TO</b> <i>dateTime2</i> filter.</returns>
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableFromToImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableFromTo<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime, DateTime dateTime2)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.FromTo, dateTime, dateTime2);
+		}
+		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableFromToImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, dateTime, dateTime2) => table.TemporalTableHint(TemporalTable.FromTo, dateTime, dateTime2);
+		}
+
+		/// <summary>
+		/// <para>
+		/// See <see href="https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables">Temporal table</see>
+		/// </para>
+		/// <b>Expression</b><br/><term/>
+		/// <b>BETWEEN</b> <i>dateTime</i> <b>AND</b> <i>dateTime2</i>
+		/// <br/>
+		/// <b>Qualifying Rows</b><br/><term/>
+		/// <c>ValidFrom</c> &lt;= <i>dateTime2</i> AND <c>ValidTo</c> &gt; <i>dateTime</i>
+		/// <br/>
+		/// <b>Note</b><br/>
+		/// Same as in the <b>FOR SYSTEM_TIME FROM</b> <i>dateTime</i> <b>TO</b> <i>dateTime2</i> description,
+		/// except the table of rows returned includes rows that became active on the upper boundary defined by the <i>dateTime2</i> endpoint.
+		/// </summary>
+		/// <typeparam name="TSource"></typeparam>
+		/// <param name="table"></param>
+		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME BETWEEN</b> <i>dateTime</i> <b>AND</b> <i>dateTime2</i> filter.</returns>
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableBetweenImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableBetween<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime, DateTime dateTime2)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.Between, dateTime, dateTime2);
+		}
+		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableBetweenImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, dateTime, dateTime2) => table.TemporalTableHint(TemporalTable.Between, dateTime, dateTime2);
+		}
+
+		/// <summary>
+		/// <para>
+		/// See <see href="https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables">Temporal table</see>
+		/// </para>
+		/// <b>Expression</b><br/><term/>
+		/// <b>CONTAINED IN</b> (<i>dateTime</i>, <i>dateTime2</i>)
+		/// <br/>
+		/// <b>Qualifying Rows</b><br/><term/>
+		/// <c>ValidFrom</c> &gt;= <i>dateTime</i> AND <c>ValidTo</c> &lt;= <i>dateTime2</i>
+		/// <br/>
+		/// <b>Note</b><br/>
+		/// Returns a table with the values for all row versions that were opened and closed within the specified time range
+		/// defined by the two period values for the <b>CONTAINED IN</b> argument. Rows that became active exactly on the lower
+		/// boundary or ceased being active exactly on the upper boundary are included.
+		/// </summary>
+		/// <typeparam name="TSource"></typeparam>
+		/// <param name="table"></param>
+		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME CONTAINED IN</b> (<i>dateTime</i>, <i>dateTime2</i>) filter.</returns>
+		[LinqTunnel, Pure]
+		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableContainedInImpl))]
+		public static ISqlServerSpecificTable<TSource> TemporalTableContainedIn<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime, DateTime dateTime2)
+			where TSource : notnull
+		{
+			return table.TemporalTableHint(TemporalTable.ContainedIn, dateTime, dateTime2);
+		}
+		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableContainedInImpl<TSource>()
+			where TSource : notnull
+		{
+			return (table, dateTime, dateTime2) => table.TemporalTableHint(TemporalTable.ContainedIn, dateTime, dateTime2);
 		}
 
 		#endregion

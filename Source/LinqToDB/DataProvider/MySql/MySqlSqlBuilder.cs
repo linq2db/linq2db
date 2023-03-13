@@ -596,15 +596,15 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void FinalizeBuildQuery(SqlStatement statement)
+		protected override void FinalizeBuildQuery(NullabilityContext nullability, SqlStatement statement)
 		{
-			base.FinalizeBuildQuery(statement);
+			base.FinalizeBuildQuery(nullability, statement);
 
 			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
 				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
 					HintBuilder.Append(' ');
-				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+				BuildQueryExtensions(nullability, HintBuilder, statement.SqlQueryExtensions, null, " ", null);
 			}
 
 			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
@@ -616,21 +616,21 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildTableExtensions(SqlTable table, string alias)
+		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions is not null)
 			{
 				if (HintBuilder is not null)
-					BuildTableExtensions(HintBuilder, table, alias, null, " ", null, ext =>
+					BuildTableExtensions(nullability, HintBuilder, table, alias, null, " ", null, ext =>
 						ext.Scope is
 							Sql.QueryExtensionScope.TableHint or
 							Sql.QueryExtensionScope.TablesInScopeHint);
 
-				BuildTableExtensions(StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint);
+				BuildTableExtensions(nullability, StringBuilder, table, alias, " ", ", ", null, ext => ext.Scope is Sql.QueryExtensionScope.IndexHint);
 			}
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
 		{
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
@@ -649,7 +649,7 @@ namespace LinqToDB.DataProvider.MySql
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(nullability, StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
 			}
 		}
 	}

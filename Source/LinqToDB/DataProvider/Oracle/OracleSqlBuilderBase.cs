@@ -711,15 +711,15 @@ END;",
 			}
 		}
 
-		protected override void FinalizeBuildQuery(SqlStatement statement)
+		protected override void FinalizeBuildQuery(NullabilityContext nullability, SqlStatement statement)
 		{
-			base.FinalizeBuildQuery(statement);
+			base.FinalizeBuildQuery(nullability, statement);
 
 			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
 				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
 					HintBuilder.Append(' ');
-				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+				BuildQueryExtensions(nullability, HintBuilder, statement.SqlQueryExtensions, null, " ", null);
 			}
 
 			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
@@ -731,10 +731,10 @@ END;",
 			}
 		}
 
-		protected override void BuildTableExtensions(SqlTable table, string alias)
+		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
 		{
 			if (HintBuilder is not null && table.SqlQueryExtensions is not null)
-				BuildTableExtensions(HintBuilder, table, alias, null, " ", null);
+				BuildTableExtensions(nullability, HintBuilder, table, alias, null, " ", null);
 		}
 	}
 }

@@ -440,10 +440,29 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(nullability, expr);
 
-		protected override void BuildTableExtensions(SqlTable table, string alias)
+		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions is not null)
-				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
+				BuildTableExtensions(nullability, StringBuilder, table, alias, " WITH (", ", ", ")");
+		}
+
+		protected override void BuildTableNameExtensions(NullabilityContext nullability, SqlTable table)
+		{
+			var ext = table.SqlQueryExtensions?.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.TableNameHint);
+
+			if (ext is { BuilderType: not null })
+			{
+				var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
+
+				switch (extensionBuilder)
+				{
+					case ISqlQueryExtensionBuilder queryExtensionBuilder:
+						queryExtensionBuilder.Build(nullability, this, StringBuilder, ext);
+						break;
+					default:
+						throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlQueryExtensionBuilder).FullName}' interface.");
+				}
+			}
 		}
 
 		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
@@ -472,10 +491,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.BuildJoinType(join, condition);
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")");
+				BuildQueryExtensions(nullability, StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")");
 		}
 	}
 }

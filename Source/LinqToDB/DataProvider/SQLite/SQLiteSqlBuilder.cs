@@ -230,10 +230,10 @@ namespace LinqToDB.DataProvider.SQLite
 			aliasBuilt = false;
 		}
 
-		protected override void BuildTableExtensions(SqlTable table, string alias)
+		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions is not null)
-				BuildTableExtensions(StringBuilder, table, alias, " ", " ", null);
+				BuildTableExtensions(nullability, StringBuilder, table, alias, " ", " ", null);
 		}
 
 		protected override void BuildUpdateTableName(NullabilityContext nullability, SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -241,7 +241,7 @@ namespace LinqToDB.DataProvider.SQLite
 			base.BuildUpdateTableName(nullability, selectQuery, updateClause);
 
 			if (updateClause.Table != null)
-				BuildTableExtensions(updateClause.Table, "");
+				BuildTableExtensions(nullability, updateClause.Table, "");
 		}
 	}
 }
