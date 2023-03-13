@@ -23,532 +23,1138 @@ namespace Cli.Fluent.SqlServerNorthwind
 	{
 		static TestDataDB()
 		{
-			var fluentBuilder = new FluentMappingBuilder(ContextSchema);
+			var builder = new FluentMappingBuilder(ContextSchema);
 
-			;
-			fluentBuilder.Entity<Category>().HasAttribute(new TableAttribute("Categories")).Member(e => e.CategoryId).HasAttribute(new ColumnAttribute("CategoryID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.CategoryName).HasAttribute(new ColumnAttribute("CategoryName")
-			{
-				CanBeNull = false
-			}).Member(e => e.Description).HasAttribute(new ColumnAttribute("Description")).Member(e => e.Picture).HasAttribute(new ColumnAttribute("Picture")).Member(e => e.Products).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Category.CategoryId),
-				OtherKey = nameof(Product.CategoryId)
-			});
-			fluentBuilder.Entity<CustomerCustomerDemo>().HasAttribute(new TableAttribute("CustomerCustomerDemo")).Member(e => e.CustomerId).HasAttribute(new ColumnAttribute("CustomerID")
-			{
-				CanBeNull = false,
-				IsPrimaryKey = true,
-				PrimaryKeyOrder = 0
-			}).Member(e => e.CustomerTypeId).HasAttribute(new ColumnAttribute("CustomerTypeID")
-			{
-				CanBeNull = false,
-				IsPrimaryKey = true,
-				PrimaryKeyOrder = 1
-			}).Member(e => e.FkCustomerCustomerDemo).HasAttribute(new AssociationAttribute()
+			builder
+				.Entity<Category>()
+					.HasAttribute(new TableAttribute("Categories"))
+					.Member(e => e.CategoryId)
+						.HasAttribute(new ColumnAttribute("CategoryID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.CategoryName)
+						.HasAttribute(new ColumnAttribute("CategoryName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Description)
+						.HasAttribute(new ColumnAttribute("Description"))
+					.Member(e => e.Picture)
+						.HasAttribute(new ColumnAttribute("Picture"))
+					.Member(e => e.Products)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Category.CategoryId),
+							OtherKey = nameof(Product.CategoryId)
+						});
+
+			builder
+				.Entity<CustomerCustomerDemo>()
+					.HasAttribute(new TableAttribute("CustomerCustomerDemo"))
+					.Member(e => e.CustomerId)
+						.HasAttribute(new ColumnAttribute("CustomerID")
+						{
+							CanBeNull = false,
+							IsPrimaryKey = true,
+							PrimaryKeyOrder = 0
+						})
+					.Member(e => e.CustomerTypeId)
+						.HasAttribute(new ColumnAttribute("CustomerTypeID")
+						{
+							CanBeNull = false,
+							IsPrimaryKey = true,
+							PrimaryKeyOrder = 1
+						})
+					.Member(e => e.FkCustomerCustomerDemo)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(CustomerCustomerDemo.CustomerTypeId),
+							OtherKey = nameof(CustomerDemographic.CustomerTypeId)
+						})
+					.Member(e => e.Customers)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(CustomerCustomerDemo.CustomerId),
+							OtherKey = nameof(Customer.CustomerId)
+						});
+
+			builder
+				.Entity<CustomerDemographic>()
+					.HasAttribute(new TableAttribute("CustomerDemographics"))
+					.Member(e => e.CustomerTypeId)
+						.HasAttribute(new ColumnAttribute("CustomerTypeID")
+						{
+							CanBeNull = false,
+							IsPrimaryKey = true
+						})
+					.Member(e => e.CustomerDesc)
+						.HasAttribute(new ColumnAttribute("CustomerDesc"))
+					.Member(e => e.CustomerCustomerDemos)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(CustomerDemographic.CustomerTypeId),
+							OtherKey = nameof(CustomerCustomerDemo.CustomerTypeId)
+						});
+
+			builder
+				.Entity<Customer>()
+					.HasAttribute(new TableAttribute("Customers"))
+					.Member(e => e.CustomerId)
+						.HasAttribute(new ColumnAttribute("CustomerID")
+						{
+							CanBeNull = false,
+							IsPrimaryKey = true
+						})
+					.Member(e => e.CompanyName)
+						.HasAttribute(new ColumnAttribute("CompanyName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ContactName)
+						.HasAttribute(new ColumnAttribute("ContactName"))
+					.Member(e => e.ContactTitle)
+						.HasAttribute(new ColumnAttribute("ContactTitle"))
+					.Member(e => e.Address)
+						.HasAttribute(new ColumnAttribute("Address"))
+					.Member(e => e.City)
+						.HasAttribute(new ColumnAttribute("City"))
+					.Member(e => e.Region)
+						.HasAttribute(new ColumnAttribute("Region"))
+					.Member(e => e.PostalCode)
+						.HasAttribute(new ColumnAttribute("PostalCode"))
+					.Member(e => e.Country)
+						.HasAttribute(new ColumnAttribute("Country"))
+					.Member(e => e.Phone)
+						.HasAttribute(new ColumnAttribute("Phone"))
+					.Member(e => e.Fax)
+						.HasAttribute(new ColumnAttribute("Fax"))
+					.Member(e => e.CustomerCustomerDemos)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Customer.CustomerId),
+							OtherKey = nameof(CustomerCustomerDemo.CustomerId)
+						})
+					.Member(e => e.Orders)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Customer.CustomerId),
+							OtherKey = nameof(Order.CustomerId)
+						});
+
+			builder
+				.Entity<EmployeeTerritory>()
+					.HasAttribute(new TableAttribute("EmployeeTerritories"))
+					.Member(e => e.EmployeeId)
+						.HasAttribute(new ColumnAttribute("EmployeeID")
+						{
+							IsPrimaryKey = true,
+							PrimaryKeyOrder = 0
+						})
+					.Member(e => e.TerritoryId)
+						.HasAttribute(new ColumnAttribute("TerritoryID")
+						{
+							CanBeNull = false,
+							IsPrimaryKey = true,
+							PrimaryKeyOrder = 1
+						})
+					.Member(e => e.Employees)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(EmployeeTerritory.EmployeeId),
+							OtherKey = nameof(Employee.EmployeeId)
+						})
+					.Member(e => e.Territories)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(EmployeeTerritory.TerritoryId),
+							OtherKey = nameof(Territory.TerritoryId)
+						});
+
+			builder
+				.Entity<Employee>()
+					.HasAttribute(new TableAttribute("Employees"))
+					.Member(e => e.EmployeeId)
+						.HasAttribute(new ColumnAttribute("EmployeeID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.LastName)
+						.HasAttribute(new ColumnAttribute("LastName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.FirstName)
+						.HasAttribute(new ColumnAttribute("FirstName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Title)
+						.HasAttribute(new ColumnAttribute("Title"))
+					.Member(e => e.TitleOfCourtesy)
+						.HasAttribute(new ColumnAttribute("TitleOfCourtesy"))
+					.Member(e => e.BirthDate)
+						.HasAttribute(new ColumnAttribute("BirthDate"))
+					.Member(e => e.HireDate)
+						.HasAttribute(new ColumnAttribute("HireDate"))
+					.Member(e => e.Address)
+						.HasAttribute(new ColumnAttribute("Address"))
+					.Member(e => e.City)
+						.HasAttribute(new ColumnAttribute("City"))
+					.Member(e => e.Region)
+						.HasAttribute(new ColumnAttribute("Region"))
+					.Member(e => e.PostalCode)
+						.HasAttribute(new ColumnAttribute("PostalCode"))
+					.Member(e => e.Country)
+						.HasAttribute(new ColumnAttribute("Country"))
+					.Member(e => e.HomePhone)
+						.HasAttribute(new ColumnAttribute("HomePhone"))
+					.Member(e => e.Extension)
+						.HasAttribute(new ColumnAttribute("Extension"))
+					.Member(e => e.Photo)
+						.HasAttribute(new ColumnAttribute("Photo"))
+					.Member(e => e.Notes)
+						.HasAttribute(new ColumnAttribute("Notes"))
+					.Member(e => e.ReportsTo)
+						.HasAttribute(new ColumnAttribute("ReportsTo"))
+					.Member(e => e.PhotoPath)
+						.HasAttribute(new ColumnAttribute("PhotoPath"))
+					.Member(e => e.Employees)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Employee.ReportsTo),
+							OtherKey = nameof(Employee.EmployeeId)
+						})
+					.Member(e => e.Employees1)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Employee.EmployeeId),
+							OtherKey = nameof(Employee.ReportsTo)
+						})
+					.Member(e => e.EmployeeTerritories)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Employee.EmployeeId),
+							OtherKey = nameof(EmployeeTerritory.EmployeeId)
+						})
+					.Member(e => e.Orders)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Employee.EmployeeId),
+							OtherKey = nameof(Order.EmployeeId)
+						});
+
+			builder
+				.Entity<OrderDetail>()
+					.HasAttribute(new TableAttribute("Order Details"))
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID")
+						{
+							IsPrimaryKey = true,
+							PrimaryKeyOrder = 0
+						})
+					.Member(e => e.ProductId)
+						.HasAttribute(new ColumnAttribute("ProductID")
+						{
+							IsPrimaryKey = true,
+							PrimaryKeyOrder = 1
+						})
+					.Member(e => e.UnitPrice)
+						.HasAttribute(new ColumnAttribute("UnitPrice"))
+					.Member(e => e.Quantity)
+						.HasAttribute(new ColumnAttribute("Quantity"))
+					.Member(e => e.Discount)
+						.HasAttribute(new ColumnAttribute("Discount"))
+					.Member(e => e.OrderDetailsOrders)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(OrderDetail.OrderId),
+							OtherKey = nameof(Order.OrderId)
+						})
+					.Member(e => e.OrderDetailsProducts)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(OrderDetail.ProductId),
+							OtherKey = nameof(Product.ProductId)
+						});
+
+			builder
+				.Entity<Order>()
+					.HasAttribute(new TableAttribute("Orders"))
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.CustomerId)
+						.HasAttribute(new ColumnAttribute("CustomerID"))
+					.Member(e => e.EmployeeId)
+						.HasAttribute(new ColumnAttribute("EmployeeID"))
+					.Member(e => e.OrderDate)
+						.HasAttribute(new ColumnAttribute("OrderDate"))
+					.Member(e => e.RequiredDate)
+						.HasAttribute(new ColumnAttribute("RequiredDate"))
+					.Member(e => e.ShippedDate)
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
+					.Member(e => e.ShipVia)
+						.HasAttribute(new ColumnAttribute("ShipVia"))
+					.Member(e => e.Freight)
+						.HasAttribute(new ColumnAttribute("Freight"))
+					.Member(e => e.ShipName)
+						.HasAttribute(new ColumnAttribute("ShipName"))
+					.Member(e => e.ShipAddress)
+						.HasAttribute(new ColumnAttribute("ShipAddress"))
+					.Member(e => e.ShipCity)
+						.HasAttribute(new ColumnAttribute("ShipCity"))
+					.Member(e => e.ShipRegion)
+						.HasAttribute(new ColumnAttribute("ShipRegion"))
+					.Member(e => e.ShipPostalCode)
+						.HasAttribute(new ColumnAttribute("ShipPostalCode"))
+					.Member(e => e.ShipCountry)
+						.HasAttribute(new ColumnAttribute("ShipCountry"))
+					.Member(e => e.OrderDetails)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Order.OrderId),
+							OtherKey = nameof(OrderDetail.OrderId)
+						})
+					.Member(e => e.Customer)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Order.CustomerId),
+							OtherKey = nameof(Customer.CustomerId)
+						})
+					.Member(e => e.Employee)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Order.EmployeeId),
+							OtherKey = nameof(Employee.EmployeeId)
+						})
+					.Member(e => e.Shippers)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Order.ShipVia),
+							OtherKey = nameof(Shipper.ShipperId)
+						});
+
+			builder
+				.Entity<Product>()
+					.HasAttribute(new TableAttribute("Products"))
+					.Member(e => e.ProductId)
+						.HasAttribute(new ColumnAttribute("ProductID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.SupplierId)
+						.HasAttribute(new ColumnAttribute("SupplierID"))
+					.Member(e => e.CategoryId)
+						.HasAttribute(new ColumnAttribute("CategoryID"))
+					.Member(e => e.QuantityPerUnit)
+						.HasAttribute(new ColumnAttribute("QuantityPerUnit"))
+					.Member(e => e.UnitPrice)
+						.HasAttribute(new ColumnAttribute("UnitPrice"))
+					.Member(e => e.UnitsInStock)
+						.HasAttribute(new ColumnAttribute("UnitsInStock"))
+					.Member(e => e.UnitsOnOrder)
+						.HasAttribute(new ColumnAttribute("UnitsOnOrder"))
+					.Member(e => e.ReorderLevel)
+						.HasAttribute(new ColumnAttribute("ReorderLevel"))
+					.Member(e => e.Discontinued)
+						.HasAttribute(new ColumnAttribute("Discontinued"))
+					.Member(e => e.OrderDetails)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Product.ProductId),
+							OtherKey = nameof(OrderDetail.ProductId)
+						})
+					.Member(e => e.Category)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Product.CategoryId),
+							OtherKey = nameof(Category.CategoryId)
+						})
+					.Member(e => e.Supplier)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Product.SupplierId),
+							OtherKey = nameof(Supplier.SupplierId)
+						});
+
+			builder
+				.Entity<Region>()
+					.HasAttribute(new TableAttribute("Region"))
+					.Member(e => e.RegionId)
+						.HasAttribute(new ColumnAttribute("RegionID")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.RegionDescription)
+						.HasAttribute(new ColumnAttribute("RegionDescription")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Territories)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Region.RegionId),
+							OtherKey = nameof(Territory.RegionId)
+						});
+
+			builder
+				.Entity<Shipper>()
+					.HasAttribute(new TableAttribute("Shippers"))
+					.Member(e => e.ShipperId)
+						.HasAttribute(new ColumnAttribute("ShipperID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.CompanyName)
+						.HasAttribute(new ColumnAttribute("CompanyName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Phone)
+						.HasAttribute(new ColumnAttribute("Phone"))
+					.Member(e => e.Orders)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Shipper.ShipperId),
+							OtherKey = nameof(Order.ShipVia)
+						});
+
+			builder
+				.Entity<Supplier>()
+					.HasAttribute(new TableAttribute("Suppliers"))
+					.Member(e => e.SupplierId)
+						.HasAttribute(new ColumnAttribute("SupplierID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.CompanyName)
+						.HasAttribute(new ColumnAttribute("CompanyName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ContactName)
+						.HasAttribute(new ColumnAttribute("ContactName"))
+					.Member(e => e.ContactTitle)
+						.HasAttribute(new ColumnAttribute("ContactTitle"))
+					.Member(e => e.Address)
+						.HasAttribute(new ColumnAttribute("Address"))
+					.Member(e => e.City)
+						.HasAttribute(new ColumnAttribute("City"))
+					.Member(e => e.Region)
+						.HasAttribute(new ColumnAttribute("Region"))
+					.Member(e => e.PostalCode)
+						.HasAttribute(new ColumnAttribute("PostalCode"))
+					.Member(e => e.Country)
+						.HasAttribute(new ColumnAttribute("Country"))
+					.Member(e => e.Phone)
+						.HasAttribute(new ColumnAttribute("Phone"))
+					.Member(e => e.Fax)
+						.HasAttribute(new ColumnAttribute("Fax"))
+					.Member(e => e.HomePage)
+						.HasAttribute(new ColumnAttribute("HomePage"))
+					.Member(e => e.Products)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Supplier.SupplierId),
+							OtherKey = nameof(Product.SupplierId)
+						});
+
+			builder
+				.Entity<Territory>()
+					.HasAttribute(new TableAttribute("Territories"))
+					.Member(e => e.TerritoryId)
+						.HasAttribute(new ColumnAttribute("TerritoryID")
+						{
+							CanBeNull = false,
+							IsPrimaryKey = true
+						})
+					.Member(e => e.TerritoryDescription)
+						.HasAttribute(new ColumnAttribute("TerritoryDescription")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.RegionId)
+						.HasAttribute(new ColumnAttribute("RegionID"))
+					.Member(e => e.EmployeeTerritories)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Territory.TerritoryId),
+							OtherKey = nameof(EmployeeTerritory.TerritoryId)
+						})
+					.Member(e => e.Region)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(Territory.RegionId),
+							OtherKey = nameof(Region.RegionId)
+						});
+
+			builder
+				.Entity<AlphabeticalListOfProduct>()
+					.HasAttribute(new TableAttribute("Alphabetical list of products")
+					{
+						IsView = true
+					})
+					.Member(e => e.ProductId)
+						.HasAttribute(new ColumnAttribute("ProductID"))
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.SupplierId)
+						.HasAttribute(new ColumnAttribute("SupplierID"))
+					.Member(e => e.CategoryId)
+						.HasAttribute(new ColumnAttribute("CategoryID"))
+					.Member(e => e.QuantityPerUnit)
+						.HasAttribute(new ColumnAttribute("QuantityPerUnit"))
+					.Member(e => e.UnitPrice)
+						.HasAttribute(new ColumnAttribute("UnitPrice"))
+					.Member(e => e.UnitsInStock)
+						.HasAttribute(new ColumnAttribute("UnitsInStock"))
+					.Member(e => e.UnitsOnOrder)
+						.HasAttribute(new ColumnAttribute("UnitsOnOrder"))
+					.Member(e => e.ReorderLevel)
+						.HasAttribute(new ColumnAttribute("ReorderLevel"))
+					.Member(e => e.Discontinued)
+						.HasAttribute(new ColumnAttribute("Discontinued"))
+					.Member(e => e.CategoryName)
+						.HasAttribute(new ColumnAttribute("CategoryName")
+						{
+							CanBeNull = false
+						});
+
+			builder
+				.Entity<CategorySalesFor1997>()
+					.HasAttribute(new TableAttribute("Category Sales for 1997")
+					{
+						IsView = true
+					})
+					.Member(e => e.CategoryName)
+						.HasAttribute(new ColumnAttribute("CategoryName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.CategorySales)
+						.HasAttribute(new ColumnAttribute("CategorySales"));
+
+			builder
+				.Entity<CurrentProductList>()
+					.HasAttribute(new TableAttribute("Current Product List")
+					{
+						IsView = true
+					})
+					.Member(e => e.ProductId)
+						.HasAttribute(new ColumnAttribute("ProductID")
+						{
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						});
+
+			builder
+				.Entity<CustomerAndSuppliersByCity>()
+					.HasAttribute(new TableAttribute("Customer and Suppliers by City")
+					{
+						IsView = true
+					})
+					.Member(e => e.City)
+						.HasAttribute(new ColumnAttribute("City"))
+					.Member(e => e.CompanyName)
+						.HasAttribute(new ColumnAttribute("CompanyName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ContactName)
+						.HasAttribute(new ColumnAttribute("ContactName"))
+					.Member(e => e.Relationship)
+						.HasAttribute(new ColumnAttribute("Relationship")
+						{
+							CanBeNull = false
+						});
+
+			builder
+				.Entity<Invoice>()
+					.HasAttribute(new TableAttribute("Invoices")
+					{
+						IsView = true
+					})
+					.Member(e => e.ShipName)
+						.HasAttribute(new ColumnAttribute("ShipName"))
+					.Member(e => e.ShipAddress)
+						.HasAttribute(new ColumnAttribute("ShipAddress"))
+					.Member(e => e.ShipCity)
+						.HasAttribute(new ColumnAttribute("ShipCity"))
+					.Member(e => e.ShipRegion)
+						.HasAttribute(new ColumnAttribute("ShipRegion"))
+					.Member(e => e.ShipPostalCode)
+						.HasAttribute(new ColumnAttribute("ShipPostalCode"))
+					.Member(e => e.ShipCountry)
+						.HasAttribute(new ColumnAttribute("ShipCountry"))
+					.Member(e => e.CustomerId)
+						.HasAttribute(new ColumnAttribute("CustomerID"))
+					.Member(e => e.CustomerName)
+						.HasAttribute(new ColumnAttribute("CustomerName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Address)
+						.HasAttribute(new ColumnAttribute("Address"))
+					.Member(e => e.City)
+						.HasAttribute(new ColumnAttribute("City"))
+					.Member(e => e.Region)
+						.HasAttribute(new ColumnAttribute("Region"))
+					.Member(e => e.PostalCode)
+						.HasAttribute(new ColumnAttribute("PostalCode"))
+					.Member(e => e.Country)
+						.HasAttribute(new ColumnAttribute("Country"))
+					.Member(e => e.Salesperson)
+						.HasAttribute(new ColumnAttribute("Salesperson")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.OrderDate)
+						.HasAttribute(new ColumnAttribute("OrderDate"))
+					.Member(e => e.RequiredDate)
+						.HasAttribute(new ColumnAttribute("RequiredDate"))
+					.Member(e => e.ShippedDate)
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
+					.Member(e => e.ShipperName)
+						.HasAttribute(new ColumnAttribute("ShipperName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ProductId)
+						.HasAttribute(new ColumnAttribute("ProductID"))
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.UnitPrice)
+						.HasAttribute(new ColumnAttribute("UnitPrice"))
+					.Member(e => e.Quantity)
+						.HasAttribute(new ColumnAttribute("Quantity"))
+					.Member(e => e.Discount)
+						.HasAttribute(new ColumnAttribute("Discount"))
+					.Member(e => e.ExtendedPrice)
+						.HasAttribute(new ColumnAttribute("ExtendedPrice"))
+					.Member(e => e.Freight)
+						.HasAttribute(new ColumnAttribute("Freight"));
+
+			builder
+				.Entity<OrderDetailsExtended>()
+					.HasAttribute(new TableAttribute("Order Details Extended")
+					{
+						IsView = true
+					})
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.ProductId)
+						.HasAttribute(new ColumnAttribute("ProductID"))
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.UnitPrice)
+						.HasAttribute(new ColumnAttribute("UnitPrice"))
+					.Member(e => e.Quantity)
+						.HasAttribute(new ColumnAttribute("Quantity"))
+					.Member(e => e.Discount)
+						.HasAttribute(new ColumnAttribute("Discount"))
+					.Member(e => e.ExtendedPrice)
+						.HasAttribute(new ColumnAttribute("ExtendedPrice"));
+
+			builder
+				.Entity<OrderSubtotal>()
+					.HasAttribute(new TableAttribute("Order Subtotals")
+					{
+						IsView = true
+					})
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.Subtotal)
+						.HasAttribute(new ColumnAttribute("Subtotal"));
+
+			builder
+				.Entity<OrdersQry>()
+					.HasAttribute(new TableAttribute("Orders Qry")
+					{
+						IsView = true
+					})
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.CustomerId)
+						.HasAttribute(new ColumnAttribute("CustomerID"))
+					.Member(e => e.EmployeeId)
+						.HasAttribute(new ColumnAttribute("EmployeeID"))
+					.Member(e => e.OrderDate)
+						.HasAttribute(new ColumnAttribute("OrderDate"))
+					.Member(e => e.RequiredDate)
+						.HasAttribute(new ColumnAttribute("RequiredDate"))
+					.Member(e => e.ShippedDate)
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
+					.Member(e => e.ShipVia)
+						.HasAttribute(new ColumnAttribute("ShipVia"))
+					.Member(e => e.Freight)
+						.HasAttribute(new ColumnAttribute("Freight"))
+					.Member(e => e.ShipName)
+						.HasAttribute(new ColumnAttribute("ShipName"))
+					.Member(e => e.ShipAddress)
+						.HasAttribute(new ColumnAttribute("ShipAddress"))
+					.Member(e => e.ShipCity)
+						.HasAttribute(new ColumnAttribute("ShipCity"))
+					.Member(e => e.ShipRegion)
+						.HasAttribute(new ColumnAttribute("ShipRegion"))
+					.Member(e => e.ShipPostalCode)
+						.HasAttribute(new ColumnAttribute("ShipPostalCode"))
+					.Member(e => e.ShipCountry)
+						.HasAttribute(new ColumnAttribute("ShipCountry"))
+					.Member(e => e.CompanyName)
+						.HasAttribute(new ColumnAttribute("CompanyName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Address)
+						.HasAttribute(new ColumnAttribute("Address"))
+					.Member(e => e.City)
+						.HasAttribute(new ColumnAttribute("City"))
+					.Member(e => e.Region)
+						.HasAttribute(new ColumnAttribute("Region"))
+					.Member(e => e.PostalCode)
+						.HasAttribute(new ColumnAttribute("PostalCode"))
+					.Member(e => e.Country)
+						.HasAttribute(new ColumnAttribute("Country"));
+
+			builder
+				.Entity<ProductSalesFor1997>()
+					.HasAttribute(new TableAttribute("Product Sales for 1997")
+					{
+						IsView = true
+					})
+					.Member(e => e.CategoryName)
+						.HasAttribute(new ColumnAttribute("CategoryName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ProductSales)
+						.HasAttribute(new ColumnAttribute("ProductSales"));
+
+			builder
+				.Entity<ProductsAboveAveragePrice>()
+					.HasAttribute(new TableAttribute("Products Above Average Price")
+					{
+						IsView = true
+					})
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.UnitPrice)
+						.HasAttribute(new ColumnAttribute("UnitPrice"));
+
+			builder
+				.Entity<ProductsByCategory>()
+					.HasAttribute(new TableAttribute("Products by Category")
+					{
+						IsView = true
+					})
+					.Member(e => e.CategoryName)
+						.HasAttribute(new ColumnAttribute("CategoryName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.QuantityPerUnit)
+						.HasAttribute(new ColumnAttribute("QuantityPerUnit"))
+					.Member(e => e.UnitsInStock)
+						.HasAttribute(new ColumnAttribute("UnitsInStock"))
+					.Member(e => e.Discontinued)
+						.HasAttribute(new ColumnAttribute("Discontinued"));
+
+			builder
+				.Entity<QuarterlyOrder>()
+					.HasAttribute(new TableAttribute("Quarterly Orders")
+					{
+						IsView = true
+					})
+					.Member(e => e.CustomerId)
+						.HasAttribute(new ColumnAttribute("CustomerID"))
+					.Member(e => e.CompanyName)
+						.HasAttribute(new ColumnAttribute("CompanyName"))
+					.Member(e => e.City)
+						.HasAttribute(new ColumnAttribute("City"))
+					.Member(e => e.Country)
+						.HasAttribute(new ColumnAttribute("Country"));
+
+			builder
+				.Entity<SalesTotalsByAmount>()
+					.HasAttribute(new TableAttribute("Sales Totals by Amount")
+					{
+						IsView = true
+					})
+					.Member(e => e.SaleAmount)
+						.HasAttribute(new ColumnAttribute("SaleAmount"))
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.CompanyName)
+						.HasAttribute(new ColumnAttribute("CompanyName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ShippedDate)
+						.HasAttribute(new ColumnAttribute("ShippedDate"));
+
+			builder
+				.Entity<SalesByCategory>()
+					.HasAttribute(new TableAttribute("Sales by Category")
+					{
+						IsView = true
+					})
+					.Member(e => e.CategoryId)
+						.HasAttribute(new ColumnAttribute("CategoryID"))
+					.Member(e => e.CategoryName)
+						.HasAttribute(new ColumnAttribute("CategoryName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ProductSales)
+						.HasAttribute(new ColumnAttribute("ProductSales"));
+
+			builder
+				.Entity<SummaryOfSalesByQuarter>()
+					.HasAttribute(new TableAttribute("Summary of Sales by Quarter")
+					{
+						IsView = true
+					})
+					.Member(e => e.ShippedDate)
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.Subtotal)
+						.HasAttribute(new ColumnAttribute("Subtotal"));
+
+			builder
+				.Entity<SummaryOfSalesByYear>()
+					.HasAttribute(new TableAttribute("Summary of Sales by Year")
+					{
+						IsView = true
+					})
+					.Member(e => e.ShippedDate)
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.Subtotal)
+						.HasAttribute(new ColumnAttribute("Subtotal"));
+
+			builder
+				.Entity<ExtensionMethods.CustOrderHistResult>()
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Total)
+						.HasAttribute(new ColumnAttribute("Total"));
+
+			builder
+				.Entity<ExtensionMethods.CustOrdersDetailResult>()
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.UnitPrice)
+						.HasAttribute(new ColumnAttribute("UnitPrice"))
+					.Member(e => e.Quantity)
+						.HasAttribute(new ColumnAttribute("Quantity"))
+					.Member(e => e.Discount)
+						.HasAttribute(new ColumnAttribute("Discount"))
+					.Member(e => e.ExtendedPrice)
+						.HasAttribute(new ColumnAttribute("ExtendedPrice"));
+
+			builder
+				.Entity<ExtensionMethods.CustOrdersOrdersResult>()
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.OrderDate)
+						.HasAttribute(new ColumnAttribute("OrderDate"))
+					.Member(e => e.RequiredDate)
+						.HasAttribute(new ColumnAttribute("RequiredDate"))
+					.Member(e => e.ShippedDate)
+						.HasAttribute(new ColumnAttribute("ShippedDate"));
+
+			builder
+				.Entity<ExtensionMethods.EmployeeSalesByCountryResult>()
+					.Member(e => e.Country)
+						.HasAttribute(new ColumnAttribute("Country"))
+					.Member(e => e.LastName)
+						.HasAttribute(new ColumnAttribute("LastName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.FirstName)
+						.HasAttribute(new ColumnAttribute("FirstName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.ShippedDate)
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.SaleAmount)
+						.HasAttribute(new ColumnAttribute("SaleAmount"));
+
+			builder
+				.Entity<ExtensionMethods.SalesByYearResult>()
+					.Member(e => e.ShippedDate)
+						.HasAttribute(new ColumnAttribute("ShippedDate"))
+					.Member(e => e.OrderId)
+						.HasAttribute(new ColumnAttribute("OrderID"))
+					.Member(e => e.Subtotal)
+						.HasAttribute(new ColumnAttribute("Subtotal"))
+					.Member(e => e.Year)
+						.HasAttribute(new ColumnAttribute("Year"));
+
+			builder
+				.Entity<ExtensionMethods.SalesByCategoryResult>()
+					.Member(e => e.ProductName)
+						.HasAttribute(new ColumnAttribute("ProductName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.TotalPurchase)
+						.HasAttribute(new ColumnAttribute("TotalPurchase"));
+
+			builder
+				.Entity<ExtensionMethods.TenMostExpensiveProductsResult>()
+					.Member(e => e.TenMostExpensiveProducts)
+						.HasAttribute(new ColumnAttribute("TenMostExpensiveProducts")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.UnitPrice)
+						.HasAttribute(new ColumnAttribute("UnitPrice"));
+
+			builder.HasAttribute<CustomerCustomerDemo>(e => ExtensionMethods.FkCustomerCustomerDemo(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(CustomerCustomerDemo.CustomerTypeId),
 				OtherKey = nameof(CustomerDemographic.CustomerTypeId)
-			}).Member(e => e.Customers).HasAttribute(new AssociationAttribute()
+			});
+
+			builder.HasAttribute<CustomerDemographic>(e => ExtensionMethods.CustomerCustomerDemos(e, default(IDataContext)!), new AssociationAttribute()
+			{
+				ThisKey = nameof(CustomerDemographic.CustomerTypeId),
+				OtherKey = nameof(CustomerCustomerDemo.CustomerTypeId)
+			});
+
+			builder.HasAttribute<CustomerCustomerDemo>(e => ExtensionMethods.Customers(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(CustomerCustomerDemo.CustomerId),
 				OtherKey = nameof(Customer.CustomerId)
 			});
-			fluentBuilder.Entity<CustomerDemographic>().HasAttribute(new TableAttribute("CustomerDemographics")).Member(e => e.CustomerTypeId).HasAttribute(new ColumnAttribute("CustomerTypeID")
-			{
-				CanBeNull = false,
-				IsPrimaryKey = true
-			}).Member(e => e.CustomerDesc).HasAttribute(new ColumnAttribute("CustomerDesc")).Member(e => e.CustomerCustomerDemos).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(CustomerDemographic.CustomerTypeId),
-				OtherKey = nameof(CustomerCustomerDemo.CustomerTypeId)
-			});
-			fluentBuilder.Entity<Customer>().HasAttribute(new TableAttribute("Customers")).Member(e => e.CustomerId).HasAttribute(new ColumnAttribute("CustomerID")
-			{
-				CanBeNull = false,
-				IsPrimaryKey = true
-			}).Member(e => e.CompanyName).HasAttribute(new ColumnAttribute("CompanyName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ContactName).HasAttribute(new ColumnAttribute("ContactName")).Member(e => e.ContactTitle).HasAttribute(new ColumnAttribute("ContactTitle")).Member(e => e.Address).HasAttribute(new ColumnAttribute("Address")).Member(e => e.City).HasAttribute(new ColumnAttribute("City")).Member(e => e.Region).HasAttribute(new ColumnAttribute("Region")).Member(e => e.PostalCode).HasAttribute(new ColumnAttribute("PostalCode")).Member(e => e.Country).HasAttribute(new ColumnAttribute("Country")).Member(e => e.Phone).HasAttribute(new ColumnAttribute("Phone")).Member(e => e.Fax).HasAttribute(new ColumnAttribute("Fax")).Member(e => e.CustomerCustomerDemos).HasAttribute(new AssociationAttribute()
+
+			builder.HasAttribute<Customer>(e => ExtensionMethods.CustomerCustomerDemos(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Customer.CustomerId),
 				OtherKey = nameof(CustomerCustomerDemo.CustomerId)
-			}).Member(e => e.Orders).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Customer.CustomerId),
-				OtherKey = nameof(Order.CustomerId)
 			});
-			fluentBuilder.Entity<EmployeeTerritory>().HasAttribute(new TableAttribute("EmployeeTerritories")).Member(e => e.EmployeeId).HasAttribute(new ColumnAttribute("EmployeeID")
-			{
-				IsPrimaryKey = true,
-				PrimaryKeyOrder = 0
-			}).Member(e => e.TerritoryId).HasAttribute(new ColumnAttribute("TerritoryID")
-			{
-				CanBeNull = false,
-				IsPrimaryKey = true,
-				PrimaryKeyOrder = 1
-			}).Member(e => e.Employees).HasAttribute(new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(EmployeeTerritory.EmployeeId),
-				OtherKey = nameof(Employee.EmployeeId)
-			}).Member(e => e.Territories).HasAttribute(new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(EmployeeTerritory.TerritoryId),
-				OtherKey = nameof(Territory.TerritoryId)
-			});
-			fluentBuilder.Entity<Employee>().HasAttribute(new TableAttribute("Employees")).Member(e => e.EmployeeId).HasAttribute(new ColumnAttribute("EmployeeID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.LastName).HasAttribute(new ColumnAttribute("LastName")
-			{
-				CanBeNull = false
-			}).Member(e => e.FirstName).HasAttribute(new ColumnAttribute("FirstName")
-			{
-				CanBeNull = false
-			}).Member(e => e.Title).HasAttribute(new ColumnAttribute("Title")).Member(e => e.TitleOfCourtesy).HasAttribute(new ColumnAttribute("TitleOfCourtesy")).Member(e => e.BirthDate).HasAttribute(new ColumnAttribute("BirthDate")).Member(e => e.HireDate).HasAttribute(new ColumnAttribute("HireDate")).Member(e => e.Address).HasAttribute(new ColumnAttribute("Address")).Member(e => e.City).HasAttribute(new ColumnAttribute("City")).Member(e => e.Region).HasAttribute(new ColumnAttribute("Region")).Member(e => e.PostalCode).HasAttribute(new ColumnAttribute("PostalCode")).Member(e => e.Country).HasAttribute(new ColumnAttribute("Country")).Member(e => e.HomePhone).HasAttribute(new ColumnAttribute("HomePhone")).Member(e => e.Extension).HasAttribute(new ColumnAttribute("Extension")).Member(e => e.Photo).HasAttribute(new ColumnAttribute("Photo")).Member(e => e.Notes).HasAttribute(new ColumnAttribute("Notes")).Member(e => e.ReportsTo).HasAttribute(new ColumnAttribute("ReportsTo")).Member(e => e.PhotoPath).HasAttribute(new ColumnAttribute("PhotoPath")).Member(e => e.Employees).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Employee.ReportsTo),
-				OtherKey = nameof(Employee.EmployeeId)
-			}).Member(e => e.Employees1).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Employee.EmployeeId),
-				OtherKey = nameof(Employee.ReportsTo)
-			}).Member(e => e.EmployeeTerritories).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Employee.EmployeeId),
-				OtherKey = nameof(EmployeeTerritory.EmployeeId)
-			}).Member(e => e.Orders).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Employee.EmployeeId),
-				OtherKey = nameof(Order.EmployeeId)
-			});
-			fluentBuilder.Entity<OrderDetail>().HasAttribute(new TableAttribute("Order Details")).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")
-			{
-				IsPrimaryKey = true,
-				PrimaryKeyOrder = 0
-			}).Member(e => e.ProductId).HasAttribute(new ColumnAttribute("ProductID")
-			{
-				IsPrimaryKey = true,
-				PrimaryKeyOrder = 1
-			}).Member(e => e.UnitPrice).HasAttribute(new ColumnAttribute("UnitPrice")).Member(e => e.Quantity).HasAttribute(new ColumnAttribute("Quantity")).Member(e => e.Discount).HasAttribute(new ColumnAttribute("Discount")).Member(e => e.OrderDetailsOrders).HasAttribute(new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(OrderDetail.OrderId),
-				OtherKey = nameof(Order.OrderId)
-			}).Member(e => e.OrderDetailsProducts).HasAttribute(new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(OrderDetail.ProductId),
-				OtherKey = nameof(Product.ProductId)
-			});
-			fluentBuilder.Entity<Order>().HasAttribute(new TableAttribute("Orders")).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.CustomerId).HasAttribute(new ColumnAttribute("CustomerID")).Member(e => e.EmployeeId).HasAttribute(new ColumnAttribute("EmployeeID")).Member(e => e.OrderDate).HasAttribute(new ColumnAttribute("OrderDate")).Member(e => e.RequiredDate).HasAttribute(new ColumnAttribute("RequiredDate")).Member(e => e.ShippedDate).HasAttribute(new ColumnAttribute("ShippedDate")).Member(e => e.ShipVia).HasAttribute(new ColumnAttribute("ShipVia")).Member(e => e.Freight).HasAttribute(new ColumnAttribute("Freight")).Member(e => e.ShipName).HasAttribute(new ColumnAttribute("ShipName")).Member(e => e.ShipAddress).HasAttribute(new ColumnAttribute("ShipAddress")).Member(e => e.ShipCity).HasAttribute(new ColumnAttribute("ShipCity")).Member(e => e.ShipRegion).HasAttribute(new ColumnAttribute("ShipRegion")).Member(e => e.ShipPostalCode).HasAttribute(new ColumnAttribute("ShipPostalCode")).Member(e => e.ShipCountry).HasAttribute(new ColumnAttribute("ShipCountry")).Member(e => e.OrderDetails).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Order.OrderId),
-				OtherKey = nameof(OrderDetail.OrderId)
-			}).Member(e => e.Customer).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Order.CustomerId),
-				OtherKey = nameof(Customer.CustomerId)
-			}).Member(e => e.Employee).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Order.EmployeeId),
-				OtherKey = nameof(Employee.EmployeeId)
-			}).Member(e => e.Shippers).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Order.ShipVia),
-				OtherKey = nameof(Shipper.ShipperId)
-			});
-			fluentBuilder.Entity<Product>().HasAttribute(new TableAttribute("Products")).Member(e => e.ProductId).HasAttribute(new ColumnAttribute("ProductID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.SupplierId).HasAttribute(new ColumnAttribute("SupplierID")).Member(e => e.CategoryId).HasAttribute(new ColumnAttribute("CategoryID")).Member(e => e.QuantityPerUnit).HasAttribute(new ColumnAttribute("QuantityPerUnit")).Member(e => e.UnitPrice).HasAttribute(new ColumnAttribute("UnitPrice")).Member(e => e.UnitsInStock).HasAttribute(new ColumnAttribute("UnitsInStock")).Member(e => e.UnitsOnOrder).HasAttribute(new ColumnAttribute("UnitsOnOrder")).Member(e => e.ReorderLevel).HasAttribute(new ColumnAttribute("ReorderLevel")).Member(e => e.Discontinued).HasAttribute(new ColumnAttribute("Discontinued")).Member(e => e.OrderDetails).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Product.ProductId),
-				OtherKey = nameof(OrderDetail.ProductId)
-			}).Member(e => e.Category).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Product.CategoryId),
-				OtherKey = nameof(Category.CategoryId)
-			}).Member(e => e.Supplier).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Product.SupplierId),
-				OtherKey = nameof(Supplier.SupplierId)
-			});
-			fluentBuilder.Entity<Region>().HasAttribute(new TableAttribute("Region")).Member(e => e.RegionId).HasAttribute(new ColumnAttribute("RegionID")
-			{
-				IsPrimaryKey = true
-			}).Member(e => e.RegionDescription).HasAttribute(new ColumnAttribute("RegionDescription")
-			{
-				CanBeNull = false
-			}).Member(e => e.Territories).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Region.RegionId),
-				OtherKey = nameof(Territory.RegionId)
-			});
-			fluentBuilder.Entity<Shipper>().HasAttribute(new TableAttribute("Shippers")).Member(e => e.ShipperId).HasAttribute(new ColumnAttribute("ShipperID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.CompanyName).HasAttribute(new ColumnAttribute("CompanyName")
-			{
-				CanBeNull = false
-			}).Member(e => e.Phone).HasAttribute(new ColumnAttribute("Phone")).Member(e => e.Orders).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Shipper.ShipperId),
-				OtherKey = nameof(Order.ShipVia)
-			});
-			fluentBuilder.Entity<Supplier>().HasAttribute(new TableAttribute("Suppliers")).Member(e => e.SupplierId).HasAttribute(new ColumnAttribute("SupplierID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.CompanyName).HasAttribute(new ColumnAttribute("CompanyName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ContactName).HasAttribute(new ColumnAttribute("ContactName")).Member(e => e.ContactTitle).HasAttribute(new ColumnAttribute("ContactTitle")).Member(e => e.Address).HasAttribute(new ColumnAttribute("Address")).Member(e => e.City).HasAttribute(new ColumnAttribute("City")).Member(e => e.Region).HasAttribute(new ColumnAttribute("Region")).Member(e => e.PostalCode).HasAttribute(new ColumnAttribute("PostalCode")).Member(e => e.Country).HasAttribute(new ColumnAttribute("Country")).Member(e => e.Phone).HasAttribute(new ColumnAttribute("Phone")).Member(e => e.Fax).HasAttribute(new ColumnAttribute("Fax")).Member(e => e.HomePage).HasAttribute(new ColumnAttribute("HomePage")).Member(e => e.Products).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Supplier.SupplierId),
-				OtherKey = nameof(Product.SupplierId)
-			});
-			fluentBuilder.Entity<Territory>().HasAttribute(new TableAttribute("Territories")).Member(e => e.TerritoryId).HasAttribute(new ColumnAttribute("TerritoryID")
-			{
-				CanBeNull = false,
-				IsPrimaryKey = true
-			}).Member(e => e.TerritoryDescription).HasAttribute(new ColumnAttribute("TerritoryDescription")
-			{
-				CanBeNull = false
-			}).Member(e => e.RegionId).HasAttribute(new ColumnAttribute("RegionID")).Member(e => e.EmployeeTerritories).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Territory.TerritoryId),
-				OtherKey = nameof(EmployeeTerritory.TerritoryId)
-			}).Member(e => e.Region).HasAttribute(new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(Territory.RegionId),
-				OtherKey = nameof(Region.RegionId)
-			});
-			fluentBuilder.Entity<AlphabeticalListOfProduct>().HasAttribute(new TableAttribute("Alphabetical list of products")
-			{
-				IsView = true
-			}).Member(e => e.ProductId).HasAttribute(new ColumnAttribute("ProductID")).Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.SupplierId).HasAttribute(new ColumnAttribute("SupplierID")).Member(e => e.CategoryId).HasAttribute(new ColumnAttribute("CategoryID")).Member(e => e.QuantityPerUnit).HasAttribute(new ColumnAttribute("QuantityPerUnit")).Member(e => e.UnitPrice).HasAttribute(new ColumnAttribute("UnitPrice")).Member(e => e.UnitsInStock).HasAttribute(new ColumnAttribute("UnitsInStock")).Member(e => e.UnitsOnOrder).HasAttribute(new ColumnAttribute("UnitsOnOrder")).Member(e => e.ReorderLevel).HasAttribute(new ColumnAttribute("ReorderLevel")).Member(e => e.Discontinued).HasAttribute(new ColumnAttribute("Discontinued")).Member(e => e.CategoryName).HasAttribute(new ColumnAttribute("CategoryName")
-			{
-				CanBeNull = false
-			});
-			fluentBuilder.Entity<CategorySalesFor1997>().HasAttribute(new TableAttribute("Category Sales for 1997")
-			{
-				IsView = true
-			}).Member(e => e.CategoryName).HasAttribute(new ColumnAttribute("CategoryName")
-			{
-				CanBeNull = false
-			}).Member(e => e.CategorySales).HasAttribute(new ColumnAttribute("CategorySales"));
-			fluentBuilder.Entity<CurrentProductList>().HasAttribute(new TableAttribute("Current Product List")
-			{
-				IsView = true
-			}).Member(e => e.ProductId).HasAttribute(new ColumnAttribute("ProductID")
-			{
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			});
-			fluentBuilder.Entity<CustomerAndSuppliersByCity>().HasAttribute(new TableAttribute("Customer and Suppliers by City")
-			{
-				IsView = true
-			}).Member(e => e.City).HasAttribute(new ColumnAttribute("City")).Member(e => e.CompanyName).HasAttribute(new ColumnAttribute("CompanyName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ContactName).HasAttribute(new ColumnAttribute("ContactName")).Member(e => e.Relationship).HasAttribute(new ColumnAttribute("Relationship")
-			{
-				CanBeNull = false
-			});
-			fluentBuilder.Entity<Invoice>().HasAttribute(new TableAttribute("Invoices")
-			{
-				IsView = true
-			}).Member(e => e.ShipName).HasAttribute(new ColumnAttribute("ShipName")).Member(e => e.ShipAddress).HasAttribute(new ColumnAttribute("ShipAddress")).Member(e => e.ShipCity).HasAttribute(new ColumnAttribute("ShipCity")).Member(e => e.ShipRegion).HasAttribute(new ColumnAttribute("ShipRegion")).Member(e => e.ShipPostalCode).HasAttribute(new ColumnAttribute("ShipPostalCode")).Member(e => e.ShipCountry).HasAttribute(new ColumnAttribute("ShipCountry")).Member(e => e.CustomerId).HasAttribute(new ColumnAttribute("CustomerID")).Member(e => e.CustomerName).HasAttribute(new ColumnAttribute("CustomerName")
-			{
-				CanBeNull = false
-			}).Member(e => e.Address).HasAttribute(new ColumnAttribute("Address")).Member(e => e.City).HasAttribute(new ColumnAttribute("City")).Member(e => e.Region).HasAttribute(new ColumnAttribute("Region")).Member(e => e.PostalCode).HasAttribute(new ColumnAttribute("PostalCode")).Member(e => e.Country).HasAttribute(new ColumnAttribute("Country")).Member(e => e.Salesperson).HasAttribute(new ColumnAttribute("Salesperson")
-			{
-				CanBeNull = false
-			}).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.OrderDate).HasAttribute(new ColumnAttribute("OrderDate")).Member(e => e.RequiredDate).HasAttribute(new ColumnAttribute("RequiredDate")).Member(e => e.ShippedDate).HasAttribute(new ColumnAttribute("ShippedDate")).Member(e => e.ShipperName).HasAttribute(new ColumnAttribute("ShipperName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ProductId).HasAttribute(new ColumnAttribute("ProductID")).Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.UnitPrice).HasAttribute(new ColumnAttribute("UnitPrice")).Member(e => e.Quantity).HasAttribute(new ColumnAttribute("Quantity")).Member(e => e.Discount).HasAttribute(new ColumnAttribute("Discount")).Member(e => e.ExtendedPrice).HasAttribute(new ColumnAttribute("ExtendedPrice")).Member(e => e.Freight).HasAttribute(new ColumnAttribute("Freight"));
-			fluentBuilder.Entity<OrderDetailsExtended>().HasAttribute(new TableAttribute("Order Details Extended")
-			{
-				IsView = true
-			}).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.ProductId).HasAttribute(new ColumnAttribute("ProductID")).Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.UnitPrice).HasAttribute(new ColumnAttribute("UnitPrice")).Member(e => e.Quantity).HasAttribute(new ColumnAttribute("Quantity")).Member(e => e.Discount).HasAttribute(new ColumnAttribute("Discount")).Member(e => e.ExtendedPrice).HasAttribute(new ColumnAttribute("ExtendedPrice"));
-			fluentBuilder.Entity<OrderSubtotal>().HasAttribute(new TableAttribute("Order Subtotals")
-			{
-				IsView = true
-			}).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.Subtotal).HasAttribute(new ColumnAttribute("Subtotal"));
-			fluentBuilder.Entity<OrdersQry>().HasAttribute(new TableAttribute("Orders Qry")
-			{
-				IsView = true
-			}).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.CustomerId).HasAttribute(new ColumnAttribute("CustomerID")).Member(e => e.EmployeeId).HasAttribute(new ColumnAttribute("EmployeeID")).Member(e => e.OrderDate).HasAttribute(new ColumnAttribute("OrderDate")).Member(e => e.RequiredDate).HasAttribute(new ColumnAttribute("RequiredDate")).Member(e => e.ShippedDate).HasAttribute(new ColumnAttribute("ShippedDate")).Member(e => e.ShipVia).HasAttribute(new ColumnAttribute("ShipVia")).Member(e => e.Freight).HasAttribute(new ColumnAttribute("Freight")).Member(e => e.ShipName).HasAttribute(new ColumnAttribute("ShipName")).Member(e => e.ShipAddress).HasAttribute(new ColumnAttribute("ShipAddress")).Member(e => e.ShipCity).HasAttribute(new ColumnAttribute("ShipCity")).Member(e => e.ShipRegion).HasAttribute(new ColumnAttribute("ShipRegion")).Member(e => e.ShipPostalCode).HasAttribute(new ColumnAttribute("ShipPostalCode")).Member(e => e.ShipCountry).HasAttribute(new ColumnAttribute("ShipCountry")).Member(e => e.CompanyName).HasAttribute(new ColumnAttribute("CompanyName")
-			{
-				CanBeNull = false
-			}).Member(e => e.Address).HasAttribute(new ColumnAttribute("Address")).Member(e => e.City).HasAttribute(new ColumnAttribute("City")).Member(e => e.Region).HasAttribute(new ColumnAttribute("Region")).Member(e => e.PostalCode).HasAttribute(new ColumnAttribute("PostalCode")).Member(e => e.Country).HasAttribute(new ColumnAttribute("Country"));
-			fluentBuilder.Entity<ProductSalesFor1997>().HasAttribute(new TableAttribute("Product Sales for 1997")
-			{
-				IsView = true
-			}).Member(e => e.CategoryName).HasAttribute(new ColumnAttribute("CategoryName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ProductSales).HasAttribute(new ColumnAttribute("ProductSales"));
-			fluentBuilder.Entity<ProductsAboveAveragePrice>().HasAttribute(new TableAttribute("Products Above Average Price")
-			{
-				IsView = true
-			}).Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.UnitPrice).HasAttribute(new ColumnAttribute("UnitPrice"));
-			fluentBuilder.Entity<ProductsByCategory>().HasAttribute(new TableAttribute("Products by Category")
-			{
-				IsView = true
-			}).Member(e => e.CategoryName).HasAttribute(new ColumnAttribute("CategoryName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.QuantityPerUnit).HasAttribute(new ColumnAttribute("QuantityPerUnit")).Member(e => e.UnitsInStock).HasAttribute(new ColumnAttribute("UnitsInStock")).Member(e => e.Discontinued).HasAttribute(new ColumnAttribute("Discontinued"));
-			fluentBuilder.Entity<QuarterlyOrder>().HasAttribute(new TableAttribute("Quarterly Orders")
-			{
-				IsView = true
-			}).Member(e => e.CustomerId).HasAttribute(new ColumnAttribute("CustomerID")).Member(e => e.CompanyName).HasAttribute(new ColumnAttribute("CompanyName")).Member(e => e.City).HasAttribute(new ColumnAttribute("City")).Member(e => e.Country).HasAttribute(new ColumnAttribute("Country"));
-			fluentBuilder.Entity<SalesTotalsByAmount>().HasAttribute(new TableAttribute("Sales Totals by Amount")
-			{
-				IsView = true
-			}).Member(e => e.SaleAmount).HasAttribute(new ColumnAttribute("SaleAmount")).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.CompanyName).HasAttribute(new ColumnAttribute("CompanyName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ShippedDate).HasAttribute(new ColumnAttribute("ShippedDate"));
-			fluentBuilder.Entity<SalesByCategory>().HasAttribute(new TableAttribute("Sales by Category")
-			{
-				IsView = true
-			}).Member(e => e.CategoryId).HasAttribute(new ColumnAttribute("CategoryID")).Member(e => e.CategoryName).HasAttribute(new ColumnAttribute("CategoryName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ProductSales).HasAttribute(new ColumnAttribute("ProductSales"));
-			fluentBuilder.Entity<SummaryOfSalesByQuarter>().HasAttribute(new TableAttribute("Summary of Sales by Quarter")
-			{
-				IsView = true
-			}).Member(e => e.ShippedDate).HasAttribute(new ColumnAttribute("ShippedDate")).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.Subtotal).HasAttribute(new ColumnAttribute("Subtotal"));
-			fluentBuilder.Entity<SummaryOfSalesByYear>().HasAttribute(new TableAttribute("Summary of Sales by Year")
-			{
-				IsView = true
-			}).Member(e => e.ShippedDate).HasAttribute(new ColumnAttribute("ShippedDate")).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.Subtotal).HasAttribute(new ColumnAttribute("Subtotal"));
-			fluentBuilder.Entity<ExtensionMethods.CustOrderHistResult>().Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.Total).HasAttribute(new ColumnAttribute("Total"));
-			fluentBuilder.Entity<ExtensionMethods.CustOrdersDetailResult>().Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.UnitPrice).HasAttribute(new ColumnAttribute("UnitPrice")).Member(e => e.Quantity).HasAttribute(new ColumnAttribute("Quantity")).Member(e => e.Discount).HasAttribute(new ColumnAttribute("Discount")).Member(e => e.ExtendedPrice).HasAttribute(new ColumnAttribute("ExtendedPrice"));
-			fluentBuilder.Entity<ExtensionMethods.CustOrdersOrdersResult>().Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.OrderDate).HasAttribute(new ColumnAttribute("OrderDate")).Member(e => e.RequiredDate).HasAttribute(new ColumnAttribute("RequiredDate")).Member(e => e.ShippedDate).HasAttribute(new ColumnAttribute("ShippedDate"));
-			fluentBuilder.Entity<ExtensionMethods.EmployeeSalesByCountryResult>().Member(e => e.Country).HasAttribute(new ColumnAttribute("Country")).Member(e => e.LastName).HasAttribute(new ColumnAttribute("LastName")
-			{
-				CanBeNull = false
-			}).Member(e => e.FirstName).HasAttribute(new ColumnAttribute("FirstName")
-			{
-				CanBeNull = false
-			}).Member(e => e.ShippedDate).HasAttribute(new ColumnAttribute("ShippedDate")).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.SaleAmount).HasAttribute(new ColumnAttribute("SaleAmount"));
-			fluentBuilder.Entity<ExtensionMethods.SalesByYearResult>().Member(e => e.ShippedDate).HasAttribute(new ColumnAttribute("ShippedDate")).Member(e => e.OrderId).HasAttribute(new ColumnAttribute("OrderID")).Member(e => e.Subtotal).HasAttribute(new ColumnAttribute("Subtotal")).Member(e => e.Year).HasAttribute(new ColumnAttribute("Year"));
-			fluentBuilder.Entity<ExtensionMethods.SalesByCategoryResult>().Member(e => e.ProductName).HasAttribute(new ColumnAttribute("ProductName")
-			{
-				CanBeNull = false
-			}).Member(e => e.TotalPurchase).HasAttribute(new ColumnAttribute("TotalPurchase"));
-			fluentBuilder.Entity<ExtensionMethods.TenMostExpensiveProductsResult>().Member(e => e.TenMostExpensiveProducts).HasAttribute(new ColumnAttribute("TenMostExpensiveProducts")
-			{
-				CanBeNull = false
-			}).Member(e => e.UnitPrice).HasAttribute(new ColumnAttribute("UnitPrice"));
-			fluentBuilder.HasAttribute<CustomerCustomerDemo>(e => ExtensionMethods.FkCustomerCustomerDemo(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(CustomerCustomerDemo.CustomerTypeId),
-				OtherKey = nameof(CustomerDemographic.CustomerTypeId)
-			});
-			fluentBuilder.HasAttribute<CustomerDemographic>(e => ExtensionMethods.CustomerCustomerDemos(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(CustomerDemographic.CustomerTypeId),
-				OtherKey = nameof(CustomerCustomerDemo.CustomerTypeId)
-			});
-			fluentBuilder.HasAttribute<CustomerCustomerDemo>(e => ExtensionMethods.Customers(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(CustomerCustomerDemo.CustomerId),
-				OtherKey = nameof(Customer.CustomerId)
-			});
-			fluentBuilder.HasAttribute<Customer>(e => ExtensionMethods.CustomerCustomerDemos(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(Customer.CustomerId),
-				OtherKey = nameof(CustomerCustomerDemo.CustomerId)
-			});
-			fluentBuilder.HasAttribute<Employee>(e => ExtensionMethods.Employees(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Employee>(e => ExtensionMethods.Employees(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Employee.ReportsTo),
 				OtherKey = nameof(Employee.EmployeeId)
 			});
-			fluentBuilder.HasAttribute<Employee>(e => ExtensionMethods.Employees1(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Employee>(e => ExtensionMethods.Employees1(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Employee.EmployeeId),
 				OtherKey = nameof(Employee.ReportsTo)
 			});
-			fluentBuilder.HasAttribute<EmployeeTerritory>(e => ExtensionMethods.Employees(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<EmployeeTerritory>(e => ExtensionMethods.Employees(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(EmployeeTerritory.EmployeeId),
 				OtherKey = nameof(Employee.EmployeeId)
 			});
-			fluentBuilder.HasAttribute<Employee>(e => ExtensionMethods.EmployeeTerritories(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Employee>(e => ExtensionMethods.EmployeeTerritories(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Employee.EmployeeId),
 				OtherKey = nameof(EmployeeTerritory.EmployeeId)
 			});
-			fluentBuilder.HasAttribute<EmployeeTerritory>(e => ExtensionMethods.Territories(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<EmployeeTerritory>(e => ExtensionMethods.Territories(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(EmployeeTerritory.TerritoryId),
 				OtherKey = nameof(Territory.TerritoryId)
 			});
-			fluentBuilder.HasAttribute<Territory>(e => ExtensionMethods.EmployeeTerritories(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Territory>(e => ExtensionMethods.EmployeeTerritories(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Territory.TerritoryId),
 				OtherKey = nameof(EmployeeTerritory.TerritoryId)
 			});
-			fluentBuilder.HasAttribute<OrderDetail>(e => ExtensionMethods.OrderDetailsOrders(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<OrderDetail>(e => ExtensionMethods.OrderDetailsOrders(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(OrderDetail.OrderId),
 				OtherKey = nameof(Order.OrderId)
 			});
-			fluentBuilder.HasAttribute<Order>(e => ExtensionMethods.OrderDetails(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Order>(e => ExtensionMethods.OrderDetails(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Order.OrderId),
 				OtherKey = nameof(OrderDetail.OrderId)
 			});
-			fluentBuilder.HasAttribute<OrderDetail>(e => ExtensionMethods.OrderDetailsProducts(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<OrderDetail>(e => ExtensionMethods.OrderDetailsProducts(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(OrderDetail.ProductId),
 				OtherKey = nameof(Product.ProductId)
 			});
-			fluentBuilder.HasAttribute<Product>(e => ExtensionMethods.OrderDetails1(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Product>(e => ExtensionMethods.OrderDetails1(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Product.ProductId),
 				OtherKey = nameof(OrderDetail.ProductId)
 			});
-			fluentBuilder.HasAttribute<Order>(e => ExtensionMethods.Customer(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Order>(e => ExtensionMethods.Customer(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Order.CustomerId),
 				OtherKey = nameof(Customer.CustomerId)
 			});
-			fluentBuilder.HasAttribute<Customer>(e => ExtensionMethods.Orders(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Customer>(e => ExtensionMethods.Orders(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Customer.CustomerId),
 				OtherKey = nameof(Order.CustomerId)
 			});
-			fluentBuilder.HasAttribute<Order>(e => ExtensionMethods.Employee(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Order>(e => ExtensionMethods.Employee(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Order.EmployeeId),
 				OtherKey = nameof(Employee.EmployeeId)
 			});
-			fluentBuilder.HasAttribute<Employee>(e => ExtensionMethods.Orders(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Employee>(e => ExtensionMethods.Orders(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Employee.EmployeeId),
 				OtherKey = nameof(Order.EmployeeId)
 			});
-			fluentBuilder.HasAttribute<Order>(e => ExtensionMethods.Shippers(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Order>(e => ExtensionMethods.Shippers(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Order.ShipVia),
 				OtherKey = nameof(Shipper.ShipperId)
 			});
-			fluentBuilder.HasAttribute<Shipper>(e => ExtensionMethods.Orders(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Shipper>(e => ExtensionMethods.Orders(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Shipper.ShipperId),
 				OtherKey = nameof(Order.ShipVia)
 			});
-			fluentBuilder.HasAttribute<Product>(e => ExtensionMethods.Category(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Product>(e => ExtensionMethods.Category(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Product.CategoryId),
 				OtherKey = nameof(Category.CategoryId)
 			});
-			fluentBuilder.HasAttribute<Category>(e => ExtensionMethods.Products(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Category>(e => ExtensionMethods.Products(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Category.CategoryId),
 				OtherKey = nameof(Product.CategoryId)
 			});
-			fluentBuilder.HasAttribute<Product>(e => ExtensionMethods.Supplier(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Product>(e => ExtensionMethods.Supplier(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Product.SupplierId),
 				OtherKey = nameof(Supplier.SupplierId)
 			});
-			fluentBuilder.HasAttribute<Supplier>(e => ExtensionMethods.Products(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Supplier>(e => ExtensionMethods.Products(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Supplier.SupplierId),
 				OtherKey = nameof(Product.SupplierId)
 			});
-			fluentBuilder.HasAttribute<Territory>(e => ExtensionMethods.Region(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Territory>(e => ExtensionMethods.Region(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(Territory.RegionId),
 				OtherKey = nameof(Region.RegionId)
 			});
-			fluentBuilder.HasAttribute<Region>(e => ExtensionMethods.Territories(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Region>(e => ExtensionMethods.Territories(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Region.RegionId),
 				OtherKey = nameof(Territory.RegionId)
 			});
 
-			;
-			fluentBuilder.Build();
+			builder.Build();
 		}
 		public static MappingSchema ContextSchema { get; } = new MappingSchema();
 

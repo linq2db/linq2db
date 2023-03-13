@@ -146,9 +146,9 @@ namespace LinqToDB.CodeModel
 		{
 			// hardcoded sequence with newline spacers
 			VisitList(file.Header);
-			Visit(CodeEmptyLine.Instance);
+			WriteLine();
 			VisitList(file.Imports);
-			Visit(CodeEmptyLine.Instance);
+			WriteLine();
 
 			_currentImports = file.Imports;
 			VisitList(file);
@@ -470,13 +470,16 @@ namespace LinqToDB.CodeModel
 		private            void WriteCall(CodeCallBase       call)
 		{
 			// TODO: check if we can ommit "this" or it will result in name conflicts
-			if (call.Callee != null && call.Callee.ElementType != CodeElementType.This)
+			var hasCalle = call.Callee != null && call.Callee.ElementType != CodeElementType.This;
+			if (hasCalle)
 			{
 				if (call.Extension)
 					// TODO: here we could need () around parameter value if it is complex expression
 					Visit(call.Parameters[0]);
 				else
-					Visit(call.Callee);
+					Visit(call.Callee!);
+
+				WriteTrivia(call.WrapTrivia);
 				Write('.');
 			}
 
@@ -492,6 +495,9 @@ namespace LinqToDB.CodeModel
 			Write('(');
 			WriteDelimitedList(call.Extension ? call.Parameters.Skip(1) : call.Parameters, ", ", false);
 			Write(')');
+
+			if (hasCalle)
+				UndoTrivia(call.WrapTrivia);
 		}
 
 		protected override void Visit(CodeReturn statement)
@@ -1205,8 +1211,10 @@ namespace LinqToDB.CodeModel
 				OpenBlock(false);
 				foreach (var stmt in statements.Items)
 				{
+					WriteTrivia(stmt.Before);
 					Visit(stmt);
 					WriteLine(';');
+					WriteTrivia(stmt.After);
 				}
 				CloseBlock(false, true);
 			}

@@ -244,7 +244,7 @@ namespace LinqToDB.CodeModel
 			var exception = (ICodeExpression)Visit(statement.Exception);
 
 			if (exception != statement.Exception)
-				return new CodeThrowStatement(exception);
+				return new CodeThrowStatement(exception, ((ICodeStatement)statement).Before, ((ICodeStatement)statement).After);
 
 			return statement;
 		}
@@ -318,7 +318,7 @@ namespace LinqToDB.CodeModel
 			var rvalue = (ICodeExpression)Visit(statement.RValue);
 
 			if (rvalue != statement.RValue)
-				return new CodeAssignmentStatement(statement.LValue, rvalue);
+				return new CodeAssignmentStatement(statement.LValue, rvalue, ((ICodeStatement)statement).Before, ((ICodeStatement)statement).After);
 
 			return statement;
 		}
@@ -338,7 +338,7 @@ namespace LinqToDB.CodeModel
 			var task = (ICodeExpression)Visit(statement.Task);
 
 			if (task != statement.Task)
-				return new CodeAwaitStatement(task);
+				return new CodeAwaitStatement(task, ((ICodeStatement)statement).Before, ((ICodeStatement)statement).After);
 
 			return statement;
 		}
@@ -576,7 +576,7 @@ namespace LinqToDB.CodeModel
 			var parameters = VisitReadOnlyList(call.Parameters);
 
 			if (parameters != call.Parameters)
-				return new CodeCallStatement(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters);
+				return new CodeCallStatement(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters, call.WrapTrivia, ((ICodeStatement)call).Before, ((ICodeStatement)call).After);
 
 			return call;
 		}
@@ -586,7 +586,7 @@ namespace LinqToDB.CodeModel
 			var parameters = VisitReadOnlyList(call.Parameters);
 
 			if (parameters != call.Parameters)
-				return new CodeCallExpression(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters, call.ReturnType);
+				return new CodeCallExpression(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters, call.WrapTrivia, call.ReturnType);
 
 			return call;
 		}
@@ -596,7 +596,7 @@ namespace LinqToDB.CodeModel
 			var expression = statement.Expression != null ? (ICodeExpression)Visit(statement.Expression) : null;
 
 			if (expression != statement.Expression)
-				return new CodeReturn(expression);
+				return new CodeReturn(expression, ((ICodeStatement)statement).Before, ((ICodeStatement)statement).After);
 
 			return statement;
 		}

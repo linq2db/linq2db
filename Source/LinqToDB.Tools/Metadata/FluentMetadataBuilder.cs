@@ -17,6 +17,8 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	internal sealed class FluentMetadataBuilder : IMetadataBuilder
 	{
+		private const string BUILDER_VAR_NAME = "builder";
+
 		private readonly CodeVariable                                                                                                  _builderVar;
 		private readonly List<ICodeStatement>                                                                                          _builderCalls = new();
 		// [T, (Attr, [Member, Attr])]
@@ -24,7 +26,7 @@ namespace LinqToDB.Metadata
 
 		public FluentMetadataBuilder(CodeBuilder builder)
 		{
-			_builderVar = builder.Variable(builder.Name("fluentBuilder"), WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder, true);
+			_builderVar = builder.Variable(builder.Name(BUILDER_VAR_NAME), WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder, true);
 		}
 
 		void IMetadataBuilder.BuildEntityMetadata(IDataModelGenerationContext context, EntityModel entity)
@@ -449,8 +451,7 @@ namespace LinqToDB.Metadata
 			// generate fluent builder setup in context static constructor
 
 			// var fluentBuilder = new FluentMappingBuilder(ContextSchema);
-			context.StaticInitializer.Append(context.AST.Assign(_builderVar, context.AST.New(WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder, context.ContextMappingSchema)));
-			context.StaticInitializer.Append(context.AST.NewLine);
+			context.StaticInitializer.Append(context.AST.Assign(_builderVar, context.AST.New(WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder, context.ContextMappingSchema)).NewLine());
 
 			// add entity attributes (with properties)
 			foreach (var kvp in _entities)
@@ -468,7 +469,7 @@ namespace LinqToDB.Metadata
 					WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
 					entityBuilderType,
 					new IType[] { entityType },
-					false);
+					false).Wrap(1);
 
 				// builder.Entity<T>().HasAttribute(new TableAttribute("table") { ... })
 				if (isStatement)
@@ -478,7 +479,9 @@ namespace LinqToDB.Metadata
 						context.AST.Call(
 							expression,
 							WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute,
-							kvp.Value.tableAttribute!));
+							kvp.Value.tableAttribute!)
+						.Wrap(2)
+						.NewLine());
 
 					continue;
 				}
@@ -490,7 +493,7 @@ namespace LinqToDB.Metadata
 						expression,
 						WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute,
 						entityBuilderType,
-						kvp.Value.tableAttribute);
+						kvp.Value.tableAttribute).Wrap(2);
 				}
 
 				var cnt = 0;
@@ -512,29 +515,29 @@ namespace LinqToDB.Metadata
 						expression,
 						WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_Member,
 						entityBuilderType,
-						lambda.Method);
+						lambda.Method).Wrap(2);
 
 					if (attribute == null)
 					{
 						// .IsNotColumn()
 						if (isLast)
 						{
-							context.StaticInitializer.Append(context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.PropertyMappingBuilder_IsNotColumn));
+							context.StaticInitializer.Append(context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.PropertyMappingBuilder_IsNotColumn).Wrap(3).NewLine());
 							break;
 						}
 						else
-							expression = context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.PropertyMappingBuilder_IsNotColumn, entityBuilderType);
+							expression = context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.PropertyMappingBuilder_IsNotColumn, entityBuilderType).Wrap(3);
 					}
 					else
 					{
 						// .HasAttribute()
 						if (isLast)
 						{
-							context.StaticInitializer.Append(context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, attribute));
+							context.StaticInitializer.Append(context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, attribute).Wrap(3).NewLine());
 							break;
 						}
 						else
-							expression = context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, entityBuilderType, attribute);
+							expression = context.AST.Call(expression, WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute, entityBuilderType, attribute).Wrap(3);
 					}
 				}
 			}
@@ -543,11 +546,7 @@ namespace LinqToDB.Metadata
 			if (_builderCalls.Count > 0)
 			{
 				foreach (var line in _builderCalls)
-				{
-					context.StaticInitializer.Append(line);
-				}
-
-				context.StaticInitializer.Append(context.AST.NewLine);
+					context.StaticInitializer.Append(line.NewLine());
 			}
 
 			// flientBuilder.Build();

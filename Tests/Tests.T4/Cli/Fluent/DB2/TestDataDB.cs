@@ -24,191 +24,508 @@ namespace Cli.Fluent.DB2
 	{
 		static TestDataDB()
 		{
-			var fluentBuilder = new FluentMappingBuilder(ContextSchema);
+			var builder = new FluentMappingBuilder(ContextSchema);
 
-			;
-			fluentBuilder.Entity<Alltype>().HasAttribute(new TableAttribute("ALLTYPES")).Member(e => e.Id).HasAttribute(new ColumnAttribute("ID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.Bigintdatatype).HasAttribute(new ColumnAttribute("BIGINTDATATYPE")).Member(e => e.Intdatatype).HasAttribute(new ColumnAttribute("INTDATATYPE")).Member(e => e.Smallintdatatype).HasAttribute(new ColumnAttribute("SMALLINTDATATYPE")).Member(e => e.Decimaldatatype).HasAttribute(new ColumnAttribute("DECIMALDATATYPE")).Member(e => e.Decfloatdatatype).HasAttribute(new ColumnAttribute("DECFLOATDATATYPE")).Member(e => e.Realdatatype).HasAttribute(new ColumnAttribute("REALDATATYPE")).Member(e => e.Doubledatatype).HasAttribute(new ColumnAttribute("DOUBLEDATATYPE")).Member(e => e.Chardatatype).HasAttribute(new ColumnAttribute("CHARDATATYPE")).Member(e => e.Char20Datatype).HasAttribute(new ColumnAttribute("CHAR20DATATYPE")).Member(e => e.Varchardatatype).HasAttribute(new ColumnAttribute("VARCHARDATATYPE")).Member(e => e.Clobdatatype).HasAttribute(new ColumnAttribute("CLOBDATATYPE")).Member(e => e.Dbclobdatatype).HasAttribute(new ColumnAttribute("DBCLOBDATATYPE")).Member(e => e.Binarydatatype).HasAttribute(new ColumnAttribute("BINARYDATATYPE")).Member(e => e.Varbinarydatatype).HasAttribute(new ColumnAttribute("VARBINARYDATATYPE")).Member(e => e.Blobdatatype).HasAttribute(new ColumnAttribute("BLOBDATATYPE")).Member(e => e.Graphicdatatype).HasAttribute(new ColumnAttribute("GRAPHICDATATYPE")).Member(e => e.Datedatatype).HasAttribute(new ColumnAttribute("DATEDATATYPE")).Member(e => e.Timedatatype).HasAttribute(new ColumnAttribute("TIMEDATATYPE")).Member(e => e.Timestampdatatype).HasAttribute(new ColumnAttribute("TIMESTAMPDATATYPE")).Member(e => e.Xmldatatype).HasAttribute(new ColumnAttribute("XMLDATATYPE"));
-			fluentBuilder.Entity<Child>().HasAttribute(new TableAttribute("Child")).Member(e => e.ParentId).HasAttribute(new ColumnAttribute("ParentID")).Member(e => e.ChildId).HasAttribute(new ColumnAttribute("ChildID"));
-			fluentBuilder.Entity<CollatedTable>().HasAttribute(new TableAttribute("CollatedTable")).Member(e => e.Id).HasAttribute(new ColumnAttribute("Id")).Member(e => e.CaseSensitive).HasAttribute(new ColumnAttribute("CaseSensitive")
-			{
-				CanBeNull = false
-			}).Member(e => e.CaseInsensitive).HasAttribute(new ColumnAttribute("CaseInsensitive")
-			{
-				CanBeNull = false
-			});
-			fluentBuilder.Entity<Doctor>().HasAttribute(new TableAttribute("Doctor")).Member(e => e.PersonId).HasAttribute(new ColumnAttribute("PersonID")
-			{
-				IsPrimaryKey = true
-			}).Member(e => e.Taxonomy).HasAttribute(new ColumnAttribute("Taxonomy")
-			{
-				CanBeNull = false
-			}).Member(e => e.Person).HasAttribute(new AssociationAttribute()
+			builder
+				.Entity<Alltype>()
+					.HasAttribute(new TableAttribute("ALLTYPES"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.Bigintdatatype)
+						.HasAttribute(new ColumnAttribute("BIGINTDATATYPE"))
+					.Member(e => e.Intdatatype)
+						.HasAttribute(new ColumnAttribute("INTDATATYPE"))
+					.Member(e => e.Smallintdatatype)
+						.HasAttribute(new ColumnAttribute("SMALLINTDATATYPE"))
+					.Member(e => e.Decimaldatatype)
+						.HasAttribute(new ColumnAttribute("DECIMALDATATYPE"))
+					.Member(e => e.Decfloatdatatype)
+						.HasAttribute(new ColumnAttribute("DECFLOATDATATYPE"))
+					.Member(e => e.Realdatatype)
+						.HasAttribute(new ColumnAttribute("REALDATATYPE"))
+					.Member(e => e.Doubledatatype)
+						.HasAttribute(new ColumnAttribute("DOUBLEDATATYPE"))
+					.Member(e => e.Chardatatype)
+						.HasAttribute(new ColumnAttribute("CHARDATATYPE"))
+					.Member(e => e.Char20Datatype)
+						.HasAttribute(new ColumnAttribute("CHAR20DATATYPE"))
+					.Member(e => e.Varchardatatype)
+						.HasAttribute(new ColumnAttribute("VARCHARDATATYPE"))
+					.Member(e => e.Clobdatatype)
+						.HasAttribute(new ColumnAttribute("CLOBDATATYPE"))
+					.Member(e => e.Dbclobdatatype)
+						.HasAttribute(new ColumnAttribute("DBCLOBDATATYPE"))
+					.Member(e => e.Binarydatatype)
+						.HasAttribute(new ColumnAttribute("BINARYDATATYPE"))
+					.Member(e => e.Varbinarydatatype)
+						.HasAttribute(new ColumnAttribute("VARBINARYDATATYPE"))
+					.Member(e => e.Blobdatatype)
+						.HasAttribute(new ColumnAttribute("BLOBDATATYPE"))
+					.Member(e => e.Graphicdatatype)
+						.HasAttribute(new ColumnAttribute("GRAPHICDATATYPE"))
+					.Member(e => e.Datedatatype)
+						.HasAttribute(new ColumnAttribute("DATEDATATYPE"))
+					.Member(e => e.Timedatatype)
+						.HasAttribute(new ColumnAttribute("TIMEDATATYPE"))
+					.Member(e => e.Timestampdatatype)
+						.HasAttribute(new ColumnAttribute("TIMESTAMPDATATYPE"))
+					.Member(e => e.Xmldatatype)
+						.HasAttribute(new ColumnAttribute("XMLDATATYPE"));
+
+			builder
+				.Entity<Child>()
+					.HasAttribute(new TableAttribute("Child"))
+					.Member(e => e.ParentId)
+						.HasAttribute(new ColumnAttribute("ParentID"))
+					.Member(e => e.ChildId)
+						.HasAttribute(new ColumnAttribute("ChildID"));
+
+			builder
+				.Entity<CollatedTable>()
+					.HasAttribute(new TableAttribute("CollatedTable"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("Id"))
+					.Member(e => e.CaseSensitive)
+						.HasAttribute(new ColumnAttribute("CaseSensitive")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.CaseInsensitive)
+						.HasAttribute(new ColumnAttribute("CaseInsensitive")
+						{
+							CanBeNull = false
+						});
+
+			builder
+				.Entity<Doctor>()
+					.HasAttribute(new TableAttribute("Doctor"))
+					.Member(e => e.PersonId)
+						.HasAttribute(new ColumnAttribute("PersonID")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Taxonomy)
+						.HasAttribute(new ColumnAttribute("Taxonomy")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Person)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(Doctor.PersonId),
+							OtherKey = nameof(Person.PersonId)
+						});
+
+			builder
+				.Entity<GrandChild>()
+					.HasAttribute(new TableAttribute("GrandChild"))
+					.Member(e => e.ParentId)
+						.HasAttribute(new ColumnAttribute("ParentID"))
+					.Member(e => e.ChildId)
+						.HasAttribute(new ColumnAttribute("ChildID"))
+					.Member(e => e.GrandChildId)
+						.HasAttribute(new ColumnAttribute("GrandChildID"));
+
+			builder
+				.Entity<InheritanceChild>()
+					.HasAttribute(new TableAttribute("InheritanceChild"))
+					.Member(e => e.InheritanceChildId)
+						.HasAttribute(new ColumnAttribute("InheritanceChildId")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.InheritanceParentId)
+						.HasAttribute(new ColumnAttribute("InheritanceParentId"))
+					.Member(e => e.TypeDiscriminator)
+						.HasAttribute(new ColumnAttribute("TypeDiscriminator"))
+					.Member(e => e.Name)
+						.HasAttribute(new ColumnAttribute("Name"));
+
+			builder
+				.Entity<InheritanceParent>()
+					.HasAttribute(new TableAttribute("InheritanceParent"))
+					.Member(e => e.InheritanceParentId)
+						.HasAttribute(new ColumnAttribute("InheritanceParentId")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.TypeDiscriminator)
+						.HasAttribute(new ColumnAttribute("TypeDiscriminator"))
+					.Member(e => e.Name)
+						.HasAttribute(new ColumnAttribute("Name"));
+
+			builder
+				.Entity<KeepIdentityTest>()
+					.HasAttribute(new TableAttribute("KeepIdentityTest"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.Value)
+						.HasAttribute(new ColumnAttribute("Value"));
+
+			builder
+				.Entity<LinqDataType>()
+					.HasAttribute(new TableAttribute("LinqDataTypes"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID"))
+					.Member(e => e.MoneyValue)
+						.HasAttribute(new ColumnAttribute("MoneyValue"))
+					.Member(e => e.DateTimeValue)
+						.HasAttribute(new ColumnAttribute("DateTimeValue"))
+					.Member(e => e.DateTimeValue2)
+						.HasAttribute(new ColumnAttribute("DateTimeValue2"))
+					.Member(e => e.BoolValue)
+						.HasAttribute(new ColumnAttribute("BoolValue"))
+					.Member(e => e.GuidValue)
+						.HasAttribute(new ColumnAttribute("GuidValue"))
+					.Member(e => e.BinaryValue)
+						.HasAttribute(new ColumnAttribute("BinaryValue"))
+					.Member(e => e.SmallIntValue)
+						.HasAttribute(new ColumnAttribute("SmallIntValue"))
+					.Member(e => e.IntValue)
+						.HasAttribute(new ColumnAttribute("IntValue"))
+					.Member(e => e.BigIntValue)
+						.HasAttribute(new ColumnAttribute("BigIntValue"))
+					.Member(e => e.StringValue)
+						.HasAttribute(new ColumnAttribute("StringValue"));
+
+			builder
+				.Entity<Mastertable>()
+					.HasAttribute(new TableAttribute("MASTERTABLE"))
+					.Member(e => e.Id1)
+						.HasAttribute(new ColumnAttribute("ID1")
+						{
+							IsPrimaryKey = true,
+							PrimaryKeyOrder = 0
+						})
+					.Member(e => e.Id2)
+						.HasAttribute(new ColumnAttribute("ID2")
+						{
+							IsPrimaryKey = true,
+							PrimaryKeyOrder = 1
+						})
+					.Member(e => e.Slavetables)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Mastertable.Id1) + "," + nameof(Mastertable.Id2),
+							OtherKey = nameof(Slavetable.Id222222222222222222222222) + "," + nameof(Slavetable.Id1)
+						});
+
+			builder
+				.Entity<Parent>()
+					.HasAttribute(new TableAttribute("Parent"))
+					.Member(e => e.ParentId)
+						.HasAttribute(new ColumnAttribute("ParentID"))
+					.Member(e => e.Value1)
+						.HasAttribute(new ColumnAttribute("Value1"));
+
+			builder
+				.Entity<Patient>()
+					.HasAttribute(new TableAttribute("Patient"))
+					.Member(e => e.PersonId)
+						.HasAttribute(new ColumnAttribute("PersonID")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Diagnosis)
+						.HasAttribute(new ColumnAttribute("Diagnosis")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.Person)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(Patient.PersonId),
+							OtherKey = nameof(Person.PersonId)
+						});
+
+			builder
+				.Entity<Person>()
+					.HasAttribute(new TableAttribute("Person"))
+					.Member(e => e.PersonId)
+						.HasAttribute(new ColumnAttribute("PersonID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.FirstName)
+						.HasAttribute(new ColumnAttribute("FirstName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.LastName)
+						.HasAttribute(new ColumnAttribute("LastName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.MiddleName)
+						.HasAttribute(new ColumnAttribute("MiddleName"))
+					.Member(e => e.Gender)
+						.HasAttribute(new ColumnAttribute("Gender"))
+					.Member(e => e.Doctor)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Person.PersonId),
+							OtherKey = nameof(Doctor.PersonId)
+						})
+					.Member(e => e.Patient)
+						.HasAttribute(new AssociationAttribute()
+						{
+							ThisKey = nameof(Person.PersonId),
+							OtherKey = nameof(Patient.PersonId)
+						});
+
+			builder
+				.Entity<Slavetable>()
+					.HasAttribute(new TableAttribute("SLAVETABLE"))
+					.Member(e => e.Id1)
+						.HasAttribute(new ColumnAttribute("ID1"))
+					.Member(e => e.Id222222222222222222222222)
+						.HasAttribute(new ColumnAttribute("ID 2222222222222222222222  22"))
+					.Member(e => e.Id2222222222222222)
+						.HasAttribute(new ColumnAttribute("ID 2222222222222222"))
+					.Member(e => e.Mastertable)
+						.HasAttribute(new AssociationAttribute()
+						{
+							CanBeNull = false,
+							ThisKey = nameof(Slavetable.Id222222222222222222222222) + "," + nameof(Slavetable.Id1),
+							OtherKey = nameof(Mastertable.Id1) + "," + nameof(Mastertable.Id2)
+						});
+
+			builder
+				.Entity<TestIdentity>()
+					.HasAttribute(new TableAttribute("TestIdentity"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true,
+							IsIdentity = true,
+							SkipOnInsert = true,
+							SkipOnUpdate = true
+						});
+
+			builder
+				.Entity<TestMerge1>()
+					.HasAttribute(new TableAttribute("TestMerge1"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("Id")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Field1)
+						.HasAttribute(new ColumnAttribute("Field1"))
+					.Member(e => e.Field2)
+						.HasAttribute(new ColumnAttribute("Field2"))
+					.Member(e => e.Field3)
+						.HasAttribute(new ColumnAttribute("Field3"))
+					.Member(e => e.Field4)
+						.HasAttribute(new ColumnAttribute("Field4"))
+					.Member(e => e.Field5)
+						.HasAttribute(new ColumnAttribute("Field5"))
+					.Member(e => e.FieldInt64)
+						.HasAttribute(new ColumnAttribute("FieldInt64"))
+					.Member(e => e.FieldBoolean)
+						.HasAttribute(new ColumnAttribute("FieldBoolean"))
+					.Member(e => e.FieldString)
+						.HasAttribute(new ColumnAttribute("FieldString"))
+					.Member(e => e.FieldNString)
+						.HasAttribute(new ColumnAttribute("FieldNString"))
+					.Member(e => e.FieldChar)
+						.HasAttribute(new ColumnAttribute("FieldChar"))
+					.Member(e => e.FieldNChar)
+						.HasAttribute(new ColumnAttribute("FieldNChar"))
+					.Member(e => e.FieldFloat)
+						.HasAttribute(new ColumnAttribute("FieldFloat"))
+					.Member(e => e.FieldDouble)
+						.HasAttribute(new ColumnAttribute("FieldDouble"))
+					.Member(e => e.FieldDateTime)
+						.HasAttribute(new ColumnAttribute("FieldDateTime"))
+					.Member(e => e.FieldBinary)
+						.HasAttribute(new ColumnAttribute("FieldBinary"))
+					.Member(e => e.FieldGuid)
+						.HasAttribute(new ColumnAttribute("FieldGuid"))
+					.Member(e => e.FieldDecimal)
+						.HasAttribute(new ColumnAttribute("FieldDecimal"))
+					.Member(e => e.FieldDate)
+						.HasAttribute(new ColumnAttribute("FieldDate"))
+					.Member(e => e.FieldTime)
+						.HasAttribute(new ColumnAttribute("FieldTime"))
+					.Member(e => e.FieldEnumString)
+						.HasAttribute(new ColumnAttribute("FieldEnumString"))
+					.Member(e => e.FieldEnumNumber)
+						.HasAttribute(new ColumnAttribute("FieldEnumNumber"));
+
+			builder
+				.Entity<TestMerge2>()
+					.HasAttribute(new TableAttribute("TestMerge2"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("Id")
+						{
+							IsPrimaryKey = true
+						})
+					.Member(e => e.Field1)
+						.HasAttribute(new ColumnAttribute("Field1"))
+					.Member(e => e.Field2)
+						.HasAttribute(new ColumnAttribute("Field2"))
+					.Member(e => e.Field3)
+						.HasAttribute(new ColumnAttribute("Field3"))
+					.Member(e => e.Field4)
+						.HasAttribute(new ColumnAttribute("Field4"))
+					.Member(e => e.Field5)
+						.HasAttribute(new ColumnAttribute("Field5"))
+					.Member(e => e.FieldInt64)
+						.HasAttribute(new ColumnAttribute("FieldInt64"))
+					.Member(e => e.FieldBoolean)
+						.HasAttribute(new ColumnAttribute("FieldBoolean"))
+					.Member(e => e.FieldString)
+						.HasAttribute(new ColumnAttribute("FieldString"))
+					.Member(e => e.FieldNString)
+						.HasAttribute(new ColumnAttribute("FieldNString"))
+					.Member(e => e.FieldChar)
+						.HasAttribute(new ColumnAttribute("FieldChar"))
+					.Member(e => e.FieldNChar)
+						.HasAttribute(new ColumnAttribute("FieldNChar"))
+					.Member(e => e.FieldFloat)
+						.HasAttribute(new ColumnAttribute("FieldFloat"))
+					.Member(e => e.FieldDouble)
+						.HasAttribute(new ColumnAttribute("FieldDouble"))
+					.Member(e => e.FieldDateTime)
+						.HasAttribute(new ColumnAttribute("FieldDateTime"))
+					.Member(e => e.FieldBinary)
+						.HasAttribute(new ColumnAttribute("FieldBinary"))
+					.Member(e => e.FieldGuid)
+						.HasAttribute(new ColumnAttribute("FieldGuid"))
+					.Member(e => e.FieldDecimal)
+						.HasAttribute(new ColumnAttribute("FieldDecimal"))
+					.Member(e => e.FieldDate)
+						.HasAttribute(new ColumnAttribute("FieldDate"))
+					.Member(e => e.FieldTime)
+						.HasAttribute(new ColumnAttribute("FieldTime"))
+					.Member(e => e.FieldEnumString)
+						.HasAttribute(new ColumnAttribute("FieldEnumString"))
+					.Member(e => e.FieldEnumNumber)
+						.HasAttribute(new ColumnAttribute("FieldEnumNumber"));
+
+			builder
+				.Entity<Personview>()
+					.HasAttribute(new TableAttribute("PERSONVIEW")
+					{
+						IsView = true
+					})
+					.Member(e => e.PersonId)
+						.HasAttribute(new ColumnAttribute("PersonID"))
+					.Member(e => e.FirstName)
+						.HasAttribute(new ColumnAttribute("FirstName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.LastName)
+						.HasAttribute(new ColumnAttribute("LastName")
+						{
+							CanBeNull = false
+						})
+					.Member(e => e.MiddleName)
+						.HasAttribute(new ColumnAttribute("MiddleName"))
+					.Member(e => e.Gender)
+						.HasAttribute(new ColumnAttribute("Gender"));
+
+			builder
+				.Entity<TestTableFunctionResult>()
+					.Member(e => e.O)
+						.HasAttribute(new ColumnAttribute("O"));
+
+			builder
+				.Entity<TestModule1TestTableFunctionResult>()
+					.Member(e => e.O)
+						.HasAttribute(new ColumnAttribute("O"));
+
+			builder
+				.Entity<TestModule2TestTableFunctionResult>()
+					.Member(e => e.O)
+						.HasAttribute(new ColumnAttribute("O"));
+
+			builder.HasAttribute<Doctor>(e => ExtensionMethods.Person(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(Doctor.PersonId),
 				OtherKey = nameof(Person.PersonId)
 			});
-			fluentBuilder.Entity<GrandChild>().HasAttribute(new TableAttribute("GrandChild")).Member(e => e.ParentId).HasAttribute(new ColumnAttribute("ParentID")).Member(e => e.ChildId).HasAttribute(new ColumnAttribute("ChildID")).Member(e => e.GrandChildId).HasAttribute(new ColumnAttribute("GrandChildID"));
-			fluentBuilder.Entity<InheritanceChild>().HasAttribute(new TableAttribute("InheritanceChild")).Member(e => e.InheritanceChildId).HasAttribute(new ColumnAttribute("InheritanceChildId")
+
+			builder.HasAttribute<Person>(e => ExtensionMethods.Doctor(e, default(IDataContext)!), new AssociationAttribute()
 			{
-				IsPrimaryKey = true
-			}).Member(e => e.InheritanceParentId).HasAttribute(new ColumnAttribute("InheritanceParentId")).Member(e => e.TypeDiscriminator).HasAttribute(new ColumnAttribute("TypeDiscriminator")).Member(e => e.Name).HasAttribute(new ColumnAttribute("Name"));
-			fluentBuilder.Entity<InheritanceParent>().HasAttribute(new TableAttribute("InheritanceParent")).Member(e => e.InheritanceParentId).HasAttribute(new ColumnAttribute("InheritanceParentId")
-			{
-				IsPrimaryKey = true
-			}).Member(e => e.TypeDiscriminator).HasAttribute(new ColumnAttribute("TypeDiscriminator")).Member(e => e.Name).HasAttribute(new ColumnAttribute("Name"));
-			fluentBuilder.Entity<KeepIdentityTest>().HasAttribute(new TableAttribute("KeepIdentityTest")).Member(e => e.Id).HasAttribute(new ColumnAttribute("ID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.Value).HasAttribute(new ColumnAttribute("Value"));
-			fluentBuilder.Entity<LinqDataType>().HasAttribute(new TableAttribute("LinqDataTypes")).Member(e => e.Id).HasAttribute(new ColumnAttribute("ID")).Member(e => e.MoneyValue).HasAttribute(new ColumnAttribute("MoneyValue")).Member(e => e.DateTimeValue).HasAttribute(new ColumnAttribute("DateTimeValue")).Member(e => e.DateTimeValue2).HasAttribute(new ColumnAttribute("DateTimeValue2")).Member(e => e.BoolValue).HasAttribute(new ColumnAttribute("BoolValue")).Member(e => e.GuidValue).HasAttribute(new ColumnAttribute("GuidValue")).Member(e => e.BinaryValue).HasAttribute(new ColumnAttribute("BinaryValue")).Member(e => e.SmallIntValue).HasAttribute(new ColumnAttribute("SmallIntValue")).Member(e => e.IntValue).HasAttribute(new ColumnAttribute("IntValue")).Member(e => e.BigIntValue).HasAttribute(new ColumnAttribute("BigIntValue")).Member(e => e.StringValue).HasAttribute(new ColumnAttribute("StringValue"));
-			fluentBuilder.Entity<Mastertable>().HasAttribute(new TableAttribute("MASTERTABLE")).Member(e => e.Id1).HasAttribute(new ColumnAttribute("ID1")
-			{
-				IsPrimaryKey = true,
-				PrimaryKeyOrder = 0
-			}).Member(e => e.Id2).HasAttribute(new ColumnAttribute("ID2")
-			{
-				IsPrimaryKey = true,
-				PrimaryKeyOrder = 1
-			}).Member(e => e.Slavetables).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Mastertable.Id1) + "," + nameof(Mastertable.Id2),
-				OtherKey = nameof(Slavetable.Id222222222222222222222222) + "," + nameof(Slavetable.Id1)
+				ThisKey = nameof(Person.PersonId),
+				OtherKey = nameof(Doctor.PersonId)
 			});
-			fluentBuilder.Entity<Parent>().HasAttribute(new TableAttribute("Parent")).Member(e => e.ParentId).HasAttribute(new ColumnAttribute("ParentID")).Member(e => e.Value1).HasAttribute(new ColumnAttribute("Value1"));
-			fluentBuilder.Entity<Patient>().HasAttribute(new TableAttribute("Patient")).Member(e => e.PersonId).HasAttribute(new ColumnAttribute("PersonID")
-			{
-				IsPrimaryKey = true
-			}).Member(e => e.Diagnosis).HasAttribute(new ColumnAttribute("Diagnosis")
-			{
-				CanBeNull = false
-			}).Member(e => e.Person).HasAttribute(new AssociationAttribute()
+
+			builder.HasAttribute<Patient>(e => ExtensionMethods.Person(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(Patient.PersonId),
 				OtherKey = nameof(Person.PersonId)
 			});
-			fluentBuilder.Entity<Person>().HasAttribute(new TableAttribute("Person")).Member(e => e.PersonId).HasAttribute(new ColumnAttribute("PersonID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			}).Member(e => e.FirstName).HasAttribute(new ColumnAttribute("FirstName")
-			{
-				CanBeNull = false
-			}).Member(e => e.LastName).HasAttribute(new ColumnAttribute("LastName")
-			{
-				CanBeNull = false
-			}).Member(e => e.MiddleName).HasAttribute(new ColumnAttribute("MiddleName")).Member(e => e.Gender).HasAttribute(new ColumnAttribute("Gender")).Member(e => e.Doctor).HasAttribute(new AssociationAttribute()
-			{
-				ThisKey = nameof(Person.PersonId),
-				OtherKey = nameof(Doctor.PersonId)
-			}).Member(e => e.Patient).HasAttribute(new AssociationAttribute()
+
+			builder.HasAttribute<Person>(e => ExtensionMethods.Patient(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Person.PersonId),
 				OtherKey = nameof(Patient.PersonId)
 			});
-			fluentBuilder.Entity<Slavetable>().HasAttribute(new TableAttribute("SLAVETABLE")).Member(e => e.Id1).HasAttribute(new ColumnAttribute("ID1")).Member(e => e.Id222222222222222222222222).HasAttribute(new ColumnAttribute("ID 2222222222222222222222  22")).Member(e => e.Id2222222222222222).HasAttribute(new ColumnAttribute("ID 2222222222222222")).Member(e => e.Mastertable).HasAttribute(new AssociationAttribute()
+
+			builder.HasAttribute<Slavetable>(e => ExtensionMethods.Mastertable(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				CanBeNull = false,
 				ThisKey = nameof(Slavetable.Id222222222222222222222222) + "," + nameof(Slavetable.Id1),
 				OtherKey = nameof(Mastertable.Id1) + "," + nameof(Mastertable.Id2)
 			});
-			fluentBuilder.Entity<TestIdentity>().HasAttribute(new TableAttribute("TestIdentity")).Member(e => e.Id).HasAttribute(new ColumnAttribute("ID")
-			{
-				IsPrimaryKey = true,
-				IsIdentity = true,
-				SkipOnInsert = true,
-				SkipOnUpdate = true
-			});
-			fluentBuilder.Entity<TestMerge1>().HasAttribute(new TableAttribute("TestMerge1")).Member(e => e.Id).HasAttribute(new ColumnAttribute("Id")
-			{
-				IsPrimaryKey = true
-			}).Member(e => e.Field1).HasAttribute(new ColumnAttribute("Field1")).Member(e => e.Field2).HasAttribute(new ColumnAttribute("Field2")).Member(e => e.Field3).HasAttribute(new ColumnAttribute("Field3")).Member(e => e.Field4).HasAttribute(new ColumnAttribute("Field4")).Member(e => e.Field5).HasAttribute(new ColumnAttribute("Field5")).Member(e => e.FieldInt64).HasAttribute(new ColumnAttribute("FieldInt64")).Member(e => e.FieldBoolean).HasAttribute(new ColumnAttribute("FieldBoolean")).Member(e => e.FieldString).HasAttribute(new ColumnAttribute("FieldString")).Member(e => e.FieldNString).HasAttribute(new ColumnAttribute("FieldNString")).Member(e => e.FieldChar).HasAttribute(new ColumnAttribute("FieldChar")).Member(e => e.FieldNChar).HasAttribute(new ColumnAttribute("FieldNChar")).Member(e => e.FieldFloat).HasAttribute(new ColumnAttribute("FieldFloat")).Member(e => e.FieldDouble).HasAttribute(new ColumnAttribute("FieldDouble")).Member(e => e.FieldDateTime).HasAttribute(new ColumnAttribute("FieldDateTime")).Member(e => e.FieldBinary).HasAttribute(new ColumnAttribute("FieldBinary")).Member(e => e.FieldGuid).HasAttribute(new ColumnAttribute("FieldGuid")).Member(e => e.FieldDecimal).HasAttribute(new ColumnAttribute("FieldDecimal")).Member(e => e.FieldDate).HasAttribute(new ColumnAttribute("FieldDate")).Member(e => e.FieldTime).HasAttribute(new ColumnAttribute("FieldTime")).Member(e => e.FieldEnumString).HasAttribute(new ColumnAttribute("FieldEnumString")).Member(e => e.FieldEnumNumber).HasAttribute(new ColumnAttribute("FieldEnumNumber"));
-			fluentBuilder.Entity<TestMerge2>().HasAttribute(new TableAttribute("TestMerge2")).Member(e => e.Id).HasAttribute(new ColumnAttribute("Id")
-			{
-				IsPrimaryKey = true
-			}).Member(e => e.Field1).HasAttribute(new ColumnAttribute("Field1")).Member(e => e.Field2).HasAttribute(new ColumnAttribute("Field2")).Member(e => e.Field3).HasAttribute(new ColumnAttribute("Field3")).Member(e => e.Field4).HasAttribute(new ColumnAttribute("Field4")).Member(e => e.Field5).HasAttribute(new ColumnAttribute("Field5")).Member(e => e.FieldInt64).HasAttribute(new ColumnAttribute("FieldInt64")).Member(e => e.FieldBoolean).HasAttribute(new ColumnAttribute("FieldBoolean")).Member(e => e.FieldString).HasAttribute(new ColumnAttribute("FieldString")).Member(e => e.FieldNString).HasAttribute(new ColumnAttribute("FieldNString")).Member(e => e.FieldChar).HasAttribute(new ColumnAttribute("FieldChar")).Member(e => e.FieldNChar).HasAttribute(new ColumnAttribute("FieldNChar")).Member(e => e.FieldFloat).HasAttribute(new ColumnAttribute("FieldFloat")).Member(e => e.FieldDouble).HasAttribute(new ColumnAttribute("FieldDouble")).Member(e => e.FieldDateTime).HasAttribute(new ColumnAttribute("FieldDateTime")).Member(e => e.FieldBinary).HasAttribute(new ColumnAttribute("FieldBinary")).Member(e => e.FieldGuid).HasAttribute(new ColumnAttribute("FieldGuid")).Member(e => e.FieldDecimal).HasAttribute(new ColumnAttribute("FieldDecimal")).Member(e => e.FieldDate).HasAttribute(new ColumnAttribute("FieldDate")).Member(e => e.FieldTime).HasAttribute(new ColumnAttribute("FieldTime")).Member(e => e.FieldEnumString).HasAttribute(new ColumnAttribute("FieldEnumString")).Member(e => e.FieldEnumNumber).HasAttribute(new ColumnAttribute("FieldEnumNumber"));
-			fluentBuilder.Entity<Personview>().HasAttribute(new TableAttribute("PERSONVIEW")
-			{
-				IsView = true
-			}).Member(e => e.PersonId).HasAttribute(new ColumnAttribute("PersonID")).Member(e => e.FirstName).HasAttribute(new ColumnAttribute("FirstName")
-			{
-				CanBeNull = false
-			}).Member(e => e.LastName).HasAttribute(new ColumnAttribute("LastName")
-			{
-				CanBeNull = false
-			}).Member(e => e.MiddleName).HasAttribute(new ColumnAttribute("MiddleName")).Member(e => e.Gender).HasAttribute(new ColumnAttribute("Gender"));
-			fluentBuilder.Entity<TestTableFunctionResult>().Member(e => e.O).HasAttribute(new ColumnAttribute("O"));
-			fluentBuilder.Entity<TestModule1TestTableFunctionResult>().Member(e => e.O).HasAttribute(new ColumnAttribute("O"));
-			fluentBuilder.Entity<TestModule2TestTableFunctionResult>().Member(e => e.O).HasAttribute(new ColumnAttribute("O"));
-			fluentBuilder.HasAttribute<Doctor>(e => ExtensionMethods.Person(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(Doctor.PersonId),
-				OtherKey = nameof(Person.PersonId)
-			});
-			fluentBuilder.HasAttribute<Person>(e => ExtensionMethods.Doctor(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(Person.PersonId),
-				OtherKey = nameof(Doctor.PersonId)
-			});
-			fluentBuilder.HasAttribute<Patient>(e => ExtensionMethods.Person(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(Patient.PersonId),
-				OtherKey = nameof(Person.PersonId)
-			});
-			fluentBuilder.HasAttribute<Person>(e => ExtensionMethods.Patient(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				ThisKey = nameof(Person.PersonId),
-				OtherKey = nameof(Patient.PersonId)
-			});
-			fluentBuilder.HasAttribute<Slavetable>(e => ExtensionMethods.Mastertable(e, default(IDataContext)!), new AssociationAttribute()
-			{
-				CanBeNull = false,
-				ThisKey = nameof(Slavetable.Id222222222222222222222222) + "," + nameof(Slavetable.Id1),
-				OtherKey = nameof(Mastertable.Id1) + "," + nameof(Mastertable.Id2)
-			});
-			fluentBuilder.HasAttribute<Mastertable>(e => ExtensionMethods.Slavetables(e, default(IDataContext)!), new AssociationAttribute()
+
+			builder.HasAttribute<Mastertable>(e => ExtensionMethods.Slavetables(e, default(IDataContext)!), new AssociationAttribute()
 			{
 				ThisKey = nameof(Mastertable.Id1) + "," + nameof(Mastertable.Id2),
 				OtherKey = nameof(Slavetable.Id222222222222222222222222) + "," + nameof(Slavetable.Id1)
 			});
-			fluentBuilder.HasAttribute(() => ExtensionMethods.TestFunction(default(int?)), new Sql.FunctionAttribute("TEST_FUNCTION")
+
+			builder.HasAttribute(() => ExtensionMethods.TestFunction(default(int?)), new Sql.FunctionAttribute("TEST_FUNCTION")
 			{
 				ServerSideOnly = true
 			});
-			fluentBuilder.HasAttribute(() => ExtensionMethods.TestModule1TestFunction(default(int?)), new Sql.FunctionAttribute("TEST_MODULE1.TEST_FUNCTION")
+
+			builder.HasAttribute(() => ExtensionMethods.TestModule1TestFunction(default(int?)), new Sql.FunctionAttribute("TEST_MODULE1.TEST_FUNCTION")
 			{
 				ServerSideOnly = true
 			});
-			fluentBuilder.HasAttribute(() => ExtensionMethods.TestModule2TestFunction(default(int?)), new Sql.FunctionAttribute("TEST_MODULE2.TEST_FUNCTION")
+
+			builder.HasAttribute(() => ExtensionMethods.TestModule2TestFunction(default(int?)), new Sql.FunctionAttribute("TEST_MODULE2.TEST_FUNCTION")
 			{
 				ServerSideOnly = true
 			});
-			fluentBuilder.HasAttribute<TestDataDB>(ctx => ctx.TestTableFunction(default(int?)), new Sql.TableFunctionAttribute("TEST_TABLE_FUNCTION"));
-			fluentBuilder.HasAttribute<TestDataDB>(ctx => ctx.TestModule1TestTableFunction(default(int?)), new Sql.TableFunctionAttribute("TEST_TABLE_FUNCTION")
+
+			builder.HasAttribute<TestDataDB>(ctx => ctx.TestTableFunction(default(int?)), new Sql.TableFunctionAttribute("TEST_TABLE_FUNCTION"));
+
+			builder.HasAttribute<TestDataDB>(ctx => ctx.TestModule1TestTableFunction(default(int?)), new Sql.TableFunctionAttribute("TEST_TABLE_FUNCTION")
 			{
 				Package = "TEST_MODULE1"
 			});
-			fluentBuilder.HasAttribute<TestDataDB>(ctx => ctx.TestModule2TestTableFunction(default(int?)), new Sql.TableFunctionAttribute("TEST_TABLE_FUNCTION")
+
+			builder.HasAttribute<TestDataDB>(ctx => ctx.TestModule2TestTableFunction(default(int?)), new Sql.TableFunctionAttribute("TEST_TABLE_FUNCTION")
 			{
 				Package = "TEST_MODULE2"
 			});
 
-			;
-			fluentBuilder.Build();
+			builder.Build();
 		}
 		public static MappingSchema ContextSchema { get; } = new MappingSchema();
 
