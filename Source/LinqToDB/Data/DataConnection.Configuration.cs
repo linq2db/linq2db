@@ -26,6 +26,10 @@ namespace LinqToDB.Data
 			}
 
 			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info;
+
+			public static void EnsureInit()
+			{
+			}
 		}
 
 		static ILinqToDBSettings? _defaultSettings;
@@ -45,6 +49,8 @@ namespace LinqToDB.Data
 			{
 				_defaultSettings    = value;
 				_defaultDataOptions = null;
+
+				Configuration.EnsureInit();
 			}
 		}
 
@@ -115,7 +121,6 @@ namespace LinqToDB.Data
 			{
 				get
 				{
-					
 					var dataProvider = _dataProvider ??= GetDataProvider(
 						new (ConfigurationString: _connectionStringSettings?.Name, ConnectionString: ConnectionString, ProviderName: _connectionStringSettings?.ProviderName),
 						_connectionStringSettings?.IsGlobal ?? false);
