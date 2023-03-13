@@ -18,15 +18,6 @@ namespace Cli.Default.PostgreSQL
 {
 	public partial class TestDataDB : DataConnection
 	{
-		#region Schemas
-		public void InitSchemas()
-		{
-			TestSchema = new TestSchemaSchema.DataContext(this);
-		}
-
-		public TestSchemaSchema.DataContext TestSchema { get; set; } = null!;
-		#endregion
-
 		public TestDataDB()
 		{
 			InitSchemas();
@@ -48,6 +39,15 @@ namespace Cli.Default.PostgreSQL
 		}
 
 		partial void InitDataContext();
+
+		#region Schemas
+		public void InitSchemas()
+		{
+			TestSchema = new TestSchemaSchema.DataContext(this);
+		}
+
+		public TestSchemaSchema.DataContext TestSchema { get; set; } = null!;
+		#endregion
 
 		public ITable<AllType>                  AllTypes                  => this.GetTable<AllType>();
 		public ITable<Child>                    Children                  => this.GetTable<Child>();

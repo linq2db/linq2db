@@ -39,6 +39,8 @@ namespace LinqToDB.DataModel
 		IMetadataBuilder?     IDataModelGenerationContext.MetadataBuilder               => _parentContext.MetadataBuilder;
 
 		ClassBuilder          IDataModelGenerationContext.MainDataContext               => _parentContext.MainDataContext;
+		ConstructorGroup      IDataModelGenerationContext.MainDataContextConstructors   => _parentContext.MainDataContextConstructors;
+		MethodGroup           IDataModelGenerationContext.MainDataContextPartialMethods => _parentContext.MainDataContextPartialMethods;
 		ClassBuilder          IDataModelGenerationContext.CurrentDataContext            => _schemaContext;
 		ICodeExpression       IDataModelGenerationContext.ContextReference              => _contextReference;
 

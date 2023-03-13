@@ -34,6 +34,14 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		ClassBuilder          MainDataContext               { get; }
 		/// <summary>
+		/// Main data context countructors group.
+		/// </summary>
+		ConstructorGroup      MainDataContextConstructors    { get; }
+		/// <summary>
+		/// Main data context partial methods group.
+		/// </summary>
+		MethodGroup          MainDataContextPartialMethods   { get; }
+		/// <summary>
 		/// Current data context class builder.
 		/// For default schema references <see cref="MainDataContext"/>.
 		/// For schema context references schema context class builder.

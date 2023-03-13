@@ -14,7 +14,7 @@ namespace LinqToDB.DataModel
 		/// <param name="initSchemasMethodName">(Optional) additional schemas init method name.</param>
 		private static void BuildDataContextConstructors(IDataModelGenerationContext context, CodeIdentifier? initSchemasMethodName)
 		{
-			var constructors = context.MainDataContext.Constructors();
+			var constructors = context.MainDataContextConstructors;
 
 			var ctors = new List<BlockBuilder>();
 
@@ -28,7 +28,7 @@ namespace LinqToDB.DataModel
 
 			if (context.Model.DataContext.HasDefaultConstructor)
 			{
-				var ctor = constructors.New().SetModifiers(Modifiers.Public);
+				var ctor = context.MainDataContextConstructors.New().SetModifiers(Modifiers.Public);
 
 				// base(new DataOptions().UseMappingSchema(ContextSchema))
 				if (context.HasContextMappingSchema)
@@ -50,7 +50,7 @@ namespace LinqToDB.DataModel
 					context.AST.Name(DataModelConstants.CONTEXT_CONSTRUCTOR_CONFIGURATION_PARAMETER),
 					CodeParameterDirection.In);
 
-				var ctor = constructors.New().Parameter(configurationParam).SetModifiers(Modifiers.Public);
+				var ctor = context.MainDataContextConstructors.New().Parameter(configurationParam).SetModifiers(Modifiers.Public);
 
 				// base(new DataOptions().UseConfiguration(configuration, ContextSchema))
 				if (context.HasContextMappingSchema)
@@ -76,7 +76,7 @@ namespace LinqToDB.DataModel
 					context.AST.Name(DataModelConstants.CONTEXT_CONSTRUCTOR_OPTIONS_PARAMETER),
 					CodeParameterDirection.In);
 
-				var ctor = constructors.New().Parameter(optionsParam).SetModifiers(Modifiers.Public);
+				var ctor = context.MainDataContextConstructors.New().Parameter(optionsParam).SetModifiers(Modifiers.Public);
 
 				// base(options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? ContextSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, ContextSchema)))
 				if (context.HasContextMappingSchema)
@@ -118,7 +118,7 @@ namespace LinqToDB.DataModel
 					CodeParameterDirection.In);
 
 				var optionsRef = context.AST.Member(typedOptionsParam.Reference, WellKnownTypes.LinqToDB.Configuration.DataOptions_Options);
-				var ctor       = constructors.New().Parameter(typedOptionsParam).SetModifiers(Modifiers.Public);
+				var ctor       = context.MainDataContextConstructors.New().Parameter(typedOptionsParam).SetModifiers(Modifiers.Public);
 
 				// base(options.Options.UseMappingSchema(options.Options.ConnectionOptions.MappingSchema == null ? ContextSchema : MappingSchema.CombineSchemas(options.Options.ConnectionOptions.MappingSchema, ContextSchema)))
 				if (context.HasContextMappingSchema)
@@ -154,10 +154,9 @@ namespace LinqToDB.DataModel
 
 			// partial init method, called by all constructors, which could be used by user to add
 			// additional initialization logic
-			var initDataContext = context.MainDataContext
-				.Methods(true)
-					.New(context.AST.Name(DataModelConstants.CONTEXT_INIT_METHOD))
-						.SetModifiers(Modifiers.Partial);
+			var initDataContext = context.MainDataContextPartialMethods
+				.New(context.AST.Name(DataModelConstants.CONTEXT_INIT_METHOD))
+					.SetModifiers(Modifiers.Partial);
 
 			foreach (var body in ctors)
 			{

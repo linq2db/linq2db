@@ -10,22 +10,22 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.All.SqlCe
+namespace Cli.All.PostgreSQL
 {
-	[Table("Issue695Parent")]
-	public class Issue695Parent : IEquatable<Issue695Parent>
+	[Table("same_name2")]
+	public class SameName2 : IEquatable<SameName2>
 	{
-		[Column("ID", DataType = LinqToDB.DataType.Int32, DbType = "int", Length = 0, Precision = 10, Scale = 0, IsPrimaryKey = true)] public SqlInt32 Id { get; set; } // int
+		[Column("id"       , DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0, IsPrimaryKey = true)] public int  Id       { get; set; } // integer
+		[Column("same_name", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0                     )] public int? SameName { get; set; } // integer
 
 		#region IEquatable<T> support
-		private static readonly IEqualityComparer<Issue695Parent> _equalityComparer = ComparerBuilder.GetEqualityComparer<Issue695Parent>(c => c.Id);
+		private static readonly IEqualityComparer<SameName2> _equalityComparer = ComparerBuilder.GetEqualityComparer<SameName2>(c => c.Id);
 
-		public bool Equals(Issue695Parent? other)
+		public bool Equals(SameName2? other)
 		{
 			return _equalityComparer.Equals(this, other!);
 		}
@@ -37,16 +37,16 @@ namespace Cli.All.SqlCe
 
 		public override bool Equals(object? obj)
 		{
-			return Equals(obj as Issue695Parent);
+			return Equals(obj as SameName2);
 		}
 		#endregion
 
 		#region Associations
 		/// <summary>
-		/// FK_Issue695_Parent backreference
+		/// same_name
 		/// </summary>
-		[Association(ThisKey = nameof(Id), OtherKey = nameof(SqlCe.Issue695.Id))]
-		public Issue695? Issue695 { get; set; }
+		[Association(ThisKey = nameof(SameName), OtherKey = nameof(PostgreSQL.SameName.Id))]
+		public SameName? Samename { get; set; }
 		#endregion
 	}
 }

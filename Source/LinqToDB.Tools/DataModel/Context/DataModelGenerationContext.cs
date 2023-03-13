@@ -20,6 +20,9 @@ namespace LinqToDB.DataModel
 		private readonly ISqlBuilder                                                    _sqlBuilder;
 		private readonly DatabaseModel                                                  _model;
 		private readonly ClassBuilder                                                   _dataContextClass;
+		private readonly PropertyGroup                                                  _staticProperties;
+		private readonly ConstructorGroup                                               _constructors;
+		private readonly MethodGroup                                                    _partialMethods;
 		private readonly IMetadataBuilder?                                              _metadataBuilder;
 		private readonly IType                                                          _procedureContextParameterType;
 		private readonly Func<string, string>                                           _parameterNameNormalizer;
@@ -58,6 +61,9 @@ namespace LinqToDB.DataModel
 			_metadataBuilder         = metadataBuilder;
 			_parameterNameNormalizer = parameterNameNormalizer;
 			_dataContextClass        = this.DefineFileClass(_model.DataContext.Class);
+			_staticProperties        = _dataContextClass.Properties(true);
+			_constructors            = _dataContextClass.Constructors();
+			_partialMethods          = _dataContextClass.Methods(true);
 
 			// TODO: linq2db refactoring
 			// check wether custom data context is inherited from DataConnection
@@ -74,6 +80,8 @@ namespace LinqToDB.DataModel
 		IMetadataBuilder?     IDataModelGenerationContext.MetadataBuilder               => _metadataBuilder;
 
 		ClassBuilder          IDataModelGenerationContext.MainDataContext               => _dataContextClass;
+		ConstructorGroup      IDataModelGenerationContext.MainDataContextConstructors   => _constructors;
+		MethodGroup           IDataModelGenerationContext.MainDataContextPartialMethods => _partialMethods;
 		ClassBuilder          IDataModelGenerationContext.CurrentDataContext            => _dataContextClass;
 		ICodeExpression       IDataModelGenerationContext.ContextReference              => _dataContextClass.Type.This;
 
@@ -97,13 +105,12 @@ namespace LinqToDB.DataModel
 				//
 				// public static MappingSchema ContextSchema { get; } = new ();
 				//
-				return _mappingSchema ??= _dataContextClass
-					.Properties(true)
-						.New(_languageProvider.ASTBuilder.Name(DataModelConstants.CONTEXT_SCHEMA_PROPERTY), WellKnownTypes.LinqToDB.Mapping.MappingSchema)
-							.SetModifiers(Modifiers.Public | Modifiers.Static)
-							.Default(false)
-							.SetInitializer(_languageProvider.ASTBuilder.New(WellKnownTypes.LinqToDB.Mapping.MappingSchema))
-					.Property.Reference;
+				return _mappingSchema ??= _staticProperties
+					.New(_languageProvider.ASTBuilder.Name(DataModelConstants.CONTEXT_SCHEMA_PROPERTY), WellKnownTypes.LinqToDB.Mapping.MappingSchema)
+						.SetModifiers(Modifiers.Public | Modifiers.Static)
+						.Default(false)
+						.SetInitializer(_languageProvider.ASTBuilder.New(WellKnownTypes.LinqToDB.Mapping.MappingSchema))
+				.Property.Reference;
 			}
 		}
 

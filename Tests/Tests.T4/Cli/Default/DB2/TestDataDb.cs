@@ -15,15 +15,6 @@ namespace Cli.Default.DB2
 {
 	public partial class TestDataDB : DataConnection
 	{
-		#region Schemas
-		public void InitSchemas()
-		{
-			Db2Inst1 = new Db2Inst1Schema.DataContext(this);
-		}
-
-		public Db2Inst1Schema.DataContext Db2Inst1 { get; set; } = null!;
-		#endregion
-
 		public TestDataDB()
 		{
 			InitSchemas();
@@ -45,5 +36,14 @@ namespace Cli.Default.DB2
 		}
 
 		partial void InitDataContext();
+
+		#region Schemas
+		public void InitSchemas()
+		{
+			Db2Inst1 = new Db2Inst1Schema.DataContext(this);
+		}
+
+		public Db2Inst1Schema.DataContext Db2Inst1 { get; set; } = null!;
+		#endregion
 	}
 }

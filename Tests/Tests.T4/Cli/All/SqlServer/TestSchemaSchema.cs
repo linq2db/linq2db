@@ -39,128 +39,6 @@ namespace Cli.All.SqlServer
 			}
 		}
 
-		#region Table Extensions
-		public static TestSchemaA? Find(this ITable<TestSchemaA> table, SqlInt32 testSchemaAid)
-		{
-			return table.FirstOrDefault(e => (bool)(e.TestSchemaAid == testSchemaAid));
-		}
-
-		public static Task<TestSchemaA?> FindAsync(this ITable<TestSchemaA> table, SqlInt32 testSchemaAid, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.TestSchemaAid == testSchemaAid), cancellationToken);
-		}
-
-		public static IQueryable<TestSchemaA> FindQuery(this ITable<TestSchemaA> table, SqlInt32 testSchemaAid)
-		{
-			return table.Where(e => (bool)(e.TestSchemaAid == testSchemaAid));
-		}
-
-		public static TestSchemaA? Find(this ITable<TestSchemaA> table, TestSchemaA @record)
-		{
-			return table.FirstOrDefault(e => (bool)(e.TestSchemaAid == @record.TestSchemaAid));
-		}
-
-		public static Task<TestSchemaA?> FindAsync(this ITable<TestSchemaA> table, TestSchemaA @record, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.TestSchemaAid == @record.TestSchemaAid), cancellationToken);
-		}
-
-		public static IQueryable<TestSchemaA> FindQuery(this ITable<TestSchemaA> table, TestSchemaA @record)
-		{
-			return table.Where(e => (bool)(e.TestSchemaAid == @record.TestSchemaAid));
-		}
-
-		public static TestSchemaA? FindTestSchemaA(this TestDataDB db, SqlInt32 testSchemaAid)
-		{
-			return db.GetTable<TestSchemaA>().FirstOrDefault(e => (bool)(e.TestSchemaAid == testSchemaAid));
-		}
-
-		public static Task<TestSchemaA?> FindTestSchemaAAsync(this TestDataDB db, SqlInt32 testSchemaAid, CancellationToken cancellationToken = default)
-		{
-			return db.GetTable<TestSchemaA>().FirstOrDefaultAsync(e => (bool)(e.TestSchemaAid == testSchemaAid), cancellationToken);
-		}
-
-		public static IQueryable<TestSchemaA> FindTestSchemaAQuery(this TestDataDB db, SqlInt32 testSchemaAid)
-		{
-			return db.GetTable<TestSchemaA>().Where(e => (bool)(e.TestSchemaAid == testSchemaAid));
-		}
-
-		public static TestSchemaA? Find(this TestDataDB db, TestSchemaA @record)
-		{
-			return db.GetTable<TestSchemaA>().FirstOrDefault(e => (bool)(e.TestSchemaAid == @record.TestSchemaAid));
-		}
-
-		public static Task<TestSchemaA?> FindAsync(this TestDataDB db, TestSchemaA @record, CancellationToken cancellationToken = default)
-		{
-			return db.GetTable<TestSchemaA>().FirstOrDefaultAsync(e => (bool)(e.TestSchemaAid == @record.TestSchemaAid), cancellationToken);
-		}
-
-		public static IQueryable<TestSchemaA> FindQuery(this TestDataDB db, TestSchemaA @record)
-		{
-			return db.GetTable<TestSchemaA>().Where(e => (bool)(e.TestSchemaAid == @record.TestSchemaAid));
-		}
-
-		public static TestSchemaB? Find(this ITable<TestSchemaB> table, SqlInt32 testSchemaBid)
-		{
-			return table.FirstOrDefault(e => (bool)(e.TestSchemaBid == testSchemaBid));
-		}
-
-		public static Task<TestSchemaB?> FindAsync(this ITable<TestSchemaB> table, SqlInt32 testSchemaBid, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.TestSchemaBid == testSchemaBid), cancellationToken);
-		}
-
-		public static IQueryable<TestSchemaB> FindQuery(this ITable<TestSchemaB> table, SqlInt32 testSchemaBid)
-		{
-			return table.Where(e => (bool)(e.TestSchemaBid == testSchemaBid));
-		}
-
-		public static TestSchemaB? Find(this ITable<TestSchemaB> table, TestSchemaB @record)
-		{
-			return table.FirstOrDefault(e => (bool)(e.TestSchemaBid == @record.TestSchemaBid));
-		}
-
-		public static Task<TestSchemaB?> FindAsync(this ITable<TestSchemaB> table, TestSchemaB @record, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.TestSchemaBid == @record.TestSchemaBid), cancellationToken);
-		}
-
-		public static IQueryable<TestSchemaB> FindQuery(this ITable<TestSchemaB> table, TestSchemaB @record)
-		{
-			return table.Where(e => (bool)(e.TestSchemaBid == @record.TestSchemaBid));
-		}
-
-		public static TestSchemaB? FindTestSchemaB(this TestDataDB db, SqlInt32 testSchemaBid)
-		{
-			return db.GetTable<TestSchemaB>().FirstOrDefault(e => (bool)(e.TestSchemaBid == testSchemaBid));
-		}
-
-		public static Task<TestSchemaB?> FindTestSchemaBAsync(this TestDataDB db, SqlInt32 testSchemaBid, CancellationToken cancellationToken = default)
-		{
-			return db.GetTable<TestSchemaB>().FirstOrDefaultAsync(e => (bool)(e.TestSchemaBid == testSchemaBid), cancellationToken);
-		}
-
-		public static IQueryable<TestSchemaB> FindTestSchemaBQuery(this TestDataDB db, SqlInt32 testSchemaBid)
-		{
-			return db.GetTable<TestSchemaB>().Where(e => (bool)(e.TestSchemaBid == testSchemaBid));
-		}
-
-		public static TestSchemaB? Find(this TestDataDB db, TestSchemaB @record)
-		{
-			return db.GetTable<TestSchemaB>().FirstOrDefault(e => (bool)(e.TestSchemaBid == @record.TestSchemaBid));
-		}
-
-		public static Task<TestSchemaB?> FindAsync(this TestDataDB db, TestSchemaB @record, CancellationToken cancellationToken = default)
-		{
-			return db.GetTable<TestSchemaB>().FirstOrDefaultAsync(e => (bool)(e.TestSchemaBid == @record.TestSchemaBid), cancellationToken);
-		}
-
-		public static IQueryable<TestSchemaB> FindQuery(this TestDataDB db, TestSchemaB @record)
-		{
-			return db.GetTable<TestSchemaB>().Where(e => (bool)(e.TestSchemaBid == @record.TestSchemaBid));
-		}
-		#endregion
-
 		[Table("SameTableName", Schema = "TestSchema")]
 		public class SameTableName
 		{
@@ -260,6 +138,128 @@ namespace Cli.All.SqlServer
 			public TestSchemaA TargetTestSchemaA1 { get; set; } = null!;
 			#endregion
 		}
+
+		#region Table Extensions
+		public static TestSchemaA? Find(this ITable<TestSchemaA> table, SqlInt32 testSchemaAid)
+		{
+			return table.FirstOrDefault(e => e.TestSchemaAid.Equals(testSchemaAid));
+		}
+
+		public static Task<TestSchemaA?> FindAsync(this ITable<TestSchemaA> table, SqlInt32 testSchemaAid, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.TestSchemaAid.Equals(testSchemaAid), cancellationToken);
+		}
+
+		public static IQueryable<TestSchemaA> FindQuery(this ITable<TestSchemaA> table, SqlInt32 testSchemaAid)
+		{
+			return table.Where(e => e.TestSchemaAid.Equals(testSchemaAid));
+		}
+
+		public static TestSchemaA? Find(this ITable<TestSchemaA> table, TestSchemaA @record)
+		{
+			return table.FirstOrDefault(e => e.TestSchemaAid.Equals(@record.TestSchemaAid));
+		}
+
+		public static Task<TestSchemaA?> FindAsync(this ITable<TestSchemaA> table, TestSchemaA @record, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.TestSchemaAid.Equals(@record.TestSchemaAid), cancellationToken);
+		}
+
+		public static IQueryable<TestSchemaA> FindQuery(this ITable<TestSchemaA> table, TestSchemaA @record)
+		{
+			return table.Where(e => e.TestSchemaAid.Equals(@record.TestSchemaAid));
+		}
+
+		public static TestSchemaA? FindTestSchemaA(this TestDataDB db, SqlInt32 testSchemaAid)
+		{
+			return db.GetTable<TestSchemaA>().FirstOrDefault(e => e.TestSchemaAid.Equals(testSchemaAid));
+		}
+
+		public static Task<TestSchemaA?> FindTestSchemaAAsync(this TestDataDB db, SqlInt32 testSchemaAid, CancellationToken cancellationToken = default)
+		{
+			return db.GetTable<TestSchemaA>().FirstOrDefaultAsync(e => e.TestSchemaAid.Equals(testSchemaAid), cancellationToken);
+		}
+
+		public static IQueryable<TestSchemaA> FindTestSchemaAQuery(this TestDataDB db, SqlInt32 testSchemaAid)
+		{
+			return db.GetTable<TestSchemaA>().Where(e => e.TestSchemaAid.Equals(testSchemaAid));
+		}
+
+		public static TestSchemaA? Find(this TestDataDB db, TestSchemaA @record)
+		{
+			return db.GetTable<TestSchemaA>().FirstOrDefault(e => e.TestSchemaAid.Equals(@record.TestSchemaAid));
+		}
+
+		public static Task<TestSchemaA?> FindAsync(this TestDataDB db, TestSchemaA @record, CancellationToken cancellationToken = default)
+		{
+			return db.GetTable<TestSchemaA>().FirstOrDefaultAsync(e => e.TestSchemaAid.Equals(@record.TestSchemaAid), cancellationToken);
+		}
+
+		public static IQueryable<TestSchemaA> FindQuery(this TestDataDB db, TestSchemaA @record)
+		{
+			return db.GetTable<TestSchemaA>().Where(e => e.TestSchemaAid.Equals(@record.TestSchemaAid));
+		}
+
+		public static TestSchemaB? Find(this ITable<TestSchemaB> table, SqlInt32 testSchemaBid)
+		{
+			return table.FirstOrDefault(e => e.TestSchemaBid.Equals(testSchemaBid));
+		}
+
+		public static Task<TestSchemaB?> FindAsync(this ITable<TestSchemaB> table, SqlInt32 testSchemaBid, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.TestSchemaBid.Equals(testSchemaBid), cancellationToken);
+		}
+
+		public static IQueryable<TestSchemaB> FindQuery(this ITable<TestSchemaB> table, SqlInt32 testSchemaBid)
+		{
+			return table.Where(e => e.TestSchemaBid.Equals(testSchemaBid));
+		}
+
+		public static TestSchemaB? Find(this ITable<TestSchemaB> table, TestSchemaB @record)
+		{
+			return table.FirstOrDefault(e => e.TestSchemaBid.Equals(@record.TestSchemaBid));
+		}
+
+		public static Task<TestSchemaB?> FindAsync(this ITable<TestSchemaB> table, TestSchemaB @record, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.TestSchemaBid.Equals(@record.TestSchemaBid), cancellationToken);
+		}
+
+		public static IQueryable<TestSchemaB> FindQuery(this ITable<TestSchemaB> table, TestSchemaB @record)
+		{
+			return table.Where(e => e.TestSchemaBid.Equals(@record.TestSchemaBid));
+		}
+
+		public static TestSchemaB? FindTestSchemaB(this TestDataDB db, SqlInt32 testSchemaBid)
+		{
+			return db.GetTable<TestSchemaB>().FirstOrDefault(e => e.TestSchemaBid.Equals(testSchemaBid));
+		}
+
+		public static Task<TestSchemaB?> FindTestSchemaBAsync(this TestDataDB db, SqlInt32 testSchemaBid, CancellationToken cancellationToken = default)
+		{
+			return db.GetTable<TestSchemaB>().FirstOrDefaultAsync(e => e.TestSchemaBid.Equals(testSchemaBid), cancellationToken);
+		}
+
+		public static IQueryable<TestSchemaB> FindTestSchemaBQuery(this TestDataDB db, SqlInt32 testSchemaBid)
+		{
+			return db.GetTable<TestSchemaB>().Where(e => e.TestSchemaBid.Equals(testSchemaBid));
+		}
+
+		public static TestSchemaB? Find(this TestDataDB db, TestSchemaB @record)
+		{
+			return db.GetTable<TestSchemaB>().FirstOrDefault(e => e.TestSchemaBid.Equals(@record.TestSchemaBid));
+		}
+
+		public static Task<TestSchemaB?> FindAsync(this TestDataDB db, TestSchemaB @record, CancellationToken cancellationToken = default)
+		{
+			return db.GetTable<TestSchemaB>().FirstOrDefaultAsync(e => e.TestSchemaBid.Equals(@record.TestSchemaBid), cancellationToken);
+		}
+
+		public static IQueryable<TestSchemaB> FindQuery(this TestDataDB db, TestSchemaB @record)
+		{
+			return db.GetTable<TestSchemaB>().Where(e => e.TestSchemaBid.Equals(@record.TestSchemaBid));
+		}
+		#endregion
 
 		#region Stored Procedures
 		#region TestProcedure

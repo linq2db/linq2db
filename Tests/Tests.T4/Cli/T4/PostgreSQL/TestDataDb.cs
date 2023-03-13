@@ -34,25 +34,28 @@ namespace Cli.T4.PostgreSQL
 				Param3 = (int?)(tuple[1])
 			});
 		}
+		public static MappingSchema ContextSchema { get; } = new MappingSchema();
+
 		public TestDataDB()
+			: base(new DataOptions().UseMappingSchema(ContextSchema))
 		{
 			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
-			: base(configuration)
+			: base(new DataOptions().UseConfiguration(configuration, ContextSchema))
 		{
 			InitDataContext();
 		}
 
 		public TestDataDB(DataOptions options)
-			: base(options)
+			: base(options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? ContextSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, ContextSchema)))
 		{
 			InitDataContext();
 		}
 
 		public TestDataDB(DataOptions<TestDataDB> options)
-			: base(options.Options)
+			: base(options.Options.UseMappingSchema(options.Options.ConnectionOptions.MappingSchema == null ? ContextSchema : MappingSchema.CombineSchemas(options.Options.ConnectionOptions.MappingSchema, ContextSchema)))
 		{
 			InitDataContext();
 		}
@@ -203,8 +206,6 @@ namespace Cli.T4.PostgreSQL
 		}
 		#endregion
 		#endregion
-
-		public static MappingSchema ContextSchema { get; } = new MappingSchema();
 	}
 
 	[Table("AllTypes", Schema = "public")]

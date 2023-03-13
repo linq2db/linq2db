@@ -60,7 +60,7 @@ namespace LinqToDB.CodeModel
 			};
 
 			// all handled types are structs, so we need to handle Nullable<T> comparisons too
-			_types = new HashSet<IType>(types.Concat(types.Select(WellKnownTypes.System.Nullable)), languageProvider.TypeEqualityComparerWithoutNRT);
+			_types = new HashSet<IType>(types.Concat(types.Select(t => t.WithNullability(true))), languageProvider.TypeEqualityComparerWithoutNRT);
 		}
 
 		protected override ICodeElement Visit(CodeBinary expression)

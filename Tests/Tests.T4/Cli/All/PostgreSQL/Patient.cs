@@ -10,22 +10,22 @@ using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.All.SqlCe
+namespace Cli.All.PostgreSQL
 {
-	[Table("Issue695Parent")]
-	public class Issue695Parent : IEquatable<Issue695Parent>
+	[Table("Patient")]
+	public class Patient : IEquatable<Patient>
 	{
-		[Column("ID", DataType = LinqToDB.DataType.Int32, DbType = "int", Length = 0, Precision = 10, Scale = 0, IsPrimaryKey = true)] public SqlInt32 Id { get; set; } // int
+		[Column("PersonID" , DataType  = DataType.Int32, DbType   = "integer"        , Precision = 32                      , Scale  = 0  , IsPrimaryKey = true)] public int    PersonId  { get; set; } // integer
+		[Column("Diagnosis", CanBeNull = false         , DataType = DataType.NVarChar, DbType    = "character varying(256)", Length = 256                     )] public string Diagnosis { get; set; } = null!; // character varying(256)
 
 		#region IEquatable<T> support
-		private static readonly IEqualityComparer<Issue695Parent> _equalityComparer = ComparerBuilder.GetEqualityComparer<Issue695Parent>(c => c.Id);
+		private static readonly IEqualityComparer<Patient> _equalityComparer = ComparerBuilder.GetEqualityComparer<Patient>(c => c.PersonId);
 
-		public bool Equals(Issue695Parent? other)
+		public bool Equals(Patient? other)
 		{
 			return _equalityComparer.Equals(this, other!);
 		}
@@ -37,16 +37,16 @@ namespace Cli.All.SqlCe
 
 		public override bool Equals(object? obj)
 		{
-			return Equals(obj as Issue695Parent);
+			return Equals(obj as Patient);
 		}
 		#endregion
 
 		#region Associations
 		/// <summary>
-		/// FK_Issue695_Parent backreference
+		/// Patient_PersonID_fkey
 		/// </summary>
-		[Association(ThisKey = nameof(Id), OtherKey = nameof(SqlCe.Issue695.Id))]
-		public Issue695? Issue695 { get; set; }
+		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
+		public Person PersonIDfkey { get; set; } = null!;
 		#endregion
 	}
 }

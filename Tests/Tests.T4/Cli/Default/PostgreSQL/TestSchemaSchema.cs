@@ -32,6 +32,24 @@ namespace Cli.Default.PostgreSQL
 			}
 		}
 
+		[Table("TestSchemaIdentity", Schema = "test_schema")]
+		public class TestSchemaIdentity
+		{
+			[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+		}
+
+		[Table("testsamename", Schema = "test_schema")]
+		public class Testsamename
+		{
+			[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+		}
+
+		[Table("testserialidentity", Schema = "test_schema")]
+		public class Testserialidentity
+		{
+			[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+		}
+
 		#region Table Extensions
 		public static TestSchemaIdentity? Find(this ITable<TestSchemaIdentity> table, int id)
 		{
@@ -63,23 +81,5 @@ namespace Cli.Default.PostgreSQL
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
 		#endregion
-
-		[Table("TestSchemaIdentity", Schema = "test_schema")]
-		public class TestSchemaIdentity
-		{
-			[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
-		}
-
-		[Table("testsamename", Schema = "test_schema")]
-		public class Testsamename
-		{
-			[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
-		}
-
-		[Table("testserialidentity", Schema = "test_schema")]
-		public class Testserialidentity
-		{
-			[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
-		}
 	}
 }

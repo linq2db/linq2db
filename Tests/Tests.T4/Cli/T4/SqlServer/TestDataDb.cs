@@ -233,7 +233,7 @@ namespace Cli.T4.SqlServer
 
 		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId id)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
+			return table.FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Issue1144? Find(this ITable<Issue1144> table, int id)

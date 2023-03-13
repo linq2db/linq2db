@@ -5,25 +5,18 @@
 // </auto-generated>
 // ---------------------------------------------------------------------------------------------------
 
+using LinqToDB;
 using LinqToDB.Mapping;
 
 #pragma warning disable 1573, 1591
 #nullable enable
 
-namespace Cli.Default.SqlCe
+namespace Cli.All.PostgreSQL
 {
-	[Table("Issue695")]
-	public class Issue695
+	[Table("Parent")]
+	public class Parent
 	{
-		[Column("ID"         , IsPrimaryKey = true)] public int Id          { get; set; } // int
-		[Column("UniqueValue"                     )] public int UniqueValue { get; set; } // int
-
-		#region Associations
-		/// <summary>
-		/// FK_Issue695_Parent
-		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Id), OtherKey = nameof(Issue695Parent.Id))]
-		public Issue695Parent Parent { get; set; } = null!;
-		#endregion
+		[Column("ParentID", DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0)] public int? ParentId { get; set; } // integer
+		[Column("Value1"  , DataType = DataType.Int32, DbType = "integer", Precision = 32, Scale = 0)] public int? Value1   { get; set; } // integer
 	}
 }

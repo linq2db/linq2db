@@ -68,662 +68,662 @@ namespace Cli.All.SqlCe
 		#region Table Extensions
 		public static AllType? Find(this ITable<AllType> table, SqlInt32 id)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
+			return table.FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<AllType?> FindAsync(this ITable<AllType> table, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<AllType> FindQuery(this ITable<AllType> table, SqlInt32 id)
 		{
-			return table.Where(e => (bool)(e.Id == id));
+			return table.Where(e => e.Id.Equals(id));
 		}
 
 		public static AllType? Find(this ITable<AllType> table, AllType @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return table.FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<AllType?> FindAsync(this ITable<AllType> table, AllType @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<AllType> FindQuery(this ITable<AllType> table, AllType @record)
 		{
-			return table.Where(e => (bool)(e.Id == @record.Id));
+			return table.Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static AllType? FindAllType(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<AllType>().FirstOrDefault(e => (bool)(e.Id == id));
+			return db.GetTable<AllType>().FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<AllType?> FindAllTypeAsync(this TestDataDB db, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<AllType>().FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return db.GetTable<AllType>().FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<AllType> FindAllTypeQuery(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<AllType>().Where(e => (bool)(e.Id == id));
+			return db.GetTable<AllType>().Where(e => e.Id.Equals(id));
 		}
 
 		public static AllType? Find(this TestDataDB db, AllType @record)
 		{
-			return db.GetTable<AllType>().FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<AllType>().FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<AllType?> FindAsync(this TestDataDB db, AllType @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<AllType>().FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return db.GetTable<AllType>().FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<AllType> FindQuery(this TestDataDB db, AllType @record)
 		{
-			return db.GetTable<AllType>().Where(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<AllType>().Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Doctor? Find(this ITable<Doctor> table, SqlInt32 personId)
 		{
-			return table.FirstOrDefault(e => (bool)(e.PersonId == personId));
+			return table.FirstOrDefault(e => e.PersonId.Equals(personId));
 		}
 
 		public static Task<Doctor?> FindAsync(this ITable<Doctor> table, SqlInt32 personId, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.PersonId == personId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.PersonId.Equals(personId), cancellationToken);
 		}
 
 		public static IQueryable<Doctor> FindQuery(this ITable<Doctor> table, SqlInt32 personId)
 		{
-			return table.Where(e => (bool)(e.PersonId == personId));
+			return table.Where(e => e.PersonId.Equals(personId));
 		}
 
 		public static Doctor? Find(this ITable<Doctor> table, Doctor @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.PersonId == @record.PersonId));
+			return table.FirstOrDefault(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Task<Doctor?> FindAsync(this ITable<Doctor> table, Doctor @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.PersonId == @record.PersonId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.PersonId.Equals(@record.PersonId), cancellationToken);
 		}
 
 		public static IQueryable<Doctor> FindQuery(this ITable<Doctor> table, Doctor @record)
 		{
-			return table.Where(e => (bool)(e.PersonId == @record.PersonId));
+			return table.Where(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Doctor? FindDoctor(this TestDataDB db, SqlInt32 personId)
 		{
-			return db.GetTable<Doctor>().FirstOrDefault(e => (bool)(e.PersonId == personId));
+			return db.GetTable<Doctor>().FirstOrDefault(e => e.PersonId.Equals(personId));
 		}
 
 		public static Task<Doctor?> FindDoctorAsync(this TestDataDB db, SqlInt32 personId, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Doctor>().FirstOrDefaultAsync(e => (bool)(e.PersonId == personId), cancellationToken);
+			return db.GetTable<Doctor>().FirstOrDefaultAsync(e => e.PersonId.Equals(personId), cancellationToken);
 		}
 
 		public static IQueryable<Doctor> FindDoctorQuery(this TestDataDB db, SqlInt32 personId)
 		{
-			return db.GetTable<Doctor>().Where(e => (bool)(e.PersonId == personId));
+			return db.GetTable<Doctor>().Where(e => e.PersonId.Equals(personId));
 		}
 
 		public static Doctor? Find(this TestDataDB db, Doctor @record)
 		{
-			return db.GetTable<Doctor>().FirstOrDefault(e => (bool)(e.PersonId == @record.PersonId));
+			return db.GetTable<Doctor>().FirstOrDefault(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Task<Doctor?> FindAsync(this TestDataDB db, Doctor @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Doctor>().FirstOrDefaultAsync(e => (bool)(e.PersonId == @record.PersonId), cancellationToken);
+			return db.GetTable<Doctor>().FirstOrDefaultAsync(e => e.PersonId.Equals(@record.PersonId), cancellationToken);
 		}
 
 		public static IQueryable<Doctor> FindQuery(this TestDataDB db, Doctor @record)
 		{
-			return db.GetTable<Doctor>().Where(e => (bool)(e.PersonId == @record.PersonId));
+			return db.GetTable<Doctor>().Where(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static InheritanceChild? Find(this ITable<InheritanceChild> table, SqlInt32 inheritanceChildId)
 		{
-			return table.FirstOrDefault(e => (bool)(e.InheritanceChildId == inheritanceChildId));
+			return table.FirstOrDefault(e => e.InheritanceChildId.Equals(inheritanceChildId));
 		}
 
 		public static Task<InheritanceChild?> FindAsync(this ITable<InheritanceChild> table, SqlInt32 inheritanceChildId, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.InheritanceChildId == inheritanceChildId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.InheritanceChildId.Equals(inheritanceChildId), cancellationToken);
 		}
 
 		public static IQueryable<InheritanceChild> FindQuery(this ITable<InheritanceChild> table, SqlInt32 inheritanceChildId)
 		{
-			return table.Where(e => (bool)(e.InheritanceChildId == inheritanceChildId));
+			return table.Where(e => e.InheritanceChildId.Equals(inheritanceChildId));
 		}
 
 		public static InheritanceChild? Find(this ITable<InheritanceChild> table, InheritanceChild @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.InheritanceChildId == @record.InheritanceChildId));
+			return table.FirstOrDefault(e => e.InheritanceChildId.Equals(@record.InheritanceChildId));
 		}
 
 		public static Task<InheritanceChild?> FindAsync(this ITable<InheritanceChild> table, InheritanceChild @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.InheritanceChildId == @record.InheritanceChildId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.InheritanceChildId.Equals(@record.InheritanceChildId), cancellationToken);
 		}
 
 		public static IQueryable<InheritanceChild> FindQuery(this ITable<InheritanceChild> table, InheritanceChild @record)
 		{
-			return table.Where(e => (bool)(e.InheritanceChildId == @record.InheritanceChildId));
+			return table.Where(e => e.InheritanceChildId.Equals(@record.InheritanceChildId));
 		}
 
 		public static InheritanceChild? FindInheritanceChild(this TestDataDB db, SqlInt32 inheritanceChildId)
 		{
-			return db.GetTable<InheritanceChild>().FirstOrDefault(e => (bool)(e.InheritanceChildId == inheritanceChildId));
+			return db.GetTable<InheritanceChild>().FirstOrDefault(e => e.InheritanceChildId.Equals(inheritanceChildId));
 		}
 
 		public static Task<InheritanceChild?> FindInheritanceChildAsync(this TestDataDB db, SqlInt32 inheritanceChildId, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<InheritanceChild>().FirstOrDefaultAsync(e => (bool)(e.InheritanceChildId == inheritanceChildId), cancellationToken);
+			return db.GetTable<InheritanceChild>().FirstOrDefaultAsync(e => e.InheritanceChildId.Equals(inheritanceChildId), cancellationToken);
 		}
 
 		public static IQueryable<InheritanceChild> FindInheritanceChildQuery(this TestDataDB db, SqlInt32 inheritanceChildId)
 		{
-			return db.GetTable<InheritanceChild>().Where(e => (bool)(e.InheritanceChildId == inheritanceChildId));
+			return db.GetTable<InheritanceChild>().Where(e => e.InheritanceChildId.Equals(inheritanceChildId));
 		}
 
 		public static InheritanceChild? Find(this TestDataDB db, InheritanceChild @record)
 		{
-			return db.GetTable<InheritanceChild>().FirstOrDefault(e => (bool)(e.InheritanceChildId == @record.InheritanceChildId));
+			return db.GetTable<InheritanceChild>().FirstOrDefault(e => e.InheritanceChildId.Equals(@record.InheritanceChildId));
 		}
 
 		public static Task<InheritanceChild?> FindAsync(this TestDataDB db, InheritanceChild @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<InheritanceChild>().FirstOrDefaultAsync(e => (bool)(e.InheritanceChildId == @record.InheritanceChildId), cancellationToken);
+			return db.GetTable<InheritanceChild>().FirstOrDefaultAsync(e => e.InheritanceChildId.Equals(@record.InheritanceChildId), cancellationToken);
 		}
 
 		public static IQueryable<InheritanceChild> FindQuery(this TestDataDB db, InheritanceChild @record)
 		{
-			return db.GetTable<InheritanceChild>().Where(e => (bool)(e.InheritanceChildId == @record.InheritanceChildId));
+			return db.GetTable<InheritanceChild>().Where(e => e.InheritanceChildId.Equals(@record.InheritanceChildId));
 		}
 
 		public static InheritanceParent? Find(this ITable<InheritanceParent> table, SqlInt32 inheritanceParentId)
 		{
-			return table.FirstOrDefault(e => (bool)(e.InheritanceParentId == inheritanceParentId));
+			return table.FirstOrDefault(e => e.InheritanceParentId.Equals(inheritanceParentId));
 		}
 
 		public static Task<InheritanceParent?> FindAsync(this ITable<InheritanceParent> table, SqlInt32 inheritanceParentId, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.InheritanceParentId == inheritanceParentId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.InheritanceParentId.Equals(inheritanceParentId), cancellationToken);
 		}
 
 		public static IQueryable<InheritanceParent> FindQuery(this ITable<InheritanceParent> table, SqlInt32 inheritanceParentId)
 		{
-			return table.Where(e => (bool)(e.InheritanceParentId == inheritanceParentId));
+			return table.Where(e => e.InheritanceParentId.Equals(inheritanceParentId));
 		}
 
 		public static InheritanceParent? Find(this ITable<InheritanceParent> table, InheritanceParent @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.InheritanceParentId == @record.InheritanceParentId));
+			return table.FirstOrDefault(e => e.InheritanceParentId.Equals(@record.InheritanceParentId));
 		}
 
 		public static Task<InheritanceParent?> FindAsync(this ITable<InheritanceParent> table, InheritanceParent @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.InheritanceParentId == @record.InheritanceParentId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.InheritanceParentId.Equals(@record.InheritanceParentId), cancellationToken);
 		}
 
 		public static IQueryable<InheritanceParent> FindQuery(this ITable<InheritanceParent> table, InheritanceParent @record)
 		{
-			return table.Where(e => (bool)(e.InheritanceParentId == @record.InheritanceParentId));
+			return table.Where(e => e.InheritanceParentId.Equals(@record.InheritanceParentId));
 		}
 
 		public static InheritanceParent? FindInheritanceParent(this TestDataDB db, SqlInt32 inheritanceParentId)
 		{
-			return db.GetTable<InheritanceParent>().FirstOrDefault(e => (bool)(e.InheritanceParentId == inheritanceParentId));
+			return db.GetTable<InheritanceParent>().FirstOrDefault(e => e.InheritanceParentId.Equals(inheritanceParentId));
 		}
 
 		public static Task<InheritanceParent?> FindInheritanceParentAsync(this TestDataDB db, SqlInt32 inheritanceParentId, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<InheritanceParent>().FirstOrDefaultAsync(e => (bool)(e.InheritanceParentId == inheritanceParentId), cancellationToken);
+			return db.GetTable<InheritanceParent>().FirstOrDefaultAsync(e => e.InheritanceParentId.Equals(inheritanceParentId), cancellationToken);
 		}
 
 		public static IQueryable<InheritanceParent> FindInheritanceParentQuery(this TestDataDB db, SqlInt32 inheritanceParentId)
 		{
-			return db.GetTable<InheritanceParent>().Where(e => (bool)(e.InheritanceParentId == inheritanceParentId));
+			return db.GetTable<InheritanceParent>().Where(e => e.InheritanceParentId.Equals(inheritanceParentId));
 		}
 
 		public static InheritanceParent? Find(this TestDataDB db, InheritanceParent @record)
 		{
-			return db.GetTable<InheritanceParent>().FirstOrDefault(e => (bool)(e.InheritanceParentId == @record.InheritanceParentId));
+			return db.GetTable<InheritanceParent>().FirstOrDefault(e => e.InheritanceParentId.Equals(@record.InheritanceParentId));
 		}
 
 		public static Task<InheritanceParent?> FindAsync(this TestDataDB db, InheritanceParent @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<InheritanceParent>().FirstOrDefaultAsync(e => (bool)(e.InheritanceParentId == @record.InheritanceParentId), cancellationToken);
+			return db.GetTable<InheritanceParent>().FirstOrDefaultAsync(e => e.InheritanceParentId.Equals(@record.InheritanceParentId), cancellationToken);
 		}
 
 		public static IQueryable<InheritanceParent> FindQuery(this TestDataDB db, InheritanceParent @record)
 		{
-			return db.GetTable<InheritanceParent>().Where(e => (bool)(e.InheritanceParentId == @record.InheritanceParentId));
+			return db.GetTable<InheritanceParent>().Where(e => e.InheritanceParentId.Equals(@record.InheritanceParentId));
 		}
 
 		public static Issue695? Find(this ITable<Issue695> table, SqlInt32 id)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
+			return table.FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<Issue695?> FindAsync(this ITable<Issue695> table, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<Issue695> FindQuery(this ITable<Issue695> table, SqlInt32 id)
 		{
-			return table.Where(e => (bool)(e.Id == id));
+			return table.Where(e => e.Id.Equals(id));
 		}
 
 		public static Issue695? Find(this ITable<Issue695> table, Issue695 @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return table.FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<Issue695?> FindAsync(this ITable<Issue695> table, Issue695 @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<Issue695> FindQuery(this ITable<Issue695> table, Issue695 @record)
 		{
-			return table.Where(e => (bool)(e.Id == @record.Id));
+			return table.Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Issue695? FindIssue695(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<Issue695>().FirstOrDefault(e => (bool)(e.Id == id));
+			return db.GetTable<Issue695>().FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<Issue695?> FindIssue695Async(this TestDataDB db, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Issue695>().FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return db.GetTable<Issue695>().FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<Issue695> FindIssue695Query(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<Issue695>().Where(e => (bool)(e.Id == id));
+			return db.GetTable<Issue695>().Where(e => e.Id.Equals(id));
 		}
 
 		public static Issue695? Find(this TestDataDB db, Issue695 @record)
 		{
-			return db.GetTable<Issue695>().FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<Issue695>().FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<Issue695?> FindAsync(this TestDataDB db, Issue695 @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Issue695>().FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return db.GetTable<Issue695>().FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<Issue695> FindQuery(this TestDataDB db, Issue695 @record)
 		{
-			return db.GetTable<Issue695>().Where(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<Issue695>().Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Issue695Parent? Find(this ITable<Issue695Parent> table, SqlInt32 id)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
+			return table.FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<Issue695Parent?> FindAsync(this ITable<Issue695Parent> table, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<Issue695Parent> FindQuery(this ITable<Issue695Parent> table, SqlInt32 id)
 		{
-			return table.Where(e => (bool)(e.Id == id));
+			return table.Where(e => e.Id.Equals(id));
 		}
 
 		public static Issue695Parent? Find(this ITable<Issue695Parent> table, Issue695Parent @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return table.FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<Issue695Parent?> FindAsync(this ITable<Issue695Parent> table, Issue695Parent @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<Issue695Parent> FindQuery(this ITable<Issue695Parent> table, Issue695Parent @record)
 		{
-			return table.Where(e => (bool)(e.Id == @record.Id));
+			return table.Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Issue695Parent? FindIssue695Parent(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<Issue695Parent>().FirstOrDefault(e => (bool)(e.Id == id));
+			return db.GetTable<Issue695Parent>().FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<Issue695Parent?> FindIssue695ParentAsync(this TestDataDB db, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Issue695Parent>().FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return db.GetTable<Issue695Parent>().FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<Issue695Parent> FindIssue695ParentQuery(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<Issue695Parent>().Where(e => (bool)(e.Id == id));
+			return db.GetTable<Issue695Parent>().Where(e => e.Id.Equals(id));
 		}
 
 		public static Issue695Parent? Find(this TestDataDB db, Issue695Parent @record)
 		{
-			return db.GetTable<Issue695Parent>().FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<Issue695Parent>().FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<Issue695Parent?> FindAsync(this TestDataDB db, Issue695Parent @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Issue695Parent>().FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return db.GetTable<Issue695Parent>().FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<Issue695Parent> FindQuery(this TestDataDB db, Issue695Parent @record)
 		{
-			return db.GetTable<Issue695Parent>().Where(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<Issue695Parent>().Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Patient? Find(this ITable<Patient> table, SqlInt32 personId)
 		{
-			return table.FirstOrDefault(e => (bool)(e.PersonId == personId));
+			return table.FirstOrDefault(e => e.PersonId.Equals(personId));
 		}
 
 		public static Task<Patient?> FindAsync(this ITable<Patient> table, SqlInt32 personId, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.PersonId == personId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.PersonId.Equals(personId), cancellationToken);
 		}
 
 		public static IQueryable<Patient> FindQuery(this ITable<Patient> table, SqlInt32 personId)
 		{
-			return table.Where(e => (bool)(e.PersonId == personId));
+			return table.Where(e => e.PersonId.Equals(personId));
 		}
 
 		public static Patient? Find(this ITable<Patient> table, Patient @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.PersonId == @record.PersonId));
+			return table.FirstOrDefault(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Task<Patient?> FindAsync(this ITable<Patient> table, Patient @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.PersonId == @record.PersonId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.PersonId.Equals(@record.PersonId), cancellationToken);
 		}
 
 		public static IQueryable<Patient> FindQuery(this ITable<Patient> table, Patient @record)
 		{
-			return table.Where(e => (bool)(e.PersonId == @record.PersonId));
+			return table.Where(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Patient? FindPatient(this TestDataDB db, SqlInt32 personId)
 		{
-			return db.GetTable<Patient>().FirstOrDefault(e => (bool)(e.PersonId == personId));
+			return db.GetTable<Patient>().FirstOrDefault(e => e.PersonId.Equals(personId));
 		}
 
 		public static Task<Patient?> FindPatientAsync(this TestDataDB db, SqlInt32 personId, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Patient>().FirstOrDefaultAsync(e => (bool)(e.PersonId == personId), cancellationToken);
+			return db.GetTable<Patient>().FirstOrDefaultAsync(e => e.PersonId.Equals(personId), cancellationToken);
 		}
 
 		public static IQueryable<Patient> FindPatientQuery(this TestDataDB db, SqlInt32 personId)
 		{
-			return db.GetTable<Patient>().Where(e => (bool)(e.PersonId == personId));
+			return db.GetTable<Patient>().Where(e => e.PersonId.Equals(personId));
 		}
 
 		public static Patient? Find(this TestDataDB db, Patient @record)
 		{
-			return db.GetTable<Patient>().FirstOrDefault(e => (bool)(e.PersonId == @record.PersonId));
+			return db.GetTable<Patient>().FirstOrDefault(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Task<Patient?> FindAsync(this TestDataDB db, Patient @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Patient>().FirstOrDefaultAsync(e => (bool)(e.PersonId == @record.PersonId), cancellationToken);
+			return db.GetTable<Patient>().FirstOrDefaultAsync(e => e.PersonId.Equals(@record.PersonId), cancellationToken);
 		}
 
 		public static IQueryable<Patient> FindQuery(this TestDataDB db, Patient @record)
 		{
-			return db.GetTable<Patient>().Where(e => (bool)(e.PersonId == @record.PersonId));
+			return db.GetTable<Patient>().Where(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Person? Find(this ITable<Person> table, SqlInt32 personId)
 		{
-			return table.FirstOrDefault(e => (bool)(e.PersonId == personId));
+			return table.FirstOrDefault(e => e.PersonId.Equals(personId));
 		}
 
 		public static Task<Person?> FindAsync(this ITable<Person> table, SqlInt32 personId, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.PersonId == personId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.PersonId.Equals(personId), cancellationToken);
 		}
 
 		public static IQueryable<Person> FindQuery(this ITable<Person> table, SqlInt32 personId)
 		{
-			return table.Where(e => (bool)(e.PersonId == personId));
+			return table.Where(e => e.PersonId.Equals(personId));
 		}
 
 		public static Person? Find(this ITable<Person> table, Person @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.PersonId == @record.PersonId));
+			return table.FirstOrDefault(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Task<Person?> FindAsync(this ITable<Person> table, Person @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.PersonId == @record.PersonId), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.PersonId.Equals(@record.PersonId), cancellationToken);
 		}
 
 		public static IQueryable<Person> FindQuery(this ITable<Person> table, Person @record)
 		{
-			return table.Where(e => (bool)(e.PersonId == @record.PersonId));
+			return table.Where(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Person? FindPerson(this TestDataDB db, SqlInt32 personId)
 		{
-			return db.GetTable<Person>().FirstOrDefault(e => (bool)(e.PersonId == personId));
+			return db.GetTable<Person>().FirstOrDefault(e => e.PersonId.Equals(personId));
 		}
 
 		public static Task<Person?> FindPersonAsync(this TestDataDB db, SqlInt32 personId, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Person>().FirstOrDefaultAsync(e => (bool)(e.PersonId == personId), cancellationToken);
+			return db.GetTable<Person>().FirstOrDefaultAsync(e => e.PersonId.Equals(personId), cancellationToken);
 		}
 
 		public static IQueryable<Person> FindPersonQuery(this TestDataDB db, SqlInt32 personId)
 		{
-			return db.GetTable<Person>().Where(e => (bool)(e.PersonId == personId));
+			return db.GetTable<Person>().Where(e => e.PersonId.Equals(personId));
 		}
 
 		public static Person? Find(this TestDataDB db, Person @record)
 		{
-			return db.GetTable<Person>().FirstOrDefault(e => (bool)(e.PersonId == @record.PersonId));
+			return db.GetTable<Person>().FirstOrDefault(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static Task<Person?> FindAsync(this TestDataDB db, Person @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<Person>().FirstOrDefaultAsync(e => (bool)(e.PersonId == @record.PersonId), cancellationToken);
+			return db.GetTable<Person>().FirstOrDefaultAsync(e => e.PersonId.Equals(@record.PersonId), cancellationToken);
 		}
 
 		public static IQueryable<Person> FindQuery(this TestDataDB db, Person @record)
 		{
-			return db.GetTable<Person>().Where(e => (bool)(e.PersonId == @record.PersonId));
+			return db.GetTable<Person>().Where(e => e.PersonId.Equals(@record.PersonId));
 		}
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, SqlInt32 id)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
+			return table.FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<TestIdentity?> FindAsync(this ITable<TestIdentity> table, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<TestIdentity> FindQuery(this ITable<TestIdentity> table, SqlInt32 id)
 		{
-			return table.Where(e => (bool)(e.Id == id));
+			return table.Where(e => e.Id.Equals(id));
 		}
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, TestIdentity @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return table.FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<TestIdentity?> FindAsync(this ITable<TestIdentity> table, TestIdentity @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<TestIdentity> FindQuery(this ITable<TestIdentity> table, TestIdentity @record)
 		{
-			return table.Where(e => (bool)(e.Id == @record.Id));
+			return table.Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static TestIdentity? FindTestIdentity(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<TestIdentity>().FirstOrDefault(e => (bool)(e.Id == id));
+			return db.GetTable<TestIdentity>().FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<TestIdentity?> FindTestIdentityAsync(this TestDataDB db, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<TestIdentity>().FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return db.GetTable<TestIdentity>().FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<TestIdentity> FindTestIdentityQuery(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<TestIdentity>().Where(e => (bool)(e.Id == id));
+			return db.GetTable<TestIdentity>().Where(e => e.Id.Equals(id));
 		}
 
 		public static TestIdentity? Find(this TestDataDB db, TestIdentity @record)
 		{
-			return db.GetTable<TestIdentity>().FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<TestIdentity>().FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<TestIdentity?> FindAsync(this TestDataDB db, TestIdentity @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<TestIdentity>().FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return db.GetTable<TestIdentity>().FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<TestIdentity> FindQuery(this TestDataDB db, TestIdentity @record)
 		{
-			return db.GetTable<TestIdentity>().Where(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<TestIdentity>().Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static TestMerge1? Find(this ITable<TestMerge1> table, SqlInt32 id)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
+			return table.FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<TestMerge1?> FindAsync(this ITable<TestMerge1> table, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<TestMerge1> FindQuery(this ITable<TestMerge1> table, SqlInt32 id)
 		{
-			return table.Where(e => (bool)(e.Id == id));
+			return table.Where(e => e.Id.Equals(id));
 		}
 
 		public static TestMerge1? Find(this ITable<TestMerge1> table, TestMerge1 @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return table.FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<TestMerge1?> FindAsync(this ITable<TestMerge1> table, TestMerge1 @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<TestMerge1> FindQuery(this ITable<TestMerge1> table, TestMerge1 @record)
 		{
-			return table.Where(e => (bool)(e.Id == @record.Id));
+			return table.Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static TestMerge1? FindTestMerge1(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<TestMerge1>().FirstOrDefault(e => (bool)(e.Id == id));
+			return db.GetTable<TestMerge1>().FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<TestMerge1?> FindTestMerge1Async(this TestDataDB db, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<TestMerge1>().FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return db.GetTable<TestMerge1>().FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<TestMerge1> FindTestMerge1Query(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<TestMerge1>().Where(e => (bool)(e.Id == id));
+			return db.GetTable<TestMerge1>().Where(e => e.Id.Equals(id));
 		}
 
 		public static TestMerge1? Find(this TestDataDB db, TestMerge1 @record)
 		{
-			return db.GetTable<TestMerge1>().FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<TestMerge1>().FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<TestMerge1?> FindAsync(this TestDataDB db, TestMerge1 @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<TestMerge1>().FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return db.GetTable<TestMerge1>().FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<TestMerge1> FindQuery(this TestDataDB db, TestMerge1 @record)
 		{
-			return db.GetTable<TestMerge1>().Where(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<TestMerge1>().Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static TestMerge2? Find(this ITable<TestMerge2> table, SqlInt32 id)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
+			return table.FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<TestMerge2?> FindAsync(this ITable<TestMerge2> table, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<TestMerge2> FindQuery(this ITable<TestMerge2> table, SqlInt32 id)
 		{
-			return table.Where(e => (bool)(e.Id == id));
+			return table.Where(e => e.Id.Equals(id));
 		}
 
 		public static TestMerge2? Find(this ITable<TestMerge2> table, TestMerge2 @record)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return table.FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<TestMerge2?> FindAsync(this ITable<TestMerge2> table, TestMerge2 @record, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<TestMerge2> FindQuery(this ITable<TestMerge2> table, TestMerge2 @record)
 		{
-			return table.Where(e => (bool)(e.Id == @record.Id));
+			return table.Where(e => e.Id.Equals(@record.Id));
 		}
 
 		public static TestMerge2? FindTestMerge2(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<TestMerge2>().FirstOrDefault(e => (bool)(e.Id == id));
+			return db.GetTable<TestMerge2>().FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<TestMerge2?> FindTestMerge2Async(this TestDataDB db, SqlInt32 id, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<TestMerge2>().FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return db.GetTable<TestMerge2>().FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static IQueryable<TestMerge2> FindTestMerge2Query(this TestDataDB db, SqlInt32 id)
 		{
-			return db.GetTable<TestMerge2>().Where(e => (bool)(e.Id == id));
+			return db.GetTable<TestMerge2>().Where(e => e.Id.Equals(id));
 		}
 
 		public static TestMerge2? Find(this TestDataDB db, TestMerge2 @record)
 		{
-			return db.GetTable<TestMerge2>().FirstOrDefault(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<TestMerge2>().FirstOrDefault(e => e.Id.Equals(@record.Id));
 		}
 
 		public static Task<TestMerge2?> FindAsync(this TestDataDB db, TestMerge2 @record, CancellationToken cancellationToken = default)
 		{
-			return db.GetTable<TestMerge2>().FirstOrDefaultAsync(e => (bool)(e.Id == @record.Id), cancellationToken);
+			return db.GetTable<TestMerge2>().FirstOrDefaultAsync(e => e.Id.Equals(@record.Id), cancellationToken);
 		}
 
 		public static IQueryable<TestMerge2> FindQuery(this TestDataDB db, TestMerge2 @record)
 		{
-			return db.GetTable<TestMerge2>().Where(e => (bool)(e.Id == @record.Id));
+			return db.GetTable<TestMerge2>().Where(e => e.Id.Equals(@record.Id));
 		}
 		#endregion
 
@@ -735,7 +735,7 @@ namespace Cli.All.SqlCe
 		[Association(CanBeNull = false, ThisKey = nameof(SqlCe.Doctor.PersonId), OtherKey = nameof(SqlCe.Person.PersonId))]
 		public static Person Person(this Doctor obj, IDataContext db)
 		{
-			return db.GetTable<Person>().First(t => (bool)(obj.PersonId == t.PersonId));
+			return db.GetTable<Person>().First(t => obj.PersonId.Equals(t.PersonId));
 		}
 		#endregion
 
@@ -746,7 +746,7 @@ namespace Cli.All.SqlCe
 		[Association(ThisKey = nameof(SqlCe.Person.PersonId), OtherKey = nameof(SqlCe.Doctor.PersonId))]
 		public static Doctor? Doctor(this Person obj, IDataContext db)
 		{
-			return db.GetTable<Doctor>().FirstOrDefault(t => (bool)(t.PersonId == obj.PersonId));
+			return db.GetTable<Doctor>().FirstOrDefault(t => t.PersonId.Equals(obj.PersonId));
 		}
 
 		/// <summary>
@@ -755,7 +755,7 @@ namespace Cli.All.SqlCe
 		[Association(ThisKey = nameof(SqlCe.Person.PersonId), OtherKey = nameof(SqlCe.Patient.PersonId))]
 		public static Patient? Patient(this Person obj, IDataContext db)
 		{
-			return db.GetTable<Patient>().FirstOrDefault(t => (bool)(t.PersonId == obj.PersonId));
+			return db.GetTable<Patient>().FirstOrDefault(t => t.PersonId.Equals(obj.PersonId));
 		}
 		#endregion
 
@@ -763,10 +763,10 @@ namespace Cli.All.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Issue695.Id) + "," + nameof(Issue695.Id), OtherKey = nameof(Issue695Parent.Id) + "," + nameof(Issue695Parent.Id))]
+		[Association(CanBeNull = false, ThisKey = nameof(SqlCe.Issue695.Id), OtherKey = nameof(Issue695Parent.Id))]
 		public static Issue695Parent Parent(this Issue695 obj, IDataContext db)
 		{
-			return db.GetTable<Issue695Parent>().First(t => (bool)(obj.Id == t.Id) && (bool)(obj.Id == t.Id));
+			return db.GetTable<Issue695Parent>().First(t => obj.Id.Equals(t.Id));
 		}
 		#endregion
 
@@ -774,10 +774,10 @@ namespace Cli.All.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Issue695Parent.Id) + "," + nameof(Issue695Parent.Id), OtherKey = nameof(Issue695.Id) + "," + nameof(Issue695.Id))]
-		public static IQueryable<Issue695> Issues695(this Issue695Parent obj, IDataContext db)
+		[Association(ThisKey = nameof(Issue695Parent.Id), OtherKey = nameof(SqlCe.Issue695.Id))]
+		public static Issue695? Issue695(this Issue695Parent obj, IDataContext db)
 		{
-			return db.GetTable<Issue695>().Where(t => (bool)(t.Id == obj.Id) && (bool)(t.Id == obj.Id));
+			return db.GetTable<Issue695>().FirstOrDefault(t => t.Id.Equals(obj.Id));
 		}
 		#endregion
 
@@ -788,7 +788,7 @@ namespace Cli.All.SqlCe
 		[Association(CanBeNull = false, ThisKey = nameof(SqlCe.Patient.PersonId), OtherKey = nameof(SqlCe.Person.PersonId))]
 		public static Person Person(this Patient obj, IDataContext db)
 		{
-			return db.GetTable<Person>().First(t => (bool)(obj.PersonId == t.PersonId));
+			return db.GetTable<Person>().First(t => obj.PersonId.Equals(t.PersonId));
 		}
 		#endregion
 		#endregion

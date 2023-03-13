@@ -141,7 +141,7 @@ namespace LinqToDB.CommandLine
 				sqlBuilder,
 				dataModel,
 				MetadataBuilders.GetMetadataBuilder(generator.Language, settings.DataModel.Metadata),
-				ProviderSpecificStructsEqualityFixer.Create(generator.Language));
+				new ProviderSpecificStructsEqualityFixer(generator.Language));
 			var sourceCode = generator.GenerateSourceCode(dataModel, files);
 
 			Directory.CreateDirectory(output);
