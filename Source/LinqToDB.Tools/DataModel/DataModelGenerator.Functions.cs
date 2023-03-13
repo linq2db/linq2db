@@ -73,8 +73,10 @@ namespace LinqToDB.DataModel
 
 			for (var i = 0; i < model.Columns.Count; i++)
 			{
-				var columnModel = model.Columns[i];
+				var columnModel   = model.Columns[i];
 				var columnBuilder = context.DefineProperty(columnsGroup, columnModel.Property);
+
+				context.RegisterColumnProperty(columnModel, columnBuilder.Property);
 
 				if (withMapping)
 					context.MetadataBuilder?.BuildColumnMetadata(context, resultClassBuilder.Type, columnModel.Metadata, columnBuilder);

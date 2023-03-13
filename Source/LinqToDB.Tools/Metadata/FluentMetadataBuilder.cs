@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using LinqToDB.CodeModel;
 using LinqToDB.Common;
 using LinqToDB.DataModel;
@@ -16,10 +17,10 @@ namespace LinqToDB.Metadata
 	/// </summary>
 	internal sealed class FluentMetadataBuilder : IMetadataBuilder
 	{
-		private readonly CodeVariable                                                                                                 _builderVar;
-		private readonly List<ICodeStatement>                                                                                         _builderCalls = new();
+		private readonly CodeVariable                                                                                                  _builderVar;
+		private readonly List<ICodeStatement>                                                                                          _builderCalls = new();
 		// [T, (Attr, [Member, Attr])]
-		private readonly Dictionary<CodeClass, (ICodeExpression tableAttribute, Dictionary<CodeReference, ICodeExpression?> members)> _entities     = new();
+		private readonly Dictionary<CodeClass, (ICodeExpression? tableAttribute, Dictionary<CodeReference, ICodeExpression?> members)> _entities     = new();
 
 		public FluentMetadataBuilder(CodeBuilder builder)
 		{
@@ -65,10 +66,17 @@ namespace LinqToDB.Metadata
 
 		void IMetadataBuilder.BuildColumnMetadata(IDataModelGenerationContext context, CodeClass entityClass, ColumnMetadata metadata, PropertyBuilder propertyBuilder)
 		{
+			if (!_entities.TryGetValue(entityClass, out var entity))
+			{
+				_entities.Add(entityClass, entity = (null, new Dictionary<CodeReference, ICodeExpression?>()));
+			}
+
+			var members = entity.members;
+
 			//.IsNotColumn()
 			if (!metadata.IsColumn)
 			{
-				_entities[entityClass].members.Add(propertyBuilder.Property.Reference, null);
+				members.Add(propertyBuilder.Property.Reference, null);
 				return;
 			}
 
@@ -147,12 +155,16 @@ namespace LinqToDB.Metadata
 							new CodeTypeReference(entityClass.Type),
 							methodBuilder.Method.Name,
 							methodBuilder.Method.ReturnType!.Type,
-							lambdaParam.Reference)));
+							lambdaParam.Reference,
+							// default(IDataContext)
+							context.AST.Default(methodBuilder.Method.Parameters[1].Type.Type, false))));
 
 			_builderCalls.Add(
 				context.AST.Call(
 					_builderVar.Reference,
 					WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_HasAttribute,
+					new IType[] { entityType },
+					false,
 					lambda.Method,
 					BuildAssociationAttribute(context, metadata)));
 		}
@@ -195,12 +207,14 @@ namespace LinqToDB.Metadata
 							: WellKnownTypes.System.Action),
 					true);
 
-			var fakeParameters = BuildDefaultArgs(context, methodBuilder.Method);
+			var fakeParameters = BuildDefaultArgs(context, methodBuilder.Method, metadata.IsAggregate == true);
+
+			var typeParams = metadata.IsAggregate == true ? new  IType[] { WellKnownTypes.System.Object } : Array<IType>.Empty;
 
 			if (methodBuilder.Method.ReturnType != null)
-				lambda.Body().Append(context.AST.Return(context.AST.Call(new CodeTypeReference(context.NonTableFunctionsClass.Type), methodBuilder.Method.Name, methodBuilder.Method.ReturnType.Type, fakeParameters)));
+				lambda.Body().Append(context.AST.Return(context.AST.Call(new CodeTypeReference(context.NonTableFunctionsClass.Type), methodBuilder.Method.Name, methodBuilder.Method.ReturnType.Type, typeParams, false, fakeParameters)));
 			else
-				lambda.Body().Append(context.AST.Call(new CodeTypeReference(context.NonTableFunctionsClass.Type), methodBuilder.Method.Name, fakeParameters));
+				lambda.Body().Append(context.AST.Call(new CodeTypeReference(context.NonTableFunctionsClass.Type), methodBuilder.Method.Name, typeParams, false, fakeParameters));
 
 			_builderCalls.Add(
 				context.AST.Call(
@@ -241,7 +255,7 @@ namespace LinqToDB.Metadata
 			var attr = context.AST.New(WellKnownTypes.LinqToDB.SqlTableFunctionAttribute, parameters, initializers?.ToArray() ?? Array<CodeAssignmentStatement>.Empty);
 
 			// generate:
-			// builder.HasAttribute<ITable<T>>(e => e.Method(defaults), attr);
+			// builder.HasAttribute<TContext>(ctx => ctx.Method(defaults), attr);
 			var lambdaParam = context.AST.LambdaParameter(context.AST.Name("ctx"), context.TableFunctionsClass.Type);
 			var lambda      = context.AST
 				.Lambda(WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(methodBuilder.Method.ReturnType!.Type, context.TableFunctionsClass.Type)), true)
@@ -254,12 +268,14 @@ namespace LinqToDB.Metadata
 							lambdaParam.Reference,
 							methodBuilder.Method.Name,
 							methodBuilder.Method.ReturnType!.Type,
-							BuildDefaultArgs(context, methodBuilder.Method))));
+							BuildDefaultArgs(context, methodBuilder.Method, false))));
 
 			_builderCalls.Add(
 				context.AST.Call(
 					_builderVar.Reference,
 					WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_HasAttribute,
+					new IType[] { context.TableFunctionsClass.Type },
+					false,
 					lambda.Method,
 					attr));
 		}
@@ -283,7 +299,7 @@ namespace LinqToDB.Metadata
 		/// <summary>
 		/// Generates list of default(T) parameters for method.
 		/// </summary>
-		private static ICodeExpression[] BuildDefaultArgs(IDataModelGenerationContext context, CodeMethod method)
+		private static ICodeExpression[] BuildDefaultArgs(IDataModelGenerationContext context, CodeMethod method, bool replaceTArg)
 		{
 			if (method.Parameters.Count == 0)
 				return Array<ICodeExpression>.Empty;
@@ -291,9 +307,59 @@ namespace LinqToDB.Metadata
 			var parameters = new ICodeExpression[method.Parameters.Count];
 			for (var i = 0; i < parameters.Length; i++)
 				// no target-typing to avoid overloads conflict
-				parameters[i] = context.AST.Default(method.Parameters[i].Type.Type, false);
+				parameters[i] = context.AST.Default(replaceTArg ? ReplaceTArg(method.Parameters[i].Type.Type) : method.Parameters[i].Type.Type, false);
 
 			return parameters;
+		}
+
+		private static IType ReplaceTArg(IType type)
+		{
+			switch (type.Kind)
+			{
+				case TypeKind.Dynamic:
+				case TypeKind.Regular:
+				case TypeKind.OpenGeneric:
+					return type;
+				case TypeKind.Array:
+				{
+					var elemType = ReplaceTArg(type.ArrayElementType!);
+
+					if (elemType == type.ArrayElementType)
+						return type;
+
+					return new ArrayType(elemType, type.ArraySizes!, type.IsNullable);
+				}
+				case TypeKind.Generic:
+				{
+					IType[]? typeArguments = null;
+					for (var i = 0; i < type.TypeArguments!.Count; i++)
+					{
+						var argType = ReplaceTArg(type.TypeArguments[i]);
+						if (argType != type.TypeArguments[i] || typeArguments != null)
+						{
+							if (typeArguments == null)
+							{
+								typeArguments = new IType[type.TypeArguments!.Count];
+								for (var j = 0; j < i; j++)
+									typeArguments[j] = type.TypeArguments[j];
+							}
+
+							typeArguments[i] = argType;
+						}
+					}
+
+					if (typeArguments == null)
+						return type;
+
+					if (type.Parent != null)
+						return new GenericType(type.Parent, type.Name!, type.IsValueType, type.IsNullable, typeArguments, type.External);
+					return new GenericType(type.Namespace, type.Name!, type.IsValueType, type.IsNullable, typeArguments, type.External);
+				}
+				case TypeKind.TypeArgument:
+					return WellKnownTypes.System.Object;
+				default:
+					throw new NotImplementedException($"Type {type.Kind} support not implemented in {nameof(ReplaceTArg)}()");
+			}
 		}
 
 		/// <summary>
@@ -393,6 +459,16 @@ namespace LinqToDB.Metadata
 				var entityType        = kvp.Key.Type;
 				var entityBuilderType = WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilderWithType(entityType);
 
+				if (isStatement && kvp.Value.tableAttribute == null)
+					continue;
+
+				// builder.Entity<T>()
+				var expression = context.AST.Call(
+					_builderVar.Reference,
+					WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
+					entityBuilderType,
+					new IType[] { entityType },
+					false);
 
 				// builder.Entity<T>().HasAttribute(new TableAttribute("table") { ... })
 				if (isStatement)
@@ -400,31 +476,22 @@ namespace LinqToDB.Metadata
 					context.StaticInitializer.Append(
 						// .HasAttribute(new TableAttribute("table") { ... })
 						context.AST.Call(
-							// builder.Entity<T>()
-							context.AST.Call(
-								_builderVar.Reference,
-								WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
-								entityBuilderType,
-								new IType[] { entityType },
-								false),
+							expression,
 							WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute,
-							kvp.Value.tableAttribute));
+							kvp.Value.tableAttribute!));
 
 					continue;
 				}
 
-				// .HasAttribute(new TableAttribute("table") { ... })
-				var expression = context.AST.Call(
-					// builder.Entity<T>()
-					context.AST.Call(
-						_builderVar.Reference,
-						WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
+				if (kvp.Value.tableAttribute != null)
+				{
+					// .HasAttribute(new TableAttribute("table") { ... })
+					expression = context.AST.Call(
+						expression,
+						WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute,
 						entityBuilderType,
-						new IType[] { entityType },
-						false),
-					WellKnownTypes.LinqToDB.Mapping.EntityMappingBuilder_HasAttribute,
-					entityBuilderType,
-					kvp.Value.tableAttribute);
+						kvp.Value.tableAttribute);
+				}
 
 				var cnt = 0;
 				foreach (var members in kvp.Value.members)

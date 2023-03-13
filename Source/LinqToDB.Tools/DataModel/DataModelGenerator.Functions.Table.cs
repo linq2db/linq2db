@@ -55,7 +55,6 @@ namespace LinqToDB.DataModel
 
 			// generate mapping method with metadata
 			var method = context.DefineMethod(region.Methods(false), tableFunction.Method);
-			context.MetadataBuilder?.BuildTableFunctionMetadata(context, tableFunction.Metadata, method);
 
 			// generate method parameters, return type and body
 
@@ -134,6 +133,9 @@ namespace LinqToDB.DataModel
 					lambda.Method));
 
 			// TODO: similar tables deduplication
+
+			// metadata last
+			context.MetadataBuilder?.BuildTableFunctionMetadata(context, tableFunction.Metadata, method);
 		}
 	}
 }

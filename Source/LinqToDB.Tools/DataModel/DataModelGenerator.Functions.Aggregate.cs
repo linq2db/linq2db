@@ -37,9 +37,6 @@ namespace LinqToDB.DataModel
 						WellKnownTypes.System.InvalidOperationException,
 						context.AST.Constant(DataModelConstants.EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
 
-			// build mappings
-			context.MetadataBuilder?.BuildFunctionMetadata(context, aggregate.Metadata, method);
-
 			var source = context.AST.TypeParameter(context.AST.Name(DataModelConstants.AGGREGATE_RECORD_TYPE));
 			method.TypeParameter(source);
 
@@ -78,6 +75,9 @@ namespace LinqToDB.DataModel
 					context.DefineParameter(method, param.Parameter);
 				}
 			}
+
+			// metadata last
+			context.MetadataBuilder?.BuildFunctionMetadata(context, aggregate.Metadata, method);
 		}
 	}
 }

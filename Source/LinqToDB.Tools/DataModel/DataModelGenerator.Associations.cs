@@ -206,8 +206,6 @@ namespace LinqToDB.DataModel
 
 			// define extension method
 			var  methodBuilder = context.DefineMethod(associations, extensionModel).Returns(type);
-			// and it's metadata
-			context.MetadataBuilder?.BuildAssociationMetadata(context, context.ExtensionsClass.Type, metadata, methodBuilder);
 
 			// build method parameters...
 			var thisParam = context.AST.Parameter(thisEntityType, context.AST.Name(DataModelConstants.EXTENSIONS_ENTITY_THIS_PARAMETER), CodeParameterDirection.In);
@@ -308,6 +306,9 @@ namespace LinqToDB.DataModel
 
 				methodBuilder.Body().Append(context.AST.Return(body));
 			}
+
+			// and it's metadata
+			context.MetadataBuilder?.BuildAssociationMetadata(context, context.ExtensionsClass.Type, metadata, methodBuilder);
 		}
 	}
 }

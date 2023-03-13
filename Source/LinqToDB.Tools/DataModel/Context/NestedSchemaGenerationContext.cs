@@ -51,7 +51,7 @@ namespace LinqToDB.DataModel
 		CodeReference         IDataModelGenerationContext.ContextMappingSchema          => _parentContext.ContextMappingSchema;
 		IType                 IDataModelGenerationContext.ProcedureContextParameterType => _parentContext.ProcedureContextParameterType;
 		ClassBuilder          IDataModelGenerationContext.ExtensionsClass               => _parentContext.ExtensionsClass;
-		CodeClass             IDataModelGenerationContext.NonTableFunctionsClass        => _parentContext.NonTableFunctionsClass;
+		CodeClass             IDataModelGenerationContext.NonTableFunctionsClass        => _schemaWrapper.Type;
 		CodeClass             IDataModelGenerationContext.TableFunctionsClass           => _parentContext.TableFunctionsClass;
 
 		MethodGroup           IDataModelGenerationContext.FindExtensionsGroup           => _findExtensions ??= _schemaWrapper.Regions().New(DataModelConstants.FIND_METHODS_REGION).Methods(false);

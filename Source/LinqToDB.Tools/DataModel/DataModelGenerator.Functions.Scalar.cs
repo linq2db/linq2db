@@ -46,9 +46,6 @@ namespace LinqToDB.DataModel
 						WellKnownTypes.System.InvalidOperationException,
 						context.AST.Constant(DataModelConstants.EXCEPTION_QUERY_ONLY_SCALAR_CALL, true))));
 
-			// build mappings
-			context.MetadataBuilder?.BuildFunctionMetadata(context, function.Metadata, method);
-
 			IType returnType;
 			if (function.ReturnTuple != null)
 			{
@@ -125,6 +122,9 @@ namespace LinqToDB.DataModel
 
 			foreach (var param in function.Parameters)
 				context.DefineParameter(method, param.Parameter);
+
+			// metadata last
+			context.MetadataBuilder?.BuildFunctionMetadata(context, function.Metadata, method);
 		}
 	}
 }

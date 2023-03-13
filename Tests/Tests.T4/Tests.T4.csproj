@@ -48,6 +48,16 @@
 
 	<ItemGroup>
 
+		<None Update="Cli\Fluent.tt">
+		  <LastGenOutput>Fluent.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<None Update="Cli\NoMetadata.tt">
+		  <LastGenOutput>NoMetadata.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
 		<None Update="Cli\All.tt">
 		  <LastGenOutput>All.generated.cs</LastGenOutput>
 		  <Generator>TextTemplatingFileGenerator</Generator>
@@ -255,6 +265,16 @@
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>Default.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Cli\Fluent.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Fluent.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Cli\NoMetadata.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>NoMetadata.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Cli\T4.generated.cs">
 		  <DesignTime>True</DesignTime>
