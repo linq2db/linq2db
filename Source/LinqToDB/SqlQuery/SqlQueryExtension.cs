@@ -10,6 +10,7 @@ namespace LinqToDB.SqlQuery
 		public Sql.QueryExtensionScope           Scope         { get; set; }
 		public Dictionary<string,ISqlExpression> Arguments     { get; } = new();
 		public Type?                             BuilderType   { get; set; }
+		public SourceCardinality                 Cardinality   { get; set; }
 
 		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)
 		{

@@ -1501,6 +1501,7 @@ namespace LinqToDB.Remote
 						{
 							Append(ext.Configuration);
 							Append((int)ext.Scope);
+							Append((int)ext.Cardinality);
 							Append(ext.BuilderType);
 							Append(ext.Arguments.Count);
 
@@ -2437,6 +2438,7 @@ namespace LinqToDB.Remote
 
 							ext.Configuration = ReadString();
 							ext.Scope         = (Sql.QueryExtensionScope)ReadInt();
+							ext.Cardinality   = (SourceCardinality)      ReadInt();
 							ext.BuilderType   = ReadType();
 
 							var cnt = ReadInt();

@@ -1395,6 +1395,7 @@ namespace LinqToDB.SqlQuery
 							Configuration = item.Configuration,
 							Scope         = item.Scope,
 							BuilderType   = item.BuilderType,
+							Cardinality   = item.Cardinality,
 						};
 
 						foreach (var arg in item.Arguments)
