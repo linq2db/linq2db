@@ -11,13 +11,16 @@ namespace LinqToDB.CodeModel
 		private readonly List<CodeTypeToken>   _genericArguments;
 		private readonly List<ICodeExpression> _parameters;
 
+		private List<SimpleTrivia>?   _wrapTrivia;
+
 		protected CodeCallBase(
 			bool                         extension,
 			ICodeExpression              callee,
 			CodeIdentifier               method,
-			IEnumerable<CodeTypeToken>   genericArguments,
+			IEnumerable<CodeTypeToken>?  genericArguments,
 			bool                         skipTypeArguments,
-			IEnumerable<ICodeExpression> parameters)
+			IEnumerable<ICodeExpression> parameters,
+			IEnumerable<SimpleTrivia>?   wrapTrivia)
 		{
 			Extension            = extension;
 			Callee               = callee;
@@ -25,6 +28,7 @@ namespace LinqToDB.CodeModel
 			CanSkipTypeArguments = skipTypeArguments;
 			_genericArguments    = new (genericArguments ?? Array<CodeTypeToken>  .Empty);
 			_parameters          = new (parameters       ?? Array<ICodeExpression>.Empty);
+			_wrapTrivia          = wrapTrivia == null ? null : new(wrapTrivia);
 		}
 
 		/// <summary>
@@ -53,5 +57,13 @@ namespace LinqToDB.CodeModel
 		/// Method call parameters.
 		/// </summary>
 		public IReadOnlyList<ICodeExpression>       Parameters           => _parameters;
+
+		public IReadOnlyList<SimpleTrivia>?         WrapTrivia           => _wrapTrivia;
+
+		/// <summary>
+		/// Add trivia element for method call wrap.
+		/// </summary>
+		/// <param name="trivia">Simple trivia element.</param>
+		internal void AddWrapSimpleTrivia(SimpleTrivia trivia) => (_wrapTrivia ??= new()).Add(trivia);
 	}
 }

@@ -20,15 +20,6 @@ namespace Cli.Default.SqlServer
 {
 	public partial class TestDataDB : DataConnection
 	{
-		#region Schemas
-		public void InitSchemas()
-		{
-			TestSchema = new TestSchemaSchema.DataContext(this);
-		}
-
-		public TestSchemaSchema.DataContext TestSchema { get; set; } = null!;
-		#endregion
-
 		public TestDataDB()
 		{
 			InitSchemas();
@@ -50,6 +41,15 @@ namespace Cli.Default.SqlServer
 		}
 
 		partial void InitDataContext();
+
+		#region Schemas
+		public void InitSchemas()
+		{
+			TestSchema = new TestSchemaSchema.DataContext(this);
+		}
+
+		public TestSchemaSchema.DataContext TestSchema { get; set; } = null!;
+		#endregion
 
 		public ITable<AllType>                 AllTypes                 => this.GetTable<AllType>();
 		public ITable<AllTypes2>               AllTypes2                => this.GetTable<AllTypes2>();
@@ -215,12 +215,12 @@ namespace Cli.Default.SqlServer
 
 		public static Issue1115? Find(this ITable<Issue1115> table, SqlHierarchyId id)
 		{
-			return table.FirstOrDefault(e => (bool)(e.Id == id));
+			return table.FirstOrDefault(e => e.Id.Equals(id));
 		}
 
 		public static Task<Issue1115?> FindAsync(this ITable<Issue1115> table, SqlHierarchyId id, CancellationToken cancellationToken = default)
 		{
-			return table.FirstOrDefaultAsync(e => (bool)(e.Id == id), cancellationToken);
+			return table.FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
 		}
 
 		public static Issue1144? Find(this ITable<Issue1144> table, int id)

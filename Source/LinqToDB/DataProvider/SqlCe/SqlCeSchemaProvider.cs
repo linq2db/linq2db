@@ -111,10 +111,14 @@ SELECT
 	COALESCE(rc.UNIQUE_CONSTRAINT_CATALOG, '') + '.' + COALESCE(rc.UNIQUE_CONSTRAINT_SCHEMA, '') + '.' + rc.UNIQUE_CONSTRAINT_TABLE_NAME OtherTableID,
 	rc.CONSTRAINT_NAME                                                                                                                   Name,
 	tc.COLUMN_NAME                                                                                                                       ThisColumn,
-	oc.COLUMN_NAME                                                                                                                       OtherColumn
+	oc.COLUMN_NAME                                                                                                                       OtherColumn,
+	tc.ORDINAL_POSITION                                                                                                                  Ordinal
 FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS rc
-INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE tc ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
-INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNIQUE_CONSTRAINT_NAME");
+	INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE tc ON tc.CONSTRAINT_NAME = rc.CONSTRAINT_NAME
+		AND tc.TABLE_NAME = rc.CONSTRAINT_TABLE_NAME
+	INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE oc ON oc.CONSTRAINT_NAME = rc.UNIQUE_CONSTRAINT_NAME
+		AND oc.TABLE_NAME = rc.UNIQUE_CONSTRAINT_TABLE_NAME
+		AND tc.ORDINAL_POSITION = oc.ORDINAL_POSITION");
 
 			return data.ToList();
 		}

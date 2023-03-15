@@ -1,12 +1,11 @@
 ﻿namespace LinqToDB.CodeModel
 {
-	// TODO: remove
 	/// <summary>
 	/// Empty line element. Used for explicit formatting.
 	/// </summary>
 	public sealed class CodeEmptyLine : ITopLevelElement
 	{
-		public static readonly ITopLevelElement Instance = new CodeEmptyLine();
+		public static readonly CodeEmptyLine Instance = new ();
 		
 		private CodeEmptyLine()
 		{
