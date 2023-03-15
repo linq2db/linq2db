@@ -600,7 +600,7 @@ namespace Tests.DataProvider
 					expectedVersion = "3.40.0";
 					break;
 				case ProviderName.SQLiteMS:
-					expectedVersion = "3.39.2";
+					expectedVersion = "3.40.1";
 					break;
 				default:
 					throw new InvalidOperationException();
