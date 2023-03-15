@@ -79,27 +79,6 @@ namespace Tests.Linq
 
 			db.InlineParameters = inlinParameters;
 
-			var q =
-				from p in db.GetTable<TemporalTest>()
-					.AsSqlServer()
-					.TemporalTableHint(SqlServerHints.TemporalTable.AsOf, data[1].StartedOn.AddMilliseconds(100))
-				select p;
-
-			var list = q.ToList();
-
-			Assert.That(list[0].StartedOn, Is.EqualTo(data[1].StartedOn));
-		}
-
-		[Test]
-		public void AsOfTest2([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context, [Values(true, false)] bool inlinParameters)
-		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
-			using var db = GetDataContext(context);
-
-			var data = CreateTestTable(db);
-
-			db.InlineParameters = inlinParameters;
-
 			var n = 1;
 
 			var q =
@@ -107,31 +86,6 @@ namespace Tests.Linq
 					.AsSqlServer()
 					.TemporalTableAsOf(data[0].StartedOn.AddMilliseconds(100))
 				where p.ID == n
-				select p;
-
-			var list = q.ToList();
-
-			Assert.That(list[0].StartedOn, Is.EqualTo(data[0].StartedOn));
-		}
-
-		[Test]
-		public void RangeTest(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context,
-			[Values(SqlServerHints.TemporalTable.FromTo, SqlServerHints.TemporalTable.Between, SqlServerHints.TemporalTable.ContainedIn)] string hint,
-			[Values(true, false)] bool inlinParameters)
-		{
-			using var _  = new DisableBaseline("Current datetime parameters used");
-			using var db = GetDataContext(context);
-
-			var data = CreateTestTable(db);
-
-			db.InlineParameters = inlinParameters;
-
-			var q =
-				from p in db.GetTable<TemporalTest>()
-					.AsSqlServer()
-					.TemporalTableHint(hint, data[0].StartedOn.AddMilliseconds(-100), data[1].StartedOn.AddMilliseconds(100))
-				orderby p.StartedOn
 				select p;
 
 			var list = q.ToList();

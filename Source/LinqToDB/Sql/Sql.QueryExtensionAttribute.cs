@@ -70,6 +70,7 @@ namespace LinqToDB
 			public Type?               ExtensionBuilderType { get; set; }
 			public string[]?           ExtensionArguments   { get; set; }
 			public SourceCardinality   Cardinality          { get; set; }
+			public object?             Parameters           { get; set; }
 
 			public virtual SqlQueryExtension GetExtension(List<SqlQueryExtensionData> parameters)
 			{
@@ -79,6 +80,7 @@ namespace LinqToDB
 					Scope         = Scope,
 					BuilderType   = ExtensionBuilderType,
 					Cardinality   = Cardinality,
+					Parameters    = Parameters,
 				};
 
 				foreach (var item in parameters)

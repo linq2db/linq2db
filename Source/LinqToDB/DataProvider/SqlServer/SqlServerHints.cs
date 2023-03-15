@@ -849,7 +849,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
-				var expression = (string)((SqlValue)sqlQueryExtension.Arguments["expression"]).Value!;
+				var expression = (string)sqlQueryExtension.Parameters!;
 
 				stringBuilder
 					.Append(" FOR SYSTEM_TIME ")
@@ -895,64 +895,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
-		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
-		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
-			this                ISqlServerSpecificTable<TSource> table,
-			[SqlQueryDependent] string                           expression)
-			where TSource : notnull
-		{
-			var newTable = new Table<TSource>(table.DataContext,
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(TemporalTableHint, table, expression),
-					table.Expression, Expression.Constant(expression))
-			);
-
-			return new SqlServerSpecificTable<TSource>(newTable);
-		}
-
-		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
-		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
-		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
-			this                ISqlServerSpecificTable<TSource> table,
-			[SqlQueryDependent] string                           expression,
-			                    DateTime                         dateTime)
-			where TSource : notnull
-		{
-			var newTable = new Table<TSource>(table.DataContext,
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime),
-					table.Expression, Expression.Constant(expression), Expression.Constant(dateTime))
-			);
-
-			return new SqlServerSpecificTable<TSource>(newTable);
-		}
-
-		[LinqTunnel, Pure]
-		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
-		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
-		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
-			this                ISqlServerSpecificTable<TSource> table,
-			[SqlQueryDependent] string                           expression,
-			                    DateTime                         dateTime,
-			                    DateTime                         dateTime2)
-			where TSource : notnull
-		{
-			var newTable = new Table<TSource>(table.DataContext,
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(TemporalTableHint, table, expression, dateTime, dateTime2),
-					table.Expression, Expression.Constant(expression), Expression.Constant(dateTime),
-					Expression.Constant(dateTime2))
-			);
-
-			return new SqlServerSpecificTable<TSource>(newTable);
-		}
-
 		/// <summary>
 		/// <para>
 		/// See <see href="https://learn.microsoft.com/en-us/sql/relational-databases/tables/temporal-tables">Temporal table</see>
@@ -970,16 +912,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="table"></param>
 		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME ALL</b> filter.</returns>
 		[LinqTunnel, Pure]
-		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableAllImpl))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder),
+			Cardinality = SourceCardinality.OneOrMany,
+			Parameters  = TemporalTable.All)]
 		public static ISqlServerSpecificTable<TSource> TemporalTableAll<TSource>(this ISqlServerSpecificTable<TSource> table)
 			where TSource : notnull
 		{
-			return table.TemporalTableHint(TemporalTable.All);
-		}
-		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> TemporalTableAllImpl<TSource>()
-			where TSource : notnull
-		{
-			return table => table.TemporalTableHint(TemporalTable.All);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableAll, table),
+					table.Expression)
+			);
+
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -1003,16 +950,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="table"></param>
 		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME AS OF</b> <i>dateTime</i> filter.</returns>
 		[LinqTunnel, Pure]
-		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableAsOfImpl))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder),
+			Cardinality = SourceCardinality.One,
+			Parameters  = TemporalTable.AsOf)]
 		public static ISqlServerSpecificTable<TSource> TemporalTableAsOf<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime)
 			where TSource : notnull
 		{
-			return table.TemporalTableHint(TemporalTable.AsOf, dateTime);
-		}
-		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableAsOfImpl<TSource>()
-			where TSource : notnull
-		{
-			return (table, dateTime) => table.TemporalTableHint(TemporalTable.AsOf, dateTime);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableAsOf, table, dateTime),
+					table.Expression, Expression.Constant(dateTime))
+			);
+
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -1038,16 +990,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="table"></param>
 		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME FROM</b> <i>dateTime</i> <b>TO</b> <i>dateTime2</i> filter.</returns>
 		[LinqTunnel, Pure]
-		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableFromToImpl))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder),
+			Cardinality = SourceCardinality.ZeroOrMany,
+			Parameters  = TemporalTable.FromTo)]
 		public static ISqlServerSpecificTable<TSource> TemporalTableFromTo<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime, DateTime dateTime2)
 			where TSource : notnull
 		{
-			return table.TemporalTableHint(TemporalTable.FromTo, dateTime, dateTime2);
-		}
-		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableFromToImpl<TSource>()
-			where TSource : notnull
-		{
-			return (table, dateTime, dateTime2) => table.TemporalTableHint(TemporalTable.FromTo, dateTime, dateTime2);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableFromTo, table, dateTime, dateTime2),
+					table.Expression, Expression.Constant(dateTime), Expression.Constant(dateTime2))
+			);
+
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -1068,16 +1025,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="table"></param>
 		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME BETWEEN</b> <i>dateTime</i> <b>AND</b> <i>dateTime2</i> filter.</returns>
 		[LinqTunnel, Pure]
-		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableBetweenImpl))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder),
+			Cardinality = SourceCardinality.ZeroOrMany,
+			Parameters  = TemporalTable.Between)]
 		public static ISqlServerSpecificTable<TSource> TemporalTableBetween<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime, DateTime dateTime2)
 			where TSource : notnull
 		{
-			return table.TemporalTableHint(TemporalTable.Between, dateTime, dateTime2);
-		}
-		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableBetweenImpl<TSource>()
-			where TSource : notnull
-		{
-			return (table, dateTime, dateTime2) => table.TemporalTableHint(TemporalTable.Between, dateTime, dateTime2);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableBetween, table, dateTime, dateTime2),
+					table.Expression, Expression.Constant(dateTime), Expression.Constant(dateTime2))
+			);
+
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -1099,16 +1061,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="table"></param>
 		/// <returns>Table-like query source with <b>FOR SYSTEM_TIME CONTAINED IN</b> (<i>dateTime</i>, <i>dateTime2</i>) filter.</returns>
 		[LinqTunnel, Pure]
-		[ExpressionMethod(ProviderName.SqlServer, nameof(TemporalTableContainedInImpl))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder),
+			Cardinality = SourceCardinality.ZeroOrMany,
+			Parameters  = TemporalTable.ContainedIn)]
 		public static ISqlServerSpecificTable<TSource> TemporalTableContainedIn<TSource>(this ISqlServerSpecificTable<TSource> table, DateTime dateTime, DateTime dateTime2)
 			where TSource : notnull
 		{
-			return table.TemporalTableHint(TemporalTable.ContainedIn, dateTime, dateTime2);
-		}
-		static Expression<Func<ISqlServerSpecificTable<TSource>,DateTime,DateTime,ISqlServerSpecificTable<TSource>>> TemporalTableContainedInImpl<TSource>()
-			where TSource : notnull
-		{
-			return (table, dateTime, dateTime2) => table.TemporalTableHint(TemporalTable.ContainedIn, dateTime, dateTime2);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TemporalTableContainedIn, table, dateTime, dateTime2),
+					table.Expression, Expression.Constant(dateTime), Expression.Constant(dateTime2))
+			);
+
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
 		#endregion

@@ -217,6 +217,19 @@ namespace LinqToDB.Remote
 				}
 			}
 
+			protected void Append(object? obj)
+			{
+				Builder.Append(' ');
+
+				switch (obj)
+				{
+					case null    : Builder.Append('-'); break;
+					case string s: Builder.Append('1'); Append(s); break;
+					case int    i: Builder.Append('2'); Append(i); break;
+					default      : throw new LinqToDBException($"Cant serialize object type {obj.GetType()}.");
+				}
+			}
+
 			protected int GetType(Type? type)
 			{
 				if (type == null)
@@ -393,6 +406,23 @@ namespace LinqToDB.Remote
 				Pos += len;
 
 				return value;
+			}
+
+			protected object? ReadObject()
+			{
+				Get(' ');
+
+				var c = Peek();
+
+				Pos++;
+
+				return c switch
+				{
+					'-' => null,
+					'1' => ReadString(),
+					'2' => ReadInt(),
+					_   => throw new LinqToDBException($"Cant deserialize object type '{c}'.")
+				};
 			}
 
 			protected List<string> ReadStringList()
@@ -1503,6 +1533,7 @@ namespace LinqToDB.Remote
 							Append((int)ext.Scope);
 							Append((int)ext.Cardinality);
 							Append(ext.BuilderType);
+							Append(ext.Parameters);
 							Append(ext.Arguments.Count);
 
 							foreach (var argument in ext.Arguments)
@@ -2440,6 +2471,7 @@ namespace LinqToDB.Remote
 							ext.Scope         = (Sql.QueryExtensionScope)ReadInt();
 							ext.Cardinality   = (SourceCardinality)      ReadInt();
 							ext.BuilderType   = ReadType();
+							ext.Parameters    = ReadObject();
 
 							var cnt = ReadInt();
 
