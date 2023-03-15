@@ -20,15 +20,18 @@ namespace LinqToDB.Data
 			static Configuration()
 			{
 				Info = new();
-
-				if (DefaultSettings != null)
-					SetConnectionStrings(DefaultSettings.ConnectionStrings);
+				EnsureInit();
 			}
 
 			public static readonly ConcurrentDictionary<string,ConfigurationInfo> Info;
 
 			public static void EnsureInit()
 			{
+				if (DefaultSettings != null)
+				{
+					Info.Clear();
+					SetConnectionStrings(DefaultSettings.ConnectionStrings);
+				}
 			}
 		}
 
