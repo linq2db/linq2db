@@ -203,7 +203,6 @@ namespace Tests
 			TestExternals.Log("Connection strings:");
 
 #if !NET472
-			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
 			foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
@@ -216,6 +215,8 @@ namespace Tests
 				TxtSettings.Instance.AddConnectionString(
 					provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
 			}
+
+			DataConnection.DefaultSettings = TxtSettings.Instance;
 #else
 			foreach (var provider in testSettings.Connections)
 			{
