@@ -22,7 +22,7 @@ namespace Cli.Default.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Id) + "," + nameof(Id), OtherKey = nameof(Issue695Parent.Id) + "," + nameof(Id))]
+		[Association(CanBeNull = false, ThisKey = nameof(Id), OtherKey = nameof(Issue695Parent.Id))]
 		public Issue695Parent Parent { get; set; } = null!;
 		#endregion
 	}

@@ -133,5 +133,10 @@ namespace LinqToDB
 		void RemoveInterceptor(IInterceptor interceptor);
 
 		IUnwrapDataObjectInterceptor? UnwrapDataObjectInterceptor { get; }
+
+		/// <summary>
+		/// Gets initial value for database connection configuration name.
+		/// </summary>
+		string?                       ConfigurationString         { get; }
 	}
 }

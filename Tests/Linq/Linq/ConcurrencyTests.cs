@@ -884,5 +884,80 @@ namespace Tests.Linq
 				record.Stamp = data[0].Stamp;
 			}
 		}
+
+		[Test]
+		public void TestFilterExtension([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			var skipCnt = context.IsAnyOf(TestProvName.AllClickHouse);
+			var ms      = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<ConcurrencyTable<byte[]>>()
+					.Property(e => e.Stamp)
+						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Auto))
+						// don't set skip-on-update to test UpdateOptimistic skips it
+						.HasSkipOnInsert()
+						.HasDataType(DataType.Timestamp)
+				.Build();
+
+			using var _   = new DisableBaseline("timestamp used");
+			using var db  = GetDataContext(context, ms);
+			using var t   = db.CreateLocalTable<ConcurrencyTable<byte[]>>();
+
+			var record = new ConcurrencyTable<byte[]>()
+			{
+				Id    = 1,
+				Value = "initial"
+			};
+
+			var cnt = db.Insert(record);
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record);
+
+			record.Value = "value 1";
+			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record);
+
+			record.Value = "value 2";
+			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			AssertData(record);
+
+			var dbStamp = record.Stamp.ToArray();
+			record.Value = "value 3";
+			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
+			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
+			Assert.AreEqual(0, cnt);
+			record.Stamp = dbStamp;
+			record.Value = "value 2";
+			AssertData(record, true);
+			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
+
+			cnt = t.WhereKeyOptimistic(record).Delete();
+			Assert.AreEqual(0, cnt);
+			record.Stamp = dbStamp;
+			AssertData(record, true);
+
+			cnt = t.WhereKeyOptimistic(record).Delete();
+			if (!skipCnt) Assert.AreEqual(1, cnt);
+			Assert.AreEqual(0, t.ToArray().Length);
+
+			void AssertData(ConcurrencyTable<byte[]> record, bool equals = false)
+			{
+				var data = t.ToArray();
+
+				Assert.AreEqual(1, data.Length);
+				Assert.AreEqual(record.Id, data[0].Id);
+				Assert.AreEqual(record.Value, data[0].Value);
+
+				if (equals)
+					Assert.AreEqual(record.Stamp, data[0].Stamp);
+				else
+					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+
+				record.Stamp = data[0].Stamp;
+			}
+		}
 	}
 }

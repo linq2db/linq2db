@@ -8,8 +8,7 @@ namespace LinqToDB.Tools.Mapper
 	/// Mapper helper class.
 	/// </summary>
 	/// <example>
-	/// This example shows how to map one object to another.
-	/// <code source="CodeJam.Blocks.Tests\Mapping\Examples\MapTests.cs" region="Example" lang="C#"/>
+	/// This <see href="https://github.com/rsdn/CodeJam/blob/master/CodeJam.Blocks.Tests/Mapping/Examples/MapTests.cs">example</see> shows how to map one object to another.
 	/// </example>
 	[PublicAPI]
 	public static class Map

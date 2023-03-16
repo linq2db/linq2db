@@ -16,11 +16,6 @@ namespace LinqToDB.CodeModel
 		}
 
 		/// <summary>
-		/// Get new line element.
-		/// </summary>
-		public ITopLevelElement NewLine => CodeEmptyLine.Instance;
-
-		/// <summary>
 		/// Add new file code unit.
 		/// </summary>
 		/// <param name="fileName">File name.</param>
@@ -96,7 +91,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="skipTypeArguments">Type arguments could be skipped on code-generation due to type inference.</param>
 		/// <param name="parameters">Method parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, IType[] genericArguments, bool skipTypeArguments, params ICodeExpression[] parameters) => new(false, objOrType, method, genericArguments, skipTypeArguments, parameters, returnType);
+		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, IType[] genericArguments, bool skipTypeArguments, params ICodeExpression[] parameters) => new(false, objOrType, method, genericArguments, skipTypeArguments, parameters, null, returnType);
 
 		/// <summary>
 		/// Create non-void method call expression.
@@ -106,7 +101,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="returnType">Method return value type.</param>
 		/// <param name="parameters">Method parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(false, objOrType, method, Common.Array<IType>.Empty, false, parameters, returnType);
+		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(false, objOrType, method, Common.Array<IType>.Empty, false, parameters, null, returnType);
 
 		/// <summary>
 		/// Create generic void method call statement.
@@ -117,7 +112,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="skipTypeArguments">Type arguments could be skipped on code-generation due to type inference.</param>
 		/// <param name="parameters">Method parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method, IType[] genericArguments, bool skipTypeArguments, params ICodeExpression[] parameters) => new(false, objOrType, method, genericArguments, skipTypeArguments, parameters);
+		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method, IType[] genericArguments, bool skipTypeArguments, params ICodeExpression[] parameters) => new(false, objOrType, method, genericArguments, skipTypeArguments, parameters, null);
 
 		/// <summary>
 		/// Create void method call statement.
@@ -126,7 +121,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="method">Called method name.</param>
 		/// <param name="parameters">Method parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method, params ICodeExpression[] parameters) => new(false, objOrType, method, Common.Array<IType>.Empty, false, parameters);
+		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method, params ICodeExpression[] parameters) => new(false, objOrType, method, Common.Array<IType>.Empty, false, parameters, null);
 
 		/// <summary>
 		/// Create non-void generic extension method call expression.
@@ -138,7 +133,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="skipTypeArguments">Type arguments could be skipped on code-generation due to type inference.</param>
 		/// <param name="parameters">Call parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, IType[] genericArguments, bool skipTypeArguments, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, genericArguments, skipTypeArguments, parameters, returnType);
+		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, IType[] genericArguments, bool skipTypeArguments, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, genericArguments, skipTypeArguments, parameters, null, returnType);
 
 		/// <summary>
 		/// Create non-void extension method call expression.
@@ -148,7 +143,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="returnType">Method return value type.</param>
 		/// <param name="parameters">Call parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, Common.Array<IType>.Empty, false, parameters, returnType);
+		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, Common.Array<IType>.Empty, false, parameters, null, returnType);
 
 		/// <summary>
 		/// Create void generic extension method call statement.
@@ -159,7 +154,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="skipTypeArguments">Type arguments could be skipped on code-generation due to type inference.</param>
 		/// <param name="parameters">Call parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallStatement ExtCall(IType type, CodeIdentifier method, IType[] genericArguments, bool skipTypeArguments, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, genericArguments, skipTypeArguments, parameters);
+		public CodeCallStatement ExtCall(IType type, CodeIdentifier method, IType[] genericArguments, bool skipTypeArguments, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, genericArguments, skipTypeArguments, parameters, null);
 
 		/// <summary>
 		/// Create void extension method call statement.
@@ -168,7 +163,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="method">Called method name.</param>
 		/// <param name="parameters">Call parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallStatement ExtCall(IType type, CodeIdentifier method, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, Common.Array<IType>.Empty, false, parameters);
+		public CodeCallStatement ExtCall(IType type, CodeIdentifier method, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, Common.Array<IType>.Empty, false, parameters, null);
 
 		/// <summary>
 		/// Create method parameter.
@@ -201,7 +196,7 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		/// <param name="expression">Optional return value.</param>
 		/// <returns>Return statement/expression instance.</returns>
-		public CodeReturn Return(ICodeExpression? expression) => new(expression);
+		public CodeReturn Return(ICodeExpression? expression) => new(expression, null, null);
 
 		/// <summary>
 		/// Creates equality binary expression.
@@ -265,7 +260,7 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		/// <param name="exception">Exception object to throw.</param>
 		/// <returns>Throw statement instance.</returns>
-		public CodeThrowStatement Throw(ICodeExpression exception) => new(exception);
+		public CodeThrowStatement Throw(ICodeExpression exception) => new(exception, null, null);
 
 		/// <summary>
 		/// Creates generic type parameter descriptor.
@@ -280,7 +275,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="lvalue">Assignee.</param>
 		/// <param name="rvalue">Assigned value.</param>
 		/// <returns>Assignment statement/expression instance.</returns>
-		public CodeAssignmentStatement Assign(ILValue lvalue, ICodeExpression rvalue) => new(lvalue, rvalue);
+		public CodeAssignmentStatement Assign(ILValue lvalue, ICodeExpression rvalue) => new(lvalue, rvalue, null, null);
 
 		/// <summary>
 		/// Creates await expression.
@@ -294,7 +289,7 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		/// <param name="task">Task expression to await.</param>
 		/// <returns>Await statement instance.</returns>
-		public CodeAwaitStatement AwaitStatement(ICodeExpression task) => new(task);
+		public CodeAwaitStatement AwaitStatement(ICodeExpression task) => new(task, null, null);
 
 		/// <summary>
 		/// Creates variable declaration.
@@ -422,5 +417,14 @@ namespace LinqToDB.CodeModel
 		/// <param name="value">Expression to apply operator to.</param>
 		/// <returns>Operator expression.</returns>
 		public CodeSuppressNull SuppressNull(ICodeExpression value) => new (value);
+
+		/// <summary>
+		/// Creates ternary expression.
+		/// </summary>
+		/// <param name="condition">Condition expression.</param>
+		/// <param name="true">Condition true value.</param>
+		/// <param name="false">Condition false value.</param>
+		/// <returns>Ternary expression instance.</returns>
+		public CodeTernary IIF(ICodeExpression condition, ICodeExpression @true, ICodeExpression @false) => new(condition, @true, @false);
 	}
 }

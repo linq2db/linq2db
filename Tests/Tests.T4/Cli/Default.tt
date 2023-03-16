@@ -24,7 +24,7 @@
 	RunCliTool("Access"         , null                 , "Cli.Default.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN);
 	RunCliTool("DB2"            , "DB2"                , "Cli.Default.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation);
 	RunCliTool("Firebird"       , "Firebird4"          , "Cli.Default.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode);
-	RunCliTool("Informix"       , "Informix"           , "Cli.Default.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation);
+	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.Default.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation);
 	RunCliTool("MySQL"          , "MariaDB"            , "Cli.Default.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode);
 	RunCliTool("MySQL"          , "MySqlConnector"     , "Cli.Default.MySql"              , Path.Combine(targetDir, "MySql")              , mode);
 	RunCliTool("Oracle"         , "Oracle.11.Managed"  , "Cli.Default.Oracle"             , Path.Combine(targetDir, "Oracle")             , mode);

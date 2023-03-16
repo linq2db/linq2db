@@ -215,7 +215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains6([DataSources(ProviderName.Access, TestProvName.AllClickHouse)] string context)
+		public void Contains6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

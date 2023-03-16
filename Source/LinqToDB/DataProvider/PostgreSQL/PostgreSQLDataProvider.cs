@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,6 +50,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
+
+			if (Adapter.SupportsBigInteger)
+				SetProviderField<DbDataReader, BigInteger, decimal>((DbDataReader rd, int idx) => rd.GetFieldValue<BigInteger>(idx));
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 

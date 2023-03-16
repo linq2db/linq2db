@@ -40,12 +40,14 @@ namespace LinqToDB.DataProvider.SqlCe
 		public static ISqlCeSpecificTable<TSource> AsSqlCe<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsSqlCe, table),
-				table.Expression);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSqlCe, table),
+					table.Expression)
+			);
 
-			return new SqlCeSpecificTable<TSource>(table);
+			return new SqlCeSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]

@@ -504,6 +504,7 @@ namespace Tests.DataProvider
 				Assert.AreEqual(2, t.Columns.Count);
 				Assert.AreEqual(1, t.Columns.Count(_ => _.IsPrimaryKey));
 				Assert.AreEqual(1, t.ForeignKeys.Count);
+				Assert.AreEqual(1, t.ForeignKeys[0].ThisColumns.Count);
 			}
 		}
 

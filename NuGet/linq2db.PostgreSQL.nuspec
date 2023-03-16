@@ -23,7 +23,7 @@
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="7.0.1"  />
+				<dependency id="Npgsql"  version="7.0.2"  />
 			</group>
 		</dependencies>
 		<contentFiles>

@@ -1,4 +1,5 @@
 ﻿using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
 
@@ -58,6 +59,7 @@ namespace LinqToDB.Scaffold
 			// data model options
 			options.DataModel.IncludeDatabaseName                            = false;
 			options.DataModel.GenerateDefaultSchema                          = true;
+			options.DataModel.Metadata                                       = MetadataSource.Attributes;
 			options.DataModel.BaseEntityClass                                = null;
 			options.DataModel.EntityClassIsPartial                           = true;
 			options.DataModel.EntityClassNameProvider                        = null;

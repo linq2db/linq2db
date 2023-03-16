@@ -203,7 +203,6 @@ namespace Tests
 			TestExternals.Log("Connection strings:");
 
 #if !NET472
-			DataConnection.DefaultSettings            = TxtSettings.Instance;
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
 			foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
@@ -216,6 +215,8 @@ namespace Tests
 				TxtSettings.Instance.AddConnectionString(
 					provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
 			}
+
+			DataConnection.DefaultSettings = TxtSettings.Instance;
 #else
 			foreach (var provider in testSettings.Connections)
 			{
@@ -402,7 +403,7 @@ namespace Tests
 			}
 
 			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
-			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str, null);
 		}
 
 		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
@@ -412,10 +413,8 @@ namespace Tests
 				return GetDataConnection(configuration, dbOptionsBuilder);
 			}
 
-			throw new NotImplementedException();
-
-			/*var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
-			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str);*/
+			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+			return _serverContainer.Prepare(null, null, false, str, dbOptionsBuilder);
 		}
 
 		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)

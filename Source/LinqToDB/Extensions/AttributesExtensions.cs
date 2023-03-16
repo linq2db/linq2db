@@ -52,15 +52,32 @@ namespace LinqToDB.Extensions
 
 		static Attribute[] GetInheritAttributes(ICustomAttributeProvider source)
 		{
+#pragma warning disable RS0030 // Do not used banned APIs
 			var attrs = _inheritAttributes.GetOrAdd(source, static source =>
 			{
-#pragma warning disable RS0030 // Do not used banned APIs
+				// workaround for issue in non-generic GetCustomAttributes(inherit: true) API:
+				// https://github.com/dotnet/runtime/issues/30219
+				IEnumerable<Attribute>? attrs = null;
+
+				     if (source is PropertyInfo pi) attrs = pi.GetCustomAttributes<Attribute>(inherit: true);
+				else if (source is EventInfo    ei) attrs = ei.GetCustomAttributes<Attribute>(inherit: true);
+
+				if (attrs != null)
+				{
+					// internally it returns Attribute[] already
+					if (attrs is Attribute[] arr)
+						return arr.Length == 0 ? Array<Attribute>.Empty : arr;
+
+					arr = attrs.ToArray();
+					return arr.Length == 0 ? Array<Attribute>.Empty : arr;
+				}
+
 				var res = source.GetCustomAttributes(typeof(Attribute), inherit: true);
-#pragma warning restore RS0030 // Do not used banned APIs
 				// API returns object[] for old frameworks and typed array for new
 				return res.Length == 0 ? Array<Attribute>.Empty : res is Attribute[] attrRes ? attrRes : res.Cast<Attribute>().ToArray();
 			});
 			return attrs;
+#pragma warning restore RS0030 // Do not used banned APIs
 		}
 
 		static class InheritAttributeCache<T>

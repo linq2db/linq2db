@@ -24,7 +24,8 @@ namespace LinqToDB.Remote.Grpc
 		/// Creates instance of grpc-based remote data context.
 		/// </summary>
 		/// <param name="address">Server address.</param>
-		public GrpcDataContext(string address) : base(new DataOptions())
+		public GrpcDataContext(string address, Func<DataOptions,DataOptions>? optionBuilder = null)
+			: base(optionBuilder == null ? new() : optionBuilder(new()))
 		{
 			if (string.IsNullOrWhiteSpace(address))
 				throw new ArgumentException($"'{nameof(address)}' cannot be null or whitespace.", nameof(address));
@@ -37,8 +38,8 @@ namespace LinqToDB.Remote.Grpc
 		/// </summary>
 		/// <param name="address">Server address.</param>
 		/// <param name="channelOptions">Optional client channel settings.</param>
-		public GrpcDataContext(string address, GrpcChannelOptions? channelOptions)
-			: this(address)
+		public GrpcDataContext(string address, GrpcChannelOptions? channelOptions, Func<DataOptions,DataOptions>? optionBuilder = null)
+			: this(address, optionBuilder)
 		{
 			ChannelOptions = channelOptions;
 		}
@@ -58,8 +59,8 @@ namespace LinqToDB.Remote.Grpc
 		{
 			return new GrpcDataContext(Address, ChannelOptions)
 			{
-				MappingSchema = MappingSchema,
-				Configuration = Configuration
+				MappingSchema       = MappingSchema,
+				ConfigurationString = ConfigurationString
 			};
 		}
 

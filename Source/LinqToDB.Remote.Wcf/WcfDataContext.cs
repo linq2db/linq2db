@@ -16,6 +16,10 @@ namespace LinqToDB.Remote.Wcf
 		{
 		}
 
+		WcfDataContext(DataOptions options) : base(options)
+		{
+		}
+
 		public WcfDataContext(string endpointConfigurationName) : this()
 		{
 			_endpointConfigurationName = endpointConfigurationName ?? throw new ArgumentNullException(nameof(endpointConfigurationName));
@@ -33,7 +37,8 @@ namespace LinqToDB.Remote.Wcf
 			_endpointAddress           = endpointAddress           ?? throw new ArgumentNullException(nameof(endpointAddress));
 		}
 
-		public WcfDataContext(Binding binding, EndpointAddress endpointAddress) : this()
+		public WcfDataContext(Binding binding, EndpointAddress endpointAddress, Func<DataOptions,DataOptions>? optionBuilder = null)
+			: this(optionBuilder == null ? new() : optionBuilder(new()))
 		{
 			Binding          = binding         ?? throw new ArgumentNullException(nameof(binding));
 			_endpointAddress = endpointAddress ?? throw new ArgumentNullException(nameof(endpointAddress));
@@ -68,7 +73,7 @@ namespace LinqToDB.Remote.Wcf
 			return new WcfDataContext()
 			{
 				MappingSchema              = MappingSchema,
-				Configuration              = Configuration,
+				ConfigurationString        = ConfigurationString,
 				Binding                    = Binding,
 				_endpointConfigurationName = _endpointConfigurationName,
 				_remoteAddress             = _remoteAddress,

@@ -39,8 +39,8 @@ namespace Cli.Default.Sybase
 		[Column("char20DataType"                                                                      )] public string?   Char20DataType        { get; set; } // char(20)
 		[Column("varcharDataType"                                                                     )] public string?   VarcharDataType       { get; set; } // varchar(20)
 		[Column("textDataType"                                                                        )] public string?   TextDataType          { get; set; } // text
-		[Column("ncharDataType"                                                                       )] public string?   NcharDataType         { get; set; } // nchar(60)
-		[Column("nvarcharDataType"                                                                    )] public string?   NvarcharDataType      { get; set; } // nvarchar(60)
+		[Column("ncharDataType"                                                                       )] public string?   NcharDataType         { get; set; } // nchar(20)
+		[Column("nvarcharDataType"                                                                    )] public string?   NvarcharDataType      { get; set; } // nvarchar(20)
 		[Column("ntextDataType"                                                                       )] public string?   NtextDataType         { get; set; } // unitext
 		[Column("binaryDataType"                                                                      )] public byte[]?   BinaryDataType        { get; set; } // binary(1)
 		[Column("varbinaryDataType"                                                                   )] public byte[]?   VarbinaryDataType     { get; set; } // varbinary(1)

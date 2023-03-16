@@ -40,12 +40,13 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlSpecificTable<TSource> AsMySql<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
+			var newTable = new Table<TSource>(table.DataContext, Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(AsMySql, table),
-				table.Expression);
+				table.Expression)
+			);
 
-			return new MySqlSpecificTable<TSource>(table);
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		[LinqTunnel, Pure]

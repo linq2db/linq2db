@@ -13,17 +13,18 @@ namespace Tests.Model.Remote.Grpc
 	{
 		private readonly Action? _onDispose;
 
-		public TestGrpcDataContext(string address, Action? onDispose = null)
+		public TestGrpcDataContext(string address, Action? onDispose = null, Func<DataOptions,DataOptions>? optionBuilder = null)
 			: base(
-				  address,
-				  new GrpcChannelOptions
-				  {
-					  HttpClient = new HttpClient(
-						  new HttpClientHandler
-						  {
-							  ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-						  })
-				  })
+				address,
+				new GrpcChannelOptions
+				{
+					HttpClient = new HttpClient(
+						new HttpClientHandler
+						{
+							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+						})
+				},
+				optionBuilder)
 		{
 			_onDispose = onDispose;
 		}

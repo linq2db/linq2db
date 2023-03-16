@@ -23,8 +23,12 @@ namespace LinqToDB.Linq.Builder
 			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var buildInStatement = false;
 
-			if (sequence.SelectQuery.Select.TakeValue != null ||
-			    sequence.SelectQuery.Select.SkipValue != null)
+			if (sequence.SelectQuery.Select.TakeValue != null                              ||
+			    sequence.SelectQuery.Select.SkipValue != null                              ||
+			    builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery      ||
+			    builder.DataContext.SqlProviderFlags.IsExistsPreferableForContains == false &&
+			    builder.DataOptions.LinqOptions.PreferExistsForScalar == false              &&
+			    builder.MappingSchema.IsScalarType(methodCall.Arguments[1].Type))
 			{
 				sequence         = new SubQueryContext(sequence);
 				buildInStatement = true;

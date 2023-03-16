@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (BuildStep == Step.Output)
 			{
 				return;
-		}
+			}
 
 			base.BuildOutputSubclause(output);
 		}
@@ -430,6 +430,25 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			if (table.SqlQueryExtensions is not null)
 				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
+		}
+
+		protected override void BuildTableNameExtensions(SqlTable table)
+		{
+			var ext = table.SqlQueryExtensions?.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.TableNameHint);
+
+			if (ext is { BuilderType: not null })
+			{
+				var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
+
+				switch (extensionBuilder)
+				{
+					case ISqlQueryExtensionBuilder queryExtensionBuilder:
+						queryExtensionBuilder.Build(this, StringBuilder, ext);
+						break;
+					default:
+						throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlQueryExtensionBuilder).FullName}' interface.");
+				}
+			}
 		}
 
 		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)

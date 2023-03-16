@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider
 	{
 		void ISqlTableExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
 		{
-			if (stringBuilder.Length > 0 && stringBuilder[stringBuilder.Length - 1] != ' ')
+			if (stringBuilder.Length > 0 && stringBuilder[^1] != ' ')
 				stringBuilder.Append(' ');
 
 			var args = sqlQueryExtension.Arguments;
@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider
 			{
 				var delimiter0 = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val0 } ? val0 : " ";
 				var delimiter1 = args.TryGetValue(".ExtensionArguments.1", out var extArg1) && extArg1 is SqlValue { Value : string val1 } ? val1 : " ";
-				var count              = (int)((SqlValue)hintParametersCount).Value!;
+				var count      = (int)((SqlValue)hintParametersCount).Value!;
 
 				if (count > 0)
 				{

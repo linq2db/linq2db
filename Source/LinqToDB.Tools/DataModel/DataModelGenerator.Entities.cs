@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.CodeModel;
-using LinqToDB.Data;
 
 namespace LinqToDB.DataModel
 {
@@ -14,35 +13,21 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Generates mapping classes for table/view models (entities).
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="entities">Collection of entity models.</param>
 		/// <param name="defineEntityClass">Action to define new empty entity class.</param>
-		/// <param name="contextProperties">Property group in data context with table access properties.</param>
-		/// <param name="contextType">Data context class type.</param>
-		/// <param name="context">Data context instance accessor for context property generation.</param>
-		/// <param name="findMethodsGroup">Action to get Find extension method group.</param>
-		private void BuildEntities(
+		private static void BuildEntities(
+			IDataModelGenerationContext      context,
 			IReadOnlyCollection<EntityModel> entities,
-			Func<EntityModel, ClassBuilder>  defineEntityClass,
-			PropertyGroup                    contextProperties,
-			IType                            contextType,
-			ICodeExpression                  context,
-			Func<MethodGroup>                findMethodsGroup)
+			Func<EntityModel, ClassBuilder>  defineEntityClass)
 		{
 			foreach (var entity in entities)
 			{
-				var entityBuilder = defineEntityClass(entity);
-
 				// register entity class builder in lookup so later we can access it
 				// during generation of associations and procedures/functions
-				_entityBuilders.Add(entity, entityBuilder);
+				context.RegisterEntityBuilder(entity, defineEntityClass(entity));
 
-				BuildEntity(
-					entity,
-					entityBuilder,
-					contextProperties,
-					contextType,
-					context,
-					findMethodsGroup);
+				BuildEntity(context, entity);
 			}
 		}
 
@@ -50,47 +35,39 @@ namespace LinqToDB.DataModel
 		/// Generates mapping class for specific <paramref name="entity"/>. Also generates Find extension method if its
 		/// generation enabled for entity.
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="entity">Entity data model.</param>
-		/// <param name="entityBuilder">Entity class builder.</param>
-		/// <param name="contextProperties">Property group in data context with table access properties.</param>
-		/// <param name="contextType">Data context class type.</param>
-		/// <param name="context">Data context instance accessor for context property generation.</param>
-		/// <param name="findMethodsGroup">Action to get Find extension method group.</param>
-		private void BuildEntity(
-			EntityModel       entity,
-			ClassBuilder      entityBuilder,
-			PropertyGroup     contextProperties,
-			IType             contextType,
-			ICodeExpression   context,
-			Func<MethodGroup> findMethodsGroup)
+		private static void BuildEntity(IDataModelGenerationContext context, EntityModel entity)
 		{
 			// generate table metadata for entity
-			_metadataBuilder.BuildEntityMetadata(entity.Metadata, entityBuilder);
+			context.MetadataBuilder?.BuildEntityMetadata(context, entity);
+
+			var entityBuilder = context.GetEntityBuilder(entity);
 
 			// generate colum properties
 			var columnsGroup = entityBuilder.Properties(true);
 			foreach (var columnModel in entity.Columns)
 			{
-				var columnBuilder = DefineProperty(columnsGroup, columnModel.Property);
+				var columnBuilder = context.DefineProperty(columnsGroup, columnModel.Property);
 
 				// register property in lookup for later use by associations generator
-				_columnProperties.Add(columnModel, columnBuilder.Property);
+				context.RegisterColumnProperty(columnModel, columnBuilder.Property);
 
 				// generate column metadata
-				_metadataBuilder.BuildColumnMetadata(columnModel.Metadata, columnBuilder);
+				context.MetadataBuilder?.BuildColumnMetadata(context, entityBuilder.Type, columnModel.Metadata, columnBuilder);
 			}
 
 			// generate IEquatable interface implementation
-			BuildEntityIEquatable(entity, entityBuilder);
+			BuildEntityIEquatable(context, entity);
 
 			// add entity access property to data context
-			BuildEntityContextProperty(entity, entityBuilder.Type.Type, contextProperties, context);
+			BuildEntityContextProperty(context, entity);
 
 			// generate Find extension method
-			BuildFindExtensions(entity, contextType, entityBuilder.Type.Type, findMethodsGroup);
+			BuildFindExtensions(context, entity);
 		}
 
-		private void BuildEntityIEquatable(EntityModel entity, ClassBuilder entityBuilder)
+		private static void BuildEntityIEquatable(IDataModelGenerationContext context, EntityModel entity)
 		{
 			if (!entity.ImplementsIEquatable)
 				return;
@@ -99,34 +76,36 @@ namespace LinqToDB.DataModel
 			if (pk.Length == 0)
 				return;
 
+			var entityBuilder = context.GetEntityBuilder(entity);
+
 			entityBuilder.Implements(WellKnownTypes.System.IEquatable(entityBuilder.Type.Type));
 
 			var keySelectors    = new ICodeExpression[pk.Length];
 			var lambdaType      = WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(WellKnownTypes.System.ObjectNullable, entityBuilder.Type.Type));
-			var entityParameter = AST.LambdaParameter(AST.Name(ENTITY_IEQUATABLE_COMPARER_LAMBDA_PARAMETER), entityBuilder.Type.Type);
+			var entityParameter = context.AST.LambdaParameter(context.AST.Name(DataModelConstants.ENTITY_IEQUATABLE_COMPARER_LAMBDA_PARAMETER), entityBuilder.Type.Type);
 
 			for (var i = 0; i < pk.Length; i++)
 			{
 				var column      = pk[i];
-				var lambda      = AST.Lambda(lambdaType, true).Parameter(entityParameter);
+				var lambda      = context.AST.Lambda(lambdaType, true).Parameter(entityParameter);
 
-				lambda.Body().Append(AST.Return(AST.Member(entityParameter.Reference, _columnProperties[column].Reference)));
+				lambda.Body().Append(context.AST.Return(context.AST.Member(entityParameter.Reference, context.GetColumnProperty(column).Reference)));
 
 				keySelectors[i] = lambda.Method;
 			}
 
 			// generate static field with comparer instance
-			var region = entityBuilder.Regions().New(ENTITY_IEQUATABLE_REGION);
+			var region = entityBuilder.Regions().New(DataModelConstants.ENTITY_IEQUATABLE_REGION);
 
 			var fieldType = WellKnownTypes.System.Collections.Generic.IEqualityComparer(entityBuilder.Type.Type);
 
 			var comparerField = region
 				.Fields(false)
-					.New(AST.Name(ENTITY_IEQUATABLE_COMPARER_FIELD), fieldType)
+					.New(context.AST.Name(DataModelConstants.ENTITY_IEQUATABLE_COMPARER_FIELD), fieldType)
 						.Private()
 						.Static()
 						.ReadOnly()
-						.AddInitializer(AST.Call(
+						.AddInitializer(context.AST.Call(
 							new CodeTypeReference(WellKnownTypes.LinqToDB.Tools.Comparers.ComparerBuilder),
 							WellKnownTypes.LinqToDB.Tools.Comparers.ComparerBuilder_GetEqualityComparer,
 							fieldType,
@@ -137,26 +116,26 @@ namespace LinqToDB.DataModel
 			var methods = region.Methods(false);
 
 			// generate IEquatable.Equals
-			var parameter = AST.Parameter(entityBuilder.Type.Type.WithNullability(true), WellKnownTypes.System.IEquatable_Equals_Parameter, CodeParameterDirection.In);
+			var parameter = context.AST.Parameter(entityBuilder.Type.Type.WithNullability(true), WellKnownTypes.System.IEquatable_Equals_Parameter, CodeParameterDirection.In);
 			methods.New(WellKnownTypes.System.IEquatable_Equals)
 				.SetModifiers(Modifiers.Public)
 				.Parameter(parameter)
 				.Returns(WellKnownTypes.System.Boolean)
-				.Body().Append(AST.Return(
-					AST.Call(
+				.Body().Append(context.AST.Return(
+					context.AST.Call(
 						comparerField.Field.Reference,
 						WellKnownTypes.System.Collections.Generic.IEqualityComparer_Equals,
 						WellKnownTypes.System.Boolean,
 						entityBuilder.Type.This,
-						AST.SuppressNull(parameter.Reference))
+						context.AST.SuppressNull(parameter.Reference))
 					));
 
 			// override object.GetHashCode
 			methods.New(WellKnownTypes.System.Object_GetHashCode)
 				.SetModifiers(Modifiers.Public | Modifiers.Override)
 				.Returns(WellKnownTypes.System.Int32)
-				.Body().Append(AST.Return(
-					AST.Call(
+				.Body().Append(context.AST.Return(
+					context.AST.Call(
 						comparerField.Field.Reference,
 						WellKnownTypes.System.Collections.Generic.IEqualityComparer_GetHashCode,
 						WellKnownTypes.System.Int32,
@@ -164,37 +143,33 @@ namespace LinqToDB.DataModel
 					));
 
 			// override object.Equals
-			parameter = AST.Parameter(WellKnownTypes.System.ObjectNullable, WellKnownTypes.System.Object_Equals_Parameter, CodeParameterDirection.In);
+			parameter = context.AST.Parameter(WellKnownTypes.System.ObjectNullable, WellKnownTypes.System.Object_Equals_Parameter, CodeParameterDirection.In);
 			methods.New(WellKnownTypes.System.Object_Equals)
 				.SetModifiers(Modifiers.Public | Modifiers.Override)
 				.Parameter(parameter)
 				.Returns(WellKnownTypes.System.Boolean)
 				.Body()
 					.Append(
-						AST.Return(
-							AST.Call(
+						context.AST.Return(
+							context.AST.Call(
 								entityBuilder.Type.This,
 								WellKnownTypes.System.IEquatable_Equals,
 								WellKnownTypes.System.Boolean,
-								AST.As(entityBuilder.Type.Type, parameter.Reference))));
+								context.AST.As(entityBuilder.Type.Type, parameter.Reference))));
 		}
 
 		/// <summary>
 		/// Generates entity table accessor property in data context.
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="model">Entity data model.</param>
-		/// <param name="entityType">Entity class type.</param>
-		/// <param name="contextProperties">Property group in data context with table access properties.</param>
-		/// <param name="contextReference">Data context instance accessor for context property generation.</param>
-		private void BuildEntityContextProperty(
-			EntityModel     model,
-			IType           entityType,
-			PropertyGroup   contextProperties,
-			ICodeExpression contextReference)
+		private static void BuildEntityContextProperty(IDataModelGenerationContext context, EntityModel model)
 		{
 			// context property disabled for entity? skip generation
 			if (model.ContextProperty == null)
 				return;
+
+			var entityType = context.GetEntityBuilder(model).Type.Type;
 
 			// example of generated code:
 			// public ITable<Entity> Entities => GetTable<Entity>();
@@ -204,68 +179,55 @@ namespace LinqToDB.DataModel
 			else
 				throw new InvalidOperationException($"Entity {model.Class.Name} context property type is not valid");
 
-			var contextProperty = DefineProperty(contextProperties, model.ContextProperty);
+			var contextProperty = context.DefineProperty(context.ContextProperties, model.ContextProperty);
 
 			// this.GetTable<Entity>() call
-			var getTableCall = AST.ExtCall(
+			var getTableCall = context.AST.ExtCall(
 					WellKnownTypes.LinqToDB.DataExtensions,
 					WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 					WellKnownTypes.LinqToDB.ITable(entityType),
 					new[] { entityType },
 					false,
 					// `this` parameter
-					contextReference);
+					context.ContextReference);
 
 			contextProperty
 				.AddGetter()
-					.Append(AST.Return(getTableCall));
+					.Append(context.AST.Return(getTableCall));
 		}
 
 		/// <summary>
 		/// Generates Find extension method for entity in extensions class.
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="model">Entity data model.</param>
-		/// <param name="contextType">Generated data context class type.</param>
-		/// <param name="entityType">Entity class type.</param>
-		/// <param name="findMethodsGroup">Action to get method group for Find methods in extensions class.</param>
-		private void BuildFindExtensions(
-			EntityModel       model,
-			IType             contextType,
-			IType             entityType,
-			Func<MethodGroup> findMethodsGroup)
+		private static void BuildFindExtensions(IDataModelGenerationContext context, EntityModel model)
 		{
 			// if entity doesn't have primary key, skip extension generation
 			if (!model.Columns.Any(static c => c.Metadata.IsPrimaryKey))
 				return;
 
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindByPkOnTable           );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindAsyncByPkOnTable      );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindQueryByPkOnTable      );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindByRecordOnTable       );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindAsyncByRecordOnTable  );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindQueryByRecordOnTable  );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindByPkOnContext         );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindAsyncByPkOnContext    );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindQueryByPkOnContext    );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindByRecordOnContext     );
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindAsyncByRecordOnContext);
-			BuildFindExtension(model, contextType, entityType, findMethodsGroup, FindTypes.FindQueryByRecordOnContext);
+			BuildFindExtension(context, model, FindTypes.FindByPkOnTable           );
+			BuildFindExtension(context, model, FindTypes.FindAsyncByPkOnTable      );
+			BuildFindExtension(context, model, FindTypes.FindQueryByPkOnTable      );
+			BuildFindExtension(context, model, FindTypes.FindByRecordOnTable       );
+			BuildFindExtension(context, model, FindTypes.FindAsyncByRecordOnTable  );
+			BuildFindExtension(context, model, FindTypes.FindQueryByRecordOnTable  );
+			BuildFindExtension(context, model, FindTypes.FindByPkOnContext         );
+			BuildFindExtension(context, model, FindTypes.FindAsyncByPkOnContext    );
+			BuildFindExtension(context, model, FindTypes.FindQueryByPkOnContext    );
+			BuildFindExtension(context, model, FindTypes.FindByRecordOnContext     );
+			BuildFindExtension(context, model, FindTypes.FindAsyncByRecordOnContext);
+			BuildFindExtension(context, model, FindTypes.FindQueryByRecordOnContext);
 		}
 
 		/// <summary>
 		/// Generates Find extension method for entity in extensions class.
 		/// </summary>
+		/// <param name="context">Model generation context.</param>
 		/// <param name="model">Entity data model.</param>
-		/// <param name="contextType">Generated data context class type.</param>
-		/// <param name="entityType">Entity class type.</param>
-		/// <param name="findMethodsGroup">Action to get method group for Find methods in extensions class.</param>
 		/// <param name="methodType">Type of find method to generate.</param>
-		private void BuildFindExtension(
-			EntityModel       model,
-			IType             contextType,
-			IType             entityType,
-			Func<MethodGroup> findMethodsGroup,
-			FindTypes         methodType)
+		private static void BuildFindExtension(IDataModelGenerationContext context, EntityModel model, FindTypes methodType)
 		{
 			if ((model.FindExtensions & methodType) != methodType)
 				return;
@@ -276,6 +238,8 @@ namespace LinqToDB.DataModel
 			var byEntity  = (methodType & FindTypes.ByEntity    ) == FindTypes.ByEntity;
 			var onTable   = (methodType & FindTypes.OnTable     ) == FindTypes.OnTable;
 			var onContext = (methodType & FindTypes.OnContext   ) == FindTypes.OnContext;
+
+			var entityType = context.GetEntityBuilder(model).Type.Type;
 
 			// examples of generated code:
 			// public Entity? Find(this ITable<Entity> table, int pk) => table.FirstOrDefault(e => e.PK == pk);
@@ -302,9 +266,9 @@ namespace LinqToDB.DataModel
 
 			// extended parameter (table or context)
 			methodParameters.Add(
-				AST.Parameter(
-					onTable ? WellKnownTypes.LinqToDB.ITable(entityType) : contextType,
-					AST.Name(onTable ? FIND_TABLE_PARAMETER : FIND_CONTEXT_PARAMETER),
+				context.AST.Parameter(
+					onTable ? WellKnownTypes.LinqToDB.ITable(entityType) : context.MainDataContext.Type.Type,
+					context.AST.Name(onTable ? DataModelConstants.FIND_TABLE_PARAMETER : DataModelConstants.FIND_CONTEXT_PARAMETER),
 					CodeParameterDirection.In));
 
 			// for composite primary key we generate comparison based on field order (ordinal) in primary key definition
@@ -315,24 +279,24 @@ namespace LinqToDB.DataModel
 
 			// sort in order for parameters
 			// sort for filter will be done later
-			if (_options.DataModel.OrderFindParametersByColumnOrdinal)
+			if (context.Options.OrderFindParametersByColumnOrdinal)
 				pks = pks.OrderBy(static c => c.Metadata.PrimaryKeyOrder);
 			else
 				pks = pks.OrderBy(static c => c.Property.Name);
 
 			// apply ordinal sort to primary key columns for parameters generation if by-name sort not
-			if (_options.DataModel.OrderFindParametersByColumnOrdinal)
+			if (context.Options.OrderFindParametersByColumnOrdinal)
 				pks = pks.OrderBy(static c => c.Metadata.PrimaryKeyOrder);
 
 			// filter parameter
-			var entityParameter = AST.LambdaParameter(AST.Name(FIND_ENTITY_FILTER_PARAMETER), entityType);
+			var entityParameter = context.AST.LambdaParameter(context.AST.Name(DataModelConstants.FIND_ENTITY_FILTER_PARAMETER), entityType);
 			// filter comparisons
 			var comparisons = new List<(int ordinal, ICodeExpression comparison)>();
 
 			ICodeExpression? recordReference = null;
 			if (byEntity)
 			{
-				var param       = AST.Parameter(entityType, AST.Name(FIND_ENTITY_PARAMETER), CodeParameterDirection.In);
+				var param       = context.AST.Parameter(entityType, context.AST.Name(DataModelConstants.FIND_ENTITY_PARAMETER), CodeParameterDirection.In);
 				recordReference = param.Reference;
 				methodParameters.Add(param);
 			}
@@ -343,20 +307,20 @@ namespace LinqToDB.DataModel
 				if (byPK)
 				{
 					// generate parameter for primary key column
-					var paramName       = _findMethodParameterNameNormalizer(column.Property.Name);
-					var parameter       = AST.Parameter(column.Property.Type!, AST.Name(paramName), CodeParameterDirection.In);
+					var paramName       = context.NormalizeParameterName(column.Property.Name);
+					var parameter       = context.AST.Parameter(column.Property.Type!, context.AST.Name(paramName), CodeParameterDirection.In);
 					fieldFromParameters = parameter.Reference;
 					methodParameters.Add(parameter);
 				}
 				else
-					fieldFromParameters = AST.Member(recordReference!, _columnProperties[column].Reference);
+					fieldFromParameters = context.AST.Member(recordReference!, context.GetColumnProperty(column).Reference);
 
 				// generate filter comparison
 				// note that == operator could be overloaded for compared type and require comparison modification
 				// e.g. we have this situation for Sql* types from Microsoft
 				// comparison modification is done later after model generation by conversion visitor
-				var condition = AST.Equal(
-					AST.Member(entityParameter.Reference, _columnProperties[column].Reference),
+				var condition = context.AST.Equal(
+					context.AST.Member(entityParameter.Reference, context.GetColumnProperty(column).Reference),
 					fieldFromParameters);
 
 				comparisons.Add((column.Metadata.PrimaryKeyOrder ?? 0, condition));
@@ -365,11 +329,11 @@ namespace LinqToDB.DataModel
 			ICodeExpression? cancellationTokenParameter = null;
 			if (async)
 			{
-				var param                  = AST.Parameter(
+				var param                  = context.AST.Parameter(
 					WellKnownTypes.System.Threading.CancellationToken,
-					AST.Name(CANCELLATION_TOKEN_PARAMETER),
+					context.AST.Name(DataModelConstants.CANCELLATION_TOKEN_PARAMETER),
 					CodeParameterDirection.In,
-					AST.Default(WellKnownTypes.System.Threading.CancellationToken, true));
+					context.AST.Default(WellKnownTypes.System.Threading.CancellationToken, true));
 				cancellationTokenParameter = param.Reference;
 				methodParameters.Add(param);
 			}
@@ -378,16 +342,16 @@ namespace LinqToDB.DataModel
 			// e => e.PK1 == pk1 && e.PK2 == pk2
 			ICodeExpression filter = null!;
 			foreach (var (_, cond) in comparisons.OrderBy(static _ => _.ordinal))
-				filter = filter == null ? cond : AST.And(filter, cond);
+				filter = filter == null ? cond : context.AST.And(filter, cond);
 
 			// define filter lambda of type Expression<Func<TEntity, bool>>
-			var filterLambda = AST
+			var filterLambda = context.AST
 				.Lambda(
 					WellKnownTypes.System.Linq.Expressions.Expression(WellKnownTypes.System.Func(WellKnownTypes.System.Boolean, entityType)),
 					true)
 				.Parameter(entityParameter);
 
-			filterLambda.Body().Append(AST.Return(filter));
+			filterLambda.Body().Append(context.AST.Return(filter));
 
 			// declare Find method
 			IType returnType;
@@ -400,14 +364,14 @@ namespace LinqToDB.DataModel
 					returnType = WellKnownTypes.System.Threading.Tasks.Task(returnType);
 			}
 
-			var methodName = onContext && byPK ? FIND_METHOD + entityType.Name!.Name : FIND_METHOD;
+			var methodName = onContext && byPK ? DataModelConstants.FIND_METHOD + entityType.Name!.Name : DataModelConstants.FIND_METHOD;
 			if (query)
-				methodName += FIND_QUERY_SUFFIX;
+				methodName += DataModelConstants.FIND_QUERY_SUFFIX;
 			if (async)
-				methodName += ASYNC_SUFFIX;
+				methodName += DataModelConstants.ASYNC_SUFFIX;
 
-			var find       = findMethodsGroup()
-				.New(AST.Name(methodName))
+			var find       = context.FindExtensionsGroup
+				.New(context.AST.Name(methodName))
 					.SetModifiers(Modifiers.Public | Modifiers.Static | Modifiers.Extension)
 					.Returns(returnType);
 			;
@@ -415,7 +379,7 @@ namespace LinqToDB.DataModel
 				find.Parameter(param);
 
 			var table = onContext
-					? AST.ExtCall(
+					? context.AST.ExtCall(
 						WellKnownTypes.LinqToDB.DataExtensions,
 						WellKnownTypes.LinqToDB.DataExtensions_GetTable,
 						WellKnownTypes.LinqToDB.ITable(entityType),
@@ -430,8 +394,8 @@ namespace LinqToDB.DataModel
 				find
 					.Body()
 						.Append(
-							AST.Return(
-								AST.ExtCall(
+							context.AST.Return(
+								context.AST.ExtCall(
 									WellKnownTypes.System.Linq.Queryable,
 									WellKnownTypes.System.Linq.Queryable_Where,
 									returnType,
@@ -445,8 +409,8 @@ namespace LinqToDB.DataModel
 				find
 					.Body()
 						.Append(
-							AST.Return(
-								AST.ExtCall(
+							context.AST.Return(
+								context.AST.ExtCall(
 									async ? WellKnownTypes.LinqToDB.AsyncExtensions                     : WellKnownTypes.System.Linq.Queryable,
 									async ? WellKnownTypes.LinqToDB.AsyncExtensions_FirstOrDefaultAsync : WellKnownTypes.System.Linq.Queryable_FirstOrDefault,
 									returnType,

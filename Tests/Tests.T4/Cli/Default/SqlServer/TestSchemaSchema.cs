@@ -33,28 +33,6 @@ namespace Cli.Default.SqlServer
 			}
 		}
 
-		#region Table Extensions
-		public static TestSchemaA? Find(this ITable<TestSchemaA> table, int testSchemaAid)
-		{
-			return table.FirstOrDefault(e => e.TestSchemaAid == testSchemaAid);
-		}
-
-		public static Task<TestSchemaA?> FindAsync(this ITable<TestSchemaA> table, int testSchemaAid, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.TestSchemaAid == testSchemaAid, cancellationToken);
-		}
-
-		public static TestSchemaB? Find(this ITable<TestSchemaB> table, int testSchemaBid)
-		{
-			return table.FirstOrDefault(e => e.TestSchemaBid == testSchemaBid);
-		}
-
-		public static Task<TestSchemaB?> FindAsync(this ITable<TestSchemaB> table, int testSchemaBid, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.TestSchemaBid == testSchemaBid, cancellationToken);
-		}
-		#endregion
-
 		[Table("SameTableName", Schema = "TestSchema")]
 		public class SameTableName
 		{
@@ -116,5 +94,27 @@ namespace Cli.Default.SqlServer
 			public TestSchemaA TargetTestSchemaA1 { get; set; } = null!;
 			#endregion
 		}
+
+		#region Table Extensions
+		public static TestSchemaA? Find(this ITable<TestSchemaA> table, int testSchemaAid)
+		{
+			return table.FirstOrDefault(e => e.TestSchemaAid == testSchemaAid);
+		}
+
+		public static Task<TestSchemaA?> FindAsync(this ITable<TestSchemaA> table, int testSchemaAid, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.TestSchemaAid == testSchemaAid, cancellationToken);
+		}
+
+		public static TestSchemaB? Find(this ITable<TestSchemaB> table, int testSchemaBid)
+		{
+			return table.FirstOrDefault(e => e.TestSchemaBid == testSchemaBid);
+		}
+
+		public static Task<TestSchemaB?> FindAsync(this ITable<TestSchemaB> table, int testSchemaBid, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.TestSchemaBid == testSchemaBid, cancellationToken);
+		}
+		#endregion
 	}
 }
