@@ -9,9 +9,9 @@ namespace LinqToDB.DataModel
 		/// <summary>
 		/// Generates aggregate function mapping.
 		/// </summary>
-		/// <param name="aggregate">Aggrrgate function model.</param>
-		/// <param name="functionsGroup">Functions region.</param>
-		private void BuildAggregateFunction(AggregateFunctionModel aggregate, Func<RegionGroup> functionsGroup)
+		/// <param name="context">Model generation context.</param>
+		/// <param name="aggregate">Aggregate function model.</param>
+		private static void BuildAggregateFunction(IDataModelGenerationContext context, AggregateFunctionModel aggregate)
 		{
 			// generation sample:
 			/*
@@ -25,22 +25,19 @@ namespace LinqToDB.DataModel
 			// - src/TSource: any aggregated table-like source
 			// - value: actual aggregated value (value selector from source)
 
-			var method = DefineMethod(
-				functionsGroup().New(aggregate.Method.Name).Methods(false),
+			var method = context.DefineMethod(
+				context.AddAggregateFunctionRegion(aggregate.Method.Name).Methods(false),
 				aggregate.Method);
 
 			// aggregates cannot be used outside of query context, so we throw exception from method
 			var body = method
 				.Body()
 				.Append(
-					AST.Throw(AST.New(
+					context.AST.Throw(context.AST.New(
 						WellKnownTypes.System.InvalidOperationException,
-						AST.Constant(EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
+						context.AST.Constant(DataModelConstants.EXCEPTION_QUERY_ONLY_ASSOCATION_CALL, true))));
 
-			// build mappings
-			_metadataBuilder.BuildFunctionMetadata(aggregate.Metadata, method);
-
-			var source = AST.TypeParameter(AST.Name(AGGREGATE_RECORD_TYPE));
+			var source = context.AST.TypeParameter(context.AST.Name(DataModelConstants.AGGREGATE_RECORD_TYPE));
 			method.TypeParameter(source);
 
 			method.Returns(aggregate.ReturnType);
@@ -53,9 +50,9 @@ namespace LinqToDB.DataModel
 			// define parameters
 			// aggregate has at least one parameter - collection of aggregated values
 			// and optionally could have one or more additional scalar parameters
-			var sourceParam = AST.Parameter(
+			var sourceParam = context.AST.Parameter(
 				WellKnownTypes.System.Collections.Generic.IEnumerable(source),
-				AST.Name(AGGREGATE_SOURCE_PARAMETER),
+				context.AST.Name(DataModelConstants.AGGREGATE_SOURCE_PARAMETER),
 				CodeParameterDirection.In);
 			method.Parameter(sourceParam);
 
@@ -75,9 +72,12 @@ namespace LinqToDB.DataModel
 					param.Parameter.Type      = parameterType;
 					param.Parameter.Direction = CodeParameterDirection.In;
 
-					DefineParameter(method, param.Parameter);
+					context.DefineParameter(method, param.Parameter);
 				}
 			}
+
+			// metadata last
+			context.MetadataBuilder?.BuildFunctionMetadata(context, aggregate.Metadata, method);
 		}
 	}
 }

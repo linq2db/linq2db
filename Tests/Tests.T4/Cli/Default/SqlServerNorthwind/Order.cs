@@ -42,14 +42,14 @@ namespace Cli.Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_Orders_Customers
 		/// </summary>
-		[Association(ThisKey = nameof(CustomerId), OtherKey = nameof(Customer.CustomerId))]
-		public Customer? Customers { get; set; }
+		[Association(ThisKey = nameof(CustomerId), OtherKey = nameof(SqlServerNorthwind.Customer.CustomerId))]
+		public Customer? Customer { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees
 		/// </summary>
-		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(Employee.EmployeeId))]
-		public Employee? Employees { get; set; }
+		[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(SqlServerNorthwind.Employee.EmployeeId))]
+		public Employee? Employee { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Shippers
