@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 using PN = LinqToDB.ProviderName;
@@ -68,7 +70,7 @@ namespace LinqToDB
 		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({source}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
 		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
 			[ExprParameter] this IQueryable<string?> source,
-			[ExprParameter] string separator)
+			[ExprParameter]      string              separator)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (separator == null) throw new ArgumentNullException(nameof(separator));
@@ -97,9 +99,9 @@ namespace LinqToDB
 		[Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({selector}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
 		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
-							this IEnumerable<T> source,
-			[ExprParameter] string separator,
-			[ExprParameter] Func<T, string?> selector)
+							this IEnumerable<T>   source,
+			[ExprParameter]      string           separator,
+			[ExprParameter]      Func<T, string?> selector)
 		{
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}

@@ -1,4 +1,7 @@
-﻿namespace LinqToDB
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB
 {
 	using Async;
 

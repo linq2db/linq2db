@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Linq.Builder
+﻿using System.Collections.Generic;
+using System.Linq;
+
+namespace LinqToDB.Linq.Builder
 {
 	using Common;
 

@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SchemaProvider
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.SchemaProvider
 {
 	/// <summary>
 	/// Describes table-like objects such as tables, views, procedure or function results.

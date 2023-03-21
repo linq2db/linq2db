@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.ClickHouse
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Mapping;

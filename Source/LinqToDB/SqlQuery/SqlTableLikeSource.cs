@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -10,9 +12,9 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal SqlTableLikeSource(
-			int id,
-			SqlValuesTable sourceEnumerable,
-			SelectQuery sourceQuery,
+			int                   id,
+			SqlValuesTable        sourceEnumerable,
+			SelectQuery           sourceQuery,
 			IEnumerable<SqlField> sourceFields)
 		{
 			SourceID         = id;

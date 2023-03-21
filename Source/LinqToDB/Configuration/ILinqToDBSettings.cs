@@ -1,3 +1,5 @@
+﻿using System.Collections.Generic;
+
 namespace LinqToDB.Configuration
 {
 	/// <summary>

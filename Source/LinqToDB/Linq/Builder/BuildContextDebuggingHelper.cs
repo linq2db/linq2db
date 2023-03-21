@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Linq.Builder
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.Linq.Builder
 {
 	internal static class BuildContextDebuggingHelper
 	{

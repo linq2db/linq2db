@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LinqToDB.Data
 {
@@ -71,7 +71,7 @@ namespace LinqToDB.Data
 		public int? RecordsAffected { get; set; }
 
 		/// <summary>
-		/// Gets or sets the <see cref="Exception"/> for <see cref="TraceInfoStep.Error"/> step.
+		/// Gets or sets the <see cref="Exception"/> for <see cref="JSType.Error"/> step.
 		/// </summary>
 		public Exception? Exception { get; set; }
 

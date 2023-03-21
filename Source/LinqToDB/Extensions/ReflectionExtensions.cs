@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Linq;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Xml;
@@ -40,7 +43,7 @@ namespace LinqToDB.Extensions
 			//	- preserve the order of GetMembers() inside the same type declared type
 
 			var results = new List<MemberInfo>(members.Length);
-			var seen = new HashSet<string>();
+			var seen    = new HashSet<string>();
 			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseType!)
 			{
 				// iterating in reverse order because we will reverse it

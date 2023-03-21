@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -259,8 +261,8 @@ namespace LinqToDB.Linq.Builder
 									//
 									var sequenceExpression = GetEagerLoadingExpression(false);
 
-									var resultType    = typeof(IEnumerable<>).MakeGenericType(path.Type);
-									var result = (Expression)new SqlEagerLoadExpression(sequenceExpression);
+									var resultType = typeof(IEnumerable<>).MakeGenericType(path.Type);
+									var result     = (Expression)new SqlEagerLoadExpression(sequenceExpression);
 
 									var methodInfo = _methodKind switch
 									{

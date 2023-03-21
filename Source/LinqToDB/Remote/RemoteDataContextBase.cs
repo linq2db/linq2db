@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Data.Common;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace LinqToDB.Remote
@@ -166,7 +169,7 @@ namespace LinqToDB.Remote
 
 
 		private List<string>? _queryHints;
-		public  List<string>   QueryHints => _queryHints ??= new();
+		public  List<string>  QueryHints => _queryHints ??= new();
 
 		private List<string>? _nextQueryHints;
 		public  List<string>   NextQueryHints => _nextQueryHints ??= new();

@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -3262,8 +3266,8 @@ namespace LinqToDB.Linq.Builder
 			Expression.Parameter(typeof(object[]), "preamble");
 
 		public int RegisterPreamble<T>(
-			object? data,
-			Func<object?, IDataContext, Expression, object?[]?, T> func,
+			object?                                                                         data,
+			Func<object?, IDataContext, Expression, object?[]?, T>                          func,
 			Func<object?, IDataContext, Expression, object?[]?, CancellationToken, Task<T>> funcAsync
 			)
 		{

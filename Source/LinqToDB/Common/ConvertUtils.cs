@@ -1,9 +1,11 @@
 ﻿using System;
-using LinqToDB.Common.Internal;
-using LinqToDB.Extensions;
+using System.Collections.Generic;
 
 namespace LinqToDB.Common
 {
+	using Internal;
+	using Extensions;
+
 	internal static class ConvertUtils
 	{
 		private static readonly IDictionary<Type, ISet<Type>> _alwaysConvert = new Dictionary<Type, ISet<Type>>()

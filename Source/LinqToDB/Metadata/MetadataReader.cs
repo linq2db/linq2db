@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -25,7 +27,7 @@ namespace LinqToDB.Metadata
 		readonly string                                   _objectId;
 		readonly ConcurrentDictionary<Type, MemberInfo[]> _dynamicColumns = new();
 
-		readonly IMetadataReader[]             _readers;
+		readonly IMetadataReader[]              _readers;
 		public   IReadOnlyList<IMetadataReader> Readers => _readers;
 
 		public MetadataReader(params IMetadataReader[] readers)

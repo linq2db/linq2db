@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Configuration
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.Configuration
 {
 	/// <summary>
 	/// Data provider configuration provider.

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Data.Common;
 
@@ -343,7 +344,7 @@ namespace LinqToDB.DataProvider.MySql
 				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToProcedure      :
 					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
-					if (value.Contains('`'))
+					if (value.Contains("`"))
 						value = value.Replace("`", "``");
 
 					return sb.Append('`').Append(value).Append('`');

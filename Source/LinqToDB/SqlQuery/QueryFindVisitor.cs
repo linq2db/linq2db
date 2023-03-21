@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
 	public readonly struct QueryFindVisitor<TContext>
 	{
 		private readonly HashSet<IQueryElement>               _visitedFind;
-		private readonly TContext?                             _context;
+		private readonly TContext?                            _context;
 		private readonly Func<TContext, IQueryElement, bool>? _find;
 		private readonly Func<IQueryElement, bool>?           _findStatic;
 

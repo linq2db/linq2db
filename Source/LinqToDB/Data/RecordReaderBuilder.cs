@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -24,7 +26,7 @@ namespace LinqToDB.Data
 		public MappingSchema          MappingSchema { get; }
 		public Type                   ObjectType    { get; }
 		public Type                   OriginalType  { get; }
-		public DbDataReader            Reader        { get; }
+		public DbDataReader           Reader        { get; }
 		public Dictionary<string,int> ReaderIndexes { get; }
 
 		int                  _varIndex;

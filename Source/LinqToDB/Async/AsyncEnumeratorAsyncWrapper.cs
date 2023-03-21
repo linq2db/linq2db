@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Async
 {
@@ -7,7 +9,7 @@ namespace LinqToDB.Async
 		private IAsyncEnumerator<T>? _enumerator;
 #if !NATIVE_ASYNC
 		private readonly Func<Task<Tuple<IAsyncEnumerator<T>, IDisposable?>>> _init;
-		private IDisposable? _disposable;
+		private          IDisposable?                                         _disposable;
 #else
 		private readonly Func<Task<Tuple<IAsyncEnumerator<T>, IAsyncDisposable?>>> _init;
 		private IAsyncDisposable? _disposable;

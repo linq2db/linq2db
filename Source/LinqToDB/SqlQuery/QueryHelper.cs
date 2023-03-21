@@ -1,12 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlQuery
 {
 	using SqlProvider;
 	using Common;
-	using Common.Internal;
 	using Mapping;
 
 	public static partial class QueryHelper

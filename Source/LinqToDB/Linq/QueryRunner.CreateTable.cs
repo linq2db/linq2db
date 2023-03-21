@@ -1,4 +1,7 @@
-﻿namespace LinqToDB.Linq
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace LinqToDB.Linq
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;

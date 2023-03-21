@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Data.Common;
 using System.Text;
 using System.Globalization;
+using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
 {

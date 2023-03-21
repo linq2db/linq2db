@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery.Visitors
+﻿using System;
+
+namespace LinqToDB.SqlQuery.Visitors
 {
 	public class SqlQueryCloneVisitor<TContext> : SqlQueryCloneVisitorBase
 

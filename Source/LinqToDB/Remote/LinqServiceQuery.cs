@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Remote
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.Remote
 {
 	using SqlQuery;
 

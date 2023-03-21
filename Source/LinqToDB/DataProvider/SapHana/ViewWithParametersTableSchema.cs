@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.SapHana
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider.SapHana
 {
 	using SchemaProvider;
 

@@ -1,8 +1,10 @@
 ﻿using System;
-using LinqToDB.Remote;
+using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
+	using Remote;
+
 	public readonly struct QueryVisitor<TContext>
 	{
 		public readonly Dictionary<IQueryElement,IQueryElement?> VisitedElements;
