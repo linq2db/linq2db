@@ -13,7 +13,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -23,12 +25,15 @@ using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
+
 using Microsoft.SqlServer.Types;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
@@ -2155,6 +2160,13 @@ DROP TABLE IF EXISTS TemporalTable3History
 				Assert.AreEqual(readOnly, column!.SkipOnInsert);
 				Assert.AreEqual(readOnly, column!.SkipOnUpdate);
 			}
+		}
+
+		[Test]
+		public void GetDataConnectionTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var cs = DataConnection.GetConnectionString(context);
+			_ = SqlServerTools.CreateDataConnection(cs);
 		}
 	}
 }
