@@ -45,7 +45,7 @@ namespace LinqToDB
 		public DataContext(string? configurationString)
 			: this(configurationString == null
 				? DataConnection.DefaultDataOptions
-				: DataConnection.ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(configurationString))))
+				: DataConnection.ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(ConfigurationString : configurationString))))
 		{
 		}
 
