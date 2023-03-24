@@ -22,6 +22,7 @@ nuget.exe Pack ..\BuiltNuGet\linq2db.cli.nuspec -OutputDirectory ..\BuiltNuGet\b
 REM disable new T4 nugets publishing, prepare for their obsoletion and removal
 REM goto eof:
 nuget.exe Pack ..\BuiltNuGet\linq2db.Access.nuspec -OutputDirectory ..\BuiltNuGet\built
+nuget.exe Pack ..\BuiltNuGet\linq2db.ClickHouse.MySqlConnector.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.DB2.Core.nuspec -OutputDirectory ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.Firebird.nuspec -OutputDirectory ..\BuiltNuGet\built

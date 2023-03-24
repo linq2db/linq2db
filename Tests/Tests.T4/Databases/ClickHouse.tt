@@ -1,0 +1,13 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\MySqlConnector.dll"             #>
+<#@ include file="$(SolutionDir)Source\LinqToDB.Templates\LinqToDB.ClickHouse.ttinclude"     #>
+<#@ include file="..\Shared.ttinclude" once="true"                                           #>
+<#
+	NamespaceName                = "ClickHouseDataContext";
+	DataContextName              = "ClickHouseDB";
+	EnableNullableReferenceTypes = false;
+
+	LoadClickHouseMetadata(GetConnectionString("ClickHouse.MySql"));
+	GenerateModel();
+#>

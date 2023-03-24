@@ -19,7 +19,7 @@ public void LoadMySqlMetadata(string connectionString)
 
 public void LoadMySqlMetadata(string server, string database, string uid, string password,int port=3306)
 {
-	using (var dataConnection = GetMySqlConnection(server, database, uid, password,port))
+	using (var dataConnection = GetMySqlConnection(server, database, uid, password, port))
 		LoadMetadata(dataConnection);
 }
 #>
