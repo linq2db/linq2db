@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(connectionString), default, version);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString : connectionString), default, version);
 		}
 
 		public static void ResolvePostgreSQL(string path)
