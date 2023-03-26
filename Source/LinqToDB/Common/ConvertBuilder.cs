@@ -265,6 +265,7 @@ namespace LinqToDB.Common
 					return null;
 
 				var fromType = from;
+
 				if (fromType.IsNullable())
 					fromType = fromType.ToNullableUnderlying();
 
