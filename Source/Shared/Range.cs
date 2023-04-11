@@ -36,10 +36,10 @@ namespace System
 		}
 
 		/// <summary>Indicates whether the current Range object is equal to another object of the same type.</summary>
-		/// <param name="value">An object to compare with this object</param>
-		public override bool Equals(object? value)
+		/// <param name="obj">An object to compare with this object</param>
+		public override bool Equals(object? obj)
 		{
-			if (value is Range r)
+			if (obj is Range r)
 			{
 				return r.Start.Equals(Start) && r.End.Equals(End);
 			}
