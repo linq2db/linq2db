@@ -2340,6 +2340,23 @@ namespace Tests.DataProvider
 				.InlineParameters()
 				.Count();
 		}
+
+		[Test]
+		public void ObjectParamTest5([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConverter<object?,object?>(o => o is Enum e ? ms.ChangeType(e, typeof(object)) : o);
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			object categoryParam = PersonCategory.Friends;
+
+			_ = db.GetTable<Person>()
+				.Select(p => new { p.Name, Category = (PersonCategory)p.ID })
+				.Where(p => p.Category.Equals(categoryParam))
+				.Count();
+		}
 	}
 
 	public static class TestPgAggregates
