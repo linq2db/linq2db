@@ -2363,7 +2363,7 @@ namespace Tests.DataProvider
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConverter<object?,DataParameter?>(o => new(null, o is Enum e ? ms.EnumToValue(e) : o, DataType.Undefined));
+			ms.SetConverter<object?,DataParameter>(o => new(null, o is Enum e ? ms.EnumToValue(e) : o, DataType.Undefined));
 
 			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
 
