@@ -51,7 +51,7 @@ namespace Tests.Tools
 						{
 							if (provider is "--" or "---")
 								providers.Clear();
-							else if (provider[0..1] == "-")
+							else if (provider.StartsWith("-"))
 								providers.Remove(provider.Replace("-", "").Trim());
 							else
 								providers.Add(provider);

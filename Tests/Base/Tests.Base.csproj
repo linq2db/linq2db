@@ -17,8 +17,6 @@
 		<Reference Include="System.ServiceModel" />
 
 		<PackageReference Include="System.Text.Json" />
-
-		<Compile Include="$(SolutionDir)/Source/Shared/Range.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
