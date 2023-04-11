@@ -281,11 +281,13 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
+						// Try GetConvertExpression<.., DataParameter>() first.
+						//
 						if (newExpr.ValueExpression.Type != typeof(DataParameter))
 						{
 							var expr = MappingSchema.GetConvertExpression(newExpr.ValueExpression.Type, typeof(DataParameter), false, false);
 
-							newExpr.ValueExpression = expr != null ?
+							newExpr.ValueExpression = expr is not null ?
 								InternalExtensions.ApplyLambdaToExpression(expr, newExpr.ValueExpression) :
 								ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
 						}

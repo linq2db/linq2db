@@ -15,23 +15,25 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.ServiceModel" />
-		
+
 		<PackageReference Include="System.Text.Json" />
+
+		<Compile Include="$(SolutionDir)/Source/Shared/Range.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
 		<!--netcoreapp31 needed due to very old transient depndency from oracle 2.19 provider-->
 		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
-	
+
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
-	  <Compile Update="TestProviders\TestNoopProvider.cs">
-	    <SubType>Source</SubType>
-	  </Compile>
+		<Compile Update="TestProviders\TestNoopProvider.cs">
+			<SubType>Source</SubType>
+		</Compile>
 	</ItemGroup>
 
 </Project>

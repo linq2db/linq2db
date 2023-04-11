@@ -71,6 +71,7 @@
 
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
+		<Compile Remove="$(MSBuildThisFileDirectory)/Source/Shared/Range.cs" />
 	</ItemGroup>
 
 </Project>
