@@ -31,3 +31,5 @@ docker exec clickhouse clickhouse-client --multiquery --host 127.0.0.1 -u testus
 #docker exec clickhouse clickhouse-client --multiquery --host 127.0.0.1 -u testuser --password testuser -q "CREATE DATABASE testdb4"
 
 docker logs clickhouse
+
+docker exec clickhouse clickhouse-client --multiquery --host 127.0.0.1 -u testuser --password testuser -q "SELECT version()"

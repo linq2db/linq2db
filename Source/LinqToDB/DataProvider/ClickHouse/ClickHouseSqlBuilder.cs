@@ -226,7 +226,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			AppendIndent();
 
-			StringBuilder.Append(" PRIMARY KEY (");
+			StringBuilder.Append("PRIMARY KEY (");
 
 			var first = true;
 			foreach (var fieldName in fieldNames)
