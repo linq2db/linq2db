@@ -462,9 +462,13 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{D069A715-29E5-4CFD-9112-63ED5633971F}"
 	ProjectSection(SolutionItems) = preProject
 		Source\Shared\HashCode.cs = Source\Shared\HashCode.cs
+		Source\Shared\Index.cs = Source\Shared\Index.cs
 		Source\Shared\IsExternalInit.cs = Source\Shared\IsExternalInit.cs
 		Source\Shared\JetBrains.Annotations.cs = Source\Shared\JetBrains.Annotations.cs
 		Source\Shared\NullableAttributes.cs = Source\Shared\NullableAttributes.cs
+		Source\Shared\Range.cs = Source\Shared\Range.cs
+		Source\Shared\SharedAssemblyInfo.cs = Source\Shared\SharedAssemblyInfo.cs
+		Source\Shared\SkipLocalsInitAttribute.cs = Source\Shared\SkipLocalsInitAttribute.cs
 		Source\Shared\TupleElementNamesAttribute.cs = Source\Shared\TupleElementNamesAttribute.cs
 		Source\Shared\ValueTuple.cs = Source\Shared\ValueTuple.cs
 	EndProjectSection
