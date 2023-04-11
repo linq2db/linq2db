@@ -232,7 +232,7 @@ namespace Tests.Mapping
 		{
 			var ms3 = new MappingSchema("3");
 			ms3.AddMetadataReader(new XmlAttributeReader(new MemoryStream(Encoding.UTF8.GetBytes(Data))));
-
+			
 			var ms = new MappingSchema("2", ms3);
 
 			var attrs = ms.GetAttributes<MapValueAttribute>(

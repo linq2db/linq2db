@@ -41,26 +41,6 @@ namespace Tests.Tools
 					if (!settings1.Connections.ContainsKey(connection.Key))
 						settings1.Connections.Add(connection.Key, connection.Value);
 
-				if (settings2.Providers is not null)
-				{
-					var providers = new HashSet<string>(settings2.Providers);
-
-					if (settings1.Providers is not null)
-					{
-						foreach (var provider in settings1.Providers)
-						{
-							if (provider is "--" or "---")
-								providers.Clear();
-							else if (provider[0..1] == "-")
-								providers.Remove(provider.Replace("-", "").Trim());
-							else
-								providers.Add(provider);
-						}
-					}
-
-					settings1.Providers = providers.ToArray();
-				}
-
 				settings1.Providers            ??= settings2.Providers;
 				settings1.Skip                 ??= settings2.Skip;
 				settings1.TraceLevel           ??= settings2.TraceLevel;
@@ -118,7 +98,6 @@ namespace Tests.Tools
 
 				//Translate connection strings enclosed in brackets as references to other existing connection strings.
 				settings.Connections ??= new();
-
 				foreach (var connection in settings.Connections)
 				{
 					var cs = connection.Value.ConnectionString;
