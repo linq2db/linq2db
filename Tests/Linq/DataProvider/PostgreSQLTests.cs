@@ -2346,7 +2346,24 @@ namespace Tests.DataProvider
 		{
 			var ms = new MappingSchema();
 
-			ms.SetConverter<object?,object?>(o => o is Enum e ? ms.ChangeType(e, typeof(object)) : o);
+			ms.SetConverter<object?,object?>(o => o is Enum e ? ms.EnumToValue(e) : o);
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			object categoryParam = PersonCategory.Friends;
+
+			_ = db.GetTable<Person>()
+				.Select(p => new { p.Name, Category = (PersonCategory)p.ID })
+				.Where(p => p.Category.Equals(categoryParam))
+				.Count();
+		}
+
+		[Test]
+		public void ObjectParamTest6([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConverter<object?,DataParameter?>(o => new(null, o is Enum e ? ms.EnumToValue(e) : o, DataType.Undefined));
 
 			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
 
