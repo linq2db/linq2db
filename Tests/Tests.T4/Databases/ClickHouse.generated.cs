@@ -71,10 +71,11 @@ namespace ClickHouseDataContext
 		[Column("smallintDataType"),                       Nullable         ] public short?  SmallintDataType { get; set; } // Int16
 		[Column("floatDataType"),                          Nullable         ] public float?  FloatDataType    { get; set; } // Float32
 		[Column("doubleDataType"),                         Nullable         ] public double? DoubleDataType   { get; set; } // Float64
-		[Column("ncharDataType"),                          Nullable         ] public byte[]  NcharDataType    { get; set; } // FixedString(20)
-		[Column("char20DataType"),                         Nullable         ] public byte[]  Char20DataType   { get; set; } // FixedString(20)
+		[Column("ncharDataType"),                          Nullable         ] public string  NcharDataType    { get; set; } // FixedString(20)
+		[Column("char20DataType"),                         Nullable         ] public string  Char20DataType   { get; set; } // FixedString(20)
 		[Column("varcharDataType"),                        Nullable         ] public string  VarcharDataType  { get; set; } // String
-		[Column("charDataType"),                           Nullable         ] public byte[]  CharDataType     { get; set; } // FixedString(1)
+		[Column("charDataType"),                           Nullable         ] public char?   CharDataType     { get; set; } // FixedString(1)
+		[Column("bitDataType"),                            Nullable         ] public ulong?  BitDataType      { get; set; } // UInt64
 	}
 
 	[Table("Child")]
@@ -161,7 +162,7 @@ namespace ClickHouseDataContext
 		[Column,                                 NotNull] public string FirstName  { get; set; } // String
 		[Column,                                 NotNull] public string LastName   { get; set; } // String
 		[Column,                       Nullable         ] public string MiddleName { get; set; } // String
-		[Column,                                 NotNull] public byte[] Gender     { get; set; } // FixedString(1)
+		[Column,                                 NotNull] public char   Gender     { get; set; } // FixedString(1)
 	}
 
 	[Table("TestMerge1")]
@@ -177,8 +178,8 @@ namespace ClickHouseDataContext
 		[Column,                       Nullable         ] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column,                       Nullable         ] public string          FieldString     { get; set; } // String
 		[Column,                       Nullable         ] public string          FieldNString    { get; set; } // String
-		[Column,                       Nullable         ] public byte[]          FieldChar       { get; set; } // FixedString(1)
-		[Column,                       Nullable         ] public byte[]          FieldNChar      { get; set; } // FixedString(2)
+		[Column,                       Nullable         ] public char?           FieldChar       { get; set; } // FixedString(1)
+		[Column,                       Nullable         ] public string          FieldNChar      { get; set; } // FixedString(2)
 		[Column,                       Nullable         ] public float?          FieldFloat      { get; set; } // Float32
 		[Column,                       Nullable         ] public double?         FieldDouble     { get; set; } // Float64
 		[Column,                       Nullable         ] public DateTimeOffset? FieldDateTime   { get; set; } // DateTime64(3)
@@ -205,8 +206,8 @@ namespace ClickHouseDataContext
 		[Column,                       Nullable         ] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column,                       Nullable         ] public string          FieldString     { get; set; } // String
 		[Column,                       Nullable         ] public string          FieldNString    { get; set; } // String
-		[Column,                       Nullable         ] public byte[]          FieldChar       { get; set; } // FixedString(1)
-		[Column,                       Nullable         ] public byte[]          FieldNChar      { get; set; } // FixedString(2)
+		[Column,                       Nullable         ] public char?           FieldChar       { get; set; } // FixedString(1)
+		[Column,                       Nullable         ] public string          FieldNChar      { get; set; } // FixedString(2)
 		[Column,                       Nullable         ] public float?          FieldFloat      { get; set; } // Float32
 		[Column,                       Nullable         ] public double?         FieldDouble     { get; set; } // Float64
 		[Column,                       Nullable         ] public DateTimeOffset? FieldDateTime   { get; set; } // DateTime64(3)
