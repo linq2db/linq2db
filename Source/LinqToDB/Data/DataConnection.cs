@@ -484,21 +484,23 @@ namespace LinqToDB.Data
 		/// </summary>
 		static void OnTraceInternal(TraceInfo info)
 		{
+			var dc = info.DataConnection;
+
 			switch (info.TraceInfoStep)
 			{
 				case TraceInfoStep.BeforeExecute:
-					info.DataConnection.WriteTraceLineConnection(
+					dc.WriteTraceLineConnection(
 						$"{info.TraceInfoStep}{Environment.NewLine}{info.SqlText}",
-						info.DataConnection.TraceSwitchConnection.DisplayName,
+						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
 
 				case TraceInfoStep.AfterExecute:
-					info.DataConnection.WriteTraceLineConnection(
+					dc.WriteTraceLineConnection(
 						info.RecordsAffected != null
 							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
 							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
-						info.DataConnection.TraceSwitchConnection.DisplayName,
+						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
 
@@ -532,7 +534,7 @@ namespace LinqToDB.Data
 						}
 					}
 
-					info.DataConnection.WriteTraceLineConnection(sb.Value.ToString(), info.DataConnection.TraceSwitchConnection.DisplayName, info.TraceLevel);
+					dc.WriteTraceLineConnection(sb.Value.ToString(), dc.TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -543,10 +545,10 @@ namespace LinqToDB.Data
 
 					sb.Value.AppendLine(info.TraceInfoStep.ToString());
 
-					if (info.MapperExpression != null && info.DataConnection.Options.LinqOptions.TraceMapperExpression)
+					if (info.MapperExpression != null && dc.Options.LinqOptions.TraceMapperExpression)
 						sb.Value.AppendLine(info.MapperExpression.GetDebugView());
 
-					info.DataConnection.WriteTraceLineConnection(sb.Value.ToString(), info.DataConnection.TraceSwitchConnection.DisplayName, info.TraceLevel);
+					dc.WriteTraceLineConnection(sb.Value.ToString(), dc.TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -562,7 +564,7 @@ namespace LinqToDB.Data
 
 					sb.Value.AppendLine();
 
-					info.DataConnection.WriteTraceLineConnection(sb.Value.ToString(), info.DataConnection.TraceSwitchConnection.DisplayName, info.TraceLevel);
+					dc.WriteTraceLineConnection(sb.Value.ToString(), dc.TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
