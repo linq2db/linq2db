@@ -15,6 +15,7 @@
 		<PackageVersion Include="System.ComponentModel.Annotations"                     Version="5.0.0"         />
 		<!--Source of NullabilityInfoContext for runtimes before .net 6-->
 		<PackageVersion Include="Nullability.Source"                                    Version="2.1.0"         />
+		<PackageVersion Include="PolySharp"                                             Version="1.13.1"        />
 		<!--build support-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.3.5-beta1.23080.2" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="7.0.1"         />
