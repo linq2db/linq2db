@@ -191,6 +191,10 @@ Legend:
 |`TestProvName.Oracle21Managed`|Oracle 21c using managed provider (core version for .net core)||
 |`ProviderName.Oracle21DevartDirect`|Oracle 21c using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
 |`ProviderName.Oracle21DevartOCI`|Oracle 21c using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
+|`TestProvName.Oracle23Native`|Oracle 23c using native provider||
+|`TestProvName.Oracle23Managed`|Oracle 23c using managed provider (core version for .net core)||
+|`ProviderName.Oracle23DevartDirect`|Oracle 23c using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
+|`ProviderName.Oracle23DevartOCI`|Oracle 23c using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
 |`ProviderName.SapHanaNative`|SAP HANA 2 using native provider||
 |`ProviderName.SapHanaOdbc`|SAP HANA 2 using ODBC provider||
 |`ProviderName.ClickHouseOctonica`|ClickHouse using `Octonica.ClickHouseClient` provider||

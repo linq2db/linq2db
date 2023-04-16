@@ -99,6 +99,10 @@
 			//"Oracle.21.Native",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
+			//"Oracle.23.Managed",
+			//"Oracle.23.Native",
+			//"Oracle.23.Devart.Direct",
+			//"Oracle.23.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
@@ -206,6 +210,9 @@
 			//"Oracle.21.Managed",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
+			//"Oracle.23.Managed",
+			//"Oracle.23.Devart.Direct",
+			//"Oracle.23.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
@@ -313,6 +320,9 @@
 			//"Oracle.21.Managed",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
+			//"Oracle.23.Managed",
+			//"Oracle.23.Devart.Direct",
+			//"Oracle.23.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
@@ -420,6 +430,9 @@
 			//"Oracle.21.Managed",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
+			//"Oracle.23.Managed",
+			//"Oracle.23.Devart.Direct",
+			//"Oracle.23.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
@@ -641,6 +654,22 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Oracle.21.Devart.OCI": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.23.Native": {
+				"Provider": "Oracle.DataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.23.Managed": {
+				"Provider": "Oracle.ManagedDataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.23.Devart.Direct": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.23.Devart.OCI": {
 				"Provider": "Devart.Data.Oracle",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
