@@ -95,6 +95,10 @@
 			//"Oracle.18.Native",
 			//"Oracle.18.Devart.Direct",
 			//"Oracle.18.Devart.OCI",
+			//"Oracle.19.Managed",
+			//"Oracle.19.Native",
+			//"Oracle.19.Devart.Direct",
+			//"Oracle.19.Devart.OCI",
 			//"Oracle.21.Managed",
 			//"Oracle.21.Native",
 			//"Oracle.21.Devart.Direct",
@@ -207,6 +211,9 @@
 			//"Oracle.18.Managed",
 			//"Oracle.18.Devart.Direct",
 			//"Oracle.18.Devart.OCI",
+			//"Oracle.19.Managed",
+			//"Oracle.19.Devart.Direct",
+			//"Oracle.19.Devart.OCI",
 			//"Oracle.21.Managed",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
@@ -317,6 +324,9 @@
 			//"Oracle.18.Managed",
 			//"Oracle.18.Devart.Direct",
 			//"Oracle.18.Devart.OCI",
+			//"Oracle.19.Managed",
+			//"Oracle.19.Devart.Direct",
+			//"Oracle.19.Devart.OCI",
 			//"Oracle.21.Managed",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
@@ -427,6 +437,9 @@
 			//"Oracle.18.Managed",
 			//"Oracle.18.Devart.Direct",
 			//"Oracle.18.Devart.OCI",
+			//"Oracle.19.Managed",
+			//"Oracle.19.Devart.Direct",
+			//"Oracle.19.Devart.OCI",
 			//"Oracle.21.Managed",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
@@ -638,6 +651,22 @@
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Oracle.18.Devart.OCI": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.19.Native": {
+				"Provider": "Oracle.DataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.19.Managed": {
+				"Provider": "Oracle.ManagedDataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.19.Devart.Direct": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.19.Devart.OCI": {
 				"Provider": "Devart.Data.Oracle",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},

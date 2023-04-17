@@ -174,6 +174,11 @@ namespace Tests
 		public const string Oracle18Managed        = "Oracle.18.Managed";
 		public const string Oracle18Native         = "Oracle.18.Native";
 
+		public const string Oracle19DevartDirect   = "Oracle.19.Devart.Direct";
+		public const string Oracle19DevartOCI      = "Oracle.19.Devart.OCI";
+		public const string Oracle19Managed        = "Oracle.19.Managed";
+		public const string Oracle19Native         = "Oracle.19.Native";
+
 		public const string Oracle21DevartDirect   = "Oracle.21.Devart.Direct";
 		public const string Oracle21DevartOCI      = "Oracle.21.Devart.OCI";
 		public const string Oracle21Managed        = "Oracle.21.Managed";
@@ -184,19 +189,20 @@ namespace Tests
 		public const string Oracle23Managed        = "Oracle.23.Managed";
 		public const string Oracle23Native         = "Oracle.23.Native";
 
-		public const string AllOracleDevartOCI     = $"{Oracle11DevartOCI},{Oracle12DevartOCI},{Oracle18DevartOCI},{Oracle21DevartOCI},{Oracle23DevartOCI}";
-		public const string AllOracleDevartDirect  = $"{Oracle11DevartDirect},{Oracle12DevartDirect},{Oracle18DevartDirect},{Oracle21DevartDirect},{Oracle23DevartDirect}";
+		public const string AllOracleDevartOCI     = $"{Oracle11DevartOCI},{Oracle12DevartOCI},{Oracle18DevartOCI},{Oracle19DevartOCI},{Oracle21DevartOCI},{Oracle23DevartOCI}";
+		public const string AllOracleDevartDirect  = $"{Oracle11DevartDirect},{Oracle12DevartDirect},{Oracle18DevartDirect},{Oracle19DevartDirect},{Oracle21DevartDirect},{Oracle23DevartDirect}";
 		public const string AllOracleDevart        = $"{AllOracleDevartOCI},{AllOracleDevartDirect}";
 
-		public const string AllOracleManaged       = $"{ProviderName.Oracle11Managed},{Oracle12Managed},{Oracle18Managed},{Oracle21Managed},{Oracle23Managed}";
-		public const string AllOracleNative        = $"{ProviderName.Oracle11Native},{Oracle12Native},{Oracle18Native},{Oracle21Native},{Oracle23Native}";
+		public const string AllOracleManaged       = $"{ProviderName.Oracle11Managed},{Oracle12Managed},{Oracle18Managed},{Oracle19Managed},{Oracle21Managed},{Oracle23Managed}";
+		public const string AllOracleNative        = $"{ProviderName.Oracle11Native},{Oracle12Native},{Oracle18Native},{Oracle19Native},{Oracle21Native},{Oracle23Native}";
 
 		public const string AllOracle11            = $"{ProviderName.Oracle11Native},{ProviderName.Oracle11Managed},{Oracle11DevartOCI},{Oracle11DevartDirect}";
 		public const string AllOracle12            = $"{Oracle12Native},{Oracle12Managed},{Oracle12DevartOCI},{Oracle12DevartDirect}";
 		public const string AllOracle18            = $"{Oracle18Native},{Oracle18Managed},{Oracle18DevartOCI},{Oracle18DevartDirect}";
+		public const string AllOracle19            = $"{Oracle19Native},{Oracle19Managed},{Oracle19DevartOCI},{Oracle19DevartDirect}";
 		public const string AllOracle21            = $"{Oracle21Native},{Oracle21Managed},{Oracle21DevartOCI},{Oracle21DevartDirect}";
 		public const string AllOracle23            = $"{Oracle23Native},{Oracle23Managed},{Oracle23DevartOCI},{Oracle23DevartDirect}";
-		public const string AllOracle12Plus        = $"{AllOracle12},{AllOracle18},{AllOracle21},{AllOracle23}";
+		public const string AllOracle12Plus        = $"{AllOracle12},{AllOracle18},{AllOracle19},{AllOracle21},{AllOracle23}";
 
 		public const string AllOracle              = $"{AllOracle11},{AllOracle12Plus}";
 		#endregion
