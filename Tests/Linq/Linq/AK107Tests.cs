@@ -46,7 +46,8 @@ namespace Tests.Linq
 		private MappingSchema CreateUser(string context)
 		{
 			using var _ = new DisableBaseline("test setup");
-			var schema = context.IsAnyOf(TestProvName.AllOracle19) ? "sequence_schema" : "c##sequence_schema";
+			//var schema = context.IsAnyOf(TestProvName.AllOracle19) ? "sequence_schema" : "c##sequence_schema";
+			var schema = "c##sequence_schema";
 
 			using var db = GetDataConnection(context);
 			try
@@ -197,7 +198,8 @@ namespace Tests.Linq
 		public void SequenceNameTest([IncludeDataSources(false, TestProvName.AllOracle)]
 			string context)
 		{
-			var schema = context.IsAnyOf(TestProvName.AllOracle19) ? "sequence_schema" : "c##sequence_schema";
+			//var schema = context.IsAnyOf(TestProvName.AllOracle19) ? "sequence_schema" : "c##sequence_schema";
+			var schema = "c##sequence_schema";
 			using var db = GetDataConnection(context, CreateUser(context));
 			db.BeginTransaction();
 

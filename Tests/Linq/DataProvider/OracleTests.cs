@@ -2646,7 +2646,8 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue723Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			var schema = context.IsAnyOf(TestProvName.AllOracle19) ? "ISSUE723SCHEMA" : "C##ISSUE723SCHEMA";
+			//var schema = context.IsAnyOf(TestProvName.AllOracle19) ? "ISSUE723SCHEMA" : "C##ISSUE723SCHEMA";
+			var schema = "C##ISSUE723SCHEMA";
 			// v12 fix: ORA-65096: invalid common user or role name
 			// http://www.dba-oracle.com/t_ora_65096_create_user_12c_without_c_prefix.htm
 
