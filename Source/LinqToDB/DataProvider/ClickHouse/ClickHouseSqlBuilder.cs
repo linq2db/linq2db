@@ -475,5 +475,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// (could have many nesting levels) which we don't support and have no plans to support
 			addAlias = addAlias || selectQuery?.ParentSelect != null;
 		}
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions is not null)
+			{
+				BuildTableExtensions(StringBuilder, table, alias, null, ", ", null,
+					ext => ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint);
+			}
+		}
 	}
 }
