@@ -2,19 +2,28 @@
 using System.Linq.Expressions;
 using System.Text;
 using JetBrains.Annotations;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Expressions;
 	using Linq;
 	using SqlProvider;
+	using SqlQuery;
 
-	public static class ClickHouseHints
+	public static partial class ClickHouseHints
 	{
 		public static class Table
 		{
 			public const string Final = "FINAL";
+		}
+
+		public static class Join
+		{
+			public const string Outer = "OUTER";
+			public const string Semi  = "SEMI";
+			public const string Anti  = "ANTI";
+			public const string Any   = "ANY";
+			public const string AsOf  = "ASOF";
 		}
 
 		#region TableHint
@@ -197,6 +206,58 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#endregion
 
+		#region JoinHint
+
+		/// <summary>
+		/// Adds a join hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
+		public static IClickHouseSpecificTable<TSource> JoinHint<TSource>(this IClickHouseSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(JoinHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
+
+			return new ClickHouseSpecificTable<TSource>(newTable);
+		}
+
+		/// <summary>
+		/// Adds a join hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
+		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
+		public static IClickHouseSpecificQueryable<TSource> JoinHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(JoinHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint))));
+		}
+
+		#endregion
+
+		/// <summary>
+		/// Adds <b>FINAL</b> modifier to FROM Clause.
+		/// </summary>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalHintImpl))]
 		public static IClickHouseSpecificTable<TSource> FinalHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -209,6 +270,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return table => TableHint(table, Table.Final);
 		}
 
+		/// <summary>
+		/// Adds <b>FINAL</b> modifier to FROM Clause.
+		/// </summary>
+		/// <typeparam name="TSource"></typeparam>
+		/// <param name="table"></param>
+		/// <returns></returns>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalInScopeHintImpl2))]
 		public static IClickHouseSpecificTable<TSource> FinalInScopeHint<TSource>(this IClickHouseSpecificTable<TSource> table)
 			where TSource : notnull
@@ -221,6 +288,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return table => TableHint(table, Table.Final);
 		}
 
+		/// <summary>
+		/// Adds <b>FINAL</b> modifier to FROM Clause of all the tables in the method scope.
+		/// </summary>
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalInScopeHintImpl))]
 		public static IClickHouseSpecificQueryable<TSource> FinalInScopeHint<TSource>(this IClickHouseSpecificQueryable<TSource> table)
 			where TSource : notnull

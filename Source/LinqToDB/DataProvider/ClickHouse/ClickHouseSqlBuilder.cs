@@ -484,5 +484,31 @@ namespace LinqToDB.DataProvider.ClickHouse
 					ext => ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint);
 			}
 		}
+
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			if (join.SqlQueryExtensions != null)
+			{
+				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope is Sql.QueryExtensionScope.JoinHint);
+
+				if (ext?.Arguments["hint"] is SqlValue v)
+				{
+					var h = (string)v.Value!;
+
+					switch (join.JoinType)
+					{
+						case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+						                           StringBuilder.Append($"CROSS {h} JOIN "); return false;
+						case JoinType.Inner      : StringBuilder.Append($"INNER {h} JOIN "); return true;
+						case JoinType.Left       : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
+						case JoinType.Right      : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
+						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
+						default                  : throw new InvalidOperationException();
+					}
+				}
+			}
+
+			return base.BuildJoinType(join, condition);
+		}
 	}
 }
