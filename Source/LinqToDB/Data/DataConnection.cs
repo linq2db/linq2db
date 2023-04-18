@@ -467,38 +467,40 @@ namespace LinqToDB.Data
 			set => _isMarsEnabled = value;
 		}
 
-		static void DefaultTrace(TraceInfo info)
-		{
-			info.DataConnection.OnTraceInternal(info);
-		}
+		/// <summary>
+		/// Gets or sets default trace handler.
+		/// </summary>
+		public static Action<TraceInfo> DefaultOnTraceConnection { get; set; } = OnTraceInternal;
 
 		/// <summary>
 		/// Gets or sets trace handler, used for current connection instance.
 		/// Configured on the connection builder using <see cref="DataOptionsExtensions.UseTracing(DataOptions,Action{TraceInfo})"/>.
 		/// defaults to <see cref="WriteTraceLineConnection"/> calls.
 		/// </summary>
-		public Action<TraceInfo> OnTraceConnection { get; set; } = DefaultTrace;
+		public Action<TraceInfo> OnTraceConnection { get; set; } = DefaultOnTraceConnection;
 
 		/// <summary>
 		/// Writes the trace out using <see cref="WriteTraceLineConnection"/>.
 		/// </summary>
-		void OnTraceInternal(TraceInfo info)
+		static void OnTraceInternal(TraceInfo info)
 		{
+			var dc = info.DataConnection;
+
 			switch (info.TraceInfoStep)
 			{
 				case TraceInfoStep.BeforeExecute:
-					WriteTraceLineConnection(
+					dc.WriteTraceLineConnection(
 						$"{info.TraceInfoStep}{Environment.NewLine}{info.SqlText}",
-						TraceSwitchConnection.DisplayName,
+						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
 
 				case TraceInfoStep.AfterExecute:
-					WriteTraceLineConnection(
+					dc.WriteTraceLineConnection(
 						info.RecordsAffected != null
 							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
 							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
-						TraceSwitchConnection.DisplayName,
+						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
 
@@ -532,7 +534,7 @@ namespace LinqToDB.Data
 						}
 					}
 
-					WriteTraceLineConnection(sb.Value.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
+					dc.WriteTraceLineConnection(sb.Value.ToString(), dc.TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -543,10 +545,10 @@ namespace LinqToDB.Data
 
 					sb.Value.AppendLine(info.TraceInfoStep.ToString());
 
-					if (info.MapperExpression != null && info.DataConnection.Options.LinqOptions.TraceMapperExpression)
+					if (info.MapperExpression != null && dc.Options.LinqOptions.TraceMapperExpression)
 						sb.Value.AppendLine(info.MapperExpression.GetDebugView());
 
-					WriteTraceLineConnection(sb.Value.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
+					dc.WriteTraceLineConnection(sb.Value.ToString(), dc.TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -562,7 +564,7 @@ namespace LinqToDB.Data
 
 					sb.Value.AppendLine();
 
-					WriteTraceLineConnection(sb.Value.ToString(), TraceSwitchConnection.DisplayName, info.TraceLevel);
+					dc.WriteTraceLineConnection(sb.Value.ToString(), dc.TraceSwitchConnection.DisplayName, info.TraceLevel);
 
 					break;
 				}
@@ -731,6 +733,7 @@ namespace LinqToDB.Data
 		#endregion
 
 		#region Command
+
 		private DbCommand? _command;
 
 		/// <summary>
