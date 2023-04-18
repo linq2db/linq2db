@@ -510,5 +510,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			return base.BuildJoinType(join, condition);
 		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null);
+		}
 	}
 }

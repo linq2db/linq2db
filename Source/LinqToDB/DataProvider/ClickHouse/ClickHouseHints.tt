@@ -23,38 +23,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 	}
 }
 <#+
-void GenerateTableHint(string hint, string version = "")
-{
-#>
-		[ExpressionMethod(ProviderName.ClickHouse, nameof(With<#= hint #>TableImpl))]
-		public static IClickHouseSpecificTable<TSource> With<#= hint #><TSource>(this IClickHouseSpecificTable<TSource> table)
-			where TSource : notnull
-		{
-			return table.TableHint<#= version #>(Table.<#= hint #>);
-		}
-
-		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> With<#= hint #>TableImpl<TSource>()
-			where TSource : notnull
-		{
-			return table => table.TableHint<#= version #>(Table.<#= hint #>);
-		}
-
-		[ExpressionMethod(ProviderName.ClickHouse, nameof(With<#= hint #>QueryImpl))]
-		public static IClickHouseSpecificQueryable<TSource> With<#= hint #>InScope<TSource>(this IClickHouseSpecificQueryable<TSource> query)
-			where TSource : notnull
-		{
-			return query.TablesInScopeHint<#= version #>(Table.<#= hint #>);
-		}
-
-		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> With<#= hint #>QueryImpl<TSource>()
-			where TSource : notnull
-		{
-			return query => query.TablesInScopeHint<#= version #>(Table.<#= hint #>);
-		}
-
-<#+
-}
-
 void GenerateJoinHint(string hint)
 {
 #>
@@ -82,44 +50,6 @@ void GenerateJoinHint(string hint)
 			where TSource : notnull
 		{
 			return table => table.JoinHint(Join.<#= hint #>);
-		}
-
-<#+
-}
-
-void GenerateQueryHint(string hint, string version = "")
-{
-#>
-		[ExpressionMethod(nameof(Option<#= hint #>Impl))]
-		public static IClickHouseSpecificQueryable<TSource> Option<#= hint #><TSource>(this IClickHouseSpecificQueryable<TSource> query)
-			where TSource : notnull
-		{
-			return query.QueryHint<#= version #>(Query.<#= hint #>);
-		}
-
-		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> Option<#= hint #>Impl<TSource>()
-			where TSource : notnull
-		{
-			return query => query.QueryHint<#= version #>(Query.<#= hint #>);
-		}
-
-<#+
-}
-
-void GenerateQueryHint2(string hint, string version = "")
-{
-#>
-		[ExpressionMethod(nameof(Option<#= hint #>Impl))]
-		public static IClickHouseSpecificQueryable<TSource> Option<#= hint #><TSource>(this IClickHouseSpecificQueryable<TSource> query, int value)
-			where TSource : notnull
-		{
-			return query.QueryHint<#= version #>(Query.<#= hint #>(value));
-		}
-
-		static Expression<Func<IClickHouseSpecificQueryable<TSource>,int,IClickHouseSpecificQueryable<TSource>>> Option<#= hint #>Impl<TSource>()
-			where TSource : notnull
-		{
-			return (query, value) => query.QueryHint<#= version #>(Query.<#= hint #>(value));
 		}
 
 <#+

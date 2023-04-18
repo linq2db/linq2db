@@ -110,5 +110,43 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring("INNER ANY JOIN"));
 		}
+
+		[Test]
+		public void SettingsHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsClickHouse()
+			.SettingsHint("convert_query_to_cnf=false");
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SETTINGS convert_query_to_cnf=false"));
+		}
+
+		[Test]
+		public void SettingsHintWithParamsTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child.TableID("ch")
+				join p in db.Parent on c.ParentID equals p.ParentID
+				select p
+			)
+			.AsClickHouse()
+			.SettingsHint("additional_table_filters = {{'{0}': 'ParentID != 2'}}", Sql.TableName("ch"));
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("SETTINGS additional_table_filters = {'Child': 'ParentID != 2'}"));
+		}
 	}
 }
