@@ -60,6 +60,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="PolySharp" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/Build/BannedSymbols.txt" />
 
