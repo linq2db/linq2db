@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker run -d --name clickhouse --ulimit nofile=262144:262144 -p 8123:8123 -p 9000:9000 -p 9004:9004 -p 9005:9005 -e CLICKHOUSE_USER=testuser -e CLICKHOUSE_PASSWORD=testuser clickhouse/clickhouse-server:23.1.3.5
+docker run -d --name clickhouse --ulimit nofile=262144:262144 -p 8123:8123 -p 9000:9000 -p 9004:9004 -p 9005:9005 -e CLICKHOUSE_USER=testuser -e CLICKHOUSE_PASSWORD=testuser clickhouse/clickhouse-server:latest
 
 docker ps -a
 
@@ -31,5 +31,3 @@ docker exec clickhouse clickhouse-client --multiquery --host 127.0.0.1 -u testus
 #docker exec clickhouse clickhouse-client --multiquery --host 127.0.0.1 -u testuser --password testuser -q "CREATE DATABASE testdb4"
 
 docker logs clickhouse
-
-docker exec clickhouse clickhouse-client --multiquery --host 127.0.0.1 -u testuser --password testuser -q "SELECT version()"
