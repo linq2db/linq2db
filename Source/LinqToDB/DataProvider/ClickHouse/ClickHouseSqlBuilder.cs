@@ -185,39 +185,33 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// For now we use fixed engines and it is recommended to use RAW SQL for table creation
 			// append MergeTree engine for mappings with primary key
 			// and Memory engine for others
-			if (!createTable.Table.TableOptions.IsTemporaryOptionSet())
+			var primaryKey = createTable.Table.Fields
+				.Where(_ => _.IsPrimaryKey)
+				.OrderBy(_ => _.PrimaryKeyOrder)
+				.ToArray();
+
+			if (primaryKey.Length > 0)
 			{
-				var primaryKey = createTable.Table.Fields
-					.Where(_ => _.IsPrimaryKey)
-					.OrderBy(_ => _.PrimaryKeyOrder)
-					.ToArray();
+				StringBuilder
+					.AppendLine("ENGINE = MergeTree()")
+					.Append("ORDER BY ");
 
-				if (primaryKey.Length > 0)
+				if (primaryKey.Length > 1)
+					StringBuilder.Append('(');
+
+				for (var i = 0; i < primaryKey.Length; i++)
 				{
-					StringBuilder
-						.AppendLine("ENGINE = MergeTree()")
-						.Append("ORDER BY ");
-
-					if (primaryKey.Length > 1)
-						StringBuilder.Append('(');
-
-					for (var i = 0; i < primaryKey.Length; i++)
-					{
-						if (i > 0)
-							StringBuilder.Append(", ");
-						Convert(StringBuilder, primaryKey[i].PhysicalName, ConvertType.NameToQueryField);
-					}
-
-					if (primaryKey.Length > 1)
-						StringBuilder.Append(')');
-
-					StringBuilder.AppendLine();
+					if (i > 0)
+						StringBuilder.Append(", ");
+					Convert(StringBuilder, primaryKey[i].PhysicalName, ConvertType.NameToQueryField);
 				}
-				else
-					StringBuilder
-						.AppendLine("ENGINE = Memory()");
+
+				if (primaryKey.Length > 1)
+					StringBuilder.Append(')');
+
+				StringBuilder.AppendLine();
 			}
-			else // temp tables use memory engine
+			else
 				StringBuilder
 					.AppendLine("ENGINE = Memory()");
 		}
