@@ -19,6 +19,18 @@ namespace LinqToDB.DataProvider.ClickHouse
 	GenerateJoinHint("Anti");
 	GenerateJoinHint("Any");
 	GenerateJoinHint("AsOf");
+	GenerateJoinHint("Global");
+	GenerateJoinHint("GlobalOuter");
+	GenerateJoinHint("GlobalSemi");
+	GenerateJoinHint("GlobalAnti");
+	GenerateJoinHint("GlobalAny");
+	GenerateJoinHint("GlobalAsOf");
+	GenerateJoinHint("All");
+	GenerateJoinHint("AllOuter");
+	GenerateJoinHint("AllSemi");
+	GenerateJoinHint("AllAnti");
+	GenerateJoinHint("AllAny");
+	GenerateJoinHint("AllAsOf");
 #>
 	}
 }

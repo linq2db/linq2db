@@ -3,6 +3,7 @@ using System.Text;
 using System.Linq;
 using System.Globalization;
 using System.Collections.Generic;
+using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
@@ -494,6 +495,29 @@ namespace LinqToDB.DataProvider.ClickHouse
 				if (ext?.Arguments["hint"] is SqlValue v)
 				{
 					var h = (string)v.Value!;
+
+					if (h.StartsWith(ClickHouseHints.Join.Global))
+					{
+						StringBuilder
+							.Append(ClickHouseHints.Join.Global)
+							.Append(' ');
+
+						if (h ==  ClickHouseHints.Join.Global)
+							return base.BuildJoinType(join, condition);
+
+						h = h[(ClickHouseHints.Join.Global.Length + 1)..];
+					}
+					else if (h.StartsWith(ClickHouseHints.Join.All))
+					{
+						StringBuilder
+							.Append(ClickHouseHints.Join.All)
+							.Append(' ');
+
+						if (h ==  ClickHouseHints.Join.All)
+							return base.BuildJoinType(join, condition);
+
+						h = h[(ClickHouseHints.Join.All.Length + 1)..];
+					}
 
 					switch (join.JoinType)
 					{

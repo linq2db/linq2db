@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.DataProvider.ClickHouse;
+
 using NUnit.Framework;
 
 namespace Tests.Extensions
@@ -147,6 +149,70 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("SETTINGS additional_table_filters = {'Child': 'ParentID != 2'}"));
+		}
+
+		[Test]
+		public void JoinGlobalHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinGlobalHint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("GLOBAL LEFT JOIN"));
+		}
+
+		[Test]
+		public void JoinGlobalSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinGlobalSemiHint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("GLOBAL LEFT SEMI JOIN"));
+		}
+
+		[Test]
+		public void JoinAllHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinAllHint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("ALL LEFT JOIN"));
+		}
+
+		[Test]
+		public void JoinAllSemiHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				join p in db.Parent.AsClickHouse().JoinAllSemiHint() on c.ParentID equals p.ParentID into g
+				from p in g.DefaultIfEmpty()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring("ALL LEFT SEMI JOIN"));
 		}
 	}
 }

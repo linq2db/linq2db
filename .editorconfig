@@ -38,7 +38,7 @@ end_of_line = lf
 
 # Sort using and Import directives with System.* appearing first
 dotnet_sort_system_directives_first = true
-dotnet_separate_import_directive_groups = false
+dotnet_separate_import_directive_groups = true
 
 # Use language keywords instead of framework type names for type references
 dotnet_style_predefined_type_for_locals_parameters_members = true:error
