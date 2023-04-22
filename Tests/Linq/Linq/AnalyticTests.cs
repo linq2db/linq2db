@@ -1499,7 +1499,7 @@ namespace Tests.Linq
 
 					};
 
-				var res = q.ToArray();
+				var res = q.AsEnumerable().OrderBy(r => r.Id).ToArray();
 
 				Assert.AreEqual(4, res.Length);
 
@@ -1507,9 +1507,9 @@ namespace Tests.Linq
 				Assert.IsNull(res[0].PreviousId);
 				Assert.IsNull(res[1].Id);
 				Assert.IsNull(res[1].PreviousId);
-				Assert.AreEqual(6, res[2].Id);
+				Assert.AreEqual(5, res[2].Id);
 				Assert.IsNull(res[2].PreviousId);
-				Assert.AreEqual(5, res[3].Id);
+				Assert.AreEqual(6, res[3].Id);
 				Assert.IsNull(res[3].PreviousId);
 			}
 		}
