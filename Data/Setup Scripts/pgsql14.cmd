@@ -8,8 +8,7 @@ REM use pull to get latest layers (run will use cached layers)
 docker pull postgres:14
 docker run -d --name pgsql14 -e POSTGRES_PASSWORD=Password12! -p 5414:5432 -v /var/run/postgresql:/var/run/postgresql postgres:14
 
-ECHO pause to wait for PGSQL startup completion
-timeout 5
+call wait pgsql14 "server started"
 
 REM create test database
 docker exec pgsql14 psql -U postgres -c "create database testdata"
