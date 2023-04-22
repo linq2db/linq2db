@@ -8,8 +8,7 @@ REM use pull to get latest layers (run will use cached layers)
 docker pull mcr.microsoft.com/mssql/server:2017-latest
 docker run -e ACCEPT_EULA=Y -e SA_PASSWORD=Password12! -p 1417:1433 --name sql2017 -d mcr.microsoft.com/mssql/server:2017-latest
 
-ECHO pause to wait for SQL Server startup completion
-timeout 15
+call wait sql2017 "Recovery is complete"
 
 REM create test databases
 docker exec sql2017 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
