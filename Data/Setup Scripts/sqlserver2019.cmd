@@ -10,8 +10,7 @@ REM docker run -e ACCEPT_EULA=Y -e SA_PASSWORD=Password12! -p 1419:1433 --name s
 docker pull huyttq/sqlserver-2019-with-fts:2019
 docker run -e ACCEPT_EULA=Y -e SA_PASSWORD=Password12! -p 1419:1433 --name sql2019 -d huyttq/sqlserver-2019-with-fts:2019
 
-ECHO pause to wait for SQL Server startup completion
-timeout 40
+call wait sql2019 "Recovery is complete"
 
 REM create test databases
 REM docker exec sql2019 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"

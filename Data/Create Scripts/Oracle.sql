@@ -48,12 +48,6 @@ DROP table "t_test_user_contract"
 /
 DROP table "t_test_user"
 /
-DROP USER "c##sequence_schema" CASCADE
-/
-CREATE USER "c##sequence_schema" IDENTIFIED BY "secret_password"
-/
-GRANT CREATE SEQUENCE TO "c##sequence_schema"
-/
 DROP sequence "sq_test_user_contract"
 /
 DROP table "t_entity"
@@ -701,9 +695,6 @@ create table "t_test_user_contract"
 	"name"             varchar2(255) not null,
 	unique           ("user_id", "contract_no")
 )
-/
-
-create sequence "c##sequence_schema"."sq_test_user"
 /
 create sequence "sq_test_user_contract"
 /
