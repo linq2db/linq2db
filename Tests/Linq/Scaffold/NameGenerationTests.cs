@@ -21,6 +21,25 @@ namespace Tests.Scaffold
 				NameTransformation.Association,
 				new HashSet<string>() { "dbo" },
 				"Member", "Provider"),
+			// https://github.com/linq2db/linq2db/issues/4061
+			new TestCaseData(
+				true,
+				new SqlObjectName("OfferedItemCustomValue", Schema: "dbo"), new SqlObjectName("OfferedItemCustomColumn", Schema: "dbo"),
+				new[]{ "OfferId", "GroupPosition", "ColumnName", "ColumnType" },
+				new[]{ "OfferId", "GroupPosition", "ColumnName", "ColumnType" },
+				"FK_OfferedItemCustomValue_OfferedItemCustomColumn",
+				NameTransformation.Association,
+				new HashSet<string>() { "dbo" },
+				"OfferedItemCustomColumn", "OfferedItemCustomValue"),
+			new TestCaseData(
+				true,
+				new SqlObjectName("Offer", Schema: "dbo"), new SqlObjectName("OfferTemplate", Schema: "dbo"),
+				new[]{ "CompanyId", "OfferTemplateId" },
+				new[]{ "CompanyId", "OfferTemplateId" },
+				"FK_Offer_OfferTemplate",
+				NameTransformation.Association,
+				new HashSet<string>() { "dbo" },
+				"OfferTemplate", "Offer"),
 		};
 
 		[TestCaseSource(nameof(_associationTestCases))]
