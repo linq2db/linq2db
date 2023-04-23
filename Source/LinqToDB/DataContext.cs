@@ -331,6 +331,7 @@ namespace LinqToDB
 					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
 
+					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 					await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					_dataConnection = null;
 				}
@@ -434,6 +435,7 @@ namespace LinqToDB
 				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
 				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
+				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				_dataConnection.Dispose();
 				_dataConnection = null;
 			}
@@ -451,6 +453,7 @@ namespace LinqToDB
 				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
 				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
+				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				_dataConnection = null;
 			}
