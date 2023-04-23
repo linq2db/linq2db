@@ -12,5 +12,6 @@ RMDIR ..\BuiltNuGet\built /S /Q
 MD ..\BuiltNuGet\built
 nuget.exe Pack ..\BuiltNuGet\linq2db.cli.nuspec -OutputDirectory ..\BuiltNuGet\built
 
+dotnet tool uninstall linq2db.cli -g
 dotnet tool install -g --add-source ..\BuiltNuGet\built linq2db.cli --version %VERSION%
-dotnet tool update -g --add-source ..\BuiltNuGet\built linq2db.cli --version %VERSION%
+
