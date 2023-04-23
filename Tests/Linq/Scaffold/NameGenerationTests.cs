@@ -40,6 +40,24 @@ namespace Tests.Scaffold
 				NameTransformation.Association,
 				new HashSet<string>() { "dbo" },
 				"OfferTemplate", "Offer"),
+			new TestCaseData(
+				false,
+				new SqlObjectName("OfferedItemCustomValue", Schema: "dbo"), new SqlObjectName("OfferedItemCustomColumn", Schema: "dbo"),
+				new[]{ "OfferId", "GroupPosition", "ColumnName", "ColumnType" },
+				new[]{ "OfferId", "GroupPosition", "ColumnName", "ColumnType" },
+				"FK_OfferedItemCustomValue_OfferedItemCustomColumn",
+				NameTransformation.Association,
+				new HashSet<string>() { "dbo" },
+				"OfferedItemCustomColumn", "OfferedItemCustomValue"),
+			new TestCaseData(
+				false,
+				new SqlObjectName("Offer", Schema: "dbo"), new SqlObjectName("OfferTemplate", Schema: "dbo"),
+				new[]{ "CompanyId", "OfferTemplateId" },
+				new[]{ "CompanyId", "OfferTemplateId" },
+				"FK_Offer_OfferTemplate",
+				NameTransformation.Association,
+				new HashSet<string>() { "dbo" },
+				"OfferTemplate", "Offer"),
 		};
 
 		[TestCaseSource(nameof(_associationTestCases))]
