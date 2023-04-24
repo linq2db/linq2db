@@ -16,6 +16,7 @@ namespace LinqToDB
 	using Data;
 	using DataProvider;
 	using Linq;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 	using SqlProvider;
 
@@ -107,10 +108,31 @@ namespace LinqToDB
 		/// </summary>
 		public string        ContextName         => DataProvider.Name;
 
+		int  _msID;
+		int? _configurationID;
 		/// <summary>
 		/// Gets or sets ContextID.
 		/// </summary>
-		public int           ConfigurationID     => DataProvider.ID;
+		public int           ConfigurationID
+		{
+			// can we just delegate it to underlying DataConnection?
+			get
+			{
+				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						// GetDataConnection :-/
+						.Add(ConfigurationString ?? ConnectionString ?? GetDataConnection().Connection.ConnectionString)
+						.Add(Options)
+						.Add(GetType())
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		/// <summary>
 		/// Gets or sets mapping schema. Uses provider's mapping schema by default.
