@@ -23,7 +23,6 @@
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.3.1"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.5.0"         />
 		<!--data providers-->
-		<PackageVersion Include="MySql.Data"                                            Version="8.0.33"        />
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"        />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.5"         />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.1.1"         />
@@ -58,7 +57,8 @@
 		<!--packages for test projects-->
 		<PackageVersion Include="System.Collections.Immutable"                          Version="7.0.0"         />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.2.22"        />
-		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.6.5"         />
+		<!--frozen due https://github.com/OData/WebApi/issues/2767-->
+		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.6.4"         />
 		<!--don't update due to https://github.com/OData/AspNetCoreOData/issues/420#issuecomment-1219208060-->
 		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.0.4"         />
 		<PackageVersion Include="NodaTime"                                              Version="3.1.9"         />
@@ -95,6 +95,7 @@
 		<PackageVersion Include="System.Text.Json"                                      Version="6.0.7"         />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.0.179"       />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.0.179"       />
+		<PackageVersion Include="MySql.Data"                                            Version="8.0.32.1"      />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
@@ -127,6 +128,7 @@
 	<ItemGroup Condition=" '$(TargetFramework)' != 'netcoreapp3.1' ">
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"         />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.1.1"         />
+		<PackageVersion Include="MySql.Data"                                            Version="8.0.33"        />
 	</ItemGroup>
 
 </Project>
