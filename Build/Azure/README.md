@@ -108,7 +108,9 @@ Legend:
 |Oracle 11.2g XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 12.2c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 18c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Oracle 19c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 21c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Oracle 23c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP HANA 2.0 SPS 05r57<br>ODBC Provider|:x:|:x:|:heavy_check_mark:|:x:|
 |ClickHouse (latest)<br>[Octonica.ClickHouseClient](https://www.nuget.org/packages/Octonica.ClickHouseClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |ClickHouse (latest)<br>[ClickHouse.Client](https://www.nuget.org/packages/ClickHouse.Client/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -187,10 +189,18 @@ Legend:
 |`TestProvName.Oracle18Managed`|Oracle 18c using managed provider (core version for .net core)||
 |`ProviderName.Oracle18DevartDirect`|Oracle 18c using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
 |`ProviderName.Oracle18DevartOCI`|Oracle 18c using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
+|`TestProvName.Oracle19Native`|Oracle 19c using native provider||
+|`TestProvName.Oracle19Managed`|Oracle 19c using managed provider (core version for .net core)||
+|`ProviderName.Oracle19DevartDirect`|Oracle 19c using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
+|`ProviderName.Oracle19DevartOCI`|Oracle 19c using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
 |`TestProvName.Oracle21Native`|Oracle 21c using native provider||
 |`TestProvName.Oracle21Managed`|Oracle 21c using managed provider (core version for .net core)||
 |`ProviderName.Oracle21DevartDirect`|Oracle 21c using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
 |`ProviderName.Oracle21DevartOCI`|Oracle 21c using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
+|`TestProvName.Oracle23Native`|Oracle 23c using native provider||
+|`TestProvName.Oracle23Managed`|Oracle 23c using managed provider (core version for .net core)||
+|`ProviderName.Oracle23DevartDirect`|Oracle 23c using Devart.Data.Oracle provider (Direct connect)|Not tested on CI|
+|`ProviderName.Oracle23DevartOCI`|Oracle 23c using Devart.Data.Oracle provider (Oracle client)|Not tested on CI|
 |`ProviderName.SapHanaNative`|SAP HANA 2 using native provider||
 |`ProviderName.SapHanaOdbc`|SAP HANA 2 using ODBC provider||
 |`ProviderName.ClickHouseOctonica`|ClickHouse using `Octonica.ClickHouseClient` provider||
