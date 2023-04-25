@@ -1,7 +1,8 @@
 ﻿using System;
-
+using System.Reflection;
 using LinqToDB.Extensions;
-
+using LinqToDB.Mapping;
+using Microsoft.Data.SqlClient;
 using NUnit.Framework;
 
 namespace Tests.Reflection
@@ -46,6 +47,37 @@ namespace Tests.Reflection
 		[AttributeUsage(AttributeTargets.All)]
 		public sealed class MyAttribute : Attribute
 		{
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4079")]
+		public void DynamicColumnInfoAttributes()
+		{
+			var dc = new DynamicColumnInfo(typeof(string), typeof(string), "name");
+
+#pragma warning disable RS0030 // Do not use banned APIs
+			CustomAttributeExtensions.GetCustomAttribute<Attribute>(dc);
+			CustomAttributeExtensions.GetCustomAttribute<Attribute>(dc, true);
+			CustomAttributeExtensions.GetCustomAttribute<Attribute>(dc, false);
+			CustomAttributeExtensions.GetCustomAttribute(dc, typeof(Attribute));
+			CustomAttributeExtensions.GetCustomAttribute(dc, typeof(Attribute), true);
+			CustomAttributeExtensions.GetCustomAttribute(dc, typeof(Attribute), false);
+
+			CustomAttributeExtensions.GetCustomAttributes<Attribute>(dc);
+			CustomAttributeExtensions.GetCustomAttributes<Attribute>(dc, true);
+			CustomAttributeExtensions.GetCustomAttributes<Attribute>(dc, false);
+			CustomAttributeExtensions.GetCustomAttributes(dc);
+			CustomAttributeExtensions.GetCustomAttributes(dc, true);
+			CustomAttributeExtensions.GetCustomAttributes(dc, false);
+			CustomAttributeExtensions.GetCustomAttributes(dc, typeof(Attribute));
+			CustomAttributeExtensions.GetCustomAttributes(dc, typeof(Attribute), true);
+			CustomAttributeExtensions.GetCustomAttributes(dc, typeof(Attribute), false);
+
+			AttributesExtensions.GetAttribute<Attribute>(dc, true);
+			AttributesExtensions.GetAttribute<Attribute>(dc,false);
+
+			AttributesExtensions.GetAttributes<Attribute>(dc, true);
+			AttributesExtensions.GetAttributes<Attribute>(dc, false);
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 	}
 }
