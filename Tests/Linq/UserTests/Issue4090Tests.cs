@@ -96,8 +96,9 @@ namespace Tests.UserTests
 			});
 			using var tbl3 = db.CreateLocalTable(new[]
 			{
-				new Table3 { Id3 = 101, ParentId3 = 11, Name3 = "Nested1" },
-				new Table3 { Id3 = 102, ParentId3 = 12, Name3 = "Nested2" },
+				new Table3 { Id3 = 21, ParentId3 = 11, Name3 = "Child21" },
+				new Table3 { Id3 = 22, ParentId3 = 11, Name3 = "Child22" },
+				new Table3 { Id3 = 23, ParentId3 = 12, Name3 = "Child23" },
 			});
 			var ret = db.GetTable<Table1>()
 				.Select(t1 => new
@@ -190,8 +191,9 @@ namespace Tests.UserTests
 			});
 			using var tbl3 = db.CreateLocalTable(new[]
 			{
-				new Table3 { Id3 = 101, ParentId3 = 11, Name3 = "Nested1" },
-				new Table3 { Id3 = 102, ParentId3 = 12, Name3 = "Nested2" },
+				new Table3 { Id3 = 21, ParentId3 = 11, Name3 = "Child21" },
+				new Table3 { Id3 = 22, ParentId3 = 11, Name3 = "Child22" },
+				new Table3 { Id3 = 23, ParentId3 = 12, Name3 = "Child23" },
 			});
 			var ret = db.GetTable<Table1>()
 				.Select(t1 => new
