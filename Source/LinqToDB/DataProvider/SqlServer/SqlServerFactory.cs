@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				_      => SqlServerVersion.AutoDetect,
 			};
 
-			return SqlServerTools.GetDataProvider(version, provider, null);
+			return SqlServerTools.GetDataProvider(version, provider);
 		}
 	}
 }

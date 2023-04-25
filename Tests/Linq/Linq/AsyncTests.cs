@@ -232,6 +232,10 @@ namespace Tests.Linq
 			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
 				Assert.Inconclusive("MySqlConnector 0.x handles cancellation token incorrectly. Fixed in 1.x : https://github.com/mysql-net/MySqlConnector/issues/931");
 #endif
+#if !NETCOREAPP3_1
+			if (context.IsAnyOf(TestProvName.AllMySqlData))
+				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
+#endif
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;
 			cts.Cancel();
