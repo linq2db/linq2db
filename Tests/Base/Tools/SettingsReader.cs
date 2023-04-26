@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 
 namespace Tests.Tools
@@ -36,6 +37,26 @@ namespace Tests.Tools
 				foreach (var connection in settings2.Connections)
 					if (!settings1.Connections.ContainsKey(connection.Key))
 						settings1.Connections.Add(connection.Key, connection.Value);
+
+				if (settings2.Providers is not null)
+				{
+					var providers = new HashSet<string>(settings2.Providers);
+
+					if (settings1.Providers is not null)
+					{
+						foreach (var provider in settings1.Providers)
+						{
+							if (provider is "--" or "---")
+								providers.Clear();
+							else if (provider.StartsWith("-"))
+								providers.Remove(provider.Replace("-", "").Trim());
+							else
+								providers.Add(provider);
+						}
+					}
+
+					settings1.Providers = providers.ToArray();
+				}
 
 				settings1.Providers            ??= settings2.Providers;
 				settings1.Skip                 ??= settings2.Skip;
@@ -94,6 +115,7 @@ namespace Tests.Tools
 
 				//Translate connection strings enclosed in brackets as references to other existing connection strings.
 				settings.Connections ??= new();
+
 				foreach (var connection in settings.Connections)
 				{
 					var cs = connection.Value.ConnectionString;

@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.DataProvider.MySql;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -318,6 +319,61 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring($"{MySqlHints.SubQuery.LockInShareMode}"));
+		}
+
+		[Table("ForUpdateTestTable")]
+		public class ForUpdateTestTable
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column("OtherNaming"), NotNull]
+			public string? Data { get; set; }
+
+			[Column("timestampUpdated"), DataType(DataType.Timestamp)]
+			public DateTime TimestampUpdated { get; set; }
+		}
+
+		[Test]
+		public void ForUpdateTest([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using var db  = GetDataConnection(context);
+			using var tmp = db.CreateLocalTable<ForUpdateTestTable>();
+
+			db.BeginTransaction();
+
+			var p = DateTime.Now;
+
+			var q =
+				(
+					from t in
+					(
+						from t in tmp
+						where t.Id == 1
+						group t by new {} into g
+						select new
+						{
+							Count = g.Count(),
+						}
+					).AsSubQuery()
+					where t.Count == 0
+					select t
+				)
+				.AsMySql()
+				.ForUpdateHint();
+
+			_ = q.ToList();
+
+			Assert.That(db.LastQuery, Contains.Substring("FOR UPDATE"));
+
+			_ = q.Insert(tmp, t => new()
+			{
+				Id               = 1,
+				Data             = "Some data",
+				TimestampUpdated = p,
+			});
+
+			Assert.That(db.LastQuery, Contains.Substring("FOR UPDATE"));
 		}
 	}
 }
