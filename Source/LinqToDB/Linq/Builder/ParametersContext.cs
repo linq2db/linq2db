@@ -244,7 +244,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
 				{
-					if (columnDescriptor != null && !(originalAccessor is BinaryExpression))
+					if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 					{
 						newExpr.DataType = columnDescriptor.GetDbDataType(true)
 							.WithSystemType(newExpr.ValueExpression.Type);
@@ -287,7 +287,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var expr = MappingSchema.GetConvertExpression(newExpr.ValueExpression.Type, typeof(DataParameter), false, false);
 
-							newExpr.ValueExpression = expr is not null ?
+							newExpr.ValueExpression = expr != null ?
 								InternalExtensions.ApplyLambdaToExpression(expr, newExpr.ValueExpression) :
 								ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
 						}

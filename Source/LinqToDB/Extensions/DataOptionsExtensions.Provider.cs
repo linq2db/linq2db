@@ -81,8 +81,9 @@ namespace LinqToDB
 			options = options
 				.UseConnectionString(
 					OracleTools.GetDataProvider(
-						version : OracleTools.DefaultVersion,
-						provider: OracleProvider.Managed),
+						version         : OracleTools.DefaultVersion,
+						provider        : OracleProvider.Managed,
+						connectionString: connectionString),
 					connectionString);
 
 			return optionSetter != null ? options.WithOptions(optionSetter) : options;
