@@ -28,6 +28,9 @@ namespace LinqToDB.Extensions
 
 		public static MemberInfo[] GetPublicInstanceValueMembers(this Type type)
 		{
+			if (type.IsInterface)
+				return GetInterfacePublicInstanceValueMembers(type);
+
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
 				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0)
 				.ToArray();
@@ -60,6 +63,35 @@ namespace LinqToDB.Extensions
 			results.Reverse();
 
 			return results.ToArray();
+		}
+
+		private static MemberInfo[] GetInterfacePublicInstanceValueMembers(Type type)
+		{
+			var members = type
+				.GetMembers(BindingFlags.Instance | BindingFlags.Public)
+				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0);
+
+			var interfaces = type.GetInterfaces();
+			if (interfaces.Length == 0)
+				return members.ToArray();
+			else
+			{
+				var results = members.ToList();
+				var seen    = new HashSet<string>(results.Select(m => m.Name));
+
+				foreach (var iface in interfaces)
+				{
+					foreach (var member in iface
+						.GetMembers(BindingFlags.Instance | BindingFlags.Public)
+						.Where(m => m.MemberType == MemberTypes.Field || m.MemberType == MemberTypes.Property && ((PropertyInfo)m).GetIndexParameters().Length == 0))
+					{
+						if (seen.Add(member.Name))
+							results.Add(member);
+					}
+				}
+
+				return results.ToArray();
+			}
 		}
 
 		public static MemberInfo[] GetStaticMembersEx(this Type type, string name)
