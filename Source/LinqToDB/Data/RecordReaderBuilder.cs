@@ -126,16 +126,21 @@ namespace LinqToDB.Data
 			var members = new List<(ColumnDescriptor column, MemberInfo storage, ConvertFromDataReaderExpression expr)>();
 			foreach (var info in GetReadIndexes(entityDescriptor))
 			{
-				var cd = info.Column;
+				var cd              = info.Column;
+				MemberInfo? storage = null;
+
 				if (cd.Storage != null || cd.MemberAccessor.MemberInfo is not PropertyInfo pi)
-					members.Add((cd, cd.StorageInfo, new ConvertFromDataReaderExpression(cd.StorageType, info.ReaderIndex, cd.ValueConverter, DataReaderLocal, DataContext)));
+					storage = cd.StorageInfo;
 				else if (objectType.HasSetter(ref pi))
 				{
 					if (cd.MemberAccessor.MemberInfo == cd.StorageInfo && cd.MemberAccessor.MemberInfo != pi)
-						members.Add((cd, pi, new ConvertFromDataReaderExpression(cd.StorageType, info.ReaderIndex, cd.ValueConverter, DataReaderLocal, DataContext)));
+						storage = pi;
 					else
-						members.Add((cd, cd.StorageInfo, new ConvertFromDataReaderExpression(cd.StorageType, info.ReaderIndex, cd.ValueConverter, DataReaderLocal, DataContext)));
+						storage = cd.StorageInfo;
 				}
+
+				if (storage != null)
+					members.Add((cd, storage, new ConvertFromDataReaderExpression(cd.StorageType, info.ReaderIndex, cd.ValueConverter, DataReaderLocal, DataContext)));
 			}
 
 			var initExpr = Expression.MemberInit(

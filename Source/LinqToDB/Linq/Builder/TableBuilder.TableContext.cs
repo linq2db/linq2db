@@ -331,15 +331,20 @@ namespace LinqToDB.Linq.Builder
 							if (cd.ColumnName != idx.Item2.PhysicalName)
 								continue;
 
+							MemberInfo? storage = null;
+
 							if (cd.Storage != null || cd.MemberAccessor.MemberInfo is not PropertyInfo pi)
-								members.Add((cd, cd.StorageInfo, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
+								storage = cd.StorageInfo;
 							else if (objectType.HasSetter(ref pi))
 							{
 								if (cd.MemberAccessor.MemberInfo == cd.StorageInfo && cd.MemberAccessor.MemberInfo != pi)
-									members.Add((cd, pi, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
+									storage = pi;
 								else
-									members.Add((cd, cd.StorageInfo, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
+									storage = cd.StorageInfo;
 							}
+
+							if (storage != null)
+								members.Add((cd, storage, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
 						}
 					}
 				}

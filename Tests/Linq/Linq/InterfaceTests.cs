@@ -1,5 +1,6 @@
 ﻿using System.Linq;
-
+using LinqToDB;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -24,6 +25,7 @@ namespace Tests.Linq
 			}
 		}
 
+		#region Issue 4082
 		public interface IIdentifiable
 		{
 			int Id { get; }
@@ -49,5 +51,6 @@ namespace Tests.Linq
 			Assert.AreEqual(1, results.Length);
 			Assert.AreEqual(1, results[0].Id);
 		}
+		#endregion
 	}
 }
