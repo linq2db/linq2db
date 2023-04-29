@@ -9,11 +9,11 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
-	using SqlQuery;
 	using Reflection;
+	using SqlQuery;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	sealed class EnumerableContext : IBuildContext
@@ -404,7 +404,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
 		{
-			var members = new List<(ColumnDescriptor Column, ConvertFromDataReaderExpression Expr)>();
+			var members = new List<(ColumnDescriptor Column, MemberInfo Storage, ConvertFromDataReaderExpression Expr)>();
 			foreach (var idx in index)
 			{
 				if (idx.Item1 >= 0 && idx.Item2 != null)
@@ -419,12 +419,17 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (cd != null
-						&& (cd.Storage != null ||
-							!(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
-							info.GetSetMethod(true) != null))
+					if (cd == null)
+						continue;
+
+					if (cd.Storage != null || cd.MemberAccessor.MemberInfo is not PropertyInfo pi)
+						members.Add((cd, cd.StorageInfo, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
+					else if (objectType.HasSetter(ref pi))
 					{
-						members.Add((cd, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
+						if (cd.MemberAccessor.MemberInfo == cd.StorageInfo && cd.MemberAccessor.MemberInfo != pi)
+							members.Add((cd, pi, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
+						else
+							members.Add((cd, cd.StorageInfo, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
 					}
 				}
 			}
@@ -433,7 +438,7 @@ namespace LinqToDB.Linq.Builder
 				members
 					// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 					.Where(static m => !m.Column.MemberAccessor.IsComplex)
-					.Select(static m => (MemberBinding)Expression.Bind(m.Column.StorageInfo, m.Expr))
+					.Select(static m => (MemberBinding)Expression.Bind(m.Storage, m.Expr))
 			);
 
 			var        hasComplex = members.Count > initExpr.Bindings.Count;
