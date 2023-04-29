@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public static DataConnection CreateDataConnection(string connectionString, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
 		{
-			return new DataConnection(GetDataProvider(version), connectionString);
+			return new DataConnection(GetDataProvider(version, connectionString: connectionString), connectionString);
 		}
 
 		public static DataConnection CreateDataConnection(DbConnection connection, PostgreSQLVersion version = PostgreSQLVersion.AutoDetect)
