@@ -1,16 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Data.Linq;
 using System.Globalization;
+using System.IO;
 using System.Linq.Expressions;
 using System.Xml;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Common
 {
-	using System.Collections;
-	using System.IO;
 	using Expressions;
-	using JetBrains.Annotations;
 	using Mapping;
 
 	/// <summary>

@@ -27,6 +27,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using LinqToDB.Expressions;
 	using Model;
 
 	[TestFixture]
@@ -1072,6 +1073,34 @@ namespace Tests.DataProvider
 				Assert.AreEqual(2, FirebirdModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First());
 				Assert.AreEqual(3, FirebirdModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First());
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4065")]
+		public void TestParameterlessProcedure([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// call as proc
+			db.ExecuteProc("\"Person_SelectAll\"");
+			db.QueryProc<PersonSelectAllResult>("\"Person_SelectAll\"").ToList();
+
+			// call as table function
+			PersonSelectAll(db).ToList();
+		}
+
+		[Sql.TableFunction("Person_SelectAll", ArgIndices = new int[0])]
+		public static IQueryable<PersonSelectAllResult> PersonSelectAll(IDataContext ctx)
+		{
+			return ctx.GetTable<PersonSelectAllResult>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, ctx);
+		}
+
+		public partial class PersonSelectAllResult
+		{
+			[Column("PERSONID"  , DataType = DataType.Int32   , DbType = "integer")    ] public int?    Personid   { get; set; }
+			[Column("FIRSTNAME" , DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Firstname  { get; set; }
+			[Column("LASTNAME"  , DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Lastname   { get; set; }
+			[Column("MIDDLENAME", DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Middlename { get; set; }
+			[Column("GENDER"    , DataType = DataType.NChar   , DbType = "char(1)")    ] public string? Gender     { get; set; }
 		}
 	}
 

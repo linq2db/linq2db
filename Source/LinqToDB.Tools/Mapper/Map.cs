@@ -42,8 +42,8 @@ namespace LinqToDB.Tools.Mapper
 		{
 			public static readonly Mapper<T,T> Mapper =
 				GetMapper<T,T>(m => m
-					 .SetProcessCrossReferences(true)
-					 .SetDeepCopy(true));
+					.SetProcessCrossReferences(true)
+					.SetDeepCopy(true));
 		}
 
 		/// <summary>
