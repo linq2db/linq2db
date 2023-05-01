@@ -2547,6 +2547,7 @@ namespace Tests.Linq
 			};
 		}
 
+		[ActiveIssue(4098)]
 		[Test]
 		public void Issue4098([DataSources] string context, [Values] bool withCte)
 		{
