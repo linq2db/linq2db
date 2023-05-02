@@ -60,6 +60,8 @@ namespace Tests.Linq
 			Assert.AreEqual("new_name", results[0].Name);
 			Assert.AreEqual(2, results[1].Id);
 			Assert.AreEqual("old_name", results[1].Name);
+		}
+		#endregion
 
 		#region Issue 4082
 		public interface IIdentifiable
