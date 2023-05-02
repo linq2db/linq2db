@@ -15,7 +15,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Extensions
 {
-	using LinqToDB.Reflection;
+	using Reflection;
 
 	[PublicAPI]
 	public static class ReflectionExtensions
@@ -28,6 +28,9 @@ namespace LinqToDB.Extensions
 
 		public static MemberInfo[] GetPublicInstanceValueMembers(this Type type)
 		{
+			if (type.IsInterface)
+				return GetInterfacePublicInstanceValueMembers(type);
+
 			var members = type.GetMembers(BindingFlags.Instance | BindingFlags.Public)
 				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0)
 				.ToArray();
@@ -60,6 +63,35 @@ namespace LinqToDB.Extensions
 			results.Reverse();
 
 			return results.ToArray();
+		}
+
+		private static MemberInfo[] GetInterfacePublicInstanceValueMembers(Type type)
+		{
+			var members = type
+				.GetMembers(BindingFlags.Instance | BindingFlags.Public)
+				.Where(m => m.IsFieldEx() || m.IsPropertyEx() && ((PropertyInfo)m).GetIndexParameters().Length == 0);
+
+			var interfaces = type.GetInterfaces();
+			if (interfaces.Length == 0)
+				return members.ToArray();
+			else
+			{
+				var results = members.ToList();
+				var seen    = new HashSet<string>(results.Select(m => m.Name));
+
+				foreach (var iface in interfaces)
+				{
+					foreach (var member in iface
+						.GetMembers(BindingFlags.Instance | BindingFlags.Public)
+						.Where(m => m.MemberType == MemberTypes.Field || m.MemberType == MemberTypes.Property && ((PropertyInfo)m).GetIndexParameters().Length == 0))
+					{
+						if (seen.Add(member.Name))
+							results.Add(member);
+					}
+				}
+
+				return results.ToArray();
+			}
 		}
 
 		public static MemberInfo[] GetStaticMembersEx(this Type type, string name)
@@ -1014,6 +1046,42 @@ namespace LinqToDB.Extensions
 				return method;
 
 			return _methodDefinitionCache.GetOrAdd(method, static mi => mi.GetGenericMethodDefinition());
+		}
+
+		/// <summary>
+		/// Checks that source type <paramref name="targetType"/> has setter for <paramref name="property"/>.
+		/// Supports non-public setters and read-only interface property implementations with setter.
+		/// In other words, checks that property on <paramref name="targetType"/> is writeable.
+		/// </summary>
+		/// <param name="property">Replaces with implementation property if original property is readonly interface property.</param>
+		internal static bool HasSetter(this Type targetType, ref PropertyInfo property)
+		{
+			if (property.SetMethod != null)
+				return true;
+
+			if (property.GetMethod == null)
+				return false;
+
+			// search for interface property implementation
+			if (targetType != property.DeclaringType && targetType.IsClass && property.DeclaringType!.IsInterface)
+			{
+				var map = targetType.GetInterfaceMapEx(property.DeclaringType!);
+				for (var i = 0; i < map.InterfaceMethods.Length; i++)
+				{
+					if (map.InterfaceMethods[i] == property.GetMethod)
+					{
+						// find implementation property and check if it has setter
+						foreach (var prop in map.TargetType.GetProperties())
+							if (prop.GetMethod == map.TargetMethods[i])
+							{
+								property = prop;
+								return true;
+							}
+					}
+				}
+			}
+
+			return false;
 		}
 	}
 }
