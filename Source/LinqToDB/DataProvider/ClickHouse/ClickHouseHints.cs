@@ -71,7 +71,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.TableHint, typeof(TableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
-		public static IClickHouseSpecificTable<TSource> TableHint<TSource>(this IClickHouseSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+		internal static IClickHouseSpecificTable<TSource> TableHint<TSource>(this IClickHouseSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
 			var newTable = new Table<TSource>(table.DataContext,
@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
-		public static IClickHouseSpecificQueryable<TSource> TablesInScopeHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
+		internal static IClickHouseSpecificQueryable<TSource> TablesInScopeHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
-		public static IClickHouseSpecificTable<TSource> JoinHint<TSource>(this IClickHouseSpecificTable<TSource> table, [SqlQueryDependent] string hint)
+		internal static IClickHouseSpecificTable<TSource> JoinHint<TSource>(this IClickHouseSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
 			var newTable = new Table<TSource>(table.DataContext,
@@ -147,7 +147,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
-		public static IClickHouseSpecificQueryable<TSource> JoinHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
+		internal static IClickHouseSpecificQueryable<TSource> JoinHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
 			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -156,6 +156,32 @@ namespace LinqToDB.DataProvider.ClickHouse
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(JoinHint, source, hint),
+					currentSource.Expression, Expression.Constant(hint))));
+		}
+
+		#endregion
+
+		#region SubQueryHint
+
+		/// <summary>
+		/// Adds a subquery hint to the generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
+		/// <returns>Query source with table hints.</returns>
+		[LinqTunnel, Pure]
+		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
+		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		internal static IClickHouseSpecificQueryable<TSource> SubQueryHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryHint, source, hint),
 					currentSource.Expression, Expression.Constant(hint))));
 		}
 
@@ -174,7 +200,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		[LinqTunnel, Pure]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.QueryHint, typeof(HintWithFormatParametersExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
-		public static IClickHouseSpecificQueryable<TSource> QueryHint<TSource>(
+		internal static IClickHouseSpecificQueryable<TSource> QueryHint<TSource>(
 			this                       IClickHouseSpecificQueryable<TSource> source,
 			[SqlQueryDependent]        string                                hint,
 			[SqlQueryDependent]        string                                hintFormat,
@@ -241,6 +267,21 @@ namespace LinqToDB.DataProvider.ClickHouse
 			where TSource : notnull
 		{
 			return table => TablesInScopeHint(table, Table.Final);
+		}
+
+		/// <summary>
+		/// Adds <b>FINAL</b> modifier to FROM Clause of all the tables in the method scope.
+		/// </summary>
+		[ExpressionMethod(ProviderName.ClickHouse, nameof(FinalQueryHintImpl))]
+		public static IClickHouseSpecificQueryable<TSource> FinalHint<TSource>(this IClickHouseSpecificQueryable<TSource> table)
+			where TSource : notnull
+		{
+			return SubQueryHint(table, Table.Final);
+		}
+		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> FinalQueryHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return table => SubQueryHint(table, Table.Final);
 		}
 
 		[ExpressionMethod(ProviderName.ClickHouse, nameof(SettingsHintImpl))]

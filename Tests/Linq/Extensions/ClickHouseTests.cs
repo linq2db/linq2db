@@ -34,6 +34,24 @@ namespace Tests.Extensions
 		}
 
 		[Test]
+		public void FinalSubQueryHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from p in db.GetTable<ReplacingMergeTreeTable>()
+				from c in db.GetTable<ReplacingMergeTreeTable>()
+					.AsSubQuery()
+					.AsClickHouse()
+					.FinalHint()
+				select p;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Contains.Substring(ClickHouseHints.Table.Final));
+		}
+
+		[Test]
 		public void FinalInScopeHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);

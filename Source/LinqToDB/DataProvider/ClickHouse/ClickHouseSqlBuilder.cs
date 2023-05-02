@@ -3,7 +3,6 @@ using System.Text;
 using System.Linq;
 using System.Globalization;
 using System.Collections.Generic;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
@@ -482,53 +481,52 @@ namespace LinqToDB.DataProvider.ClickHouse
 			if (table.SqlQueryExtensions is not null)
 			{
 				BuildTableExtensions(StringBuilder, table, alias, null, ", ", null,
-					ext => ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint);
+					ext =>
+						ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint &&
+						!(ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final)));
 			}
 		}
 
 		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
 		{
-			if (join.SqlQueryExtensions != null)
+			var ext = join.SqlQueryExtensions?.LastOrDefault(e => e.Scope is Sql.QueryExtensionScope.JoinHint);
+
+			if (ext?.Arguments["hint"] is SqlValue v)
 			{
-				var ext = join.SqlQueryExtensions.LastOrDefault(e => e.Scope is Sql.QueryExtensionScope.JoinHint);
+				var h = (string)v.Value!;
 
-				if (ext?.Arguments["hint"] is SqlValue v)
+				if (h.StartsWith(ClickHouseHints.Join.Global))
 				{
-					var h = (string)v.Value!;
+					StringBuilder
+						.Append(ClickHouseHints.Join.Global)
+						.Append(' ');
 
-					if (h.StartsWith(ClickHouseHints.Join.Global))
-					{
-						StringBuilder
-							.Append(ClickHouseHints.Join.Global)
-							.Append(' ');
+					if (h ==  ClickHouseHints.Join.Global)
+						return base.BuildJoinType(join, condition);
 
-						if (h ==  ClickHouseHints.Join.Global)
-							return base.BuildJoinType(join, condition);
+					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
+				}
+				else if (h.StartsWith(ClickHouseHints.Join.All))
+				{
+					StringBuilder
+						.Append(ClickHouseHints.Join.All)
+						.Append(' ');
 
-						h = h[(ClickHouseHints.Join.Global.Length + 1)..];
-					}
-					else if (h.StartsWith(ClickHouseHints.Join.All))
-					{
-						StringBuilder
-							.Append(ClickHouseHints.Join.All)
-							.Append(' ');
+					if (h ==  ClickHouseHints.Join.All)
+						return base.BuildJoinType(join, condition);
 
-						if (h ==  ClickHouseHints.Join.All)
-							return base.BuildJoinType(join, condition);
+					h = h[(ClickHouseHints.Join.All.Length + 1)..];
+				}
 
-						h = h[(ClickHouseHints.Join.All.Length + 1)..];
-					}
-
-					switch (join.JoinType)
-					{
-						case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
-						                           StringBuilder.Append($"CROSS {h} JOIN "); return false;
-						case JoinType.Inner      : StringBuilder.Append($"INNER {h} JOIN "); return true;
-						case JoinType.Left       : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
-						case JoinType.Right      : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
-						case JoinType.Full       : StringBuilder.Append($"FULL {h} JOIN ");  return true;
-						default                  : throw new InvalidOperationException();
-					}
+				switch (join.JoinType)
+				{
+					case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+					                      StringBuilder.Append($"CROSS {h} JOIN "); return false;
+					case JoinType.Inner : StringBuilder.Append($"INNER {h} JOIN "); return true;
+					case JoinType.Left  : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
+					case JoinType.Right : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
+					case JoinType.Full  : StringBuilder.Append($"FULL {h} JOIN ");  return true;
+					default             : throw new InvalidOperationException();
 				}
 			}
 
@@ -539,6 +537,34 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			if (statement.SqlQueryExtensions is not null)
 				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null);
+		}
+
+		protected override void BuildFromExtensions(SelectQuery selectQuery)
+		{
+			var hasFinal =
+				selectQuery.SqlQueryExtensions?.Any(HasFinal) == true ||
+				selectQuery.From.Tables.Any(t => t.Source switch
+				{
+					SqlTable                   s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
+					SelectQuery                s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
+					SqlTableSource(SelectQuery s) => s.SqlQueryExtensions?.Any(HasFinal) == true,
+					_ => throw new NotImplementedException()
+				});
+
+			static bool HasFinal(SqlQueryExtension ext)
+			{
+				return
+					ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint or Sql.QueryExtensionScope.SubQueryHint &&
+					ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final);
+			}
+
+			if (hasFinal)
+			{
+				StringBuilder
+					.Append(' ')
+					.Append(ClickHouseHints.Table.Final)
+					;
+			}
 		}
 	}
 }
