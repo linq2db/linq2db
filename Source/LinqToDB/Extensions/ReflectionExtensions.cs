@@ -280,6 +280,13 @@ namespace LinqToDB.Extensions
 			return type.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance);
 		}
 
+		internal static IEnumerable<PropertyInfo> GetDeclaredPropertiesEx(this Type type)
+		{
+			foreach (var pi in type.GetProperties(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.Instance))
+				if (pi.DeclaringType == type && pi.GetIndexParameters().Length == 0)
+					yield return pi;
+		}
+
 		public static PropertyInfo[] GetNonPublicPropertiesEx(this Type type)
 		{
 			return type.GetProperties(BindingFlags.NonPublic | BindingFlags.Instance);
@@ -400,7 +407,7 @@ namespace LinqToDB.Extensions
 				{
 					var method = pm.TargetMethods[i];
 
-					if (method == member || (method.DeclaringType == member.DeclaringType && method.Name == member.Name))
+					if (!method.IsStatic && (method == member || (method.DeclaringType == member.DeclaringType && method.Name == member.Name)))
 						yield return inf;
 				}
 			}
@@ -926,59 +933,85 @@ namespace LinqToDB.Extensions
 			if (member1 == null || member2 == null)
 				return false;
 
-			if (member1.Name == member2.Name)
+			if (member1.Name == member2.Name && member1.DeclaringType == member2.DeclaringType)
+				return true;
+
+			if (member1 is not PropertyInfo || member2 is not PropertyInfo)
+				return false;
+
+			if (!member1.DeclaringType!.IsInterface && !member2.DeclaringType!.IsInterface)
 			{
-				if (member1.DeclaringType == member2.DeclaringType)
-					return true;
+				if (member1.Name != member2.Name)
+					return false;
 
-				if (member1 is PropertyInfo info1)
-				{
-					var isSubclass =
-						member1.DeclaringType!.IsSameOrParentOf(member2.DeclaringType!) ||
-						member2.DeclaringType!.IsSameOrParentOf(member1.DeclaringType!);
+				// Looks like it will not handle "new" properties case properly
+				var isSubclass = member1.DeclaringType!.IsSameOrParentOf(member2.DeclaringType!) ||
+								 member2.DeclaringType!.IsSameOrParentOf(member1.DeclaringType!);
 
-					if (isSubclass)
-						return true;
-
-					if (declaringType != null && member2.DeclaringType!.IsInterface)
-					{
-						var getter1 = info1.GetGetMethod()!;
-						var getter2 = ((PropertyInfo)member2).GetGetMethod()!;
-
-						var map = declaringType.GetInterfaceMapEx(member2.DeclaringType);
-
-						for (var i = 0; i < map.InterfaceMethods.Length; i++)
-							if (getter2.Name == map.InterfaceMethods[i].Name && getter2.DeclaringType == map.InterfaceMethods[i].DeclaringType &&
-								getter1.Name == map.TargetMethods   [i].Name && getter1.DeclaringType == map.TargetMethods   [i].DeclaringType)
-								return true;
-					}
-				}
+				return isSubclass;
 			}
 
-			if (member2.DeclaringType!.IsInterface && !member1.DeclaringType!.IsInterface && member1.Name.EndsWith(member2.Name))
+			if (member1.DeclaringType!.IsInterface && member2.DeclaringType!.IsInterface)
+				return false;
+
+			// interface vs class property comparison inhuman logic
+			// we probably will be able to implement it in more clear way after
+			// https://github.com/dotnet/runtime/issues/81299
+			// implemented, but for now we need to use partial name match for implicit implementations
+			if (declaringType == null || declaringType.IsInterface)
+				declaringType = member2.DeclaringType!.IsInterface ? member1.DeclaringType! : member2.DeclaringType!;
+
+			// member1 should reference class property
+			// member2 should reference interface property
+			if (member1.DeclaringType!.IsInterface)
+				(member1, member2) = (member2, member1);
+
+			if (!member2.DeclaringType!.IsSameOrParentOf(declaringType))
+				return false;
+
+			// we use ".<PROPERTY_NAME>" suffix to match implicit implementations by name
+			// it potentially could lead to name conflicts but it's best we can do as full name generation logic is not easy
+			if (member1.Name == member2.Name || member1.Name.EndsWith($".{member2.Name}"))
 			{
-				if (member1 is PropertyInfo info)
+				var getter1 = ((PropertyInfo)member1).GetMethod!;
+				var getter2 = ((PropertyInfo)member2).GetMethod!;
+
+				var map = declaringType.GetInterfaceMapEx(member2.DeclaringType!);
+
+				for (var i = 0; i < map.InterfaceMethods.Length; i++)
+					if (!map.InterfaceMethods[i].IsStatic &&
+						map.InterfaceMethods[i] == getter2 &&
+						(map.TargetMethods[i] == getter1 ||
+						(map.TargetMethods[i].Name == getter1.Name && map.TargetMethods[i].DeclaringType == getter1.DeclaringType)))
+						return true;
+
+				// (see Issue4031_Case01 test)
+				// This code tries to handle very special case when class implements interface
+				// using members of base class, declared in another assembly
+				// in such cases compiler generates proxy property accessors without property on target class
+				//
+				// In that case targetMethod reference proxy method, but member1 property references real getter
+				// from base type, which results in failed comparison above
+				var accessorNameEnd = $".{getter1.Name}";
+				for (var i = 0; i < map.InterfaceMethods.Length; i++)
 				{
-					var isSubclass = member2.DeclaringType.IsAssignableFrom(member1.DeclaringType);
-
-					if (isSubclass)
+					if (declaringType == map.TargetMethods[i].DeclaringType && map.TargetMethods[i].Name.EndsWith(accessorNameEnd))
 					{
-						var getter1 = info.GetGetMethod();
-						var getter2 = ((PropertyInfo)member2).GetGetMethod();
+						// now we need to check that target method has no property to avoid false matches
+						var targetMethod = map.TargetMethods[i];
+						var isProxy      = true;
 
-						var map = member1.DeclaringType.GetInterfaceMapEx(member2.DeclaringType);
-
-						for (var i = 0; i < map.InterfaceMethods.Length; i++)
+						foreach (var pi in targetMethod.DeclaringType!.GetDeclaredPropertiesEx())
 						{
-							var imi = map.InterfaceMethods[i];
-							var tmi = map.TargetMethods[i];
-
-							if ((getter2 == null || (getter2.Name == imi.Name && getter2.DeclaringType == imi.DeclaringType)) &&
-							    (getter1 == null || (getter1.Name == tmi.Name && getter1.DeclaringType == tmi.DeclaringType)))
+							if (pi.GetMethod == targetMethod)
 							{
-								return true;
+								isProxy = false;
+								break;
 							}
 						}
+
+						if (isProxy)
+							return true;
 					}
 				}
 			}
@@ -1068,7 +1101,7 @@ namespace LinqToDB.Extensions
 				var map = targetType.GetInterfaceMapEx(property.DeclaringType!);
 				for (var i = 0; i < map.InterfaceMethods.Length; i++)
 				{
-					if (map.InterfaceMethods[i] == property.GetMethod)
+					if (!map.InterfaceMethods[i].IsStatic && map.InterfaceMethods[i] == property.GetMethod)
 					{
 						// find implementation property and check if it has setter
 						foreach (var prop in map.TargetType.GetProperties())
