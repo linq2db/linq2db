@@ -2374,6 +2374,48 @@ namespace Tests.DataProvider
 				.Where(p => p.Category.Equals(categoryParam))
 				.Count();
 		}
+
+		[Table("AllTypes")]
+		public class Issue3895Table
+		{
+			[Column, PrimaryKey, Identity                  ] public int       ID                  { get; set; }
+			[Column                                        ] public DateTime? timestampDataType   { get; set; }
+			[Column(DbType = "timestamp with time zone")   ] public DateTime? timestampTZDataType { get; set; }
+		}
+
+		[Test]
+		public void TestIssue3895([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] DateTimeKind kind)
+		{
+			using var db = GetDataContext(context);
+
+			var dt = new DateTime(TestData.DateTime.Ticks, kind);
+
+			_ = db.GetTable<Issue3895Table>()
+				// also tests that same value used as two parameters with different kinds/db types
+				.Where(e => e.timestampDataType == dt && e.timestampTZDataType == dt)
+				.ToArray();
+		}
+
+		[Test]
+		public void TestIssue3895BulkCopy(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values] DateTimeKind kind,
+			[Values] BulkCopyType bulkCopyType)
+		{
+			var tableName = "TestIssue3895BulkCopy";
+
+			using var db  = GetDataConnection(context);
+			using var t   = db.CreateLocalTable<Issue3895Table>(tableName: tableName);
+			var dt        = new DateTime(TestData.DateTime.Ticks, kind);
+
+			var options   = new BulkCopyOptions()
+			{
+				TableName = tableName,
+				BulkCopyType = bulkCopyType
+			};
+
+			db.BulkCopy(options, new[] { new Issue3895Table() { timestampDataType = dt, timestampTZDataType = dt } });
+		}
 	}
 
 	public static class TestPgAggregates
