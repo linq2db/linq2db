@@ -548,7 +548,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 					SqlTable                   s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
 					SelectQuery                s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
 					SqlTableSource(SelectQuery s) => s.SqlQueryExtensions?.Any(HasFinal) == true,
-					_ => throw new NotImplementedException()
+					_ => false
 				});
 
 			static bool HasFinal(SqlQueryExtension ext)
