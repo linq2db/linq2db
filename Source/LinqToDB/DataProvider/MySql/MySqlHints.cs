@@ -13,7 +13,6 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-
 	public static partial class MySqlHints
 	{
 		// https://dev.mysql.com/doc/refman/8.0/en/optimizer-hints.html#optimizer-hints-index-level
