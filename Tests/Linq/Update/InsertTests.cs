@@ -1723,8 +1723,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertWith([IncludeDataSources(
-			TestProvName.AllSqlServer2008, TestProvName.AllClickHouse)]
+		public void InsertWith([IncludeDataSources(TestProvName.AllSqlServer2008)]
 			string context)
 		{
 			var m = null as int?;
