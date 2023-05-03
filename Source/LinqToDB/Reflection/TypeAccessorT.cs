@@ -51,8 +51,8 @@ namespace LinqToDB.Reflection
 			else
 			{
 				// load properties takin into account explicit interface implementations
-				var interfacePropertiesList = new List<PropertyInfo>();
-				var interfaceProperties     = new HashSet<(Type? declaringType, string name, Type type)>();
+				var interfacePropertiesList = new List<PropertyInfo?>();
+				var interfaceProperties     = new Dictionary<(Type? declaringType, string name, Type type), int>();
 
 				// as interface could be re-implemented multiple times, we should track which inteface property accessors
 				// are not mapped yet and reduce this list walking inheritance hierarchy from top to base type
@@ -100,8 +100,8 @@ namespace LinqToDB.Reflection
 							if ((pi.GetMethod == null || (methods.TryGetValue(pi.GetMethod, out var ifaceGetters) && RemoveAll(unmappedAccessors, ifaceGetters))) &&
 								(pi.SetMethod == null || (methods.TryGetValue(pi.SetMethod, out var ifaceSetters) && RemoveAll(unmappedAccessors, ifaceSetters))))
 							{
+								interfaceProperties.Add((pi.DeclaringType, pi.Name, pi.PropertyType), interfacePropertiesList.Count);
 								interfacePropertiesList.Add(pi);
-								interfaceProperties.Add((pi.DeclaringType, pi.Name, pi.PropertyType));
 							}
 						}
 					}
@@ -113,10 +113,16 @@ namespace LinqToDB.Reflection
 				}
 
 				foreach (var mi in type.GetPublicInstanceValueMembers())
-					if (mi is not PropertyInfo pi || !interfaceProperties.Contains((pi.DeclaringType, pi.Name, pi.PropertyType)))
-						_members.Add(mi);
+				{
+					if (mi is PropertyInfo pi && interfaceProperties.TryGetValue((pi.DeclaringType, pi.Name, pi.PropertyType), out var idx))
+						interfacePropertiesList[idx] = null;
 
-				_members.AddRange(interfacePropertiesList);
+					_members.Add(mi);
+				}
+
+				foreach (var pi in interfacePropertiesList)
+					if (pi != null)
+						_members.Add(pi);
 			}
 
 			// ObjectFactory
