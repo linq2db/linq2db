@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using LinqToDB;
-using LinqToDB.Configuration;
-using NUnit.Framework;
 
+using LinqToDB;
 using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using System.Data;
 	using Model;
-	using Tests.Tools;
+	using Tools;
 
 	[TestFixture]
 	public class TraceTests : TestBase
