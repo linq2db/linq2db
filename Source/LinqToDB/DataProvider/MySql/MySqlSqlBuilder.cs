@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
+			return new MySqlSqlBuilder(this) { _hintBuilder = _hintBuilder };
 		}
 
 		protected override bool   IsRecursiveCteKeywordRequired   => true;
@@ -288,14 +288,14 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause;      BuildWithClause(statement.GetWithClause());
-				BuildStep = Step.SelectClause;    BuildSelectClause(statement.SelectQuery);
-				BuildStep = Step.FromClause;      BuildFromClause(statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause;     BuildWhereClause(statement.SelectQuery);
-				BuildStep = Step.GroupByClause;   BuildGroupByClause(statement.SelectQuery);
-				BuildStep = Step.HavingClause;    BuildHavingClause(statement.SelectQuery);
-				BuildStep = Step.OrderByClause;   BuildOrderByClause(statement.SelectQuery);
-				BuildStep = Step.OffsetLimit;     BuildOffsetLimit(statement.SelectQuery);
+				BuildStep = Step.WithClause;      BuildWithClause     (statement.GetWithClause());
+				BuildStep = Step.SelectClause;    BuildSelectClause   (statement.SelectQuery);
+				BuildStep = Step.FromClause;      BuildFromClause     (statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;     BuildWhereClause    (statement.SelectQuery);
+				BuildStep = Step.GroupByClause;   BuildGroupByClause  (statement.SelectQuery);
+				BuildStep = Step.HavingClause;    BuildHavingClause   (statement.SelectQuery);
+				BuildStep = Step.OrderByClause;   BuildOrderByClause  (statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (statement.SelectQuery);
 				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
 			}
 
@@ -558,16 +558,16 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		private StringBuilder? HintBuilder;
+		private StringBuilder? _hintBuilder;
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;
 
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
-			if (HintBuilder == null)
+			if (_hintBuilder == null)
 			{
-				HintBuilder        = new();
+				_hintBuilder        = new();
 				_isTopLevelBuilder = true;
 				_hintPosition      = StringBuilder.Length;
 
@@ -575,7 +575,7 @@ namespace LinqToDB.DataProvider.MySql
 					_hintPosition -= " INTO ".Length;
 
 				if (selectQuery?.QueryName is {} queryName)
-					HintBuilder
+					_hintBuilder
 						.Append("QB_NAME(")
 						.Append(queryName)
 						.Append(')')
@@ -595,19 +595,19 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			base.FinalizeBuildQuery(statement);
 
-			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
+			if (statement.SqlQueryExtensions is not null && _hintBuilder is not null)
 			{
-				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
-					HintBuilder.Append(' ');
-				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+				if (_hintBuilder.Length > 0 && _hintBuilder[_hintBuilder.Length - 1] != ' ')
+					_hintBuilder.Append(' ');
+				BuildQueryExtensions(_hintBuilder, statement.SqlQueryExtensions, null, " ", null);
 			}
 
-			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
+			if (_isTopLevelBuilder && _hintBuilder!.Length > 0)
 			{
-				HintBuilder.Insert(0, " /*+ ");
-				HintBuilder.Append(" */");
+				_hintBuilder.Insert(0, " /*+ ");
+				_hintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, HintBuilder);
+				StringBuilder.Insert(_hintPosition, _hintBuilder);
 			}
 		}
 
@@ -615,8 +615,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (table.SqlQueryExtensions is not null)
 			{
-				if (HintBuilder is not null)
-					BuildTableExtensions(HintBuilder, table, alias, null, " ", null, ext =>
+				if (_hintBuilder is not null)
+					BuildTableExtensions(_hintBuilder, table, alias, null, " ", null, ext =>
 						ext.Scope is
 							Sql.QueryExtensionScope.TableHint or
 							Sql.QueryExtensionScope.TablesInScopeHint);

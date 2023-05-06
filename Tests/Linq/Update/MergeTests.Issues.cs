@@ -668,7 +668,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(ReviewIndex.Data)
 					.OnTargetKey()
-					.UpdateWhenNotMatchedBySource(t =>  new ReviewIndex() { Id = 2, Value = "3"})
+					.UpdateWhenNotMatchedBySource(t =>  new ReviewIndex() { Id = 2, Value = "3" })
 					.Merge();
 			}
 		}

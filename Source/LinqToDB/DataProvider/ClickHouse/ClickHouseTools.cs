@@ -3,10 +3,9 @@ using System.Data.Common;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Configuration;
 	using Data;
 
-	public static class ClickHouseTools
+	public static partial class ClickHouseTools
 	{
 		static readonly Lazy<IDataProvider> _octonicaDataProvider = DataConnection.CreateDataProvider<ClickHouseOctonicaDataProvider>();
 		static readonly Lazy<IDataProvider> _clientDataProvider   = DataConnection.CreateDataProvider<ClickHouseClientDataProvider>();
