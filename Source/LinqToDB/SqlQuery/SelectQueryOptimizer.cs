@@ -1123,7 +1123,7 @@ namespace LinqToDB.SqlQuery
 
 			if (isQueryOK && query.Select.Columns.Any(static c => QueryHelper.ContainsAggregationOrWindowFunctionOneLevel(c.Expression)))
 			{
-				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet && childSource.Joins.Count == 0 && parentQuery.ParentSelect == null;
+				isQueryOK = parentJoinedTable == null && parentQuery.IsSimpleOrSet && childSource.Joins.Count == 0;
 			}
 
 			// SELECT MAX(query.c1) { parentQuery}

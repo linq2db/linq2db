@@ -2484,9 +2484,9 @@ namespace Tests.Linq
 		#region Issue 4098
 		sealed class Transaction
 		{
-			public string? InvestorId    { get; set; }
-			public string? SecurityClass { get; set; }
-			public int     Units         { get; set; }
+			                            public string? InvestorId   { get; set; }
+			[Column(CanBeNull = false)] public string SecurityClass { get; set; } = null!;
+			                            public int     Units        { get; set; }
 
 			public static readonly Transaction[] Data = new []
 			{
@@ -2497,11 +2497,12 @@ namespace Tests.Linq
 			};
 		}
 
+		[Table(IsColumnAttributeRequired = false)]
 		sealed class InvestorPayment
 		{
-			public int     Id         { get; set; }
-			public string? InvestorId { get; set; }
-			public int     NetPayment { get; set; }
+			                            public int     Id         { get; set; }
+			[Column(CanBeNull = false)] public string  InvestorId { get; set; } = null!;
+			                            public int     NetPayment { get; set; }
 
 			public static readonly InvestorPayment[] Data = new []
 			{
@@ -2512,9 +2513,9 @@ namespace Tests.Linq
 
 		sealed class PaymentEvent
 		{
-			public int     Id            { get; set; }
-			public string? Description   { get; set; }
-			public string? SecurityClass { get; set; }
+			                            public int     Id           { get; set; }
+			                            public string? Description  { get; set; }
+			[Column(CanBeNull = false)] public string SecurityClass { get; set; } = null!;
 
 			public static readonly PaymentEvent[] Data = new []
 			{
@@ -2609,7 +2610,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue4098([DataSources] string context)
+		public void Issue4098([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
