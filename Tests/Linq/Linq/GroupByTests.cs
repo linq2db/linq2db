@@ -2547,9 +2547,8 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue(4098)]
 		[Test]
-		public void Issue4098([DataSources] string context, [Values] bool withCte)
+		public void Issue4098WithCte([CteTests.CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2568,8 +2567,66 @@ namespace Tests.Linq
 								Units = g.Sum(x => x.Units)
 							});
 
-			if (withCte)
-				balances = balances.AsCte();
+			balances = balances.AsCte();
+
+			var payments = (from pe in paymentEvents
+							join ip in investorPayments on pe.Id equals ip.Id
+							join ipd in investorPaymentDetails on ip.InvestorId equals ipd.InvestorId
+							join pc in paymentCalculations on new { calc = ipd.CalculationId, eid = pe.Id } equals new { calc = pc.Id, eid = pc.EventId }
+							join b in balances on new { inv = ip.InvestorId, cls = pe.SecurityClass } equals new { inv = b.InvestorId, cls = b.SecurityClass }
+							select new
+							{
+								ip.InvestorId,
+								pe.Description,
+								ip.NetPayment,
+								TotalUnits = b.Units
+							});
+
+			var grouppedPayments = (from x in payments
+									group x by new { x.InvestorId, x.TotalUnits } into g
+									select new
+									{
+										g.Key.InvestorId,
+										TotalAmount = g.Sum(x => x.NetPayment),
+										TotalUnits  = g.Key.TotalUnits
+									});
+
+			var retval = (from p in grouppedPayments
+						  select new
+						  {
+							  INVESTORID    = p.InvestorId,
+							  TOTALUNITS    = p.TotalUnits,
+							  PAYMENTAMOUNT = p.TotalAmount,
+						  }).ToList().OrderBy(r => r.INVESTORID).ToArray();
+
+			Assert.AreEqual(2, retval.Length);
+			Assert.AreEqual("inv1", retval[0].INVESTORID);
+			Assert.AreEqual(100, retval[0].PAYMENTAMOUNT);
+			Assert.AreEqual(300, retval[0].TOTALUNITS);
+			Assert.AreEqual("inv2", retval[1].INVESTORID);
+			Assert.AreEqual(200, retval[1].PAYMENTAMOUNT);
+			Assert.AreEqual(700, retval[1].TOTALUNITS);
+		}
+
+		[Test]
+		public void Issue4098([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var transactions           = db.CreateLocalTable(Transaction.Data);
+			using var investorPayments       = db.CreateLocalTable(InvestorPayment.Data);
+			using var paymentEvents          = db.CreateLocalTable(PaymentEvent.Data);
+			using var investorPaymentDetails = db.CreateLocalTable(InvestorPaymentDetail.Data);
+			using var paymentCalculations    = db.CreateLocalTable(PaymentCalculation.Data);
+
+			var balances = (from x in transactions
+							group x by new { x.SecurityClass, x.InvestorId } into g
+							select new
+							{
+								g.Key.InvestorId,
+								g.Key.SecurityClass,
+								Units = g.Sum(x => x.Units)
+							});
 
 			var payments = (from pe in paymentEvents
 							join ip in investorPayments on pe.Id equals ip.Id
