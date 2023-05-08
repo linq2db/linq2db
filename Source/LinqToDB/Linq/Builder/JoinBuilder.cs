@@ -55,9 +55,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var context  = new SubQueryContext(outerContext);
-			innerContext = isGroup
-				? new GroupJoinSubQueryContext(innerContext)
-				: innerContext.GetType() == typeof(SelectContext) ? new JoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
+			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
 
 			var join = isGroup ? innerContext.SelectQuery.WeakLeftJoin() : innerContext.SelectQuery.InnerJoin();
 			var sql  = context.SelectQuery;
@@ -82,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 			var innerParent = innerContext.Parent;
 
 			var outerKeyContext = new ExpressionContext(buildInfo.Parent, context,      outerKeyLambda);
-			var innerKeyContext = new InnerKeyContext  (buildInfo.Parent, innerContext is JoinSubQueryContext ctx ? ctx.SubQuery : innerContext, innerKeyLambda);
+			var innerKeyContext = new InnerKeyContext  (buildInfo.Parent, innerContext, innerKeyLambda);
 
 			// Make join and where for the counter.
 			//
@@ -136,7 +134,7 @@ namespace LinqToDB.Linq.Builder
 					buildInfo.Parent, selector, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
 			}
 
-			return new JoinContext(buildInfo.Parent, selector, context, innerContext)
+			return new AllJoinsLinqBuilder.JoinContext(buildInfo.Parent, selector, context, innerContext)
 #if DEBUG
 			{
 				Debug_MethodCall = methodCall
@@ -268,19 +266,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal class JoinContext : SelectContext
-		{
-			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext)
-				: base(parent, lambda, outerContext, innerContext)
-			{
-			}
-
-			public override void CompleteColumns()
-			{
-			}
-		}
-
-		internal sealed class GroupJoinContext : JoinContext
+		internal sealed class GroupJoinContext : SelectContext
 		{
 			public GroupJoinContext(
 				IBuildContext?           parent,
@@ -502,27 +488,6 @@ namespace LinqToDB.Linq.Builder
 					return IsExpressionResult.True;
 
 				return base.IsExpression(expression, level, requestFlag);
-			}
-		}
-
-		internal sealed class JoinSubQueryContext : SubQueryContext
-		{
-			public JoinSubQueryContext(IBuildContext subQuery)
-				: base(subQuery)
-			{
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				return base
-					.ConvertToSql(expression, level, flags)
-					.Select(idx =>
-					{
-						var n = SelectQuery.Select.Add(idx.Sql);
-
-						return new SqlInfo(idx.MemberChain, SelectQuery.Select.Columns[n], n);
-					})
-					.ToArray();
 			}
 		}
 	}
