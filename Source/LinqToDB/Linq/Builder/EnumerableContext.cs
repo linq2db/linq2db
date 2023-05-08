@@ -597,7 +597,6 @@ namespace LinqToDB.Linq.Builder
 				var generator = new ExpressionGenerator();
 				if (typeof(DataParameter).IsSameOrParentOf(getter.Body.Type))
 				{
-					
 					var variable  = generator.AssignToVariable(getter.Body);
 					generator.AddExpression(
 						Expression.New(
