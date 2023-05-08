@@ -55,7 +55,9 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var context  = new SubQueryContext(outerContext);
-			innerContext = isGroup ? new GroupJoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
+			innerContext = isGroup
+				? new GroupJoinSubQueryContext(innerContext)
+				: innerContext.GetType() == typeof(SelectContext) ? new JoinSubQueryContext(innerContext) : new SubQueryContext(innerContext);
 
 			var join = isGroup ? innerContext.SelectQuery.WeakLeftJoin() : innerContext.SelectQuery.InnerJoin();
 			var sql  = context.SelectQuery;
@@ -80,7 +82,7 @@ namespace LinqToDB.Linq.Builder
 			var innerParent = innerContext.Parent;
 
 			var outerKeyContext = new ExpressionContext(buildInfo.Parent, context,      outerKeyLambda);
-			var innerKeyContext = new InnerKeyContext  (buildInfo.Parent, innerContext, innerKeyLambda);
+			var innerKeyContext = new InnerKeyContext  (buildInfo.Parent, innerContext is JoinSubQueryContext ctx ? ctx.SubQuery : innerContext, innerKeyLambda);
 
 			// Make join and where for the counter.
 			//
@@ -500,6 +502,27 @@ namespace LinqToDB.Linq.Builder
 					return IsExpressionResult.True;
 
 				return base.IsExpression(expression, level, requestFlag);
+			}
+		}
+
+		internal sealed class JoinSubQueryContext : SubQueryContext
+		{
+			public JoinSubQueryContext(IBuildContext subQuery)
+				: base(subQuery)
+			{
+			}
+
+			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
+			{
+				return base
+					.ConvertToSql(expression, level, flags)
+					.Select(idx =>
+					{
+						var n = SelectQuery.Select.Add(idx.Sql);
+
+						return new SqlInfo(idx.MemberChain, SelectQuery.Select.Columns[n], n);
+					})
+					.ToArray();
 			}
 		}
 	}
