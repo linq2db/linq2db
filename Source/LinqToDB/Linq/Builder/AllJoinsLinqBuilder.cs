@@ -110,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 			return joinContext;
 		}
 
-		sealed class JoinContext : SelectContext
+		internal sealed class JoinContext : SelectContext
 		{
 			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, outerContext, innerContext)
 			{

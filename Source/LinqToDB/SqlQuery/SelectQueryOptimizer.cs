@@ -162,7 +162,7 @@ namespace LinqToDB.SqlQuery
 
 						if (n != q.Select.Columns.Count)
 							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
-								q.GroupBy.Items.Add(field);
+								q.GroupBy.Expr(field);
 
 						return q.Select.Columns[idx];
 					}
