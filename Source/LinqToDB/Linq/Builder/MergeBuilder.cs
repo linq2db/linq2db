@@ -197,7 +197,9 @@ namespace LinqToDB.Linq.Builder
 			SqlSearchCondition result;
 
 			var isTableContext = onContext.IsExpression(null, 0, RequestFor.Table);
-			if (isTableContext.Result)
+
+			// no idea why we close table context, but at least we shouldn't do it for descendants
+			if (isTableContext.Result && onContext.GetType() == typeof(TableBuilder.TableContext))
 			{
 				var tableContext  = (TableBuilder.TableContext)onContext;
 				var clonedContext = new TableBuilder.TableContext(builder, new SelectQuery(), tableContext.SqlTable);
