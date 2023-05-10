@@ -717,7 +717,7 @@ namespace Tests.Mapping
 		[Test]
 		public void TestDynamicColumnStoreExpressions([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var storage = new Dictionary<int, Dictionary<string, object>>();
+			var storage = new Dictionary<int, Dictionary<string, object?>>();
 
 			var ms = new MappingSchema();
 			var builder = new FluentMappingBuilder(ms);
@@ -734,7 +734,7 @@ namespace Tests.Mapping
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
 			{
 				var obj = new CustomSetterGetterBase { Id = 5 };
-				storage.Add(5, new Dictionary<string, object>());
+				storage.Add(5, new Dictionary<string, object?>());
 				storage[5].Add("Name", "test_name");
 				db.Insert(obj);
 
@@ -751,7 +751,7 @@ namespace Tests.Mapping
 			}
 		}
 
-		static object Getter(IDictionary<int, Dictionary<string, object>> storage, CustomSetterGetterBase instance, string property, object defaultValue)
+		static object? Getter(IDictionary<int, Dictionary<string, object?>> storage, CustomSetterGetterBase instance, string property, object? defaultValue)
 		{
 			if (!storage.ContainsKey(instance.Id))
 				return defaultValue;
@@ -762,10 +762,10 @@ namespace Tests.Mapping
 			return value;
 		}
 
-		static void Setter(IDictionary<int, Dictionary<string, object>> storage, CustomSetterGetterBase instance, string property, object value)
+		static void Setter(IDictionary<int, Dictionary<string, object?>> storage, CustomSetterGetterBase instance, string property, object? value)
 		{
 			if (!storage.ContainsKey(instance.Id))
-				storage.Add(instance.Id, new Dictionary<string, object>());
+				storage.Add(instance.Id, new Dictionary<string, object?>());
 
 			storage[instance.Id][property] = value;
 		}
