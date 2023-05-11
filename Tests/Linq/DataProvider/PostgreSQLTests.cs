@@ -2269,6 +2269,153 @@ namespace Tests.DataProvider
 				Assert.AreEqual(value2, data[0].Value2);
 			}
 		}
+
+		public enum PersonCategory
+		{
+			Friends   = 1,
+			Relatives = 2
+		}
+
+		[Test]
+		public void ObjectParamTest1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConverter<object?,DataParameter>(o => new(null, o is PersonCategory pc ? (int)pc : o, DataType.Undefined));
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			object categoryParam = PersonCategory.Friends;
+
+			_ = db.GetTable<Person>()
+				.Select(p => new { p.Name, Category = (PersonCategory)p.ID })
+				.Where(p => p.Category.Equals(categoryParam))
+				.Count();
+		}
+
+		[Test]
+		public void ObjectParamTest2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConverter<object?,object?>(o => o is PersonCategory pc ? (int)pc : o);
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			object categoryParam = PersonCategory.Friends;
+
+			_ = db.GetTable<Person>()
+				.Select(p => new { p.Name, Category = (PersonCategory)p.ID })
+				.Where(p => p.Category.Equals(categoryParam))
+				.Count();
+		}
+
+		[Test]
+		public void ObjectParamTest3([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConverter<object?,object?>(o => o is Enum e ? Convert.ChangeType(e, Enum.GetUnderlyingType(e.GetType())) : o);
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			object categoryParam = PersonCategory.Friends;
+
+			_ = db.GetTable<Person>()
+				.Select(p => new { p.Name, Category = (PersonCategory)p.ID })
+				.Where(p => p.Category.Equals(categoryParam))
+				.Count();
+		}
+
+		[Test]
+		public void ObjectParamTest4([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			object categoryParam = PersonCategory.Friends;
+
+			_ = db.GetTable<Person>()
+				.Select(p => new { p.Name, Category = (PersonCategory)p.ID })
+				.Where(p => p.Category.Equals(categoryParam))
+				.InlineParameters()
+				.Count();
+		}
+
+		[Test]
+		public void ObjectParamTest5([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConverter<object?,object?>(o => o is Enum e ? ms.EnumToValue(e) : o);
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			object categoryParam = PersonCategory.Friends;
+
+			_ = db.GetTable<Person>()
+				.Select(p => new { p.Name, Category = (PersonCategory)p.ID })
+				.Where(p => p.Category.Equals(categoryParam))
+				.Count();
+		}
+
+		[Test]
+		public void ObjectParamTest6([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConverter<object?,DataParameter>(o => new(null, o is Enum e ? ms.EnumToValue(e) : o, DataType.Undefined));
+
+			using var db = GetDataConnection(context, o => o.UseMappingSchema(ms));
+
+			object categoryParam = PersonCategory.Friends;
+
+			_ = db.GetTable<Person>()
+				.Select(p => new { p.Name, Category = (PersonCategory)p.ID })
+				.Where(p => p.Category.Equals(categoryParam))
+				.Count();
+		}
+
+		[Table("AllTypes")]
+		public class Issue3895Table
+		{
+			[Column, PrimaryKey, Identity                  ] public int       ID                  { get; set; }
+			[Column                                        ] public DateTime? timestampDataType   { get; set; }
+			[Column(DbType = "timestamp with time zone")   ] public DateTime? timestampTZDataType { get; set; }
+		}
+
+		[Test]
+		public void TestIssue3895([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] DateTimeKind kind)
+		{
+			using var db = GetDataContext(context);
+
+			var dt = new DateTime(TestData.DateTime.Ticks, kind);
+
+			_ = db.GetTable<Issue3895Table>()
+				// also tests that same value used as two parameters with different kinds/db types
+				.Where(e => e.timestampDataType == dt && e.timestampTZDataType == dt)
+				.ToArray();
+		}
+
+		[Test]
+		public void TestIssue3895BulkCopy(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values] DateTimeKind kind,
+			[Values] BulkCopyType bulkCopyType)
+		{
+			var tableName = "TestIssue3895BulkCopy";
+
+			using var db  = GetDataConnection(context);
+			using var t   = db.CreateLocalTable<Issue3895Table>(tableName: tableName);
+			var dt        = new DateTime(TestData.DateTime.Ticks, kind);
+
+			var options   = new BulkCopyOptions()
+			{
+				TableName = tableName,
+				BulkCopyType = bulkCopyType
+			};
+
+			db.BulkCopy(options, new[] { new Issue3895Table() { timestampDataType = dt, timestampTZDataType = dt } });
+		}
 	}
 
 	public static class TestPgAggregates

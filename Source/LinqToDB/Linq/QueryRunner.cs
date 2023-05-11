@@ -607,8 +607,8 @@ namespace LinqToDB.Linq
 
 			public void Dispose()
 			{
-				_queryRunner?.Dispose();
 				_dataReader ?.Dispose();
+				_queryRunner?.Dispose();
 
 				_queryRunner = null;
 				_dataReader  = null;
@@ -620,11 +620,11 @@ namespace LinqToDB.Linq
 			public async ValueTask DisposeAsync()
 #endif
 			{
-				if (_queryRunner != null)
-					await _queryRunner.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
 				if (_dataReader != null)
 					await _dataReader.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				if (_queryRunner != null)
+					await _queryRunner.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				_queryRunner = null;
 				_dataReader  = null;

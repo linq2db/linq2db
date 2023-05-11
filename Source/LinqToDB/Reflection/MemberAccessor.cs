@@ -97,7 +97,7 @@ namespace LinqToDB.Reflection
 
 				// Build setter.
 				//
-				HasSetter = !infos.Any(info => info.member is PropertyInfo && ((PropertyInfo)info.member).GetSetMethod(true) == null);
+				HasSetter = !infos.Any(info => info.member is PropertyInfo pi && pi.GetSetMethod(true) == null);
 
 				var valueParam = Expression.Parameter(Type, "value");
 

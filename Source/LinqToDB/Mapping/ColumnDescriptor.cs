@@ -674,7 +674,7 @@ namespace LinqToDB.Mapping
 				getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
 			}
 
-			if (!getterExpr.Type.IsSameOrParentOf(typeof(DataParameter)))
+			if (!getterExpr.Type.IsSameOrParentOf(typeof(DataParameter)) || getterExpr.Type == typeof(object))
 			{
 				var convertLambda = mappingSchema.GetConvertExpression(
 					dbDataType.WithSystemType(getterExpr.Type),

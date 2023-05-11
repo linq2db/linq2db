@@ -8,11 +8,11 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
-	using SqlQuery;
 	using Reflection;
+	using SqlQuery;
 
 	//TODO: review
 	sealed class EnumerableContext : BuildContextBase
@@ -148,7 +148,6 @@ namespace LinqToDB.Linq.Builder
 				var generator = new ExpressionGenerator();
 				if (typeof(DataParameter).IsSameOrParentOf(getter.Body.Type))
 				{
-					
 					var variable  = generator.AssignToVariable(getter.Body);
 					generator.AddExpression(
 						Expression.New(

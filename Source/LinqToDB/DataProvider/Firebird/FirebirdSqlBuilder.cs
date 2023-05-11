@@ -546,5 +546,26 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 		}
+
+		protected override string GetPhysicalTableName(NullabilityContext nullability, ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
+		{
+			// for parameter-less table function skip argument list generation
+			if (table is SqlTable tbl
+				&& tbl.SqlTableType == SqlTableType.Function
+				&& (tbl.TableArguments == null || tbl.TableArguments.Length == 0))
+			{
+				var tableName = tbl.TableName;
+				if (tableName.Database == null && defaultDatabaseName != null)
+					tableName = tableName with { Database = defaultDatabaseName };
+
+				using var sb = Pools.StringBuilder.Allocate();
+
+				BuildObjectName(sb.Value, tableName, ConvertType.NameToProcedure, true, tbl.TableOptions);
+
+				return sb.Value.ToString();
+			}
+
+			return base.GetPhysicalTableName(nullability, table, alias, ignoreTableExpression, defaultDatabaseName);
+		}
 	}
 }

@@ -1633,9 +1633,15 @@ namespace LinqToDB.SqlProvider
 					BuildJoinTable(nullability, selectQuery, ts, jt, ref jn);
 			}
 
+			BuildFromExtensions(selectQuery);
+
 			Indent--;
 
 			StringBuilder.AppendLine();
+		}
+
+		protected virtual void BuildFromExtensions(SelectQuery selectQuery)
+		{
 		}
 
 		private static readonly Regex _selectDetector = new (@"^[\W\r\n]*select\W+", RegexOptions.Compiled | RegexOptions.IgnoreCase);

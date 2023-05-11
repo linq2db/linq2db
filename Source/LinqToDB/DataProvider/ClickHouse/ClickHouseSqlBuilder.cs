@@ -185,39 +185,33 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// For now we use fixed engines and it is recommended to use RAW SQL for table creation
 			// append MergeTree engine for mappings with primary key
 			// and Memory engine for others
-			if (!createTable.Table.TableOptions.IsTemporaryOptionSet())
+			var primaryKey = createTable.Table.Fields
+				.Where(_ => _.IsPrimaryKey)
+				.OrderBy(_ => _.PrimaryKeyOrder)
+				.ToArray();
+
+			if (primaryKey.Length > 0)
 			{
-				var primaryKey = createTable.Table.Fields
-					.Where(_ => _.IsPrimaryKey)
-					.OrderBy(_ => _.PrimaryKeyOrder)
-					.ToArray();
+				StringBuilder
+					.AppendLine("ENGINE = MergeTree()")
+					.Append("ORDER BY ");
 
-				if (primaryKey.Length > 0)
+				if (primaryKey.Length > 1)
+					StringBuilder.Append('(');
+
+				for (var i = 0; i < primaryKey.Length; i++)
 				{
-					StringBuilder
-						.AppendLine("ENGINE = MergeTree()")
-						.Append("ORDER BY ");
-
-					if (primaryKey.Length > 1)
-						StringBuilder.Append('(');
-
-					for (var i = 0; i < primaryKey.Length; i++)
-					{
-						if (i > 0)
-							StringBuilder.Append(", ");
-						Convert(StringBuilder, primaryKey[i].PhysicalName, ConvertType.NameToQueryField);
-					}
-
-					if (primaryKey.Length > 1)
-						StringBuilder.Append(')');
-
-					StringBuilder.AppendLine();
+					if (i > 0)
+						StringBuilder.Append(", ");
+					Convert(StringBuilder, primaryKey[i].PhysicalName, ConvertType.NameToQueryField);
 				}
-				else
-					StringBuilder
-						.AppendLine("ENGINE = Memory()");
+
+				if (primaryKey.Length > 1)
+					StringBuilder.Append(')');
+
+				StringBuilder.AppendLine();
 			}
-			else // temp tables use memory engine
+			else
 				StringBuilder
 					.AppendLine("ENGINE = Memory()");
 		}
@@ -226,7 +220,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			AppendIndent();
 
-			StringBuilder.Append(" PRIMARY KEY (");
+			StringBuilder.Append("PRIMARY KEY (");
 
 			var first = true;
 			foreach (var fieldName in fieldNames)
@@ -485,6 +479,97 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// force alias generation on nested queries otherwise column in parent query will have composite name subqueryAlias.columnName
 			// (could have many nesting levels) which we don't support and have no plans to support
 			addAlias = addAlias || selectQuery?.ParentSelect != null;
+		}
+
+		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions is not null)
+			{
+				BuildTableExtensions(nullability, StringBuilder, table, alias, null, ", ", null,
+					ext =>
+						ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint &&
+						!(ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final)));
+			}
+		}
+
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			var ext = join.SqlQueryExtensions?.LastOrDefault(e => e.Scope is Sql.QueryExtensionScope.JoinHint);
+
+			if (ext?.Arguments["hint"] is SqlValue v)
+			{
+				var h = (string)v.Value!;
+
+				if (h.StartsWith(ClickHouseHints.Join.Global))
+				{
+					StringBuilder
+						.Append(ClickHouseHints.Join.Global)
+						.Append(' ');
+
+					if (h ==  ClickHouseHints.Join.Global)
+						return base.BuildJoinType(join, condition);
+
+					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
+				}
+				else if (h.StartsWith(ClickHouseHints.Join.All))
+				{
+					StringBuilder
+						.Append(ClickHouseHints.Join.All)
+						.Append(' ');
+
+					if (h ==  ClickHouseHints.Join.All)
+						return base.BuildJoinType(join, condition);
+
+					h = h[(ClickHouseHints.Join.All.Length + 1)..];
+				}
+
+				switch (join.JoinType)
+				{
+					case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+					                      StringBuilder.Append($"CROSS {h} JOIN "); return false;
+					case JoinType.Inner : StringBuilder.Append($"INNER {h} JOIN "); return true;
+					case JoinType.Left  : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
+					case JoinType.Right : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
+					case JoinType.Full  : StringBuilder.Append($"FULL {h} JOIN ");  return true;
+					default             : throw new InvalidOperationException();
+				}
+			}
+
+			return base.BuildJoinType(join, condition);
+		}
+
+		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(nullability, StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null);
+		}
+
+		protected override void BuildFromExtensions(SelectQuery selectQuery)
+		{
+			var hasFinal =
+				selectQuery.SqlQueryExtensions?.Any(HasFinal) == true ||
+				selectQuery.From.Tables.Any(t => t.Source switch
+				{
+					SqlTable                   s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
+					SelectQuery                s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
+					SqlTableSource(SelectQuery s) => s.SqlQueryExtensions?.Any(HasFinal) == true,
+					_ => false
+				});
+
+			static bool HasFinal(SqlQueryExtension ext)
+			{
+				return
+					ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint or Sql.QueryExtensionScope.SubQueryHint &&
+					ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final);
+			}
+
+			if (hasFinal)
+			{
+				StringBuilder
+					.Append(' ')
+					.Append(ClickHouseHints.Table.Final)
+					;
+			}
 		}
 	}
 }

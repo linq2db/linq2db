@@ -235,5 +235,14 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		#region Deconstruct
+
+		public void Deconstruct(out ISqlTableSource source)
+		{
+			source = Source;
+		}
+
+		#endregion
 	}
 }

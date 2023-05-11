@@ -590,9 +590,28 @@ namespace LinqToDB.Mapping
 			return this;
 		}
 
+		/// <summary>
+		/// Specify value set/get logic for dynamic properties, defined using <see cref="Sql.Property{T}(object?, string)"/> API.
+		/// </summary>
+		/// <param name="getter">Getter expression. Parameters:
+		/// <list type="number">
+		/// <item>entity instance</item>
+		/// <item>column name in database</item>
+		/// <item>default value for column type (from <see cref="MappingSchema"/>)</item>
+		/// </list>
+		/// returns column value for provided entity instance.
+		/// </param>
+		/// <param name="setter">Setter expression. Parameters:
+		/// <list type="number">
+		/// <item>entity instance</item>
+		/// <item>column name in database</item>
+		/// <item>column value to set</item>
+		/// </list>
+		/// </param>
+		/// <returns></returns>
 		public EntityMappingBuilder<TEntity> DynamicPropertyAccessors(
-			Expression<Func<TEntity, string, object, object>> getter,
-			Expression<Action<TEntity, string, object>>       setter)
+			Expression<Func<TEntity, string, object?, object?>> getter,
+			Expression<Action<TEntity, string, object?>>        setter)
 		{
 			_builder.HasAttribute(
 				typeof(TEntity),

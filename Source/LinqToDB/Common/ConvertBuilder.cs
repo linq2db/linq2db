@@ -11,7 +11,7 @@ namespace LinqToDB.Common
 {
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common.Internal;
+	using Internal;
 	using Mapping;
 
 	public static class ConvertBuilder
@@ -265,6 +265,7 @@ namespace LinqToDB.Common
 					return null;
 
 				var fromType = from;
+
 				if (fromType.IsNullable())
 					fromType = fromType.ToNullableUnderlying();
 

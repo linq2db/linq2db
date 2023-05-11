@@ -389,6 +389,8 @@ namespace LinqToDB.Mapping
 			return Converter.ChangeType(value, conversionType, this);
 		}
 
+		Dictionary<Type,Type>? _enumTypeMapping;
+
 		/// <summary>
 		/// Converts enum value to database value.
 		/// </summary>
@@ -396,7 +398,21 @@ namespace LinqToDB.Mapping
 		/// <returns>Database value.</returns>
 		public object? EnumToValue(Enum value)
 		{
-			var toType = ConvertBuilder.GetDefaultMappingFromEnumType(this, value.GetType())!;
+			_enumTypeMapping ??= new();
+
+			Type? toType;
+			var   fromType = value.GetType();
+
+			lock (_enumTypeMapping)
+				_enumTypeMapping.TryGetValue(fromType, out toType);
+
+			if (toType == null)
+			{
+				toType = ConvertBuilder.GetDefaultMappingFromEnumType(this, value.GetType())!;
+				lock (_enumTypeMapping)
+					_enumTypeMapping[fromType] = toType;
+			}
+
 			return Converter.ChangeType(value, toType, this);
 		}
 

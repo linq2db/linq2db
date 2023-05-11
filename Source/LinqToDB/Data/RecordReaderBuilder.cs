@@ -1,16 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Data
 {
-	using System.Data.Common;
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
-	using LinqToDB.Common;
+	using Common;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 
@@ -121,17 +123,24 @@ namespace LinqToDB.Data
 
 		Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType)
 		{
-			var members = new List<(ColumnDescriptor column, ConvertFromDataReaderExpression expr)>();
+			var members = new List<(ColumnDescriptor column, MemberInfo storage, ConvertFromDataReaderExpression expr)>();
 			foreach (var info in GetReadIndexes(entityDescriptor))
 			{
-				if (info.Column.Storage != null ||
-					  info.Column.MemberAccessor.MemberInfo is not PropertyInfo pi ||
-					  pi.GetSetMethod(true) != null)
+				var cd              = info.Column;
+				MemberInfo? storage = null;
+
+				if (cd.Storage != null || cd.MemberAccessor.MemberInfo is not PropertyInfo pi)
+					storage = cd.StorageInfo;
+				else if (objectType.HasSetter(ref pi))
 				{
-					members.Add((
-						info.Column,
-						new ConvertFromDataReaderExpression(info.Column.StorageType, info.ReaderIndex, info.Column.ValueConverter, DataReaderLocal, DataContext)));
+					if (cd.MemberAccessor.MemberInfo == cd.StorageInfo && cd.MemberAccessor.MemberInfo != pi)
+						storage = pi;
+					else
+						storage = cd.StorageInfo;
 				}
+
+				if (storage != null)
+					members.Add((cd, storage, new ConvertFromDataReaderExpression(cd.StorageType, info.ReaderIndex, cd.ValueConverter, DataReaderLocal, DataContext)));
 			}
 
 			var initExpr = Expression.MemberInit(
@@ -139,7 +148,7 @@ namespace LinqToDB.Data
 				members
 					// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 					.Where (static m => !m.column.MemberAccessor.IsComplex)
-					.Select(static m => (MemberBinding)Expression.Bind(m.column.StorageInfo, m.expr)));
+					.Select(static m => (MemberBinding)Expression.Bind(m.storage, m.expr)));
 
 			Expression expr = initExpr;
 
