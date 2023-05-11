@@ -106,6 +106,45 @@ namespace LinqToDB.Linq.Builder
 
 		#region Context
 
+		sealed class SetOperationPartContext : BuildContextBase
+		{
+			public SetOperationContext SetContext { get; }
+			public int                 PartIndex  { get; }
+
+			public SetOperationPartContext(SetOperationContext setContext, int partIndex) : base(setContext.Builder, setContext.ElementType, setContext.SelectQuery)
+			{
+				SetContext = setContext;
+				PartIndex       = partIndex;
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this))
+				{
+					throw new NotImplementedException();
+				}
+
+				var newPath = SequenceHelper.CorrectExpression(path, this, SetContext);
+
+				return SetContext.MakeExpression(newPath, flags);
+			}
+
+			public override IBuildContext Clone(CloningContext      context)
+			{
+				throw new NotImplementedException();
+			}
+
+			public override SqlStatement  GetResultStatement()
+			{
+				throw new NotImplementedException();
+			}
+
+			public override void          SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				throw new NotImplementedException();
+			}
+		}
+
 		sealed class SetOperationContext : SubQueryContext
 		{
 			public SetOperationContext(SetOperation setOperation, SelectQuery selectQuery, SubQueryContext sequence1, SubQueryContext sequence2,
@@ -139,7 +178,7 @@ namespace LinqToDB.Linq.Builder
 
 			static bool IsMatchingNeeded(Expression expr)
 			{
-				return expr.Find(1, (_, e) => e is SqlGenericConstructorExpression or SqlEagerLoadExpression) != null;
+				return expr.Find(1, (_, e) => e is SqlGenericConstructorExpression or SqlEagerLoadExpression or ContextConstructionExpression) != null;
 			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -294,6 +333,21 @@ namespace LinqToDB.Linq.Builder
 				return expr;
 			}
 
+			SetOperationPartContext? _leftPart;
+			SetOperationPartContext? _rightPart;
+
+			SetOperationPartContext GetLeftPart()
+			{
+				_leftPart ??= new SetOperationPartContext(this, 0);
+				return _leftPart;
+			}
+
+			SetOperationPartContext GetRightPart()
+			{
+				_rightPart ??= new SetOperationPartContext(this, 1);
+				return _rightPart;
+			}
+
 			Expression MakeConditionalConstructExpression(Expression path, Expression leftExpression, Expression rightExpression, ProjectFlags flags)
 			{
 				leftExpression  = SequenceHelper.RemapToNewPath(this, leftExpression, path, flags.ExpressionFlag());
@@ -351,13 +405,6 @@ namespace LinqToDB.Linq.Builder
 
 				return resultExpr;
 			}
-
-			Expression BuildProjectionExpression(SubQueryContext context, ProjectFlags projectFlags)
-			{
-				var thisRef = new ContextRefExpression(_type, this);
-				return BuildProjectionExpression(thisRef, context, projectFlags);
-			}
-
 
 			Expression ExpandExpression(SubQueryContext context, Expression expression)
 			{
@@ -646,6 +693,8 @@ namespace LinqToDB.Linq.Builder
 
 			static IEnumerable<Expression> CollectDataPathes(Expression expression, Expression currentPath)
 			{
+				expression = expression.UnwrapConvert();
+
 				if (expression is SqlGenericConstructorExpression generic)
 				{
 					foreach (var assignment in generic.Assignments)
@@ -673,8 +722,14 @@ namespace LinqToDB.Linq.Builder
 					foreach (var path in CollectDataPathes(conditional.IfFalse, currentPath))
 						yield return path;
 				}
-				else 
+				else
+				{
+					//TODO: Something wrong here
+					if (expression.Find(1, (_, e) => e is SqlEagerLoadExpression) != null)
+						yield break;
+
 					yield return currentPath;
+				}
 			}
 
 			static bool ExpressionContains(Expression expr, Expression value)
@@ -1004,11 +1059,16 @@ namespace LinqToDB.Linq.Builder
 				expr1 = ProcessEagerExpressions(expr1, _sequence1, flags, _eagerPlaceholders1);
 				expr2 = ProcessEagerExpressions(expr2, _sequence2, flags, _eagerPlaceholders2);
 
-				if (_eagerPlaceholders1.Count > 0 || _eagerPlaceholders2.Count > 0)
+				if (ExpressionEqualityComparer.Instance.Equals(expr1, expr2))
+					return expr1;
+
+				var hasEagerLoading = _eagerPlaceholders1.Count > 0 || _eagerPlaceholders2.Count > 0;
+				if (hasEagerLoading)
 				{
 					GenerateAllFields(path, ref expr1, ref expr2, flags, out var fieldsAdded);
 				}
 
+				/*
 				if (ExpressionEqualityComparer.Instance.Equals(expr1, path))
 				{
 					expr1 = Expression.Default(expr1.Type);
@@ -1018,9 +1078,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					expr2 = Expression.Default(expr2.Type);
 				}
-
-				if (IsEqualProjections(expr1, expr2))
-					return expr1;
+				*/
 
 				var foundPathes = CollectDataPathes(expr1, path)
 					.Concat(CollectDataPathes(expr2, path))
@@ -1042,21 +1100,23 @@ namespace LinqToDB.Linq.Builder
 					//	return MakeConditionalExpression(path, expr1, expr2);
 					//}
 
-					var incompatible = false;
+					var incompatible = hasEagerLoading;
 
 					if (resultExpr is SqlGenericConstructorExpression generic)
 					{
-						if (expr1 is SqlGenericConstructorExpression contructor1 &&
+						if (!incompatible && expr1 is SqlGenericConstructorExpression contructor1 &&
 						    expr2 is SqlGenericConstructorExpression contructor2)
 						{
 							incompatible = !IsCompatibleForCommonProjection(contructor1, generic) ||
 							               !IsCompatibleForCommonProjection(contructor2, generic);
 						}
 
-						if (expr1 is not SqlGenericConstructorExpression ||
-						    expr2 is not SqlGenericConstructorExpression)
+						if (!incompatible && (expr1 is not SqlGenericConstructorExpression ||
+						    expr2 is not SqlGenericConstructorExpression))
 						{
 							incompatible = !ExpressionEqualityComparer.Instance.Equals(expr1, expr2);
+							if (!incompatible)
+								resultExpr = expr1;
 						}
 
 						if (incompatible || Builder.TryConstruct(Builder.MappingSchema, generic, this, flags) == null)

@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 					else
 					{
 						var declaringType = column.MemberInfo.DeclaringType!;
-						var objExpression = EnsureType(currentPath, declaringType);
+						var objExpression = SequenceHelper.EnsureType(currentPath, declaringType);
 
 						// Target ReflectedType to DeclaringType for better caching
 						//
@@ -200,7 +200,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			entityType = GetTypeForInstantiation(entityType);
 
-			refExpression = EnsureType(refExpression, entityType);
+			refExpression = SequenceHelper.EnsureType(refExpression, entityType);
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 
@@ -439,24 +439,6 @@ namespace LinqToDB.Linq.Builder
 			return constructed;
 		}
 
-		static Expression EnsureType(Expression expr, Type type)
-		{
-			if (expr.Type != type)
-			{
-				expr = expr.UnwrapConvert();
-				if (expr.Type != type)
-				{
-					if (expr is ContextRefExpression refExpression)
-						return refExpression.WithType(type);
-					return Expression.Convert(expr, type);
-				}
-
-				return expr;
-			}
-
-			return expr;
-		}
-
 		static Expression GetMemberExpression(SqlGenericConstructorExpression constructorExpression, MemberInfo memberInfo)
 		{
 			var me = constructorExpression.Assignments.FirstOrDefault(a =>
@@ -473,7 +455,7 @@ namespace LinqToDB.Linq.Builder
 			var entityDescriptor     = MappingSchema.GetEntityDescriptor(entityType);
 			var rootReference        = constructorExpression.ConstructionRoot ?? new ContextRefExpression(entityType, context);
 
-			rootReference = EnsureType(rootReference, entityType);
+			rootReference = SequenceHelper.EnsureType(rootReference, entityType);
 
 			if (checkInheritance && flags.HasFlag(ProjectFlags.Expression))
 			{
@@ -541,7 +523,7 @@ namespace LinqToDB.Linq.Builder
 
 						var onType = discriminatorMemberInfo.DeclaringType ?? inheritance.Type;
 
-						var currentRef = EnsureType(rootReference, onType);
+						var currentRef = SequenceHelper.EnsureType(rootReference, onType);
 						var member     = currentRef.Type.GetMemberEx(discriminatorMemberInfo);
 						member = discriminatorMemberInfo;
 						if (false)

@@ -3462,6 +3462,8 @@ namespace LinqToDB.Linq.Builder
 								}
 								else
 								{
+									return next;
+									// TODO: recheck
 									throw new InvalidOperationException(
 										$"Member '{member}' not found in type '{contextRef.Type}'.");
 								}
@@ -3943,7 +3945,7 @@ namespace LinqToDB.Linq.Builder
 				var declaringType = memberExpression.Member.DeclaringType;
 				if (declaringType != null && declaringType != memberExpression.Expression.Type)
 				{
-					memberExpression = memberExpression.Update(EnsureType(memberExpression.Expression, declaringType));
+					memberExpression = memberExpression.Update(SequenceHelper.EnsureType(memberExpression.Expression, declaringType));
 					return MakeExpression(currentContext, memberExpression, flags);
 				}
 
@@ -4012,7 +4014,7 @@ namespace LinqToDB.Linq.Builder
 				var newPath = memberExpression;
 				if (!ReferenceEquals(root, memberExpression.Expression))
 				{
-					newPath = memberExpression.Update(EnsureType(root, memberExpression.Expression.Type));
+					newPath = memberExpression.Update(SequenceHelper.EnsureType(root, memberExpression.Expression.Type));
 				}
 
 				path = newPath;

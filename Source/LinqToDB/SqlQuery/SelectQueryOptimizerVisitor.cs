@@ -1083,8 +1083,38 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty && !selectQuery.GroupBy.IsEmpty)
 				return false;
 
+			if (selectQuery.Select.IsDistinct)
+			{
+				// Common check for Distincts
+
+				if (subQuery.Select.SkipValue    != null || subQuery.Select.TakeValue    != null ||
+				    selectQuery.Select.SkipValue != null || selectQuery.Select.TakeValue != null)
+				{
+					return false;
+				}
+
+				// Common column check for Distincts
+
+				foreach (var parentColumn in selectQuery.Select.Columns)
+				{
+					if (parentColumn.Expression is not SqlColumn column || column.Parent != subQuery)
+					{
+						return false;
+					}
+				}
+			}
+
+
 			if (subQuery.Select.HasModifier && selectQuery.Select.HasModifier)
-				return false;
+			{
+				// handling case when we have two DISTINCT
+				// Note, columns already checked above
+				//
+				if (!subQuery.Select.IsDistinct || !selectQuery.Select.IsDistinct)
+				{
+					return false;
+				}
+			}
 
 			if (subQuery.Select.HasModifier || !subQuery.GroupBy.IsEmpty)
 			{

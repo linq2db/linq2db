@@ -35,6 +35,8 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression? DefaultValue { get; }
 
+			const string NotNullPropName = "not_null";
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)) || flags.HasFlag(ProjectFlags.Expand))
@@ -44,6 +46,16 @@ namespace LinqToDB.Linq.Builder
 
 				if (flags.IsTraverse())
 					return expr;
+
+				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))
+				{
+					var placeholder = ExpressionBuilder.CreatePlaceholder(this,
+						new SqlNullabilityExpression(new SqlValue(1)),
+						path,
+						alias : NotNullPropName);
+
+					return placeholder;
+				}
 
 				expr = Builder.BuildSqlExpression(this, expr, flags);
 				expr = Builder.UpdateNesting(this, expr);
@@ -74,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 						if (notNull == null)
 						{
 							notNull = ExpressionBuilder.CreatePlaceholder(this,
-								new SqlNullabilityExpression (new SqlValue(1)), Expression.Constant(1), alias: "not_null");
+								new SqlNullabilityExpression (new SqlValue(1)), SequenceHelper.CreateSpecialProperty(path, typeof(int?), NotNullPropName), alias: NotNullPropName);
 						}
 
 						if (notNull.Type.IsValueType && !notNull.Type.IsNullable())

@@ -86,11 +86,17 @@ namespace Tests.Linq
 		class Roman : Book
 		{
 			public override string Discriminator => "Roman";
+
+			[Column(CanBeNull = true)]
+			public int RomanScore { get; set; }
 		}
 
 		class Novel : Book
 		{
 			public override string Discriminator => "Novel";
+
+			[Column(CanBeNull = true)]
+			public int NovelScore { get; set; }
 		}
 
 		class Chapter
@@ -149,17 +155,17 @@ namespace Tests.Linq
 
 			var books = new Book[]
 			{
-				new Roman {BookId = 11, BookName = "Lisey's Story["},
+				new Roman {BookId = 11, BookName = "Lisey's Story[", RomanScore = 4},
 				new Novel {BookId = 12, BookName = "Duma Key"},
-				new Roman {BookId = 13, BookName = "Just After Sunset"},
+				new Roman {BookId = 13, BookName = "Just After Sunset", RomanScore = 3},
 						  
-				new Roman {BookId = 21, BookName = "Deathworld"},
+				new Roman {BookId = 21, BookName = "Deathworld", RomanScore = 1},
 				new Novel {BookId = 22, BookName = "The Stainless Steel Rat"},
 				new Roman {BookId = 23, BookName = "Planet of the Damned"},
 						  
-				new Roman {BookId = 31, BookName = "Blood of Amber"},
+				new Roman {BookId = 31, BookName = "Blood of Amber", RomanScore = 5},
 				new Novel {BookId = 32, BookName = "Knight of Shadows"},
-				new Roman {BookId = 33, BookName = "The Chronicles of Amber"}
+				new Roman {BookId = 33, BookName = "The Chronicles of Amber", RomanScore = 7}
 			};
 
 			var bookAuthor = new BookAuthor[]
@@ -202,6 +208,29 @@ namespace Tests.Linq
 				select b;
 
 			var query = query1.Concat(query2);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void UnionInheritance([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 = 
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Roman>()
+				select (Book)b;
+
+			var query2 = 
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Novel>()
+				select b;
+
+			var query = query1.Union(query2);
 
 			AssertQuery(query);
 		}

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -77,6 +80,24 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
+		public static Expression EnsureType(Expression expr, Type type)
+		{
+			if (expr.Type != type)
+			{
+				expr = expr.UnwrapConvert();
+				if (expr.Type != type)
+				{
+					if (expr is ContextRefExpression refExpression)
+						return refExpression.WithType(type);
+					return Expression.Convert(expr, type);
+				}
+
+				return expr;
+			}
+
+			return expr;
+		}
+
 		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CorrectTrackingPath(Expression? expression, Expression? except, Expression toPath)
 		{
@@ -97,9 +118,10 @@ namespace LinqToDB.Linq.Builder
 					var assignment = generic.Assignments[i];
 
 					var currentPath = toPath;
-					if (contextRef != null && assignment.MemberInfo.DeclaringType != null && !assignment.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
+
+					if (assignment.MemberInfo.DeclaringType != null)
 					{
-						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
+						currentPath = EnsureType(currentPath, assignment.MemberInfo.DeclaringType);
 					}
 
 					var newExpression = CorrectTrackingPath(assignment.Expression,
@@ -139,9 +161,25 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!placeholder.Type.IsAssignableFrom(toPath.Type))
 				{
-					toPath = Expression.MakeMemberAccess(toPath, ((MemberExpression)placeholder.Path).Member);
+					if (IsSpecialProperty(placeholder.Path, out var propType, out var propName))
+					{
+						toPath = CreateSpecialProperty(toPath, propType, propName);
+						if (placeholder.Type != toPath.Type)
+						{
+							toPath = Expression.Convert(toPath, placeholder.Type);
+						}
+
+						return placeholder.WithTrackingPath(toPath);
+					}
+
+					if (placeholder.Path is MemberExpression memberExpression)
+					{
+						toPath = Expression.MakeMemberAccess(toPath, memberExpression.Member);
+						return placeholder.WithTrackingPath(toPath);
+					}
 				}
-				return placeholder.WithTrackingPath(toPath);
+
+				return placeholder;
 			}
 
 			/*
@@ -212,7 +250,7 @@ namespace LinqToDB.Linq.Builder
 			if (expression is SqlGenericConstructorExpression generic)
 			{
 				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
-				List<SqlGenericConstructorExpression.Parameter>? parameters = null;
+				List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
 
 				var contextRef = toPath as ContextRefExpression;
 
@@ -310,6 +348,17 @@ namespace LinqToDB.Linq.Builder
 					return toPath;
 				}
 
+				if (IsSpecialProperty(expression, out var propType, out var propName))
+				{
+					var newExpr = CreateSpecialProperty(toPath, propType, propName);
+					if (placeholder.Type != newExpr.Type)
+					{
+						newExpr = Expression.Convert(newExpr, placeholder.Type);
+					}
+
+					return newExpr;
+				}
+
 				if (placeholder.Path is MemberExpression me && me.Expression?.Type == toPath.Type)
 				{
 					var newExpr = (Expression)Expression.MakeMemberAccess(toPath, me.Member);
@@ -320,6 +369,8 @@ namespace LinqToDB.Linq.Builder
 
 					return newExpr;
 				}
+
+				return placeholder;
 			}
 
 			if (expression is BinaryExpression binary && toPath.Type != binary.Type)
@@ -342,9 +393,17 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is ConditionalExpression conditional)
 			{
-				return conditional.Update(RemapToNewPath(buildContext, conditional.Test, toPath, flags),
-					RemapToNewPath(buildContext, conditional.IfTrue, toPath, flags),
-					RemapToNewPath(buildContext, conditional.IfFalse, toPath, flags));
+				var newTest  = RemapToNewPath(buildContext, conditional.Test,    toPath, flags);
+				var newTrue  = RemapToNewPath(buildContext, conditional.IfTrue,  toPath, flags);
+				var newFalse = RemapToNewPath(buildContext, conditional.IfFalse, toPath, flags);
+
+				if (newTrue.Type != expression.Type)
+					newTrue = Expression.Convert(newTrue, expression.Type);
+
+				if (newFalse.Type != expression.Type)
+					newFalse = Expression.Convert(newFalse, expression.Type);
+
+				return conditional.Update(newTest, newTrue, newFalse);
 			}
 
 			if (expression.NodeType == ExpressionType.Convert)
@@ -574,5 +633,47 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.Arguments[idx].UnwrapLambda();
 		}
 
+		#region Special fields helpers
+
+		public static Expression CreateSpecialProperty(Expression obj, Type type, string name)
+		{
+			return Expression.MakeMemberAccess(obj, new SpecialPropertyInfo(obj.Type, type, name));
+		}
+
+		public static bool IsSpecialProperty(Expression expression, Type type, string propName)
+		{
+			if (expression.Type != type)
+				return false;
+
+			if (expression is not MemberExpression memberExpression)
+				return false;
+
+			if (memberExpression.Member is not SpecialPropertyInfo)
+				return false;
+
+			if (memberExpression.Member.Name != propName)
+				return false;
+
+			return true;
+		}
+
+		public static bool IsSpecialProperty(Expression expression, [NotNullWhen(true)] out Type? type, [NotNullWhen(true)] out string? propName)
+		{
+			type     = null;
+			propName = null;
+
+			if (expression is not MemberExpression memberExpression)
+				return false;
+
+			if (memberExpression.Member is not SpecialPropertyInfo)
+				return false;
+
+			type     = expression.Type;
+			propName = memberExpression.Member.Name;
+
+			return true;
+		}
+
+		#endregion
 	}
 }

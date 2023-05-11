@@ -371,7 +371,10 @@ namespace LinqToDB.Linq.Builder
 
 							var cex = (UnaryExpression)expr;
 
-							context.builder._convertedExpressions.Add(cex.Operand, cex);
+							//if (context.builder._convertedExpressions.TryGetValue(cex.Operand, out var converted))
+							//	return new TransformInfo(converted, true);
+
+							// context.builder._convertedExpressions.Add(cex.Operand, cex);
 
 							var newOperand = context.builder.BuildSqlExpression(context.context,
 								cex.Operand, context.flags);
@@ -768,6 +771,9 @@ namespace LinqToDB.Linq.Builder
 				return null;
 
 			if (expr is ContextRefExpression contextRef && contextRef.BuildContext.ElementType == expr.Type)
+				return null;
+
+			if (SequenceHelper.IsSpecialProperty(expr, out _, out _))
 				return null;
 
 			var unwrapped = expr.Unwrap();
