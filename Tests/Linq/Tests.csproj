@@ -3,7 +3,6 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
-		<PlatformTarget Condition=" '$(TargetFramework)' == 'net472' ">x86</PlatformTarget>
 	</PropertyGroup>
 
 	<ItemGroup>
