@@ -6,7 +6,7 @@ docker rm -f oracle12
 
 REM use pull to get latest layers (run will use cached layers)
 docker pull datagrip/oracle:12.2.0.1-se2-directio
-docker run -d --name oracle12 -e ORACLE_PWD=oracle -e ORACLE_SID=ORC12 -p 1522:1521 datagrip/oracle:12.2.0.1-se2-directio
+docker run -d --name oracle12 -e ORACLE_PWD=oracle -e ORACLE_SID=ORC12 -m 1g -p 1522:1521 datagrip/oracle:12.2.0.1-se2-directio
 
 call wait oracle12 "DATABASE IS READY TO USE!"
 

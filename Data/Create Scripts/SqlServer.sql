@@ -709,6 +709,7 @@ CREATE TABLE LinqDataTypes
 GO
 -- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
+
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2008.MS BEGIN
 -- SKIP SqlServer.2012 BEGIN
@@ -1152,6 +1153,7 @@ END
 GO
 -- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
+
 CREATE PROCEDURE TestSchema.TestProcedure
 AS
 BEGIN
@@ -1351,7 +1353,9 @@ CREATE TABLE CollatedTable
 GO
 
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 -- SKIP SqlServer.2008 BEGIN
+-- SKIP SqlServer.2008.MS BEGIN
 IF EXISTS (SELECT name FROM sys.sequences  WHERE name = N'TestSequence')
 	DROP SEQUENCE dbo.TestSequence
 GO
@@ -1359,7 +1363,9 @@ CREATE SEQUENCE dbo.TestSequence
 	START WITH 1
 	INCREMENT BY 1;
 GO
+-- SKIP SqlServer.2008.MS END
 -- SKIP SqlServer.2008 END
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 
 -- one-to-one (by primary key) relation for scaffold testing
