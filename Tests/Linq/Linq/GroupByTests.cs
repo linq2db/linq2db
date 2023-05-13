@@ -2480,5 +2480,193 @@ namespace Tests.Linq
 				Assert.AreEqual(QueryElementType.SqlTable, source.Source.ElementType);
 			}
 		}
+
+		#region Issue 4098
+		sealed class Transaction
+		{
+			                            public string? InvestorId   { get; set; }
+			[Column(CanBeNull = false)] public string SecurityClass { get; set; } = null!;
+			                            public int     Units        { get; set; }
+
+			public static readonly Transaction[] Data = new []
+			{
+				new Transaction() { InvestorId = "inv1", SecurityClass = "test", Units = 100 },
+				new Transaction() { InvestorId = "inv1", SecurityClass = "test", Units = 200 },
+				new Transaction() { InvestorId = "inv2", SecurityClass = "test", Units = 300 },
+				new Transaction() { InvestorId = "inv2", SecurityClass = "test", Units = 400 },
+			};
+		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		sealed class InvestorPayment
+		{
+			                            public int     Id         { get; set; }
+			[Column(CanBeNull = false)] public string  InvestorId { get; set; } = null!;
+			                            public int     NetPayment { get; set; }
+
+			public static readonly InvestorPayment[] Data = new []
+			{
+				new InvestorPayment() { Id = 1, InvestorId = "inv1", NetPayment = 100 },
+				new InvestorPayment() { Id = 2, InvestorId = "inv2", NetPayment = 200 },
+			};
+		}
+
+		sealed class PaymentEvent
+		{
+			                            public int     Id           { get; set; }
+			                            public string? Description  { get; set; }
+			[Column(CanBeNull = false)] public string SecurityClass { get; set; } = null!;
+
+			public static readonly PaymentEvent[] Data = new []
+			{
+				new PaymentEvent() { Id = 1, Description = "one", SecurityClass = "test" },
+				new PaymentEvent() { Id = 2, Description = "two", SecurityClass = "test" },
+			};
+		}
+
+		sealed class InvestorPaymentDetail
+		{
+			public string? InvestorId    { get; set; }
+			public int     CalculationId { get; set; }
+
+			public static readonly InvestorPaymentDetail[] Data = new []
+			{
+				new InvestorPaymentDetail() { InvestorId = "inv1", CalculationId = 1 },
+				new InvestorPaymentDetail() { InvestorId = "inv2", CalculationId = 2 },
+			};
+		}
+
+		sealed class PaymentCalculation
+		{
+			public int Id      { get; set; }
+			public int EventId { get; set; }
+
+			public static readonly PaymentCalculation[] Data = new []
+			{
+				new PaymentCalculation() { Id = 1, EventId = 1 },
+				new PaymentCalculation() { Id = 2, EventId = 2 },
+			};
+		}
+
+		[Test]
+		public void Issue4098WithCte([CteTests.CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var transactions           = db.CreateLocalTable(Transaction.Data);
+			using var investorPayments       = db.CreateLocalTable(InvestorPayment.Data);
+			using var paymentEvents          = db.CreateLocalTable(PaymentEvent.Data);
+			using var investorPaymentDetails = db.CreateLocalTable(InvestorPaymentDetail.Data);
+			using var paymentCalculations    = db.CreateLocalTable(PaymentCalculation.Data);
+
+			var balances = (from x in transactions
+							group x by new { x.SecurityClass, x.InvestorId } into g
+							select new
+							{
+								g.Key.InvestorId,
+								g.Key.SecurityClass,
+								Units = g.Sum(x => x.Units)
+							});
+
+			balances = balances.AsCte();
+
+			var payments = (from pe in paymentEvents
+							join ip in investorPayments on pe.Id equals ip.Id
+							join ipd in investorPaymentDetails on ip.InvestorId equals ipd.InvestorId
+							join pc in paymentCalculations on new { calc = ipd.CalculationId, eid = pe.Id } equals new { calc = pc.Id, eid = pc.EventId }
+							join b in balances on new { inv = ip.InvestorId, cls = pe.SecurityClass } equals new { inv = b.InvestorId, cls = b.SecurityClass }
+							select new
+							{
+								ip.InvestorId,
+								pe.Description,
+								ip.NetPayment,
+								TotalUnits = b.Units
+							});
+
+			var grouppedPayments = (from x in payments
+									group x by new { x.InvestorId, x.TotalUnits } into g
+									select new
+									{
+										g.Key.InvestorId,
+										TotalAmount = g.Sum(x => x.NetPayment),
+										TotalUnits  = g.Key.TotalUnits
+									});
+
+			var retval = (from p in grouppedPayments
+						  select new
+						  {
+							  INVESTORID    = p.InvestorId,
+							  TOTALUNITS    = p.TotalUnits,
+							  PAYMENTAMOUNT = p.TotalAmount,
+						  }).ToList().OrderBy(r => r.INVESTORID).ToArray();
+
+			Assert.AreEqual(2, retval.Length);
+			Assert.AreEqual("inv1", retval[0].INVESTORID);
+			Assert.AreEqual(100, retval[0].PAYMENTAMOUNT);
+			Assert.AreEqual(300, retval[0].TOTALUNITS);
+			Assert.AreEqual("inv2", retval[1].INVESTORID);
+			Assert.AreEqual(200, retval[1].PAYMENTAMOUNT);
+			Assert.AreEqual(700, retval[1].TOTALUNITS);
+		}
+
+		[Test]
+		public void Issue4098([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var transactions           = db.CreateLocalTable(Transaction.Data);
+			using var investorPayments       = db.CreateLocalTable(InvestorPayment.Data);
+			using var paymentEvents          = db.CreateLocalTable(PaymentEvent.Data);
+			using var investorPaymentDetails = db.CreateLocalTable(InvestorPaymentDetail.Data);
+			using var paymentCalculations    = db.CreateLocalTable(PaymentCalculation.Data);
+
+			var balances = (from x in transactions
+							group x by new { x.SecurityClass, x.InvestorId } into g
+							select new
+							{
+								g.Key.InvestorId,
+								g.Key.SecurityClass,
+								Units = g.Sum(x => x.Units)
+							});
+
+			var payments = (from pe in paymentEvents
+							join ip in investorPayments on pe.Id equals ip.Id
+							join ipd in investorPaymentDetails on ip.InvestorId equals ipd.InvestorId
+							join pc in paymentCalculations on new { calc = ipd.CalculationId, eid = pe.Id } equals new { calc = pc.Id, eid = pc.EventId }
+							join b in balances on new { inv = ip.InvestorId, cls = pe.SecurityClass } equals new { inv = b.InvestorId, cls = b.SecurityClass }
+							select new
+							{
+								ip.InvestorId,
+								pe.Description,
+								ip.NetPayment,
+								TotalUnits = b.Units
+							});
+
+			var grouppedPayments = (from x in payments
+									group x by new { x.InvestorId, x.TotalUnits } into g
+									select new
+									{
+										g.Key.InvestorId,
+										TotalAmount = g.Sum(x => x.NetPayment),
+										TotalUnits  = g.Key.TotalUnits
+									});
+
+			var retval = (from p in grouppedPayments
+						  select new
+						  {
+							  INVESTORID    = p.InvestorId,
+							  TOTALUNITS    = p.TotalUnits,
+							  PAYMENTAMOUNT = p.TotalAmount,
+						  }).ToList().OrderBy(r => r.INVESTORID).ToArray();
+
+			Assert.AreEqual(2, retval.Length);
+			Assert.AreEqual("inv1", retval[0].INVESTORID);
+			Assert.AreEqual(100, retval[0].PAYMENTAMOUNT);
+			Assert.AreEqual(300, retval[0].TOTALUNITS);
+			Assert.AreEqual("inv2", retval[1].INVESTORID);
+			Assert.AreEqual(200, retval[1].PAYMENTAMOUNT);
+			Assert.AreEqual(700, retval[1].TOTALUNITS);
+		}
+		#endregion
 	}
 }

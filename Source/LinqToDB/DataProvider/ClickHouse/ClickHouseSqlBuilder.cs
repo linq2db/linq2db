@@ -475,5 +475,96 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// (could have many nesting levels) which we don't support and have no plans to support
 			addAlias = addAlias || selectQuery?.ParentSelect != null;
 		}
+
+		protected override void BuildTableExtensions(SqlTable table, string alias)
+		{
+			if (table.SqlQueryExtensions is not null)
+			{
+				BuildTableExtensions(StringBuilder, table, alias, null, ", ", null,
+					ext =>
+						ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint &&
+						!(ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final)));
+			}
+		}
+
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			var ext = join.SqlQueryExtensions?.LastOrDefault(e => e.Scope is Sql.QueryExtensionScope.JoinHint);
+
+			if (ext?.Arguments["hint"] is SqlValue v)
+			{
+				var h = (string)v.Value!;
+
+				if (h.StartsWith(ClickHouseHints.Join.Global))
+				{
+					StringBuilder
+						.Append(ClickHouseHints.Join.Global)
+						.Append(' ');
+
+					if (h ==  ClickHouseHints.Join.Global)
+						return base.BuildJoinType(join, condition);
+
+					h = h[(ClickHouseHints.Join.Global.Length + 1)..];
+				}
+				else if (h.StartsWith(ClickHouseHints.Join.All))
+				{
+					StringBuilder
+						.Append(ClickHouseHints.Join.All)
+						.Append(' ');
+
+					if (h ==  ClickHouseHints.Join.All)
+						return base.BuildJoinType(join, condition);
+
+					h = h[(ClickHouseHints.Join.All.Length + 1)..];
+				}
+
+				switch (join.JoinType)
+				{
+					case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+					                      StringBuilder.Append($"CROSS {h} JOIN "); return false;
+					case JoinType.Inner : StringBuilder.Append($"INNER {h} JOIN "); return true;
+					case JoinType.Left  : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
+					case JoinType.Right : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
+					case JoinType.Full  : StringBuilder.Append($"FULL {h} JOIN ");  return true;
+					default             : throw new InvalidOperationException();
+				}
+			}
+
+			return base.BuildJoinType(join, condition);
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null);
+		}
+
+		protected override void BuildFromExtensions(SelectQuery selectQuery)
+		{
+			var hasFinal =
+				selectQuery.SqlQueryExtensions?.Any(HasFinal) == true ||
+				selectQuery.From.Tables.Any(t => t.Source switch
+				{
+					SqlTable                   s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
+					SelectQuery                s  => s.SqlQueryExtensions?.Any(HasFinal) == true,
+					SqlTableSource(SelectQuery s) => s.SqlQueryExtensions?.Any(HasFinal) == true,
+					_ => false
+				});
+
+			static bool HasFinal(SqlQueryExtension ext)
+			{
+				return
+					ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint or Sql.QueryExtensionScope.SubQueryHint &&
+					ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final);
+			}
+
+			if (hasFinal)
+			{
+				StringBuilder
+					.Append(' ')
+					.Append(ClickHouseHints.Table.Final)
+					;
+			}
+		}
 	}
 }

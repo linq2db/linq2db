@@ -2168,5 +2168,33 @@ DROP TABLE IF EXISTS TemporalTable3History
 			var cs = DataConnection.GetConnectionString(context);
 			_ = SqlServerTools.CreateDataConnection(cs);
 		}
+
+		[Test]
+		public void TestVariantConverters([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<object, DataParameter>(obj => new DataParameter(null, obj is TimeSpan ts ? ts.Ticks : obj));
+
+			using var db = GetDataConnection(context, ms);
+			using var tb = db.CreateLocalTable<VariantTable>();
+
+			db.BulkCopy(new[]
+			{
+				new VariantTable() { Id = 1, Value = "string value" },
+				new VariantTable() { Id = 2, Value = TimeSpan.FromDays(2) },
+			});
+
+			var res = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(res.Length, Is.EqualTo(2));
+			Assert.That(res[0].Value, Is.EqualTo("string value"));
+			Assert.That(res[1].Value, Is.EqualTo(TimeSpan.FromDays(2).Ticks));
+		}
+
+		sealed class VariantTable
+		{
+			public int     Id    { get; set; }
+			public object? Value { get; set; }
+		}
 	}
 }
