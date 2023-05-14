@@ -136,10 +136,13 @@ namespace LinqToDB.Linq.Builder
 
 		public sealed class FirstSingleContext : SequenceContextBase
 		{
+			private readonly bool _orDefault;
+
 			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
+				_orDefault  = _methodCall.Method.Name.Contains("OrDefault");
 			}
 
 			readonly MethodCallExpression _methodCall;
@@ -330,7 +333,7 @@ namespace LinqToDB.Linq.Builder
 
 						Expression defaultValue;
 
-						if (_methodCall.Method.Name.EndsWith("OrDefault"))
+						if (_orDefault)
 							defaultValue = Expression.Constant(expr.Type.GetDefaultValue(), expr.Type);
 						else
 							defaultValue = Expression.Convert(
@@ -367,6 +370,24 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				throw new NotImplementedException();
+			}
+
+			public override int ConvertToParentIndex(int index, IBuildContext context)
+			{
+				if (!_orDefault || Parent == null || SelectQuery.Select.Columns[index].CanBeNull)
+					return base.ConvertToParentIndex(index, context);
+
+				var column = SelectQuery.Select.Columns[index];
+
+				var idx = Parent.ConvertToParentIndex(index, context);
+
+				foreach (var col in Parent.SelectQuery.Select.Columns)
+				{
+					if (col.Expression == column)
+						col.Expression = new SqlExpression(col.SystemType, "{0}", column.Precedence, column) { CanBeNull = true };
+				}
+
+				return idx;
 			}
 
 			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
