@@ -220,12 +220,35 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+
+		static string[] _passThroughMethods = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
+
 		static Expression UnwrapDefaultIfEmpty(Expression expression)
 		{
-			while (expression is MethodCallExpression mc && mc.IsQueryable(nameof(Enumerable.DefaultIfEmpty)))
+			do
 			{
-				expression = mc.Arguments[0];
-			}
+				if (expression is MethodCallExpression mc)
+				{
+					if (mc.IsQueryable(nameof(Enumerable.DefaultIfEmpty)))
+						expression = mc.Arguments[0];
+					else if (mc.IsQueryable(_passThroughMethods))
+					{
+						return mc.Update(mc.Object, mc.Arguments.Select(UnwrapDefaultIfEmpty));
+					}
+					else if (mc.IsQueryable(nameof(Enumerable.SelectMany)))
+					{
+						return mc.Update(mc.Object, mc.Arguments.Select(UnwrapDefaultIfEmpty));
+					}
+					else
+						break;
+				}
+				else if (expression is SqlAdjustTypeExpression adjust)
+				{
+					return adjust.Update(UnwrapDefaultIfEmpty(adjust.Expression));
+				}
+				else
+					break;
+			} while (true);
 
 			return expression;
 		}
@@ -243,11 +266,13 @@ namespace LinqToDB.Linq.Builder
 			
 			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
-			var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression.Unwrap());
+			var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression);
 
 			sequenceExpression = ExpandContexts(buildContext, sequenceExpression);
+			sequenceExpression = UnwrapDefaultIfEmpty(sequenceExpression);
 
-			var correctedSequence    = cloningContext.CloneExpression(sequenceExpression);
+			var correctedSequence  = cloningContext.CloneExpression(sequenceExpression);
+			var correctedPredicate = cloningContext.CloneExpression(eagerLoad.Predicate);
 
 			CollectDependencies(sequenceExpression, dependencies);
 
@@ -283,6 +308,17 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
+				if (correctedPredicate != null)
+				{
+					var predicateSql = ConvertPredicate(clonedParentContext, correctedPredicate, ProjectFlags.SQL,
+						out var error);
+
+					if (predicateSql == null)
+						throw error!.CreateError();
+
+					clonedParentContext.SelectQuery.Where.ConcatSearchCondition(new SqlSearchCondition(new SqlCondition(false, predicateSql)));
+				}
+
 				var orderByToApply = CollectOrderBy(correctedSequence);
 
 				var mainKeyExpression   = GenerateKeyExpression(mainKeys, 0);

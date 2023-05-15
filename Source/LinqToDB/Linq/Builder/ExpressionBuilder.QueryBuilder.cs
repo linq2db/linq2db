@@ -767,7 +767,7 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, ProjectFlags flags)
 		{
-			if (expr is ContextConstructionExpression or SqlGenericConstructorExpression or ConstantExpression)
+			if (expr is ContextConstructionExpression or SqlGenericConstructorExpression or ConstantExpression or SqlEagerLoadExpression)
 				return null;
 
 			if (expr is ContextRefExpression contextRef && contextRef.BuildContext.ElementType == expr.Type)

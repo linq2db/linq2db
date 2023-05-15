@@ -344,7 +344,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void UnionEagerSameDetails([DataSources] string context)
+		public void ConcatEagerDifferentDetails([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
 			using var disposal = InitTestData(db);
@@ -358,7 +358,7 @@ namespace Tests.Linq
 				{
 					Id = b.BookId,
 					b.BookName,
-					Authors = b.Authors.ToList()
+					Authors = b.Authors.Where(x => x.AuthorName != "A").ToList()
 				};
 
 			var query2 = 
@@ -371,7 +371,7 @@ namespace Tests.Linq
 					Authors = b.Authors.ToList()
 				};
 
-			var query = query1.Union(query2);
+			var query = query1.Concat(query2);
 
 			AssertQuery(query);
 		}

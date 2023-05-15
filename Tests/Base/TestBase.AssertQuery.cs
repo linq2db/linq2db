@@ -122,6 +122,25 @@ namespace Tests
 						var checkedMethod = CheckForNull(mc.Object, Expression.Constant(DefaultValue.GetValue(mc.Method.ReturnType), mc.Method.ReturnType), mc);
 						return new TransformInfo(checkedMethod);
 					}
+
+					if (mc.Method.IsStatic && mc.Method.DeclaringType == typeof(Enumerable))
+					{
+						var arguments = mc.Arguments.Select(a => ApplyNullCheck(a)).ToList();
+						mc = mc.Update(mc.Object, arguments);
+						var firstArg = mc.Arguments[0];
+
+						if (firstArg.Type.IsClass || firstArg.Type.IsInterface)
+						{
+							var checkedExpr = Expression.Condition(
+								Expression.NotEqual(firstArg, Expression.Default(firstArg.Type)),
+									mc,
+									Expression.Default(mc.Type));
+
+							return new TransformInfo(checkedExpr);
+						}
+
+						return new TransformInfo(mc);
+					}
 				}
 				else if (e.NodeType == ExpressionType.MemberAccess)
 				{

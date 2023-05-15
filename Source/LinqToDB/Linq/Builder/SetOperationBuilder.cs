@@ -11,6 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 	using Common;
+	using System.Collections;
 
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
@@ -168,6 +169,8 @@ namespace LinqToDB.Linq.Builder
 			readonly SubQueryContext      _sequence2;
 			SqlPlaceholderExpression?     _setIdPlaceholder;
 			Expression?                   _setIdReference;
+			int?                          _leftSetId;
+			int?                          _rightSetId;
 
 			readonly Dictionary<Expression, SqlPlaceholderExpression> _createdSQL = new(ExpressionEqualityComparer.Instance);
 			readonly Dictionary<Expression, Expression> _generatedExpressions = new(ExpressionEqualityComparer.Instance);
@@ -317,7 +320,6 @@ namespace LinqToDB.Linq.Builder
 			static MethodInfo _keySetIdMethosInfo = Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(typeof(int));
 
 			const           string     ProjectionSetIdFieldName = "__projection__set_id__";
-			static readonly Expression _setIdFieldName          = Expression.Constant(ProjectionSetIdFieldName);
 
 			Expression EnsureBuilt(Expression expr, ProjectFlags flags)
 			{
@@ -358,34 +360,9 @@ namespace LinqToDB.Linq.Builder
 
 				rightExpression = EnsureBuilt(rightExpression, flags);
 
-				var sequenceLeftSetId  = Builder.GenerateSetId(_sequence1.SubQuery.SelectQuery.SourceID);
-				var sequenceRightSetId = Builder.GenerateSetId(_sequence2.SubQuery.SelectQuery.SourceID);
+				EnsureSetIdFieldCreated();
 
-				if (_setIdReference == null)
-				{
-
-					var sqlValueLeft  = new SqlValue(sequenceLeftSetId);
-					var sqlValueRight = new SqlValue(sequenceRightSetId);
-
-					var thisRef  = new ContextRefExpression(_type, this);
-
-					_setIdReference = Expression.Call(_keySetIdMethosInfo, thisRef, Expression.Constant(ProjectionSetIdFieldName));
-
-					var leftRef  = new ContextRefExpression(_type, _sequence1);
-					var rightRef = new ContextRefExpression(_type, _sequence2);
-
-					var keyLeft  = Expression.Call(_keySetIdMethosInfo, leftRef, _setIdFieldName);
-					var keyRight = Expression.Call(_keySetIdMethosInfo, rightRef, _setIdFieldName);
-
-					var leftIdPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence1, sqlValueLeft, keyLeft, alias: ProjectionSetIdFieldName);
-					leftIdPlaceholder = (SqlPlaceholderExpression)Builder.UpdateNesting(this, leftIdPlaceholder);
-
-					var rightIdPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence2, sqlValueRight,
-						keyRight, alias: ProjectionSetIdFieldName);
-					rightIdPlaceholder = Builder.MakeColumn(SelectQuery, rightIdPlaceholder, asNew: true);
-
-					_setIdPlaceholder = leftIdPlaceholder.WithPath(_setIdReference).WithTrackingPath(_setIdReference);
-				}
+				var sequenceLeftSetId = _leftSetId!.Value;
 
 				if (leftExpression.Type != path.Type)
 				{
@@ -398,12 +375,47 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var resultExpr = Expression.Condition(
-					Expression.Equal(_setIdReference, Expression.Constant(sequenceLeftSetId)),
+					Expression.Equal(_setIdReference!, Expression.Constant(sequenceLeftSetId)),
 					leftExpression,
 					rightExpression
 				);
 
 				return resultExpr;
+			}
+
+			void EnsureSetIdFieldCreated()
+			{
+				if (_setIdReference != null)
+					return;
+
+				var sequenceLeftSetId  = Builder.GenerateSetId(_sequence1.SubQuery.SelectQuery.SourceID);
+				var sequenceRightSetId = Builder.GenerateSetId(_sequence2.SubQuery.SelectQuery.SourceID);
+
+				var sqlValueLeft  = new SqlValue(sequenceLeftSetId);
+				var sqlValueRight = new SqlValue(sequenceRightSetId);
+
+				var thisRef = new ContextRefExpression(_type, this);
+
+				_setIdReference = SequenceHelper.CreateSpecialProperty(thisRef, typeof(int), ProjectionSetIdFieldName);
+
+				var leftRef  = new ContextRefExpression(_type, _sequence1);
+				var rightRef = new ContextRefExpression(_type, _sequence2);
+
+				var keyLeft  = SequenceHelper.CreateSpecialProperty(leftRef, typeof(int), ProjectionSetIdFieldName);
+				var keyRight = SequenceHelper.CreateSpecialProperty(rightRef, typeof(int), ProjectionSetIdFieldName);
+
+				var leftIdPlaceholder =
+					ExpressionBuilder.CreatePlaceholder(_sequence1, sqlValueLeft, keyLeft, alias : ProjectionSetIdFieldName);
+				leftIdPlaceholder = (SqlPlaceholderExpression)Builder.UpdateNesting(this, leftIdPlaceholder);
+
+				var rightIdPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence2, sqlValueRight,
+					keyRight, alias : ProjectionSetIdFieldName);
+				rightIdPlaceholder = Builder.MakeColumn(SelectQuery, rightIdPlaceholder, asNew : true);
+
+				_setIdPlaceholder = leftIdPlaceholder.WithPath(_setIdReference).WithTrackingPath(_setIdReference);
+
+				_leftSetId  = sequenceLeftSetId;
+				_rightSetId = sequenceRightSetId;
 			}
 
 			Expression ExpandExpression(SubQueryContext context, Expression expression)
@@ -476,12 +488,23 @@ namespace LinqToDB.Linq.Builder
 						var newExpr = Builder.ConvertToSqlExpr(context, e, flags.SqlFlag());
 						if (newExpr is SqlPlaceholderExpression placeholder)
 							placeholders.Add(placeholder);
+						if (newExpr.UnwrapConvert() is SqlEagerLoadExpression eager)
+						{
+							newExpr = eager.SequenceExpression;
+							if (e.Type != newExpr.Type)
+							{
+								newExpr = new SqlAdjustTypeExpression(newExpr, e.Type, Builder.MappingSchema);
+							}
+
+							return new TransformInfo(newExpr, false, true);
+						}
+
 						if (newExpr is SqlErrorExpression)
-							return e;
-						return newExpr;
+							return new TransformInfo(e);
+						return new TransformInfo(newExpr);;
 					}
 
-					return e;
+					return new TransformInfo(e);
 				});
 
 				return transformed;
@@ -542,37 +565,6 @@ namespace LinqToDB.Linq.Builder
 					return true;
 
 				return false;
-			}
-
-
-			/*
-			public Expression MergeProjections(Type objectType, Expression projection1, Expression projection2)
-			{
-				projection1 = SqlGenericConstructorExpression.Parse(projection1);
-				projection2 = SqlGenericConstructorExpression.Parse(projection2);
-
-				if (projection1 is SqlGenericConstructorExpression generic1)
-				{
-					var assignments = new List<Expression>();
-					if (projection2 is SqlGenericConstructorExpression generic2)
-					{
-
-					}
-				}
-			}
-
-			public SqlGenericConstructorExpression MergeConstructors(Type objectType, SqlGenericConstructorExpression constructor1, SqlGenericConstructorExpression constructor2)
-			{
-
-			}
-
-			*/
-
-			public Expression MergeProjections(Type objectType, IEnumerable<Expression> projections, ref bool incompatible)
-			{
-				return MergeProjections(objectType,
-					projections.Select(e => (e, GetMemberPath(e))).ToList(),
-					0, ref incompatible);
 			}
 
 			class MemberOrParameter : IEquatable<MemberOrParameter>
@@ -769,8 +761,6 @@ namespace LinqToDB.Linq.Builder
 						else
 							throw new InvalidOperationException();
 					}
-
-					return current;
 				}
 
 				var projections = knownProjections.Where(p => ExpressionContains(p, currentPath)).ToList();
@@ -1027,6 +1017,48 @@ namespace LinqToDB.Linq.Builder
 				return transformed;
 			}
 
+			static List<SqlEagerLoadExpression> CollectEagerLoadingExpressions(Expression expression)
+			{
+				var result = new List<SqlEagerLoadExpression>();
+				expression.Visit(result, (r, e) =>
+				{
+					if (e is SqlEagerLoadExpression eager)
+					{
+						result.Add(eager);
+					}
+				});
+
+				return result;
+			}
+
+			Expression AddSetPredicateToEagerExpresson(Expression expression, List<SqlEagerLoadExpression> eagerExpressions, int setIndex)
+			{
+				if (eagerExpressions.Count == 0)
+					return expression;
+
+				EnsureSetIdFieldCreated();
+
+				var setValue = setIndex == 0 ? _leftSetId!.Value : _rightSetId!.Value;
+
+				var predicate = Expression.Equal(_setIdReference!, Expression.Constant(setValue));
+				var replacement = eagerExpressions.ToDictionary(eager => eager, eager => eager.AppendPredicate(predicate));
+
+				var nexExpr = expression.Transform(replacement, (r, e) =>
+				{
+					if (e is SqlEagerLoadExpression eager)
+					{
+						if (replacement.TryGetValue(eager, out var newExpr))
+						{
+							return new TransformInfo(newExpr, false, true);
+						}
+					}
+
+					return new TransformInfo(e);
+				});
+
+				return nexExpr;
+			}
+
 			void GenerateAllFields(Expression path, ref Expression expr1, ref Expression expr2, ProjectFlags flags, out bool additionalFieldsAdded)
 			{
 				var foundPathes = CollectDataPathes(expr1, path)
@@ -1048,6 +1080,15 @@ namespace LinqToDB.Linq.Builder
 				expr1 = CorrectEagerLoadingExpression(expr1, transformMap);
 				expr2 = CorrectEagerLoadingExpression(expr2, transformMap);
 
+				var eager1 = CollectEagerLoadingExpressions(expr1);
+				var eager2 = CollectEagerLoadingExpressions(expr2);
+
+				var toModify1 = eager1.Except(eager2, ExpressionEqualityComparer.Instance).Cast<SqlEagerLoadExpression>().ToList();
+				var toModify2 = eager2.Except(eager1, ExpressionEqualityComparer.Instance).Cast<SqlEagerLoadExpression>().ToList();
+
+				expr1 = AddSetPredicateToEagerExpresson(expr1, toModify1, 0);
+				expr2 = AddSetPredicateToEagerExpresson(expr2, toModify2, 1);
+
 				//TODO: fill missing references
 				additionalFieldsAdded = false;
 			}
@@ -1055,6 +1096,8 @@ namespace LinqToDB.Linq.Builder
 			Expression MatchConstructors(Expression path, Expression expr1, Expression expr2,  ProjectFlags flags)
 			{
 				Expression resultExpr;
+
+				var forcedEquality = _setOperation == SetOperation.Except || _setOperation == SetOperation.ExceptAll;
 
 				expr1 = ProcessEagerExpressions(expr1, _sequence1, flags, _eagerPlaceholders1);
 				expr2 = ProcessEagerExpressions(expr2, _sequence2, flags, _eagerPlaceholders2);
@@ -1068,18 +1111,6 @@ namespace LinqToDB.Linq.Builder
 					GenerateAllFields(path, ref expr1, ref expr2, flags, out var fieldsAdded);
 				}
 
-				/*
-				if (ExpressionEqualityComparer.Instance.Equals(expr1, path))
-				{
-					expr1 = Expression.Default(expr1.Type);
-				}
-
-				if (ExpressionEqualityComparer.Instance.Equals(expr2, path))
-				{
-					expr2 = Expression.Default(expr2.Type);
-				}
-				*/
-
 				var foundPathes = CollectDataPathes(expr1, path)
 					.Concat(CollectDataPathes(expr2, path))
 					.Distinct(ExpressionEqualityComparer.Instance)
@@ -1089,7 +1120,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (flags.HasFlag(ProjectFlags.Expression))
 				{
-					if (_setOperation == SetOperation.Except || _setOperation == SetOperation.ExceptAll)
+					if (forcedEquality)
 						return expr1;
 
 					if (IsEqualProjections(expr1, expr2))
@@ -1153,7 +1184,10 @@ namespace LinqToDB.Linq.Builder
 				// for correct updating self-references below
 				context.RegisterCloned(this, cloned);
 
-				cloned._setIdReference = context.CloneExpression(_setIdReference);
+				cloned._setIdPlaceholder = context.CloneExpression(_setIdPlaceholder);
+				cloned._setIdReference   = context.CloneExpression(_setIdReference);
+				cloned._leftSetId        = _leftSetId;
+				cloned._rightSetId       = _rightSetId;
 				
 				foreach(var generated in _createdSQL)
 				{

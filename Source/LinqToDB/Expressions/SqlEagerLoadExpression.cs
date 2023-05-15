@@ -5,15 +5,22 @@ namespace LinqToDB.Expressions
 {
 	class SqlEagerLoadExpression: Expression, IEquatable<SqlEagerLoadExpression>
 	{
-		public Expression SequenceExpression { get; }
+		public Expression  SequenceExpression { get; }
+		public Expression? Predicate          { get; }
 
-		public SqlEagerLoadExpression(Expression sequenceExpression)
+		public SqlEagerLoadExpression(Expression sequenceExpression, Expression? predicate = null)
 		{
-			SequenceExpression   = sequenceExpression;
+			SequenceExpression = sequenceExpression;
+			Predicate          = predicate;
 		}
 
 		public override string ToString()
 		{
+			if (Predicate != null)
+			{
+				return $"Eager({SequenceExpression} AND {Predicate})::{Type.Name}";
+			}
+
 			return $"Eager({SequenceExpression})::{Type.Name}";
 		}
 
@@ -37,6 +44,20 @@ namespace LinqToDB.Expressions
 			if (ReferenceEquals(this, other))
 			{
 				return true;
+			}
+
+			if (Predicate == null)
+			{
+				if (other.Predicate != null)
+					return false;
+			}
+			else if (other.Predicate == null)
+			{
+				return false;
+			}
+			else if (!ExpressionEqualityComparer.Instance.Equals(Predicate, other.Predicate))
+			{
+				return false;
 			}
 
 			return ExpressionEqualityComparer.Instance.Equals(SequenceExpression, other.SequenceExpression);
@@ -64,7 +85,12 @@ namespace LinqToDB.Expressions
 
 		public override int GetHashCode()
 		{
-			return SequenceExpression.GetHashCode();
+			unchecked
+			{
+				var hashCode = ExpressionEqualityComparer.Instance.GetHashCode(SequenceExpression);
+				hashCode = (hashCode * 397) ^ (Predicate != null ? ExpressionEqualityComparer.Instance.GetHashCode(Predicate) : 0);
+				return hashCode;
+			}
 		}
 
 		public static bool operator ==(SqlEagerLoadExpression? left, SqlEagerLoadExpression? right)
@@ -75,6 +101,16 @@ namespace LinqToDB.Expressions
 		public static bool operator !=(SqlEagerLoadExpression? left, SqlEagerLoadExpression? right)
 		{
 			return !Equals(left, right);
+		}
+
+		public SqlEagerLoadExpression AppendPredicate(Expression predicate)
+		{
+			if (Predicate != null)
+			{
+				predicate = Expression.AndAlso(Predicate, predicate);
+			}
+
+			return new SqlEagerLoadExpression(SequenceExpression, predicate);
 		}
 	}
 }
