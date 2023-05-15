@@ -24,7 +24,7 @@ namespace Tests.UserTests
 		public partial class Table2
 		{
 			[Column("ID2"), PrimaryKey, NotNull] public int Id2 { get; set; }
-			[Column("PARENTID2"), NotNull] public int ParentId2 { get; set; }
+			[Column("PARENTID2"), Nullable] public int? ParentId2 { get; set; }
 			[Column("NAME2"), Nullable] public string? Name2 { get; set; }
 		}
 
@@ -32,7 +32,7 @@ namespace Tests.UserTests
 		public partial class Table3
 		{
 			[Column("ID3"), PrimaryKey, NotNull] public int Id3 { get; set; }
-			[Column("PARENTID3"), NotNull] public int ParentId3 { get; set; }
+			[Column("PARENTID3"), Nullable] public int? ParentId3 { get; set; }
 			[Column("NAME3"), Nullable] public string? Name3 { get; set; }
 		}
 
@@ -224,6 +224,190 @@ namespace Tests.UserTests
 			Assert.That(ret.Count, Is.EqualTo(2));
 			Assert.That(ret[0].Value1, Is.Not.Null);
 			Assert.That(ret[0].Value1!.Value2, Is.Not.Null);
+		}
+
+		[Test]
+		public void CrossApply_NullableFields_WithIds([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl1 = db.CreateLocalTable(new[]
+			{
+				new Table1 { Id1 = 1, Name1 = "Some1" },
+				new Table1 { Id1 = 2, Name1 = null },
+			});
+			using var tbl2 = db.CreateLocalTable(new[]
+			{
+				new Table2 { Id2 = 11, ParentId2 = 1, Name2 = "Child11" },
+				new Table2 { Id2 = 12, ParentId2 = 2, Name2 = "Child12" },
+				new Table2 { Id2 = 13, ParentId2 = null, Name2 = "Child13" },
+				new Table2 { Id2 = 14, ParentId2 = 1, Name2 = null },
+				new Table2 { Id2 = 15, ParentId2 = 2, Name2 = null },
+				new Table2 { Id2 = 16, ParentId2 = null, Name2 = null },
+			});
+			using var tbl3 = db.CreateLocalTable(new[]
+			{
+				new Table3 { Id3 = 21, ParentId3 = 11, Name3 = "Child21" },
+				new Table3 { Id3 = 22, ParentId3 = 12, Name3 = "Child22" },
+				new Table3 { Id3 = 23, ParentId3 = 13, Name3 = "Child23" },
+				new Table3 { Id3 = 24, ParentId3 = 14, Name3 = "Child24" },
+				new Table3 { Id3 = 25, ParentId3 = 15, Name3 = "Child25" },
+				new Table3 { Id3 = 26, ParentId3 = 16, Name3 = "Child26" },
+				new Table3 { Id3 = 27, ParentId3 = null, Name3 = "Child27" },
+			});
+			var ret = db.GetTable<Table3>()
+				.OrderBy(x => x.Id3)
+				.Select(t3 => new
+				{
+					Name3 = t3.Name3,
+					Value2 = db.GetTable<Table2>()
+						.Where(x => x.Id2 == t3.ParentId3)
+						.Select(t2 => new
+						{
+							//first cross apply
+							Value1 = db.GetTable<Table1>()
+								.Where(x => x.Id1 == t2.ParentId2)
+								.Select(t1 => new
+								{
+									//nested cross apply
+									Name1 = t1.Name1,
+									Id1 = t1.Id1,
+								})
+								.FirstOrDefault(),
+							Name2 = t2.Name2,
+							Id2 = t2.Id2,
+						})
+						.FirstOrDefault()
+				})
+				.ToList();
+			Assert.That(ret.Count, Is.EqualTo(7));
+
+			Assert.AreEqual(ret[0].Name3!, "Child21");
+			Assert.That(ret[0].Value2, Is.Not.Null);
+			Assert.AreEqual(ret[0].Value2!.Name2!, "Child11");
+			Assert.That(ret[0].Value2!.Value1, Is.Not.Null);
+			Assert.AreEqual(ret[0].Value2!.Value1!.Name1!, "Some1");
+
+			Assert.AreEqual(ret[1].Name3!, "Child22");
+			Assert.That(ret[1].Value2, Is.Not.Null);
+			Assert.AreEqual(ret[1].Value2!.Name2!, "Child12");
+			Assert.That(ret[1].Value2!.Value1, Is.Not.Null);
+			Assert.That(ret[1].Value2!.Value1!.Name1, Is.Null);
+
+			Assert.AreEqual(ret[2].Name3!, "Child23");
+			Assert.That(ret[2].Value2, Is.Not.Null);
+			Assert.AreEqual(ret[2].Value2!.Name2!, "Child13");
+			Assert.That(ret[2].Value2!.Value1, Is.Null);
+
+			Assert.AreEqual(ret[3].Name3!, "Child24");
+			Assert.That(ret[3].Value2, Is.Not.Null);
+			Assert.That(ret[3].Value2!.Name2!, Is.Null);
+			Assert.That(ret[3].Value2!.Value1, Is.Not.Null);
+			Assert.AreEqual(ret[3].Value2!.Value1!.Name1!, "Some1");
+
+			Assert.AreEqual(ret[4].Name3!, "Child25");
+			Assert.That(ret[4].Value2, Is.Not.Null);
+			Assert.That(ret[4].Value2!.Name2!, Is.Null);
+			Assert.That(ret[4].Value2!.Value1, Is.Not.Null);
+			Assert.That(ret[4].Value2!.Value1!.Name1, Is.Null);
+
+			Assert.AreEqual(ret[5].Name3!, "Child26");
+			Assert.That(ret[5].Value2, Is.Not.Null);
+			Assert.That(ret[5].Value2!.Name2!, Is.Null);
+			Assert.That(ret[5].Value2!.Value1, Is.Null);
+
+			Assert.AreEqual(ret[6].Name3!, "Child27");
+			Assert.That(ret[6].Value2, Is.Null);
+		}
+
+		[Test]
+		public void CrossApply_NullableFields_WithoutIds([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tbl1 = db.CreateLocalTable(new[]
+			{
+				new Table1 { Id1 = 1, Name1 = "Some1" },
+				new Table1 { Id1 = 2, Name1 = null },
+			});
+			using var tbl2 = db.CreateLocalTable(new[]
+			{
+				new Table2 { Id2 = 11, ParentId2 = 1, Name2 = "Child11" },
+				new Table2 { Id2 = 12, ParentId2 = 2, Name2 = "Child12" },
+				new Table2 { Id2 = 13, ParentId2 = null, Name2 = "Child13" },
+				new Table2 { Id2 = 14, ParentId2 = 1, Name2 = null },
+				new Table2 { Id2 = 15, ParentId2 = 2, Name2 = null },
+				new Table2 { Id2 = 16, ParentId2 = null, Name2 = null },
+			});
+			using var tbl3 = db.CreateLocalTable(new[]
+			{
+				new Table3 { Id3 = 21, ParentId3 = 11, Name3 = "Child21" },
+				new Table3 { Id3 = 22, ParentId3 = 12, Name3 = "Child22" },
+				new Table3 { Id3 = 23, ParentId3 = 13, Name3 = "Child23" },
+				new Table3 { Id3 = 24, ParentId3 = 14, Name3 = "Child24" },
+				new Table3 { Id3 = 25, ParentId3 = 15, Name3 = "Child25" },
+				new Table3 { Id3 = 26, ParentId3 = 16, Name3 = "Child26" },
+				new Table3 { Id3 = 27, ParentId3 = null, Name3 = "Child27" },
+			});
+			var ret = db.GetTable<Table3>()
+				.OrderBy(x => x.Id3)
+				.Select(t3 => new
+				{
+					Name3 = t3.Name3,
+					Value2 = db.GetTable<Table2>()
+						.Where(x => x.Id2 == t3.ParentId3)
+						.Select(t2 => new
+						{
+							//first cross apply
+							Value1 = db.GetTable<Table1>()
+								.Where(x => x.Id1 == t2.ParentId2)
+								.Select(t1 => new
+								{
+									//nested cross apply
+									Name1 = t1.Name1,
+								})
+								.FirstOrDefault(),
+							Name2 = t2.Name2,
+						})
+						.FirstOrDefault()
+				})
+				.ToList();
+			Assert.That(ret.Count, Is.EqualTo(7));
+
+			Assert.AreEqual(ret[0].Name3!, "Child21");
+			Assert.That(ret[0].Value2, Is.Not.Null);
+			Assert.AreEqual(ret[0].Value2!.Name2!, "Child11");
+			Assert.That(ret[0].Value2!.Value1, Is.Not.Null);
+			Assert.AreEqual(ret[0].Value2!.Value1!.Name1!, "Some1");
+
+			Assert.AreEqual(ret[1].Name3!, "Child22");
+			Assert.That(ret[1].Value2, Is.Not.Null);
+			Assert.AreEqual(ret[1].Value2!.Name2!, "Child12");
+			Assert.That(ret[1].Value2!.Value1, Is.Not.Null);
+			Assert.That(ret[1].Value2!.Value1!.Name1, Is.Null);
+
+			Assert.AreEqual(ret[2].Name3!, "Child23");
+			Assert.That(ret[2].Value2, Is.Not.Null);
+			Assert.AreEqual(ret[2].Value2!.Name2!, "Child13");
+			Assert.That(ret[2].Value2!.Value1, Is.Null);
+
+			Assert.AreEqual(ret[3].Name3!, "Child24");
+			Assert.That(ret[3].Value2, Is.Not.Null);
+			Assert.That(ret[3].Value2!.Name2!, Is.Null);
+			Assert.That(ret[3].Value2!.Value1, Is.Not.Null);
+			Assert.AreEqual(ret[3].Value2!.Value1!.Name1!, "Some1");
+
+			Assert.AreEqual(ret[4].Name3!, "Child25");
+			Assert.That(ret[4].Value2, Is.Not.Null);
+			Assert.That(ret[4].Value2!.Name2!, Is.Null);
+			Assert.That(ret[4].Value2!.Value1, Is.Not.Null);
+			Assert.That(ret[4].Value2!.Value1!.Name1, Is.Null);
+
+			Assert.AreEqual(ret[5].Name3!, "Child26");
+			Assert.That(ret[5].Value2, Is.Not.Null);
+			Assert.That(ret[5].Value2!.Name2!, Is.Null);
+			Assert.That(ret[5].Value2!.Value1, Is.Null);
+
+			Assert.AreEqual(ret[6].Name3!, "Child27");
+			Assert.That(ret[6].Value2, Is.Null);
 		}
 	}
 }
