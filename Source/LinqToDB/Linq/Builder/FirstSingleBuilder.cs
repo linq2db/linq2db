@@ -269,10 +269,7 @@ namespace LinqToDB.Linq.Builder
 					_checkNullIndex = q.DefaultIfEmpty(-1).First();
 
 					if (_checkNullIndex < 0)
-					{
-						_checkNullIndex = SelectQuery.Select.Add(new SqlValue(1));
-						SelectQuery.Select.Columns[_checkNullIndex].RawAlias = "is_empty";
-					}
+						_checkNullIndex = SelectQuery.Select.AddNew(new SqlValue(1), "is_empty");
 
 					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
 				}
