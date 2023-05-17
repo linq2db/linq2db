@@ -149,7 +149,9 @@ namespace Tests.Linq
 			Issue4031_Execute<Issue4031Case03>(context);
 		}
 
-		// unsuported case: two properties with same name (Id), which requires heavy EntityDescriptor refactoring (at least)
+		// unsuported case:
+		// we prefer member declared with "new" over interface implementation member for backward compatibility
+		// (see https://github.com/linq2db/linq2db/issues/4113)
 		[Test, ActiveIssue]
 		public void Issue4031_Case04([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
