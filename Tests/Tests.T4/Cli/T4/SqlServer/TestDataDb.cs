@@ -91,6 +91,16 @@ namespace Cli.T4.SqlServer
 		public ITable<ParentView>               ParentViews              => this.GetTable<ParentView>();
 
 		#region Table Functions
+		#region SchemaTableFunction
+		private static readonly MethodInfo _schemaTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.SchemaTableFunction(default));
+
+		[Sql.TableFunction("SchemaTableFunction", Schema = "TestSchema")]
+		public ITable<Parent> SchemaTableFunction(int? id)
+		{
+			return this.GetTable<Parent>(this, _schemaTableFunction, id);
+		}
+		#endregion
+
 		#region GetParentById
 		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
 

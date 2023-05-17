@@ -8,7 +8,10 @@
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,6 +34,17 @@ namespace Cli.Fluent.SqlServer
 			{
 				_dataContext = dataContext;
 			}
+
+			#region Table Functions
+			#region SchemaTableFunction
+			private static readonly MethodInfo _schemaTableFunction = MemberHelper.MethodOf<DataContext>(ctx => ctx.SchemaTableFunction(default));
+
+			public IQueryable<Parent> SchemaTableFunction(int? id)
+			{
+				return _dataContext.GetTable<Parent>(this, _schemaTableFunction, id);
+			}
+			#endregion
+			#endregion
 		}
 
 		public class SameTableName
