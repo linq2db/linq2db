@@ -20,7 +20,7 @@ namespace Cli.NoMetadata.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C007182
+		/// SYS_C007192
 		/// </summary>
 		public TTestUser User { get; set; } = null!;
 		#endregion
