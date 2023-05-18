@@ -1171,6 +1171,11 @@ namespace Cli.Fluent.SqlServer
 
 			builder.HasAttribute<TestDataDB>(ctx => ctx.Issue1921(), new Sql.TableFunctionAttribute("Issue1921"));
 
+			builder.HasAttribute<TestSchemaSchema.DataContext>(ctx => ctx.SchemaTableFunction(default(int?)), new Sql.TableFunctionAttribute("SchemaTableFunction")
+			{
+				Schema = "TestSchema"
+			});
+
 			builder.Build();
 		}
 		public static MappingSchema ContextSchema { get; } = new MappingSchema();

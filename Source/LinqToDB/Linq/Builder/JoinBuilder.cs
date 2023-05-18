@@ -134,7 +134,7 @@ namespace LinqToDB.Linq.Builder
 					buildInfo.Parent, selector, context, inner, methodCall.Arguments[1], outerKeyLambda, innerKeyLambda);
 			}
 
-			return new JoinContext(buildInfo.Parent, selector, context, innerContext)
+			return new AllJoinsLinqBuilder.JoinContext(buildInfo.Parent, selector, context, innerContext)
 #if DEBUG
 			{
 				Debug_MethodCall = methodCall
@@ -266,19 +266,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		internal class JoinContext : SelectContext
-		{
-			public JoinContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext outerContext, IBuildContext innerContext)
-				: base(parent, lambda, outerContext, innerContext)
-			{
-			}
-
-			public override void CompleteColumns()
-			{
-			}
-		}
-
-		internal sealed class GroupJoinContext : JoinContext
+		internal sealed class GroupJoinContext : SelectContext
 		{
 			public GroupJoinContext(
 				IBuildContext?           parent,
