@@ -905,7 +905,7 @@ namespace Cli.Fluent.Oracle
 
 		#region TTestUserContract Associations
 		/// <summary>
-		/// SYS_C007192
+		/// SYS_C007182
 		/// </summary>
 		public static TTestUser User(this TTestUserContract obj, IDataContext db)
 		{
@@ -915,7 +915,7 @@ namespace Cli.Fluent.Oracle
 
 		#region TTestUser Associations
 		/// <summary>
-		/// SYS_C007192 backreference
+		/// SYS_C007182 backreference
 		/// </summary>
 		public static IQueryable<TTestUserContract> TTestUserContracts(this TTestUser obj, IDataContext db)
 		{
@@ -1061,7 +1061,6 @@ namespace Cli.Fluent.Oracle
 					Direction = ParameterDirection.InputOutput
 				}
 			};
-			var ret = dataConnection.ExecuteProc("ALLOUTPUTPARAMETERS", parameters);
 			id = Converter.ChangeTypeTo<decimal?>(parameters[0].Value);
 			bigintdatatype = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 			numericdatatype = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
@@ -1089,7 +1088,7 @@ namespace Cli.Fluent.Oracle
 			bfiledatatype = Converter.ChangeTypeTo<byte[]?>(parameters[24].Value);
 			guiddatatype = Converter.ChangeTypeTo<byte[]?>(parameters[25].Value);
 			xmldatatype = Converter.ChangeTypeTo<object?>(parameters[26].Value);
-			return ret;
+			return dataConnection.ExecuteProc("ALLOUTPUTPARAMETERS", parameters);
 		}
 
 		public static async Task<AlloutputparametersResults> AlloutputparametersAsync(this TestDataDB dataConnection, decimal? id, decimal? bigintdatatype, decimal? numericdatatype, decimal? bitdatatype, decimal? smallintdatatype, decimal? decimaldatatype, decimal? smallmoneydatatype, decimal? intdatatype, decimal? tinyintdatatype, decimal? moneydatatype, double? floatdatatype, float? realdatatype, DateTime? datetimedatatype, DateTime? datetime2Datatype, DateTimeOffset? datetimeoffsetdatatype, DateTimeOffset? localzonedatatype, string? chardatatype, string? char20Datatype, string? varchardatatype, string? textdatatype, string? nchardatatype, string? nvarchardatatype, string? ntextdatatype, byte[]? binarydatatype, byte[]? bfiledatatype, byte[]? guiddatatype, object? xmldatatype, CancellationToken cancellationToken = default)
@@ -1306,12 +1305,11 @@ namespace Cli.Fluent.Oracle
 					Direction = ParameterDirection.InputOutput
 				}
 			};
-			var ret = dataConnection.ExecuteProc("ARRAYTEST", parameters);
 			poutputintarray = Converter.ChangeTypeTo<object?>(parameters[1].Value);
 			pinputoutputintarray = Converter.ChangeTypeTo<object?>(parameters[2].Value);
 			poutputstrarray = Converter.ChangeTypeTo<object?>(parameters[4].Value);
 			pinputoutputstrarray = Converter.ChangeTypeTo<object?>(parameters[5].Value);
-			return ret;
+			return dataConnection.ExecuteProc("ARRAYTEST", parameters);
 		}
 
 		public static async Task<ArraytestResults> ArraytestAsync(this TestDataDB dataConnection, object? pintarray, object? poutputintarray, object? pinputoutputintarray, object? pstrarray, object? poutputstrarray, object? pinputoutputstrarray, CancellationToken cancellationToken = default)
@@ -1373,10 +1371,9 @@ namespace Cli.Fluent.Oracle
 					Direction = ParameterDirection.InputOutput
 				}
 			};
-			var ret = dataConnection.ExecuteProc("OUTREFENUMTEST", parameters);
 			poutputstr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
 			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
-			return ret;
+			return dataConnection.ExecuteProc("OUTREFENUMTEST", parameters);
 		}
 
 		public static async Task<OutrefenumtestResults> OutrefenumtestAsync(this TestDataDB dataConnection, string? pstr, string? poutputstr, string? pinputoutputstr, CancellationToken cancellationToken = default)
@@ -1439,12 +1436,11 @@ namespace Cli.Fluent.Oracle
 					Direction = ParameterDirection.InputOutput
 				}
 			};
-			var ret = dataConnection.ExecuteProc("OUTREFTEST", parameters);
 			poutputid = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 			pinputoutputid = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
 			poutputstr = Converter.ChangeTypeTo<string?>(parameters[4].Value);
 			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
-			return ret;
+			return dataConnection.ExecuteProc("OUTREFTEST", parameters);
 		}
 
 		public static async Task<OutreftestResults> OutreftestAsync(this TestDataDB dataConnection, decimal? pid, decimal? poutputid, decimal? pinputoutputid, string? pstr, string? poutputstr, string? pinputoutputstr, CancellationToken cancellationToken = default)
@@ -1537,9 +1533,8 @@ namespace Cli.Fluent.Oracle
 					Size = 22
 				}
 			};
-			var ret = dataConnection.ExecuteProc("PERSON_INSERT_OUTPUTPARAMETER", parameters);
 			ppersonid = Converter.ChangeTypeTo<decimal?>(parameters[4].Value);
-			return ret;
+			return dataConnection.ExecuteProc("PERSON_INSERT_OUTPUTPARAMETER", parameters);
 		}
 
 		public static async Task<PersonInsertOutputparameterResults> PersonInsertOutputparameterAsync(this TestDataDB dataConnection, string? pfirstname, string? plastname, string? pmiddlename, string? pgender, decimal? ppersonid, CancellationToken cancellationToken = default)
@@ -1619,10 +1614,9 @@ namespace Cli.Fluent.Oracle
 					Direction = ParameterDirection.Output
 				}
 			};
-			var ret = dataConnection.QueryProc<ResultsettestResult>("RESULTSETTEST", parameters).ToList();
 			mr = Converter.ChangeTypeTo<OracleRefCursor?>(parameters[0].Value);
 			sr = Converter.ChangeTypeTo<OracleRefCursor?>(parameters[1].Value);
-			return ret;
+			return dataConnection.QueryProc<ResultsettestResult>("RESULTSETTEST", parameters).ToList();
 		}
 
 		public static async Task<ResultsettestResults> ResultsettestAsync(this TestDataDB dataConnection, OracleRefCursor? mr, OracleRefCursor? sr, CancellationToken cancellationToken = default)
@@ -1670,9 +1664,8 @@ namespace Cli.Fluent.Oracle
 					Direction = ParameterDirection.Output
 				}
 			};
-			var ret = dataConnection.ExecuteProc("SCALARARRAY", parameters);
 			poutputintarray = Converter.ChangeTypeTo<object?>(parameters[0].Value);
-			return ret;
+			return dataConnection.ExecuteProc("SCALARARRAY", parameters);
 		}
 
 		public static async Task<ScalararrayResults> ScalararrayAsync(this TestDataDB dataConnection, object? poutputintarray, CancellationToken cancellationToken = default)
@@ -1713,10 +1706,9 @@ namespace Cli.Fluent.Oracle
 					Direction = ParameterDirection.Output
 				}
 			};
-			var ret = dataConnection.ExecuteProc("SCALAR_OUTPUTPARAMETER", parameters);
 			poutputint = Converter.ChangeTypeTo<int?>(parameters[0].Value);
 			poutputstring = Converter.ChangeTypeTo<string?>(parameters[1].Value);
-			return ret;
+			return dataConnection.ExecuteProc("SCALAR_OUTPUTPARAMETER", parameters);
 		}
 
 		public static async Task<ScalarOutputparameterResults> ScalarOutputparameterAsync(this TestDataDB dataConnection, int? poutputint, string? poutputstring, CancellationToken cancellationToken = default)
@@ -1764,9 +1756,8 @@ namespace Cli.Fluent.Oracle
 					Size = 22
 				}
 			};
-			var ret = dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			return ret;
+			return dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
 		}
 
 		public static async Task<TestProcedureResults> TestProcedureAsync(this TestDataDB dataConnection, decimal? i, decimal? o, CancellationToken cancellationToken = default)
@@ -1825,9 +1816,8 @@ namespace Cli.Fluent.Oracle
 					Size = 22
 				}
 			};
-			var ret = dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			return ret;
+			return dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 		}
 
 		public static async Task<TestProcedureResults1> TestPackage1TestProcedureAsync(this TestDataDB dataConnection, decimal? i, decimal? o, CancellationToken cancellationToken = default)
@@ -1874,9 +1864,8 @@ namespace Cli.Fluent.Oracle
 					Size = 22
 				}
 			};
-			var ret = dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			return ret;
+			return dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 		}
 
 		public static async Task<TestProcedureResults2> TestPackage2TestProcedureAsync(this TestDataDB dataConnection, decimal? i, decimal? o, CancellationToken cancellationToken = default)

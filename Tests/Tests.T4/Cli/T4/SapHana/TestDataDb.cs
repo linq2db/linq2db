@@ -345,10 +345,9 @@ namespace Cli.T4.SapHana
 					Size = 50
 				}
 			};
-			var ret = dataConnection.ExecuteProc("\"TESTDB\".\"OutRefEnumTest\"", parameters);
 			outputstr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
 			inputoutputstr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
-			return ret;
+			return dataConnection.ExecuteProc("\"TESTDB\".\"OutRefEnumTest\"", parameters);
 		}
 		#endregion
 
@@ -386,12 +385,11 @@ namespace Cli.T4.SapHana
 					Size = 50
 				}
 			};
-			var ret = dataConnection.ExecuteProc("\"TESTDB\".\"OutRefTest\"", parameters);
 			outputid = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			inputoutputid = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 			outputstr = Converter.ChangeTypeTo<string?>(parameters[4].Value);
 			inputoutputstr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
-			return ret;
+			return dataConnection.ExecuteProc("\"TESTDB\".\"OutRefTest\"", parameters);
 		}
 		#endregion
 
@@ -507,9 +505,8 @@ namespace Cli.T4.SapHana
 					Size = 10
 				}
 			};
-			var ret = dataConnection.ExecuteProc("\"TESTDB\".\"Person_Insert_OutputParameter\"", parameters);
 			personid = Converter.ChangeTypeTo<int?>(parameters[4].Value);
-			return ret;
+			return dataConnection.ExecuteProc("\"TESTDB\".\"Person_Insert_OutputParameter\"", parameters);
 		}
 		#endregion
 

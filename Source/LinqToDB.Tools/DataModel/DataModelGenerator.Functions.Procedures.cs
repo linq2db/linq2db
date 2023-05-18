@@ -146,16 +146,17 @@ namespace LinqToDB.DataModel
 			// generate ToList materialization call or mark method async in two cases:
 			// - when return type of mapping is List<T>
 			// - when procedure has non-input parameters
-			var hasReturnParameters = storedProcedure.Return != null || storedProcedure.Parameters.Any(p => p.Parameter.Direction != CodeParameterDirection.In);
-			var isQueryProc         = storedProcedure.Results.Count == 1 && (storedProcedure.Results[0].Entity != null || storedProcedure.Results[0].CustomTable != null);
-			var generateToList      = isQueryProc && (hasReturnParameters || context.Options.GenerateProcedureResultAsList);
+			var toListRequired        = context.Options.GenerateProcedureResultAsList && storedProcedure.Results.Count == 1 && (storedProcedure.Results[0].Entity != null || storedProcedure.Results[0].CustomTable != null);
+			var toListOrAsyncRequired = toListRequired
+				|| storedProcedure.Return != null
+				|| storedProcedure.Parameters.Any(p => p.Parameter.Direction != CodeParameterDirection.In);
 
 			// declare mapping method
 			var method = context.DefineMethod(
 				methodsGroup,
 				storedProcedure.Method,
-				async: async,
-				withAwait: async && (generateToList || hasReturnParameters));
+				async,
+				async && toListOrAsyncRequired);
 
 			// declare data context parameter (extension `this` parameter)
 			var ctxParam = context.AST.Parameter(
@@ -259,7 +260,6 @@ namespace LinqToDB.DataModel
 			ICodeExpression? returnValue = null;
 
 			IType returnType;
-			var resultVarSet = false;
 
 			if (storedProcedure.Results.Count == 0 || (storedProcedure.Results.Count == 1 && storedProcedure.Results[0].CustomTable == null && storedProcedure.Results[0].Entity == null))
 			{
@@ -286,7 +286,6 @@ namespace LinqToDB.DataModel
 
 					if (asyncResult != null)
 					{
-						resultVarSet = true;
 						var rowCountVar = context.AST.Variable(
 							context.AST.Name(DataModelConstants.STORED_PROCEDURE_RESULT_VARIABLE),
 							WellKnownTypes.System.Int32,
@@ -410,11 +409,10 @@ namespace LinqToDB.DataModel
 						queryProcParameters);
 				}
 
-				if (generateToList)
+				if (toListOrAsyncRequired)
 				{
 					if (async)
 					{
-						resultVarSet = true;
 						var listVar = context.AST.Variable(
 							context.AST.Name(DataModelConstants.STORED_PROCEDURE_RESULT_VARIABLE),
 							WellKnownTypes.System.Collections.Generic.List(returnElementType!),
@@ -449,7 +447,7 @@ namespace LinqToDB.DataModel
 			if (parameterRebinds?.Length > 0)
 			{
 				var result = returnValue;
-				if (!resultVarSet)
+				if (toListRequired)
 				{
 					// save API call to variable
 					var callProcVar = context.AST.Variable(
@@ -484,6 +482,7 @@ namespace LinqToDB.DataModel
 					body.Append(context.AST.Return(context.AST.New(resultClassBuilder.Type.Type, Array<ICodeExpression>.Empty, initializers)));
 
 					returnType = resultClassBuilder.Type.Type;
+
 				}
 				else
 				{

@@ -397,10 +397,9 @@ namespace Cli.NoMetadata.SapHana
 					Size = 50
 				}
 			};
-			var ret = dataConnection.ExecuteProc("\"OutRefEnumTest\"", parameters);
 			outputstr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
 			inputoutputstr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
-			return ret;
+			return dataConnection.ExecuteProc("\"OutRefEnumTest\"", parameters);
 		}
 
 		public static async Task<OutRefEnumTestResults> OutRefEnumTestAsync(this TestDataDB dataConnection, string? str, string? outputstr, string? inputoutputstr, CancellationToken cancellationToken = default)
@@ -473,12 +472,11 @@ namespace Cli.NoMetadata.SapHana
 					Size = 50
 				}
 			};
-			var ret = dataConnection.ExecuteProc("\"OutRefTest\"", parameters);
 			outputid = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			inputoutputid = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 			outputstr = Converter.ChangeTypeTo<string?>(parameters[4].Value);
 			inputoutputstr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
-			return ret;
+			return dataConnection.ExecuteProc("\"OutRefTest\"", parameters);
 		}
 
 		public static async Task<OutRefTestResults> OutRefTestAsync(this TestDataDB dataConnection, int? id, int? outputid, int? inputoutputid, string? str, string? outputstr, string? inputoutputstr, CancellationToken cancellationToken = default)
@@ -704,9 +702,8 @@ namespace Cli.NoMetadata.SapHana
 					Size = 10
 				}
 			};
-			var ret = dataConnection.ExecuteProc("\"Person_Insert_OutputParameter\"", parameters);
 			personid = Converter.ChangeTypeTo<int?>(parameters[4].Value);
-			return ret;
+			return dataConnection.ExecuteProc("\"Person_Insert_OutputParameter\"", parameters);
 		}
 
 		public static async Task<PersonInsertOutputParameterResults> PersonInsertOutputParameterAsync(this TestDataDB dataConnection, string? firstname, string? lastname, string? middlename, char? gender, int? personid, CancellationToken cancellationToken = default)
