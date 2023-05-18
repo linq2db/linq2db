@@ -191,8 +191,9 @@ namespace Cli.T4.Sybase
 					Size = 10
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[dbo].[AddIssue792Record]", parameters);
 			returnValue = Converter.ChangeTypeTo<int?>(parameters[0].Value);
-			return dataConnection.ExecuteProc("[dbo].[AddIssue792Record]", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -207,8 +208,9 @@ namespace Cli.T4.Sybase
 					Size = 10
 				}
 			};
+			var ret = dataConnection.QueryProc<PersonSelectAllResult>("[dbo].[Person_SelectAll]", parameters).ToList();
 			returnValue = Converter.ChangeTypeTo<int?>(parameters[0].Value);
-			return dataConnection.QueryProc<PersonSelectAllResult>("[dbo].[Person_SelectAll]", parameters).ToList();
+			return ret;
 		}
 
 		public partial class PersonSelectAllResult

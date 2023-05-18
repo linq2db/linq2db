@@ -290,11 +290,12 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
-			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-			return dataConnection.QueryProc(dataReader => new TestProcedureResult()
+			var ret = dataConnection.QueryProc(dataReader => new TestProcedureResult()
 			{
 				Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema)
 			}, "[TestSchema].[TestProcedure]", parameters).ToList();
+			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
+			return ret;
 		}
 
 		public static async Task<TestProcedureResults> TestProcedureAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
