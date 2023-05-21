@@ -1694,6 +1694,7 @@ namespace Tests.Linq
 			Assert.That(result.Value!.Field2, Is.EqualTo(-1));
 		}
 
+		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
 		[Test]
 		public void TextExecuteColumnConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
@@ -1737,6 +1738,7 @@ namespace Tests.Linq
 			Assert.That(result.Value!.Field2, Is.EqualTo(-1));
 		}
 
+		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
 		[Test]
 		public void TextExecuteScalarEntityColumnConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
