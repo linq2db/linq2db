@@ -1659,6 +1659,7 @@ namespace Tests.Linq
 		public void TextExecuteScalar([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
 		{
 			var ms = new MappingSchema();
+			ms.SetScalarType(typeof(ValueObject));
 			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
 
 			using var db = GetDataConnection(context, ms);
