@@ -5,6 +5,7 @@
 <#@ include file="..\Shared.ttinclude"                                              once="true" #>
 <#
 	NamespaceName = "PostreSQL11DataContext";
+	NormalizeProcedureColumnName = false;
 
 	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.11"));
 

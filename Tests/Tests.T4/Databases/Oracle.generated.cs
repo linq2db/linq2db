@@ -79,6 +79,13 @@ namespace OracleDataContext
 			InitMappingSchema();
 		}
 
+		public XeDB(DataOptions<XeDB> options)
+			: base(options.Options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 
@@ -87,10 +94,10 @@ namespace OracleDataContext
 		#region TestPACKAGE1TestTableFunction
 
 		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult> TestPACKAGE1TestTableFunction(decimal? I)
+		public ITable<TestTableFUNCTIONResult> TestPACKAGE1TestTableFunction(decimal? i)
 		{
 			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+				i);
 		}
 
 		public partial class TestTableFUNCTIONResult
@@ -103,10 +110,10 @@ namespace OracleDataContext
 		#region TestPACKAGE2TestTableFunction
 
 		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult0> TestPACKAGE2TestTableFunction(decimal? I)
+		public ITable<TestTableFUNCTIONResult0> TestPACKAGE2TestTableFunction(decimal? i)
 		{
 			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+				i);
 		}
 
 		public partial class TestTableFUNCTIONResult0
@@ -119,10 +126,10 @@ namespace OracleDataContext
 		#region TestTableFunction
 
 		[Sql.TableFunction(Schema="MANAGED", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult1> TestTableFunction(decimal? I)
+		public ITable<TestTableFUNCTIONResult1> TestTableFunction(decimal? i)
 		{
 			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+				i);
 		}
 
 		public partial class TestTableFUNCTIONResult1
@@ -493,7 +500,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C007123_BackReference (MANAGED.t_test_user_contract)
+		/// SYS_C007192_BackReference (MANAGED.t_test_user_contract)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -512,7 +519,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C007123 (MANAGED.t_test_user)
+		/// SYS_C007192 (MANAGED.t_test_user)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;
@@ -524,11 +531,11 @@ namespace OracleDataContext
 	{
 		#region TestPACKAGE1TestProcedure
 
-		public static int TestPACKAGE1TestProcedure(this XeDB dataConnection, decimal? I, out decimal? O)
+		public static int TestPACKAGE1TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Decimal)
+				new DataParameter("I", i, LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				},
@@ -541,7 +548,7 @@ namespace OracleDataContext
 
 			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 
-			O = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -550,11 +557,11 @@ namespace OracleDataContext
 
 		#region TestPACKAGE2TestProcedure
 
-		public static int TestPACKAGE2TestProcedure(this XeDB dataConnection, decimal? I, out decimal? O)
+		public static int TestPACKAGE2TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Decimal)
+				new DataParameter("I", i, LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				},
@@ -567,7 +574,7 @@ namespace OracleDataContext
 
 			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 
-			O = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -585,16 +592,16 @@ namespace OracleDataContext
 
 		#region OUTREFENUMTEST
 
-		public static int OUTREFENUMTEST(this XeDB dataConnection, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
+		public static int OUTREFENUMTEST(this XeDB dataConnection, string? pSTR, out string? pOUTPUTSTR, ref string? pINPUTOUTPUTSTR)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
+				new DataParameter("PSTR",            pSTR,            LinqToDB.DataType.NVarChar),
 				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.Output
 				},
-				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				new DataParameter("PINPUTOUTPUTSTR", pINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.InputOutput
 				}
@@ -602,8 +609,8 @@ namespace OracleDataContext
 
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
 
-			POUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
-			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+			pOUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			pINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -612,11 +619,11 @@ namespace OracleDataContext
 
 		#region OUTREFTEST
 
-		public static int OUTREFTEST(this XeDB dataConnection, decimal? PID, out decimal? POUTPUTID, ref decimal? PINPUTOUTPUTID, string? PSTR, out string? POUTPUTSTR, ref string? PINPUTOUTPUTSTR)
+		public static int OUTREFTEST(this XeDB dataConnection, decimal? pID, out decimal? pOUTPUTID, ref decimal? pINPUTOUTPUTID, string? pSTR, out string? pOUTPUTSTR, ref string? pINPUTOUTPUTSTR)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PID",             PID,             LinqToDB.DataType.Decimal)
+				new DataParameter("PID",             pID,             LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				},
@@ -625,17 +632,17 @@ namespace OracleDataContext
 					Direction = ParameterDirection.Output,
 					Size      = 22
 				},
-				new DataParameter("PINPUTOUTPUTID",  PINPUTOUTPUTID,  LinqToDB.DataType.Decimal)
+				new DataParameter("PINPUTOUTPUTID",  pINPUTOUTPUTID,  LinqToDB.DataType.Decimal)
 				{
 					Direction = ParameterDirection.InputOutput,
 					Size      = 22
 				},
-				new DataParameter("PSTR",            PSTR,            LinqToDB.DataType.NVarChar),
+				new DataParameter("PSTR",            pSTR,            LinqToDB.DataType.NVarChar),
 				new DataParameter("POUTPUTSTR", null,      LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.Output
 				},
-				new DataParameter("PINPUTOUTPUTSTR", PINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
+				new DataParameter("PINPUTOUTPUTSTR", pINPUTOUTPUTSTR, LinqToDB.DataType.NVarChar)
 				{
 					Direction = ParameterDirection.InputOutput
 				}
@@ -643,10 +650,10 @@ namespace OracleDataContext
 
 			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST", parameters);
 
-			POUTPUTID       = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			PINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
-			POUTPUTSTR      = Converter.ChangeTypeTo<string?> (parameters[4].Value);
-			PINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?> (parameters[5].Value);
+			pOUTPUTID       = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			pINPUTOUTPUTID  = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
+			pOUTPUTSTR      = Converter.ChangeTypeTo<string?> (parameters[4].Value);
+			pINPUTOUTPUTSTR = Converter.ChangeTypeTo<string?> (parameters[5].Value);
 
 			return ret;
 		}
@@ -655,11 +662,11 @@ namespace OracleDataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this XeDB dataConnection, decimal? PPERSONID)
+		public static int PersonDelete(this XeDB dataConnection, decimal? pPERSONID)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PPERSONID", PPERSONID, LinqToDB.DataType.Decimal)
+				new DataParameter("PPERSONID", pPERSONID, LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				}
@@ -672,18 +679,18 @@ namespace OracleDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this XeDB dataConnection, decimal? PPERSONID, string? PFIRSTNAME, string? PLASTNAME, string? PMIDDLENAME, string? PGENDER)
+		public static int PersonUpdate(this XeDB dataConnection, decimal? pPERSONID, string? pFIRSTNAME, string? pLASTNAME, string? pMIDDLENAME, string? pGENDER)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PPERSONID",   PPERSONID,   LinqToDB.DataType.Decimal)
+				new DataParameter("PPERSONID",   pPERSONID,   LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				},
-				new DataParameter("PFIRSTNAME",  PFIRSTNAME,  LinqToDB.DataType.NVarChar),
-				new DataParameter("PLASTNAME",   PLASTNAME,   LinqToDB.DataType.NVarChar),
-				new DataParameter("PMIDDLENAME", PMIDDLENAME, LinqToDB.DataType.NVarChar),
-				new DataParameter("PGENDER",     PGENDER,     LinqToDB.DataType.Char)
+				new DataParameter("PFIRSTNAME",  pFIRSTNAME,  LinqToDB.DataType.NVarChar),
+				new DataParameter("PLASTNAME",   pLASTNAME,   LinqToDB.DataType.NVarChar),
+				new DataParameter("PMIDDLENAME", pMIDDLENAME, LinqToDB.DataType.NVarChar),
+				new DataParameter("PGENDER",     pGENDER,     LinqToDB.DataType.Char)
 			};
 
 			return dataConnection.ExecuteProc("MANAGED.PERSON_UPDATE", parameters);
@@ -693,7 +700,7 @@ namespace OracleDataContext
 
 		#region RESULTSETTEST
 
-		public static IEnumerable<RESULTSETTESTResult> RESULTSETTEST(this XeDB dataConnection, out object? MR, out object? SR)
+		public static IEnumerable<RESULTSETTESTResult> RESULTSETTEST(this XeDB dataConnection, out object? mR, out object? sR)
 		{
 			var parameters = new []
 			{
@@ -709,8 +716,8 @@ namespace OracleDataContext
 
 			var ret = dataConnection.QueryProc<RESULTSETTESTResult>("MANAGED.RESULTSETTEST", parameters).ToList();
 
-			MR = Converter.ChangeTypeTo<object?>(parameters[0].Value);
-			SR = Converter.ChangeTypeTo<object?>(parameters[1].Value);
+			mR = Converter.ChangeTypeTo<object?>(parameters[0].Value);
+			sR = Converter.ChangeTypeTo<object?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -724,11 +731,11 @@ namespace OracleDataContext
 
 		#region TestProcedure
 
-		public static int TestProcedure(this XeDB dataConnection, decimal? I, out decimal? O)
+		public static int TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Decimal)
+				new DataParameter("I", i, LinqToDB.DataType.Decimal)
 				{
 					Size = 22
 				},
@@ -741,7 +748,7 @@ namespace OracleDataContext
 
 			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PROCEDURE", parameters);
 
-			O = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 
 			return ret;
 		}
@@ -754,7 +761,7 @@ namespace OracleDataContext
 		#region TestPACKAGE1TestFunction
 
 		[Sql.Function(Name="MANAGED.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly=true)]
-		public static decimal? TestPACKAGE1TestFunction(decimal? I)
+		public static decimal? TestPACKAGE1TestFunction(decimal? i)
 		{
 			throw new InvalidOperationException();
 		}
@@ -764,7 +771,7 @@ namespace OracleDataContext
 		#region TestPACKAGE2TestFunction
 
 		[Sql.Function(Name="MANAGED.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly=true)]
-		public static decimal? TestPACKAGE2TestFunction(decimal? I)
+		public static decimal? TestPACKAGE2TestFunction(decimal? i)
 		{
 			throw new InvalidOperationException();
 		}
@@ -784,7 +791,7 @@ namespace OracleDataContext
 		#region PatientSelectbyname
 
 		[Sql.Function(Name="MANAGED.PATIENT_SELECTBYNAME", ServerSideOnly=true)]
-		public static object? PatientSelectbyname(string? PFIRSTNAME, string? PLASTNAME)
+		public static object? PatientSelectbyname(string? pFIRSTNAME, string? pLASTNAME)
 		{
 			throw new InvalidOperationException();
 		}
@@ -794,7 +801,7 @@ namespace OracleDataContext
 		#region PersonInsert
 
 		[Sql.Function(Name="MANAGED.PERSON_INSERT", ServerSideOnly=true)]
-		public static object? PersonInsert(string? PFIRSTNAME, string? PLASTNAME, string? PMIDDLENAME, string? PGENDER)
+		public static object? PersonInsert(string? pFIRSTNAME, string? pLASTNAME, string? pMIDDLENAME, string? pGENDER)
 		{
 			throw new InvalidOperationException();
 		}
@@ -814,7 +821,7 @@ namespace OracleDataContext
 		#region PersonSelectallbygender
 
 		[Sql.Function(Name="MANAGED.PERSON_SELECTALLBYGENDER", ServerSideOnly=true)]
-		public static object? PersonSelectallbygender(string? PGENDER)
+		public static object? PersonSelectallbygender(string? pGENDER)
 		{
 			throw new InvalidOperationException();
 		}
@@ -824,7 +831,7 @@ namespace OracleDataContext
 		#region PersonSelectbykey
 
 		[Sql.Function(Name="MANAGED.PERSON_SELECTBYKEY", ServerSideOnly=true)]
-		public static object? PersonSelectbykey(decimal? PID)
+		public static object? PersonSelectbykey(decimal? pID)
 		{
 			throw new InvalidOperationException();
 		}
@@ -834,7 +841,7 @@ namespace OracleDataContext
 		#region PersonSelectbyname
 
 		[Sql.Function(Name="MANAGED.PERSON_SELECTBYNAME", ServerSideOnly=true)]
-		public static object? PersonSelectbyname(string? PFIRSTNAME, string? PLASTNAME)
+		public static object? PersonSelectbyname(string? pFIRSTNAME, string? pLASTNAME)
 		{
 			throw new InvalidOperationException();
 		}
@@ -844,7 +851,7 @@ namespace OracleDataContext
 		#region PersonSelectlistbyname
 
 		[Sql.Function(Name="MANAGED.PERSON_SELECTLISTBYNAME", ServerSideOnly=true)]
-		public static object? PersonSelectlistbyname(string? PFIRSTNAME, string? PLASTNAME)
+		public static object? PersonSelectlistbyname(string? pFIRSTNAME, string? pLASTNAME)
 		{
 			throw new InvalidOperationException();
 		}
@@ -874,7 +881,7 @@ namespace OracleDataContext
 		#region TestFunction
 
 		[Sql.Function(Name="MANAGED.TEST_FUNCTION", ServerSideOnly=true)]
-		public static decimal? TestFunction(decimal? I)
+		public static decimal? TestFunction(decimal? i)
 		{
 			throw new InvalidOperationException();
 		}

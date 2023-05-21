@@ -64,6 +64,13 @@ namespace Firebird3DataContext
 			InitMappingSchema();
 		}
 
+		public TESTDB30DB(DataOptions<TESTDB30DB> options)
+			: base(options.Options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 
