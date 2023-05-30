@@ -278,7 +278,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			StringBuilder.Remove(pos, 4).Insert(pos, "UPDATE");
 
-			base.BuildUpdateSet(selectQuery, updateClause);
+			BuildUpdateSet(selectQuery, updateClause);
 		}
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -319,7 +319,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				case ConvertType.NameToQueryParameter  :
 				case ConvertType.NameToCommandParameter:
-					return sb.Append('@').Append(value);
+						return sb.Append('@').Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))

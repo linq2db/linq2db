@@ -16,6 +16,7 @@ namespace LinqToDB.SqlProvider
 	using Mapping;
 	using Tools;
 	using SqlQuery;
+	using LinqToDB.DataProvider;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -393,7 +394,6 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-
 		protected static bool HasParameters(ISqlExpression expr)
 		{
 			var hasParameters  = null != expr.Find(QueryElementType.SqlParameter);
@@ -499,7 +499,7 @@ namespace LinqToDB.SqlProvider
 						mappingSchema,
 						dataOptions,
 						subQuery.Where.SearchCondition,
-						new OptimizationContext(context, new AliasesContext(), false),
+						new OptimizationContext(context, new AliasesContext(), false, static () => NoopQueryParametersNormalizer.Instance),
 						false)!;
 
 					var allAnd = true;
@@ -680,7 +680,9 @@ namespace LinqToDB.SqlProvider
 								_                         => false,
 							};
 						}))
+						{
 							continue;
+						}
 
 						// Join should not have ParentSelect, while SubQuery has
 						subQuery.ParentSelect = null;
@@ -693,7 +695,7 @@ namespace LinqToDB.SqlProvider
 							context.mappingSchema,
 							context.dataOptions,
 							subQuery.Where.SearchCondition,
-							new OptimizationContext(context.context, new AliasesContext(), false),
+							new OptimizationContext(context.context, new AliasesContext(), false, static () => NoopQueryParametersNormalizer.Instance),
 							false)!;
 
 						var isCount      = false;
@@ -1639,7 +1641,7 @@ namespace LinqToDB.SqlProvider
 					if (!visitor.Context.MappingSchema.ValueToSqlConverter.CanConvert(_typeWrapper, visitor.Context.DataOptions, value.Value))
 					{
 						// we cannot generate SQL literal, so just convert to parameter
-						var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, "value", value.Value);
+						var param = visitor.Context.OptimizationContext.SuggestDynamicParameter(value.ValueType, value.Value);
 						return param;
 					}
 
@@ -3315,9 +3317,8 @@ namespace LinqToDB.SqlProvider
 			{
 				switch (e.ElementType)
 				{
-					case QueryElementType.SqlField     : ((SqlField)               e).Alias = SetAlias(((SqlField)               e).Alias, maxLen); break;
-					case QueryElementType.SqlParameter : ((SqlParameter)           e).Name  = SetAlias(((SqlParameter)           e).Name,  maxLen); break;
-					case QueryElementType.SqlTable     : ((SqlTable)               e).Alias = SetAlias(((SqlTable)               e).Alias, maxLen); break;
+					case QueryElementType.SqlField     : ((SqlField)      e).Alias = SetAlias(((SqlField)      e).Alias, maxLen); break;
+					case QueryElementType.SqlTable     : ((SqlTable)      e).Alias = SetAlias(((SqlTable)      e).Alias, maxLen); break;
 					case QueryElementType.Column       : ((SqlColumn)     e).Alias = SetAlias(((SqlColumn)     e).Alias, maxLen); break;
 					case QueryElementType.TableSource  : ((SqlTableSource)e).Alias = SetAlias(((SqlTableSource)e).Alias, maxLen); break;
 				}

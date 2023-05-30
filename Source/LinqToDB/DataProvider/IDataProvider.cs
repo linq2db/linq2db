@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider
 {
 	using Common;
 	using Data;
+	using LinqToDB.SqlQuery;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -83,5 +84,18 @@ namespace LinqToDB.DataProvider
 			CancellationToken   cancellationToken)
 		where T: notnull;
 #endif
+
+		/// <summary>
+		/// Returns instance of <see cref="IQueryParametersNormalizer"/>, which implements normalization logic for parameters of single query.
+		/// E.g. it could include:
+		/// <list type="bullet">
+		/// <item>triming too long names</item>
+		/// <item>removing/replacing unsupported characters</item>
+		/// <item>name deduplication for parameters with same name</item>
+		/// </list>.
+		/// For implementation without state it is recommended to return static instance.
+		/// E.g. this could be done for providers with positional parameters that ignore names.
+		/// </summary>
+		IQueryParametersNormalizer GetQueryParameterNormalizer();
 	}
 }

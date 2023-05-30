@@ -176,14 +176,14 @@ namespace LinqToDB.Data
 
 			public sealed class CommandWithParameters
 			{
-				public CommandWithParameters(string command, SqlParameter[] sqlParameters)
+				public CommandWithParameters(string command, IReadOnlyList<SqlParameter> sqlParameters)
 				{
-					Command = command;
+					Command       = command;
 					SqlParameters = sqlParameters;
 				}
 
-				public string              Command       { get; }
-				public SqlParameter[]      SqlParameters { get; }
+				public readonly string                      Command;
+				public readonly IReadOnlyList<SqlParameter> SqlParameters;
 			}
 
 			public sealed class PreparedQuery
@@ -266,11 +266,11 @@ namespace LinqToDB.Data
 
 				for (var i = 0; i < cc; i++)
 				{
-					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent);
+					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent, dataConnection.DataProvider.GetQueryParameterNormalizer);
 					sb.Value.Length = 0;
 
 					sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);
-					commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters().ToArray());
+					commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 					optimizationContext.ClearParameters();
 				}
 
@@ -302,12 +302,12 @@ namespace LinqToDB.Data
 					for (var index = 0; index < pq.Commands.Length; index++)
 					{
 						var command = pq.Commands[index];
-						if (command.SqlParameters.Length == 0)
+						if (command.SqlParameters.Count == 0)
 							continue;
 
-						var parms = new DbParameter[command.SqlParameters.Length];
+						var parms = new DbParameter[command.SqlParameters.Count];
 
-						for (var i = 0; i < command.SqlParameters.Length; i++)
+						for (var i = 0; i < command.SqlParameters.Count; i++)
 						{
 							var sqlp = command.SqlParameters[i];
 
@@ -710,7 +710,7 @@ namespace LinqToDB.Data
 
 				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				base.SetCommand(false);
+				SetCommand(false);
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
@@ -725,7 +725,7 @@ namespace LinqToDB.Data
 
 				await _dataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				base.SetCommand(false);
+				SetCommand(false);
 
 				if (_executionQuery!.PreparedQuery.Commands.Length == 1)
 				{
