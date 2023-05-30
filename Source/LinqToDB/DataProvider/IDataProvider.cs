@@ -89,7 +89,7 @@ namespace LinqToDB.DataProvider
 		/// Returns instance of <see cref="IQueryParametersNormalizer"/>, which implements normalization logic for parameters of single query.
 		/// E.g. it could include:
 		/// <list type="bullet">
-		/// <item>triming too long names</item>
+		/// <item>trimming names that are too long</item>
 		/// <item>removing/replacing unsupported characters</item>
 		/// <item>name deduplication for parameters with same name</item>
 		/// </list>.
