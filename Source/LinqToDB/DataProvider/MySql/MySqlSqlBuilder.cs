@@ -319,7 +319,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				case ConvertType.NameToQueryParameter  :
 				case ConvertType.NameToCommandParameter:
-						return sb.Append('@').Append(value);
+					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToSprocParameter:
 					if(string.IsNullOrEmpty(value))

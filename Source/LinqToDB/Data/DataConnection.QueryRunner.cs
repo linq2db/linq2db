@@ -174,36 +174,11 @@ namespace LinqToDB.Data
 #endif
 			}
 
-			public sealed class CommandWithParameters
-			{
-				public CommandWithParameters(string command, IReadOnlyList<SqlParameter> sqlParameters)
-				{
-					Command       = command;
-					SqlParameters = sqlParameters;
-				}
+			private sealed record CommandWithParameters(string Command, IReadOnlyList<SqlParameter> SqlParameters);
 
-				public readonly string                      Command;
-				public readonly IReadOnlyList<SqlParameter> SqlParameters;
-			}
+			private sealed record PreparedQuery(CommandWithParameters[] Commands, SqlStatement Statement, IReadOnlyCollection<string>? QueryHints);
 
-			public sealed class PreparedQuery
-			{
-				public CommandWithParameters[]      Commands      = null!;
-				public SqlStatement                 Statement     = null!;
-				public IReadOnlyCollection<string>? QueryHints;
-			}
-
-			public sealed class ExecutionPreparedQuery
-			{
-				public ExecutionPreparedQuery(PreparedQuery preparedQuery, DbParameter[]?[] commandsParameters)
-				{
-					PreparedQuery      = preparedQuery;
-					CommandsParameters = commandsParameters;
-				}
-
-				public readonly PreparedQuery         PreparedQuery;
-				public readonly DbParameter[]?[] CommandsParameters;
-			}
+			private sealed record ExecutionPreparedQuery(PreparedQuery PreparedQuery, DbParameter[]?[] CommandsParameters);
 
 			ExecutionPreparedQuery? _executionQuery;
 
@@ -223,12 +198,7 @@ namespace LinqToDB.Data
 			{
 				if (query.Context != null)
 				{
-					return new PreparedQuery
-					{
-						Commands   = (CommandWithParameters[])query.Context,
-						Statement  = query.Statement,
-						QueryHints = dataConnection.GetNextCommandHints(!forGetSqlText),
-					};
+					return new PreparedQuery((CommandWithParameters[])query.Context, query.Statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}
 
 				var sql = query.Statement;
@@ -283,12 +253,7 @@ namespace LinqToDB.Data
 					query.Aliases = null;
 				}
 
-				return new PreparedQuery
-				{
-					Commands   = commands,
-					Statement  = sql,
-					QueryHints = dataConnection.GetNextCommandHints(!forGetSqlText)
-				};
+				return new PreparedQuery(commands, sql, dataConnection.GetNextCommandHints(!forGetSqlText));
 			}
 
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues, bool forGetSqlText)

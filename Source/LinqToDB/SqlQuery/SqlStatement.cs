@@ -35,6 +35,7 @@ namespace LinqToDB.SqlQuery
 		public SqlStatement? ParentStatement { get; set; }
 
 		// TODO: V6: used by tests only -> move to test helpers
+		[Obsolete("API will be removed in future versions")]
 		public SqlParameter[] CollectParameters()
 		{
 			var parametersHash = new HashSet<SqlParameter>();
