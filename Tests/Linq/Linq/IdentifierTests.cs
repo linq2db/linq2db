@@ -40,6 +40,10 @@ namespace Tests.Linq
 			"from",
 			// test _
 			"p_p",
+			// test leading _
+			"_p",
+			// test leading number
+			"1p",
 		};
 
 		[Test]

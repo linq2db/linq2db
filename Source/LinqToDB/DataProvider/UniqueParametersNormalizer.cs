@@ -5,6 +5,17 @@ using LinqToDB.Common.Internal;
 
 namespace LinqToDB.DataProvider
 {
+	/// <summary>
+	/// Parameter name rules, implemented by this policy:
+	/// <list type="bullet">
+	/// <item>duplicate name check is case-insensitive</item>
+	/// <item>max name length: 50 characters</item>
+	/// <item>allowed characters: ASCII digits, ASCII letters, _ (underscore).</item>
+	/// <item>allowed first character: ASCII letter.</item>
+	/// <item>default name if name missing/invalid: "p"</item>
+	/// <item>duplicates resolved by adding "_counter" suffix</item>
+	/// </list>
+	/// </summary>
 	public class UniqueParametersNormalizer : IQueryParametersNormalizer
 	{
 		private HashSet<string>? _usedParameterNames;
@@ -25,7 +36,7 @@ namespace LinqToDB.DataProvider
 
 			for (var i = 0; i < name.Length; i++)
 			{
-				if (!IsValidCharacter(name[i]))
+				if (!(i == 0 ? IsValidFirstCharacter(name[i]) : IsValidCharacter(name[i])))
 				{
 					badIdx = i;
 					break;
@@ -44,7 +55,7 @@ namespace LinqToDB.DataProvider
 					var chr = name[i];
 
 					// add allowed character
-					if (IsValidCharacter(chr))
+					if (sb.Value.Length == 0 ? IsValidFirstCharacter(chr) : IsValidCharacter(chr))
 						sb.Value.Append(chr);
 
 				}
@@ -57,6 +68,17 @@ namespace LinqToDB.DataProvider
 
 			return name;
 		}
+
+		protected virtual bool IsValidFirstCharacter(char chr)
+		{
+#if NET7_0_OR_GREATER
+			return char.IsAsciiLetter(chr);
+#else
+			return chr is >= 'a' and <= 'z'
+				|| chr is >= 'A' and <= 'Z';
+#endif
+		}
+
 		protected virtual bool IsValidCharacter(char chr)
 		{
 #if NET7_0_OR_GREATER
