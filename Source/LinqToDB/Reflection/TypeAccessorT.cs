@@ -112,16 +112,18 @@ namespace LinqToDB.Reflection
 					implementor = implementor.BaseType;
 				}
 
+				var uniqueNames = new HashSet<string>();
 				foreach (var mi in type.GetPublicInstanceValueMembers())
 				{
 					if (mi is PropertyInfo pi && interfaceProperties.TryGetValue((pi.DeclaringType, pi.Name, pi.PropertyType), out var idx))
 						interfacePropertiesList[idx] = null;
 
-					_members.Add(mi);
+					if (uniqueNames.Add(mi.Name))
+						_members.Add(mi);
 				}
 
 				foreach (var pi in interfacePropertiesList)
-					if (pi != null)
+					if (pi != null && uniqueNames.Add(pi.Name))
 						_members.Add(pi);
 			}
 

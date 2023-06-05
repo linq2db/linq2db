@@ -865,7 +865,9 @@ namespace LinqToDB.SqlQuery
 		{
 			if (subQuery.OrderBy.Items.Count > 0)
 			{
-				var filterItems = mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty;
+				var filterItems = mainQuery.Select.IsDistinct
+					|| !mainQuery.GroupBy.IsEmpty
+					|| mainQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
 				foreach (var item in subQuery.OrderBy.Items)
 				{

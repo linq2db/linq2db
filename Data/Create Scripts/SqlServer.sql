@@ -23,6 +23,12 @@ IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TestProcedure'
 	DROP PROCEDURE TestSchema.TestProcedure
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'SchemaTableFunction' AND schema_id = SCHEMA_ID('TestSchema'))
+BEGIN DROP FUNCTION TestSchema.SchemaTableFunction
+END
+GO
+
+
 CREATE TABLE InheritanceParent
 (
 	InheritanceParentId int          NOT NULL CONSTRAINT PK_InheritanceParent PRIMARY KEY CLUSTERED,
@@ -1159,6 +1165,15 @@ AS
 BEGIN
 	SELECT 1
 END
+GO
+
+CREATE FUNCTION TestSchema.SchemaTableFunction(@id int)
+RETURNS TABLE
+AS
+RETURN
+(
+	SELECT * FROM Parent WHERE ParentID = @id
+)
 GO
 
 

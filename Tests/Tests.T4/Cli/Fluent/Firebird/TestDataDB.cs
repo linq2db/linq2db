@@ -1148,8 +1148,9 @@ namespace Cli.Fluent.Firebird
 					Size = 4
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
+			return ret;
 		}
 
 		public static async Task<TestProcedureResults> TestProcedureAsync(this TestDataDB dataConnection, int? i, int? o, CancellationToken cancellationToken = default)
@@ -1196,8 +1197,9 @@ namespace Cli.Fluent.Firebird
 					Size = 4
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+			return ret;
 		}
 
 		public static async Task<TestProcedureResults1> TestPackage1TestProcedureAsync(this TestDataDB dataConnection, int? i, int? o, CancellationToken cancellationToken = default)
@@ -1244,8 +1246,9 @@ namespace Cli.Fluent.Firebird
 					Size = 4
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+			return ret;
 		}
 
 		public static async Task<TestProcedureResults2> TestPackage2TestProcedureAsync(this TestDataDB dataConnection, int? i, int? o, CancellationToken cancellationToken = default)
