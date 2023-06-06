@@ -342,7 +342,7 @@ namespace Tests.Extensions
 
 			db.BeginTransaction();
 
-			var p = DateTime.Now;
+			var p = TestData.DateTime;
 
 			var q =
 				(

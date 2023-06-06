@@ -215,3 +215,17 @@ CREATE TABLE TestMerge2
 	FieldEnumString Nullable(String),
 	FieldEnumNumber Nullable(Int32)
 )  ENGINE = MergeTree() ORDER BY Id PRIMARY KEY Id;
+GO
+
+DROP TABLE IF EXISTS ReplacingMergeTreeTable;
+GO
+
+CREATE TABLE ReplacingMergeTreeTable
+(
+	ID UInt32,
+	TS DateTime
+)
+ENGINE = ReplacingMergeTree(TS)
+PARTITION BY toDate(TS)
+ORDER BY ID;
+GO

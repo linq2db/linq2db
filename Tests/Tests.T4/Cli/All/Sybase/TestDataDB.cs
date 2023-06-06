@@ -667,8 +667,9 @@ namespace Cli.All.Sybase
 					Size = 10
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[AddIssue792Record]", parameters);
 			returnValue = Converter.ChangeTypeTo<int?>(parameters[0].Value);
-			return dataConnection.ExecuteProc("[AddIssue792Record]", parameters);
+			return ret;
 		}
 
 		public static async Task<AddIssue792RecordResults> AddIssue792RecordAsync(this TestDataDB dataConnection, CancellationToken cancellationToken = default)
@@ -709,8 +710,9 @@ namespace Cli.All.Sybase
 					Size = 10
 				}
 			};
+			var ret = dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]", parameters).ToList();
 			returnValue = Converter.ChangeTypeTo<int?>(parameters[0].Value);
-			return dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<PersonSelectAllResults> PersonSelectAllAsync(this TestDataDB dataConnection, CancellationToken cancellationToken = default)

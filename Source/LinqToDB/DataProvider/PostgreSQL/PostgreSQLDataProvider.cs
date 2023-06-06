@@ -231,14 +231,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// set DateTime.Kind to expected value for timestamp and timestamptz parameters to prevent npgsql 6.0.0 complains
 				else if (value is DateTime dt)
 				{
-					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
-					if (dt.Kind == DateTimeKind.Utc
-						&& (dataType.DataType == DataType.DateTime2 || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp))
-						value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
 					// timestamptz should have UTC Kind
-					else if (dt.Kind != DateTimeKind.Utc
-						&& (dataType.DataType == DataType.DateTimeOffset || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
-						value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+					if ((dataType.DataType == DataType.DateTimeOffset || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
+					{
+						if (dt.Kind != DateTimeKind.Utc)
+							value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+					}
+					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
+					else if (dataType.DataType == DataType.DateTime2 || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp)
+					{
+						if (dt.Kind == DateTimeKind.Utc)
+							value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+					}
 				}
 			}
 

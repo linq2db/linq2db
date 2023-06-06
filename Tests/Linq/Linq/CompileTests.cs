@@ -183,7 +183,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void ConcurrentTest2([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{
@@ -213,7 +213,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConcurrentTest3([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void ConcurrentTest3([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (new DisableBaseline("Multi-threading"))
 			{

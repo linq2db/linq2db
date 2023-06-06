@@ -1171,6 +1171,11 @@ namespace Cli.Fluent.SqlServer
 
 			builder.HasAttribute<TestDataDB>(ctx => ctx.Issue1921(), new Sql.TableFunctionAttribute("Issue1921"));
 
+			builder.HasAttribute<TestSchemaSchema.DataContext>(ctx => ctx.SchemaTableFunction(default(int?)), new Sql.TableFunctionAttribute("SchemaTableFunction")
+			{
+				Schema = "TestSchema"
+			});
+
 			builder.Build();
 		}
 		public static MappingSchema ContextSchema { get; } = new MappingSchema();
@@ -1498,8 +1503,9 @@ namespace Cli.Fluent.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]", parameters);
 			output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("[ExecuteProcIntParameters]", parameters);
+			return ret;
 		}
 
 		public static async Task<ExecuteProcIntParametersResults> ExecuteProcIntParametersAsync(this TestDataDB dataConnection, int? input, int? output, CancellationToken cancellationToken = default)
@@ -1544,11 +1550,12 @@ namespace Cli.Fluent.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
-			output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.QueryProc(dataReader => new ExecuteProcStringParametersResult()
+			var ret = dataConnection.QueryProc(dataReader => new ExecuteProcStringParametersResult()
 			{
 				Column = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), dataConnection.MappingSchema)
 			}, "[ExecuteProcStringParameters]", parameters).ToList();
+			output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			return ret;
 		}
 
 		/// <summary>
@@ -1622,9 +1629,10 @@ namespace Cli.Fluent.SqlServer
 					Size = 50
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]", parameters);
 			outputStr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
 			inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
-			return dataConnection.ExecuteProc("[OutRefEnumTest]", parameters);
+			return ret;
 		}
 
 		public static async Task<OutRefEnumTestResults> OutRefEnumTestAsync(this TestDataDB dataConnection, string? str, string? outputStr, string? inputOutputStr, CancellationToken cancellationToken = default)
@@ -1692,11 +1700,12 @@ namespace Cli.Fluent.SqlServer
 					Size = 50
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[OutRefTest]", parameters);
 			outputId = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			inputOutputId = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 			outputStr = Converter.ChangeTypeTo<string?>(parameters[4].Value);
 			inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
-			return dataConnection.ExecuteProc("[OutRefTest]", parameters);
+			return ret;
 		}
 
 		public static async Task<OutRefTestResults> OutRefTestAsync(this TestDataDB dataConnection, int? id, int? outputId, int? inputOutputId, string? str, string? outputStr, string? inputOutputStr, CancellationToken cancellationToken = default)
@@ -1941,8 +1950,9 @@ namespace Cli.Fluent.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]", parameters);
 			personId = Converter.ChangeTypeTo<int?>(parameters[4].Value);
-			return dataConnection.ExecuteProc("[Person_Insert_OutputParameter]", parameters);
+			return ret;
 		}
 
 		public static async Task<PersonInsertOutputParameterResults> PersonInsertOutputParameterAsync(this TestDataDB dataConnection, string? firstName, string? lastName, string? middleName, char? gender, int? personId, CancellationToken cancellationToken = default)
@@ -2218,10 +2228,11 @@ namespace Cli.Fluent.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", parameters).ToList();
 			output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 			output3 = Converter.ChangeTypeTo<int?>(parameters[3].Value);
-			return dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<QueryProcMultipleParametersResults> QueryProcMultipleParametersAsync(this TestDataDB dataConnection, int? input, int? output1, int? output2, int? output3, CancellationToken cancellationToken = default)
@@ -2285,9 +2296,10 @@ namespace Cli.Fluent.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]", parameters).ToList();
 			output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
-			return dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<QueryProcParametersResults> QueryProcParametersAsync(this TestDataDB dataConnection, int? input, int? output1, int? output2, CancellationToken cancellationToken = default)
