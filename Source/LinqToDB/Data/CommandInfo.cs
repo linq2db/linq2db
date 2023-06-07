@@ -1347,6 +1347,8 @@ namespace LinqToDB.Data
 				if (parameter.Scale     != null) p.Scale     = (byte)parameter.Scale    .Value;
 #endif
 
+				// we don't normalize parameter names here as they are passed from user code and it is user's responsibility
+				// to pass correct names. And we cannot add normalization as it will be breaking change for existing users
 				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, dbDataType, value);
 				// some providers (e.g. managed sybase provider) could change parameter name
 				// which breaks parameters rebind logic
