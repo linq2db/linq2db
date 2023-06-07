@@ -1,5 +1,6 @@
-<#@ template language="C#" debug="True" hostSpecific="True" #>
-<#@ output extension=".generated.cs"                        #>
+<#@ template language="C#" debug="True" hostSpecific="True"                    #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
+<#@ output extension=".generated.cs"                                           #>
 
 <#@ include file="$(LinqToDBT4OracleTemplatesPath)LinqToDB.Oracle.Tools.ttinclude" once="true" #>
 <#@ include file="$(LinqToDBT4OracleTemplatesPath)PluralizationService.ttinclude"  once="true" #>
