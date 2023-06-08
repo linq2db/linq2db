@@ -8,4 +8,9 @@ grant unlimited  tablespace to NATIVE;
 grant all privileges to NATIVE identified by native;
 GRANT SELECT ON sys.dba_users TO NATIVE;
 
+create user test identified by test;
+grant unlimited  tablespace to test;
+grant all privileges to test identified by test;
+GRANT SELECT ON sys.dba_users TO test;
+
 EXIT;

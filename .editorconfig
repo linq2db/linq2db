@@ -271,6 +271,7 @@ dotnet_diagnostic.IDE0150.severity = none # IDE0150: null check can be clarified
 dotnet_diagnostic.IDE0210.severity = none # IDE0210: convert to lol-level statements
 dotnet_diagnostic.IDE0220.severity = none # IDE0220: add explicit cast to MS implicity typed collections foreach
 dotnet_diagnostic.IDE0230.severity = none # IDE0230: use utf-8 literal
+dotnet_diagnostic.IDE0251.severity = none # IDE0251: Make member 'readonly'
 dotnet_diagnostic.IDE0270.severity = none # IDE0270: Null check can be simplified
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 

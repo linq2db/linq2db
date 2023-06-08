@@ -74,7 +74,7 @@ namespace JetBrains.Annotations
 	/// Should be used on attributes and causes ReSharper to not mark symbols marked with such attributes
 	/// as unused (as well as by other usage inspections)
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.GenericParameter)]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.GenericParameter | AttributeTargets.Parameter)]
 	internal sealed class MeansImplicitUseAttribute : Attribute
 	{
 		public MeansImplicitUseAttribute()
@@ -139,7 +139,7 @@ namespace JetBrains.Annotations
 	/// which should not be removed and so is treated as used.
 	/// </summary>
 	[MeansImplicitUse(ImplicitUseTargetFlags.WithMembers)]
-	[AttributeUsage(AttributeTargets.All)]
+	[AttributeUsage(AttributeTargets.All, Inherited = false)]
 	internal sealed class PublicAPIAttribute : Attribute
 	{
 		public PublicAPIAttribute()
@@ -162,6 +162,11 @@ namespace JetBrains.Annotations
 	[AttributeUsage(AttributeTargets.Parameter)]
 	internal sealed class InstantHandleAttribute : Attribute
 	{
+		/// <summary>
+		/// Require the method invocation to be used under the 'await' expression for this attribute to take effect on code analysis engine.
+		/// Can be used for delegate/enumerable parameters of 'async' methods.
+		/// </summary>
+		public bool RequireAwait { get; set; }
 	}
 
 	/// <summary>

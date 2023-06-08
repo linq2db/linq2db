@@ -363,8 +363,9 @@ namespace Cli.T4.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[dbo].[ExecuteProcIntParameters]", parameters);
 			output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("[dbo].[ExecuteProcIntParameters]", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -385,11 +386,12 @@ namespace Cli.T4.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
-			output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.QueryProc(dataReader => new ExecuteProcStringParametersResult()
+			var ret = dataConnection.QueryProc(dataReader => new ExecuteProcStringParametersResult()
 			{
 				Column = Converter.ChangeTypeTo<string>(dataReader.GetValue(0), dataConnection.MappingSchema)
 			}, "[dbo].[ExecuteProcStringParameters]", parameters).ToList();
+			output = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			return ret;
 		}
 
 		public partial class ExecuteProcStringParametersResult
@@ -425,9 +427,10 @@ namespace Cli.T4.SqlServer
 					Size = 50
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[dbo].[OutRefEnumTest]", parameters);
 			outputStr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
 			inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
-			return dataConnection.ExecuteProc("[dbo].[OutRefEnumTest]", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -460,11 +463,12 @@ namespace Cli.T4.SqlServer
 					Size = 50
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[dbo].[OutRefTest]", parameters);
 			outputId = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			inputOutputId = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 			outputStr = Converter.ChangeTypeTo<string?>(parameters[4].Value);
 			inputOutputStr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
-			return dataConnection.ExecuteProc("[dbo].[OutRefTest]", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -581,8 +585,9 @@ namespace Cli.T4.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[dbo].[Person_Insert_OutputParameter]", parameters);
 			personId = Converter.ChangeTypeTo<int?>(parameters[4].Value);
-			return dataConnection.ExecuteProc("[dbo].[Person_Insert_OutputParameter]", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -739,10 +744,11 @@ namespace Cli.T4.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[dbo].[QueryProcMultipleParameters]", parameters).ToList();
 			output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
 			output3 = Converter.ChangeTypeTo<int?>(parameters[3].Value);
-			return dataConnection.QueryProc<QueryProcMultipleParametersResult>("[dbo].[QueryProcMultipleParameters]", parameters).ToList();
+			return ret;
 		}
 
 		public partial class QueryProcMultipleParametersResult
@@ -770,9 +776,10 @@ namespace Cli.T4.SqlServer
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.QueryProc<QueryProcParametersResult>("[dbo].[QueryProcParameters]", parameters).ToList();
 			output1 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			output2 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
-			return dataConnection.QueryProc<QueryProcParametersResult>("[dbo].[QueryProcParameters]", parameters).ToList();
+			return ret;
 		}
 
 		public partial class QueryProcParametersResult

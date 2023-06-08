@@ -6,8 +6,6 @@
 	{
 		SqlStatement    Statement   { get; }
 		object?         Context     { get; set; }
-
-		SqlParameter[]? Parameters  { get; set; }
 		AliasesContext? Aliases     { get; set; }
 	}
 }

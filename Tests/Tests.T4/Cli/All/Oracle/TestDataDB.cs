@@ -1263,7 +1263,7 @@ namespace Cli.All.Oracle
 
 		#region TTestUserContract Associations
 		/// <summary>
-		/// SYS_C007182
+		/// SYS_C007192
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(TTestUserContract.UserId), OtherKey = nameof(TTestUser.UserId))]
 		public static TTestUser User(this TTestUserContract obj, IDataContext db)
@@ -1274,7 +1274,7 @@ namespace Cli.All.Oracle
 
 		#region TTestUser Associations
 		/// <summary>
-		/// SYS_C007182 backreference
+		/// SYS_C007192 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(TTestUser.UserId), OtherKey = nameof(TTestUserContract.UserId))]
 		public static IQueryable<TTestUserContract> TTestUserContracts(this TTestUser obj, IDataContext db)
@@ -1448,6 +1448,7 @@ namespace Cli.All.Oracle
 					DbType = "UNDEFINED"
 				}
 			};
+			var ret = dataConnection.ExecuteProc("ALLOUTPUTPARAMETERS", parameters);
 			id = Converter.ChangeTypeTo<OracleDecimal?>(parameters[0].Value);
 			bigintdatatype = Converter.ChangeTypeTo<OracleDecimal?>(parameters[1].Value);
 			numericdatatype = Converter.ChangeTypeTo<OracleDecimal?>(parameters[2].Value);
@@ -1475,7 +1476,7 @@ namespace Cli.All.Oracle
 			bfiledatatype = Converter.ChangeTypeTo<OracleBFile?>(parameters[24].Value);
 			guiddatatype = Converter.ChangeTypeTo<OracleBinary?>(parameters[25].Value);
 			xmldatatype = Converter.ChangeTypeTo<object?>(parameters[26].Value);
-			return dataConnection.ExecuteProc("ALLOUTPUTPARAMETERS", parameters);
+			return ret;
 		}
 
 		public static async Task<AlloutputparametersResults> AlloutputparametersAsync(this TestDataDB dataConnection, OracleDecimal? id, OracleDecimal? bigintdatatype, OracleDecimal? numericdatatype, OracleDecimal? bitdatatype, OracleDecimal? smallintdatatype, OracleDecimal? decimaldatatype, OracleDecimal? smallmoneydatatype, OracleDecimal? intdatatype, OracleDecimal? tinyintdatatype, OracleDecimal? moneydatatype, OracleDecimal? floatdatatype, OracleDecimal? realdatatype, OracleDate? datetimedatatype, OracleTimeStamp? datetime2Datatype, OracleTimeStampTZ? datetimeoffsetdatatype, OracleTimeStampLTZ? localzonedatatype, OracleString? chardatatype, OracleString? char20Datatype, string? varchardatatype, OracleClob? textdatatype, OracleString? nchardatatype, string? nvarchardatatype, string? ntextdatatype, OracleBlob? binarydatatype, OracleBFile? bfiledatatype, OracleBinary? guiddatatype, object? xmldatatype, CancellationToken cancellationToken = default)
@@ -1729,11 +1730,12 @@ namespace Cli.All.Oracle
 					DbType = "PL/SQL TABLE"
 				}
 			};
+			var ret = dataConnection.ExecuteProc("ARRAYTEST", parameters);
 			poutputintarray = Converter.ChangeTypeTo<object?>(parameters[1].Value);
 			pinputoutputintarray = Converter.ChangeTypeTo<object?>(parameters[2].Value);
 			poutputstrarray = Converter.ChangeTypeTo<object?>(parameters[4].Value);
 			pinputoutputstrarray = Converter.ChangeTypeTo<object?>(parameters[5].Value);
-			return dataConnection.ExecuteProc("ARRAYTEST", parameters);
+			return ret;
 		}
 
 		public static async Task<ArraytestResults> ArraytestAsync(this TestDataDB dataConnection, object? pintarray, object? poutputintarray, object? pinputoutputintarray, object? pstrarray, object? poutputstrarray, object? pinputoutputstrarray, CancellationToken cancellationToken = default)
@@ -1810,9 +1812,10 @@ namespace Cli.All.Oracle
 					DbType = "NVARCHAR2"
 				}
 			};
+			var ret = dataConnection.ExecuteProc("OUTREFENUMTEST", parameters);
 			poutputstr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
 			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
-			return dataConnection.ExecuteProc("OUTREFENUMTEST", parameters);
+			return ret;
 		}
 
 		public static async Task<OutrefenumtestResults> OutrefenumtestAsync(this TestDataDB dataConnection, string? pstr, string? poutputstr, string? pinputoutputstr, CancellationToken cancellationToken = default)
@@ -1888,11 +1891,12 @@ namespace Cli.All.Oracle
 					DbType = "NVARCHAR2"
 				}
 			};
+			var ret = dataConnection.ExecuteProc("OUTREFTEST", parameters);
 			poutputid = Converter.ChangeTypeTo<OracleDecimal?>(parameters[1].Value);
 			pinputoutputid = Converter.ChangeTypeTo<OracleDecimal?>(parameters[2].Value);
 			poutputstr = Converter.ChangeTypeTo<string?>(parameters[4].Value);
 			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
-			return dataConnection.ExecuteProc("OUTREFTEST", parameters);
+			return ret;
 		}
 
 		public static async Task<OutreftestResults> OutreftestAsync(this TestDataDB dataConnection, OracleDecimal? pid, OracleDecimal? poutputid, OracleDecimal? pinputoutputid, string? pstr, string? poutputstr, string? pinputoutputstr, CancellationToken cancellationToken = default)
@@ -2008,8 +2012,9 @@ namespace Cli.All.Oracle
 					Size = 22
 				}
 			};
+			var ret = dataConnection.ExecuteProc("PERSON_INSERT_OUTPUTPARAMETER", parameters);
 			ppersonid = Converter.ChangeTypeTo<OracleDecimal?>(parameters[4].Value);
-			return dataConnection.ExecuteProc("PERSON_INSERT_OUTPUTPARAMETER", parameters);
+			return ret;
 		}
 
 		public static async Task<PersonInsertOutputparameterResults> PersonInsertOutputparameterAsync(this TestDataDB dataConnection, string? pfirstname, string? plastname, string? pmiddlename, OracleString? pgender, OracleDecimal? ppersonid, CancellationToken cancellationToken = default)
@@ -2130,9 +2135,10 @@ namespace Cli.All.Oracle
 					DbType = "REF CURSOR"
 				}
 			};
+			var ret = dataConnection.QueryProc<ResultsettestResult>("RESULTSETTEST", parameters).ToList();
 			mr = Converter.ChangeTypeTo<OracleRefCursor?>(parameters[0].Value);
 			sr = Converter.ChangeTypeTo<OracleRefCursor?>(parameters[1].Value);
-			return dataConnection.QueryProc<ResultsettestResult>("RESULTSETTEST", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<ResultsettestResults> ResultsettestAsync(this TestDataDB dataConnection, OracleRefCursor? mr, OracleRefCursor? sr, CancellationToken cancellationToken = default)
@@ -2183,8 +2189,9 @@ namespace Cli.All.Oracle
 					DbType = "PL/SQL TABLE"
 				}
 			};
+			var ret = dataConnection.ExecuteProc("SCALARARRAY", parameters);
 			poutputintarray = Converter.ChangeTypeTo<object?>(parameters[0].Value);
-			return dataConnection.ExecuteProc("SCALARARRAY", parameters);
+			return ret;
 		}
 
 		public static async Task<ScalararrayResults> ScalararrayAsync(this TestDataDB dataConnection, object? poutputintarray, CancellationToken cancellationToken = default)
@@ -2228,9 +2235,10 @@ namespace Cli.All.Oracle
 					DbType = "NVARCHAR2"
 				}
 			};
+			var ret = dataConnection.ExecuteProc("SCALAR_OUTPUTPARAMETER", parameters);
 			poutputint = Converter.ChangeTypeTo<int?>(parameters[0].Value);
 			poutputstring = Converter.ChangeTypeTo<string?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("SCALAR_OUTPUTPARAMETER", parameters);
+			return ret;
 		}
 
 		public static async Task<ScalarOutputparameterResults> ScalarOutputparameterAsync(this TestDataDB dataConnection, int? poutputint, string? poutputstring, CancellationToken cancellationToken = default)
@@ -2282,8 +2290,9 @@ namespace Cli.All.Oracle
 					Size = 22
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<OracleDecimal?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
+			return ret;
 		}
 
 		public static async Task<TestProcedureResults> TestProcedureAsync(this TestDataDB dataConnection, OracleDecimal? i, OracleDecimal? o, CancellationToken cancellationToken = default)
@@ -2346,8 +2355,9 @@ namespace Cli.All.Oracle
 					Size = 22
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<OracleDecimal?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+			return ret;
 		}
 
 		public static async Task<TestProcedureResults1> TestPackage1TestProcedureAsync(this TestDataDB dataConnection, OracleDecimal? i, OracleDecimal? o, CancellationToken cancellationToken = default)
@@ -2398,8 +2408,9 @@ namespace Cli.All.Oracle
 					Size = 22
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<OracleDecimal?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+			return ret;
 		}
 
 		public static async Task<TestProcedureResults2> TestPackage2TestProcedureAsync(this TestDataDB dataConnection, OracleDecimal? i, OracleDecimal? o, CancellationToken cancellationToken = default)

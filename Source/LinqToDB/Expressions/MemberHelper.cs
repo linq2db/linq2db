@@ -24,7 +24,7 @@ namespace LinqToDB.Expressions
 			public Type?      Type;
 			public MemberInfo MemberInfo;
 
-			public bool Equals(MemberInfoWithType other)
+			public readonly bool Equals(MemberInfoWithType other)
 			{
 				return Equals(Type, other.Type) && MemberInfo.Equals(other.MemberInfo);
 			}
@@ -34,7 +34,7 @@ namespace LinqToDB.Expressions
 				return obj is MemberInfoWithType other && Equals(other);
 			}
 
-			public override int GetHashCode()
+			public readonly override int GetHashCode()
 			{
 				unchecked
 				{

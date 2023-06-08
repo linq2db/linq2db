@@ -41,11 +41,5 @@ namespace LinqToDB.SqlQuery
 				StringComparer.OrdinalIgnoreCase);
 
 		}
-
-		public SqlParameter[] GetParameters()
-		{
-			return _aliasesSet.Where(e => e.ElementType == QueryElementType.SqlParameter)
-				.Select(e => (SqlParameter)e).ToArray();
-		}
 	}
 }

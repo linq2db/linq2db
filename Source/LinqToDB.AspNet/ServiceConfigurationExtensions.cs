@@ -22,9 +22,7 @@ namespace LinqToDB.AspNet
 		///           {
 		///               var connectionString = "connection string to database";
 		///
-		///               services.AddLinqToDB(options => {
-		///                   options.UseSqlServer(connectionString);
-		///               });
+		///               services.AddLinqToDB(options => options.UseSqlServer(connectionString));
 		///           }
 		///       </code>
 		/// </example>
@@ -69,9 +67,7 @@ namespace LinqToDB.AspNet
 		///           {
 		///               var connectionString = "connection string to database";
 		///
-		///               services.AddLinqToDBContext&lt;MyContext&gt;(options => {
-		///                   options.UseSqlServer(connectionString);
-		///               });
+		///               services.AddLinqToDBContext&lt;MyContext&gt;(options => options.UseSqlServer(connectionString));
 		///           }
 		///       </code>
 		/// </example>
@@ -121,9 +117,7 @@ namespace LinqToDB.AspNet
 		///           {
 		///               var connectionString = "connection string to database";
 		///
-		///               services.AddLinqToDBContext&lt;IMyContext, MyContext&gt;(options => {
-		///                   options.UseSqlServer(connectionString);
-		///               });
+		///               services.AddLinqToDBContext&lt;IMyContext, MyContext&gt;(options => options.UseSqlServer(connectionString));
 		///           }
 		///       </code>
 		/// </example>

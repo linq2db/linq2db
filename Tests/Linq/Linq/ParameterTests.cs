@@ -69,8 +69,10 @@ namespace Tests.Linq
 
 				var queryInlined = query.InlineParameters();
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				Assert.That(query.GetStatement().CollectParameters().Length,        Is.EqualTo(1));
 				Assert.That(queryInlined.GetStatement().CollectParameters().Length, Is.EqualTo(0));
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 		}
 

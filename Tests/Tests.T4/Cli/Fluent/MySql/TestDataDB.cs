@@ -1435,8 +1435,9 @@ namespace Cli.Fluent.MySql
 					Direction = ParameterDirection.Output
 				}
 			};
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
 			aOutParam = Converter.ChangeTypeTo<sbyte?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
+			return ret;
 		}
 
 		public static async Task<TestOutputParametersWithoutTableProcedureResults> TestOutputParametersWithoutTableProcedureAsync(this TestDataDB dataConnection, string? aInParam, sbyte? aOutParam, CancellationToken cancellationToken = default)
@@ -1482,9 +1483,10 @@ namespace Cli.Fluent.MySql
 					Direction = ParameterDirection.Output
 				}
 			};
+			var ret = dataConnection.QueryProc<TestProcedureResult>("`TestProcedure`", parameters).ToList();
 			param2 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			param1 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
-			return dataConnection.QueryProc<TestProcedureResult>("`TestProcedure`", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<TestProcedureResults> TestProcedureAsync(this TestDataDB dataConnection, int? param3, int? param2, int? param1, CancellationToken cancellationToken = default)
