@@ -249,7 +249,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return value;
 		}
 
-
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			if (value is IDictionary && dataType.DataType == DataType.Undefined)

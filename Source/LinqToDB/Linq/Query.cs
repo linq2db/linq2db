@@ -549,7 +549,6 @@ namespace LinqToDB.Linq
 	{
 		public SqlStatement    Statement  { get; set; } = null!;
 		public object?         Context    { get; set; }
-		public SqlParameter[]? Parameters { get; set; }
 		public AliasesContext? Aliases    { get; set; }
 
 		internal List<ParameterAccessor> ParameterAccessors = new ();
