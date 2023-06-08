@@ -38,25 +38,8 @@ namespace Tests.Tools
 					if (!settings1.Connections.ContainsKey(connection.Key))
 						settings1.Connections.Add(connection.Key, connection.Value);
 
-				if (settings2.Providers is not null)
-				{
-					var providers = new HashSet<string>(settings2.Providers);
-
-					if (settings1.Providers is not null)
-					{
-						foreach (var provider in settings1.Providers)
-						{
-							if (provider is "--" or "---")
-								providers.Clear();
-							else if (provider.StartsWith("-"))
-								providers.Remove(provider.Replace("-", "").Trim());
-							else
-								providers.Add(provider);
-						}
-					}
-
-					settings1.Providers = providers.ToArray();
-				}
+				if (settings1.Providers is not null && settings2.Providers is not null)
+					settings1.Providers = settings2.Providers.Concat(settings1.Providers).ToArray();
 
 				settings1.Providers            ??= settings2.Providers;
 				settings1.Skip                 ??= settings2.Skip;
@@ -119,6 +102,7 @@ namespace Tests.Tools
 				foreach (var connection in settings.Connections)
 				{
 					var cs = connection.Value.ConnectionString;
+
 					if (cs != null && cs.StartsWith("[") && cs.EndsWith("]"))
 					{
 						cs = cs.Substring(1, cs.Length - 2);
@@ -127,6 +111,64 @@ namespace Tests.Tools
 						else
 							throw new InvalidOperationException($"Connection {cs} not found.");
 					}
+				}
+
+				if (settings.Providers is not null)
+				{
+					var providers = new HashSet<string>();
+
+					foreach (var provider in settings.Providers)
+					{
+						switch (provider)
+						{
+							case "++" or "+++" or "all":
+								foreach (var p in TestBase.Providers)
+									providers.Add(p);
+								break;
+							case "--" or "---":
+								providers.Clear();
+								break;
+							default:
+							{
+								if (provider.StartsWith("-"))
+								{
+									var p = provider.Replace("-", "").Trim();
+
+									if (p.StartsWith("*") && p.EndsWith("*"))
+									{
+										p = p.Trim('*');
+
+										foreach (var pr in providers.ToList())
+											if (pr.Contains(p))
+												providers.Remove(pr);
+									}
+									else if (p.StartsWith("*"))
+									{
+										p = p.Trim('*');
+
+										foreach (var pr in providers.ToList())
+											if (pr.EndsWith(p))
+												providers.Remove(pr);
+									}
+									else if (p.EndsWith("*"))
+									{
+										p = p.Trim('*');
+
+										foreach (var pr in providers.ToList())
+											if (pr.StartsWith(p))
+												providers.Remove(pr);
+									}
+									else
+										providers.Remove(p);
+								}
+								else
+									providers.Add(provider);
+								break;
+							}
+						}
+					}
+
+					settings.Providers = providers.ToArray();
 				}
 
 				return settings;

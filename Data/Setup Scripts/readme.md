@@ -5,8 +5,12 @@ Contains database setup scripts for local testing
 
 ### Linux (WSL2) images
 
+- `all.cmd` : Windows script to create or update docker containers with all the instances below
 - `clickhouse.cmd` : Windows script to create or update docker container with ClickHouse instance
 - `db2.cmd` : Windows script to create or update docker container with DB2 instance
+- `firebird25.cmd` : Windows script to create or update docker container with FFirebird 2.5 instance
+- `firebird30.cmd` : Windows script to create or update docker container with FFirebird 3.0 instance
+- `firebird40.cmd` : Windows script to create or update docker container with FFirebird 4.0 instance
 - `informix.cmd` : Windows script to create or update docker container with Informix instance
 - `mariadb.cmd` : Windows script to create or update docker container with MariaDB instance
 - `mysql55.cmd` : Windows script to create or update docker container with MySQL 5.5 instance
