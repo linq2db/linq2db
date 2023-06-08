@@ -1,6 +1,6 @@
 <#@ assembly name="$(LinqToDBT4ClickHouseClientPath)MySqlConnector.dll" #>
-<#@ include file="LinqToDB.Tools.ttinclude" once="true"                     #>
-<#@ include file="LinqToDB.ClickHouse.ttinclude" once="true"                #>
+<#@ include file="LinqToDB.Tools.ttinclude" once="true"                 #>
+<#@ include file="LinqToDB.ClickHouse.ttinclude" once="true"            #>
 <#
 var toolsPath = GetProviderToolsPath("MySqlConnector", "MySqlConnector, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d33d3e53aa5f8c92");
 
