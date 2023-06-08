@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.ClickHouse.Octonica</id>
+		<title>LINQ to ClickHouse (Octonica.ClickHouseClient)</title>
+		<description>
+			LINQ to ClickHouse is a data access technology that provides a run-time infrastructure for managing relational data as objects.
+			Install this package only if you want to use database model scaffolding using T4 templates (requires Visual Studio or Rider), otherwise you should use linq2db package.
+		</description>
+		<summary>
+			This package includes a T4 template to generate data models for ClickHouse database and references to the linq2db and Octonica.ClickHouseClient nugets.
+		</summary>
+		<tags>linq linq2db ClickHouse LinqToDB ORM database DB SQL</tags>
+		<readme>README.md</readme>
+		<dependencies>
+			<dependency id="linq2db"                   version="5.0.0" />
+			<dependency id="Octonica.ClickHouseClient" version="2.2.9" />
+		</dependencies>
+		<contentFiles>
+			<files include="**\*" buildAction="None" />
+		</contentFiles>
+	</metadata>
+	<files>
+		<file src="..\Nuget\README.T4.md"                                                  target="README.md"                                                                                          />
+		<file src="..\Nuget\readme.T4.txt"                                                 target="readme.txt"                                                                                         />
+
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                       target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                           target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\MySqlConnector.dll"                      target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\System.Memory.dll"                       target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\System.Buffers.dll"                      target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll"   target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\System.Diagnostics.DiagnosticSource.dll" target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                                                                              />
+
+		<file src="..\NuGet\ClickHouse\linq2db.ClickHouse.props"                           target="build\linq2db.ClickHouse.Octonica.props"                                                      />
+
+		<file src="..\NuGet\ClickHouse\*.*"                                                target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
+		<file src="..\NuGet\t4models\*.ttinclude"                                          target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                               target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                  target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
+		<file src="..\Source\LinqToDB.Templates\*.ClickHouse.ttinclude"                    target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+
+		<file src="..\NuGet\ClickHouse\*.*"                                                target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
+		<file src="..\NuGet\t4models\*.ttinclude"                                          target="content\LinqToDB.Templates"                                                                         />
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                               target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                  target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
+		<file src="..\Source\LinqToDB.Templates\*.ClickHouse.ttinclude"                    target="content\LinqToDB.Templates"                                                                         />
+	</files>
+</package>
