@@ -110,6 +110,8 @@ namespace LinqToDB.DataProvider.Sybase
 			return new SybaseSchemaProvider(this);
 		}
 
+		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => new SybaseParametersNormalizer();
+
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
@@ -157,9 +159,6 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 #endif
 			}
-
-			if (name.Length > 26)
-				name = name.Substring(0, 26);
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}

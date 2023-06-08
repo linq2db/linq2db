@@ -78,6 +78,8 @@ namespace LinqToDB.DataProvider.SapHana
 			return base.ConvertParameterType(type, dataType);
 		}
 
+		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => NoopQueryParametersNormalizer.Instance;
+
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 #if NET6_0_OR_GREATER

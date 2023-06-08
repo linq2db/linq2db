@@ -278,7 +278,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			StringBuilder.Remove(pos, 4).Insert(pos, "UPDATE");
 
-			base.BuildUpdateSet(selectQuery, updateClause);
+			BuildUpdateSet(selectQuery, updateClause);
 		}
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
