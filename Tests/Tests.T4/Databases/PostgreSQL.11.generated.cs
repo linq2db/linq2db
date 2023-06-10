@@ -90,6 +90,13 @@ namespace PostreSQL11DataContext
 			InitMappingSchema();
 		}
 
+		public TestdataDB(DataOptions<TestdataDB> options)
+			: base(options.Options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 
@@ -596,7 +603,7 @@ namespace PostreSQL11DataContext
 		#region AddIfNotExists
 
 		[Sql.Function(Name="\"public\".add_if_not_exists", ServerSideOnly=true)]
-		public static object? AddIfNotExists(string? p_name)
+		public static object? AddIfNotExists(string? pName)
 		{
 			throw new InvalidOperationException();
 		}

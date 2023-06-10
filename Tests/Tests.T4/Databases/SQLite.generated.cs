@@ -20,7 +20,7 @@ namespace SQLiteDataContext
 {
 	public partial class TestDataDB : LinqToDB.DataContext
 	{
-		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
+		public ITable<@namespace>        Classes             { get { return this.GetTable<@namespace>(); } }
 		public ITable<AllTypesView>      AllTypesViews       { get { return this.GetTable<AllTypesView>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
 		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
@@ -60,12 +60,19 @@ namespace SQLiteDataContext
 			InitMappingSchema();
 		}
 
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 	}
 
 	[Table("AllTypes")]
-	public partial class AllType
+	public partial class @namespace
 	{
 		[Column(),                           PrimaryKey, Identity] public long      ID                       { get; set; } // integer
 		[Column("bigintDataType"),           Nullable            ] public long?     BigintDataType           { get; set; } // bigint
@@ -357,7 +364,7 @@ namespace SQLiteDataContext
 
 	public static partial class TableExtensions
 	{
-		public static AllType? Find(this ITable<AllType> table, long ID)
+		public static @namespace? Find(this ITable<@namespace> table, long ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
