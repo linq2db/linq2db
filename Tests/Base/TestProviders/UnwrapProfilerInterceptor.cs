@@ -26,7 +26,7 @@ namespace Tests
 
 		public override DbCommand UnwrapCommand(IDataContext dataContext, DbCommand command)
 		{
-			return command is ProfiledDbCommand c ? c.InternalCommand : command;
+			return command is ProfiledDbCommand c ? c.WrappedCommand : command;
 		}
 
 		public override DbDataReader UnwrapDataReader(IDataContext dataContext, DbDataReader dataReader)
