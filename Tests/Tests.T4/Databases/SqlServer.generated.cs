@@ -641,12 +641,12 @@ namespace DataModel
 
 		#region EmployeeSalesByCountry
 
-		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this NorthwindDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
+				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
+				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
 			};
 
 			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]", parameters).ToList();
@@ -666,12 +666,12 @@ namespace DataModel
 
 		#region SalesByYear
 
-		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
+				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
+				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
 			};
 
 			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
@@ -1128,6 +1128,7 @@ namespace DataModel
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<CreateIfNotExistsTable>  CreateIfNotExistsTables  { get { return this.GetTable<CreateIfNotExistsTable>(); } }
 		public ITable<DataType>                DataTypes                { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
@@ -1201,8 +1202,8 @@ namespace DataModel
 
 		public partial class Issue1921Result
 		{
-			public string name  { get; set; } = null!;
-			public int?   objid { get; set; }
+			[Column("name") ] public string Name  { get; set; } = null!;
+			[Column("objid")] public int?   Objid { get; set; }
 		}
 
 		#endregion
@@ -1298,6 +1299,13 @@ namespace DataModel
 		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull] public int    Id              { get; set; } // int
 		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
 		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+	}
+
+	[Table("CreateIfNotExistsTable")]
+	public partial class CreateIfNotExistsTable
+	{
+		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Id    { get; set; } // int
+		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Value { get; set; } // int
 	}
 
 	[Table("DataType")]
@@ -1671,7 +1679,7 @@ namespace DataModel
 			return dataConnection.QueryProc(dataReader =>
 				new DuplicateColumnNamesResult
 				{
-					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
+					Id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
 					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
 				},
 				"[DuplicateColumnNames]").ToList();
@@ -1679,7 +1687,7 @@ namespace DataModel
 
 		public partial class DuplicateColumnNamesResult
 		{
-			               public int    id      { get; set; }
+			[Column("id")] public int    Id      { get; set; }
 			[Column("id")] public string Column2 { get; set; } = null!;
 		}
 

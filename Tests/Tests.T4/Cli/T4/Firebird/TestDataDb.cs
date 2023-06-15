@@ -499,8 +499,9 @@ namespace Cli.T4.Firebird
 					Size = 4
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -519,8 +520,9 @@ namespace Cli.T4.Firebird
 					Size = 4
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -539,8 +541,9 @@ namespace Cli.T4.Firebird
 					Size = 4
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+			return ret;
 		}
 		#endregion
 		#endregion

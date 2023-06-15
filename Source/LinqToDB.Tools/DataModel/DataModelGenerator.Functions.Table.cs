@@ -75,7 +75,7 @@ namespace LinqToDB.DataModel
 
 			// parameters for GetTable call in mapping body
 			var parameters = new ICodeExpression[3 + tableFunction.Parameters.Count];
-			parameters[0] = context.CurrentDataContext.Type.This; // `this` extension method parameter
+			parameters[0] = context.ContextReference; // `this` extension method parameter
 			parameters[1] = context.CurrentDataContext.Type.This; // context parameter
 			parameters[2] = methodInfo.Field.Reference; // method info field
 

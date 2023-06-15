@@ -494,5 +494,7 @@ namespace LinqToDB.DataProvider
 #endif
 
 		#endregion
+
+		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
 	}
 }

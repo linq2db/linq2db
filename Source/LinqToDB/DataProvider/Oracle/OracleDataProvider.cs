@@ -167,6 +167,13 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
+		public override IQueryParametersNormalizer GetQueryParameterNormalizer()
+		{
+			return Version == OracleVersion.v11
+				? new Oracle11ParametersNormalizer()
+				: new Oracle12ParametersNormalizer();
+		}
+
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)

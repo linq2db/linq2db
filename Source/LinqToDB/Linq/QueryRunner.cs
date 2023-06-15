@@ -233,8 +233,7 @@ namespace LinqToDB.Linq
 
 				SqlStatement.PrepareQueryAndAliases(sql.Statement, null, out var aliasesContext);
 
-				sql.Parameters = aliasesContext.GetParameters();
-				sql.Aliases    = aliasesContext;
+				sql.Aliases = aliasesContext;
 			}
 		}
 

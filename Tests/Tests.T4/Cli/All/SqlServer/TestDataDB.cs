@@ -1921,8 +1921,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[AddIssue792Record]", parameters);
 			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-			return dataConnection.ExecuteProc("[AddIssue792Record]", parameters);
+			return ret;
 		}
 
 		public static async Task<AddIssue792RecordResults> AddIssue792RecordAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
@@ -1967,12 +1968,13 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
-			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-			return dataConnection.QueryProc(dataReader => new DuplicateColumnNamesResult()
+			var ret = dataConnection.QueryProc(dataReader => new DuplicateColumnNamesResult()
 			{
 				Id = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema),
 				Id1 = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(1), dataConnection.MappingSchema)
 			}, "[DuplicateColumnNames]", parameters).ToList();
+			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
+			return ret;
 		}
 
 		public static async Task<DuplicateColumnNamesResults> DuplicateColumnNamesAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
@@ -2036,9 +2038,10 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[ExecuteProcIntParameters]", parameters);
 			output = Converter.ChangeTypeTo<SqlInt32?>(parameters[1].Value);
 			@return = Converter.ChangeTypeTo<int>(parameters[2].Value);
-			return dataConnection.ExecuteProc("[ExecuteProcIntParameters]", parameters);
+			return ret;
 		}
 
 		public static async Task<ExecuteProcIntParametersResults> ExecuteProcIntParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output, int @return, CancellationToken cancellationToken = default)
@@ -2109,12 +2112,13 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
-			output = Converter.ChangeTypeTo<SqlInt32?>(parameters[1].Value);
-			@return = Converter.ChangeTypeTo<int>(parameters[2].Value);
-			return dataConnection.QueryProc(dataReader => new ExecuteProcStringParametersResult()
+			var ret = dataConnection.QueryProc(dataReader => new ExecuteProcStringParametersResult()
 			{
 				Column = Converter.ChangeTypeTo<SqlString>(dataReader.GetValue(0), dataConnection.MappingSchema)
 			}, "[ExecuteProcStringParameters]", parameters).ToList();
+			output = Converter.ChangeTypeTo<SqlInt32?>(parameters[1].Value);
+			@return = Converter.ChangeTypeTo<int>(parameters[2].Value);
+			return ret;
 		}
 
 		/// <summary>
@@ -2184,8 +2188,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[Issue1897]", parameters);
 			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-			return dataConnection.ExecuteProc("[Issue1897]", parameters);
+			return ret;
 		}
 
 		public static async Task<Issue1897Results> Issue1897Async(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
@@ -2247,10 +2252,11 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[OutRefEnumTest]", parameters);
 			outputStr = Converter.ChangeTypeTo<SqlString?>(parameters[1].Value);
 			inputOutputStr = Converter.ChangeTypeTo<SqlString?>(parameters[2].Value);
 			@return = Converter.ChangeTypeTo<int>(parameters[3].Value);
-			return dataConnection.ExecuteProc("[OutRefEnumTest]", parameters);
+			return ret;
 		}
 
 		public static async Task<OutRefEnumTestResults> OutRefEnumTestAsync(this TestDataDB dataConnection, SqlString? str, SqlString? outputStr, SqlString? inputOutputStr, int @return, CancellationToken cancellationToken = default)
@@ -2347,12 +2353,13 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[OutRefTest]", parameters);
 			outputId = Converter.ChangeTypeTo<SqlInt32?>(parameters[1].Value);
 			inputOutputId = Converter.ChangeTypeTo<SqlInt32?>(parameters[2].Value);
 			outputStr = Converter.ChangeTypeTo<SqlString?>(parameters[4].Value);
 			inputOutputStr = Converter.ChangeTypeTo<SqlString?>(parameters[5].Value);
 			@return = Converter.ChangeTypeTo<int>(parameters[6].Value);
-			return dataConnection.ExecuteProc("[OutRefTest]", parameters);
+			return ret;
 		}
 
 		public static async Task<OutRefTestResults> OutRefTestAsync(this TestDataDB dataConnection, SqlInt32? id, SqlInt32? outputId, SqlInt32? inputOutputId, SqlString? str, SqlString? outputStr, SqlString? inputOutputStr, int @return, CancellationToken cancellationToken = default)
@@ -2436,8 +2443,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-			return dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<PatientSelectAllResults> PatientSelectAllAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
@@ -2502,8 +2510,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[2].Value);
-			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<PatientSelectByNameResults> PatientSelectByNameAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, int @return, CancellationToken cancellationToken = default)
@@ -2573,8 +2582,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[PersonSearch]", parameters);
 			@return = Converter.ChangeTypeTo<int>(parameters[1].Value);
-			return dataConnection.ExecuteProc("[PersonSearch]", parameters);
+			return ret;
 		}
 
 		public static async Task<PersonSearchResults> PersonSearchAsync(this TestDataDB dataConnection, SqlString? nameFilter, int @return, CancellationToken cancellationToken = default)
@@ -2628,8 +2638,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[Person_Delete]", parameters);
 			@return = Converter.ChangeTypeTo<int>(parameters[1].Value);
-			return dataConnection.ExecuteProc("[Person_Delete]", parameters);
+			return ret;
 		}
 
 		public static async Task<PersonDeleteResults> PersonDeleteAsync(this TestDataDB dataConnection, SqlInt32? personId, int @return, CancellationToken cancellationToken = default)
@@ -2698,8 +2709,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[4].Value);
-			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<PersonInsertResults> PersonInsertAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, SqlString? middleName, SqlString? gender, int @return, CancellationToken cancellationToken = default)
@@ -2794,9 +2806,10 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[Person_Insert_OutputParameter]", parameters);
 			personId = Converter.ChangeTypeTo<SqlInt32?>(parameters[4].Value);
 			@return = Converter.ChangeTypeTo<int>(parameters[5].Value);
-			return dataConnection.ExecuteProc("[Person_Insert_OutputParameter]", parameters);
+			return ret;
 		}
 
 		public static async Task<PersonInsertOutputParameterResults> PersonInsertOutputParameterAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, SqlString? middleName, SqlString? gender, SqlInt32? personId, int @return, CancellationToken cancellationToken = default)
@@ -2868,8 +2881,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-			return dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<PersonSelectAllResults> PersonSelectAllAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
@@ -2927,8 +2941,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[1].Value);
-			return dataConnection.QueryProc<PersonSelectByKeyResult>("[Person_SelectByKey]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<PersonSelectByKeyResults> PersonSelectByKeyAsync(this TestDataDB dataConnection, SqlInt32? id, int @return, CancellationToken cancellationToken = default)
@@ -2990,8 +3005,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[1].Value);
-			return dataConnection.QueryProc<PersonSelectByKeyLowercaseResult>("[Person_SelectByKeyLowercase]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<PersonSelectByKeyLowercaseResults> PersonSelectByKeyLowercaseAsync(this TestDataDB dataConnection, SqlInt32? id, int @return, CancellationToken cancellationToken = default)
@@ -3056,8 +3072,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[2].Value);
-			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<PersonSelectByNameResults> PersonSelectByNameAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, int @return, CancellationToken cancellationToken = default)
@@ -3131,8 +3148,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[2].Value);
-			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<PersonSelectListByNameResults> PersonSelectListByNameAsync(this TestDataDB dataConnection, SqlString? firstName, SqlString? lastName, int @return, CancellationToken cancellationToken = default)
@@ -3220,8 +3238,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.ExecuteProc("[Person_Update]", parameters);
 			@return = Converter.ChangeTypeTo<int>(parameters[5].Value);
-			return dataConnection.ExecuteProc("[Person_Update]", parameters);
+			return ret;
 		}
 
 		public static async Task<PersonUpdateResults> PersonUpdateAsync(this TestDataDB dataConnection, SqlInt32? personId, SqlString? firstName, SqlString? lastName, SqlString? middleName, SqlString? gender, int @return, CancellationToken cancellationToken = default)
@@ -3309,11 +3328,12 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", parameters).ToList();
 			output1 = Converter.ChangeTypeTo<SqlInt32?>(parameters[1].Value);
 			output2 = Converter.ChangeTypeTo<SqlInt32?>(parameters[2].Value);
 			output3 = Converter.ChangeTypeTo<SqlInt32?>(parameters[3].Value);
 			@return = Converter.ChangeTypeTo<int>(parameters[4].Value);
-			return dataConnection.QueryProc<QueryProcMultipleParametersResult>("[QueryProcMultipleParameters]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<QueryProcMultipleParametersResults> QueryProcMultipleParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output1, SqlInt32? output2, SqlInt32? output3, int @return, CancellationToken cancellationToken = default)
@@ -3406,10 +3426,11 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]", parameters).ToList();
 			output1 = Converter.ChangeTypeTo<SqlInt32?>(parameters[1].Value);
 			output2 = Converter.ChangeTypeTo<SqlInt32?>(parameters[2].Value);
 			@return = Converter.ChangeTypeTo<int>(parameters[3].Value);
-			return dataConnection.QueryProc<QueryProcParametersResult>("[QueryProcParameters]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<QueryProcParametersResults> QueryProcParametersAsync(this TestDataDB dataConnection, SqlInt32? input, SqlInt32? output1, SqlInt32? output2, int @return, CancellationToken cancellationToken = default)
@@ -3481,11 +3502,12 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
-			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-			return dataConnection.QueryProc(dataReader => new SelectImplicitColumnResult()
+			var ret = dataConnection.QueryProc(dataReader => new SelectImplicitColumnResult()
 			{
 				Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema)
 			}, "[SelectImplicitColumn]", parameters).ToList();
+			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
+			return ret;
 		}
 
 		public static async Task<SelectImplicitColumnResults> SelectImplicitColumnAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)
@@ -3542,8 +3564,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[1].Value);
-			return dataConnection.QueryProc<TableTypeTestProcResult>("[TableTypeTestProc]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<TableTypeTestProcResults> TableTypeTestProcAsync(this TestDataDB dataConnection, DataTable? table, int @return, CancellationToken cancellationToken = default)
@@ -3602,8 +3625,9 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<VariableResultsResult>("[VariableResults]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[1].Value);
-			return dataConnection.QueryProc<VariableResultsResult>("[VariableResults]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<VariableResultsResults> VariableResultsAsync(this TestDataDB dataConnection, SqlBoolean? returnFullRow, int @return, CancellationToken cancellationToken = default)

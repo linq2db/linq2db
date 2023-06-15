@@ -8,6 +8,7 @@
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 using System;
@@ -15,6 +16,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlTypes;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,6 +39,18 @@ namespace Cli.All.SqlServer
 			{
 				_dataContext = dataContext;
 			}
+
+			#region Table Functions
+			#region SchemaTableFunction
+			private static readonly MethodInfo _schemaTableFunction = MemberHelper.MethodOf<DataContext>(ctx => ctx.SchemaTableFunction(default));
+
+			[Sql.TableFunction("SchemaTableFunction", Schema = "TestSchema")]
+			public IQueryable<Parent> SchemaTableFunction(SqlInt32? id)
+			{
+				return _dataContext.GetTable<Parent>(this, _schemaTableFunction, id);
+			}
+			#endregion
+			#endregion
 		}
 
 		[Table("SameTableName", Schema = "TestSchema")]
@@ -276,11 +290,12 @@ namespace Cli.All.SqlServer
 					Scale = 0
 				}
 			};
-			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-			return dataConnection.QueryProc(dataReader => new TestProcedureResult()
+			var ret = dataConnection.QueryProc(dataReader => new TestProcedureResult()
 			{
 				Column = Converter.ChangeTypeTo<SqlInt32>(dataReader.GetValue(0), dataConnection.MappingSchema)
 			}, "[TestSchema].[TestProcedure]", parameters).ToList();
+			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
+			return ret;
 		}
 
 		public static async Task<TestProcedureResults> TestProcedureAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)

@@ -171,6 +171,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						if (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
 							|| IsReserved(value)
 							|| value.Any(c => char.IsWhiteSpace(c)
+							|| (value.Length > 0 && value[0] != '_' && !char.IsLetter(value[0]))
 							|| ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}

@@ -10,12 +10,12 @@
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
 		<PackageReference Include="NUnit" />
-		<PackageReference Include="MiniProfiler.Shared" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.ServiceModel" />
+		<PackageReference Include="MiniProfiler.Shared" />
 
 		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
@@ -27,6 +27,7 @@
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
+		<PackageReference Include="MiniProfiler.Minimal" />
 	</ItemGroup>
 
 	<ItemGroup>

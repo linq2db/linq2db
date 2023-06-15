@@ -282,9 +282,10 @@ namespace Cli.T4.Oracle
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
 			poutputstr = Converter.ChangeTypeTo<string?>(parameters[1].Value);
 			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[2].Value);
-			return dataConnection.ExecuteProc("MANAGED.OUTREFENUMTEST", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -317,11 +318,12 @@ namespace Cli.T4.Oracle
 					Direction = ParameterDirection.InputOutput
 				}
 			};
+			var ret = dataConnection.ExecuteProc("MANAGED.OUTREFTEST", parameters);
 			poutputid = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
 			pinputoutputid = Converter.ChangeTypeTo<decimal?>(parameters[2].Value);
 			poutputstr = Converter.ChangeTypeTo<string?>(parameters[4].Value);
 			pinputoutputstr = Converter.ChangeTypeTo<string?>(parameters[5].Value);
-			return dataConnection.ExecuteProc("MANAGED.OUTREFTEST", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -371,9 +373,10 @@ namespace Cli.T4.Oracle
 					Direction = ParameterDirection.Output
 				}
 			};
+			var ret = dataConnection.QueryProc<ResultsettestResult>("MANAGED.RESULTSETTEST", parameters).ToList();
 			mr = Converter.ChangeTypeTo<OracleRefCursor?>(parameters[0].Value);
 			sr = Converter.ChangeTypeTo<OracleRefCursor?>(parameters[1].Value);
-			return dataConnection.QueryProc<ResultsettestResult>("MANAGED.RESULTSETTEST", parameters).ToList();
+			return ret;
 		}
 
 		public partial class ResultsettestResult
@@ -397,8 +400,9 @@ namespace Cli.T4.Oracle
 					Size = 22
 				}
 			};
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("MANAGED.TEST_PROCEDURE", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -417,8 +421,9 @@ namespace Cli.T4.Oracle
 					Size = 22
 				}
 			};
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -437,8 +442,9 @@ namespace Cli.T4.Oracle
 					Size = 22
 				}
 			};
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+			return ret;
 		}
 		#endregion
 		#endregion
@@ -847,7 +853,7 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C007182 backreference
+		/// SYS_C007192 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(UserId), OtherKey = nameof(TTestUserContract.UserId))]
 		public IEnumerable<TTestUserContract> TTestUserContracts { get; set; } = null!;
@@ -864,7 +870,7 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C007182
+		/// SYS_C007192
 		/// </summary>
 		[Association(CanBeNull = false, ThisKey = nameof(UserId), OtherKey = nameof(TTestUser.UserId))]
 		public TTestUser User { get; set; } = null!;

@@ -644,12 +644,12 @@ namespace Sql2017
 
 		#region EmployeeSalesByCountry
 
-		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<EmployeeSalesByCountryResult> EmployeeSalesByCountry(this NorthwindDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
+				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
+				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
 			};
 
 			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]", parameters).ToList();
@@ -669,12 +669,12 @@ namespace Sql2017
 
 		#region SalesByYear
 
-		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @Beginning_Date, DateTime? @Ending_Date)
+		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@Beginning_Date", @Beginning_Date, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @Ending_Date,    LinqToDB.DataType.DateTime)
+				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
+				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
 			};
 
 			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
@@ -1222,8 +1222,8 @@ namespace Sql2017
 
 		public partial class Issue1921Result
 		{
-			public string name  { get; set; } = null!;
-			public int?   objid { get; set; }
+			[Column("name") ] public string Name  { get; set; } = null!;
+			[Column("objid")] public int?   Objid { get; set; }
 		}
 
 		#endregion
@@ -1682,7 +1682,7 @@ namespace Sql2017
 			return dataConnection.QueryProc(dataReader =>
 				new DuplicateColumnNamesResult
 				{
-					id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
+					Id      = Converter.ChangeTypeTo<int>   (dataReader.GetValue(0), ms),
 					Column2 = Converter.ChangeTypeTo<string>(dataReader.GetValue(1), ms),
 				},
 				"[DuplicateColumnNames]").ToList();
@@ -1690,7 +1690,7 @@ namespace Sql2017
 
 		public partial class DuplicateColumnNamesResult
 		{
-			               public int    id      { get; set; }
+			[Column("id")] public int    Id      { get; set; }
 			[Column("id")] public string Column2 { get; set; } = null!;
 		}
 

@@ -1,7 +1,6 @@
-﻿using System;
-
-namespace LinqToDB.SqlProvider
+﻿namespace LinqToDB.SqlProvider
 {
+	using DataProvider;
 	using Mapping;
 	using SqlQuery;
 
@@ -10,7 +9,7 @@ namespace LinqToDB.SqlProvider
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
 			MappingSchema mappingSchema, DataOptions dataOptions, AliasesContext aliases, EvaluationContext context)
 		{
-			var optimizationContext = new OptimizationContext(context, aliases, false);
+			var optimizationContext = new OptimizationContext(context, aliases, false, static () => NoopQueryParametersNormalizer.Instance);
 
 			var nullability = NullabilityContext.NonQuery;
 

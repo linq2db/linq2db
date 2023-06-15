@@ -54,7 +54,9 @@ namespace Tests.DataProvider
 							where t.Value > TestData.DateTime
 							select t;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				Assert.That(query.GetStatement().CollectParameters().Length, Is.EqualTo(0));
+#pragma warning restore CS0618 // Type or member is obsolete
 
 				Assert.That(query.ToString(), Does.Not.Contain("DateTime("));
 			}

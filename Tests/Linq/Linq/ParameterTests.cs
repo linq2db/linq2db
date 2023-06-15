@@ -69,8 +69,10 @@ namespace Tests.Linq
 
 				var queryInlined = query.InlineParameters();
 
+#pragma warning disable CS0618 // Type or member is obsolete
 				Assert.That(query.GetStatement().CollectParameters().Length,        Is.EqualTo(1));
 				Assert.That(queryInlined.GetStatement().CollectParameters().Length, Is.EqualTo(0));
+#pragma warning restore CS0618 // Type or member is obsolete
 			}
 		}
 
@@ -1553,6 +1555,24 @@ namespace Tests.Linq
 		{
 			_cnt++;
 			return new[] { 1, 2, 3, 4 }.Where(_ => _ != _param);
+		}
+
+		[Test]
+		public void Issue4052([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var data = new Person()
+			{
+				ID = 1,
+			};
+
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
+			var query1 = (from c in db.Person
+						  where c.ID == data.ID
+						  && (c.MiddleName != null ? c.MiddleName.Trim().ToLower() : string.Empty) == (data.MiddleName != null ? data.MiddleName.Trim().ToLower() : string.Empty)
+						  select c).ToList();
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
 		}
 	}
 }

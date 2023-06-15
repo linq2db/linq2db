@@ -1946,6 +1946,45 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void CountGroupBy1([DataSources()] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from c in db.Child
+							 orderby c.ChildID
+							 select c;
+
+				Assert.DoesNotThrow(() => query.Count());
+			}
+		}
+
+		[Test]
+		public void CountGroupBy2([DataSources()] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from c in db.Child.OrderBy(c => c.ChildID)
+							join p in db.Parent on c.ParentID equals p.ParentID
+							select new { c, p };
+
+				Assert.DoesNotThrow(() => query.Count());
+			}
+		}
+
+		[Test]
+		public void CountGroupBy3([DataSources()] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = from p in db.Parent
+							join c in db.Child.OrderBy(c => c.ChildID) on p.ParentID equals c.ParentID
+							select new { c, p };
+
+				Assert.DoesNotThrow(() => query.Count());
+			}
+		}
+
 		void CheckGuardedQuery<TKey, TEntity>(IQueryable<IGrouping<TKey, TEntity>> grouping)
 			where TKey: notnull
 		{

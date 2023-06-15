@@ -23,6 +23,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				case ProviderName.MySqlOfficial                :
 				case MySqlProviderAdapter.MySqlDataAssemblyName: return _mySqlDataProvider.Value;
+				case ProviderName.MariaDB                      :
 				case ProviderName.MySqlConnector               : return _mySqlConnectorDataProvider.Value;
 
 				case ""                         :

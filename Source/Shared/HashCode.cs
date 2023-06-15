@@ -350,7 +350,7 @@ namespace System
 			}
 		}
 
-		internal int ToHashCode()
+		internal readonly int ToHashCode()
 		{
 			// Storing the value of _length locally shaves of quite a few bytes
 			// in the resulting machine code.

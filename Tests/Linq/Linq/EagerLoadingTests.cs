@@ -1794,5 +1794,16 @@ FROM
 			}
 		}
 		#endregion
+
+		[Test, ActiveIssue(4060)]
+		public void Issue4060([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Person.Where(p => p.ID == 2)
+				.Concat(db.Person.Where(p => p.ID == 3))
+				.LoadWith(p => p.Patient)
+				.ToList();
+		}
 	}
 }

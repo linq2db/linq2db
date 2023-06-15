@@ -9,6 +9,7 @@
 	IncludeDefaultSchema = false;
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
+	NormalizeParameterName = false;
 
 	LoadFirebirdMetadata(GetConnectionString("Firebird3"));
 	GenerateModel();

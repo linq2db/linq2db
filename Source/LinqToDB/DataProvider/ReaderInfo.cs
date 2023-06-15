@@ -10,35 +10,35 @@ namespace LinqToDB.DataProvider
 		private Type? _toType;
 		public  Type?  ToType
 		{
-			get => _toType;
+			readonly get => _toType;
 			set { _toType = value; CalcHashCode(); }
 		}
 
 		private Type? _fieldType;
 		public  Type?  FieldType
 		{
-			get => _fieldType;
+			readonly get => _fieldType;
 			set { _fieldType = value; CalcHashCode(); }
 		}
 
 		private Type? _providerFieldType;
 		public  Type?  ProviderFieldType
 		{
-			get => _providerFieldType;
+			readonly get => _providerFieldType;
 			set { _providerFieldType = value; CalcHashCode(); }
 		}
 
 		private string? _dataTypeName;
 		public  string?  DataTypeName
 		{
-			get => _dataTypeName;
+			readonly get => _dataTypeName;
 			set { _dataTypeName = value?.ToLowerInvariant(); CalcHashCode(); }
 		}
 
 		private Type? _dataReaderType;
 		public Type? DataReaderType
 		{
-			get => _dataReaderType;
+			readonly get => _dataReaderType;
 			set { _dataReaderType = value; CalcHashCode(); }
 		}
 
@@ -61,7 +61,7 @@ namespace LinqToDB.DataProvider
 			return obj is ReaderInfo ri && Equals(ri);
 		}
 
-		public override int GetHashCode()
+		public readonly override int GetHashCode()
 		{
 			return _hashCode;
 		}

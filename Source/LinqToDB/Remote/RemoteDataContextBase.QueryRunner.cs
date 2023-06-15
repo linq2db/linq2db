@@ -10,6 +10,7 @@ namespace LinqToDB.Remote
 	using Common.Internal;
 	using Data;
 	using Linq;
+	using DataProvider;
 	using SqlProvider;
 	using SqlQuery;
 #if !NATIVE_ASYNC
@@ -57,7 +58,7 @@ namespace LinqToDB.Remote
 				using var sqlStringBuilder = Pools.StringBuilder.Allocate();
 				var cc                     = sqlBuilder.CommandCount(query.Statement);
 
-				var optimizationContext = new OptimizationContext(_evaluationContext, query.Aliases!, false);
+				var optimizationContext = new OptimizationContext(_evaluationContext, query.Aliases!, false, static () => NoopQueryParametersNormalizer.Instance);
 
 				for (var i = 0; i < cc; i++)
 				{
@@ -88,7 +89,7 @@ namespace LinqToDB.Remote
 
 					if (optimizationContext.HasParameters())
 					{
-						var sqlParameters = optimizationContext.GetParameters().ToList();
+						var sqlParameters = optimizationContext.GetParameters();
 						foreach (var p in sqlParameters)
 						{
 							var parameterValue = p.GetParameterValue(_evaluationContext.ParameterValues);

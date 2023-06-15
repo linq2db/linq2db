@@ -14,7 +14,7 @@ docker exec hana2 sudo chown 12000:79 /hana/password.json
 
 call wait hana2 "Startup finished"
 
-SET hdbsql="c:\Program Files\sap\hdbclient\hdbsql.exe"
+SET hdbsql="..\..\Redist\SapHana\hdbsql.exe"
 
 REM create test schema
 %hdbsql% -n localhost:39017 -u SYSTEM -p Passw0rd "CREATE SCHEMA TESTDB"

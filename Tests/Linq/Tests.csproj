@@ -60,6 +60,24 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>SqlCeTests.tt</DependentUpon>
 		</Compile>
+
+		<None Include="..\..\Redist\SapHana\libadonetHDB.dll" Link="libadonetHDB.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="..\..\Redist\SapHana\libadonetHDB32.dll" Link="libadonetHDB32.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+		<Reference Include="Sap.Data.Hana.v4.5">
+			<HintPath>..\..\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
+		<Reference Include="Sap.Data.Hana.Core.v2.1">
+			<HintPath>..\..\Redist\SapHana\v2.1\Sap.Data.Hana.Core.v2.1.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">

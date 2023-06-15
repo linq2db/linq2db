@@ -23,6 +23,12 @@ IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TestProcedure'
 	DROP PROCEDURE TestSchema.TestProcedure
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'SchemaTableFunction' AND schema_id = SCHEMA_ID('TestSchema'))
+BEGIN DROP FUNCTION TestSchema.SchemaTableFunction
+END
+GO
+
+
 CREATE TABLE InheritanceParent
 (
 	InheritanceParentId int          NOT NULL CONSTRAINT PK_InheritanceParent PRIMARY KEY CLUSTERED,
@@ -709,6 +715,7 @@ CREATE TABLE LinqDataTypes
 GO
 -- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
+
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2008.MS BEGIN
 -- SKIP SqlServer.2012 BEGIN
@@ -1152,11 +1159,21 @@ END
 GO
 -- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
+
 CREATE PROCEDURE TestSchema.TestProcedure
 AS
 BEGIN
 	SELECT 1
 END
+GO
+
+CREATE FUNCTION TestSchema.SchemaTableFunction(@id int)
+RETURNS TABLE
+AS
+RETURN
+(
+	SELECT * FROM Parent WHERE ParentID = @id
+)
 GO
 
 
@@ -1351,7 +1368,9 @@ CREATE TABLE CollatedTable
 GO
 
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 -- SKIP SqlServer.2008 BEGIN
+-- SKIP SqlServer.2008.MS BEGIN
 IF EXISTS (SELECT name FROM sys.sequences  WHERE name = N'TestSequence')
 	DROP SEQUENCE dbo.TestSequence
 GO
@@ -1359,7 +1378,9 @@ CREATE SEQUENCE dbo.TestSequence
 	START WITH 1
 	INCREMENT BY 1;
 GO
+-- SKIP SqlServer.2008.MS END
 -- SKIP SqlServer.2008 END
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
 
 -- one-to-one (by primary key) relation for scaffold testing

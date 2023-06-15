@@ -1346,6 +1346,8 @@ namespace LinqToDB.Data
 				if (parameter.Scale     != null) p.Scale     = (byte)parameter.Scale    .Value;
 #endif
 
+				// we don't normalize parameter names here as they are passed from user code and it is user's responsibility
+				// to pass correct names. And we cannot add normalization as it will be breaking change for existing users
 				dataConnection.DataProvider.SetParameter(dataConnection, p, parameter.Name!, dbDataType, value);
 				// some providers (e.g. managed sybase provider) could change parameter name
 				// which breaks parameters rebind logic
@@ -1582,8 +1584,8 @@ namespace LinqToDB.Data
 							new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, (bool?)null).Reduce(dc, dr));
 				}
 
-				return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-					new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, (bool?)null).Reduce(dc, dr));
+				return CreateObjectReader<T>(context.dataConnection, context.dataReader, (dc, dr, type, idx, dataReaderExpr, conv) =>
+					new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, (bool?)null).Reduce(dc, dr));
 			});
 
 			return (Func<DbDataReader,T>)func;
@@ -1605,8 +1607,8 @@ namespace LinqToDB.Data
 			}
 			else
 			{
-				func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr) =>
-				new ConvertFromDataReaderExpression(type, idx, null, dataReaderExpr, true).Reduce(dc, slowMode: true));
+				func = CreateObjectReader<T>(dataConnection, dataReader, (dc, dr, type, idx, dataReaderExpr, conv) =>
+				new ConvertFromDataReaderExpression(type, idx, conv, dataReaderExpr, true).Reduce(dc, slowMode: true));
 			}
 
 			_objectReaders.Set(key, func,
@@ -1618,7 +1620,7 @@ namespace LinqToDB.Data
 		static Func<DbDataReader, T> CreateObjectReader<T>(
 			DataConnection dataConnection,
 			DbDataReader   dataReader,
-			Func<DataConnection, DbDataReader, Type, int,Expression,Expression> getMemberExpression)
+			Func<DataConnection, DbDataReader, Type, int,Expression,IValueConverter?,Expression> getMemberExpression)
 		{
 			var parameter      = Expression.Parameter(typeof(DbDataReader));
 			var dataReaderExpr = (Expression)Expression.Convert(parameter, dataReader.GetType());
@@ -1652,7 +1654,7 @@ namespace LinqToDB.Data
 
 			if (dataConnection.MappingSchema.IsScalarType(typeof(T)))
 			{
-				expr = getMemberExpression(dataConnection, dataReader, typeof(T), 0, dataReaderExpr);
+				expr = getMemberExpression(dataConnection, dataReader, typeof(T), 0, dataReaderExpr, null);
 			}
 			else
 			{
@@ -1695,7 +1697,8 @@ namespace LinqToDB.Data
 									(names
 										.Select((n,i) => new { n, i })
 										.FirstOrDefault(n => dataConnection.MappingSchema.ColumnNameComparer.Compare(n.n, p.Name) == 0) ?? new { n="", i=-1 }).i,
-									dataReaderExpr) :
+									dataReaderExpr,
+									null) :
 								Expression.Constant(dataConnection.MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType)));
 					}
 				}
@@ -1711,7 +1714,7 @@ namespace LinqToDB.Data
 						select new
 						{
 							Member = member,
-							Expr   = getMemberExpression(dataConnection, dataReader, member.MemberType, n.idx, dataReaderExpr),
+							Expr   = getMemberExpression(dataConnection, dataReader, member.MemberType, n.idx, dataReaderExpr, member.ValueConverter),
 						}
 					).ToList();
 

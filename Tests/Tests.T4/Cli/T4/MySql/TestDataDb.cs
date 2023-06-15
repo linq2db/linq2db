@@ -513,8 +513,9 @@ namespace Cli.T4.MySql
 					Direction = ParameterDirection.Output
 				}
 			};
+			var ret = dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
 			aOutParam = Converter.ChangeTypeTo<sbyte?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("`TestOutputParametersWithoutTableProcedure`", parameters);
+			return ret;
 		}
 		#endregion
 
@@ -533,9 +534,10 @@ namespace Cli.T4.MySql
 					Direction = ParameterDirection.Output
 				}
 			};
+			var ret = dataConnection.QueryProc<TestProcedureResult>("`TestProcedure`", parameters).ToList();
 			param2 = Converter.ChangeTypeTo<int?>(parameters[1].Value);
 			param1 = Converter.ChangeTypeTo<int?>(parameters[2].Value);
-			return dataConnection.QueryProc<TestProcedureResult>("`TestProcedure`", parameters).ToList();
+			return ret;
 		}
 
 		public partial class TestProcedureResult

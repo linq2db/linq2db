@@ -1145,8 +1145,9 @@ namespace Cli.All.SqlServerNorthwind
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[1].Value);
-			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<CustOrderHistResults> CustOrderHistAsync(this TestDataDB dataConnection, SqlString? customerId, int @return, CancellationToken cancellationToken = default)
@@ -1206,8 +1207,9 @@ namespace Cli.All.SqlServerNorthwind
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<CustOrdersDetailResult>("[CustOrdersDetail]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[1].Value);
-			return dataConnection.QueryProc<CustOrdersDetailResult>("[CustOrdersDetail]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<CustOrdersDetailResults> CustOrdersDetailAsync(this TestDataDB dataConnection, SqlInt32? orderId, int @return, CancellationToken cancellationToken = default)
@@ -1270,8 +1272,9 @@ namespace Cli.All.SqlServerNorthwind
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[1].Value);
-			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<CustOrdersOrdersResults> CustOrdersOrdersAsync(this TestDataDB dataConnection, SqlString? customerId, int @return, CancellationToken cancellationToken = default)
@@ -1337,8 +1340,9 @@ namespace Cli.All.SqlServerNorthwind
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[2].Value);
-			return dataConnection.QueryProc<EmployeeSalesByCountryResult>("[Employee Sales by Country]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<EmployeeSalesByCountryResults> EmployeeSalesByCountryAsync(this TestDataDB dataConnection, SqlDateTime? beginningDate, SqlDateTime? endingDate, int @return, CancellationToken cancellationToken = default)
@@ -1409,8 +1413,9 @@ namespace Cli.All.SqlServerNorthwind
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[2].Value);
-			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<SalesByYearResults> SalesByYearAsync(this TestDataDB dataConnection, SqlDateTime? beginningDate, SqlDateTime? endingDate, int @return, CancellationToken cancellationToken = default)
@@ -1481,8 +1486,9 @@ namespace Cli.All.SqlServerNorthwind
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[2].Value);
-			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<SalesByCategoryResults> SalesByCategoryAsync(this TestDataDB dataConnection, SqlString? categoryName, SqlString? ordYear, int @return, CancellationToken cancellationToken = default)
@@ -1543,8 +1549,9 @@ namespace Cli.All.SqlServerNorthwind
 					Scale = 0
 				}
 			};
+			var ret = dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Ten Most Expensive Products]", parameters).ToList();
 			@return = Converter.ChangeTypeTo<int>(parameters[0].Value);
-			return dataConnection.QueryProc<TenMostExpensiveProductsResult>("[Ten Most Expensive Products]", parameters).ToList();
+			return ret;
 		}
 
 		public static async Task<TenMostExpensiveProductsResults> TenMostExpensiveProductsAsync(this TestDataDB dataConnection, int @return, CancellationToken cancellationToken = default)

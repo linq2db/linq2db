@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.BulkCopyOptions.KeepIdentity == true)
 				.ToArray();
 			ColumnTypes    = Columns.Select(c => new SqlDataType(c)).ToArray();
-			ParameterName  = SqlBuilder.ConvertInline("p", ConvertType.NameToQueryParameter);
+			ParameterName  = "p";
 			BatchSize      = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
 		}
 
@@ -92,7 +92,7 @@ namespace LinqToDB.DataProvider
 
 				if (Options.BulkCopyOptions.UseParameters || skipConvert(column) || !MappingSchema.TryConvertToSql(StringBuilder, ColumnTypes[i], Options, value))
 				{
-					var name = ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex;
+					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex, ConvertType.NameToQueryParameter);
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
@@ -103,12 +103,12 @@ namespace LinqToDB.DataProvider
 						StringBuilder.Append(name);
 					}
 
-
 					if (value is DataParameter dataParameter)
 						value = dataParameter.Value;
 
-					Parameters.Add(new DataParameter(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, value,
-						column.DataType, column.DbType)
+					Parameters.Add(new DataParameter(
+						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, ConvertType.NameToQueryParameter),
+						value, column.DataType, column.DbType)
 					{
 						Size      = column.Length,
 						Precision = column.Precision,
