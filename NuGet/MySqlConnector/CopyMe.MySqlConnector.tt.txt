@@ -5,7 +5,7 @@
 <#@ include file="$(LinqToDBT4MySqlTemplatesPath)LinqToDB.MySql.Tools.ttinclude" once="true" #>
 <#@ include file="$(LinqToDBT4MySqlTemplatesPath)PluralizationService.ttinclude" once="true" #>
 <#
-	// See LinqToDB.Templates/README.T4.Config.md for more details.
+	// See LinqToDB.Templates/README.md for more details.
 
 	// Configuring schema load process
 	//
