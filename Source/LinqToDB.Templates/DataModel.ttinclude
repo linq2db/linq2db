@@ -111,9 +111,9 @@ public HashSet<string> KeyWords = new HashSet<string>
 	"using",    "virtual",  "volatile", "void",    "while",     "namespace", "string"
 };
 
-public static Func<string, bool>  IsValueType    = IsValueTypeDefault;
-public static Func<string,string> ToPlural       = s => s + "s";
-public static Func<string,string> ToSingular     = s => s;
+public static Func<string,bool>   IsValueType = IsValueTypeDefault;
+public static Func<string,string> ToPlural    = s => s + "s";
+public static Func<string,string> ToSingular  = s => s;
 
 static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema = (dataConnection, schemaOptions) =>
 {
