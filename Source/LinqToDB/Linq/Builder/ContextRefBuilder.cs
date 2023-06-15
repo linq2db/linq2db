@@ -13,7 +13,14 @@ namespace LinqToDB.Linq.Builder
 
 		static ProjectFlags GetRootProjectFlags(BuildInfo buildInfo)
 		{
-			return buildInfo.GetFlags(buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root);
+			var flags = buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root;
+			
+			/*
+			if (buildInfo.CreateSubQuery)
+				flags |= ProjectFlags.Subquery;
+
+			*/
+			return buildInfo.GetFlags(flags);
 		}
 
 		Expression CalcBuildContext(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -27,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 				if (root is ContextRefExpression)
 					return root;
 
-				var newExpression = builder.MakeExpression(buildInfo.Parent, root, ProjectFlags.Expand);
+				var newExpression = builder.MakeExpression(buildInfo.Parent, root, buildInfo.CreateSubQuery ? ProjectFlags.Subquery : ProjectFlags.Expand);
 				newExpression = builder.RemoveNullPropagation(newExpression, true);
 
 				return newExpression;
@@ -38,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var root = CalcBuildContext(builder, buildInfo);
+			var root = CalcBuildContext(builder, new BuildInfo(buildInfo, buildInfo.Expression) {IsTest = true});
 
 			if (!ReferenceEquals(root, buildInfo.Expression))
 				return builder.IsSequence(new BuildInfo(buildInfo, root) {IsTest = true});

@@ -219,7 +219,7 @@ namespace LinqToDB.SqlQuery
 				return writer;
 
 			writer
-				.Append(" FROM ");
+				.Append("FROM ");
 
 			if (Tables.Count > 0)
 			{

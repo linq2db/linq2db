@@ -33,8 +33,8 @@ namespace LinqToDB.Linq.Builder
 		/// <summary>
 		/// Specify that we expect real expression under hidden by Selects chain 
 		/// </summary>
-		Traverse = 0x400,	
+		Traverse = 0x800,	
 
-		Expose = 0x800,	
+		Subquery = 0x1000,	
 	}
 }

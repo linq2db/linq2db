@@ -68,7 +68,7 @@ namespace LinqToDB.SqlQuery
 
 			writer
 				.AppendLine()
-				.AppendLine(" WHERE");
+				.AppendLine("WHERE");
 
 			using (writer.WithScope())
 				writer.AppendElement(Search);

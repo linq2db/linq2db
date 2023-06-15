@@ -2652,7 +2652,7 @@ namespace LinqToDB.SqlQuery
 					var sqlExpr = (ISqlExpression)Visit(element.SqlExpression);
 
 					if (ShouldReplace(element) ||!ReferenceEquals(sqlExpr, element.SqlExpression))
-						return NotifyReplaced(new SqlNullabilityExpression(sqlExpr), element);
+						return NotifyReplaced(new SqlNullabilityExpression(sqlExpr, element.CanBeNull), element);
 
 					break;
 				}	

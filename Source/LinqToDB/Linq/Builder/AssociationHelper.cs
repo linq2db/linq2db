@@ -27,10 +27,10 @@ namespace LinqToDB.Linq.Builder
 			Type                  parentType,
 			Type                  objectType,
 			bool                  inline,
-			bool                  enforceDefault,
+			bool?                 enforceDefault,
 			LoadWithInfo?         loadWith,
 			MemberInfo[]?         loadWithPath, 
-			out bool              isLeft)
+			out bool?             isOuter)
 		{
 			var dataContextConstant = Expression.Constant(builder.DataContext, builder.DataContext.GetType());
 
@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters[0]);
 			}
 
-			var shouldAddDefaultIfEmpty = enforceDefault;
+			var shouldAddDefaultIfEmpty = enforceDefault == true;
 
 			if (definedQueryMethod == null)
 			{
@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (expressionPredicate != null)
 				{
-					shouldAddDefaultIfEmpty = shouldAddDefaultIfEmpty || association.CanBeNull && inline;
+					shouldAddDefaultIfEmpty = shouldAddDefaultIfEmpty || (association.CanBeNull && inline);
 					shouldAddCacheCheck     = true;
 
 					var replacedBody = expressionPredicate.GetBody(parentParam, childParam);
@@ -276,6 +276,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			if (enforceDefault == false)
+			{
+				shouldAddDefaultIfEmpty = false;
+			}
+
 			if (inline)
 			{
 				var body = definedQueryMethod.Body.Unwrap();
@@ -284,7 +289,7 @@ namespace LinqToDB.Linq.Builder
 					.MakeGenericMethod(objectType), body);
 
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-				isLeft = true;
+				isOuter = true;
 			}
 			else
 			{
@@ -298,11 +303,11 @@ namespace LinqToDB.Linq.Builder
 							: Methods.Enumerable.DefaultIfEmpty).MakeGenericMethod(objectType), body);
 
 					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
-					isLeft = true;
+					isOuter = true;
 				}
 				else
 				{
-					isLeft = false;
+					isOuter = false;
 				}
 			}
 
@@ -314,7 +319,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext, 
-			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool isOuter)
+			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();

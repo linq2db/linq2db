@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
 			}
 
-			if (level == 0 && context != null && purpose == FullEntityPurpose.Default && context is ITableContext table)
+			if (!flags.IsKeys() && level == 0 && context != null && purpose == FullEntityPurpose.Default && context is ITableContext table)
 			{
 				var ed = MappingSchema.GetEntityDescriptor(table.ObjectType,
 					DataOptions.ConnectionOptions.OnEntityDescriptorCreated);

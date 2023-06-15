@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 			var inScopeExpr = SequenceHelper.MoveAllToScopedContext(expr, context);
 
 			var testInfo =
-				new BuildInfo(context, inScopeExpr, new SelectQuery { ParentSelect = context.SelectQuery }) { IsTest = true };
+				new BuildInfo(context, inScopeExpr, new SelectQuery { ParentSelect = context.SelectQuery }) { IsTest = true, CreateSubQuery = true };
 
 			if (!IsSequence(testInfo))
 				return null;
@@ -1502,9 +1502,7 @@ namespace LinqToDB.Linq.Builder
 				var searchCondition = new SqlSearchCondition();
 				foreach (var placeholder in notNull)
 				{
-					var sql = placeholder.Sql;
-					if (!sql.CanBeNullable(nullability))
-						sql = new SqlNullabilityExpression(sql);
+					var sql = SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true);
 					searchCondition.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(sql, isNot), isNot));
 				}
 
@@ -1835,7 +1833,8 @@ namespace LinqToDB.Linq.Builder
 					lOriginal = l;
 				}
 			} 
-			else if (r is SqlSearchCondition rsc)
+			
+			if (r is SqlSearchCondition rsc)
 			{
 				if (isEquality != null & IsBooleanConstant(rightExpr, out var boolLeft) && boolLeft != null)
 				{
@@ -1902,12 +1901,25 @@ namespace LinqToDB.Linq.Builder
 				if (QueryHelper.IsNullValue(lOriginal) && !QueryHelper.IsNullValue(rOriginal))
 				{
 					if (!rOriginal.CanBeNullable(nullability))
-						rOriginal = new SqlNullabilityExpression(rOriginal);
+						rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, true);
 				}
 				else if (QueryHelper.IsNullValue(rOriginal) && !QueryHelper.IsNullValue(lOriginal))
 				{
 					if (!lOriginal.CanBeNullable(nullability))
-						lOriginal = new SqlNullabilityExpression(lOriginal);
+						lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, true);
+				}
+
+
+				if (compareNullsAsValues)
+				{
+					if (lOriginal is SqlColumn colLeft)
+						lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.GetContext(colLeft.Parent));
+
+					if (rOriginal is SqlColumn colRight)
+						rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, NullabilityContext.GetContext(colRight.Parent));
+
+					lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, nullability);
+					rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, nullability);
 				}
 
 				predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
@@ -2589,7 +2601,7 @@ namespace LinqToDB.Linq.Builder
 					if (QueryHelper.IsNullValue(sqlValue))
 					{
 						if (!discriminatorSql.CanBeNullable(NullabilityContext.NonQuery))
-							discriminatorSql = new SqlNullabilityExpression(discriminatorSql);
+							discriminatorSql = new SqlNullabilityExpression(discriminatorSql, true);
 						return new SqlPredicate.IsNull(discriminatorSql, false);
 					}
 
@@ -3998,7 +4010,7 @@ namespace LinqToDB.Linq.Builder
 
 				var root = MakeExpression(currentContext, memberExpression.Expression, flags.RootFlag());
 
-				if (!flags.IsExpose() && root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
+				if (root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
 				{
 					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags);
 					if (subqueryExpression != null)
@@ -4023,7 +4035,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (root is ContextRefExpression contextRef)
 					{
-						expression = TryCreateAssociation(newPath, contextRef, flags);
+						expression = TryCreateAssociation(newPath, contextRef, currentContext, flags);
 					}
 				}
 
@@ -4065,7 +4077,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (mc.Arguments[0] is ContextRefExpression contextRef)
 					{
-						expression  = TryCreateAssociation(mc, contextRef, flags);
+						expression  = TryCreateAssociation(mc, contextRef, currentContext, flags);
 						rootContext = expression as ContextRefExpression;
 					}
 				}

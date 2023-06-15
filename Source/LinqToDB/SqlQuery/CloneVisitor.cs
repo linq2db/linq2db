@@ -356,7 +356,7 @@ namespace LinqToDB.SqlQuery
 				{
 					var expr = (SqlNullabilityExpression)(IQueryElement)element;
 
-					_objectTree.Add(element, clone = new SqlNullabilityExpression(Clone(expr.SqlExpression)));
+					_objectTree.Add(element, clone = new SqlNullabilityExpression(Clone(expr.SqlExpression), expr.CanBeNull));
 					break;
 				}
 

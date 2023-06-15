@@ -371,6 +371,17 @@ namespace LinqToDB.SqlQuery
 
 					return false;
 				}
+				case QueryElementType.SqlNullabilityExpression:
+				{
+					var nullability = (SqlNullabilityExpression)expr;
+					if (nullability.SqlExpression.TryEvaluateExpression(context, out var evaluated))
+					{
+						result = evaluated;
+						return true;
+					}
+
+					return false;
+				}
 
 				default:
 				{

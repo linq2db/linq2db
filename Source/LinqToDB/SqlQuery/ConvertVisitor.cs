@@ -203,7 +203,7 @@ namespace LinqToDB.SqlQuery
 						var sql  = (ISqlExpression?)ConvertInternal(expr.SqlExpression);
 
 						if (sql != null && !ReferenceEquals(sql , expr.SqlExpression))
-							newElement = new SqlNullabilityExpression(sql);
+							newElement = new SqlNullabilityExpression(sql, expr.CanBeNull);
 
 						break;
 					}

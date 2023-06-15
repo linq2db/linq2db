@@ -31,6 +31,13 @@ namespace LinqToDB.SqlQuery
 			EvaluationContext evaluationContext, IQueryElement rootElement, int level,
 			params IQueryElement[] dependencies)
 		{
+#if DEBUG
+			if (root.ElementType == QueryElementType.SelectStatement)
+			{
+
+			}
+#endif
+
 			_flags             = flags;
 			_dataOptions       = dataOptions;
 			_evaluationContext = evaluationContext;
@@ -1211,13 +1218,13 @@ namespace LinqToDB.SqlQuery
 				selectQuery.Select.SkipValue = subQuery.Select.SkipValue;
 			}
 
-			if (selectQuery.Select.Columns.Count == 0)
+			/*if (selectQuery.Select.Columns.Count == 0)
 			{
 				foreach(var column in subQuery.Select.Columns)
 				{
 					selectQuery.Select.AddColumn(column.Expression);
 				}
-			}
+			}*/
 
 			foreach (var column in subQuery.Select.Columns)
 			{

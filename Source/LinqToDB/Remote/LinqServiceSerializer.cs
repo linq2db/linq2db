@@ -915,6 +915,7 @@ namespace LinqToDB.Remote
 					{
 						var elem = (SqlNullabilityExpression)e;
 						Append(elem.SqlExpression);
+						Append(elem.CanBeNull);
 
 						break;
 					}
@@ -1793,8 +1794,9 @@ namespace LinqToDB.Remote
 					case QueryElementType.SqlNullabilityExpression :
 					{
 						var sqlExpression = Read<ISqlExpression>()!;
+						var isNullable = ReadBool();
 
-						obj = new SqlNullabilityExpression(sqlExpression);
+						obj = new SqlNullabilityExpression(sqlExpression, isNullable);
 
 						break;
 					}

@@ -176,12 +176,27 @@ namespace LinqToDB.SqlQuery
 				.Append(Name)
 				.Append('(');
 
+			var indent = false;
+			// Handling Exists
+			if (Parameters.Length == 1 && Parameters[0] is SelectQuery)
+			{
+				writer.AppendLine();
+				writer.Indent();
+				indent = true;
+			}
+
 			for (var index = 0; index < Parameters.Length; index++)
 			{
 				var p = Parameters[index];
 				p.ToString(writer);
 				if (index < Parameters.Length - 1)
 					writer.Append(", ");
+			}
+
+			if (indent)
+			{
+				writer.AppendLine();
+				writer.UnIndent();
 			}
 
 			writer.Append(')');

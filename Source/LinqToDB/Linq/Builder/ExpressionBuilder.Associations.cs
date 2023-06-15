@@ -117,9 +117,14 @@ namespace LinqToDB.Linq.Builder
 		Dictionary<SqlCacheKey, Expression>? _associations;
 		HashSet<Expression>?                 _isOuterAssociations;
 
-		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext, ProjectFlags flags)
+		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext, IBuildContext? forContext, ProjectFlags flags)
 		{
 			if (!IsAssociation(expression))
+				return expression;
+
+			var associationDescriptor = GetAssociationDescriptor(expression, out var memberInfo);
+
+			if (associationDescriptor == null || memberInfo == null)
 				return expression;
 
 			var associationRoot = (ContextRefExpression)MakeExpression(rootContext.BuildContext, rootContext, flags.AssociationRootFlag());
@@ -131,11 +136,6 @@ namespace LinqToDB.Linq.Builder
 			if (_associations.TryGetValue(key, out var associationExpression))
 				return associationExpression;
 
-			AccessorMember? memberInfo;
-			var associationDescriptor = GetAssociationDescriptor(expression, out memberInfo);
-			if (associationDescriptor == null || memberInfo == null)
-				return expression;
-
 			LoadWithInfo? loadWith     = null;
 			MemberInfo[]? loadWithPath = null;
 
@@ -145,7 +145,7 @@ namespace LinqToDB.Linq.Builder
 				loadWithPath = table.LoadWithPath;
 			}
 
-			bool isOuter = flags.HasFlag(ProjectFlags.ForceOuterAssociation);
+			bool? isOuter = flags.HasFlag(ProjectFlags.ForceOuterAssociation) ? true : null;
 
 			if (associationDescriptor.IsList)
 			{
@@ -154,7 +154,15 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				isOuter = isOuter || associationDescriptor.CanBeNull || _isOuterAssociations?.Contains(rootContext) == true;
+				if (flags.IsSubquery())
+					isOuter = false;
+				else
+					isOuter = isOuter == true || associationDescriptor.CanBeNull || _isOuterAssociations?.Contains(rootContext) == true;
+			}
+
+			if (forContext != null)
+			{
+				rootContext = (ContextRefExpression)SequenceHelper.MoveToScopedContext(rootContext, forContext);
 			}
 
 			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo,
@@ -162,11 +170,11 @@ namespace LinqToDB.Linq.Builder
 
 			associationExpression = association;
 
-			if (!associationDescriptor.IsList)
+			if (!associationDescriptor.IsList && !flags.IsExpand() && !flags.IsSubquery())
 			{
 				// IsAssociation will force to create OuterApply instead of subquery. Handled in FirstSingleContext
 				//
-				var buildInfo = new BuildInfo(rootContext.BuildContext, association, new SelectQuery())
+				var buildInfo = new BuildInfo(forContext, association, new SelectQuery())
 				{
 					IsTest = flags.IsTest(),
 					IsAssociation = true
@@ -178,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 
 				associationExpression = new ContextRefExpression(association.Type, sequence);
 
-				if (!flags.IsTest() && isOuter)
+				if (!flags.IsTest() && isOuter == true)
 				{
 					var root = MakeExpression(rootContext.BuildContext, associationExpression, flags.AssociationRootFlag());
 					_isOuterAssociations ??= new HashSet<Expression>(ExpressionEqualityComparer.Instance);
@@ -188,10 +196,12 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				if (associationExpression.Type != expression.Type)
-					associationExpression = new SqlAdjustTypeExpression(associationExpression, expression.Type, MappingSchema);
+					associationExpression =
+						new SqlAdjustTypeExpression(associationExpression, expression.Type, MappingSchema);
 			}
 
-			_associations[key] = associationExpression;
+			if (!flags.IsExpand())
+				_associations[key] = associationExpression;
 
 			return associationExpression;
 		}

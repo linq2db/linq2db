@@ -10,6 +10,11 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
 		{
+			if (expression is SqlSearchCondition)
+			{
+
+			}
+
 			Parent      = parent;
 			_expression = expression ?? throw new ArgumentNullException(nameof(expression));
 			RawAlias    = alias;

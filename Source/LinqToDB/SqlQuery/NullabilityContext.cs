@@ -103,6 +103,11 @@ namespace LinqToDB.SqlQuery
 				return CanBeNullInternal(InQuery, field.Table) ?? false;
 			}
 
+			if (expression is SqlNullabilityExpression nullability)
+			{
+				return nullability.CanBeNull;
+			}
+
 			if (expression.CanBeNullable(this))
 				return true;
 

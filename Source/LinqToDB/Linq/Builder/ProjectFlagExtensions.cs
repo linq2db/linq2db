@@ -5,7 +5,7 @@ namespace LinqToDB.Linq.Builder
 {
 	static class ProjectFlagExtensions
 	{
-		const ProjectFlags FlagsToPreserve = ProjectFlags.Test | ProjectFlags.ForceOuterAssociation;
+		const ProjectFlags FlagsToPreserve = ProjectFlags.Test | ProjectFlags.ForceOuterAssociation | ProjectFlags.Expand | ProjectFlags.Traverse | ProjectFlags.Subquery;
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -30,9 +30,9 @@ namespace LinqToDB.Linq.Builder
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProjectFlags ExposeFlag(this ProjectFlags flags)
+		public static ProjectFlags SubqueryFlag(this ProjectFlags flags)
 		{
-			return (flags & FlagsToPreserve) | ProjectFlags.Expose;
+			return (flags & FlagsToPreserve) | ProjectFlags.Subquery;
 		}
 
 		[DebuggerStepThrough]
@@ -86,6 +86,13 @@ namespace LinqToDB.Linq.Builder
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsKeys(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.Keys) != 0;
+		}
+
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsAssociationRoot(this ProjectFlags flags)
 		{
 			return (flags & ProjectFlags.AssociationRoot) != 0;
@@ -128,9 +135,9 @@ namespace LinqToDB.Linq.Builder
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsExpose(this ProjectFlags flags)
+		public static bool IsSubquery(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags.Expose) != 0;
+			return (flags & ProjectFlags.Subquery) != 0;
 		}
 
 	}

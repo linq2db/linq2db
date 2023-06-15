@@ -354,6 +354,14 @@ namespace LinqToDB.SqlQuery
 								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 							}
+							else
+							{
+								if (Operator == Operator.NotEqual)
+								{
+									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), true));
+								}
+							}
 						}
 						else
 						{

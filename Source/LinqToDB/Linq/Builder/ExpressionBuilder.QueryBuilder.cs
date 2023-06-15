@@ -416,7 +416,10 @@ namespace LinqToDB.Linq.Builder
 									newExpr = context.builder.UpdateNesting(context.context, newExpr);
 							}
 
-							return new TransformInfo(newExpr);
+							if (ExpressionEqualityComparer.Instance.Equals(newExpr, expr))
+								return new TransformInfo(expr);
+
+							return new TransformInfo(newExpr, false, true);
 						}
 
 						case ExpressionType.Call:

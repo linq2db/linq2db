@@ -69,7 +69,6 @@ namespace LinqToDB.SqlQuery
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
 
-			writer.Append(" ");
 			if (IsWeak)
 				writer.Append("WEAK ");
 

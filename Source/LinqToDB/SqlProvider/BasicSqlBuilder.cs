@@ -2818,7 +2818,6 @@ namespace LinqToDB.SqlProvider
 #if DEBUG
 									//SqlQuery.GetTableSource(field.Table);
 #endif
-
 									if (throwExceptionIfTableNotFound)
 										throw new SqlException("Table '{0}' not found.", field.Table);
 								}

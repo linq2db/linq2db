@@ -232,10 +232,13 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					// It will help to do not crash when user uses Automapper and it tries to map non accessible fields
-					//
-					if (flags.IsExpression())
-						return new DefaultValueExpression(Builder.MappingSchema, path.Type);
+					if (member is MemberExpression meCheck && SequenceHelper.IsSameContext(meCheck.Expression, this))
+					{
+						// It will help to do not crash when user uses Automapper and it tries to map non accessible fields
+						//
+						if (flags.IsExpression())
+							return new DefaultValueExpression(Builder.MappingSchema, path.Type);
+					}
 
 					return path;
 				}
@@ -420,7 +423,8 @@ namespace LinqToDB.Linq.Builder
 									}
 									else
 									{
-										return field;
+										if (SequenceHelper.IsSameContext(memberExpression.Expression, this))
+											return field;
 									}
 								}
 

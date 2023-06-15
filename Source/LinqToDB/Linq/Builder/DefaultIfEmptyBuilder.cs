@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))
 				{
 					var placeholder = ExpressionBuilder.CreatePlaceholder(this,
-						new SqlNullabilityExpression(new SqlValue(1)),
+						new SqlNullabilityExpression(new SqlValue(1), true),
 						path,
 						alias : NotNullPropName);
 
@@ -86,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 						if (notNull == null)
 						{
 							notNull = ExpressionBuilder.CreatePlaceholder(this,
-								new SqlNullabilityExpression (new SqlValue(1)), SequenceHelper.CreateSpecialProperty(path, typeof(int?), NotNullPropName), alias: NotNullPropName);
+								new SqlNullabilityExpression (new SqlValue(1), true), SequenceHelper.CreateSpecialProperty(path, typeof(int?), NotNullPropName), alias: NotNullPropName);
 						}
 
 						if (notNull.Type.IsValueType && !notNull.Type.IsNullable())
