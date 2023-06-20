@@ -142,6 +142,9 @@ namespace LinqToDB.Linq.Builder
 
 					foreach (var info in loadWith)
 					{
+						if (!info.ShouldLoad)
+							continue;
+
 						var memberInfo = info.MemberInfo;
 
 						if (memberInfo == null || !assignedMembers.Add(memberInfo))

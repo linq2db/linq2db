@@ -542,11 +542,19 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			return Equals(NewExpression, other.NewExpression) && Equals(Constructor, other.Constructor) &&
-			       Equals(ConstructorMethod, other.ConstructorMethod) && ConstructType == other.ConstructType &&
-			       ObjectType.Equals(other.ObjectType) &&
-			       EqualsLists(Parameters, other.Parameters, Parameter.ParameterComparer) &&
-			       EqualsLists(Assignments, other.Assignments, Assignment.AssignmentComparer);
+			var result = ExpressionEqualityComparer.Instance.Equals(NewExpression, other.NewExpression) &&
+			             Equals(Constructor, other.Constructor) &&
+			             Equals(ConstructorMethod, other.ConstructorMethod) && ConstructType == other.ConstructType &&
+			             ObjectType.Equals(other.ObjectType) &&
+			             EqualsLists(Parameters, other.Parameters, Parameter.ParameterComparer);
+
+			if (result)
+			{
+				result = EqualsLists(Assignments.OrderBy(a => a.MemberInfo.Name).ToList(),
+					other.Assignments.OrderBy(a => a.MemberInfo.Name).ToList(), Assignment.AssignmentComparer);
+			}
+
+			return result;
 		}
 
 		public override bool Equals(object? obj)
@@ -579,7 +587,6 @@ namespace LinqToDB.Expressions
 				hashCode = (hashCode * 397) ^ (int)ConstructType;
 				hashCode = (hashCode * 397) ^ ObjectType.GetHashCode();
 				hashCode = (hashCode * 397) ^ GetHashCode(Parameters, Parameter.ParameterComparer);
-				hashCode = (hashCode * 397) ^ GetHashCode(Assignments, Assignment.AssignmentComparer);
 				return hashCode;
 			}
 		}
