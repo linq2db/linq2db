@@ -179,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				return placeholder;
+				return placeholder.WithTrackingPath(toPath);
 			}
 
 			/*
@@ -220,16 +220,13 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		public static Expression ReplacePlaceholdersByTrackingPath(Expression expression)
+		public static Expression ReplacePlaceholdersPathByTrackingPath(Expression expression)
 		{
 			var transformed = expression.Transform(e =>
 			{
 				if (e is SqlPlaceholderExpression { TrackingPath: { } } placeholder)
 				{
-					var path = placeholder.TrackingPath;
-					if (e.Type != path.Type)
-						path = Expression.Convert(path, e.Type);
-					return path;
+					return placeholder.WithPath(placeholder.TrackingPath);
 				}
 
 				return e;
@@ -574,14 +571,14 @@ namespace LinqToDB.Linq.Builder
 			return tableContext;
 		}
 
-		public static TableBuilder.CteTableContext? GetCteContext(IBuildContext context)
+		public static CteTableContext? GetCteContext(IBuildContext context)
 		{
 			var contextRef = new ContextRefExpression(context.ElementType, context);
 
 			var rootContext =
 				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
 
-			var tableContext = rootContext?.BuildContext as TableBuilder.CteTableContext;
+			var tableContext = rootContext?.BuildContext as CteTableContext;
 
 			return tableContext;
 		}

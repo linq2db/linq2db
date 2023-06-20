@@ -271,7 +271,7 @@ namespace Tests.Linq
 						e.EmployeeID,
 						e.LastName,
 						e.FirstName,
-						NumberOfSubordinates = db.Employee.Where(e2 => e2.ReportsTo == e.ReportsTo).Count(),
+						NumberOfSubordinates = db.Employee.Where(e2 => e2.ReportsTo == e.ReportsTo && e2.ReportsTo != null).Count(),
 						e.ReportsTo
 					};
 

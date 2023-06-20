@@ -84,8 +84,6 @@ namespace LinqToDB.SqlQuery
 
 			}
 
-			writer.AppendLine("--------");
-
 			return writer;
 		}
 

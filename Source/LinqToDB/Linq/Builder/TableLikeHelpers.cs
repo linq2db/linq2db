@@ -69,8 +69,10 @@ namespace LinqToDB.Linq.Builder
 
 		public static SqlField RegisterFieldMapping(List<SqlField> fields, int index, Func<SqlField> fieldFactory)
 		{
+			/*
 			if (fields.Count > index && fields[index] != null)
 				return fields[index];
+				*/
 
 			var newField = fieldFactory();
 
@@ -88,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 			return newField;
 		}
 
-		public static Expression RemapToFields(SubQueryContext subQueryContext, ISqlTableSource? parentTable, List<SqlField> fields, Dictionary<SqlPlaceholderExpression, SqlPlaceholderExpression> knownMap, Expression expression, List<(SqlPlaceholderExpression placeholder, MemberInfo[] path)> placeholders)
+		public static Expression RemapToFields(IBuildContext subQueryContext, ISqlTableSource? parentTable, List<SqlField> fields, Dictionary<Expression, SqlPlaceholderExpression> knownMap, Expression expression, List<(SqlPlaceholderExpression placeholder, MemberInfo[] path)> placeholders)
 		{
 			if (placeholders.Count == 0)
 				return expression;
@@ -101,7 +103,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				var (placeholder, path) = placeholders[index];
 
-				if (!knownMap.TryGetValue(placeholder, out var newPlaceholder))
+				if (placeholder.TrackingPath == null)
+					continue;
+
+				if (!knownMap.TryGetValue(placeholder.TrackingPath, out var newPlaceholder))
 				{
 					var field = RegisterFieldMapping(fields, placeholder.Index!.Value, () =>
 					{
@@ -115,9 +120,19 @@ namespace LinqToDB.Linq.Builder
 					newPlaceholder = ExpressionBuilder.CreatePlaceholder(subQueryContext!.SelectQuery, field,
 						placeholder.Path, trackingPath: placeholder.TrackingPath, index: placeholder.Index);
 
-					knownMap[placeholder] = newPlaceholder;
-					// Cycle mapping
-					knownMap[newPlaceholder] = newPlaceholder;
+					knownMap[placeholder.TrackingPath] = newPlaceholder;
+				}
+				else
+				{
+					if (newPlaceholder.Sql is SqlField sqlField && newPlaceholder.SelectQuery == null)
+					{
+						var idx = placeholder.Index.Value;
+						while (idx >= fields.Count)
+							fields.Add(null!);
+
+						fields[idx]       = sqlField;
+						//knownMap[placeholder.TrackingPath] = newPlaceholder;
+					}
 				}
 
 				if (!ReferenceEquals(newPlaceholder, placeholder))

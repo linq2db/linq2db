@@ -315,11 +315,11 @@ namespace LinqToDB.Linq.Builder
 
 			IBuildContext deletedContext;
 			IBuildContext insertedContext;
-			if (targetTableContext is TableBuilder.CteTableContext cteTable)
+			if (targetTableContext is CteTableContext cteTable)
 			{
-				insertedContext = new TableBuilder.CteTableContext(builder, null,
+				insertedContext = new CteTableContext(builder, null,
 					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
-				deletedContext = new TableBuilder.CteTableContext(builder, null,
+				deletedContext = new CteTableContext(builder, null,
 					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
 			}
 			else

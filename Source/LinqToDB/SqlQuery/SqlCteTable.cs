@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
@@ -17,9 +18,9 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlCteTable(
-			CteClause           cte, 
-            EntityDescriptor    entityDescriptor)
-			: base(entityDescriptor, cte.Name)
+			CteClause cte, 
+			Type      entityType)
+			: base(entityType, null, new SqlObjectName(cte.Name ?? string.Empty))
 		{
 			Cte = cte;
 		}
@@ -57,6 +58,7 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
+				.Append("Table")
 				.AppendElement(Cte)
 				.Append('[').Append(SourceID).Append(']');
 			return writer;

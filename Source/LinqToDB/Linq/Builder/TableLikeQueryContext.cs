@@ -112,7 +112,7 @@ namespace LinqToDB.Linq.Builder
 				EnsureType(SourcePropAccess, ConnectionLambda.Parameters[1].Type));
 		}
 
-		Dictionary<SqlPlaceholderExpression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
+		Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
 
 		public bool IsTargetAssociation(Expression pathExpression)
 		{
