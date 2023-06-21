@@ -926,7 +926,9 @@ namespace LinqToDB.SqlQuery
 						? VisitElements(element.OutputColumns, VisitMode.Modify)
 						: null;
 
-					var outputItems = element.HasOutputItems ? VisitElements(element.OutputItems, VisitMode.Transform) : null;
+					var outputItems = element.HasOutputItems
+						? VisitElements(element.OutputItems, VisitMode.Transform) ?? element.OutputItems
+						: null;
 
 					element.Modify(insertedTable, deletedTable, outputTable, outputColumns, outputItems);
 
@@ -1460,8 +1462,8 @@ namespace LinqToDB.SqlQuery
 				{
 					var table = (SqlTable?)Visit(element.Table);
 					var ts    = (SqlTableSource?)Visit(element.TableSource);
-					var items = VisitElements(element.Items, VisitMode.Modify)!;
-					var keys  = VisitElements(element.Keys, VisitMode.Modify)!;
+					var items = VisitElements(element.Items, VisitMode.Modify) ?? element.Items;
+					var keys  = VisitElements(element.Keys, VisitMode.Modify) ?? element.Keys;
 
 					element.Modify(table, ts, items, keys);
 
@@ -1511,9 +1513,9 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Modify:
 				{
 					var into = (SqlTable?)Visit(element.Into);
-					VisitElements(element.Items, VisitMode.Modify);
+					var items = VisitElements(element.Items, VisitMode.Modify) ?? element.Items;
 					
-					element.Modify(into, element.Items);
+					element.Modify(into, items);
 					
 					break;
 				}
@@ -1596,7 +1598,7 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Modify:
 				{
 					var source = (ISqlTableSource)Visit(element.Source);
-					var joins  = VisitElements(element.Joins, VisitMode.Modify)!;
+					var joins  = VisitElements(element.Joins, VisitMode.Modify) ?? element.Joins;
 
 					List<ISqlExpression[]>? uk = null;
 					if (element.HasUniqueKeys)
@@ -1678,9 +1680,9 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Modify:
 				{
-					var conditions = VisitElements(element.Conditions, VisitMode.Modify);
+					var conditions = VisitElements(element.Conditions, VisitMode.Modify) ?? element.Conditions;
 
-					element.Modify(conditions!);
+					element.Modify(conditions);
 
 					break;
 				}
@@ -2004,7 +2006,7 @@ namespace LinqToDB.SqlQuery
 				case VisitMode.Modify:
 				{
 					var expr1  = (ISqlExpression)Visit(predicate.Expr1);
-					var values = VisitElements(predicate.Values, VisitMode.Modify)!;
+					var values = VisitElements(predicate.Values, VisitMode.Modify) ?? predicate.Values;
 
 					predicate.Modify(expr1, values);
 
@@ -2467,10 +2469,6 @@ namespace LinqToDB.SqlQuery
 					var tableArguments = element.TableArguments != null
 						? VisitElements(element.TableArguments, VisitMode.Modify)
 						: null;
-
-					if (element.TableArguments != null)
-						VisitElements(element.TableArguments, VisitMode.Modify);	
-
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.TableArguments, tableArguments))
 					{

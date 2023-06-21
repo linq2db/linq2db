@@ -45,7 +45,8 @@ namespace LinqToDB.SqlQuery
 				.AppendElement(Table)
 				.AppendLine()
 				.AppendElement(SelectQuery)
-				.AppendLine();
+				.AppendLine()
+				.AppendElement(Output);
 
 			return writer;
 		}

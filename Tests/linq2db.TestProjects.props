@@ -25,6 +25,11 @@
 		</None>
 	</ItemGroup>
 
+	<!-- ReadableExpressions workaround -->
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<EnableUnsafeBinaryFormatterSerialization>True</EnableUnsafeBinaryFormatterSerialization>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<PackageReference Include="FluentAssertions" />
 		<PackageReference Include="NodaTime" />
