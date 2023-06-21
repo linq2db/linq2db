@@ -80,6 +80,8 @@ namespace LinqToDB.Linq.Builder
 
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, argument));
 
+			sequence = new SubQueryContext(sequence);
+
 			if (fakeJoin != null)
 			{
 				buildInfo.Parent!.SelectQuery.From.Tables[0].Joins.Remove(fakeJoin);

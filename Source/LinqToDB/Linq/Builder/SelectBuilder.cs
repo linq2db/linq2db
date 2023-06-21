@@ -45,17 +45,18 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.SetAlias(selector.Parameters[0].Name);
 
-			var body = selector.Body.Unwrap();
+			var createSubquery = true;
 
-			switch (body.NodeType)
+			if (sequence is SubQueryContext)
 			{
-				case ExpressionType.Parameter : break;
-				default                       :
-					sequence = CheckSubQueryForSelect(sequence, buildInfo);
-					break;
+				if (sequence.SelectQuery.IsSimple)
+					createSubquery = false;
 			}
 
-			body = selector.Parameters.Count == 1
+			if (createSubquery)
+				sequence = new SubQueryContext(sequence);
+
+			var body = selector.Parameters.Count == 1
 				? SequenceHelper.PrepareBody(selector, sequence)
 				: SequenceHelper.PrepareBody(selector, sequence, new CounterContext(sequence));
 
@@ -65,21 +66,6 @@ namespace LinqToDB.Linq.Builder
 			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);
 #endif
 			return context;
-		}
-
-		static IBuildContext CheckSubQueryForSelect(IBuildContext context, BuildInfo buildInfo)
-		{
-			var createSubquery = context.SelectQuery.Select.IsDistinct;
-
-			if (!createSubquery)
-			{
-				if (!buildInfo.IsAggregation & !context.SelectQuery.Select.GroupBy.IsEmpty)
-					createSubquery = true;
-			}
-
-			return createSubquery
-				? new SubQueryContext(context)
-				: context;
 		}
 
 		#endregion
