@@ -1129,6 +1129,11 @@ namespace LinqToDB.SqlQuery
 					return false;
 				if (selectQuery.From.Tables.Count > 1)
 					return false;
+
+				if (selectQuery.Select.Columns.Any(c =>
+					    QueryHelper.IsAggregationOrWindowFunction(c.Expression) ||
+					    !IsColumnExpressionValid(selectQuery, c, c.Expression)))
+					return false;
 			}
 
 			if (subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)

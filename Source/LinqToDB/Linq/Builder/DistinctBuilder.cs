@@ -64,7 +64,10 @@ namespace LinqToDB.Linq.Builder
 				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
 					return path;
 
-				return base.MakeExpression(path, flags);
+				var corrected = SequenceHelper.CorrectExpression(path, this, Context);
+				var result = Builder.ConvertToSqlExpr(Context, corrected, flags.SqlFlag());
+
+				return result;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
