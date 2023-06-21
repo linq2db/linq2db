@@ -14,9 +14,9 @@ namespace LinqToDB.Linq.Builder
 			return buildInfo.Expression is ChangeTypeExpression;
 		}
 
-		ISequenceBuilder GetBuilder(ExpressionBuilder builder, BuildInfo buildInfo)
+		ISequenceBuilder? GetBuilder(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return builder.GetBuilder(buildInfo)!;
+			return builder.GetBuilder(buildInfo, false)!;
 		}
 
 		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 			var expr = (ChangeTypeExpression)buildInfo.Expression;
 			var info = new BuildInfo(buildInfo, expr.Expression);
 
-			return GetBuilder(builder, info).BuildSequence(builder, info);
+			return GetBuilder(builder, info)?.BuildSequence(builder, info);
 		}
 
 		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 			var expr = (ChangeTypeExpression)buildInfo.Expression;
 			var info = new BuildInfo(buildInfo, expr.Expression);
 
-			return GetBuilder(builder, info).IsSequence(builder, info);
+			return GetBuilder(builder, info)?.IsSequence(builder, info) == true;
 		}
 
 		public Expression Expand(ExpressionBuilder builder, BuildInfo buildInfo)

@@ -4169,6 +4169,16 @@ namespace LinqToDB.Linq.Builder
 
 					if (!handled)
 					{
+						var converted = ConvertExpression(path);
+						if (!ReferenceEquals(converted, path))
+						{
+							expression = MakeExpression(currentContext, converted, flags);
+							handled    = true;
+						}
+					}
+
+					if (!handled)
+					{
 						var applyConvert = true;
 						if (currentContext != null && flags.HasFlag(ProjectFlags.Expression))
 						{
