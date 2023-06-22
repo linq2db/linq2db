@@ -18,19 +18,20 @@ namespace ClickHouseDataContext
 {
 	public partial class ClickHouseDB : LinqToDB.Data.DataConnection
 	{
-		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
-		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
-		public ITable<CollatedTable>     CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<Doctor>            Doctors             { get { return this.GetTable<Doctor>(); } }
-		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
-		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
-		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
-		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
-		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
-		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
+		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
+		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
+		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
+		public ITable<InheritanceChild>        InheritanceChildren      { get { return this.GetTable<InheritanceChild>(); } }
+		public ITable<InheritanceParent>       InheritanceParents       { get { return this.GetTable<InheritanceParent>(); } }
+		public ITable<LinqDataType>            LinqDataTypes            { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<Parent>                  Parents                  { get { return this.GetTable<Parent>(); } }
+		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
+		public ITable<Person>                  People                   { get { return this.GetTable<Person>(); } }
+		public ITable<ReplacingMergeTreeTable> ReplacingMergeTreeTables { get { return this.GetTable<ReplacingMergeTreeTable>(); } }
+		public ITable<TestMerge1>              TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>              TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
 
 		public ClickHouseDB()
 		{
@@ -75,7 +76,6 @@ namespace ClickHouseDataContext
 		[Column("char20DataType"),                         Nullable         ] public string  Char20DataType   { get; set; } // FixedString(20)
 		[Column("varcharDataType"),                        Nullable         ] public string  VarcharDataType  { get; set; } // String
 		[Column("charDataType"),                           Nullable         ] public char?   CharDataType     { get; set; } // FixedString(1)
-		[Column("bitDataType"),                            Nullable         ] public ulong?  BitDataType      { get; set; } // UInt64
 	}
 
 	[Table("Child")]
@@ -163,6 +163,13 @@ namespace ClickHouseDataContext
 		[Column,                                 NotNull] public string LastName   { get; set; } // String
 		[Column,                       Nullable         ] public string MiddleName { get; set; } // String
 		[Column,                                 NotNull] public char   Gender     { get; set; } // FixedString(1)
+	}
+
+	[Table("ReplacingMergeTreeTable")]
+	public partial class ReplacingMergeTreeTable
+	{
+		[Column(SkipOnUpdate=true), PrimaryKey, NotNull] public uint           ID { get; set; } // UInt32
+		[Column,                                NotNull] public DateTimeOffset TS { get; set; } // DateTime
 	}
 
 	[Table("TestMerge1")]
@@ -269,6 +276,12 @@ namespace ClickHouseDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static ReplacingMergeTreeTable Find(this ITable<ReplacingMergeTreeTable> table, uint ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
 		}
 
 		public static TestMerge1 Find(this ITable<TestMerge1> table, int Id)

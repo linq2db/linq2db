@@ -39,6 +39,34 @@
 
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+
+		<!-- templates pathes for linq2db solution -->
+		<LinqToDBT4SharedTools>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SharedTools>
+
+		<LinqToDBT4ClickHouseClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4ClickHouseClientPath>
+		<LinqToDBT4DB2ClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4DB2ClientPath>
+		<LinqToDBT4FirebirdClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4FirebirdClientPath>
+		<LinqToDBT4MySqlConnectorClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4MySqlConnectorClientPath>
+		<LinqToDBT4OracleManagedClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4OracleManagedClientPath>
+		<LinqToDBT4NpgsqlClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4NpgsqlClientPath>
+		<LinqToDBT4SQLiteClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SQLiteClientPath>
+		<LinqToDBT4SQLServerClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SQLServerClientPath>
+		<LinqToDBT4SybaseDataActionClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SybaseDataActionClientPath>
+
+		<LinqToDBT4TemplatesPath>$(SolutionDir)Source\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
+		<LinqToDBT4AccessTemplatesPath>$(SolutionDir)Nuget\Access\</LinqToDBT4AccessTemplatesPath>
+		<LinqToDBT4ClickHouseTemplatesPath>$(SolutionDir)Nuget\ClickHouse\</LinqToDBT4ClickHouseTemplatesPath>
+		<LinqToDBT4DB2TemplatesPath>$(SolutionDir)Nuget\DB2\</LinqToDBT4DB2TemplatesPath>
+		<LinqToDBT4FirebirdTemplatesPath>$(SolutionDir)Nuget\Firebird\</LinqToDBT4FirebirdTemplatesPath>
+		<LinqToDBT4InformixTemplatesPath>$(SolutionDir)Nuget\Informix\</LinqToDBT4InformixTemplatesPath>
+		<LinqToDBT4MySqlTemplatesPath>$(SolutionDir)Nuget\MySql\</LinqToDBT4MySqlTemplatesPath>
+		<LinqToDBT4OracleTemplatesPath>$(SolutionDir)Nuget\Oracle\</LinqToDBT4OracleTemplatesPath>
+		<LinqToDBT4PostgreSQLTemplatesPath>$(SolutionDir)Nuget\PostgreSQL\</LinqToDBT4PostgreSQLTemplatesPath>
+		<LinqToDBT4SapHanaTemplatesPath>$(SolutionDir)Nuget\SapHana\</LinqToDBT4SapHanaTemplatesPath>
+		<LinqToDBT4SqlCeTemplatesPath>$(SolutionDir)Nuget\SqlCe\</LinqToDBT4SqlCeTemplatesPath>
+		<LinqToDBT4SQLiteTemplatesPath>$(SolutionDir)Nuget\SQLite\</LinqToDBT4SQLiteTemplatesPath>
+		<LinqToDBT4SqlServerTemplatesPath>$(SolutionDir)Nuget\SqlServer\</LinqToDBT4SqlServerTemplatesPath>
+		<LinqToDBT4SybaseAseTemplatesPath>$(SolutionDir)Nuget\Sybase\</LinqToDBT4SybaseAseTemplatesPath>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">

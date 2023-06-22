@@ -1,6 +1,6 @@
-<#@ assembly name="$(LinqToDBT4NpgsqlClientPath)Npgsql.dll"   #>
-<#@ include  file="LinqToDB.Tools.ttinclude"      once="true" #>
-<#@ include  file="LinqToDB.PostgreSQL.ttinclude" once="true" #>
+<#@ assembly name="$(LinqToDBT4NpgsqlClientPath)Npgsql.dll"                             #>
+<#@ include  file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"      once="true" #>
+<#@ include  file="$(LinqToDBT4TemplatesPath)LinqToDB.PostgreSQL.ttinclude" once="true" #>
 <#
 
 var toolsPath = GetProviderToolsPath("Npgsql", "Npgsql, Version=7.0.4.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7");

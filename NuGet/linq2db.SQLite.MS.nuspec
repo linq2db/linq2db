@@ -3,10 +3,6 @@
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.SQLite.MS</id>
 		<title>LINQ to SQLite</title>
-		<description>
-			LINQ to SQLite is a data access technology that provides a run-time infrastructure for managing relational data as objects.
-			Install this package only if you want to use database model scaffolding using T4 templates (requires Visual Studio or Rider), otherwise you should use linq2db package.
-		</description>
 		<summary>
 			This package includes a T4 template to generate data models for SQLite database and references to the linq2db and Microsoft.Data.SQLite nugets.
 		</summary>
@@ -27,9 +23,6 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
-		<file src="..\Nuget\readme.T4.txt"                                           target="readme.txt"                                                                                         />
-
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Data.SQLite.dll"            target="tools"                                                                                              />
@@ -43,12 +36,12 @@
 		<file src="..\NuGet\t4models\*.ttinclude"                                    target="contentFiles\any\any\LinqToDB.Templates"                                                            />
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
-		<file src="..\Source\LinqToDB.Templates\*.SQLite.ttinclude"                  target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+		<file src="..\Source\LinqToDB.Templates\LinqToDB.SQLite.*"                   target="contentFiles\any\any\LinqToDB.Templates"                                                            />
 
 		<file src="..\NuGet\SQLite\*.*"                                              target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
 		<file src="..\NuGet\t4models\*.ttinclude"                                    target="content\LinqToDB.Templates"                                                                         />
 		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
-		<file src="..\Source\LinqToDB.Templates\*.SQLite.ttinclude"                  target="content\LinqToDB.Templates"                                                                         />
+		<file src="..\Source\LinqToDB.Templates\LinqToDB.SQLite.*"                   target="content\LinqToDB.Templates"                                                                         />
 	</files>
 </package>

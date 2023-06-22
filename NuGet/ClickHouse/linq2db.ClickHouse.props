@@ -2,6 +2,7 @@
 	<PropertyGroup>
 		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
 		<LinqToDBT4ClickHouseClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ClickHouseClientPath>
+		<LinqToDBT4TemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 		<LinqToDBT4ClickHouseTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4ClickHouseTemplatesPath>
 	</PropertyGroup>
 </Project>

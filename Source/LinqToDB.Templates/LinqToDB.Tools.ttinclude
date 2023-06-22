@@ -49,7 +49,7 @@ public static void LoadAssembly(string assemblyName, string toolsPath)
 	// check if already loaded
 	if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == assemblyName))
 		return;
-	
+
 	try
 	{
 		// try to load using VS (host) lookup paths

@@ -213,7 +213,7 @@ This applies only to Azure SQL DatabaseV11.&lt;br/&gt;
     <column name="severity" type="int">The severity of the error. Possible values are:&lt;br /&gt;&lt;br /&gt; 0 = Information&lt;br /&gt;1 = Warning&lt;br /&gt;2 = Error</column>
     <column name="event_count" type="int">The number of times that this event occurred for the specified database within the time interval specified (&lt;strong&gt;start_time&lt;/strong&gt; and &lt;strong&gt;end_time&lt;/strong&gt;).</column>
     <column name="description" type="nvarchar(max)">A detailed description of the event.&lt;br /&gt;&lt;br /&gt; See &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-log-azure-sql-database#EventTypes'&gt;Event Types&lt;/a&gt; for a list of possible values.</column>
-    <column name="additional_data" type="XML">*Note: This value is always NULL for Azure SQL Database V12.*&lt;br /&gt;&lt;br /&gt; For &lt;strong&gt;Deadlock&lt;/strong&gt; events, this column contains the deadlock graph. This column is NULL for other event types.</column>
+    <column name="additional_data" type="XML">*Note: This value is always NULL for Azure SQL Database V12. See [examples](#Deadlock) section for how to retrieve deadlock events for V12.*&lt;br /&gt;&lt;br /&gt; For &lt;strong&gt;Deadlock&lt;/strong&gt; events, this column contains the deadlock graph. This column is NULL for other event types.</column>
   </table>
   <table name="sys.firewall_rules" category="AzureSQLDatabase" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-firewall-rules-azure-sql-database">
     <description>&lt;para&gt;&lt;strong&gt;sys.firewall_rules (Azure SQL Database)&lt;/strong&gt;&lt;/para&gt;
@@ -1711,7 +1711,7 @@ The following columns will be removed in a future release of SQL Server: &lt;str
     <column name="column_id" type="int">ID of the columnstore column.</column>
     <column name="segment_id" type="int">ID of the rowgroup. For backward compatibility, the column name continues to be called segment_id even though this is the rowgroup ID. You can uniquely identify a segment using \&lt;hobt_id, partition_id, column_id&gt;, &lt;segment_id&gt;.</column>
     <column name="version" type="int">Version of the column segment format.</column>
-    <column name="encoding_type" type="int">Type of encoding used for that segment:&lt;br /&gt;&lt;br /&gt; 1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)&lt;br /&gt;&lt;br /&gt; 2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary&lt;br /&gt;&lt;br /&gt; 3 = STRING_HASH_BASED - string/binary column with common values in dictionary&lt;br /&gt;&lt;br /&gt; 4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary&lt;br /&gt;&lt;br /&gt; 5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary&lt;br /&gt;&lt;br /&gt; For more information, see the [Remarks](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql#remarks) section.</column>
+    <column name="encoding_type" type="int">Type of encoding used for that segment:&lt;br /&gt;&lt;br /&gt; 1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)&lt;br /&gt;&lt;br /&gt; 2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary&lt;br /&gt;&lt;br /&gt; 3 = STRING_HASH_BASED - string/binary column with common values in dictionary&lt;br /&gt;&lt;br /&gt; 4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary&lt;br /&gt;&lt;br /&gt; 5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary&lt;br /&gt;&lt;br /&gt; For more information, see the [Remarks](#remarks) section.</column>
     <column name="row_count" type="int">Number of rows in the row group.</column>
     <column name="has_nulls" type="int">1 if the column segment has null values.</column>
     <column name="base_id" type="bigint">Base value ID if encoding type 1 is being used. If encoding type 1 is not being used, base_id is set to -1.</column>
@@ -4234,7 +4234,7 @@ Range: 0 = Not a distribution column. 1 = Azure Synapse Analytics is using this 
     <column name="distribution_id" type="int">Unique numeric id associated with the distribution.&lt;br /&gt;&lt;br /&gt; Key for this view.&lt;br/&gt;
 Range: 1 to the number of Compute nodes in appliance multiplied by the number of distributions per Compute node.</column>
     <column name="pdw_node_id" type="int">ID of the node this distribution is on.&lt;br/&gt;
-		Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql).</column>
+Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).</column>
     <column name="name" type="nvarchar(32)">String identifier associated with the distribution, used as a suffix on distributed tables.&lt;br/&gt;
 Range: String composed of 'A-Z','a-z','0-9','_','-'.</column>
     <column name="position" type="int">Position of the distribution within a node respective to other distributions on that node.&lt;br/&gt;
@@ -4327,7 +4327,7 @@ Range: NOT NULL</column>
 &lt;para&gt;Contains further detailed information, beyond the information in &lt;a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-pdw-loader-backup-runs-transact-sql'&gt;sys.pdw_loader_backup_runs (Transact-SQL)&lt;/a&gt;, about ongoing and completed backup and restore operations in Azure Synapse Analytics and about ongoing and completed backup, restore, and load operations in Analytics Platform System (PDW). The information persists across system restarts.&lt;/para&gt;</description>
     <column name="run_id" type="int">Unique identifier for a specific backup or restore run.&lt;br /&gt;&lt;br /&gt; run_id and pdw_node_id form the key for this view.</column>
     <column name="pdw_node_id" type="int">Unique identifier of an appliance node for which this record holds details.&lt;br /&gt;&lt;br /&gt; run_id and pdw_node_id form the key for this view.&lt;br/&gt;
-Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql).</column>
+Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).</column>
     <column name="status" type="nvarchar(16)">The current status of the run.&lt;br/&gt;
 Range: 'CANCELLED', 'COMPLETED', 'FAILED', 'QUEUED', 'RUNNING'</column>
     <column name="start_time" type="datetime">Time at which the operation started on this particular node.</column>
@@ -4356,9 +4356,9 @@ Range: For operation_type = **BACKUP**&lt;br /&gt;**DIFFERENTIAL**&lt;br /&gt;**
     <column name="table_name" type="nvarchar(255)">Information not available.</column>
     <column name="Principal_id" type="int">ID of the user requesting the operation.</column>
     <column name="session_id" type="nvarchar(32)">ID of the session performing the operation.&lt;br/&gt;
-Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql).</column>
+Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql.md).</column>
     <column name="request_id" type="nvarchar(32)">ID of the request performing the operation. For loads, this is the current or last request associated with this load..&lt;br/&gt;
-Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](https://docs.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql).</column>
+Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql.md).</column>
     <column name="status" type="nvarchar(16)">Status of the run.&lt;br/&gt;
 Range: 'CANCELLED','COMPLETED','FAILED','QUEUED','RUNNING'</column>
     <column name="progress" type="int">Percentage completed.&lt;br/&gt;
@@ -4406,7 +4406,7 @@ Range: If total_elapsed_time exceeds the maximum value for an integer (24.8 days
 &lt;para&gt;Ties the materialized view to internal object names by object_id.&lt;br/&gt;
 The columns physical_name and object_id form the key for this catalog view.&lt;/para&gt;</description>
     <column name="physical_name" type="nvarchar(36)">The physical name for the materialized view.</column>
-    <column name="object_id" type="int">The object ID for the materialized view. See [sys.objects (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver16?view=azure-sqldw-latest&amp;preserve-view=true).</column>
+    <column name="object_id" type="int">The object ID for the materialized view. See [sys.objects (Transact-SQL)](./sys-objects-transact-sql.md?view=azure-sqldw-latest&amp;preserve-view=true).</column>
   </table>
   <table name="sys.pdw_nodes_column_store_dictionaries" category="AzureSynapseAnalytics" uri="https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-pdw-nodes-column-store-dictionaries-transact-sql">
     <description>&lt;para&gt;&lt;strong&gt;sys.pdw_nodes_column_store_dictionaries (Transact-SQL)&lt;/strong&gt;&lt;/para&gt;

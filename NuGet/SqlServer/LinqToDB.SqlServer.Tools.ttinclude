@@ -1,2 +1,2 @@
-<#@ include file="LinqToDB.Tools.ttinclude"     once="true" #>
-<#@ include file="LinqToDB.SqlServer.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"     once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.SqlServer.ttinclude" once="true" #>

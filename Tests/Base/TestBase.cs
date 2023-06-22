@@ -128,9 +128,10 @@ namespace Tests
 
 			Configuration.Linq.TraceMapperExpression = false;
 			// Configuration.Linq.GenerateExpressionTest  = true;
-			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 
 #if NET472
+			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Replace("file:///", ""))!;
+
 			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
 			try
 			{
@@ -140,6 +141,8 @@ namespace Tests
 			{
 				// ignore
 			}
+#else
+			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 #endif
 
 			Environment.CurrentDirectory = assemblyPath;

@@ -29,9 +29,8 @@
 			<group targetFramework="net6.0" />
 		</dependencies>
 	</metadata>
-
 	<files>
-		<file src="..\Nuget\README.linq2db.md"                                target="README.md"           />
+		<file src="..\NuGet\README.linq2db.md"                                target="README.md"           />
 
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.pdb"          target="lib\net45\"          />
 		<file src="..\Source\LinqToDB\bin\Release\net45\linq2db.xml"          target="lib\net45\"          />
