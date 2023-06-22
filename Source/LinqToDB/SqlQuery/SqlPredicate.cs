@@ -902,6 +902,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public abstract QueryElementType ElementType { get; }
 
 		protected abstract void ToString(QueryElementTextWriter writer);

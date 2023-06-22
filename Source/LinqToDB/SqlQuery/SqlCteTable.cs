@@ -4,8 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
-	using Mapping;
-
 	public class SqlCteTable : SqlTable
 	{
 		[DisallowNull]

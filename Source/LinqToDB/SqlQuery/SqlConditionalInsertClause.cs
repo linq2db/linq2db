@@ -34,6 +34,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		QueryElementType IQueryElement.ElementType => QueryElementType.ConditionalInsertClause;
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)

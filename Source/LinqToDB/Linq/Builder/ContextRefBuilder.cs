@@ -58,7 +58,10 @@ namespace LinqToDB.Linq.Builder
 				return false;
 
 			if (!contextRef.Type.IsEnumerableType(contextRef.BuildContext.ElementType))
-				return false;
+			{
+				var ctx = contextRef.BuildContext.GetContext(buildInfo.Expression, buildInfo);
+				return ctx != null;
+			}
 
 			return true;
 		}

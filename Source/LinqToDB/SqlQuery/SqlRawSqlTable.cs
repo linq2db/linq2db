@@ -3,8 +3,6 @@ using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
-
 	//TODO: Investigate how to implement only ISqlTableSource interface
 	public class SqlRawSqlTable : SqlTable, IQueryElement
 	{

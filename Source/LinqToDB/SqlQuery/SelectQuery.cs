@@ -11,9 +11,6 @@ namespace LinqToDB.SqlQuery
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public class SelectQuery : ISqlTableSource, IQueryExtendible
 	{
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		protected string DebugSqlText => SqlText;
-
 		#region Init
 
 		public SelectQuery()
@@ -310,6 +307,10 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IQueryElement Members
+
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 
 		public QueryElementType ElementType => QueryElementType.SqlQuery;
 

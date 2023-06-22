@@ -5,6 +5,10 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlWithClause : IQueryElement, ISqlExpressionWalkable
 	{
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
+
 		public QueryElementType ElementType => QueryElementType.WithClause;
 
 		public QueryElementTextWriter ToString(QueryElementTextWriter writer)

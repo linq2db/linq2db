@@ -24,6 +24,9 @@ namespace LinqToDB.SqlQuery
 
 		public Type? SystemType => null;
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SqlRow;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

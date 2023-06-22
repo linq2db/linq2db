@@ -4,8 +4,6 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
-
 	public class SqlSelectClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 	{
 		#region Init
@@ -336,6 +334,10 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IQueryElement Members
+
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 
 		public QueryElementType ElementType => QueryElementType.SelectClause;
 

@@ -4,6 +4,9 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlComment : IQueryElement
 	{
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.Comment;
 
 		public List<string> Lines { get; }

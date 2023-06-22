@@ -6,7 +6,7 @@ using System.Threading;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using Common.Internal;
+
 	using Data;
 	using Mapping;
 	using Remote;
@@ -281,6 +281,10 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IQueryElement Members
+
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 
 		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
 

@@ -9,6 +9,10 @@ namespace LinqToDB.SqlQuery
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
 	public class CteClause : IQueryElement, ISqlExpressionWalkable
 	{
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
+
 		public static int CteIDCounter;
 
 		public List<SqlField> Fields { get; internal set; }

@@ -511,6 +511,9 @@ namespace LinqToDB.SqlQuery
 
 		public static void ConcatSearchCondition(this SqlWhereClause where, SqlSearchCondition search)
 		{
+			if (search.Conditions.Count == 0)
+				return;
+
 			if (where.IsEmpty)
 			{
 				where.SearchCondition.Conditions.AddRange(search.Conditions);

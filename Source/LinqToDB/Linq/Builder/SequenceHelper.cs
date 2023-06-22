@@ -119,10 +119,20 @@ namespace LinqToDB.Linq.Builder
 
 					var currentPath = toPath;
 
+					var applicable = true;
 					if (assignment.MemberInfo.DeclaringType != null)
 					{
-						currentPath = EnsureType(currentPath, assignment.MemberInfo.DeclaringType);
+						applicable = assignment.MemberInfo.DeclaringType.IsAssignableFrom(currentPath.Type);
+						if (applicable)
+							currentPath = EnsureType(currentPath, assignment.MemberInfo.DeclaringType);
 					}
+
+					if (!applicable)
+					{
+						assignments?.Add(assignment);
+						continue;
+					}
+
 
 					var newExpression = CorrectTrackingPath(assignment.Expression,
 						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo));
@@ -159,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is SqlPlaceholderExpression placeholder)
 			{
-				if (!placeholder.Type.IsAssignableFrom(toPath.Type))
+				if (!placeholder.Type.IsAssignableFrom(toPath.Type) && !placeholder.Type.IsValueType)
 				{
 					if (IsSpecialProperty(placeholder.Path, out var propType, out var propName))
 					{

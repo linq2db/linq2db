@@ -5,6 +5,9 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlGroupingSet : ISqlExpression
 	{
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.GroupingSet;
 
 		public SqlGroupingSet()

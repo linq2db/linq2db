@@ -2748,9 +2748,12 @@ namespace Tests.Linq
 		#region issue 1455
 		public class Alert
 		{
-			public string?   AlertKey     { get; set; }
-			public string?   AlertCode    { get; set; }
-			public DateTime? CreationDate { get { return DateTime.Today; } }
+			[Column(CanBeNull = false)]
+			public string    AlertKey     { get; set; } = null!;
+			[Column(CanBeNull = false)]
+			public string    AlertCode    { get; set; } = null!;
+			[Column(CanBeNull = false)]
+			public DateTime CreationDate { get { return DateTime.Today; } }
 		}
 		public class AuditAlert : Alert
 		{

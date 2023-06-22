@@ -3,7 +3,7 @@
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using Common.Internal;
+
 	using Mapping;
 
 	public class SqlField : ISqlExpression
@@ -150,6 +150,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SqlField;
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)

@@ -4,6 +4,10 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlAliasPlaceholder : ISqlExpression
 	{
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
+
 		public QueryElementType ElementType => QueryElementType.SqlAliasPlaceholder;
 
 		public QueryElementTextWriter ToString(QueryElementTextWriter writer)

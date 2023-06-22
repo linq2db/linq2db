@@ -7,8 +7,6 @@ using LinqToDB.Remote;
 
 namespace LinqToDB.SqlQuery
 {
-	using Linq.Builder;
-
 	public class ConvertVisitor<TContext>
 	{
 		// when true, only changed (and explicitly added) elements added to VisitedElements

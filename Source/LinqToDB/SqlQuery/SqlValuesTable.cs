@@ -170,6 +170,11 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IQueryElement
+
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
+
 		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)

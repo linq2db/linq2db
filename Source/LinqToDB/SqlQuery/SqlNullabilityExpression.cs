@@ -15,14 +15,19 @@ namespace LinqToDB.SqlQuery
 
 		public static ISqlExpression ApplyNullability(ISqlExpression sqlExpression, NullabilityContext nullability)
 		{
-			if (sqlExpression is SqlNullabilityExpression)
-				return sqlExpression;
-
-			return new SqlNullabilityExpression(sqlExpression, nullability.CanBeNull(sqlExpression));
+			return sqlExpression switch
+			{
+				SqlNullabilityExpression => sqlExpression,
+				SqlSearchCondition => sqlExpression,
+				_ => new SqlNullabilityExpression(sqlExpression, nullability.CanBeNull(sqlExpression))
+			};
 		}
 
 		public static ISqlExpression ApplyNullability(ISqlExpression sqlExpression, bool canBeNull)
 		{
+			if (sqlExpression is SqlSearchCondition)
+				return sqlExpression;
+
 			if (sqlExpression is SqlNullabilityExpression nullabilityExpression)
 			{
 				if (nullabilityExpression.CanBeNull == canBeNull)
@@ -104,6 +109,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SqlNullabilityExpression;
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)

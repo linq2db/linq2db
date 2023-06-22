@@ -6,7 +6,7 @@ using System.Linq;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using Common.Internal;
+
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
@@ -56,6 +56,10 @@ namespace LinqToDB.SqlQuery
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		#region IQueryElement
+
+#if DEBUG
+		public virtual string DebugText => this.ToDebugString();
+#endif
 
 		public abstract QueryElementType       ElementType { get; }
 		public abstract QueryElementTextWriter ToString(QueryElementTextWriter writer);

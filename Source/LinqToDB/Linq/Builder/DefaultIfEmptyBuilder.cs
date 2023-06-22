@@ -39,12 +39,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)) || flags.HasFlag(ProjectFlags.Expand))
+				if (SequenceHelper.IsSameContext(path, this) && (flags.IsRoot() || flags.IsAssociationRoot()) || flags.IsExpand())
 					return path;
 
 				var expr = base.MakeExpression(path, flags);
 
-				if (flags.IsTraverse())
+				if (flags.IsTraverse() || flags.IsRoot())
 					return expr;
 
 				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))

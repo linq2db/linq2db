@@ -146,6 +146,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SqlExpression;
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)

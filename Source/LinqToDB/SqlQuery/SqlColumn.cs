@@ -4,8 +4,6 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
-
 	public class SqlColumn : IEquatable<SqlColumn>, ISqlExpression
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
@@ -276,6 +274,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.Column;
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)

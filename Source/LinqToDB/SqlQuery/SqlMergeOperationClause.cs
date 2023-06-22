@@ -51,6 +51,9 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		QueryElementType IQueryElement.ElementType => QueryElementType.MergeOperationClause;
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)

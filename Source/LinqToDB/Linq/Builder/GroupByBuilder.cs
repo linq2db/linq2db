@@ -429,7 +429,7 @@ namespace LinqToDB.Linq.Builder
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) &&
-				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregationRoot) || flags.HasFlag(ProjectFlags.Test)))
+				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregationRoot)))
 				{
 					return path;
 				}

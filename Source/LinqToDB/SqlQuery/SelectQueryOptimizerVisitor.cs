@@ -573,9 +573,10 @@ namespace LinqToDB.SqlQuery
 			_correcting = null;
 		}
 
-		internal void ResolveWeakJoins(SelectQuery selectQuery)
+		internal bool ResolveWeakJoins(SelectQuery selectQuery)
 		{
 			EnsureReferencesCorrected(selectQuery);
+			var isModified = false;
 
 			foreach (var table in selectQuery.From.Tables)
 			{
@@ -608,9 +609,12 @@ namespace LinqToDB.SqlQuery
 							continue;
 
 						table.Joins.RemoveAt(i);
+						isModified = true;
 					}
 				}
 			}
+
+			return isModified;
 		}
 
 		static bool IsLimitedToOneRecord(SelectQuery query)
@@ -1020,7 +1024,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		bool IsColumnExpressionValid(SelectQuery parentQuery, SqlColumn column, ISqlExpression columnExpression)
+		bool IsColumnExpressionValid(SelectQuery parentQuery, SelectQuery subQuery, SqlColumn column, ISqlExpression columnExpression)
 		{
 			if (columnExpression.ElementType == QueryElementType.Column ||
 			    columnExpression.ElementType == QueryElementType.SqlField)
@@ -1031,7 +1035,7 @@ namespace LinqToDB.SqlQuery
 			var underlying = QueryHelper.UnwrapExpression(columnExpression, false);
 			if (!ReferenceEquals(underlying, columnExpression))
 			{
-				return IsColumnExpressionValid(parentQuery, column, underlying);
+				return IsColumnExpressionValid(parentQuery, subQuery, column, underlying);
 			}
 
 			// check that column has at least one reference
@@ -1040,15 +1044,12 @@ namespace LinqToDB.SqlQuery
 			int found = 1;
 			parentQuery.VisitParentFirstAll(e =>
 			{
-				if (e.ElementType == QueryElementType.SelectClause)
-					return false;
-
 				if (ReferenceEquals(e, column))
 				{
 					++found;
 				}
 
-				return found > 1;
+				return found < 2;
 			});
 
 			return found < 2;
@@ -1132,7 +1133,7 @@ namespace LinqToDB.SqlQuery
 
 				if (selectQuery.Select.Columns.Any(c =>
 					    QueryHelper.IsAggregationOrWindowFunction(c.Expression) ||
-					    !IsColumnExpressionValid(selectQuery, c, c.Expression)))
+					    !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
 					return false;
 			}
 
@@ -1145,7 +1146,10 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, c, c.Expression)))
+			if (subQuery.Select.Columns.Any(c => !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
+				return false;
+
+			if (subQuery.GroupBy.IsEmpty && subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
 				return false;
 
 			if (subQuery.HasSetOperators)
@@ -1279,7 +1283,7 @@ namespace LinqToDB.SqlQuery
 			if (joinTable.JoinType != JoinType.Inner && joinTable.JoinType != JoinType.Left)
 				return false;
 
-			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, c, c.Expression)))
+			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
 				return false;
 
 			// Actual modification starts from this point
@@ -1319,19 +1323,38 @@ namespace LinqToDB.SqlQuery
 			if (_correcting != null)
 				return element;
 
-			var currentVersion = _version;
+			do
+			{
+				var isModified     = false;
+				var currentVersion = _version;
 
-			OptimizeSubQueries(element.SelectQuery);
-
-			if (currentVersion != _version)
-				EnsureReferencesCorrected(element.SelectQuery);
-
-			MoveOuterJoinsToSubQuery(element.SelectQuery);
-
-			if (OptimizeApplies(element.SelectQuery, _flags.IsApplyJoinSupported))
 				OptimizeSubQueries(element.SelectQuery);
 
-			ResolveWeakJoins(element.SelectQuery);
+				if (currentVersion != _version)
+				{
+					isModified = true;
+					EnsureReferencesCorrected(element.SelectQuery);
+				}
+
+				if (MoveOuterJoinsToSubQuery(element.SelectQuery))
+				{
+					isModified = true;
+				}
+
+				if (OptimizeApplies(element.SelectQuery, _flags.IsApplyJoinSupported))
+				{
+					isModified = true;
+				}
+
+				if (ResolveWeakJoins(element.SelectQuery))
+				{
+					isModified = true;
+				}
+
+				if (!isModified)
+					break;
+
+			} while (true);
 
 			return element;
 		}
@@ -1531,16 +1554,17 @@ namespace LinqToDB.SqlQuery
 			return counter <= 1;
 		}
 
-		void MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
+		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
 		{
 			if (!_flags.IsSubQueryColumnSupported)
-				return;
+				return false;
 
 			var currentVersion = _version;
 
 			EvaluationContext? evaluationContext = null;
 
-			foreach (var sq in QueryHelper.EnumerateAccessibleSources(selectQuery).OfType<SelectQuery>())
+			var selectQueries = QueryHelper.EnumerateAccessibleSources(selectQuery).OfType<SelectQuery>().ToList();
+			foreach (var sq in selectQueries)
 			{
 				for (var ti = 0; ti < sq.From.Tables.Count; ti++)
 				{
@@ -1580,6 +1604,7 @@ namespace LinqToDB.SqlQuery
 									}
 								}
 
+								//TODO: finish it 
 								var mainQuery = table.Source as SelectQuery;
 								/*
 								if (mainQuery?.Select.HasModifier == true)
@@ -1591,6 +1616,8 @@ namespace LinqToDB.SqlQuery
 								table.Joins.RemoveAt(j);
 								tsQuery.Where.ConcatSearchCondition(join.Condition);
 
+								mainQuery = null;
+
 								if (mainQuery != null)
 								{
 									// moving into FROM query
@@ -1599,14 +1626,12 @@ namespace LinqToDB.SqlQuery
 									var newColumn = mainQuery.Select.Columns[idx];
 									newColumn.RawAlias = testedColumn.RawAlias;
 
-									NotifyReplaced(testedColumn, newColumn);
+									/*NotifyReplaced(testedColumn, newColumn);
 
 									foreach (var c in mainQuery.Select.Columns)
 									{
 										NotifyReplaced(c.Expression, c);
-									}
-
-									newColumn.Expression = mainQuery;
+									}*/
 								}
 								else
 								{
@@ -1621,7 +1646,12 @@ namespace LinqToDB.SqlQuery
 			}
 
 			if (_version != currentVersion)
+			{
 				EnsureReferencesCorrected(selectQuery);
+				return true;
+			}
+
+			return false;
 		}
 
 	}

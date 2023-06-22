@@ -11,6 +11,9 @@
 		public SelectQuery  SelectQuery { get; private set; }
 		public SetOperation Operation   { get; }
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SetOperator;
 
 		public void Modify(SelectQuery selectQuery)

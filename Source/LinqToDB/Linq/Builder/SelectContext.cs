@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 			if (SequenceHelper.IsSameContext(path, this))
 			{
 				// Eager load case
-				if ((flags.IsExpand() || flags.IsSql() || flags.IsExpression()) && !(path.Type.IsAssignableFrom(ElementType) || ElementType.IsAssignableFrom(path.Type)))
+				if ((flags.IsExpand() || flags.IsSql() || flags.IsExpression()) && !(path.Type.IsAssignableFrom(ElementType) || ElementType.IsAssignableFrom(path.Type)) && !path.Type.IsValueType)
 				{
 					return path;
 				}
