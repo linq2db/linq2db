@@ -339,6 +339,47 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void MergeWithOutputConditionalInto([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var temp = db.CreateTempTable<InsertTempTable>("#InsertTempTable");
+
+				PrepareData(db);
+
+				var table = GetTarget(db);
+
+				var affected = table
+					.Merge()
+					.Using(GetSource1(db).Where(_ => _.Id == 5))
+					.OnTargetKey()
+					.InsertWhenNotMatched()
+					.MergeWithOutputInto(temp,
+						(a, deleted, inserted, source) => new ()
+						{
+							Action    = a == "DELETE" ? "Row Deleted" : a == "INSERT" ? "Row Inserted" : "Row Updated",
+							NewId     = inserted.Id,
+							DeletedId = deleted.Id,
+							SourceId  = source.Id + 1
+						}
+					);
+
+				affected.Should().Be(1);
+
+				var result = temp.ToArray();
+
+				result.Should().HaveCount(1);
+
+				var record = result[0];
+
+				record.Action.   Should().Be("Row Inserted");
+				record.NewId.    Should().Be(5);
+				record.DeletedId.Should().BeNull();
+				record.SourceId. Should().Be(6);
+			}
+		}
+
+		[Test]
 		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
