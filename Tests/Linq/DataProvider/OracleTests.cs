@@ -4277,5 +4277,79 @@ END convert_bool;");
 
 		[Sql.Expression("convert_bool({0})", ServerSideOnly = true)]
 		public static bool Issue3742Function(string parameter) => throw new InvalidOperationException();
+
+		#region Issue 4172
+
+		[Table(Name = "ISSUE4172TABLE")]
+		sealed class ISSUE4172TABLE
+		{
+			[Column("ROLE"), Nullable] public Role ROLE { get; set; }
+		}
+
+		enum Role
+		{
+			[MapValue("")]
+			Unknown,
+
+			[MapValue("1")]
+			Role1,
+
+			[MapValue("2")]
+			Role2
+		}
+
+		[Test]
+		public static void Issue4172Test1([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			try
+			{
+				using var users = db.CreateTable<ISSUE4172TABLE>();
+
+				users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
+
+				// Should return Unknown Role users
+				var data = (
+					from u in users
+					where u.ROLE == Role.Unknown
+					select u).ToList();
+
+				Assert.True(data.Count == 0, "Incorrect count");
+			}
+			catch { }
+			finally
+			{
+				db.DropTable<ISSUE4172TABLE>();
+			}
+		}
+
+		[Test]
+		public static void Issue4172Test2([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			try
+			{
+				using var users = db.CreateTable<ISSUE4172TABLE>();
+
+				users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
+
+				// Should return Known Role users
+				var data = (
+				 from u in users
+				 where u.ROLE != Role.Unknown
+				 select u).ToList();
+
+				Assert.True(data.Count == 1, "Incorrect count");
+			}
+			catch { }
+			finally
+			{
+				db.DropTable<ISSUE4172TABLE>();
+			}
+		}
+
+		#endregion
 	}
 }
