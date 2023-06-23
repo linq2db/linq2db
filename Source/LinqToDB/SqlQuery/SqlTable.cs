@@ -261,7 +261,7 @@ namespace LinqToDB.SqlQuery
 
 		List<ISqlExpression>? _keyFields;
 
-		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
+		public virtual IList<ISqlExpression>? GetKeys(bool allIfEmpty)
 		{
 			_keyFields ??=
 			(

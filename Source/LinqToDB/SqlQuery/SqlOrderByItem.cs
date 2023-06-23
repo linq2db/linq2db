@@ -34,7 +34,6 @@ namespace LinqToDB.SqlQuery
 		#region IQueryElement Members
 
 #if DEBUG
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		public string DebugText => this.ToDebugString();
 #endif
 

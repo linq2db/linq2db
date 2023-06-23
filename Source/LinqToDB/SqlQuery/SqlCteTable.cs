@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -32,6 +33,40 @@ namespace LinqToDB.SqlQuery
 		internal SqlCteTable(int id, string alias, SqlField[] fields)
 			: base(id, null, alias, new(string.Empty), null!, null, fields, SqlTableType.Cte, null, TableOptions.NotSet, null)
 		{
+		}
+
+		public override IList<ISqlExpression>? GetKeys(bool allIfEmpty)
+		{
+			if (Cte?.Body == null)
+				return null;
+
+			var cteKeys = Cte.Body.GetKeys(allIfEmpty);
+
+			if (cteKeys.Count == 0)
+				return cteKeys;
+
+			var hasInvalid = false;
+			IList<ISqlExpression> projected = Cte.Body.Select.Columns.Select((c, idx) =>
+			{
+				var found = cteKeys.FirstOrDefault(k => ReferenceEquals(c, k));
+				if (found != null)
+				{
+					var field = Cte.Fields[idx];
+
+					var foundField = Fields.FirstOrDefault(f => f.Name == field.Name);
+					if (foundField == null)
+						hasInvalid = true;
+					return (foundField as ISqlExpression)!;
+				}
+
+				hasInvalid = true;
+				return null!;
+			}).ToList();
+
+			if (hasInvalid)
+				return null;
+
+			return projected;
 		}
 
 		internal void SetDelayedCteObject(CteClause cte)

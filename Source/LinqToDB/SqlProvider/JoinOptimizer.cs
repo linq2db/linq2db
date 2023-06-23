@@ -929,6 +929,17 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
+				if (c.Predicate is SqlSearchCondition search && search.Conditions.Count == 1)
+				{
+					c = search.Conditions[0];
+
+					if (c.IsOr)
+					{
+						found = null;
+						break;
+					}
+				}
+
 				if (   c.ElementType                                  != QueryElementType.Condition
 					|| c.Predicate.ElementType                        != QueryElementType.ExprExprPredicate
 					|| ((SqlPredicate.ExprExpr) c.Predicate).Operator != SqlPredicate.Operator.Equal)
