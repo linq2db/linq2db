@@ -1122,16 +1122,18 @@ namespace DataModel
 		#endregion
 	}
 
-	public partial class TestData2014DB : LinqToDB.Data.DataConnection
+	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
+		public ITable<Animals62>               Animals62                { get { return this.GetTable<Animals62>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<CreateIfNotExistsTable>  CreateIfNotExistsTables  { get { return this.GetTable<CreateIfNotExistsTable>(); } }
 		public ITable<DataType>                DataTypes                { get { return this.GetTable<DataType>(); } }
 		public ITable<DecimalOverflow>         DecimalOverflows         { get { return this.GetTable<DecimalOverflow>(); } }
 		public ITable<Doctor>                  Doctors                  { get { return this.GetTable<Doctor>(); } }
+		public ITable<Eyes62>                  Eyes62                   { get { return this.GetTable<Eyes62>(); } }
+		public ITable<ForeignKeyTable>         ForeignKeyTables         { get { return this.GetTable<ForeignKeyTable>(); } }
 		public ITable<GrandChild>              GrandChildren            { get { return this.GetTable<GrandChild>(); } }
 		public ITable<GuidID>                  GuidIds                  { get { return this.GetTable<GuidID>(); } }
 		public ITable<GuidID2>                 GuidID2                  { get { return this.GetTable<GuidID2>(); } }
@@ -1151,6 +1153,7 @@ namespace DataModel
 		public ITable<ParentChildView>         ParentChildViews         { get { return this.GetTable<ParentChildView>(); } }
 		public ITable<ParentView>              ParentViews              { get { return this.GetTable<ParentView>(); } }
 		public ITable<Patient>                 Patients                 { get { return this.GetTable<Patient>(); } }
+		public ITable<PrimaryKeyTable>         PrimaryKeyTables         { get { return this.GetTable<PrimaryKeyTable>(); } }
 		public ITable<Provider>                Providers                { get { return this.GetTable<Provider>(); } }
 		public ITable<SameTableName>           SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<SqlType>                 SqlTypes                 { get { return this.GetTable<SqlType>(); } }
@@ -1282,6 +1285,19 @@ namespace DataModel
 		[Column("geometryDataType",       DbType="geometry",          DataType=LinqToDB.DataType.Udt),                         Nullable            ] public SqlGeometry?    GeometryDataType       { get; set; } // geometry
 	}
 
+	[Table("Animals62")]
+	public partial class Animals62
+	{
+		[Column(DbType="nvarchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),                        NotNull] public string  AnimalType    { get; set; } = null!; // nvarchar(40)
+		[Column(DbType="nvarchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),                        NotNull] public string  AnimalType2   { get; set; } = null!; // nvarchar(40)
+		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                         PrimaryKey,  NotNull] public int     Id            { get; set; } // int
+		[Column(DbType="nvarchar(max)", DataType=LinqToDB.DataType.NVarChar, Length=int.MaxValue),    Nullable         ] public string? Name          { get; set; } // nvarchar(max)
+		[Column(DbType="nvarchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),                        NotNull] public string  Discriminator { get; set; } = null!; // nvarchar(40)
+		[Column(DbType="int",           DataType=LinqToDB.DataType.Int32),                            Nullable         ] public int?    EyeId         { get; set; } // int
+		[Column(DbType="nvarchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),              Nullable         ] public string? Second        { get; set; } // nvarchar(40)
+		[Column(DbType="nvarchar(40)",  DataType=LinqToDB.DataType.NVarChar, Length=40),              Nullable         ] public string? First         { get; set; } // nvarchar(40)
+	}
+
 	[Table("Child")]
 	public partial class Child
 	{
@@ -1299,13 +1315,6 @@ namespace DataModel
 		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull] public int    Id              { get; set; } // int
 		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
 		[Column(DbType="nvarchar(20)", DataType=LinqToDB.DataType.NVarChar, Length=20), NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
-	}
-
-	[Table("CreateIfNotExistsTable")]
-	public partial class CreateIfNotExistsTable
-	{
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Id    { get; set; } // int
-		[Column(DbType="int", DataType=LinqToDB.DataType.Int32), NotNull] public int Value { get; set; } // int
 	}
 
 	[Table("DataType")]
@@ -1329,6 +1338,30 @@ namespace DataModel
 	{
 		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey, NotNull] public int    PersonID { get; set; } // int
 		[Column(DbType="nvarchar(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),             NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+	}
+
+	[Table("Eyes62")]
+	public partial class Eyes62
+	{
+		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey,  NotNull] public int     Id { get; set; } // int
+		[Column(DbType="nvarchar(40)", DataType=LinqToDB.DataType.NVarChar, Length=40),    Nullable         ] public string? Xy { get; set; } // nvarchar(40)
+	}
+
+	[Table("ForeignKeyTable")]
+	public partial class ForeignKeyTable
+	{
+		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               NotNull] public int    PrimaryKeyTableID { get; set; } // int
+		[Column(DbType="nvarchar(50)", DataType=LinqToDB.DataType.NVarChar, Length=50), NotNull] public string Name              { get; set; } = null!; // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_ForeignKeyTable_PrimaryKeyTable (dbo.PrimaryKeyTable)
+		/// </summary>
+		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
+		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
+
+		#endregion
 	}
 
 	[Table("GrandChild")]
@@ -1495,6 +1528,23 @@ namespace DataModel
 		[Column(DbType="nvarchar(256)", DataType=LinqToDB.DataType.NVarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 	}
 
+	[Table("PrimaryKeyTable")]
+	public partial class PrimaryKeyTable
+	{
+		[Column(DbType="int",          DataType=LinqToDB.DataType.Int32),               PrimaryKey, NotNull] public int    ID   { get; set; } // int
+		[Column(DbType="nvarchar(50)", DataType=LinqToDB.DataType.NVarChar, Length=50),             NotNull] public string Name { get; set; } = null!; // nvarchar(50)
+
+		#region Associations
+
+		/// <summary>
+		/// FK_ForeignKeyTable_PrimaryKeyTable_BackReference (dbo.ForeignKeyTable)
+		/// </summary>
+		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true)]
+		public List<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
+
+		#endregion
+	}
+
 	[Table("Provider")]
 	public partial class Provider
 	{
@@ -1639,10 +1689,10 @@ namespace DataModel
 		#region Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
+		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
+		public TestSchemaX FkTestSchemaYTestSchemaX { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX (dbo.TestSchemaX)
@@ -1651,7 +1701,7 @@ namespace DataModel
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
+		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
@@ -1659,11 +1709,11 @@ namespace DataModel
 		#endregion
 	}
 
-	public static partial class TestData2014DBStoredProcedures
+	public static partial class TestDataDBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TestData2014DB dataConnection)
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
 			return dataConnection.ExecuteProc("[AddIssue792Record]");
 		}
@@ -1672,7 +1722,7 @@ namespace DataModel
 
 		#region DuplicateColumnNames
 
-		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this TestData2014DB dataConnection)
+		public static List<DuplicateColumnNamesResult> DuplicateColumnNames(this TestDataDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -1695,7 +1745,7 @@ namespace DataModel
 
 		#region ExecuteProcIntParameters
 
-		public static int ExecuteProcIntParameters(this TestData2014DB dataConnection, int? @input, ref int? @output)
+		public static int ExecuteProcIntParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
 		{
 			var parameters = new []
 			{
@@ -1723,7 +1773,7 @@ namespace DataModel
 		/// <param name="input">
 		/// This is &lt;test&gt; procedure parameter!
 		/// </param>
-		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestData2014DB dataConnection, int? @input, ref int? @output)
+		public static List<ExecuteProcStringParametersResult> ExecuteProcStringParameters(this TestDataDB dataConnection, int? @input, ref int? @output)
 		{
 			var parameters = new []
 			{
@@ -1757,7 +1807,7 @@ namespace DataModel
 
 		#region Issue1897
 
-		public static int Issue1897(this TestData2014DB dataConnection, out int @return)
+		public static int Issue1897(this TestDataDB dataConnection, out int @return)
 		{
 			var parameters = new []
 			{
@@ -1778,7 +1828,7 @@ namespace DataModel
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this TestData2014DB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefEnumTest(this TestDataDB dataConnection, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var parameters = new []
 			{
@@ -1810,7 +1860,7 @@ namespace DataModel
 
 		#region OutRefTest
 
-		public static int OutRefTest(this TestData2014DB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
+		public static int OutRefTest(this TestDataDB dataConnection, int? @ID, ref int? @outputID, ref int? @inputOutputID, string? @str, ref string? @outputStr, ref string? @inputOutputStr)
 		{
 			var parameters = new []
 			{
@@ -1853,7 +1903,7 @@ namespace DataModel
 
 		#region PatientSelectAll
 
-		public static List<PatientSelectAllResult> PatientSelectAll(this TestData2014DB dataConnection)
+		public static List<PatientSelectAllResult> PatientSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PatientSelectAllResult>("[Patient_SelectAll]").ToList();
 		}
@@ -1872,7 +1922,7 @@ namespace DataModel
 
 		#region PatientSelectByName
 
-		public static List<PatientSelectByNameResult> PatientSelectByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
@@ -1903,7 +1953,7 @@ namespace DataModel
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TestData2014DB dataConnection, int? @PersonID)
+		public static int PersonDelete(this TestDataDB dataConnection, int? @PersonID)
 		{
 			var parameters = new []
 			{
@@ -1917,7 +1967,7 @@ namespace DataModel
 
 		#region PersonInsert
 
-		public static List<PersonInsertResult> PersonInsert(this TestData2014DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static List<PersonInsertResult> PersonInsert(this TestDataDB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			var parameters = new []
 			{
@@ -1951,7 +2001,7 @@ namespace DataModel
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this TestData2014DB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
+		public static int PersonInsertOutputParameter(this TestDataDB dataConnection, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender, ref int? @PersonID)
 		{
 			var parameters = new []
 			{
@@ -1988,7 +2038,7 @@ namespace DataModel
 
 		#region PersonSelectAll
 
-		public static List<PersonSelectAllResult> PersonSelectAll(this TestData2014DB dataConnection)
+		public static List<PersonSelectAllResult> PersonSelectAll(this TestDataDB dataConnection)
 		{
 			return dataConnection.QueryProc<PersonSelectAllResult>("[Person_SelectAll]").ToList();
 		}
@@ -2006,7 +2056,7 @@ namespace DataModel
 
 		#region PersonSelectByKey
 
-		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestData2014DB dataConnection, int? @id)
+		public static List<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? @id)
 		{
 			var parameters = new []
 			{
@@ -2029,7 +2079,7 @@ namespace DataModel
 
 		#region PersonSelectByKeyLowercase
 
-		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestData2014DB dataConnection, int? @id)
+		public static List<PersonSelectByKeyLowercaseResult> PersonSelectByKeyLowercase(this TestDataDB dataConnection, int? @id)
 		{
 			var parameters = new []
 			{
@@ -2049,7 +2099,7 @@ namespace DataModel
 
 		#region PersonSelectByName
 
-		public static List<PersonSelectByNameResult> PersonSelectByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
@@ -2079,7 +2129,7 @@ namespace DataModel
 
 		#region PersonSelectListByName
 
-		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestData2014DB dataConnection, string? @firstName, string? @lastName)
+		public static List<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
@@ -2109,7 +2159,7 @@ namespace DataModel
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestData2014DB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @PersonID, string? @FirstName, string? @LastName, string? @MiddleName, char? @Gender)
 		{
 			var parameters = new []
 			{
@@ -2139,7 +2189,7 @@ namespace DataModel
 
 		#region QueryProcMultipleParameters
 
-		public static List<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestData2014DB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
+		public static List<QueryProcMultipleParametersResult> QueryProcMultipleParameters(this TestDataDB dataConnection, int? @input, ref int? @output1, ref int? @output2, ref int? @output3)
 		{
 			var parameters = new []
 			{
@@ -2180,7 +2230,7 @@ namespace DataModel
 
 		#region QueryProcParameters
 
-		public static List<QueryProcParametersResult> QueryProcParameters(this TestData2014DB dataConnection, int? @input, ref int? @output1, ref int? @output2)
+		public static List<QueryProcParametersResult> QueryProcParameters(this TestDataDB dataConnection, int? @input, ref int? @output1, ref int? @output2)
 		{
 			var parameters = new []
 			{
@@ -2216,7 +2266,7 @@ namespace DataModel
 
 		#region SelectImplicitColumn
 
-		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this TestData2014DB dataConnection)
+		public static List<SelectImplicitColumnResult> SelectImplicitColumn(this TestDataDB dataConnection)
 		{
 			var ms = dataConnection.MappingSchema;
 
@@ -2237,7 +2287,7 @@ namespace DataModel
 
 		#region TableTypeTestProc
 
-		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestData2014DB dataConnection, DataTable? @table)
+		public static List<TableTypeTestProcResult> TableTypeTestProc(this TestDataDB dataConnection, DataTable? @table)
 		{
 			var parameters = new []
 			{
@@ -2260,7 +2310,7 @@ namespace DataModel
 
 		#region VariableResults
 
-		public static List<VariableResultsResult> VariableResults(this TestData2014DB dataConnection, bool? @ReturnFullRow)
+		public static List<VariableResultsResult> VariableResults(this TestDataDB dataConnection, bool? @ReturnFullRow)
 		{
 			var parameters = new []
 			{
@@ -2313,6 +2363,12 @@ namespace DataModel
 				t.ID == ID);
 		}
 
+		public static Animals62? Find(this ITable<Animals62> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
 		public static Child? Find(this ITable<Child> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
@@ -2329,6 +2385,12 @@ namespace DataModel
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
+		}
+
+		public static Eyes62? Find(this ITable<Eyes62> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
 		}
 
 		public static GrandChild? Find(this ITable<GrandChild> table, int Id)
@@ -2411,6 +2473,12 @@ namespace DataModel
 				t.PersonID == PersonID);
 		}
 
+		public static PrimaryKeyTable? Find(this ITable<PrimaryKeyTable> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
 		public static Provider? Find(this ITable<Provider> table, int ProviderId)
 		{
 			return table.FirstOrDefault(t =>
@@ -2454,6 +2522,28 @@ namespace DataModel
 		}
 
 		#region Associations
+
+		#region ForeignKeyTable Associations
+
+		/// <summary>
+		/// FK_ForeignKeyTable_PrimaryKeyTable
+		/// </summary>
+		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
+		public static IQueryable<PrimaryKeyTable> PrimaryKeyTables(this ForeignKeyTable obj, IDataContext db)
+		{
+			return db.GetTable<PrimaryKeyTable>().Where(c => c.ID == obj.PrimaryKeyTableID);
+		}
+
+		/// <summary>
+		/// FK_ForeignKeyTable_PrimaryKeyTable
+		/// </summary>
+		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
+		public static ForeignKeyTable PrimaryKeyTable(this PrimaryKeyTable obj, IDataContext db)
+		{
+			return db.GetTable<ForeignKeyTable>().Where(c => c.PrimaryKeyTableID == obj.ID).First();
+		}
+
+		#endregion
 
 		#region IndexTable Associations
 
@@ -2517,6 +2607,19 @@ namespace DataModel
 		public static Member? Provider(this Provider obj, IDataContext db)
 		{
 			return db.GetTable<Member>().Where(c => c.MemberId == obj.ProviderId).FirstOrDefault();
+		}
+
+		#endregion
+
+		#region PrimaryKeyTable Associations
+
+		/// <summary>
+		/// FK_ForeignKeyTable_PrimaryKeyTable_BackReference
+		/// </summary>
+		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true)]
+		public static IQueryable<ForeignKeyTable> ForeignKeyTables(this PrimaryKeyTable obj, IDataContext db)
+		{
+			return db.GetTable<ForeignKeyTable>().Where(c => c.PrimaryKeyTableID == obj.ID);
 		}
 
 		#endregion
@@ -2666,19 +2769,19 @@ namespace DataModel
 		#region TestSchemaY Associations
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public static IQueryable<TestSchemaX> FkTestSchemaYOtherIds(this TestSchemaY obj, IDataContext db)
+		public static IQueryable<TestSchemaX> FkTestSchemaYTestSchemaX(this TestSchemaY obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaX>().Where(c => c.TestSchemaXID == obj.TestSchemaXID);
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_OtherID
+		/// FK_TestSchemaY_TestSchemaX
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
-		public static TestSchemaY FkTestSchemaYOtherID(this TestSchemaX obj, IDataContext db)
+		public static TestSchemaY FkTestSchemaYTestSchemaX0(this TestSchemaX obj, IDataContext db)
 		{
 			return db.GetTable<TestSchemaY>().Where(c => c.TestSchemaXID == obj.TestSchemaXID).First();
 		}
@@ -2702,7 +2805,7 @@ namespace DataModel
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static IQueryable<TestSchemaX> TestSchemaX(this TestSchemaY obj, IDataContext db)
@@ -2711,7 +2814,7 @@ namespace DataModel
 		}
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX
+		/// FK_TestSchemaY_OtherID
 		/// </summary>
 		[Association(ThisKey="TestSchemaXID", OtherKey="TestSchemaXID", CanBeNull=false)]
 		public static TestSchemaY TestSchemaX0(this TestSchemaX obj, IDataContext db)
@@ -2738,6 +2841,21 @@ namespace DataModel
 			{
 				_dataContext = dataContext;
 			}
+
+			#region Table Functions
+
+			#region SchemaTableFunction
+
+			[Sql.TableFunction(Schema="TestSchema", Name="SchemaTableFunction")]
+			public ITable<Parent> SchemaTableFunction(int? @id)
+			{
+				return _dataContext.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
+					@id);
+			}
+
+			#endregion
+
+			#endregion
 		}
 
 		[Table(Schema="TestSchema", Name="SameTableName")]
@@ -2806,11 +2924,11 @@ namespace DataModel
 			#endregion
 		}
 
-		public static partial class TestData2014DBStoredProcedures
+		public static partial class TestDataDBStoredProcedures
 		{
 			#region TestProcedure
 
-			public static List<TestProcedureResult> TestProcedure(TestData2014DB dataConnection)
+			public static List<TestProcedureResult> TestProcedure(TestDataDB dataConnection)
 			{
 				var ms = dataConnection.MappingSchema;
 

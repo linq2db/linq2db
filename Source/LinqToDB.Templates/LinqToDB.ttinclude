@@ -161,7 +161,7 @@ void GenerateTypesFromMetadata()
 
 		foreach (var schema in schemas.Values)
 		{
-			schemaMembers.Members.Add(new Property(true, () => schema.TypeName + "." + SchemaDataContextTypeName, schema.PropertyName));
+			schemaMembers.Members.Add(new Property(EnableNullableReferenceTypes, () => schema.TypeName + "." + SchemaDataContextTypeName, schema.PropertyName));
 			body.Add(() => new [] {
 				schema.PropertyName + LenDiff(maxLen1, schema.PropertyName) +
 				" = new " + schema.TypeName + "." + LenDiff(maxLen2, schema.TypeName) +

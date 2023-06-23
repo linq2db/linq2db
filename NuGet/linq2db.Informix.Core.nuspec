@@ -26,14 +26,14 @@
 		<file src="..\NuGet\Informix.Core\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates"                                   exclude="**\*.props"              />
 		<file src="..\NuGet\Informix\LinqToDB.Informix.Tools.ttinclude"              target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Informix.Tools.ttinclude"                                   />
 		<file src="..\NuGet\t4models\*.ttinclude"                                    target="contentFiles\any\any\LinqToDB.Templates"                                                                     />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="contentFiles\any\any\LinqToDB.Templates"                                   exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\*.*"                                 target="contentFiles\any\any\LinqToDB.Templates"                                   exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                            />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Informix.*"                 target="contentFiles\any\any\LinqToDB.Templates"                                                                     />
 
 		<file src="..\NuGet\Informix.Core\*.*"                                       target="content\LinqToDB.Templates"                                                exclude="**\*.props"              />
 		<file src="..\NuGet\Informix\LinqToDB.Informix.Tools.ttinclude"              target="content\LinqToDB.Templates\LinqToDB.Informix.Tools.ttinclude"                                                />
 		<file src="..\NuGet\t4models\*.ttinclude"                                    target="content\LinqToDB.Templates"                                                                                  />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                                exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\*.*"                                 target="content\LinqToDB.Templates"                                                exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                         />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Informix.*"                 target="content\LinqToDB.Templates"                                                                                  />
 	</files>

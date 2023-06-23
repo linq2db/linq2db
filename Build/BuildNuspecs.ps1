@@ -124,9 +124,8 @@ if ($version) {
 		$xml.package.files.AppendChild($child)
 
 		if ($isT4 -eq $true) {
-			Set-File -src '..\NuGet\README.T4.md' -target 'README.md'
-			Set-File -src '..\NuGet\README.T4.md' -target 'content\LinqToDB.Templates\README.md'
-			Set-File -src '..\NuGet\README.T4.md' -target 'contentFiles\any\any\LinqToDB.Templates\README.md'
+			Set-File -src '..\NuGet\readme.T4.txt' -target 'readme.txt'
+			Set-File -src '..\NuGet\README.T4.md'  -target 'README.md'
 		}
 
 		Set-File -src '..\NuGet\icon64.png'   -target 'images\icon.png'

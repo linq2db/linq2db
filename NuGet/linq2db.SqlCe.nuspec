@@ -24,13 +24,13 @@
 
 		<file src="..\NuGet\SqlCe\*.*"                                               target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
 		<file src="..\NuGet\t4models\*.ttinclude"                                    target="contentFiles\any\any\LinqToDB.Templates"                                                            />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\*.*"                                 target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.SqlCe.*"                    target="contentFiles\any\any\LinqToDB.Templates"                                                            />
 
 		<file src="..\NuGet\SqlCe\*.*"                                               target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
 		<file src="..\NuGet\t4models\*.ttinclude"                                    target="content\LinqToDB.Templates"                                                                         />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\*.*"                                 target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
 		<file src="..\Source\LinqToDB.Templates\LinqToDB.SqlCe.*"                    target="content\LinqToDB.Templates"                                                                         />
 	</files>
