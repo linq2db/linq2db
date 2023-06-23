@@ -4299,55 +4299,37 @@ END convert_bool;");
 		}
 
 		[Test]
-		public static void Issue4172Test1([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		public void Issue4172Test1([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
 		{
 			using var db = GetDataConnection(context);
+			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
 
-			try
-			{
-				using var users = db.CreateTable<ISSUE4172TABLE>();
+			users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
 
-				users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
-
-				// Should return Unknown Role users
-				var data = (
+			// Should return Unknown Role users
+			var data = (
 					from u in users
 					where u.ROLE == Role.Unknown
 					select u).ToList();
 
-				Assert.True(data.Count == 0, "Incorrect count");
-			}
-			catch { }
-			finally
-			{
-				db.DropTable<ISSUE4172TABLE>();
-			}
+			Assert.True(data.Count == 0, "Incorrect count");
 		}
 
 		[Test]
-		public static void Issue4172Test2([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		public void Issue4172Test2([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
 		{
 			using var db = GetDataConnection(context);
+			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
 
-			try
-			{
-				using var users = db.CreateTable<ISSUE4172TABLE>();
+			users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
 
-				users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
-
-				// Should return Known Role users
-				var data = (
+			// Should return Known Role users
+			var data = (
 				 from u in users
 				 where u.ROLE != Role.Unknown
 				 select u).ToList();
 
-				Assert.True(data.Count == 1, "Incorrect count");
-			}
-			catch { }
-			finally
-			{
-				db.DropTable<ISSUE4172TABLE>();
-			}
+			Assert.True(data.Count == 1, "Incorrect count");
 		}
 
 		#endregion
