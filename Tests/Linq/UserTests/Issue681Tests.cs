@@ -40,14 +40,135 @@ namespace Tests.UserTests
 			public int Value { get; set; }
 		}
 
-		// for SAP HANA cross-server queries see comments how to configure SAP HANA in TestUtils.GetServerName() method
 		[Test]
-		public async Task TestTableFQN(
+		public async Task TestITable(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) => { t.ToList(); return Task.CompletedTask; });
+		}
+
+		[Test]
+		public async Task TestInsert(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				db.Insert(new TestTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestUpdate(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				db.Update(new TestTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestDelete(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				db.Delete(new TestTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestInsertOrReplace(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				var record = new TestTable() { ID = 5, Value = 10 };
+				// insert
+				db.InsertOrReplace(record, databaseName: d, serverName: s, schemaName: u);
+				// replace
+				db.InsertOrReplace(record, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestInsertWithIdentity(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTableWithIdentity>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				db.InsertWithIdentity(new TestTableWithIdentity() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestDropCreate(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				try
+				{
+					db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+				}
+				finally
+				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+				}
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestDropCreateAsync(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, async (db, t, u, d, s) =>
+			{
+				try
+				{
+					await db.CreateTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+				}
+				finally
+				{
+					await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+				}
+			});
+		}
+
+		public async Task TestTableFQN<TTable>(string context, bool withServer, bool withDatabase, bool withSchema, Func<IDataContext, ITable<TTable>, string?, string?, string?, Task> operation)
+			where TTable: class
+		{
+			// for SAP HANA cross-server queries see comments how to configure SAP HANA in TestUtils.GetServerName() method
 			var throws             = false;
 			var throwsSqlException = false;
 
@@ -57,8 +178,7 @@ namespace Tests.UserTests
 
 			using var _  = new DisableBaseline("Use instance name is SQL", context.IsAnyOf(TestProvName.AllSqlServer) && !context.IsAnyOf(TestProvName.AllSqlAzure) && withServer);
 			using var db = GetDataContext(context, testLinqService : false);
-			using var t1 = db.CreateLocalTable<TestTable>();
-			using var t2 = db.CreateLocalTable<TestTableWithIdentity>();
+			using var t  = db.CreateLocalTable<TTable>();
 
 			if (withServer && (!withDatabase || !withSchema) && context.IsAnyOf(TestProvName.AllSqlServer))
 			{
@@ -93,12 +213,12 @@ namespace Tests.UserTests
 
 			using (new DisableLogging())
 			{
-				serverName = withServer   ? TestUtils.GetServerName(db, context)   : null;
+				serverName = withServer   ? TestUtils.GetServerName  (db, context) : null;
 				dbName     = withDatabase ? TestUtils.GetDatabaseName(db, context) : null;
-				schemaName = withSchema   ? TestUtils.GetSchemaName(db, context)   : null;
+				schemaName = withSchema   ? TestUtils.GetSchemaName  (db, context) : null;
 			}
 
-			var table = db.GetTable<TestTable>();
+			var table = db.GetTable<TTable>();
 
 			if (withServer  ) table = table.ServerName  (serverName);
 			if (withDatabase) table = table.DatabaseName(dbName);
@@ -107,59 +227,24 @@ namespace Tests.UserTests
 			if (throws && context.Contains(".LinqService"))
 			{
 #if NETFRAMEWORK
-				Assert.Throws<FaultException>(() => table.ToList());
+				Assert.ThrowsAsync<FaultException>(() => operation(db, table, schemaName, dbName, serverName));
 #else
-				Assert.Throws<RpcException>(() => table.ToList());
+				Assert.ThrowsAsync<RpcException>(() => operation(db, table, schemaName, dbName, serverName));
 #endif
 			}
 			else if (throws)
 			{
 				if (throwsSqlException)
 					// https://www.youtube.com/watch?v=Qji5x8gBVX4
-					Assert.Throws(
+					Assert.ThrowsAsync(
 						((SqlServerDataProvider)((DataConnection)db).DataProvider).Adapter.SqlExceptionType,
-						() => table.ToList());
+						() => operation(db, table, schemaName, dbName, serverName));
 				else
-					Assert.Throws<LinqToDBException>(() => table.ToList());
+					Assert.ThrowsAsync<LinqToDBException>(() => operation(db, table, schemaName, dbName, serverName));
 			}
 			else
 			{
-				var record = new TestTable() { ID = 5, Value = 10 };
-
-				db.Insert(record, databaseName: dbName, serverName: serverName, schemaName: schemaName);
-
-				record.Value = 123;
-				db.Update(record, databaseName: dbName, serverName: serverName, schemaName: schemaName);
-
-				var result = table.ToList();
-
-				db.Delete(record, databaseName: dbName, serverName: serverName, schemaName: schemaName);
-				db.InsertOrReplace(record, databaseName: dbName, serverName: serverName, schemaName: schemaName);
-
-				Assert.That(result.Count,    Is.EqualTo(1));
-				Assert.That(result[0].Value, Is.EqualTo(123));
-
-				var record2 = new TestTableWithIdentity() { Value = 10 };
-
-				db.InsertWithIdentity(record2, databaseName: dbName, serverName: serverName, schemaName: schemaName);
-
-				try
-				{
-					db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: dbName, schemaName: schemaName, serverName: serverName);
-				}
-				finally
-				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: dbName, schemaName: schemaName, serverName: serverName);
-				}
-
-				try
-				{
-					await db.CreateTableAsync<TestTable>(tableName: "Issue681Table3", databaseName: dbName, schemaName: schemaName, serverName: serverName);
-				}
-				finally
-				{
-					await db.DropTableAsync<TestTable>(tableName: "Issue681Table3", databaseName: dbName, schemaName: schemaName, serverName: serverName);
-				}
+				await operation(db, table, schemaName, dbName, serverName);
 			}
 		}
 	}
