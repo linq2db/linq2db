@@ -1449,6 +1449,28 @@ namespace Tests.Linq
 			}
 		}
 
+		public sealed class IsNullOrEmptyTable
+		{
+			public int     Id    { get; set; }
+			public string? Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
+		public void IsNullOrEmpty3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new IsNullOrEmptyTable() { Id = 1, Value = "   " },
+				new IsNullOrEmptyTable() { Id = 2, Value = ""    },
+			});
+
+			var results = (from p in t where string.IsNullOrEmpty(p.Value)).ToList();
+
+			Assert.That(results.Count, Is.EqualTo(1));
+			Assert.That(results[0].Id, Is.EqualTo(2));
+		}
+
 		[Table]
 		sealed class CollatedTable
 		{
