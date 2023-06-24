@@ -125,7 +125,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public async Task TestDropCreate(
+		public async Task TestCreate(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
@@ -135,18 +135,19 @@ namespace Tests.UserTests
 			{
 				try
 				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 					db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
 				}
 				finally
 				{
-					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 				}
 				return Task.CompletedTask;
-			});
+			}, TestProvName.AllSqlServer);
 		}
 
 		[Test]
-		public async Task TestDropCreateAsync(
+		public async Task TestCreateAsync(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
@@ -156,16 +157,43 @@ namespace Tests.UserTests
 			{
 				try
 				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 					await db.CreateTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
 				}
 				finally
 				{
-					await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+					await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 				}
-			});
+			}, TestProvName.AllSqlServer);
 		}
 
-		public async Task TestTableFQN<TTable>(string context, bool withServer, bool withDatabase, bool withSchema, Func<IDataContext, ITable<TTable>, string?, string?, string?, Task> operation)
+		[Test]
+		public async Task TestDrop(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				try
+				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+					db.CreateTable<TestTable>(tableName: "Issue681Table2");
+				}
+				finally
+				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+				}
+				return Task.CompletedTask;
+			}, TestProvName.AllSqlServer);
+		}
+
+		public async Task TestTableFQN<TTable>(
+			string context,
+			bool withServer, bool withDatabase, bool withSchema,
+			Func<IDataContext, ITable<TTable>, string?, string?, string?, Task> operation,
+			string? withServerThrows = null)
 			where TTable: class
 		{
 			// for SAP HANA cross-server queries see comments how to configure SAP HANA in TestUtils.GetServerName() method
@@ -184,6 +212,13 @@ namespace Tests.UserTests
 			{
 				// SQL Server FQN requires schema and db components for linked-server query
 				throws = true;
+			}
+
+			if (withServerThrows != null && withServer && context.IsAnyOf(withServerThrows))
+			{
+				throws = true;
+				if (context.IsAnyOf(TestProvName.AllSqlServer))
+					throwsSqlException = true;
 			}
 
 			if (withServer && withDatabase && withSchema && context.IsAnyOf(TestProvName.AllSqlAzure))
