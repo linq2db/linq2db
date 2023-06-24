@@ -1465,7 +1465,7 @@ namespace Tests.Linq
 				new IsNullOrEmptyTable() { Id = 2, Value = ""    },
 			});
 
-			var results = (from p in t where string.IsNullOrEmpty(p.Value)).ToList();
+			var results = (from p in t where string.IsNullOrEmpty(p.Value) select p).ToList();
 
 			Assert.That(results.Count, Is.EqualTo(1));
 			Assert.That(results[0].Id, Is.EqualTo(2));
