@@ -1456,7 +1456,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
-		public void IsNullOrEmpty3([DataSources] string context)
+		public void IsNullOrEmpty3([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[]
@@ -1469,6 +1469,83 @@ namespace Tests.Linq
 
 			Assert.That(results.Count, Is.EqualTo(1));
 			Assert.That(results[0].Id, Is.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
+		public void IsNullOrEmptySybase([IncludeDataSources(true, TestProvName.AllSybase)] string context)
+		{
+			// sybase doesn't have empty string concept
+			// empty string replaced with ' '
+			// https://stackoverflow.com/questions/52284561
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new IsNullOrEmptyTable() { Id = 1, Value = "   " },
+				new IsNullOrEmptyTable() { Id = 2, Value = ""    },
+			});
+
+			var results = (from p in t where string.IsNullOrEmpty(p.Value) select p).ToList();
+
+			Assert.That(results, Is.Empty);
+		}
+
+		// Sybase: https://stackoverflow.com/questions/52284561
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
+		public void StringLength1([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new IsNullOrEmptyTable() { Id = 1, Value = "   " },
+				new IsNullOrEmptyTable() { Id = 2, Value = ""    },
+			});
+
+			var results = (from p in t where p.Value!.Length == 0 select p).ToList();
+
+			Assert.That(results.Count, Is.EqualTo(1));
+			Assert.That(results[0].Id, Is.EqualTo(2));
+		}
+
+		// Sybase: https://stackoverflow.com/questions/52284561
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
+		public void StringLength2([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new IsNullOrEmptyTable() { Id = 1, Value = "   " },
+				new IsNullOrEmptyTable() { Id = 2, Value = ""    },
+			});
+
+			var results = (from p in t where p.Value!.Length == 3 select p).ToList();
+
+			Assert.That(results.Count, Is.EqualTo(1));
+			Assert.That(results[0].Id, Is.EqualTo(1));
+		}
+
+		// Sybase: https://stackoverflow.com/questions/52284561
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
+		public void StringLength3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t  = db.CreateLocalTable(new[]
+			{
+				new IsNullOrEmptyTable() { Id = 1, Value = "x   "  },
+				new IsNullOrEmptyTable() { Id = 2, Value = "xxxx " },
+			});
+
+			var results = (from p in t where p.Value!.Length == 4 select p).ToList();
+
+			Assert.That(results.Count, Is.EqualTo(1));
+			if (context.IsAnyOf(TestProvName.AllSybase))
+			{
+				// Sybase removes spaces on insert (?)
+				Assert.That(results[0].Id, Is.EqualTo(2));
+			}
+			else
+			{
+				Assert.That(results[0].Id, Is.EqualTo(1));
+			}
 		}
 
 		[Table]

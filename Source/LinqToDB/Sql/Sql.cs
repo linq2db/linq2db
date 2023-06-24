@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
+
 using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
@@ -12,11 +14,11 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Mapping;
 	using Expressions;
 	using Linq;
-	using SqlQuery;
 	using LinqToDB.Common;
+	using Mapping;
+	using SqlQuery;
 
 	[PublicAPI]
 	public static partial class Sql
@@ -269,7 +271,7 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Function("Convert", 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = ProviderName.ClickHouse)]
+		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = PN.ClickHouse)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -285,7 +287,7 @@ namespace LinqToDB
 		// TODO: v5 remove. bltoolkit legacy which duplicates Convert function above (without ServerSideOnly, but it shouldn't matter)
 		[CLSCompliant(false)]
 		[Function("Convert", 0, 1, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = ProviderName.ClickHouse)]
+		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = PN.ClickHouse)]
 		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -383,6 +385,14 @@ namespace LinqToDB
 
 		#region String Functions
 
+		/// <summary>
+		/// Returns string length in characters by calling corresponding database function as-is.
+		/// Could result in unexpected results due to non-standard behavior of some databases.
+		/// E.g. see LEN function notes for SQL CE or MSSQL databases.
+		/// For more standard behavior look at <see cref="StringLength(string?)"/> function.
+		/// </summary>
+		/// <param name="str">String value.</param>
+		/// <returns>String length or <c>null</c> for NULL input.</returns>
 		[Function  (                                                    PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function  (PN.Access,     "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function  (PN.Firebird,   "Char_Length",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
@@ -393,7 +403,33 @@ namespace LinqToDB
 		[Function  (PN.Informix,   "CHAR_LENGTH",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function  (PN.ClickHouse, "CHAR_LENGTH",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.DB2LUW,     "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[return: NotNullIfNotNull(nameof(str))]
 		public static int? Length(string? str)
+		{
+			return str?.Length;
+		}
+
+		/// <summary>
+		/// Returns string length in characters by calling corresponding database function.
+		/// Compared to <see cref="Length(string?)"/> function, it tries to calculate length in same way as <see cref="string.Length"/> property
+		/// for databases with non-standard length functions.
+		/// E.g. see LEN function notes for SQL CE or MSSQL databases.
+		/// Does not fix incorrect behavior for Sybase ASE with empty string (returns 1 instead 0) as there is no empty string concept in ASE.
+		/// </summary>
+		/// <param name="str">String value.</param>
+		/// <returns>String length or <c>null</c> for NULL input.</returns>
+		[Function  (               "Length",                            PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.Access,     "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.Firebird,   "Char_Length",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SqlServer,  "LEN(REPLACE({0},' ','.'))",         PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SqlCe,      "LEN(REPLACE({0},' ','.'))",         PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.Sybase,     "Len",                               PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.MySql,      "Char_Length",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.Informix,   "CHAR_LENGTH",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Function  (PN.ClickHouse, "CHAR_LENGTH",                       PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.DB2LUW,     "CHARACTER_LENGTH({0},CODEUNITS32)", PreferServerSide = true, IsNullable = IsNullableType.SameAsFirstParameter)]
+		[return: NotNullIfNotNull(nameof(str))]
+		public static int? StringLength(string? str)
 		{
 			return str?.Length;
 		}
