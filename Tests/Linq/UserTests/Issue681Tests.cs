@@ -112,7 +112,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public async Task TestInsertWithIdentity(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllClickHouse)] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
@@ -126,7 +126,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public async Task TestCreate(
-			[DataSources(TestProvName.AllClickHouse)] string context,
+			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
