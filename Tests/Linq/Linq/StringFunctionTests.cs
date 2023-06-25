@@ -1456,7 +1456,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
-		public void IsNullOrEmpty3([DataSources(TestProvName.AllSybase)] string context)
+		public void IsNullOrEmpty3([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[]
@@ -1467,8 +1467,15 @@ namespace Tests.Linq
 
 			var results = (from p in t where string.IsNullOrEmpty(p.Value) select p).ToList();
 
-			Assert.That(results.Count, Is.EqualTo(1));
-			Assert.That(results[0].Id, Is.EqualTo(2));
+			if (context.IsAnyOf(TestProvName.AllSybase))
+			{
+				Assert.That(results, Is.Empty);
+			}
+			else
+			{
+				Assert.That(results.Count, Is.EqualTo(1));
+				Assert.That(results[0].Id, Is.EqualTo(2));
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
@@ -1491,7 +1498,7 @@ namespace Tests.Linq
 
 		// Sybase: https://stackoverflow.com/questions/52284561
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
-		public void StringLength1([DataSources(TestProvName.AllSybase)] string context)
+		public void StringLength1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[]
@@ -1502,13 +1509,20 @@ namespace Tests.Linq
 
 			var results = (from p in t where p.Value!.Length == 0 select p).ToList();
 
-			Assert.That(results.Count, Is.EqualTo(1));
-			Assert.That(results[0].Id, Is.EqualTo(2));
+			if (context.IsAnyOf(TestProvName.AllOracle, TestProvName.AllSybase))
+			{
+				Assert.That(results, Is.Empty);
+			}
+			else
+			{
+				Assert.That(results.Count, Is.EqualTo(1));
+				Assert.That(results[0].Id, Is.EqualTo(2));
+			}
 		}
 
 		// Sybase: https://stackoverflow.com/questions/52284561
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4138")]
-		public void StringLength2([DataSources(TestProvName.AllSybase)] string context)
+		public void StringLength2([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t  = db.CreateLocalTable(new[]
@@ -1519,8 +1533,18 @@ namespace Tests.Linq
 
 			var results = (from p in t where p.Value!.Length == 3 select p).ToList();
 
-			Assert.That(results.Count, Is.EqualTo(1));
-			Assert.That(results[0].Id, Is.EqualTo(1));
+			if (context.IsAnyOf(TestProvName.AllSybase))
+			{
+				// sybase:
+				// - trims trailing whitespaces in storage (1)
+				// - '' replaced with ' '
+				Assert.That(results, Is.Empty);
+			}
+			else
+			{
+				Assert.That(results.Count, Is.EqualTo(1));
+				Assert.That(results[0].Id, Is.EqualTo(1));
+			}
 		}
 
 		// Sybase: https://stackoverflow.com/questions/52284561

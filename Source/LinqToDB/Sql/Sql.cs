@@ -414,7 +414,11 @@ namespace LinqToDB
 		/// Compared to <see cref="Length(string?)"/> function, it tries to calculate length in same way as <see cref="string.Length"/> property
 		/// for databases with non-standard length functions.
 		/// E.g. see LEN function notes for SQL CE or MSSQL databases.
-		/// Does not fix incorrect behavior for Sybase ASE with empty string (returns 1 instead 0) as there is no empty string concept in ASE.
+		/// Known issues with empty string:
+		/// <list type="bullet">
+		/// <item>Oracle treats '' as NULL and returns NULL instead of 1</item>
+		/// <item>Sybase ASE treats '' as ' ' and returns 1 instead of 1</item>
+		/// </list>
 		/// </summary>
 		/// <param name="str">String value.</param>
 		/// <returns>String length or <c>null</c> for NULL input.</returns>
