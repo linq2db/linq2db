@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join, condition);
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			var schemaName = tableOptions.HasIsTemporary() ? null : name.Schema;
 

@@ -490,7 +490,7 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			if (name.Schema != null)
 			{
@@ -509,6 +509,14 @@ END;",
 			else
 				sb.Append(name.Name);
 
+			if (name.Server != null && !withoutSuffix)
+				BuildObjectNameSuffix(sb, name, escape);
+
+			return sb;
+		}
+
+		protected override StringBuilder BuildObjectNameSuffix(StringBuilder sb, SqlObjectName name, bool escape)
+		{
 			if (name.Server != null)
 			{
 				sb.Append('@');
