@@ -126,7 +126,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public async Task TestCreate(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllClickHouse)] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
