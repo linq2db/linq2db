@@ -94,7 +94,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public async Task TestInsertOrReplace(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllClickHouse)] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
@@ -143,7 +143,8 @@ namespace Tests.UserTests
 					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 				}
 				return Task.CompletedTask;
-			}, TestProvName.AllSqlServer);
+				// not allowed for remote server
+			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}");
 		}
 
 		[Test]
@@ -164,7 +165,8 @@ namespace Tests.UserTests
 				{
 					await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 				}
-			}, TestProvName.AllSqlServer);
+				// not allowed for remote server
+			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}");
 		}
 
 		[Test]
@@ -199,6 +201,7 @@ namespace Tests.UserTests
 			// for SAP HANA cross-server queries see comments how to configure SAP HANA in TestUtils.GetServerName() method
 			var throws             = false;
 			var throwsSqlException = false;
+			var throwsOraException = false;
 
 			string? serverName;
 			string? schemaName;
@@ -217,8 +220,10 @@ namespace Tests.UserTests
 			if (withServerThrows != null && withServer && context.IsAnyOf(withServerThrows))
 			{
 				throws = true;
-				if (context.IsAnyOf(TestProvName.AllSqlServer))
+				if (context.IsAnyOf(TestProvName.AllSqlServer) && withDatabase && withSchema)
 					throwsSqlException = true;
+				if (context.IsAnyOf(TestProvName.AllOracle))
+					throwsOraException = true;
 			}
 
 			if (withServer && withDatabase && withSchema && context.IsAnyOf(TestProvName.AllSqlAzure))
@@ -270,12 +275,27 @@ namespace Tests.UserTests
 			else if (throws)
 			{
 				if (throwsSqlException)
-					// https://www.youtube.com/watch?v=Qji5x8gBVX4
+				{
 					Assert.ThrowsAsync(
 						((SqlServerDataProvider)((DataConnection)db).DataProvider).Adapter.SqlExceptionType,
 						() => operation(db, table, schemaName, dbName, serverName));
+				}
+				else if (throwsOraException)
+				{
+					try
+					{
+						await operation(db, table, schemaName, dbName, serverName);
+						Assert.Fail("OracleException expected");
+					}
+					catch (Exception ex)
+					{
+						Assert.That(ex.GetType().Name, Is.EqualTo("OracleException"));
+					}
+				}
 				else
+				{
 					Assert.ThrowsAsync<LinqToDBException>(() => operation(db, table, schemaName, dbName, serverName));
+				}
 			}
 			else
 			{
