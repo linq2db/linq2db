@@ -11,5 +11,5 @@ docker run -d --name mariadb -e MYSQL_ROOT_PASSWORD=root -p 3316:3306 mariadb:la
 call wait-err mariadb "3306  mariadb.org"
 
 REM create test database
-docker exec mariadb mysql -e "CREATE DATABASE testdata DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;" -uroot -proot
+docker exec mariadb mariadb -e "CREATE DATABASE testdata DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;" -uroot -proot
 
