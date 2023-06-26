@@ -2894,7 +2894,6 @@ namespace Tests.Linq
 		}
 		#endregion
 
-
 		[ActiveIssue(1224, Configurations = new[]
 		{
 			TestProvName.AllAccess,
@@ -2921,5 +2920,73 @@ namespace Tests.Linq
 			}
 		}
 
+		[Table]
+		private class Issue4160Person
+		{
+			[Column] public string Code { get; set; } = default!;
+
+			public static readonly Issue4160Person[] Data = new[]
+			{
+				new Issue4160Person() { Code = "SD" },
+				new Issue4160Person() { Code = "SD" },
+				new Issue4160Person() { Code = "SH" },
+			};
+		}
+
+		[Table]
+		private class Issue4160City
+		{
+			[Column] public string  Code { get; set; } = default!;
+			[Column] public string? Name { get; set; }
+
+			public static readonly Issue4160City[] Data = new[]
+			{
+				new Issue4160City() { Code = "SD", Name = "SYDNEY" },
+				new Issue4160City() { Code = "SD", Name = "SUNDAY" },
+				new Issue4160City() { Code = "SH", Name = "SYDHIP" }
+			};
+		}
+
+		[Test]
+		public void Issue4160Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var persons = db.CreateLocalTable(Issue4160Person.Data);
+			using var cities  = db.CreateLocalTable(Issue4160City.Data);
+
+			var query = (
+			 from pe in persons
+			 select new
+			 {
+				 Value = (from cc in cities
+						  where cc.Code == pe.Code
+						  select cc.Name).FirstOrDefault()
+			 }).Distinct();
+
+			var data = query.ToList();
+
+			Assert.That(data.Count, Is.EqualTo(2));
+			// TODO: disable is_empty field generation for this query as it is not needed
+			//Assert.That(query.GetSelectQuery().Select.Columns.Count, Is.EqualTo(1));
+		}
+
+		[ActiveIssue(Details = "Currently fails for providers without APPLY support. We should enable conversion to JOIN for it.")]
+		[Test]
+		public void Issue4160Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var persons = db.CreateLocalTable(Issue4160Person.Data);
+			using var cities  = db.CreateLocalTable(Issue4160City.Data);
+
+			var data = (
+				from pe in persons
+				from cc in cities.Where(cc => cc.Code == pe.Code).Take(1).DefaultIfEmpty()
+				select new
+				{
+					Value = cc.Name
+				}).Distinct().ToList();
+
+			Assert.That(data.Count, Is.EqualTo(2));
+		}
 	}
 }
