@@ -176,7 +176,7 @@ void GenerateTypesFromMetadata()
 
 	if (GenerateConstructors)
 	{
-		foreach (var c in GetConstructors(DefaultConfiguration, DataContextObject.Name))
+		foreach (var c in GetConstructors(DefaultConfiguration, DataContextObject?.Name))
 		{
 			if (c.BodyBuilders.Count > 0)
 				c.BodyBuilders.Add(() => new[] { "" });
