@@ -91,16 +91,16 @@ namespace LinqToDB.DataProvider.Oracle
 								var sc = new SqlSearchCondition();
 								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
 
-								if (expr.Operator == SqlPredicate.Operator.Equal)
-								{
-									// When checking Equal to Empty String, adding 'OR [col] IS NULL'
-									sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr2, false), true));
-								}
-								else if (expr.Operator == SqlPredicate.Operator.NotEqual)
-								{
-									// When checking NotEqual to Empty String, adding 'AND [col] IS NOT NULL'
-									sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr2, true), false));
-								}
+								bool isNotEqual = expr.Operator == SqlPredicate.Operator.NotEqual;
+
+								// Add 'AND [col] IS NOT NULL' when checking Not Equal to Empty String,
+								// else add 'OR [col] IS NULL'
+								sc.Conditions.Add(new(
+								  isNot: false,
+								  new SqlPredicate.IsNull(expr.Expr2, isNot: isNotEqual),
+								  isOr: !isNotEqual)
+								);
+
 								return sc;
 							}
 						}
@@ -113,16 +113,16 @@ namespace LinqToDB.DataProvider.Oracle
 								var sc = new SqlSearchCondition();
 								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
 
-								if (expr.Operator == SqlPredicate.Operator.Equal)
-								{
-									// When checking Equal to Empty String, adding 'OR [col] IS NULL'
-									sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr1, false), true));
-								}
-								else if (expr.Operator == SqlPredicate.Operator.NotEqual)
-								{
-									// When checking NotEqual to Empty String, adding 'AND [col] IS NOT NULL'
-									sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr1, true), false));
-								}
+								bool isNotEqual = expr.Operator == SqlPredicate.Operator.NotEqual;
+
+								// Add 'AND [col] IS NOT NULL' when checking Not Equal to Empty String,
+								// else add 'OR [col] IS NULL'
+								sc.Conditions.Add(new(
+								  isNot: false,
+								  new SqlPredicate.IsNull(expr.Expr2, isNot: isNotEqual),
+								  isOr: !isNotEqual)
+								);
+
 								return sc;
 							}
 						}
