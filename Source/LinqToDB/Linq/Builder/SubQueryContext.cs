@@ -76,17 +76,17 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
+			if (flags.IsRoot() && SequenceHelper.IsSameContext(path, this))
 				return path;
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
 			var result = Builder.MakeExpression(SubQuery, corrected, flags);
 
-			if (flags.HasFlag(ProjectFlags.Table))
+			if (flags.IsTable())
 				return result;
 
-			if (flags.HasFlag(ProjectFlags.Traverse))
+			if (flags.IsTraverse())
 				return result;
 
 			result = Builder.ConvertToSqlExpr(SubQuery, result, flags);

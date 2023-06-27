@@ -147,6 +147,8 @@ namespace LinqToDB.Linq.Builder
 
 			bool? isOuter = flags.HasFlag(ProjectFlags.ForceOuterAssociation) ? true : null;
 
+			var prevIsOuter = _isOuterAssociations?.Contains(rootContext) == true;
+
 			if (associationDescriptor.IsList)
 			{
 				/*if (_isOuterAssociations?.Contains(rootContext) == true)
@@ -157,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 				if (flags.IsSubquery())
 					isOuter = false;
 				else
-					isOuter = isOuter == true || associationDescriptor.CanBeNull || _isOuterAssociations?.Contains(rootContext) == true;
+					isOuter = isOuter == true || associationDescriptor.CanBeNull || prevIsOuter;
 			}
 
 			if (forContext != null)
@@ -165,8 +167,15 @@ namespace LinqToDB.Linq.Builder
 				rootContext = (ContextRefExpression)SequenceHelper.MoveToScopedContext(rootContext, forContext);
 			}
 
+			Expression? notNullCheck = null;
+			if (associationDescriptor.IsList && prevIsOuter)
+			{
+				var keys = MakeExpression(forContext, rootContext, flags.KeyFlag());
+				notNullCheck = ExtractNotNullCheck(keys);
+			}
+
 			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo,
-				associationDescriptor, !associationDescriptor.IsList, loadWith, loadWithPath, ref isOuter);
+				associationDescriptor, notNullCheck, !associationDescriptor.IsList, loadWith, loadWithPath, ref isOuter);
 
 			associationExpression = association;
 
@@ -204,6 +213,39 @@ namespace LinqToDB.Linq.Builder
 				_associations[key] = associationExpression;
 
 			return associationExpression;
+		}
+
+		Expression? ExtractNotNullCheck(Expression expr)
+		{
+			SqlPlaceholderExpression? notNull = null;
+
+			if (expr is SqlPlaceholderExpression placeholder)
+			{
+				notNull = placeholder.MakeNullable();
+			}
+
+			if (notNull == null)
+			{
+				var placeholders = CollectDistinctPlaceholders(expr);
+
+				notNull = placeholders
+					.FirstOrDefault(pl => !pl.Sql.CanBeNullable(NullabilityContext.NonQuery));
+			}
+
+			if (notNull == null)
+			{
+				return null;
+			}
+
+			if (notNull.Type.IsValueType && !notNull.Type.IsNullable())
+			{
+				notNull = notNull.MakeNullable();
+			}
+
+			var notNullExpression = Expression.NotEqual(notNull, Expression.Constant(null, notNull.Type));
+
+			return notNullExpression;
+
 		}
 
 		public static Expression AdjustType(Expression expression, Type desiredType, MappingSchema mappingSchema)

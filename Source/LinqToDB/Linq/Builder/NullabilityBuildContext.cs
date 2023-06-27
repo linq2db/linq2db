@@ -8,7 +8,6 @@ namespace LinqToDB.Linq.Builder
 	class NullabilityBuildContext : BuildContextBase
 	{
 		public IBuildContext Context    { get; }
-		public bool          OnlyForSql { get; }
 
 		public NullabilityBuildContext(IBuildContext context) : base(context.Builder, context.ElementType, context.SelectQuery)
 		{
@@ -26,12 +25,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!flags.IsTest())
 			{
-				if (newExpr is SqlPlaceholderExpression placeholder)
-				{
-					var nullability = NullabilityContext.GetContext(placeholder.SelectQuery);
-					newExpr = placeholder.WithSql(SqlNullabilityExpression.ApplyNullability(placeholder.Sql, nullability));
-				}
-				
+				newExpr = SequenceHelper.StampNullability(newExpr, SelectQuery);
 			}
 
 			return newExpr;

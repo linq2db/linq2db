@@ -4091,6 +4091,15 @@ namespace LinqToDB.Linq.Builder
 						rootContext = expression as ContextRefExpression;
 					}
 				}
+				else if (mc.IsQueryable() && flags.IsExpand())
+				{
+					var args      = mc.Arguments.ToArray();
+					args[0] = MakeExpression(currentContext, args[0], flags);
+					var newMethod = mc.Update(null, args);
+
+					if (!ReferenceEquals(newMethod, mc))
+						expression = newMethod;
+				}
 			}
 			else if (path is ContextRefExpression contextRef)
 			{

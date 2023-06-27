@@ -26,10 +26,11 @@ namespace LinqToDB.Linq.Builder
 			Type                  parentOriginalType,
 			Type                  parentType,
 			Type                  objectType,
+			Expression?           additionalCondition,
 			bool                  inline,
 			bool?                 enforceDefault,
 			LoadWithInfo?         loadWith,
-			MemberInfo[]?         loadWithPath, 
+			MemberInfo[]?         loadWithPath,
 			out bool?             isOuter)
 		{
 			var dataContextConstant = Expression.Constant(builder.DataContext, builder.DataContext.GetType());
@@ -148,6 +149,11 @@ namespace LinqToDB.Linq.Builder
 
 				var queryParam = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(objectType), dataContextConstant);
 
+				if (additionalCondition != null)
+				{
+					predicate = Expression.AndAlso(additionalCondition, predicate);
+				}
+
 				var filterLambda = Expression.Lambda(predicate, childParam);
 				Expression body  = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(objectType), queryParam,
 					Expression.Quote(filterLambda));
@@ -164,6 +170,27 @@ namespace LinqToDB.Linq.Builder
 					if (mc.IsSameGenericMethod(DefaultIfEmptyMethods))
 						shouldAddDefaultIfEmpty = false;
 				}
+
+				if (additionalCondition != null)
+				{
+					var newBody          = definedQueryMethod.Body;
+					var objParam         = Expression.Parameter(objectType);
+					var additionalLambda = Expression.Lambda(additionalCondition, objParam);
+					if (typeof(IQueryable<>).IsSameOrParentOf(definedQueryMethod.Body.Type))
+					{
+						newBody = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(objectType),
+							newBody,
+							Expression.Quote(additionalLambda));
+					}
+					else
+					{
+						newBody = Expression.Call(Methods.Enumerable.Where.MakeGenericMethod(objectType), 
+							newBody,
+							additionalLambda);
+					}
+					definedQueryMethod = Expression.Lambda(newBody, definedQueryMethod.Parameters);
+				}
+
 			}
 
 			if (!cacheCheckAdded && shouldAddCacheCheck)
@@ -319,13 +346,14 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext, 
-			AccessorMember onMember, AssociationDescriptor descriptor, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOuter)
+			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);
 			var parentExactType = descriptor.GetParentElementType();
 
 			var queryMethod = CreateAssociationQueryLambda(
 				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
+				additionalCondition,
 				inline, isOuter, loadwith, loadWithPath, out isOuter);
 
 			var body = queryMethod.GetBody(tableContext);

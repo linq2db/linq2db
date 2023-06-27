@@ -32,19 +32,28 @@ namespace LinqToDB.Linq.Builder
 			var selector       = SequenceHelper.GetArgumentLambda(methodCall, "selector");
 			var resultSelector = SequenceHelper.GetArgumentLambda(methodCall, "resultSelector");
 
+			var expr = SequenceHelper.PrepareBody(collectionSelector, sequence).Unwrap();
+
 			sequence = new SubQueryContext(sequence);
 
 			var scopeContext = new ScopeContext(sequence, sequence);
-			var expr         = SequenceHelper.PrepareBody(collectionSelector, scopeContext).Unwrap();
+			// correcting query for Eager Loading
+			expr = SequenceHelper.MoveAllToScopedContext(expr, scopeContext);
 
 			// GroupJoin handling
 			expr = builder.MakeExpression(scopeContext, expr, ProjectFlags.Expand);
 
-			// correcting query for Eager Loading
-			expr = SequenceHelper.MoveAllToScopedContext(expr, scopeContext);
 
-			var collectionInfo = new BuildInfo(sequence, expr, new SelectQuery()) { CreateSubQuery = true };
+			var collectionSelectQuery    = new SelectQuery();
+			var collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery) { CreateSubQuery = true };
+
+
+			var fakejoin = new SqlFromClause.Join(JoinType.Auto, collectionSelectQuery, null, false, null);
+			sequence.SelectQuery.From.Tables[0].Joins.Add(fakejoin.JoinedTable);
+
 			var collection     = builder.BuildSequence(collectionInfo);
+
+			sequence.SelectQuery.From.Tables[0].Joins.Remove(fakejoin.JoinedTable);
 
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//

@@ -44,6 +44,13 @@ namespace LinqToDB.Linq.Builder
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static ProjectFlags KeyFlag(this ProjectFlags flags)
+		{
+			return (flags & FlagsToPreserve) | ProjectFlags.Keys;
+		}
+
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ProjectFlags TestFlag(this ProjectFlags flags)
 		{
 			return flags | ProjectFlags.Test;

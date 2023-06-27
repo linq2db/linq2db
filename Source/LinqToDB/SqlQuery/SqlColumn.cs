@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -28,11 +29,15 @@ namespace LinqToDB.SqlQuery
 		}
 
 #if DEBUG
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		readonly int _number;
+
 		public   int  Number => _number;
+
 		static   int _columnCounter;
 #endif
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		ISqlExpression _expression;
 
 		public ISqlExpression Expression
@@ -49,6 +54,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		SelectQuery? _parent;
 
 		public SelectQuery? Parent
@@ -111,6 +117,7 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		int? _hashCode;
 
 		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]

@@ -553,6 +553,24 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
+		public static Expression StampNullability(Expression expression, SelectQuery query)
+		{
+			var nullability = NullabilityContext.GetContext(query);
+			var translated = expression.Transform(e =>
+			{
+				if (e is SqlPlaceholderExpression placeholder)
+				{
+					placeholder = placeholder.WithSql(SqlNullabilityExpression.ApplyNullability(placeholder.Sql, nullability));
+					return placeholder;
+				}
+
+				return e;
+			});
+
+			return translated;
+		}
+
+
 		public static Expression MoveToScopedContext(Expression expression, IBuildContext upTo)
 		{
 			var scoped        = new ScopeContext(upTo, upTo);
