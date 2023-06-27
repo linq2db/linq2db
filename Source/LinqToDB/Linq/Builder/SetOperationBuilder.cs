@@ -1133,21 +1133,23 @@ namespace LinqToDB.Linq.Builder
 
 					var incompatible = hasEagerLoading;
 
+					incompatible = incompatible || expr1.GetType() != expr2.GetType();
+
 					if (resultExpr is SqlGenericConstructorExpression generic)
 					{
-						if (!incompatible && expr1 is SqlGenericConstructorExpression contructor1 &&
-						    expr2 is SqlGenericConstructorExpression contructor2)
+						if (ExpressionEqualityComparer.Instance.Equals(expr1, expr2))
 						{
-							incompatible = !IsCompatibleForCommonProjection(contructor1, generic) ||
-							               !IsCompatibleForCommonProjection(contructor2, generic);
+							incompatible = false;
+							resultExpr = expr1;
 						}
-
-						if (!incompatible && (expr1 is not SqlGenericConstructorExpression ||
-						    expr2 is not SqlGenericConstructorExpression))
+						else
 						{
-							incompatible = !ExpressionEqualityComparer.Instance.Equals(expr1, expr2);
-							if (!incompatible)
-								resultExpr = expr1;
+							if (!incompatible && expr1 is SqlGenericConstructorExpression contructor1 &&
+							    expr2 is SqlGenericConstructorExpression contructor2)
+							{
+								incompatible = !IsCompatibleForCommonProjection(contructor1, generic) ||
+								               !IsCompatibleForCommonProjection(contructor2, generic);
+							}
 						}
 
 						if (incompatible || Builder.TryConstruct(Builder.MappingSchema, generic, this, flags) == null)

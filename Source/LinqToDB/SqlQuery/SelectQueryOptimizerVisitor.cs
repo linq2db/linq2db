@@ -1041,9 +1041,12 @@ namespace LinqToDB.SqlQuery
 			// check that column has at least one reference
 			//
 
-			int found = 1;
+			int found = 0;
 			parentQuery.VisitParentFirstAll(e =>
 			{
+				if (e.ElementType == QueryElementType.SelectClause && column.Parent != null && ReferenceEquals(column.Parent.Select, e))
+					return false;
+
 				if (ReferenceEquals(e, column))
 				{
 					++found;
@@ -1131,7 +1134,7 @@ namespace LinqToDB.SqlQuery
 				if (selectQuery.From.Tables.Count > 1)
 					return false;
 
-				if (selectQuery.Select.Columns.Any(c =>
+				if (subQuery.Select.Columns.Any(c =>
 					    QueryHelper.IsAggregationOrWindowFunction(c.Expression) ||
 					    !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
 					return false;

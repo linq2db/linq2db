@@ -120,7 +120,7 @@ namespace Tests.Linq
 							: new TestChildClass {StringProp                         = p.StringProp + "2", IntProp = 2} 
 					};
 
-				query    = query.Where(x => x.child.StringProp!.EndsWith("2") && x.child.IntProp == 2);
+				query = query.Where(x => x.child.StringProp!.EndsWith("2") && x.child.IntProp == 2);
 
 				AssertQuery(query);
 			}

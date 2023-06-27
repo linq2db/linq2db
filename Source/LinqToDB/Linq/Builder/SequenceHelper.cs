@@ -169,9 +169,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is SqlPlaceholderExpression placeholder)
 			{
-				if (!placeholder.Type.IsAssignableFrom(toPath.Type) && !placeholder.Type.IsValueType)
+				if (placeholder.TrackingPath != null && !placeholder.Type.IsAssignableFrom(toPath.Type) && !placeholder.Type.IsValueType)
 				{
-					if (IsSpecialProperty(placeholder.Path, out var propType, out var propName))
+					if (IsSpecialProperty(placeholder.TrackingPath, out var propType, out var propName))
 					{
 						toPath = CreateSpecialProperty(toPath, propType, propName);
 						if (placeholder.Type != toPath.Type)
@@ -181,8 +181,12 @@ namespace LinqToDB.Linq.Builder
 
 						return placeholder.WithTrackingPath(toPath);
 					}
+				}
 
-					if (placeholder.Path is MemberExpression memberExpression)
+				if (placeholder.TrackingPath != null && !placeholder.Type.IsAssignableFrom(toPath.Type) &&
+				    !toPath.Type.IsValueType)
+				{
+					if (placeholder.TrackingPath is MemberExpression memberExpression)
 					{
 						toPath = Expression.MakeMemberAccess(toPath, memberExpression.Member);
 						return placeholder.WithTrackingPath(toPath);
@@ -377,7 +381,7 @@ namespace LinqToDB.Linq.Builder
 					return newExpr;
 				}
 
-				return placeholder;
+				return toPath;
 			}
 
 			if (expression is BinaryExpression binary && toPath.Type != binary.Type)

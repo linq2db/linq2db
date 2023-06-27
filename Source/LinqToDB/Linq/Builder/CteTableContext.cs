@@ -101,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 				
 				if (!_fieldsMap.TryGetValue(placeholder.TrackingPath, out var newPlaceholder))
 				{
-					var field = placeholder.Sql as SqlField;
+					var field = QueryHelper.GetUnderlyingField(placeholder.Sql);
 
 					if (field == null)
 						throw new InvalidOperationException();
