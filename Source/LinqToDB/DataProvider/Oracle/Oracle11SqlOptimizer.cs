@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.Oracle
 								// else add 'OR [col] IS NULL'
 								sc.Conditions.Add(new(
 								  isNot: false,
-								  new SqlPredicate.IsNull(expr.Expr2, isNot: isNotEqual),
+								  new SqlPredicate.IsNull(expr.Expr1, isNot: isNotEqual),
 								  isOr: !isNotEqual)
 								);
 
