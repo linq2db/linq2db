@@ -89,7 +89,7 @@ namespace Tests.Model
 		static Expression<Func<Parent,GrandChild, bool>> GrandChildrenPredicate =>
 			(t, m) => m.ChildID > 22;
 
-		[ExpressionMethod("GrandChildren2Impl")]
+		[ExpressionMethod(nameof(GrandChildren2Impl))]
 		public IEnumerable<GrandChild> GrandChildren2 { get; set; } = null!;
 
 		static Expression<Func<Parent,ITestDataContext,IEnumerable<GrandChild>>> GrandChildren2Impl()
@@ -101,7 +101,7 @@ namespace Tests.Model
 				p.Children.SelectMany(c => c.GrandChildren);
 		}
 
-		[ExpressionMethod("GrandChildrenByIDImpl")]
+		[ExpressionMethod(nameof(GrandChildrenByIDImpl))]
 		public IEnumerable<GrandChild> GrandChildrenByID(int id)
 		{
 			throw new NotImplementedException();

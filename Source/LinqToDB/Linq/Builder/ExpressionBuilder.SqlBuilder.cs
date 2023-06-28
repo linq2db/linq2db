@@ -4211,21 +4211,7 @@ namespace LinqToDB.Linq.Builder
 								var converted = ConvertSingleExpression(path);
 								if (!ReferenceEquals(converted, path))
 								{
-									// apply only if it is convertible
-									//
-									var newMc = mc.Update(
-										mc.Object == null
-											? null
-											: BuildSqlExpression(currentContext, mc.Object, flags),
-										mc.Arguments.Select(a =>
-											BuildSqlExpression(currentContext, a, flags)));
-
-									if (!ExpressionEqualityComparer.Instance.Equals(mc, newMc))
-									{
-										expression   = MakeExpression(currentContext, newMc, flags);
-										handled      = true;
-										applyConvert = false;
-									}
+									return MakeExpression(currentContext, converted, flags);
 								}
 							}
 						}
