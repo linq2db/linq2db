@@ -995,7 +995,6 @@ namespace Tests.Linq
 			}
 		}
 
-		//[ActiveIssue("Scalar recursive CTE are not working: SQL logic error near *: syntax error")]
 		[Test]
 		public void TestRecursiveScalar([CteContextSource] string context)
 		{
@@ -1032,9 +1031,8 @@ namespace Tests.Linq
 			public string? GroupName { get; set; }
 		}
 
-		[ActiveIssue(1644, Details = "Expression 'parent.OrgGroup' is not a Field.")]
 		[Test]
-		public void TestRecursiveObjects([CteContextSource] string context)
+		public void TestRecursiveObjects([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllMySqlWithCTE)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<OrgGroup>())

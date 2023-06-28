@@ -1070,26 +1070,40 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
+		public virtual IQueryElement VisitCteClauseReference(CteClause element)
+		{
+			return element;
+		}
+
 		public virtual IQueryElement VisitSqlCteTable(SqlCteTable element)
 		{
 			switch (GetVisitMode(element))
 			{
 				case VisitMode.ReadOnly:
 				{
+					if (element.Cte != null)
+						VisitCteClauseReference(element.Cte);
+
 					break;
 				}
 				case VisitMode.Modify:
 				{
+					if (element.Cte != null)
+					{
+						var clause = (CteClause)VisitCteClauseReference(element.Cte);
+						element.Cte = clause;
+					}
+
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var clause = (CteClause?)Visit(element.Cte);
+					var clause = element.Cte != null ? (CteClause)VisitCteClauseReference(element.Cte) : null;
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Cte, clause))
 					{
 						var newFields = element.Fields.Select(f => new SqlField(f));
-						var newTable  = new SqlCteTable(element, newFields, element.Cte!);
+						var newTable  = new SqlCteTable(element, newFields, clause!);
 
 						for (var index = 0; index < newTable.Fields.Count; index++)
 						{
@@ -1168,7 +1182,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || !ReferenceEquals(element.Body, body))
 					{
-						var clonedFields = new List<SqlField>(element.Fields.Count);
+						var clonedFields = new SqlField[element.Fields.Count];
 						for (var index = 0; index < element.Fields.Count; index++)
 						{
 							var field    = element.Fields[index];

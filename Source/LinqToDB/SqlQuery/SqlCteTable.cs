@@ -42,7 +42,7 @@ namespace LinqToDB.SqlQuery
 
 			var cteKeys = Cte.Body.GetKeys(allIfEmpty);
 
-			if (cteKeys.Count == 0)
+			if (!(cteKeys?.Count > 0))
 				return cteKeys;
 
 			var hasInvalid = false;

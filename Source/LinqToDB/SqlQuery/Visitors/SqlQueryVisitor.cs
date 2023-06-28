@@ -105,6 +105,13 @@ namespace LinqToDB.SqlQuery.Visitors
 			return newElement;
 		}
 
+		public override IQueryElement VisitCteClauseReference(CteClause element)
+		{
+			if (GetReplacement(element, out var newElement))
+				return newElement;
+
+			return base.VisitCteClauseReference(element);
+		}
 
 		public override IQueryElement VisitCteClause(CteClause element)
 		{

@@ -476,6 +476,9 @@ namespace LinqToDB.SqlProvider
 				}
 			});
 
+			if (queriesToWrap.Count == 0)
+				return statement;
+
 			return QueryHelper.WrapQuery(
 				queriesToWrap,
 				statement,

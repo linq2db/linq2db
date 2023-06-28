@@ -281,27 +281,25 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		List<ISqlExpression>? _keys;
-
-		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
+		public IList<ISqlExpression>? GetKeys(bool allIfEmpty)
 		{
-			if (_keys == null)
+			if (Select.Columns.Count > 0 && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
 			{
-				if (Select.Columns.Count > 0 && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0)
-				{
-					var q =
-						from key in ((ISqlTableSource) From.Tables[0]).GetKeys(allIfEmpty)
-						from col in Select.Columns
-						where  col.Expression.Equals(key)
-						select col as ISqlExpression;
+				var tableKeys = ((ISqlTableSource)From.Tables[0]).GetKeys(allIfEmpty);
 
-					_keys = q.ToList();
-				}
-				else
-					_keys = new List<ISqlExpression>();
+				if (tableKeys == null)
+					return null;
+
+				var q =
+					from key in tableKeys
+					from col in Select.Columns
+					where  col.Expression.Equals(key)
+					select col as ISqlExpression;
+
+				return q.ToList();
 			}
 
-			return _keys;
+			return null;
 		}
 
 		#endregion
