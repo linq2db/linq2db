@@ -33,7 +33,7 @@ namespace LinqToDB.SqlQuery
 				if (ec <= 0)
 					return selectQuery;
 
-				var queries = new List<SelectQuery>();
+				var queries = new List<SelectQuery>(ec);
 				for (int i = 0; i < ec; i++)
 				{
 					var newQuery = new SelectQuery
@@ -72,7 +72,7 @@ namespace LinqToDB.SqlQuery
 
 				OnWrap(Context, queries);
 
-				return NotifyReplaced(clonedQuery, selectQuery);
+				return NotifyReplaced(queries[0], selectQuery);
 			}
 		}
 
