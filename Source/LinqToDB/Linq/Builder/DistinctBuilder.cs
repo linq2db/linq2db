@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				// create all columns
-				var sqlExpr = builder.ConvertToSqlExpr(outerSubqueryContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence), buildInfo.GetFlags());
+				var sqlExpr = builder.ConvertToSqlExpr(outerSubqueryContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], subQueryContext), buildInfo.GetFlags());
 				//builder.UpdateNesting(outerSubqueryContext, sqlExpr);
 			}
 

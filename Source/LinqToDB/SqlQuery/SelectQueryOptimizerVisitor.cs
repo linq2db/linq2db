@@ -1108,15 +1108,14 @@ namespace LinqToDB.SqlQuery
 
 				foreach (var parentColumn in selectQuery.Select.Columns)
 				{
-					if (parentColumn.Expression is not SqlColumn column || column.Parent != subQuery)
+					if (parentColumn.Expression is not SqlColumn column || column.Parent != subQuery || QueryHelper.IsAggregationOrWindowFunction(parentColumn.Expression))
 					{
 						return false;
 					}
 				}
 			}
 
-
-			if (subQuery.Select.HasModifier && selectQuery.Select.HasModifier)
+			if (subQuery.Select.HasModifier)
 			{
 				// handling case when we have two DISTINCT
 				// Note, columns already checked above
