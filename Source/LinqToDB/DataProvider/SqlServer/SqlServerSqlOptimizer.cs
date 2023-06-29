@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if ((query.Select.SkipValue != null ||
 			     query.Select.TakeValue != null ||
-			     query.Select.TakeHints != null) && !query.OrderBy.IsEmpty)
+			     query.Select.TakeHints != null))
 			{
 				statement = QueryHelper.WrapQuery(statement, query, true);
 			}

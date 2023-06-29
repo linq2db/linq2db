@@ -3877,16 +3877,28 @@ namespace LinqToDB.Linq.Builder
 		{
 			Expression ExecuteMake(IBuildContext context, Expression expr, ProjectFlags projectFlags)
 			{
+#if DEBUG
+				Debug.WriteLine($"ExecuteMake ({projectFlags}):");
+				Debug.WriteLine($"\tCtx: {currentContext}");
+				Debug.WriteLine($"\tPath: {path}");
+				Debug.WriteLine($"\tExpr: {expr}");
+
 				var key = new SqlCacheKey(expr, context, null, null, projectFlags);
 
 				if (!_stackOverflowGuard.Add(key))
 				{
 					//throw new InvalidOperationException("Stack overflow detected.");
 				}
+#endif
 
 				var result = context.MakeExpression(expr, projectFlags);
 
+#if DEBUG
+				Debug.WriteLine($"Result: {result}");
+				Debug.WriteLine("");
+
 				_stackOverflowGuard.Remove(key);
+#endif
 
 				return result;
 			}
@@ -3894,10 +3906,13 @@ namespace LinqToDB.Linq.Builder
 			static void DebugCacheHit(IBuildContext context, Expression original, Expression cached, ProjectFlags projectFlags)
 			{
 				Debug.WriteLine($"Cache hit for: {original}, {projectFlags}");
+				Debug.WriteLine($"\tResult: {cached}");
 
+#if DEBUG
 				if (!projectFlags.IsTest() && (projectFlags.IsExpression() || projectFlags.IsSql()))
 				{
 				}
+#endif
 			}
 
 			ContextRefExpression? CalcRootContext(Expression expressionToCheck)
@@ -4050,6 +4065,13 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				rootContext = CalcRootContext(root);
+			}
+			else if (path is SqlKeyHolderExpression keyHolder)
+			{
+				var inner = MakeExpression(currentContext, keyHolder.Expression, flags);
+				if (flags.IsExpand())
+					return keyHolder.Update(inner);
+				return inner;
 			}
 			else if (path is MethodCallExpression mc)
 			{

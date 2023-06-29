@@ -82,6 +82,11 @@ namespace LinqToDB.Expressions
 			return node.Update((SqlPlaceholderExpression)Visit(node.Placeholder)!);
 		}
 
+		internal virtual Expression VisitSqlKeyHolderExpression(SqlKeyHolderExpression node)
+		{
+			return node.Update(Visit(node.Expression)!);
+		}
+
 		public virtual void Cleanup()
 		{
 		}

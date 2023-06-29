@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 			expression.Visit((dependencies, toIgnore), static (ctx, e) =>
 			{
 				if (ctx.toIgnore.Contains(e))
-					return;
+					return false;
 
 				if (e.NodeType == ExpressionType.MemberAccess)
 				{
@@ -39,17 +39,8 @@ namespace LinqToDB.Linq.Builder
 						if (current is ContextRefExpression)
 						{
 							ctx.dependencies.Add(e);
-							// add others in path to ignore
-							var subCurrent = (MemberExpression)e;
-							do
-							{
-								ctx.toIgnore.Add(subCurrent);
 
-								if (subCurrent.Expression is not MemberExpression sm)
-									break;
-
-								subCurrent = sm;
-							} while (true);
+							return false;
 
 							break;
 						}
@@ -58,10 +49,23 @@ namespace LinqToDB.Linq.Builder
 				else if (e is BinaryExpression binary)
 				{
 					if (binary.Left is ContextRefExpression)
+					{
 						ctx.dependencies.Add(binary.Left);
+						return false;
+					}
 					if (binary.Right is ContextRefExpression)
+					{
 						ctx.dependencies.Add(binary.Right);
+						return false;
+					}
 				}
+				/*else if (e is SqlKeyHolderExpression keyHolder)
+				{
+					//ctx.dependencies.Add(keyHolder.Expression);
+					return false;
+				}*/
+
+				return true;
 			});
 		}
 

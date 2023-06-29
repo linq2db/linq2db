@@ -326,12 +326,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Expand))
+				if (flags.IsExpand())
 				{
 					return path;
 				}
 
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
+				if (flags.IsRoot() || flags.IsAssociationRoot())
 				{
 					if (SequenceHelper.IsSameContext(path, this))
 						return path;
@@ -341,8 +341,17 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var newFlags = flags;
-				if (newFlags.HasFlag(ProjectFlags.Expression))
+				if (newFlags.IsExpression())
 					newFlags = (newFlags & ~ProjectFlags.Expression) | ProjectFlags.SQL;
+
+				if (newFlags.IsKeys())
+				{
+					if (Body.Type != path.Type && newFlags.IsSql())
+					{
+						var resultExpr = Builder.ConvertToSqlExpr(this, Body, newFlags);
+						return resultExpr;
+					}
+				}
 
 				newFlags |= ProjectFlags.Keys;
 
@@ -355,7 +364,8 @@ namespace LinqToDB.Linq.Builder
 					if (!newFlags.IsTest())
 					{
 						// appending missing keys
-						AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
+						AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery,
+							result);
 
 						// we return SQL nested as GroupByContext
 						result = Builder.UpdateNesting(GroupByContext, result);
@@ -537,7 +547,7 @@ namespace LinqToDB.Linq.Builder
 			static Expression MakeSubQueryExpression(MappingSchema mappingSchema, Expression sequence,
 				ParameterExpression                                param,         Expression expr1, Expression expr2)
 			{
-				var filterLambda = Expression.Lambda(ExpressionBuilder.Equal(mappingSchema, expr1, expr2), param);
+				var filterLambda = Expression.Lambda(ExpressionBuilder.Equal(mappingSchema, expr1, new SqlKeyHolderExpression(expr2)), param);
 				return TypeHelper.MakeMethodCall(Methods.Enumerable.Where, sequence, filterLambda);
 			}
 

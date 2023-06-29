@@ -94,35 +94,45 @@ namespace LinqToDB.SqlQuery
 				_parentSelect         = saveParent;
 				newQuery.ParentSelect = _parentSelect;
 
-				FinalizeAndValidateInternal(newQuery);
+				do
+				{
+					var isModified     = false;
+					var currentVersion = _version;
+
+					if (FinalizeAndValidateInternal(selectQuery))
+					{
+						isModified = true;
+					}
+
+					if (currentVersion != _version)
+					{
+						isModified = true;
+						EnsureReferencesCorrected(selectQuery);
+					}
+
+					if (!isModified)
+						break;
+
+				} while (true);
 			}
 
 			return newQuery;
 		}
 
-		void CorrectOrderBy(SelectQuery selectQuery)
+		bool CorrectOrderBy(SelectQuery selectQuery)
 		{
-			//if (_currentSetOperator?.SelectQuery == selectQuery &&
-			//    _currentSetOperator.Operation    != SetOperation.UnionAll)
-			//{
-			//	selectQuery.OrderBy.Items.Clear();
-			//}
+			var isModified = false;
 
-			if (!selectQuery.HasSetOperators)
-				return;
-
-			if (selectQuery.SetOperators[0].Operation != SetOperation.UnionAll)
+			if (!selectQuery.OrderBy.IsEmpty)
 			{
-				selectQuery.OrderBy.Items.Clear();
-			}
-
-			foreach(var setOperator in selectQuery.SetOperators)
-			{
-				if (setOperator.Operation != SetOperation.UnionAll)
+				if (selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 				{
-					setOperator.SelectQuery.OrderBy.Items.Clear();
+					selectQuery.OrderBy.Items.Clear();
+					isModified = true;
 				}
 			}
+
+			return isModified;
 		}
 
 		public override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
@@ -256,7 +266,7 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		void FinalizeAndValidateInternal(SelectQuery selectQuery)
+		bool FinalizeAndValidateInternal(SelectQuery selectQuery)
 		{
 			selectQuery.Visit((this, selectQuery), static (context, e) =>
 			{
@@ -269,27 +279,24 @@ namespace LinqToDB.SqlQuery
 				}
 			});
 
-			var currentVersion = _version;
+			var isModified = false;
 
 			RemoveEmptyJoins(selectQuery);
 			OptimizeGroupBy(selectQuery);
-			//OptimizeApplies(selectQuery, _flags.IsApplyJoinSupported);
-			//OptimizeSubQueries(selectQuery, _flags.IsApplyJoinSupported);
-			//OptimizeApplies(selectQuery,_flags.IsApplyJoinSupported);
+
 			RemoveEmptyJoins(selectQuery);
 
 			OptimizeUnions(selectQuery);
-			CorrectOrderBy(selectQuery);
+
+			if (CorrectOrderBy(selectQuery))
+				isModified = true;
 
 			OptimizeGroupBy(selectQuery);
 			OptimizeDistinct(selectQuery);
 			OptimizeDistinctOrderBy(selectQuery);
 			CorrectColumns(selectQuery);
 
-			if (currentVersion != _version)
-			{
-				EnsureReferencesCorrected(selectQuery);
-			}
+			return isModified;
 		}
 
 		void OptimizeGroupBy(SelectQuery selectQuery)
@@ -1042,6 +1049,25 @@ namespace LinqToDB.SqlQuery
 			//
 
 			int found = 0;
+
+			if (!parentQuery.GroupBy.IsEmpty)
+			{
+				if (null != parentQuery.GroupBy.Find(e => ReferenceEquals(e, column)))
+					return false;
+			}			
+			
+			if (!parentQuery.Where.IsEmpty)
+			{
+				if (null != parentQuery.Where.Find(e => ReferenceEquals(e, column)))
+					return false;
+			}
+
+			if (!parentQuery.Having.IsEmpty)
+			{
+				if (null != parentQuery.Having.Find(e => ReferenceEquals(e, column)))
+					return false;
+			}
+
 			parentQuery.VisitParentFirstAll(e =>
 			{
 				if (e.ElementType == QueryElementType.SelectClause && column.Parent != null && ReferenceEquals(column.Parent.Select, e))
@@ -1151,8 +1177,11 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.Select.Columns.Any(c => !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
 				return false;
 
-			if (subQuery.GroupBy.IsEmpty && subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
-				return false;
+			if (!selectQuery.GroupBy.IsEmpty)
+			{
+				if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
+					return false;
+			}
 
 			if (subQuery.HasSetOperators)
 			{

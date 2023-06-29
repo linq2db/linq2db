@@ -234,6 +234,11 @@ namespace LinqToDB.Expressions
 				return adjustType.Update(Transform(adjustType.Expression));
 			}
 
+			if (expr is SqlKeyHolderExpression keyHolder)
+			{
+				return keyHolder.Update(Transform(keyHolder.Expression));
+			}
+
 			return expr;
 		}
 

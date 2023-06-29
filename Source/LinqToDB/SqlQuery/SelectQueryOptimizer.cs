@@ -1627,7 +1627,7 @@ namespace LinqToDB.SqlQuery
 
 			byTake = false;
 
-			if (selectQuery.Select.Columns.Count == 1)
+			if (selectQuery.Select.Columns.Count == 1 && selectQuery.GroupBy.IsEmpty)
 			{
 				var column = selectQuery.Select.Columns[0];
 				if (QueryHelper.IsAggregationFunction(column.Expression))

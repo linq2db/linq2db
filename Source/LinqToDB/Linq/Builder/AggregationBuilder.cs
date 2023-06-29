@@ -69,7 +69,10 @@ namespace LinqToDB.Linq.Builder
 						valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
 					}
 					else
-						valueExpression = new ContextRefExpression(sequenceArgument.Type, sequence);
+					{
+						var elementType = EagerLoading.GetEnumerableElementType(sequenceArgument.Type, builder.MappingSchema);
+						valueExpression = new ContextRefExpression(elementType, sequence);
+					}
 
 					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, valueExpression, ProjectFlags.SQL);
 					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
