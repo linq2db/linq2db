@@ -363,5 +363,14 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
+		public void Cleanup()
+		{
+			Select.Cleanup();
+			From.Cleanup();
+			Where.Cleanup();
+			GroupBy.Cleanup();
+			Having.Cleanup();
+			OrderBy.Cleanup();
+		}
 	}
 }

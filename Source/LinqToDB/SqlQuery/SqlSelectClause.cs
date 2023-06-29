@@ -425,5 +425,14 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Cleanup()
+		{
+			IsDistinct = false;
+			TakeValue  = null;
+			TakeHints  = null;
+			SkipValue  = null;
+			Columns.Clear();
+		}
 	}
 }

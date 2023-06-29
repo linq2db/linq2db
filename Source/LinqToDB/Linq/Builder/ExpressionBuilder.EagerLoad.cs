@@ -266,7 +266,13 @@ namespace LinqToDB.Linq.Builder
 		{
 			var cloningContext       = new CloningContext();
 			var clonedParentContext  = cloningContext.CloneContext(buildContext);
-			clonedParentContext = new EagerContext(clonedParentContext);
+
+			var itemType = eagerLoad.Type.GetItemType();
+
+			if (itemType == null)
+				throw new InvalidOperationException("Could not retrieve itemType for EagerLoading.");
+
+			clonedParentContext = new EagerContext(clonedParentContext, itemType);
 			
 			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 

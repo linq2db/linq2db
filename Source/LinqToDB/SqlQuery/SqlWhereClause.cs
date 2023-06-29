@@ -81,5 +81,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Cleanup()
+		{
+			SearchCondition.Conditions.Clear();
+		}
 	}
 }

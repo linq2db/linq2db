@@ -158,7 +158,10 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			throw new NotImplementedException();
+			var newContext = new CteContext(Builder, context.CloneContext(CteInnerQueryContext),
+				context.CloneElement(CteClause), context.CloneExpression(Expression!));
+
+			return newContext;
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

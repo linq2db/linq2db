@@ -155,7 +155,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			throw new NotImplementedException();
+			var newContext = new CteTableContext(Builder, Parent, ObjectType, context.CloneElement(SelectQuery), context.CloneContext(CteContext), false);
+			return newContext;
 		}
 
 		public override SqlStatement GetResultStatement()

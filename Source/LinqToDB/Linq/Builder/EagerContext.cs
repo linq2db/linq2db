@@ -1,4 +1,5 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -7,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		public IBuildContext Context    { get; }
 
-		public EagerContext(IBuildContext context) : base(context.Builder, context.ElementType, context.SelectQuery)
+		public EagerContext(IBuildContext context, Type elementType) : base(context.Builder, elementType, context.SelectQuery)
 		{
 			Context = context;
 		}
@@ -25,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			return new EagerContext(context.CloneContext(Context));
+			return new EagerContext(context.CloneContext(Context), ElementType);
 		}
 
 		public override SqlStatement GetResultStatement()
@@ -35,8 +36,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
-			expression = SequenceHelper.CorrectExpression(expression, this, Context);
-			return Context.GetContext(expression, buildInfo);
+			return this;
 		}
 	}
 }

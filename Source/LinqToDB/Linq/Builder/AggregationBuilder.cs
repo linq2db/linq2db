@@ -94,7 +94,8 @@ namespace LinqToDB.Linq.Builder
 				var parentContext       = buildInfo.Parent!;
 				var placeholderSelect   = parentContext.SelectQuery;
 
-				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery())
+				using var testQuery = ExpressionBuilder.QueryPool.Allocate();
+				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, testQuery.Value)
 					{ AggregationTest = true, IsAggregation = true, IsTest = true });
 
 				// It means that as root we have used fake context

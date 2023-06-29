@@ -95,5 +95,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Cleanup()
+		{
+			Items.Clear();
+		}
 	}
 }

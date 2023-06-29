@@ -674,6 +674,15 @@ namespace LinqToDB.SqlQuery
 				return;
 			}
 
+			if (!selectQuery.GroupBy.IsEmpty)
+			{
+				if (selectQuery.GroupBy.Items.All(gi => selectQuery.Select.Columns.Any(c => c.Expression.Equals(gi))))
+				{
+					selectQuery.GroupBy.Items.Clear();
+					return;
+				}
+			}
+
 			var table = selectQuery.From.Tables[0];
 
 			var keys = new List<IList<ISqlExpression>>();
@@ -736,7 +745,7 @@ namespace LinqToDB.SqlQuery
 						var skip = true;
 						foreach (var column in mainQuery.Select.Columns)
 						{
-							if (column.Expression.Equals(item.Expression))
+							if (column.Expression is SqlColumn sc && sc.Expression.Equals(item.Expression))
 							{
 								skip = false;
 								break;
@@ -1054,18 +1063,21 @@ namespace LinqToDB.SqlQuery
 			{
 				if (null != parentQuery.GroupBy.Find(e => ReferenceEquals(e, column)))
 					return false;
-			}			
-			
-			if (!parentQuery.Where.IsEmpty)
-			{
-				if (null != parentQuery.Where.Find(e => ReferenceEquals(e, column)))
-					return false;
 			}
 
-			if (!parentQuery.Having.IsEmpty)
+			if (QueryHelper.IsAggregationOrWindowFunction(column.Expression))
 			{
-				if (null != parentQuery.Having.Find(e => ReferenceEquals(e, column)))
-					return false;
+				if (!parentQuery.Where.IsEmpty)
+				{
+					if (null != parentQuery.Where.Find(e => ReferenceEquals(e, column)))
+						return false;
+				}
+
+				if (!parentQuery.Having.IsEmpty)
+				{
+					if (null != parentQuery.Having.Find(e => ReferenceEquals(e, column)))
+						return false;
+				}
 			}
 
 			parentQuery.VisitParentFirstAll(e =>
@@ -1152,17 +1164,19 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (subQuery.Select.HasModifier || !subQuery.GroupBy.IsEmpty)
+			if (subQuery.Select.HasModifier)
 			{
 				if (tableSource.Joins.Count > 0)
 					return false;
 				if (selectQuery.From.Tables.Count > 1)
 					return false;
 
-				if (subQuery.Select.Columns.Any(c =>
+				if (selectQuery.Select.Columns.Any(c =>
 					    QueryHelper.IsAggregationOrWindowFunction(c.Expression) ||
 					    !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
+				{
 					return false;
+				}
 			}
 
 			if (subQuery.Select.HasModifier || !subQuery.Where.IsEmpty)
@@ -1180,6 +1194,17 @@ namespace LinqToDB.SqlQuery
 			if (!selectQuery.GroupBy.IsEmpty)
 			{
 				if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
+					return false;
+			}
+
+			if (selectQuery.GroupBy.IsEmpty && !subQuery.GroupBy.IsEmpty)
+			{
+				if (tableSource.Joins.Count > 0)
+					return false;
+				if (selectQuery.From.Tables.Count > 1)
+					return false;
+
+				if (selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
 					return false;
 			}
 
@@ -1359,7 +1384,10 @@ namespace LinqToDB.SqlQuery
 				var isModified     = false;
 				var currentVersion = _version;
 
-				OptimizeSubQueries(element.SelectQuery);
+				if (OptimizeSubQueries(element.SelectQuery))
+				{
+					isModified = true;
+				}
 
 				if (currentVersion != _version)
 				{
@@ -1390,9 +1418,9 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		void OptimizeSubQueries(SelectQuery selectQuery)
+		bool OptimizeSubQueries(SelectQuery selectQuery)
 		{
-			var replaced    = false;
+			var replaced = false;
 
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
@@ -1415,11 +1443,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (replaced)
-			{
-				base.VisitSqlFromClause(selectQuery.From);
-				base.VisitSqlSelectClause(selectQuery.Select);
-			}
+			return replaced;
 		}
 
 		bool OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)

@@ -344,7 +344,7 @@ namespace LinqToDB.Linq.Builder
 				if (newFlags.IsExpression())
 					newFlags = (newFlags & ~ProjectFlags.Expression) | ProjectFlags.SQL;
 
-				if (newFlags.IsKeys())
+				if (newFlags.IsKeys() && SequenceHelper.IsSameContext(path, this))
 				{
 					if (Body.Type != path.Type && newFlags.IsSql())
 					{
@@ -436,10 +436,12 @@ namespace LinqToDB.Linq.Builder
 
 			public ElementContext Element { get; }
 
+			public override Type ElementType => Element.ElementType;
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) &&
-				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AggregationRoot)))
+				    (flags.IsRoot() || flags.IsAggregationRoot() || flags.IsTraverse()))
 				{
 					return path;
 				}
@@ -547,7 +549,7 @@ namespace LinqToDB.Linq.Builder
 			static Expression MakeSubQueryExpression(MappingSchema mappingSchema, Expression sequence,
 				ParameterExpression                                param,         Expression expr1, Expression expr2)
 			{
-				var filterLambda = Expression.Lambda(ExpressionBuilder.Equal(mappingSchema, expr1, new SqlKeyHolderExpression(expr2)), param);
+				var filterLambda = Expression.Lambda(ExpressionBuilder.Equal(mappingSchema, expr1, expr2), param);
 				return TypeHelper.MakeMethodCall(Methods.Enumerable.Where, sequence, filterLambda);
 			}
 
@@ -586,7 +588,7 @@ namespace LinqToDB.Linq.Builder
 				var expr = MakeSubQueryExpression(((ContextRefExpression)buildInfo.Expression).WithType(GetInterfaceGroupingType()));
 				expr = SequenceHelper.MoveToScopedContext(expr, this);
 
-				var ctx = Builder.TryBuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false});
+				var ctx = Builder.TryBuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false, CreateSubQuery = false});
 
 				return ctx;
 			}

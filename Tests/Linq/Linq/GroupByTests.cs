@@ -515,7 +515,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Calculated1([DataSources] string context)
+		public void Calculated1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))

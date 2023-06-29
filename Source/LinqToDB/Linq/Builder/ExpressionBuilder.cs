@@ -17,6 +17,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Common.Internal;
 
 	internal sealed partial class ExpressionBuilder
 	{
@@ -91,6 +92,12 @@ namespace LinqToDB.Linq.Builder
 			new QueryExtensionBuilder      (),
 			new QueryNameBuilder           (),
 		};
+
+		#endregion
+
+		#region Pools
+
+		public static readonly ObjectPool<SelectQuery> QueryPool = new(() => new SelectQuery(), sq => sq.Cleanup(), 100);
 
 		#endregion
 

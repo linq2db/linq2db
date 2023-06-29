@@ -57,9 +57,10 @@ namespace LinqToDB.Linq.Builder
 			if (enumerableType == null)
 				return false;
 
-			if (!contextRef.Type.IsEnumerableType(contextRef.BuildContext.ElementType))
+			if (contextRef.Type.IsEnumerableType(contextRef.BuildContext.ElementType))
 			{
-				var ctx = contextRef.BuildContext.GetContext(buildInfo.Expression, buildInfo);
+				using var query = ExpressionBuilder.QueryPool.Allocate();
+				var ctx = contextRef.BuildContext.GetContext(buildInfo.Expression, new BuildInfo(buildInfo, buildInfo.Expression, query.Value));
 				return ctx != null;
 			}
 
@@ -78,9 +79,12 @@ namespace LinqToDB.Linq.Builder
 			if (!buildInfo.CreateSubQuery)
 				return context;
 
-			var elementContext = context.GetContext(buildInfo.Expression, buildInfo);
-			if (elementContext != null)
-				return elementContext;
+			if (contextRef.Type.IsEnumerableType(contextRef.BuildContext.ElementType))
+			{
+				var elementContext = context.GetContext(buildInfo.Expression, buildInfo);
+				if (elementContext != null)
+					return elementContext;
+			}
 
 			return context;
 		}

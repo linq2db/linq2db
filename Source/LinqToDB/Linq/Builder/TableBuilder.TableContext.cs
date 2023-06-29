@@ -264,13 +264,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
-				if (!buildInfo.CreateSubQuery)
-					return this;
-
-				var expr = Builder.GetSequenceExpression(this);
-				var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
-
-				return context;
+				return null;
 			}
 
 			public override SqlStatement GetResultStatement()

@@ -143,5 +143,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Cleanup()
+		{
+			GroupingType = GroupingType.Default;
+			Items.Clear();
+		}
 	}
 }
