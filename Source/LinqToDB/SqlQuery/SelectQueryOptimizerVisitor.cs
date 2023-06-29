@@ -1059,7 +1059,7 @@ namespace LinqToDB.SqlQuery
 
 			int found = 0;
 
-			if (!parentQuery.GroupBy.IsEmpty)
+			if (!parentQuery.GroupBy.IsEmpty && columnExpression.ElementType != QueryElementType.SqlValue)
 			{
 				if (null != parentQuery.GroupBy.Find(e => ReferenceEquals(e, column)))
 					return false;
@@ -1171,9 +1171,7 @@ namespace LinqToDB.SqlQuery
 				if (selectQuery.From.Tables.Count > 1)
 					return false;
 
-				if (selectQuery.Select.Columns.Any(c =>
-					    QueryHelper.IsAggregationOrWindowFunction(c.Expression) ||
-					    !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
+				if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 				{
 					return false;
 				}
