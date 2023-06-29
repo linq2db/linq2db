@@ -40,6 +40,9 @@
 
 		<file src="..\NuGet\t4models\linq2db.t4models.props"                               target="build"                                                        />
 
+		<file src="..\NuGet\readme.T4.txt"                                                 target="readme.txt"                                                   />
+		<file src="..\NuGet\README.T4.md"                                                  target="README.md"                                                    />
+
 		<file src="..\NuGet\Access\*.*"                                                    target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
 		<file src="..\NuGet\ClickHouse\*.*"                                                target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />
 		<file src="..\NuGet\DB2\*.*"                                                       target="contentFiles\any\any\LinqToDB.Templates" exclude="**\*.props" />

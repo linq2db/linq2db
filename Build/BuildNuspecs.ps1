@@ -128,7 +128,7 @@ if ($version) {
 			Set-File -src '..\NuGet\README.T4.md'  -target 'README.md'
 		}
 
-		Set-File -src '..\NuGet\icon64.png'   -target 'images\icon.png'
+		Set-File -src '..\NuGet\icon64.png' -target 'images\icon.png'
 
 		$xml.package.metadata.AppendChild($xml.CreateSignificantWhitespace("`n`t"))
 		$xml.package.files.AppendChild($xml.CreateSignificantWhitespace("`n`t"))

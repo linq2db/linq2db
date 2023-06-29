@@ -1136,9 +1136,10 @@ namespace Tests.Data
 
 #endregion
 
-#region IDataContextInterceptor
+		#region IDataContextInterceptor
 
-#region EntityCreated
+		#region EntityCreated
+
 		[Test]
 		public void EntityCreated_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1198,8 +1199,9 @@ namespace Tests.Data
 			}
 		}
 
-#endregion
-#region OnClosing/OnClosed
+		#endregion
+
+		#region OnClosing/OnClosed
 
 		[Test]
 		public void CloseEvents_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1706,9 +1708,9 @@ namespace Tests.Data
 			Assert.True(interceptor.OnClosingAsyncContexts.Values.All(_ => _ == 1));
 		}
 
-#endregion
+		#endregion
 
-#endregion
+		#endregion
 
 		private sealed class TestCommandInterceptor : CommandInterceptor
 		{
