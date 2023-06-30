@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 
 				var result = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition: condition, checkForSubQuery: false, enforceHaving: false,
-					isTest: buildInfo.AggregationTest);
+					isTest: buildInfo.IsTest, isAggregationTest: buildInfo.AggregationTest);
 
 				if (result == null)
 					return null;

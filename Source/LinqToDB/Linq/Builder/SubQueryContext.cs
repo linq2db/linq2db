@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 
 			var result = Builder.MakeExpression(SubQuery, corrected, flags);
 
-			if (flags.IsTable())
+			if (flags.IsTable() || flags.IsAggregationRoot())
 				return result;
 
 			if (flags.IsTraverse())

@@ -25,19 +25,21 @@ namespace LinqToDB.Linq.Builder
 		public MethodCallExpression? Debug_MethodCall;
 #endif
 
-		public Expression     Body       { [DebuggerStepThrough] get; set; }
-		public bool           IsSubQuery { get; }
+		public Expression     Body         { [DebuggerStepThrough] get; set; }
+		public bool           IsSubQuery   { get; }
+		public IBuildContext? InnerContext { get; }
 
 		public override Expression? Expression => Body;
 
 		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
-		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, Expression body, SelectQuery selectQuery, bool isSubQuery)
+		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, IBuildContext? innerContext, Expression body, SelectQuery selectQuery, bool isSubQuery)
 			: base(builder, body.Type, selectQuery)
 		{
-			Parent     = parent;
-			IsSubQuery = isSubQuery;
-			Body       = body;
+			Parent       = parent;
+			InnerContext = innerContext;
+			IsSubQuery   = isSubQuery;
+			Body         = body;
 		}
 
 		public SelectContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences)
@@ -45,8 +47,8 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		public SelectContext(IBuildContext? parent, Expression body, IBuildContext sequence, bool isSubQuery)
-			: this(parent, sequence.Builder, body, sequence.SelectQuery, isSubQuery)
+		public SelectContext(IBuildContext? parent, Expression body, IBuildContext innerContext, bool isSubQuery)
+			: this(parent, innerContext.Builder, innerContext, body, innerContext.SelectQuery, isSubQuery)
 		{
 		}
 
@@ -55,6 +57,24 @@ namespace LinqToDB.Linq.Builder
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			Expression result;
+
+			if (flags.IsAggregationRoot() && InnerContext != null)
+			{
+				if (SequenceHelper.IsSameContext(path, this))
+				{
+					result = new ContextRefExpression(InnerContext.ElementType, InnerContext);
+				}
+				else
+				{
+					result = Builder.Project(this, path, null, 0, flags, Body, false);
+					if (result is not ContextRefExpression)
+					{
+						result = new ContextRefExpression(InnerContext.ElementType, InnerContext);
+					}
+				}
+
+				return result;
+			}
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
@@ -130,7 +150,7 @@ namespace LinqToDB.Linq.Builder
 		public override IBuildContext Clone(CloningContext context)
 		{
 			var sc = context.CloneElement(SelectQuery);
-			return new SelectContext(null, Builder, context.CloneExpression(Body), sc, IsSubQuery);
+			return new SelectContext(null, Builder, context.CloneContext(InnerContext), context.CloneExpression(Body), sc, IsSubQuery);
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

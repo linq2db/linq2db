@@ -174,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Expand))
+				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExpand() || flags.IsAggregationRoot())
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))

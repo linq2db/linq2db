@@ -1101,7 +1101,7 @@ namespace LinqToDB.SqlQuery
 			if (tableSource.Source is not SelectQuery subQuery)
 				return false;
 
-			if (subQuery.From.Tables.Count != 1)
+			if (subQuery.From.Tables.Count > 1)
 				return false;
 
 			if (_currentSetOperator?.SelectQuery == selectQuery || selectQuery.HasSetOperators)
@@ -1294,14 +1294,19 @@ namespace LinqToDB.SqlQuery
 				NotifyReplaced(column.Expression, column);
 			}
 
-			var subQueryTableSource = subQuery.From.Tables[0];
-			tableSource.Joins.InsertRange(0, subQueryTableSource.Joins);
+			NotifyReplaced(selectQuery.All, subQuery.All);
 
-			tableSource.Source = subQueryTableSource.Source;
-
-			if (subQuery.HasUniqueKeys)
+			if (subQuery.From.Tables.Count == 1)
 			{
-				subQueryTableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
+				var subQueryTableSource = subQuery.From.Tables[0];
+				tableSource.Joins.InsertRange(0, subQueryTableSource.Joins);
+
+				tableSource.Source = subQueryTableSource.Source;
+
+				if (subQuery.HasUniqueKeys)
+				{
+					subQueryTableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
+				}
 			}
 
 			ApplySubQueryExtensions(selectQuery, subQuery);
@@ -1426,6 +1431,12 @@ namespace LinqToDB.SqlQuery
 				if (MoveSubQueryUp(selectQuery, tableSource))
 				{
 					replaced = true;
+
+					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0)
+					{
+						selectQuery.From.Tables.RemoveAt(i);
+					}
+
 					--i; // repeat again
 
 					continue;

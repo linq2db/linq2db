@@ -1793,10 +1793,29 @@ namespace LinqToDB.SqlQuery
 			RemoveNotUnusedColumnsInternal(selectQuery, selectQuery);
 		}
 
+		public static SelectQuery GetInnerQuery(this SelectQuery selectQuery)
+		{
+			if (selectQuery.IsSimple)
+			{
+				if (selectQuery.From.Tables[0].Source is SelectQuery sub)
+				{
+					var inner = sub.GetInnerQuery();
+					if (inner.From.Tables.Count == 0)
+					{
+						return inner;
+					}
+				}
+			}
+
+			return selectQuery;
+		}
+
 		public static void OptimizeSelectQuery(this SelectQuery selectQuery, IQueryElement root, SqlProviderFlags providerFlags, DataOptions dataOptions)
 		{
-			new SelectQueryOptimizer(providerFlags, dataOptions, new EvaluationContext(), root, selectQuery, 0)
-				.FinalizeAndValidate();
+			var visitor = BasicSqlOptimizer.SelectOptimizer.Allocate();
+
+			var evaluationContext = new EvaluationContext(null);
+			visitor.Value.OptimizeQueries(root, providerFlags, dataOptions, evaluationContext, selectQuery, 0);
 		}
 
 		[return: NotNullIfNotNull(nameof(sqlExpression))]

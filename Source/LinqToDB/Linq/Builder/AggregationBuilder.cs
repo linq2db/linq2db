@@ -11,13 +11,91 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
-		public static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
-		       static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
+		enum AggregationType
+		{
+			Count,
+			Min,
+			Max,
+			Sum,
+			Average,
+		}
+
+		static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
+		static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
+
 
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			var function = methodCall.Method.GetExpressionAttribute(mapping);
 			return function != null && (function.IsAggregate || function.IsWindowFunction) ? function : null;
+		}
+
+		static AggregationType GetAggregationType(MethodCallExpression methodCallExpression, out int parameterCount)
+		{
+			AggregationType aggregationType;
+			parameterCount = methodCallExpression.Arguments.Count;
+			switch (methodCallExpression.Method.Name)
+			{
+				case "Count":
+				{
+					aggregationType = AggregationType.Count;
+					break;
+				}	
+				case "CountAsync":
+				{
+					--parameterCount;
+					aggregationType = AggregationType.Count;
+					break;
+				}	
+				case "Min":
+				{
+					aggregationType = AggregationType.Min;
+					break;
+				}	
+				case "MinAsync":
+				{
+					--parameterCount;
+					aggregationType = AggregationType.Min;
+					break;
+				}
+				case "Max":
+				{
+					aggregationType = AggregationType.Max;
+					break;
+				}
+				case "MaxAsync":
+				{
+					--parameterCount;
+					aggregationType = AggregationType.Max;
+					break;
+				}
+				case "Sum":
+				{
+					aggregationType = AggregationType.Sum;
+					break;
+				}
+				case "SumAsync":
+				{
+					--parameterCount;
+					aggregationType = AggregationType.Sum;
+					break;
+				}
+				case "Average":
+				{
+					aggregationType = AggregationType.Average;
+					break;
+				}
+				case "AverageAsync":
+				{
+					--parameterCount;
+					aggregationType = AggregationType.Average;
+					break;
+				}
+				default:
+					throw new ArgumentOutOfRangeException(nameof(methodCallExpression), methodCallExpression.Method.Name, "Invalid aggregation function");
+			}
+
+			return aggregationType;
 		}
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -41,6 +119,8 @@ namespace LinqToDB.Linq.Builder
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
 
+			var aggregationType = GetAggregationType(methodCall, out var parameterCount);
+
 			var sequenceArgument = builder.CorrectRoot(null, methodCall.Arguments[0]);
 
 			if (!buildInfo.IsSubQuery)
@@ -55,15 +135,22 @@ namespace LinqToDB.Linq.Builder
 				_ = builder.MakeExpression(sequence, new ContextRefExpression(buildInfo.Expression.Type, sequence),
 					ProjectFlags.Expand);
 
-				if (methodName == "Count" || methodName == "LongCount")
+				if (aggregationType == AggregationType.Count)
 				{
+					if (parameterCount == 2)
+					{
+						var lambda = methodCall.Arguments[1].UnwrapLambda();
+						sequence = builder.BuildWhere(null, sequence, lambda, false, false, buildInfo.IsTest,
+							buildInfo.IsAggregation);
+					}
+
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
 					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
 				}
 				else
 				{
 					Expression valueExpression;
-					if (methodCall.Arguments.Count == 2)
+					if (parameterCount == 2)
 					{
 						var lambda = methodCall.Arguments[1].UnwrapLambda();
 						valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
@@ -100,6 +187,9 @@ namespace LinqToDB.Linq.Builder
 
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;
+
+				testSelectQuery = testSelectQuery.GetInnerQuery();
+
 				if (testSelectQuery.From.Tables.Count == 0)
 				{
 					var valid = true;
@@ -123,20 +213,17 @@ namespace LinqToDB.Linq.Builder
 							new BuildInfo(buildInfo, sequenceArgument)
 								{ CreateSubQuery = false, IsAggregation = true });
 
-						var rootContext = builder.GetRootContext(buildInfo.Parent, sequenceArgument, false);
+						var sequenceRef = new ContextRefExpression(sequence.ElementType, sequence);
 
-						if (rootContext != null)
+						var rootContext = builder.GetRootContext(buildInfo.Parent, sequenceRef, true);
+
+						placeholderSequence = rootContext?.BuildContext ?? sequence;
+
+						if (placeholderSequence is GroupByBuilder.GroupByContext groupCtx)
 						{
-							placeholderSequence = rootContext.BuildContext;
-							placeholderSelect   = rootContext.BuildContext.SelectQuery;
-
-							if (placeholderSequence is GroupByBuilder.GroupByContext groupCtx)
-							{
-								placeholderSequence = groupCtx.SubQuery;
-								placeholderSelect   = groupCtx.Element.SelectQuery;
-							}
-
-							isSimple = true;
+							placeholderSequence = groupCtx.SubQuery;
+							placeholderSelect   = groupCtx.Element.SelectQuery;
+							isSimple            = true;
 						}
 					}
 				}
@@ -150,38 +237,51 @@ namespace LinqToDB.Linq.Builder
 					if (sequence is GroupByBuilder.GroupByContext groupByContext)
 					{
 						placeholderSequence = groupByContext.SubQuery;
-						placeholderSelect   = groupByContext.Element.SelectQuery;
 					}
 				}
 
 				placeholderSequence ??= sequence;
 
-				if (methodName == "Count" || methodName == "LongCount")
+				Expression valueExpression;
+				if (parameterCount == 2)
 				{
-					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, SqlFunction.CreateCount(returnType, placeholderSelect), buildInfo.Expression);
-					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
+					var lambda = methodCall.Arguments[1].UnwrapLambda();
+					valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
 				}
 				else
 				{
-					Expression valueExpression;
-					if (methodCall.Arguments.Count == 2)
+					valueExpression = new ContextRefExpression(methodCall.Type, sequence);
+				}
+
+				context = new AggregationContext(buildInfo.Parent, placeholderSequence, methodCall.Method.Name,
+					methodCall.Method.ReturnType);
+
+				ISqlExpression sql;
+
+				if (aggregationType == AggregationType.Count)
+				{
+					if (parameterCount == 2)
 					{
-						var lambda = methodCall.Arguments[1].UnwrapLambda();
-						valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
+						var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression,
+							buildInfo.GetFlags());
+						sql = new SqlFunction(methodCall.Type, "CASE", sqlPlaceholder.Sql, new SqlValue(1),
+							new SqlValue(methodCall.Type, null));
 					}
 					else
 					{
-						valueExpression = new ContextRefExpression(methodCall.Type, sequence);
-					};
-
-					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, buildInfo.GetFlags());
-					context = new AggregationContext(buildInfo.Parent, placeholderSequence, methodCall.Method.Name, methodCall.Method.ReturnType);
-
-					var sql = sqlPlaceholder.Sql;
-
-					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/
-						new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+						// OR sql = new SqlValue(typeof(int), 1);
+						sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
+					}
 				}
+				else
+				{
+					var sqlPlaceholder =
+						builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, buildInfo.GetFlags());
+					sql = sqlPlaceholder.Sql;
+				}
+
+				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/
+					new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
 
 				if (!isSimple)
 				{

@@ -516,8 +516,6 @@ namespace LinqToDB.Linq.Builder
 						{
 							switch (call.Method.Name)
 							{
-								case "LongCount"            :
-								case "Count"                :
 								case "Single"               :
 								case "SingleOrDefault"      :
 								case "First"                :

@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition: (LambdaExpression)methodCall.Arguments[1].Unwrap(), checkForSubQuery: false,
-					enforceHaving: false, isTest: buildInfo.AggregationTest);
+					enforceHaving: false, isTest: buildInfo.IsTest, isAggregationTest: buildInfo.AggregationTest);
 
 				if (sequence == null)
 					return null;

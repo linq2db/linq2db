@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 		#region Build Where
 
 		public IBuildContext? BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
-			bool                                        checkForSubQuery, bool enforceHaving, bool isTest)
+			bool                                        checkForSubQuery, bool enforceHaving, bool isTest, bool isAggregationTest)
 		{
 			if (sequence is not SubQueryContext)
 			{
@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			if (!isTest)
+			if (!isTest || isAggregationTest)
 			{
 				sequence.SelectQuery.Where.ConcatSearchCondition(sc);
 			}

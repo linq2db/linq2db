@@ -15,6 +15,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = new SelectContext(buildInfo.Parent,
 				builder,
+				null,
 				methodCall.Arguments[1].UnwrapLambda().Body,
 				buildInfo.SelectQuery, buildInfo.IsSubQuery);
 

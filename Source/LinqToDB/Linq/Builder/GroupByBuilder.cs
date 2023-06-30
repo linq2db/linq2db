@@ -440,13 +440,17 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) &&
-				    (flags.IsRoot() || flags.IsAggregationRoot() || flags.IsTraverse()))
+				if (SequenceHelper.IsSameContext(path, this) && (flags.IsRoot() || flags.IsTraverse()))
 				{
 					return path;
 				}
 
-				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Keys))
+				if (flags.IsAggregationRoot())
+				{
+					return path;
+				}
+
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Keys) && GetInterfaceGroupingType().IsSameOrParentOf(path.Type))
 				{
 					var result = Builder.MakeExpression(this, _keyRef, flags);
 					return result;
