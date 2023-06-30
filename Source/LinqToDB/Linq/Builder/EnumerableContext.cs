@@ -123,6 +123,12 @@ namespace LinqToDB.Linq.Builder
 
 		SqlField? GetField(MemberExpression path)
 		{
+			if (SequenceHelper.IsSpecialProperty(path, ElementType, "item"))
+			{
+				var newField = BuildField(null, path);
+				return newField;
+			}
+
 			foreach (var column in _entityDescriptor.Columns)
 			{
 				if (!column.MemberInfo.EqualsTo(path.Member, ElementType))
@@ -130,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 					continue;
 				}
 
-				var newField = BuildField(column);
+				var newField = BuildField(column, path);
 
 				return newField;
 			}
@@ -138,12 +144,19 @@ namespace LinqToDB.Linq.Builder
 			return null;
         }
 
-		SqlField BuildField(ColumnDescriptor column)
+		SqlField BuildField(ColumnDescriptor? column, MemberExpression me)
 		{
-			var memberName = column.MemberName;
-			if (!Table.FieldsLookup!.TryGetValue(column.MemberInfo, out var newField))
+			var memberName = me.Member.Name;
+			if (!Table.FieldsLookup!.TryGetValue(me.Member, out var newField))
 			{
-				var getter = column.GetDbParamLambda();
+				var getter = column?.GetDbParamLambda();
+				if (getter == null)
+				{
+					var thisParam = Expression.Parameter(me.Type, memberName);
+					getter = Expression.Lambda(thisParam, thisParam);
+				}
+
+				var dbDataType = column?.GetDbDataType(true) ?? ColumnDescriptor.CalculateDbDataType(Builder.MappingSchema, me.Type);
 
 				var generator = new ExpressionGenerator();
 				if (typeof(DataParameter).IsSameOrParentOf(getter.Body.Type))
@@ -160,7 +173,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					generator.AddExpression(Expression.New(_sqlValueconstructor,
-						Expression.Constant(column.GetDbDataType(true)),
+						Expression.Constant(dbDataType),
 						Expression.Convert(getter.Body, typeof(object))));
 				}
 
@@ -172,7 +185,7 @@ namespace LinqToDB.Linq.Builder
 				var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
 				var getterFunc   = getterLambda.Compile();
 
-				Table.Add(newField = new SqlField(column), column.MemberInfo, getterFunc);
+				Table.Add(newField = new SqlField(dbDataType, memberName, column?.CanBeNull ?? true), me.Member, getterFunc);
 			}
 
 			return newField;
@@ -184,6 +197,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (flags.HasFlag(ProjectFlags.Root))
 					return path;
+
+				if (path.Type == ElementType)
+				{
+					var specialProp = SequenceHelper.CreateSpecialProperty(path, ElementType, "item");
+					return Builder.MakeExpression(this, specialProp, flags);
+				}
 
 				/*
 				// trying to access Queryable variant

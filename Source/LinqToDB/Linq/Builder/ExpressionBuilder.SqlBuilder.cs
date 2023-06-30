@@ -1483,9 +1483,15 @@ namespace LinqToDB.Linq.Builder
 			Expression GetOriginalExpression()
 			{
 				var rightExpr = right;
-				if (rightExpr.Type != left.Type)
-					rightExpr = Expression.Convert(rightExpr, left.Type);
-				return Expression.MakeBinary(nodeType, left, rightExpr);
+				var leftExpr  = left;
+				if (rightExpr.Type != leftExpr.Type)
+				{
+					if (rightExpr.Type.CanConvertTo(leftExpr.Type))
+						rightExpr = Expression.Convert(rightExpr, leftExpr.Type);
+					else if (left.Type.CanConvertTo(leftExpr.Type))
+						leftExpr = Expression.Convert(leftExpr, right.Type);
+				}
+				return Expression.MakeBinary(nodeType, leftExpr, rightExpr);
 			}
 
 			Expression GenerateNullComparison(List<SqlPlaceholderExpression> placeholders, bool isNot)
