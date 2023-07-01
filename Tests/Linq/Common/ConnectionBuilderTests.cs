@@ -60,7 +60,7 @@ namespace Tests.Common
 			}
 
 			public IDisposable BeginScope<TState>(TState state)
-#if NET7_0_OR_GREATER
+#if !NETFRAMEWORK
 				where TState : notnull
 #endif
 				=> new Disposable();
