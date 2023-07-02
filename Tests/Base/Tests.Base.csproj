@@ -11,6 +11,10 @@
 		<PackageReference Include="NUnit" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectCapability Remove="TestContainer" />
+	</ItemGroup>
+
 	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.ServiceModel" />
