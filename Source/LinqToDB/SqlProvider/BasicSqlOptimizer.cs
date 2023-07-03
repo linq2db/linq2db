@@ -2159,9 +2159,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)predicate;
 
-					var reduced = visitor.Context.Nullability.IsEmpty
-						? exprExpr
-						: exprExpr.Reduce(visitor.Context.Nullability, visitor.Context.OptimizationContext.Context);
+					var reduced = exprExpr.Reduce(visitor.Context.Nullability, visitor.Context.OptimizationContext.Context);
 
 					if (!ReferenceEquals(reduced, exprExpr))
 					{
