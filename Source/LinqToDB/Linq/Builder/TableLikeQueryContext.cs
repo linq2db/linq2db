@@ -38,11 +38,11 @@ namespace LinqToDB.Linq.Builder
 			var projectionType = typeof(ProjectionHelper<,>).MakeGenericType(targetContextRef.Type, sourceContextRef.Type);
 
 			ProjectionBody = Expression.MemberInit(Expression.New(projectionType),
-				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<object, object>.target)),
+				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<object, object>.target)) ?? throw new InvalidOperationException(),
 					targetContextRef),
-				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<object, object>.source)),
+				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<object, object>.source)) ?? throw new InvalidOperationException(),
 					sourceContextRef),
-				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<object, object>.selft_target)),
+				Expression.Bind(projectionType.GetProperty(nameof(ProjectionHelper<object, object>.selft_target)) ?? throw new InvalidOperationException(),
 					targetContextRef));
 
 			var thisContextRef = new ContextRefExpression(projectionType, this);
@@ -245,12 +245,10 @@ namespace LinqToDB.Linq.Builder
 
 				if (!flags.IsTest())
 				{
-					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, this);
+					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, path);
 
 					var memberPath = TableLikeHelpers.GetMemberPath(isTargetAssociation ? path : subqueryPath);
-					correctedPath = Builder.UpdateNesting(SubqueryContext, correctedPath);
 					var placeholders = ExpressionBuilder.CollectPlaceholders2(correctedPath, memberPath).ToList();
-
 					var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, Source, Source.SourceFields, _knownMap, correctedPath, placeholders);
 
 					return remapped;

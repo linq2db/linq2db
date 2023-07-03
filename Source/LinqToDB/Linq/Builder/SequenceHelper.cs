@@ -67,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 			if (expression == null || expression.Find(1, (_, e) => e is SqlPlaceholderExpression) == null)
 				return expression;
 
-			var contextRef = new ContextRefExpression(expression.Type, toContext);
+			var contextRef = new ContextRefExpression(toContext.ElementType, toContext);
 
 			var transformed = CorrectTrackingPath(expression, contextRef);
 
@@ -183,7 +183,25 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (placeholder.TrackingPath != null && !placeholder.Type.IsAssignableFrom(toPath.Type) &&
+				if (placeholder.TrackingPath is MemberExpression me && me.Member.DeclaringType != null && me.Member.DeclaringType.IsAssignableFrom(toPath.Type))
+				{
+					var toPathConverted = EnsureType(toPath, me.Member.DeclaringType);
+					var newExpr         = (Expression)Expression.MakeMemberAccess(toPathConverted, me.Member);
+
+					return placeholder.WithTrackingPath(newExpr);
+				}
+
+				/*
+				if (placeholder.Path is MemberExpression me && me.Member.DeclaringType != null)
+				{
+					var toPathConverted = EnsureType(toPath, me.Member.DeclaringType);
+					var newExpr         = (Expression)Expression.MakeMemberAccess(toPathConverted, me.Member);
+
+					return placeholder.WithTrackingPath(newExpr);
+				}
+				*/
+
+				/*if (placeholder.TrackingPath != null && !placeholder.Type.IsAssignableFrom(toPath.Type) &&
 				    !toPath.Type.IsValueType)
 				{
 					if (placeholder.TrackingPath is MemberExpression memberExpression)
@@ -191,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 						toPath = Expression.MakeMemberAccess(toPath, memberExpression.Member);
 						return placeholder.WithTrackingPath(toPath);
 					}
-				}
+				}*/
 
 				return placeholder.WithTrackingPath(toPath);
 			}

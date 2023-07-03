@@ -304,6 +304,10 @@ namespace LinqToDB.SqlQuery
 			var descriptor = GetColumnDescriptor(expr);
 			if (descriptor == null)
 			{
+				var field = GetUnderlyingField(expr);
+				if (field != null)
+					return field.Type;
+
 				return new DbDataType(expr.SystemType ?? typeof(object), DataType.Undefined);
 			}
 

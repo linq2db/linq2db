@@ -1,9 +1,11 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
@@ -60,8 +62,9 @@ namespace LinqToDB.Linq.Builder
 					//
 
 					var targetType       = statement.Target.SystemType!;
-					var pTarget          = Expression.Parameter(targetType, "t");
-					var pSource          = Expression.Parameter(targetType, "s");
+					var targetLambdaType = mergeContext.SourceContext.TargetContextRef.Type;
+					var pTarget          = Expression.Parameter(targetLambdaType, "t");
+					var pSource          = Expression.Parameter(targetLambdaType, "s");
 					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 					Expression? ex = null;
@@ -72,9 +75,13 @@ namespace LinqToDB.Linq.Builder
 						if (!column.IsPrimaryKey)
 							continue;
 
+						var member = targetLambdaType.GetMemberEx(column.MemberInfo);
+						if (member == null)
+							throw new InvalidOperationException($"Member '{column.MemberInfo.Name}' is not defined in '{pTarget.Name}'");
+
 						var expr = Expression.Equal(
-							Expression.MakeMemberAccess(pTarget, column.MemberInfo),
-							Expression.MakeMemberAccess(pSource, column.MemberInfo));
+							Expression.MakeMemberAccess(pTarget, member),
+							Expression.MakeMemberAccess(pSource, member));
 						ex = ex != null ? Expression.AndAlso(ex, expr) : expr;
 					}
 

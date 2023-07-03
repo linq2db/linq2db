@@ -45,11 +45,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					case MergeKind.Merge:
 					case MergeKind.MergeWithOutputInto:
+					case MergeKind.MergeWithOutputIntoSource:
 					{
 						QueryRunner.SetNonQueryQuery(query);
 						break;
 					}	
 					case MergeKind.MergeWithOutput:
+					case MergeKind.MergeWithOutputSource:
 					{
 						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 						QueryRunner.SetRunQuery(query, mapper);
@@ -62,13 +64,14 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && flags.IsExpression() && Kind == MergeKind.MergeWithOutput)
+				if (SequenceHelper.IsSameContext(path, this) && flags.IsExpression() && 
+				    (Kind == MergeKind.MergeWithOutput || Kind == MergeKind.MergeWithOutputSource))
 				{
 					if (OutputExpression == null || OutputContext == null)
 						throw new InvalidOperationException();
 
 					var selectContext = new SelectContext(Parent, OutputExpression, OutputContext, false);
-					var outputRef     = new ContextRefExpression(path.Type, selectContext);
+					var outputRef     = new ContextRefExpression(OutputExpression.Type, selectContext);
 
 					var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 

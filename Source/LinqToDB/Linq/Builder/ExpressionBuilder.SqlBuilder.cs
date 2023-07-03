@@ -1569,7 +1569,9 @@ namespace LinqToDB.Linq.Builder
 			Expression GenerateConstructorComparison(SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
 			{
 				var strict = leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.Full ||
-				             rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.Full;
+				             rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.Full || 
+				             (leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.New &&
+				              rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.New);
 
 				var searchCondition = new SqlSearchCondition();
 				var usedMembers     = new HashSet<MemberInfo>(MemberInfoEqualityComparer.Default);
@@ -2826,9 +2828,8 @@ namespace LinqToDB.Linq.Builder
 							return false;
 
 						conditions.Add(new SqlCondition(true, notCondition));
-
-						break;
-					}
+					break;
+				}
 
 				default                    :
 					var predicate = ConvertPredicate(context, expression, flags, out error);
@@ -4370,20 +4371,8 @@ namespace LinqToDB.Linq.Builder
 				alias = me.Member.Name;
 
 
-			var sql = sqlPlaceholder.Sql;
-			/*// Right now, handling nullability in that way
-			//
-			var sql = sqlPlaceholder.Sql;
-			if (sqlPlaceholder.SelectQuery.IsNullable && !sql.CanBeNull)
-			{
-				sql = new SqlNullabilityExpression(sql);
-			}*/
-
-			//TODO: correct
-			var idx = asNew
-				? sqlPlaceholder.SelectQuery.Select.AddNew(sql)
-				: sqlPlaceholder.SelectQuery.Select.AddNew(sql);
-
+			var sql    = sqlPlaceholder.Sql;
+			var idx    = sqlPlaceholder.SelectQuery.Select.AddNew(sql);
 			var column = sqlPlaceholder.SelectQuery.Select.Columns[idx];
 
 			if (!string.IsNullOrEmpty(alias))
@@ -4394,15 +4383,6 @@ namespace LinqToDB.Linq.Builder
 			placeholder = CreatePlaceholder(parentQuery, column, sqlPlaceholder.Path, sqlPlaceholder.ConvertType, alias, idx, trackingPath: sqlPlaceholder.TrackingPath);
 
 			_columnCache[key] = placeholder;
-
-			/*if (parentQuery != null)
-			{
-				var preciseCacheKey = new SqlCacheKey(sqlPlaceholder.Path, null, null, parentQuery, ProjectFlags.SQL);
-				_preciseCachedSql[preciseCacheKey] = placeholder;
-
-				var cacheKey = new SqlCacheKey(sqlPlaceholder.Path, null, null, null, ProjectFlags.SQL);
-				_cachedSql[cacheKey] =  placeholder;
-			}*/
 
 			return placeholder;
 		}

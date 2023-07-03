@@ -77,12 +77,25 @@ namespace LinqToDB.Linq.Builder
 					var outputLambda = methodCall.Arguments[1].UnwrapLambda();
 					var outputExpression = SequenceHelper.PrepareBody(outputLambda, actionFieldContext, deletedContext, insertedContext);
 
+					// source
+					if (outputLambda.Parameters.Count > 3)
+					{
+						outputExpression = outputExpression.Replace(outputLambda.Parameters[3],
+							mergeContext.SourceContext.SourcePropAccess);
+					}
+
 					mergeContext.OutputExpression = outputExpression;
 				}
 				else
 				{
 					var outputLambda = methodCall.Arguments[2].UnwrapLambda();
 					var outputExpression = SequenceHelper.PrepareBody(outputLambda, actionFieldContext, deletedContext, insertedContext);
+					// source
+					if (outputLambda.Parameters.Count > 3)
+					{
+						outputExpression = outputExpression.Replace(outputLambda.Parameters[3],
+							mergeContext.SourceContext.SourcePropAccess);
+					}
 
 					var outputTable = methodCall.Arguments[1];
 					var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
@@ -94,6 +107,7 @@ namespace LinqToDB.Linq.Builder
 						mergeContext.TargetContext, outputSetters, mergeContext.Merge.Output.OutputItems, false);
 
 					mergeContext.Merge.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
+					mergeContext.OutputExpression = outputExpression;
 				}
 			}
 

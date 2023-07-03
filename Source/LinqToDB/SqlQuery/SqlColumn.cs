@@ -19,7 +19,7 @@ namespace LinqToDB.SqlQuery
 			RawAlias    = alias;
 
 #if DEBUG
-			_number = ++_columnCounter;
+			Number = ++_columnCounter;
 #endif
 		}
 
@@ -29,10 +29,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 #if DEBUG
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		readonly int _number;
-
-		public   int  Number => _number;
+		public int Number { get; }
 
 		static   int _columnCounter;
 #endif
@@ -161,7 +158,7 @@ namespace LinqToDB.SqlQuery
 				.Append('t')
 				.Append(Parent?.SourceID ?? -1)
 #if DEBUG
-				.Append('[').Append(_number).Append(']')
+				.Append('[').Append(Number).Append(']')
 #endif
 				.Append('.')
 				.Append(Alias ?? "c")
@@ -298,7 +295,7 @@ namespace LinqToDB.SqlQuery
 				.Append('t')
 				.Append(Parent?.SourceID ?? - 1)
 #if DEBUG
-				.Append('[').Append(_number).Append(']')
+				.Append('[').Append(Number).Append(']')
 #endif
 				.Append('.')
 				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));

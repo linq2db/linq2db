@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Builder
 
 				expr = Builder.BuildSqlExpression(this, expr, flags);
 				expr = Builder.UpdateNesting(this, expr);
-				expr = SequenceHelper.CorrectTrackingPath(expr, this);
+				expr = SequenceHelper.CorrectTrackingPath(expr, path);
 
 				if (flags.IsExpression() && expr.UnwrapConvert() is not SqlEagerLoadExpression)
 				{

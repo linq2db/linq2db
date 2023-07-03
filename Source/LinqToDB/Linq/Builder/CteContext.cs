@@ -129,7 +129,6 @@ namespace LinqToDB.Linq.Builder
 			correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, subqueryPath);
 
 			var memberPath = TableLikeHelpers.GetMemberPath(subqueryPath);
-			correctedPath = Builder.UpdateNesting(SubqueryContext, correctedPath);
 			correctedPath = RemapRecursive(correctedPath);
 			var placeholders = ExpressionBuilder.CollectPlaceholders2(correctedPath, memberPath).ToList();
 

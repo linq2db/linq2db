@@ -90,7 +90,13 @@ namespace LinqToDB.Linq.Builder
 			return newField;
 		}
 
-		public static Expression RemapToFields(IBuildContext subQueryContext, ISqlTableSource? parentTable, List<SqlField> fields, Dictionary<Expression, SqlPlaceholderExpression> knownMap, Expression expression, List<(SqlPlaceholderExpression placeholder, MemberInfo[] path)> placeholders)
+		public static Expression RemapToFields(
+			IBuildContext                                                   subQueryContext, 
+			ISqlTableSource?                                                parentTable, 
+			List<SqlField>                                                  fields, 
+			Dictionary<Expression, SqlPlaceholderExpression>                knownMap, 
+			Expression                                                      expression, 
+			List<(SqlPlaceholderExpression placeholder, MemberInfo[] path)> placeholders)
 		{
 			if (placeholders.Count == 0)
 				return expression;
@@ -108,19 +114,26 @@ namespace LinqToDB.Linq.Builder
 
 				if (!knownMap.TryGetValue(placeholder.TrackingPath, out var newPlaceholder))
 				{
-					var field = RegisterFieldMapping(fields, placeholder.Index!.Value, () =>
+					// We change path to MakeColumn's cache always create columns for such tables
+					//
+					var updatedPlaceholder = placeholder.WithPath(placeholder.TrackingPath);
+
+					updatedPlaceholder = (SqlPlaceholderExpression)subQueryContext.Builder.UpdateNesting(subQueryContext, updatedPlaceholder);
+
+					var field = RegisterFieldMapping(fields, updatedPlaceholder.Index!.Value, () =>
 					{
-						var alias = (path.Length > 0 ? GenerateColumnAlias(path) : GenerateColumnAlias(placeholder.Path)) ?? GenerateColumnAlias(placeholder.Sql);
-						var newField = new SqlField(QueryHelper.GetDbDataType(placeholder.Sql), alias, placeholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
+						var alias = (path.Length > 0 ? GenerateColumnAlias(path) : GenerateColumnAlias(updatedPlaceholder.Path)) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
+						var dataType = QueryHelper.GetDbDataType(updatedPlaceholder.Sql);
+						var newField = new SqlField(dataType, alias, updatedPlaceholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
 
 						newField.Table = parentTable;
 						return newField;
 					});
 
 					newPlaceholder = ExpressionBuilder.CreatePlaceholder(subQueryContext!.SelectQuery, field,
-						placeholder.Path, trackingPath: placeholder.TrackingPath, index: placeholder.Index);
+						updatedPlaceholder.Path, trackingPath: updatedPlaceholder.TrackingPath, index: updatedPlaceholder.Index);
 
-					knownMap[placeholder.TrackingPath] = newPlaceholder;
+					knownMap[updatedPlaceholder.TrackingPath!] = newPlaceholder;
 				}
 				else
 				{

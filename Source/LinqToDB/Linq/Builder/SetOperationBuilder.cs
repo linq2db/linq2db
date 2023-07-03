@@ -71,8 +71,7 @@ namespace LinqToDB.Linq.Builder
 				else
 					sql.Where.Exists(except);
 
-				var searchCondition = builder.GenerateComparison(query, new ContextRefExpression(elementType, sequence), new ContextRefExpression(elementType, query),
-					buildInfo.GetFlags());
+				var searchCondition = builder.GenerateComparison(query, new ContextRefExpression(elementType, sequence), new ContextRefExpression(elementType, query), buildInfo.GetFlags());
 
 				except.Where.EnsureConjunction().ConcatSearchCondition(searchCondition);
 

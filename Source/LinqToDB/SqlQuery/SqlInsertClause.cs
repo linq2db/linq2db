@@ -57,8 +57,9 @@ namespace LinqToDB.SqlQuery
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			writer
-				.Append("VALUES ")
+				.Append("INSERT ")
 				.AppendElement(Into)
+				.Append(" VALUES ")
 				.AppendLine();
 
 			using(writer.WithScope())
