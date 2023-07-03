@@ -4129,23 +4129,33 @@ namespace LinqToDB.Linq.Builder
 				} 
 				else if (IsAssociation(mc))
 				{
-					if (!mc.Method.IsStatic)
-						throw new NotImplementedException();
-
 					var arguments = mc.Arguments;
 					if (arguments.Count == 0)
 						throw new InvalidOperationException("Association methods should have at least one parameter");
 
-					var rootArgument = MakeExpression(currentContext, arguments[0], flags.RootFlag());
-					if (!ReferenceEquals(rootArgument, arguments[0]))
-					{
-						var argumentsArray = arguments.ToArray();
-						argumentsArray[0] = rootArgument;
+					var firstArgument = mc.Method.IsStatic ? arguments[0] : mc.Object!;
 
-						mc = mc.Update(mc.Object, argumentsArray);
+					if (firstArgument == null)
+						throw new InvalidOperationException();
+
+					var rootArgument = MakeExpression(currentContext, firstArgument, flags.RootFlag());
+
+					if (!ReferenceEquals(rootArgument, firstArgument))
+					{
+						if (mc.Method.IsStatic)
+						{
+							var argumentsArray = arguments.ToArray();
+							argumentsArray[0] = rootArgument;
+
+							mc = mc.Update(mc.Object, argumentsArray);
+						}
+						else
+						{
+							mc = mc.Update(rootArgument, mc.Arguments);
+						}
 					}
 
-					if (mc.Arguments[0] is ContextRefExpression contextRef)
+					if (rootArgument is ContextRefExpression contextRef)
 					{
 						expression  = TryCreateAssociation(mc, contextRef, currentContext, flags);
 						rootContext = expression as ContextRefExpression;
