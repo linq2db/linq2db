@@ -21,6 +21,7 @@ namespace LinqToDB.SqlQuery
 
 		SelectQuery?    _parentSelect;
 		SqlSetOperator? _currentSetOperator;
+		SelectQuery?    _applySelect;
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -45,6 +46,7 @@ namespace LinqToDB.SqlQuery
 			_level             = level;
 			_dependencies      = dependencies;
 			_parentSelect      = default!;
+			_applySelect       = default!;
 
 			return ProcessElement(root);
 		}
@@ -60,6 +62,7 @@ namespace LinqToDB.SqlQuery
 			_level             = default!;
 			_dependencies      = default!;
 			_parentSelect      = default!;
+			_applySelect       = default!;
 			_version           = default;
 		}
 
@@ -80,6 +83,22 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return base.VisitFuncLikePredicate(element);
+		}
+
+		public override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		{
+			var saveQuery = _applySelect;
+
+			if (element.JoinType == JoinType.CrossApply || element.JoinType == JoinType.OuterApply)
+				_applySelect = element.Table.Source as SelectQuery;
+			else
+				_applySelect = null;
+
+			var newElement = base.VisitSqlJoinedTable(element);
+
+			_applySelect = saveQuery;
+
+			return newElement;
 		}
 
 		public override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
@@ -1084,6 +1103,12 @@ namespace LinqToDB.SqlQuery
 			{
 				if (e.ElementType == QueryElementType.SelectClause && column.Parent != null && ReferenceEquals(column.Parent.Select, e))
 					return false;
+
+				if (_applySelect == parentQuery)
+				{
+					if (ReferenceEquals(parentQuery.Where, e))
+						return false;
+				}
 
 				if (ReferenceEquals(e, column))
 				{
