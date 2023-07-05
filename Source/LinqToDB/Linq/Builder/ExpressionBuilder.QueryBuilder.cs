@@ -155,27 +155,6 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		static void BuildParentsInfo(SelectQuery selectQuery, Dictionary<SelectQuery, SelectQuery> parentInfo)
-		{
-			foreach (var ts in selectQuery.From.Tables)
-			{
-				if (ts.Source is SelectQuery sc)
-				{
-					parentInfo[sc] = selectQuery;
-					BuildParentsInfo(sc, parentInfo);
-				}
-
-				foreach (var join in ts.Joins)
-				{
-					if (join.Table.Source is SelectQuery jc)
-					{
-						parentInfo[jc] = selectQuery;
-						BuildParentsInfo(jc, parentInfo);
-					}
-				}
-			}
-		}
-
 		static bool GetParentQuery(Dictionary<SelectQuery, SelectQuery> parentInfo, SelectQuery currentQuery, [MaybeNullWhen(false)] out SelectQuery? parentQuery)
 		{
 			return parentInfo.TryGetValue(currentQuery, out parentQuery);
@@ -186,18 +165,58 @@ namespace LinqToDB.Linq.Builder
 			return UpdateNesting(upToContext.SelectQuery, expression);
 		}
 
+		public class ParentInfo
+		{
+			Dictionary<SelectQuery, SelectQuery>? _info;
+
+			public bool GetParentQuery(SelectQuery rootQuery, SelectQuery currentQuery, [MaybeNullWhen(false)] out SelectQuery? parentQuery)
+			{
+				if (_info == null)
+				{
+					_info = new();
+					BuildParentsInfo(rootQuery, _info);
+				}
+				return _info.TryGetValue(currentQuery, out parentQuery);
+			}
+
+			static void BuildParentsInfo(SelectQuery selectQuery, Dictionary<SelectQuery, SelectQuery> parentInfo)
+			{
+				foreach (var ts in selectQuery.From.Tables)
+				{
+					if (ts.Source is SelectQuery sc)
+					{
+						parentInfo[sc] = selectQuery;
+						BuildParentsInfo(sc, parentInfo);
+					}
+
+					foreach (var join in ts.Joins)
+					{
+						if (join.Table.Source is SelectQuery jc)
+						{
+							parentInfo[jc] = selectQuery;
+							BuildParentsInfo(jc, parentInfo);
+						}
+					}
+				}
+			}
+
+			public void Cleanup()
+			{
+				_info = null;
+			}
+		}
+
 		public Expression UpdateNesting(SelectQuery upToQuery, Expression expression)
 		{
 			// short path
 			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToQuery)
 				return expression;
 
-			var parentInfo = new Dictionary<SelectQuery, SelectQuery>();
-			BuildParentsInfo(upToQuery, parentInfo);
+			using var parentInfo = ParentInfoPool.Allocate();
 
 			var withColumns =
 				expression.Transform(
-					(builder: this, upToQuery, parentInfo),
+					(builder: this, upToQuery, parentInfo: parentInfo.Value),
 					static (context, expr) =>
 					{
 						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToQuery, placeholder.SelectQuery))
@@ -210,7 +229,7 @@ namespace LinqToDB.Linq.Builder
 								if (ReferenceEquals(context.upToQuery, placeholder.SelectQuery))
 									break;
 
-								if (!GetParentQuery(context.parentInfo, placeholder.SelectQuery, out var parentQuery))
+								if (!context.parentInfo.GetParentQuery(context.upToQuery, placeholder.SelectQuery, out var parentQuery))
 									break;
 
 								placeholder = context.builder.MakeColumn(parentQuery, placeholder);
@@ -229,12 +248,11 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression ToColumns(IBuildContext rootContext, Expression expression)
 		{
-			var parentInfo = new Dictionary<SelectQuery, SelectQuery>();
-			BuildParentsInfo(rootContext.SelectQuery, parentInfo);
+			using var parentInfo = ParentInfoPool.Allocate();
 
 			var withColumns =
 				expression.Transform(
-					(builder: this, parentInfo, rootQuery: rootContext.SelectQuery),
+					(builder: this, parentInfo: parentInfo.Value, rootQuery: rootContext.SelectQuery),
 					static (context, expr) =>
 					{
 						if (expr is SqlPlaceholderExpression { SelectQuery: { } } placeholder)
@@ -250,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 									break;
 								}
 
-								if (!GetParentQuery(context.parentInfo, placeholder.SelectQuery, out var parentQuery))
+								if (!context.parentInfo.GetParentQuery(context.rootQuery, placeholder.SelectQuery, out var parentQuery))
 								{
 									// Handling OUTPUT cases
 									//

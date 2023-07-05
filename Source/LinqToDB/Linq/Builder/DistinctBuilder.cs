@@ -40,8 +40,8 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				// create all columns
-				var sqlExpr = builder.ConvertToSqlExpr(outerSubqueryContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], subQueryContext), buildInfo.GetFlags());
-				//builder.UpdateNesting(outerSubqueryContext, sqlExpr);
+				var sqlExpr = builder.BuildSqlExpression(outerSubqueryContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], subQueryContext), buildInfo.GetFlags());
+				sqlExpr = builder.UpdateNesting(outerSubqueryContext, sqlExpr);
 			}
 
 			return new DistinctContext(outerSubqueryContext);
@@ -61,11 +61,15 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
+				if (flags.IsExpand())
+					return path;
+
+				if (SequenceHelper.IsSameContext(path, this) && (flags.IsRoot() || flags.IsAssociationRoot()))
 					return path;
 
 				var corrected = SequenceHelper.CorrectExpression(path, this, Context);
-				var result = Builder.ConvertToSqlExpr(Context, corrected, flags.SqlFlag());
+				var result    = Builder.BuildSqlExpression(Context, corrected, flags.SqlFlag());
+				result = Builder.UpdateNesting(Context, result);
 
 				return result;
 			}

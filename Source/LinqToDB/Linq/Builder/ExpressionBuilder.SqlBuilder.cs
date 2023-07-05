@@ -4303,13 +4303,13 @@ namespace LinqToDB.Linq.Builder
 						handled    = true;
 					}
 
-					if (flags.HasFlag(ProjectFlags.Expression) && path.NodeType == ExpressionType.NewArrayInit)
+					if (flags.IsExpression() && path.NodeType == ExpressionType.NewArrayInit)
 					{
 						expression = path;
 						handled    = true;
 					}
 
-					if (!handled && (flags.HasFlag(ProjectFlags.SQL) || flags.HasFlag(ProjectFlags.Expression)))
+					if (!handled && (flags.IsSql() || flags.IsExpression()))
 					{
 						// Handling subqueries
 						//

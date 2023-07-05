@@ -98,6 +98,7 @@ namespace LinqToDB.Linq.Builder
 		#region Pools
 
 		public static readonly ObjectPool<SelectQuery> QueryPool = new(() => new SelectQuery(), sq => sq.Cleanup(), 100);
+		public static readonly ObjectPool<ParentInfo> ParentInfoPool = new(() => new ParentInfo(), pi => pi.Cleanup(), 100);
 
 		#endregion
 
@@ -240,8 +241,10 @@ namespace LinqToDB.Linq.Builder
 
 					_reorder = _reorder || n < builder.BuildCounter;
 
-					if (sequence != null)
+					if (sequence != null && !buildInfo.IsTest)
+					{
 						_sequenceExpressions[sequence] = originalExpression;
+					}
 
 					return sequence;
 				}

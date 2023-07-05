@@ -183,7 +183,7 @@ namespace LinqToDB.Linq.Builder
 						return path;
 
 					// Eager load case
-					if (flags.IsExpand() && !ElementType.IsAssignableFrom(path.Type))
+					if (path.Type.IsEnumerableType(ElementType))
 					{
 						return path;
 					}
@@ -264,7 +264,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
-				if (!buildInfo.CreateSubQuery)
+				if (!buildInfo.CreateSubQuery || buildInfo.IsTest)
 					return this;
 
 				var expr    = Builder.GetSequenceExpression(this);
