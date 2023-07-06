@@ -45,13 +45,33 @@ namespace LinqToDB.Linq.Builder
 			_convertedExpressions.Remove(ex);
 		}
 
-		Expression Deduplicate(Expression expression, bool onlyConstructRef)
+		static Expression PerformReplacement(Expression expression, Dictionary<Expression, Expression> replacements)
+		{
+			if (replacements.Count == 0)
+				return expression;
+
+			var corrected = expression.Transform(
+				replacements,
+				static (ctx, e) =>
+				{
+					if ((e.NodeType == ExpressionType.Extension || e.NodeType == ExpressionType.MemberAccess) && ctx.TryGetValue(e, out var replacement))
+					{
+						return replacement;
+					}
+
+					return e;
+				});
+
+			return corrected;
+		}
+
+		Expression Deduplicate(List<(ParameterExpression variable, Expression assingment)> variables, Expression expression, bool onlyConstructRef)
 		{
 			var visited    = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
-			var duplicates = new Dictionary<Expression, Expression?>(ExpressionEqualityComparer.Instance);
+			var duplicates = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
 			expression.Visit(
-				(builder: this, duplicates, visited, onlyConstructRef),
+				(builder: this, root: expression, duplicates, visited, onlyConstructRef),
 				static (ctx, e) =>
 				{
 
@@ -66,63 +86,35 @@ namespace LinqToDB.Linq.Builder
 						checkForDuplicate = e is SqlGenericConstructorExpression || e is SqlAdjustTypeExpression ||
 						                    e is SqlReaderIsNullExpression       || e is ContextConstructionExpression;
 					}
-					/*else
-					{
-						if (e is MemberExpression me)
-						{
-							var current = me;
-							do
-							{
-								if (current.Expression is ContextRefExpression)
-								{
-									checkForDuplicate = true;
-									break;
-								}
 
-								if (current.Expression is MemberExpression me2)
-									current = me2;
-								else
-									break;
-							} while (true);
-						}
-					}*/
-
-					if (checkForDuplicate)
+					if (checkForDuplicate && !ReferenceEquals(e, ctx.root))
 					{
 						if (!ctx.visited.Add(e))
 						{
-							ctx.duplicates[e] = null;
+							ctx.duplicates.Add(e);;
+							return false;
 						}
 					}
+
+					return true;
 				});
 
 			if (duplicates.Count == 0)
 				return expression;
 
-			var globalGenerator = new ExpressionGenerator();
+			var replacements = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 
-			foreach (var d in duplicates.Keys.ToList())
+			foreach (var d in duplicates)
 			{
-				var variable = globalGenerator.AssignToVariable(d);
-				duplicates[d] = variable;
+				var variable   = Expression.Variable(d.Type, "v" + variables.Count);
+				variables.Add((variable, d));
+
+				replacements[d] = variable;
 			}
 
-			var corrected = expression.Transform(
-				(builder: this, duplicates),
-				static (ctx, e) =>
-				{
-					if ((e.NodeType == ExpressionType.Extension || e.NodeType == ExpressionType.MemberAccess) && ctx.duplicates.TryGetValue(e, out var replacement))
-					{
-						return replacement!;
-					}
+			var corrected = PerformReplacement(expression, replacements);
 
-					return e;
-				});
-
-			globalGenerator.AddExpression(corrected);
-
-			var result = globalGenerator.Build();
-			return result;
+			return corrected;
 		}
 
 		Expression FinalizeProjection<T>(
@@ -647,16 +639,41 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression FinalizeConstructors(IBuildContext context, Expression expression)
 		{
+			List<(ParameterExpression variable, Expression assignment)> variables = new();
+
+			expression = FinalizeConstructorInternal(context, expression, variables);
+
+			if (variables.Count > 0)
+			{
+				var expressionGenerator = new ExpressionGenerator();
+
+				for (var index = 0; index < variables.Count; index++)
+				{
+					var (variable, assignment) = variables[index];
+					expressionGenerator.AddVariable(variable);
+					var finalizedAssignment = FinalizeConstructorInternal(context, assignment, variables);
+					expressionGenerator.Assign(variable, finalizedAssignment);
+				}
+
+				expressionGenerator.AddExpression(expression);
+				expression = expressionGenerator.Build();
+			}
+
+			return expression;
+		}
+
+		Expression FinalizeConstructorInternal(IBuildContext context, Expression expression, List<(ParameterExpression variable, Expression assignment)> variables)
+		{
 			do
 			{
 				expression = BuildSqlExpression(context, expression, ProjectFlags.Expression);
 
 				expression = OptimizationContext.OptimizeExpressionTree(expression, true);
 
-				var deduplicated = Deduplicate(expression, true);
-				deduplicated = Deduplicate(deduplicated, false);
+				var deduplicated = Deduplicate(variables, expression, true);
+				deduplicated = Deduplicate(variables, deduplicated, false);
 
-				var reconstructed = deduplicated.Transform((builder: this, context), (ctx, e) =>
+				var reconstructed = deduplicated.Transform((builder : this, context), (ctx, e) =>
 				{
 					if (e is SqlGenericConstructorExpression generic)
 					{
@@ -667,12 +684,13 @@ namespace LinqToDB.Linq.Builder
 					return e;
 				});
 
-				if (ReferenceEquals(reconstructed, deduplicated))
-					return reconstructed;
-
 				expression = reconstructed;
 
+				if (ReferenceEquals(reconstructed, deduplicated))
+					break;
 			} while (true);
+
+			return expression;
 		}
 
 		sealed class SubQueryContextInfo
@@ -781,6 +799,11 @@ namespace LinqToDB.Linq.Builder
 			return info;
 		}
 
+		public static bool IsSingleElementContext(IBuildContext context)
+		{
+			return context is FirstSingleBuilder.FirstSingleContext;
+		}
+
 		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, ProjectFlags flags)
 		{
 			if (expr is ContextConstructionExpression or SqlGenericConstructorExpression or ConstantExpression or SqlEagerLoadExpression)
@@ -798,7 +821,7 @@ namespace LinqToDB.Linq.Builder
 			if (info.Context == null)
 				return null;
 
-			if (expr.Type.IsEnumerableType(info.Context.ElementType) && !flags.IsExpand())
+			if (!IsSingleElementContext(info.Context) && expr.Type.IsEnumerableType(info.Context.ElementType) && !flags.IsExpand())
 			{
 				var eager = (Expression)new SqlEagerLoadExpression(unwrapped);
 				if (expr.Type != eager.Type)

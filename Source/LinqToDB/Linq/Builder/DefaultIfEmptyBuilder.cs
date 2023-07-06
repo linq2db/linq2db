@@ -44,6 +44,9 @@ namespace LinqToDB.Linq.Builder
 
 				var expr = base.MakeExpression(path, flags);
 
+				if (ExpressionEqualityComparer.Instance.Equals(expr, path))
+					return path;
+
 				if (flags.IsTraverse() || flags.IsRoot())
 					return expr;
 

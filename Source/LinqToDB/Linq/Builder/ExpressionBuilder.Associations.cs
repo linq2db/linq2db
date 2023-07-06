@@ -237,12 +237,14 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			if (notNull.Type.IsValueType && !notNull.Type.IsNullable())
+			var notNullPath = notNull.Path;
+
+			if (notNullPath.Type.IsValueType && !notNullPath.Type.IsNullable())
 			{
-				notNull = notNull.MakeNullable();
+				notNullPath = Expression.Convert(notNullPath, typeof(Nullable<>).MakeGenericType(notNullPath.Type));
 			}
 
-			var notNullExpression = Expression.NotEqual(notNull, Expression.Constant(null, notNull.Type));
+			var notNullExpression = Expression.NotEqual(notNullPath, Expression.Constant(null, notNullPath.Type));
 
 			return notNullExpression;
 

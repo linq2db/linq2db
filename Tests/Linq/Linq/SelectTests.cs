@@ -785,8 +785,6 @@ namespace Tests.Linq
 					.ThenBy(q => q.InfoAll.Value2);
 
 				AssertQuery(query3);
-
-				var _ = query3.ToArray();
 			}
 		}
 

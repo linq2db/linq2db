@@ -53,10 +53,6 @@ namespace LinqToDB.Linq.Builder
 			if (root is not ContextRefExpression contextRef)
 				return false;
 
-			var enumerableType = typeof(IEnumerable<>).GetGenericType(contextRef.Type);
-			if (enumerableType == null)
-				return false;
-
 			if (contextRef.Type.IsEnumerableType(contextRef.BuildContext.ElementType))
 			{
 				using var query = ExpressionBuilder.QueryPool.Allocate();

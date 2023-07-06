@@ -1600,8 +1600,8 @@ namespace LinqToDB.Linq.Builder
 					var predicateExpr = ConvertCompareExpression(context, nodeType, leftAssignment.Expression, rightExpression, flags);
 					if (predicateExpr is not SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
 					{
-						if (strict)
-							return predicateExpr;
+						/*if (strict)
+							return predicateExpr;*/
 						continue;
 					}
 
