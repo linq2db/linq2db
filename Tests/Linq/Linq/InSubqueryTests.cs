@@ -110,9 +110,139 @@ namespace Tests.Linq
 		[Test]
 		public void ContainsNullTest([DataSources] string context, [Values(true, false)] bool preferExists)
 		{
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(preferExists)));
 
 			_ = db.Parent.Select(c => c.Value1).Contains(null);
+		}
+
+		[Test]
+		public void NutNull_In_NotNull_Test([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 2, 4 }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2, 3 }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
+				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+		}
+
+		[Test]
+		public void NutNull_NotIn_NotNull_Test([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 3 }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2 }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))).OrderBy(i => i),
+				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))).OrderBy(i => i));
+		}
+
+		[Test]
+		public void Null_In_NotNull_Test([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => (int?)p.ID))),
+				t1.         Where(t => t.ID.In(t2.         Select(p => (int?)p.ID))));
+		}
+
+		[Test]
+		public void Null_NotIn_NotNull_Test([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => (int?)p.ID))),
+				t1.         Where(t => t.ID.NotIn(t2.         Select(p => (int?)p.ID))));
+		}
+
+		[Test]
+		public void NutNull_In_Null_Test([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] {       1, 3       }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => ((int?)t.ID).In(t2.ToList().Select(p => p.ID))),
+				t1.         Where(t => ((int?)t.ID).In(t2.         Select(p => p.ID))));
+		}
+
+		[Test]
+		public void Null_In_Null_Test([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
+				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+		}
+
+		[Test]
+		public void Null_In_Null_Test2([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2       }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
+				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+		}
+
+		[Test]
+		public void Null_In_Null_Test3([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3,      }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
+				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+		}
+
+		[Test]
+		public void Null_NotIn_Null_Test2([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5       }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6, null }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
+				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
+		}
+
+		[Test]
+		public void Null_NotIn_Null_Test3([DataSources] string context, [Values(true, false)] bool preferExists)
+		{
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
+
+			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6       }.Select(i => new { ID = i }));
+
+			AreEqual(
+				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
+				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
 		}
 	}
 }

@@ -910,7 +910,7 @@ namespace LinqToDB.SqlQuery
 
 					case QueryElementType.SqlQuery:
 					{
-						var q = (SelectQuery)element;
+						var q  = (SelectQuery)element;
 						var fc = (SqlFromClause?)   ConvertInternal(q.From   ) ?? q.From;
 						var sc = (SqlSelectClause?) ConvertInternal(q.Select ) ?? q.Select;
 						var wc = (SqlWhereClause?)  ConvertInternal(q.Where  ) ?? q.Where;
