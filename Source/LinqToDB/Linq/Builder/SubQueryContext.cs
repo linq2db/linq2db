@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
-			var result = Builder.MakeExpression(SubQuery, corrected, flags);
+			var result = Builder.ConvertToSqlExpr(SubQuery, corrected, flags);
 
 			if (flags.IsTable() || flags.IsAggregationRoot())
 				return result;

@@ -60,20 +60,26 @@ namespace LinqToDB.Linq.Builder
 					return placeholder;
 				}
 
-				expr = Builder.BuildSqlExpression(this, expr, flags);
-				expr = Builder.UpdateNesting(this, expr);
+				expr = Builder.BuildSqlExpression(this, expr, flags.SqlFlag());
+				if (!flags.IsTest())
+				{
+					expr = Builder.UpdateNesting(this, expr);
+				}
 				expr = SequenceHelper.CorrectTrackingPath(expr, path);
 
-				if (flags.IsExpression() && expr.UnwrapConvert() is not SqlEagerLoadExpression)
+				if (!flags.IsKeys() && expr.UnwrapConvert() is not SqlEagerLoadExpression)
 				{
 					if (expr is SqlPlaceholderExpression placeholder)
 					{
-						var nullablePlaceholder = placeholder.MakeNullable();
-						if (path.Type != placeholder.Type)
+						if (flags.IsExpression())
 						{
-							return Expression.Condition(
-								Expression.NotEqual(nullablePlaceholder, Expression.Default(placeholder.Type)),
-								placeholder, Expression.Default(path.Type));
+							var nullablePlaceholder = placeholder.MakeNullable();
+							if (path.Type != placeholder.Type)
+							{
+								return Expression.Condition(
+									Expression.NotEqual(nullablePlaceholder, Expression.Default(placeholder.Type)),
+									placeholder, Expression.Default(path.Type));
+							}
 						}
 
 						return placeholder;
@@ -82,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
 
 					var notNull = placeholders
-						.FirstOrDefault(placeholder => !placeholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
+						.FirstOrDefault(p => !p.Sql.CanBeNullable(NullabilityContext.NonQuery));
 
 					if (notNull != null || _allowNullField)
 					{
@@ -102,7 +108,11 @@ namespace LinqToDB.Linq.Builder
 						var notNullExpression = Expression.NotEqual(notNull, Expression.Constant(null, notNull.Type));
 						if (expr is ContextConstructionExpression construct)
 							expr = construct.InnerExpression;
-						expr = new ContextConstructionExpression(this, Expression.Condition(notNullExpression, expr, defaultValue));
+
+						expr = Expression.Condition(notNullExpression, expr, defaultValue);
+
+						if (flags.IsExpression())
+							expr = new ContextConstructionExpression(this, expr);
 					}
 				}
 
