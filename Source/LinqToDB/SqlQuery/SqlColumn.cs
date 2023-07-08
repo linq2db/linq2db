@@ -172,7 +172,7 @@ namespace LinqToDB.SqlQuery
 #else
 			if (Expression is SqlField)
 			{
-				using var sb = Pools.StringBuilder.Allocate();
+				using var sb = Common.Internal.Pools.StringBuilder.Allocate();
 				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
 			}
 
