@@ -29,13 +29,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InNullTest([DataSources] string context, [Values(true, false)] bool preferExists)
+		public void InConstTest([DataSources] string context, [Values(true, false)] bool preferExists)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists }));
 
 			var q =
 				from c in db.Parent
-				where db.Parent.Select(p => p.Value1).Contains(null)
+				where db.Parent.Select(p => p.Value1).Contains(1)
 				select c;
 
 			_ = q.ToList();
