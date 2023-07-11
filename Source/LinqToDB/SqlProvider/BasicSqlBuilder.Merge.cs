@@ -59,7 +59,7 @@ namespace LinqToDB.SqlProvider
 
 			BuildOutputSubclause(merge.Output);
 
-			BuildQueryExtensions(merge, true, true);
+			BuildQueryExtensions(merge, buildQueryHints: true, buildSubQueryHints: true);
 			BuildMergeTerminator(merge);
 		}
 
