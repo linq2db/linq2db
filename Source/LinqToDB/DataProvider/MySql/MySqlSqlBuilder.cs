@@ -599,7 +599,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				if (_hintBuilder.Length > 0 && _hintBuilder[_hintBuilder.Length - 1] != ' ')
 					_hintBuilder.Append(' ');
-				BuildQueryExtensions(_hintBuilder, statement.SqlQueryExtensions, null, " ", null, true, true);
+				BuildQueryExtensions(_hintBuilder, statement.SqlQueryExtensions, null, " ", null, buildQueryHints: true, buildSubQueryHints: true);
 			}
 
 			if (_isTopLevelBuilder && _hintBuilder!.Length > 0)
