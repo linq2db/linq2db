@@ -328,7 +328,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OrderByClause;     BuildOrderByClause    (deleteStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;       BuildOffsetLimit      (deleteStatement.SelectQuery);
 			BuildStep = Step.Output;            BuildOutputSubclause  (deleteStatement.GetOutputClause());
-			BuildStep = Step.QueryExtensions;   BuildQueryExtensions  (deleteStatement, false, true);
+			BuildStep = Step.QueryExtensions;   BuildQueryExtensions  (deleteStatement, buildQueryHints: false, buildSubQueryHints: true);
 		}
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
