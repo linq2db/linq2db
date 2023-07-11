@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
@@ -422,9 +423,27 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildQueryExtensions(SqlStatement statement, bool buildQueryHints, bool buildSubQueryHints)
 		{
+			List<SqlQueryExtension>? list = null;
+
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
+				list = statement.SelectQuery?.SqlQueryExtensions;
+
+			if (statement.SqlQueryExtensions is not null)
+			{
+				if (list is null)
+				{
+					list = statement.SqlQueryExtensions;
+				}
+				else
+				{
+					list = new (list);
+					list.AddRange(statement.SqlQueryExtensions);
+				}
+			}
+
+			if (list is not null)
 			{
 				var len = StringBuilder.Length;
 
@@ -441,7 +460,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(StringBuilder, list, null, prefix, Environment.NewLine, buildQueryHints, buildSubQueryHints);
 			}
 		}
 	}

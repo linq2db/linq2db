@@ -711,9 +711,9 @@ END;",
 
 			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
-				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
+				if (HintBuilder.Length > 0 && HintBuilder[^1] != ' ')
 					HintBuilder.Append(' ');
-				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null, true, true);
 			}
 
 			if (_isTopLevelBuilder && HintBuilder!.Length > 0)

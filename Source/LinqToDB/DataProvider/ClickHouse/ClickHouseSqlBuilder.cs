@@ -436,7 +436,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				BuildStep = Step.HavingClause   ; BuildHavingClause   (statement.SelectQuery);
 				BuildStep = Step.OrderByClause  ; BuildOrderByClause  (statement.SelectQuery);
 				BuildStep = Step.OffsetLimit    ; BuildOffsetLimit    (statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement, false, true);
 			}
 
 			if (insertClause.WithIdentity)
@@ -533,10 +533,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return base.BuildJoinType(join, condition);
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildQueryExtensions(SqlStatement statement, bool buildQueryHints, bool buildSubQueryHints)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null);
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null, buildQueryHints, buildSubQueryHints);
 		}
 
 		protected override void BuildFromExtensions(SelectQuery selectQuery)

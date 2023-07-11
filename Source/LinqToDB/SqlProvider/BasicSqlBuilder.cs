@@ -169,7 +169,7 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildSql();
 
-				if (Statement.SelectQuery != null && Statement.SelectQuery.HasSetOperators)
+				if (Statement.SelectQuery is { HasSetOperators: true })
 				{
 					foreach (var union in Statement.SelectQuery.SetOperators)
 					{
@@ -183,6 +183,17 @@ namespace LinqToDB.SqlProvider
 							optimizationContext, indent,
 							skipAlias);
 					}
+				}
+
+				switch (statement.QueryType)
+				{
+					case QueryType.Select :
+					case QueryType.Delete :
+					case QueryType.Update :
+					case QueryType.Insert :
+						BuildStep = Step.QueryExtensions;
+						BuildQueryExtensions(statement, true, false);
+						break;
 				}
 
 				FinalizeBuildQuery(statement);
@@ -317,7 +328,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OrderByClause;     BuildOrderByClause    (deleteStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;       BuildOffsetLimit      (deleteStatement.SelectQuery);
 			BuildStep = Step.Output;            BuildOutputSubclause  (deleteStatement.GetOutputClause());
-			BuildStep = Step.QueryExtensions;   BuildQueryExtensions  (deleteStatement);
+			BuildStep = Step.QueryExtensions;   BuildQueryExtensions  (deleteStatement, false, true);
 		}
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
@@ -361,7 +372,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OrderByClause;   BuildOrderByClause    (selectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit      (selectQuery);
 			BuildStep = Step.Output;          BuildOutputSubclause  (statement.GetOutputClause());
-			BuildStep = Step.QueryExtensions; BuildQueryExtensions  (statement);
+			BuildStep = Step.QueryExtensions; BuildQueryExtensions  (statement, false, true);
 		}
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
@@ -384,7 +395,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.HavingClause;    BuildHavingClause   (selectStatement.SelectQuery);
 			BuildStep = Step.OrderByClause;   BuildOrderByClause  (selectStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (selectStatement.SelectQuery);
-			BuildStep = Step.QueryExtensions; BuildQueryExtensions(selectStatement);
+			BuildStep = Step.QueryExtensions; BuildQueryExtensions(selectStatement, false, true);
 
 			TablePath = tablePath;
 			QueryName = queryName;
@@ -417,7 +428,7 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.HavingClause;    BuildHavingClause   (statement.SelectQuery);
 				BuildStep = Step.OrderByClause;   BuildOrderByClause  (statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement, false, true);
 			}
 
 			if (insertClause.WithIdentity)
@@ -445,7 +456,7 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.HavingClause;    BuildHavingClause   (statement.SelectQuery);
 				BuildStep = Step.OrderByClause;   BuildOrderByClause  (statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement, false, true);
 			}
 
 			if (insertClause.WithIdentity)
@@ -1934,9 +1945,12 @@ namespace LinqToDB.SqlProvider
 		protected void BuildQueryExtensions(
 			StringBuilder sb,
 			List<SqlQueryExtension> sqlQueryExtensions,
-			string? prefix, string delimiter, string? suffix)
+			string? prefix, string delimiter, string? suffix,
+			bool buildQueryHints, bool buildSubQueryHints)
 		{
-			if (sqlQueryExtensions.Any(ext => ext.Scope is Sql.QueryExtensionScope.QueryHint or Sql.QueryExtensionScope.SubQueryHint))
+			if (sqlQueryExtensions.Any(ext =>
+				ext.Scope == Sql.QueryExtensionScope.QueryHint    && buildQueryHints ||
+				ext.Scope == Sql.QueryExtensionScope.SubQueryHint && buildSubQueryHints))
 			{
 				if (prefix != null)
 					sb.Append(prefix);
@@ -3840,7 +3854,7 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildQueryExtensions
 
-		protected virtual void BuildQueryExtensions(SqlStatement statement)
+		protected virtual void BuildQueryExtensions(SqlStatement statement, bool buildQueryHints, bool buildSubQueryHints)
 		{
 		}
 

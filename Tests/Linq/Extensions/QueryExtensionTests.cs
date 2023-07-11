@@ -104,7 +104,7 @@ namespace Tests.Extensions
 
 			string? current = null;
 
-			if (context.IsAnyOf(TestProvName.AllAccess         )) current = accessHints;
+			if      (context.IsAnyOf(TestProvName.AllAccess    )) current = accessHints;
 			else if (context.IsAnyOf(TestProvName.AllOracle    )) current = oracleHints;
 			else if (context.IsAnyOf(TestProvName.AllMySql     )) current = mySqlHints;
 			else if (context.IsAnyOf(ProviderName.SqlCe        )) current = sqlCeHints;
@@ -120,6 +120,37 @@ namespace Tests.Extensions
 					else                Assert.That(LastQuery, Is.Not.Contains(sql));
 				}
 			}
+		}
+
+		[Test]
+		public void UnionTest([DataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from t in db.Child.TableID("ch")
+				select t
+			)
+			.Union
+			(
+				from t in db.Child.TableID("ch1")
+				where t.ChildID < 10
+				select t
+			)
+			.AsSqlServer()
+				.WithReadUncommittedInScope()
+				.OptionRecompile()
+			.AsOracle()
+				.ParallelHint(2)
+			.AsAccess()
+				.WithOwnerAccessOption()
+			.AsMySql()
+				.MaxExecutionTimeHint(1000)
+			.AsPostgreSQL()
+				.ForShareHint(Sql.TableAlias("ch"));
+
+			_ = q.ToList();
 		}
 	}
 }

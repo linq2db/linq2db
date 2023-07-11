@@ -477,10 +477,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.BuildJoinType(join, condition);
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildQueryExtensions(SqlStatement statement, bool buildQueryHints, bool buildSubQueryHints)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")");
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")", buildQueryHints, buildSubQueryHints);
 		}
 	}
 }

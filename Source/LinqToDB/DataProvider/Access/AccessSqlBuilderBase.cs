@@ -357,10 +357,10 @@ namespace LinqToDB.DataProvider.Access
 			return sb;
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildQueryExtensions(SqlStatement statement, bool buildQueryHints, bool buildSubQueryHints)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null);
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null, buildQueryHints, buildSubQueryHints);
 
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
@@ -379,7 +379,7 @@ namespace LinqToDB.DataProvider.Access
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, buildQueryHints, buildSubQueryHints);
 			}
 		}
 
