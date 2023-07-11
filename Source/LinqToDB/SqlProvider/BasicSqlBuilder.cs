@@ -395,7 +395,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.HavingClause;    BuildHavingClause   (selectStatement.SelectQuery);
 			BuildStep = Step.OrderByClause;   BuildOrderByClause  (selectStatement.SelectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (selectStatement.SelectQuery);
-			BuildStep = Step.QueryExtensions; BuildQueryExtensions(selectStatement, false, true);
+			BuildStep = Step.QueryExtensions; BuildQueryExtensions(selectStatement, buildQueryHints: false, buildSubQueryHints: true);
 
 			TablePath = tablePath;
 			QueryName = queryName;
