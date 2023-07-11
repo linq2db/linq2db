@@ -4,6 +4,7 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -2707,5 +2708,28 @@ namespace Tests.Linq
 			Assert.AreEqual(700, retval[1].TOTALUNITS);
 		}
 		#endregion
+
+		[Test]
+		public void GroupSubqueryTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			_ =
+			(
+				from pmp in
+				(
+					from p  in db.Parent
+					join ins in db.Person on p.ParentID equals ins.ID
+					from pmp  in db.Child
+					group pmp by new { ID = ins.ID, pmp.ParentID, pmp } into g
+					select new { g.Key.ID, g.Key.ParentID, Field1 = g.Max(x => x.ChildID) }
+				)
+				//.AsSubQuery()
+				from pmp1 in db.Child
+				group pmp1 by pmp.ID into g
+				select new { g.Key, Field1 = g.Max(x => x.ChildID )}
+			)
+			.ToList();
+		}
 	}
 }
