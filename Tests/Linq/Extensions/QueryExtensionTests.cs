@@ -134,7 +134,7 @@ namespace Tests.Extensions
 			)
 			.Union
 			(
-				from t in db.Child.TableID("ch1")
+				from t in db.Child
 				where t.ChildID < 10
 				select t
 			)
