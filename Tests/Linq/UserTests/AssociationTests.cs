@@ -14,7 +14,8 @@ namespace Tests.UserTests
 		{
 			[MapValue(1)] Value1 = 1,
 			[MapValue(2)] Value2 = 2,
-			[MapValue(4)] Value3 = 3
+			[MapValue(4)] Value3 = 3,
+			[MapValue(5)] Value5 = 5,
 		}
 
 		[Table]
