@@ -16,7 +16,7 @@ namespace LinqToDB.Common
 
 	public static class ConvertBuilder
 	{
-		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
+		internal static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
 
 		static object ConvertDefault(object value, Type conversionType)
 		{
