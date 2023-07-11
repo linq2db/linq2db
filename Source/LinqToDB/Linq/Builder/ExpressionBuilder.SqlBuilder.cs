@@ -1034,7 +1034,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e  = (SwitchExpression)expression;
 					var d  = e.DefaultBody == null ||
-					         e.DefaultBody is not UnaryExpression { NodeType : ExpressionType.Convert, Operand : MethodCallExpression { Method : var m } } || m != ConvertBuilder._defaultConverter;
+					         e.DefaultBody is not UnaryExpression { NodeType : ExpressionType.Convert, Operand : MethodCallExpression { Method : var m } } || m != ConvertBuilder.DefaultConverter;
 					var ps = new ISqlExpression[e.Cases.Count * 2 + (d? 1 : 0)];
 					var sv = ConvertToSql(context, e.SwitchValue);
 
