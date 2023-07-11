@@ -372,7 +372,7 @@ namespace LinqToDB.SqlProvider
 			BuildStep = Step.OrderByClause;   BuildOrderByClause    (selectQuery);
 			BuildStep = Step.OffsetLimit;     BuildOffsetLimit      (selectQuery);
 			BuildStep = Step.Output;          BuildOutputSubclause  (statement.GetOutputClause());
-			BuildStep = Step.QueryExtensions; BuildQueryExtensions  (statement, false, true);
+			BuildStep = Step.QueryExtensions; BuildQueryExtensions  (statement, buildQueryHints: false, buildSubQueryHints: true);
 		}
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
