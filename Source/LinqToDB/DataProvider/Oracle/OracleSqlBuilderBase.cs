@@ -713,7 +713,7 @@ END;",
 			{
 				if (HintBuilder.Length > 0 && HintBuilder[^1] != ' ')
 					HintBuilder.Append(' ');
-				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null, true, true);
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null, buildQueryHints: true, buildSubQueryHints: true);
 			}
 
 			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
