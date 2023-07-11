@@ -89,8 +89,6 @@ namespace LinqToDB.Linq.Builder
 			if (flags.IsTraverse())
 				return result;
 
-			result = Builder.ConvertToSqlExpr(SubQuery, result, flags);
-
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
 				result = SequenceHelper.CorrectTrackingPath(result, path);

@@ -1138,6 +1138,8 @@ namespace LinqToDB.SqlQuery
 
 			var subQuery = new SelectQuery();
 
+			subQuery.DoNotRemove = true;
+
 			var columnsMap = new Dictionary<IQueryElement, SqlColumn>();
 			foreach (var expr in uniqueColumns)
 			{

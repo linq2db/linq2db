@@ -248,7 +248,7 @@ namespace LinqToDB.Linq.Builder
 					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, path);
 
 					var memberPath = TableLikeHelpers.GetMemberPath(isTargetAssociation ? path : subqueryPath);
-					var placeholders = ExpressionBuilder.CollectPlaceholders2(correctedPath, memberPath).ToList();
+					var placeholders = ExpressionBuilder.CollectPlaceholders(correctedPath);
 					var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, Source, Source.SourceFields, _knownMap, correctedPath, placeholders);
 
 					return remapped;

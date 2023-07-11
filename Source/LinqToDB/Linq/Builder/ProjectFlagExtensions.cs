@@ -149,5 +149,12 @@ namespace LinqToDB.Linq.Builder
 			return (flags & ProjectFlags.Subquery) != 0;
 		}
 
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsExtractProjection(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.ExtractProjection) != 0;
+		}
+
 	}
 }

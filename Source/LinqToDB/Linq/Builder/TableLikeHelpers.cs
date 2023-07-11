@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -91,12 +92,12 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression RemapToFields(
-			IBuildContext                                                   subQueryContext, 
-			ISqlTableSource?                                                parentTable, 
-			List<SqlField>                                                  fields, 
-			Dictionary<Expression, SqlPlaceholderExpression>                knownMap, 
-			Expression                                                      expression, 
-			List<(SqlPlaceholderExpression placeholder, MemberInfo[] path)> placeholders)
+			IBuildContext                                    subQueryContext, 
+			ISqlTableSource?                                 parentTable, 
+			List<SqlField>                                   fields, 
+			Dictionary<Expression, SqlPlaceholderExpression> knownMap, 
+			Expression                                       expression, 
+			List<SqlPlaceholderExpression>                   placeholders)
 		{
 			if (placeholders.Count == 0)
 				return expression;
@@ -107,7 +108,7 @@ namespace LinqToDB.Linq.Builder
 
 			for (var index = 0; index < placeholders.Count; index++)
 			{
-				var (placeholder, path) = placeholders[index];
+				var placeholder = placeholders[index];
 
 				if (placeholder.TrackingPath == null)
 					continue;
@@ -122,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 					var field = RegisterFieldMapping(fields, updatedPlaceholder.Index!.Value, () =>
 					{
-						var alias = (path.Length > 0 ? GenerateColumnAlias(path) : GenerateColumnAlias(updatedPlaceholder.Path)) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
+						var alias = GenerateColumnAlias(updatedPlaceholder.Path) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
 						var dataType = QueryHelper.GetDbDataType(updatedPlaceholder.Sql);
 						var newField = new SqlField(dataType, alias, updatedPlaceholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
 
@@ -151,6 +152,21 @@ namespace LinqToDB.Linq.Builder
 				if (!ReferenceEquals(newPlaceholder, placeholder))
 					needsTransformation = true;
 
+				if (placeholder.Type != newPlaceholder.Type)
+				{
+					if (placeholder.Type.IsNullable())
+					{
+						if (!newPlaceholder.Type.IsNullable())
+							newPlaceholder = newPlaceholder.MakeNullable();
+					}
+					else
+					{
+						if (newPlaceholder.Type.IsNullable())
+							newPlaceholder = newPlaceholder.MakeNotNullable();
+
+					}
+				}
+
 				newPlaceholders[index] = newPlaceholder;
 			}
 
@@ -161,7 +177,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (e.NodeType == ExpressionType.Extension && e is SqlPlaceholderExpression placeholder)
 				{
-					var index = ctx.placeholders.FindIndex(pi => pi.placeholder == placeholder);
+					var index = ctx.placeholders.IndexOf(placeholder);
 					if (index >= 0)
 					{
 						return ctx.newPlaceholders[index];

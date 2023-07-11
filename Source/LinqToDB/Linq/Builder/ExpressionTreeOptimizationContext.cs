@@ -534,7 +534,7 @@ namespace LinqToDB.Linq.Builder
 		Dictionary<Expression, bool>? _isServerSideOnlyCache;
 
 		private FindVisitor<ExpressionTreeOptimizationContext>? _isServerSideOnlyVisitor;
-		public bool IsServerSideOnly(Expression expr)
+		public bool IsServerSideOnly(Expression expr, bool inProjection)
 		{
 			if (_isServerSideOnlyCache != null && _isServerSideOnlyCache.TryGetValue(expr, out var result))
 				return result;
@@ -556,7 +556,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (l != null)
 						{
-							result = IsServerSideOnly(l.Body.Unwrap());
+							result = IsServerSideOnly(l.Body.Unwrap(), inProjection);
 						}
 						else
 						{
@@ -575,7 +575,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (l != null)
 						{
-							result = (_isServerSideOnlyVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.IsServerSideOnly(e))).Find(l.Body.Unwrap()) != null;
+							result = (_isServerSideOnlyVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, (ctx, e) => ctx.IsServerSideOnly(e, inProjection))).Find(l.Body.Unwrap()) != null;
 						}
 						else
 						{
@@ -588,8 +588,14 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Extension:
 					{
-						if (expr is ContextRefExpression || expr is SqlGenericConstructorExpression || expr is SqlGenericParamAccessExpression)
-							result = true;
+						if (!inProjection)
+						{
+							if (expr is ContextRefExpression || expr is SqlGenericConstructorExpression ||
+							    expr is SqlGenericParamAccessExpression)
+							{
+								result = true;
+							}
+						}
 						break;
 					}
 				}
@@ -705,7 +711,7 @@ namespace LinqToDB.Linq.Builder
 
 		private bool CanBeCompiledFind(CanBeCompiledContext context, Expression ex)
 		{
-			if (IsServerSideOnly(ex))
+			if (IsServerSideOnly(ex, context.InProjection))
 				return true;
 
 			switch (ex.NodeType)
@@ -754,7 +760,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Extension:
 				{
 					if (ex is ContextRefExpression)
-						return true;
+						return !context.InProjection;
 					if (ex is SqlErrorExpression)
 						return true;
 					if (ex is SqlPlaceholderExpression)

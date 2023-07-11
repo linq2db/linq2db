@@ -264,8 +264,21 @@ namespace LinqToDB.Linq.Builder
 					{
 						var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression,
 							buildInfo.GetFlags());
-						sql = new SqlFunction(methodCall.Type, "CASE", sqlPlaceholder.Sql, new SqlValue(1),
-							new SqlValue(methodCall.Type, null));
+
+						if (isSimple)
+						{
+							sql = new SqlFunction(methodCall.Type, "CASE", sqlPlaceholder.Sql, new SqlValue(1),
+								new SqlValue(methodCall.Type, null));
+						}
+						else
+						{
+							if (sqlPlaceholder.Sql is not SqlSearchCondition sc)
+								throw new InvalidOperationException(
+									$"Expected SearchCondition, but found: '{sqlPlaceholder.Sql}'");
+
+							sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
+							placeholderSequence.SelectQuery.Where.ConcatSearchCondition(sc);
+						}
 					}
 					else
 					{

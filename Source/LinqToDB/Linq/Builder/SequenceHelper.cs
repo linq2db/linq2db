@@ -293,8 +293,10 @@ namespace LinqToDB.Linq.Builder
 						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
 					}
 
-					var newExpression = RemapToNewPath(buildContext, assignment.Expression,
-						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo), flags);
+					var newExpression = RemapToNewPath(buildContext,
+						assignment.Expression,
+						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo), flags
+					);
 
 					if (!ReferenceEquals(assignment.Expression, newExpression))
 					{
@@ -372,6 +374,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is SqlPlaceholderExpression placeholder)
 			{
+				if (QueryHelper.IsNullValue(placeholder.Sql))
+					return Expression.Default(placeholder.Type);
+
 				if (placeholder.Type == toPath.Type)
 				{
 					return toPath;
@@ -454,6 +459,11 @@ namespace LinqToDB.Linq.Builder
 			if (expression is SqlEagerLoadExpression eager)
 			{
 				return eager;
+			}
+
+			if (expression is DefaultExpression or DefaultValueExpression)
+			{
+				return expression;
 			}
 
 			if (flags.IsExpression())

@@ -132,20 +132,20 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression ConvertExpression(Expression expression)
 		{
-			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e)))
+			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e, false)))
 				.Transform(expression);
 		}
 
-		public Expression ConvertSingleExpression(Expression expression)
+		public Expression ConvertSingleExpression(Expression expression, bool inProjection)
 		{
-			return ConvertExpressionTransformer(expression).Expression;
+			return ConvertExpressionTransformer(expression, inProjection).Expression;
 		}
 
 		private TransformInfoVisitor<ExpressionBuilder>? _convertExpressionTransformer;
 
-		private TransformInfo ConvertExpressionTransformer(Expression e)
+		private TransformInfo ConvertExpressionTransformer(Expression e, bool inProjection)
 		{
-			if (CanBeConstant(e) || CanBeCompiled(e, false))
+			if (CanBeConstant(e) || CanBeCompiled(e, inProjection))
 				//if ((CanBeConstant(e) || CanBeCompiled(e)) && !PreferServerSide(e))
 				return new TransformInfo(e, true);
 
@@ -635,7 +635,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							sql = BuildConstant(newExpr, columnDescriptor);
 						}
-						else if (CanBeCompiled(newExpr, false))
+						else if (CanBeCompiled(newExpr, flags.IsExpression()))
 						{
 							if ((newExpr.NodeType == ExpressionType.MemberInit ||
 							     newExpr.NodeType == ExpressionType.New) 
@@ -1166,9 +1166,9 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
-		public bool IsServerSideOnly(Expression expr)
+		public bool IsServerSideOnly(Expression expr, bool inProjection)
 		{
-			return _optimizationContext.IsServerSideOnly(expr);
+			return _optimizationContext.IsServerSideOnly(expr, inProjection);
 		}
 
 		#endregion
@@ -3926,6 +3926,11 @@ namespace LinqToDB.Linq.Builder
 					//throw new InvalidOperationException("Stack overflow detected.");
 				}
 
+				if (flags.IsExtractProjection())
+				{
+
+				}
+
 				var result = context.MakeExpression(expr, projectFlags);
 
 				Debug.WriteLine($"({counter})Result: {result}");
@@ -4010,10 +4015,11 @@ namespace LinqToDB.Linq.Builder
 
 			ContextRefExpression? rootContext = null;
 
-			if (!flags.IsTest() && flags.IsExpression() && path is MethodCallExpression tmc && tmc.Method.Name == nameof(Enumerable.FirstOrDefault))
+			/*if (!flags.IsTest() && flags.IsExpression() && path is MethodCallExpression tmc && tmc.Method.Name == nameof(Enumerable.FirstOrDefault))
 			{
 
 			}
+			*/
 
 			if (path is MemberExpression memberExpression && memberExpression.Expression != null)
 			{
@@ -4256,6 +4262,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
+					/*
 					if (!handled && !flags.IsExpression())
 					{
 						var converted = ConvertExpression(path);
@@ -4265,30 +4272,35 @@ namespace LinqToDB.Linq.Builder
 							handled    = true;
 						}
 					}
+					*/
 
 					if (!handled)
 					{
 						var applyConvert = true;
-						if (currentContext != null && flags.HasFlag(ProjectFlags.Expression))
+						if (currentContext != null && flags.IsSql())
 						{
 							if (CanBeCompiled(path, true) || CanBeConstant(path))
 							{
 								applyConvert = false;
 							}
 
-							if (applyConvert && path is MethodCallExpression mc)
+							/*if (applyConvert && path is MethodCallExpression mc)
 							{
 								var converted = ConvertSingleExpression(path);
 								if (!ReferenceEquals(converted, path))
 								{
 									return MakeExpression(currentContext, converted, flags);
 								}
-							}
+							}*/
 						}
 
-						if (applyConvert)
+						if (applyConvert && (flags.IsSql() || flags.IsExpression()))
 						{
-							var converted = ConvertSingleExpression(path);
+							if (flags.IsExpression())
+							{
+
+							}
+							var converted = ConvertSingleExpression(path, flags.IsExpression());
 							if (!ReferenceEquals(converted, path))
 							{
 								expression = MakeExpression(currentContext, converted, flags);

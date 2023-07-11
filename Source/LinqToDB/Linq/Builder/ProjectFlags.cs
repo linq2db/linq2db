@@ -36,5 +36,7 @@ namespace LinqToDB.Linq.Builder
 		Traverse = 0x800,	
 
 		Subquery = 0x1000,	
+		
+		ExtractProjection = 0x2000,	
 	}
 }

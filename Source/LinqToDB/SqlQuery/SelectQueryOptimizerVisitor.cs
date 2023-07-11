@@ -601,7 +601,6 @@ namespace LinqToDB.SqlQuery
 
 		internal bool ResolveWeakJoins(SelectQuery selectQuery)
 		{
-			EnsureReferencesCorrected(selectQuery);
 			var isModified = false;
 
 			foreach (var table in selectQuery.From.Tables)
@@ -1129,6 +1128,9 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.From.Tables.Count > 1)
 				return false;
 
+			if (subQuery.DoNotRemove)
+				return false;
+
 			if (_currentSetOperator?.SelectQuery == selectQuery || selectQuery.HasSetOperators)
 			{
 				// processing parent query as part of Set operation
@@ -1178,14 +1180,26 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (subQuery.Select.HasModifier)
+			if (subQuery.Select.IsDistinct != selectQuery.Select.IsDistinct)
 			{
-				// handling case when we have two DISTINCT
-				// Note, columns already checked above
-				//
-				if (!subQuery.Select.IsDistinct || !selectQuery.Select.IsDistinct)
+				if (subQuery.Select.IsDistinct)
 				{
-					return false;
+					// Columns in parent query should match
+					//
+					if (subQuery.Select.Columns.Count != selectQuery.Select.Columns.Count)
+						return false;
+
+					if (!subQuery.Select.Columns.All(sc =>
+						    selectQuery.Select.Columns.Any(pc => ReferenceEquals(pc.Expression, sc))))
+					{
+						return false;
+					}
+				}
+				else
+				{
+					// handling case when we have two DISTINCT
+					// Note, columns already checked above
+					//
 				}
 			}
 
@@ -1194,6 +1208,9 @@ namespace LinqToDB.SqlQuery
 				if (tableSource.Joins.Count > 0)
 					return false;
 				if (selectQuery.From.Tables.Count > 1)
+					return false;
+
+				if (!selectQuery.Select.OrderBy.IsEmpty)
 					return false;
 
 				if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
@@ -1230,6 +1247,9 @@ namespace LinqToDB.SqlQuery
 				if (selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationFunction(c.Expression)))
 					return false;
 			}
+
+			if (subQuery.Select.TakeHints != null && selectQuery.Select.TakeValue != null)
+				return false;
 
 			if (subQuery.HasSetOperators)
 			{
@@ -1298,7 +1318,7 @@ namespace LinqToDB.SqlQuery
 
 			if (subQuery.Select.TakeValue != null)
 			{
-				selectQuery.Select.TakeValue = subQuery.Select.TakeValue;
+				selectQuery.Select.Take(subQuery.Select.TakeValue, subQuery.Select.TakeHints);
 			}
 
 			if (subQuery.Select.SkipValue != null)
@@ -1324,7 +1344,9 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.From.Tables.Count == 1)
 			{
 				var subQueryTableSource = subQuery.From.Tables[0];
-				tableSource.Joins.InsertRange(0, subQueryTableSource.Joins);
+
+				if (subQueryTableSource.Joins.Count > 0)
+					tableSource.Joins.InsertRange(0, subQueryTableSource.Joins);
 
 				tableSource.Source = subQueryTableSource.Source;
 
@@ -1431,11 +1453,13 @@ namespace LinqToDB.SqlQuery
 				if (OptimizeApplies(element.SelectQuery, _flags.IsApplyJoinSupported))
 				{
 					isModified = true;
+					EnsureReferencesCorrected(element.SelectQuery);
 				}
 
 				if (ResolveWeakJoins(element.SelectQuery))
 				{
 					isModified = true;
+					EnsureReferencesCorrected(element.SelectQuery);
 				}
 
 				if (!isModified)
@@ -1482,8 +1506,6 @@ namespace LinqToDB.SqlQuery
 
 		bool OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)
 		{
-			EnsureReferencesCorrected(selectQuery);
-
 			var tableSources = new HashSet<ISqlTableSource>();
 
 			var optimized = false;

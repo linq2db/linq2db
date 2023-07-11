@@ -128,9 +128,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, subqueryPath);
 
-			var memberPath = TableLikeHelpers.GetMemberPath(subqueryPath);
 			correctedPath = RemapRecursive(correctedPath);
-			var placeholders = ExpressionBuilder.CollectPlaceholders2(correctedPath, memberPath).ToList();
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(correctedPath);
 
 			var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, null, CteClause.Fields, _knownMap, correctedPath,
 				placeholders);
