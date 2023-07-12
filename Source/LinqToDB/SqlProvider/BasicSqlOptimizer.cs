@@ -3114,8 +3114,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			var (tableSource, _) = FindTableSource(new Stack<IQueryElement>(), updateStatement.SelectQuery, updateStatement.Update.Table!);
-			if (tableSource != null)
-				tableSource.Alias = "$F";
 
 			if (tableSource == null)
 			{
@@ -3327,8 +3325,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			CorrectUpdateSetters(statement);
-
-			tableToUpdate.Alias = "$F";
 
 			statement.Update.Table = tableToUpdate;
 

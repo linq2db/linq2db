@@ -82,8 +82,17 @@ namespace LinqToDB.Linq.Builder
 				{
 					// int Update<T>(this IUpdateable<T> source)
 
-					objectType       = genericArguments[0];
-					outputExpression = RewriteOutputExpression(outputExpression);
+					objectType                = genericArguments[0];
+					outputExpression          = RewriteOutputExpression(outputExpression);
+
+					if (updateContext.TargetTable == null)
+					{
+						var tableContext = SequenceHelper.GetTableOrCteContext(sequence);
+						if (tableContext == null)
+							throw new LinqToDBException("Cannot find target table for UPDATE statement");
+
+						updateContext.TargetTable = tableContext;
+					}
 
 					break;
 				}

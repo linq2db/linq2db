@@ -75,8 +75,8 @@ namespace LinqToDB.Linq.Builder
 			var outerKeySelector = SequenceHelper.PrepareBody(outerKeyLambda, outerContext).Unwrap();
 			var innerKeySelector = SequenceHelper.PrepareBody(innerKeyLambda, innerKeyContext).Unwrap();
 
-			outerKeySelector = builder.ConvertToSqlExpr(outerContext, outerKeySelector, buildInfo.GetFlags());
-			innerKeySelector = builder.ConvertToSqlExpr(innerContext, innerKeySelector, buildInfo.GetFlags());
+			outerKeySelector = builder.ConvertToSqlExpr(outerContext, outerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys));
+			innerKeySelector = builder.ConvertToSqlExpr(innerContext, innerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys));
 
 			var compareSearchCondition = builder.GenerateComparison(outerContext, outerKeySelector, innerKeySelector, buildInfo.GetFlags());
 

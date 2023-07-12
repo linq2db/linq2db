@@ -719,6 +719,9 @@ namespace LinqToDB.Linq.Builder
 					if (expression.Find(1, (_, e) => e is SqlEagerLoadExpression) != null)
 						yield break;
 
+					if (expression.IsNullValue())
+						yield break;
+
 					yield return currentPath;
 				}
 			}

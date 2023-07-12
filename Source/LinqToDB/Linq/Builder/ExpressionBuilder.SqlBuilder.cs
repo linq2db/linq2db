@@ -132,20 +132,20 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression ConvertExpression(Expression expression)
 		{
-			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e, false)))
+			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e, false, true)))
 				.Transform(expression);
 		}
 
 		public Expression ConvertSingleExpression(Expression expression, bool inProjection)
 		{
-			return ConvertExpressionTransformer(expression, inProjection).Expression;
+			return ConvertExpressionTransformer(expression, inProjection, false).Expression;
 		}
 
 		private TransformInfoVisitor<ExpressionBuilder>? _convertExpressionTransformer;
 
-		private TransformInfo ConvertExpressionTransformer(Expression e, bool inProjection)
+		private TransformInfo ConvertExpressionTransformer(Expression e, bool inProjection, bool checkOther)
 		{
-			if (CanBeConstant(e) || CanBeCompiled(e, inProjection))
+			if (checkOther && (CanBeConstant(e) || CanBeCompiled(e, inProjection)))
 				//if ((CanBeConstant(e) || CanBeCompiled(e)) && !PreferServerSide(e))
 				return new TransformInfo(e, true);
 
@@ -1819,24 +1819,6 @@ namespace LinqToDB.Linq.Builder
 						context.SelectQuery.IsParameterDependent = true;
 					}
 
-					// | (SqlQuery(Select([]) as q), SqlValue(null))
-					// | (SqlValue(null), SqlQuery(Select([]) as q))  =>
-
-					var q =
-						l.ElementType == QueryElementType.SqlQuery &&
-						r.ElementType == QueryElementType.SqlValue &&
-						((SqlValue)r).Value == null &&
-						((SelectQuery)l).Select.Columns.Count == 0 ?
-							(SelectQuery)l :
-						r.ElementType == QueryElementType.SqlQuery &&
-						l.ElementType == QueryElementType.SqlValue &&
-						((SqlValue)l).Value == null &&
-						((SelectQuery)r).Select.Columns.Count == 0 ?
-							(SelectQuery)r :
-							null;
-
-					q?.Select.Columns.Add(new SqlColumn(q, new SqlValue(1)));
-
 					break;
 			}
 
@@ -1929,17 +1911,14 @@ namespace LinqToDB.Linq.Builder
 				var compareNullsAsValues = CompareNullsAsValues;
 
 				// Force nullability
-				if (QueryHelper.IsNullValue(lOriginal) && !QueryHelper.IsNullValue(rOriginal))
+				if (QueryHelper.IsNullValue(lOriginal))
 				{
-					if (!rOriginal.CanBeNullable(nullability))
-						rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, true);
+					rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, true);
 				}
-				else if (QueryHelper.IsNullValue(rOriginal) && !QueryHelper.IsNullValue(lOriginal))
+				else if (QueryHelper.IsNullValue(rOriginal))
 				{
-					if (!lOriginal.CanBeNullable(nullability))
-						lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, true);
+					lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, true);
 				}
-
 
 				if (compareNullsAsValues)
 				{
@@ -4294,17 +4273,20 @@ namespace LinqToDB.Linq.Builder
 							}*/
 						}
 
-						if (applyConvert && (flags.IsSql() || flags.IsExpression()))
+						if (applyConvert && (flags.IsSql() || flags.IsExpression() || flags.IsExpand() || flags.IsTraverse()))
 						{
-							if (flags.IsExpression())
-							{
-
-							}
 							var converted = ConvertSingleExpression(path, flags.IsExpression());
 							if (!ReferenceEquals(converted, path))
 							{
-								expression = MakeExpression(currentContext, converted, flags);
-								handled    = true;
+								if (currentContext != null && flags.IsExpression() && path is MethodCallExpression mc && mc.Arguments.All(a => IsSimpleForCompilation(currentContext, a)))
+								{
+									
+								}
+								else
+								{
+									expression = MakeExpression(currentContext, converted, flags);
+									handled    = true;
+								}
 							}
 						}
 					}
@@ -4367,6 +4349,14 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expression;
+		}
+
+		public bool IsSimpleForCompilation(IBuildContext context, Expression expr)
+		{
+			if (CanBeConstant(expr))
+				return true;
+			var    sqlExpr = ConvertToSqlExpr(context, expr, ProjectFlags.SQL | ProjectFlags.Test);
+			return sqlExpr is SqlPlaceholderExpression;
 		}
 
 		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder, bool asNew = false)

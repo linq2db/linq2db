@@ -613,7 +613,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var sources = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(join.Table));
 						var ignore  = new HashSet<IQueryElement> { join };
-						if (QueryHelper.IsDependsOnSources(selectQuery, sources, ignore))
+						if (QueryHelper.IsDependsOnSources(_rootElement, sources, ignore))
 						{
 							join.IsWeak = false;
 							continue;

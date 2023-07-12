@@ -68,7 +68,11 @@ namespace LinqToDB.Linq.Builder
 					return path;
 
 				var corrected = SequenceHelper.CorrectExpression(path, this, Context);
-				var result    = Builder.BuildSqlExpression(Context, corrected, flags.SqlFlag());
+
+				if (flags.IsTable() || flags.IsTraverse())
+					return corrected;
+
+				var result = Builder.BuildSqlExpression(Context, corrected, flags.SqlFlag());
 				result = Builder.UpdateNesting(Context, result);
 
 				return result;

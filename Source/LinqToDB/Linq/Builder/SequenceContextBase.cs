@@ -37,6 +37,9 @@ namespace LinqToDB.Linq.Builder
 			if (ExpressionEqualityComparer.Instance.Equals(newPath, result))
 				return path;
 
+			if (flags.IsTable())
+				return result;
+
 			result = SequenceHelper.CorrectExpression(result, Sequence, this);
 			return result;
 		}

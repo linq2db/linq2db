@@ -200,12 +200,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 			}
 
-			updateStatement.Update.Table!.Alias = "$F";
-
-			//if (updateStatement.Update.TableSource == null)
-			{
-				CorrectUpdateSetters(updateStatement);
-			}
+			CorrectUpdateSetters(updateStatement);
 
 			return updateStatement;
 		}

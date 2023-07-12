@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			ITableContext? table;
+			ITableContext? table = null;
 
 			LoadWithInfo lastLoadWith;
 
@@ -84,15 +84,22 @@ namespace LinqToDB.Linq.Builder
 					for(;;)
 					{
 						if (sequence is LoadWithContext lw)
+						{
 							sequence = lw.Context;
+						}
 						else
 							break;
 					}
 				}
+				else
+				{
+					if (sequence is LoadWithContext lw)
+						table = lw.RegisterContext as ITableContext;
+				}
 				
 				var path = SequenceHelper.PrepareBody(selector, sequence);
 
-				var extractResult = ExtractAssociations(builder, path, null);
+				var extractResult = ExtractAssociations(builder, table, path, null);
 
 				if (extractResult == null)
 					throw new LinqToDBException($"Unable to retrieve properties path for LoadWith/ThenLoad. Path: '{selector}'");
@@ -158,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 			return loadWithSequence;
 		}
 
-		static (ITableContext? context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
+		static (ITableContext? context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, ITableContext? parentContext, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
 
@@ -182,7 +189,7 @@ namespace LinqToDB.Linq.Builder
 				filterExpression = lambda;
 			}
 
-			var (context, members) = GetAssociations(builder, currentExpression, stopExpression);
+			var (context, members) = GetAssociations(builder, parentContext, currentExpression, stopExpression);
 			if (context == null)
 				return default;
 
@@ -193,9 +200,9 @@ namespace LinqToDB.Linq.Builder
 			return (context, loadWithInfos);
 		}
 
-		static (ITableContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, Expression expression, Expression? stopExpression)
+		static (ITableContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, ITableContext? parentContext, Expression expression, Expression? stopExpression)
 		{
-			ITableContext? context    = null;
+			ITableContext? context    = parentContext;
 			MemberInfo?    lastMember = null;
 
 			var members = new List<MemberInfo>();
@@ -261,6 +268,11 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.MemberAccess :
 						{
+							expression = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
+
+							if (expression.NodeType != ExpressionType.MemberAccess)
+								break;
+
 							var mexpr         = (MemberExpression)expression;
 							var member        = lastMember = mexpr.Member;
 							var isAssociation = builder.MappingSchema.HasAttribute<AssociationAttribute>(member.ReflectedType!, member);
@@ -273,7 +285,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (!isAssociation)
 							{
-								var projected = builder.MakeExpression(context, expression, ProjectFlags.Expand);
+								var projected = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
 								if (projected == expression)
 									throw new LinqToDBException($"Member '{expression}' is not an association.");
 								expression = projected;
@@ -303,7 +315,7 @@ namespace LinqToDB.Linq.Builder
 
 							if (expression is ContextRefExpression contextRef)
 							{
-								var newExpression = builder.MakeExpression(context, expression, ProjectFlags.AssociationRoot);
+								var newExpression = builder.MakeExpression(context, expression, ProjectFlags.Table);
 								if (!ReferenceEquals(newExpression, expression))
 								{
 									expression = newExpression;
@@ -333,7 +345,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return (context, members);
+			return (context ?? parentContext, members);
 		}
 
 		static LoadWithInfo MergeLoadWith(LoadWithInfo loadWith, LoadWithInfo[] defined)

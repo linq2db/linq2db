@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 				if (ExpressionEqualityComparer.Instance.Equals(expr, path))
 					return path;
 
-				if (flags.IsTraverse() || flags.IsRoot())
+				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable())
 					return expr;
 
 				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))

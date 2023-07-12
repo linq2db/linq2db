@@ -89,6 +89,9 @@ namespace LinqToDB.Linq.Builder
 			if (flags.IsTraverse())
 				return result;
 
+			if (ExpressionEqualityComparer.Instance.Equals(corrected, result))
+				return path;
+
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
 				result = SequenceHelper.CorrectTrackingPath(result, path);
