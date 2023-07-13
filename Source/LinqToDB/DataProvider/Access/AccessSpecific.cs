@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.DataProvider.Access
 {
 	using Linq;
@@ -35,7 +37,7 @@ namespace LinqToDB.DataProvider.Access
 
 	public static partial class AccessTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IAccessSpecificTable<TSource> AsAccess<TSource>(this ITable<TSource> table)
 			where TSource : notnull
@@ -48,7 +50,7 @@ namespace LinqToDB.DataProvider.Access
 			return new AccessSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IAccessSpecificQueryable<TSource> AsAccess<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull

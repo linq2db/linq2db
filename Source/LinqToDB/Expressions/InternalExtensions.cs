@@ -313,7 +313,8 @@ namespace LinqToDB.Expressions
 				enumerable && type == typeof(Enumerable) ||
 				type == typeof(LinqExtensions) ||
 				type == typeof(DataExtensions) ||
-				type == typeof(TableExtensions);
+				type == typeof(TableExtensions) ||
+				MemberCache.GetMemberInfo(method.Method).IsQueryable;
 		}
 
 		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)

@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Linq;
@@ -35,7 +37,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public static partial class SqlServerTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificTable<TSource> AsSqlServer<TSource>(this ITable<TSource> table)
 			where TSource : notnull
@@ -50,7 +52,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> AsSqlServer<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
