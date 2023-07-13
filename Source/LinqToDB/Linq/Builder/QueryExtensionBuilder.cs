@@ -130,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					case Sql.QueryExtensionScope.SubQueryHint:
 					{
-						if (sequence is SetOperationBuilder.SetOperationContext { SubQuery : { SelectQuery : { HasSetOperators: true } q }})
+						if (sequence is SetOperationBuilder.SetOperationContext { SubQuery.SelectQuery : { HasSetOperators: true } q })
 							attr.ExtendSubQuery(q.SetOperators[^1].SelectQuery.SqlQueryExtensions ??= new(), list);
 						else
 							attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
