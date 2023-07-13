@@ -831,7 +831,6 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("OPTION (USE HINT('ASSUME_JOIN_PREDICATE_DEPENDS_ON_FILTERS'))"));
 		}
 
-
 		[Test]
 		public void OptionUseTableTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -856,6 +855,32 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("OPTION (TABLE HINT(c_1, NoLock))"));
+		}
+
+		[Test]
+		public void SqlServerUnionTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent
+					select p
+				)
+				.Union
+				(
+					from p in db.Child
+					select p.Parent
+				)
+				.AsSqlServer()
+				.OptionRecompile()
+			;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Should.Contain(
+				"UNION",
+				"OPTION (RECOMPILE)"));
 		}
 	}
 }
