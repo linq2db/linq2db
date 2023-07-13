@@ -375,5 +375,53 @@ namespace Tests.Extensions
 
 			Assert.That(db.LastQuery, Contains.Substring("FOR UPDATE"));
 		}
+
+		[Test]
+		public void MySqlUnionTest([IncludeDataSources(true, TestProvName.AllMySql)] string context)
+		{
+			using var db  = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.Parent.TableID("cc")
+				select p
+			)
+			.AsMySql()
+			.ForUpdateHint()
+			.Union
+			(
+				from p in db.Child
+				select p.Parent
+			)
+			.AsMySql()
+			.ForUpdateHint()
+			.Union
+			(
+				from p in db.Parent
+				from c in db.Child.TableID("pp")
+					.AsSubQuery()
+					.AsMySql()
+					.ForUpdateHint()
+				select p
+			)
+			.AsMySql()
+			.ForUpdateHint()
+			.NoBlockNestedLoopHint(Sql.TableSpec("cc"), Sql.TableSpec("pp"));
+			;
+
+			_ = q.ToList();
+
+
+			Assert.That(LastQuery, Should.Contain(
+				"/*+ NO_BNL(",
+				"FOR UPDATE",
+				"UNION",
+				"FOR UPDATE",
+				"UNION",
+				"FOR UPDATE",
+				")",
+				"FOR UPDATE",
+				")"));
+		}
 	}
 }

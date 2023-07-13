@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Globalization;
@@ -423,27 +422,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement, bool buildQueryHints, bool buildSubQueryHints)
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
-			List<SqlQueryExtension>? list = null;
-
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
-				list = statement.SelectQuery?.SqlQueryExtensions;
-
-			if (statement.SqlQueryExtensions is not null)
-			{
-				if (list is null)
-				{
-					list = statement.SqlQueryExtensions;
-				}
-				else
-				{
-					list = new (list);
-					list.AddRange(statement.SqlQueryExtensions);
-				}
-			}
-
-			if (list is not null)
 			{
 				var len = StringBuilder.Length;
 
@@ -460,8 +441,36 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, list, null, prefix, Environment.NewLine, buildQueryHints, buildSubQueryHints);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.QueryHint);
+			}
+		}
+
+		protected override void BuildSql()
+		{
+			BuildSqlForUnion();
 		}
 	}
 }
