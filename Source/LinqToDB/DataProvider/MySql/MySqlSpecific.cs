@@ -4,10 +4,9 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Expressions;
-
 namespace LinqToDB.DataProvider.MySql
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 

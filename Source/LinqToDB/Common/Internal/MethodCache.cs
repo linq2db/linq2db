@@ -2,11 +2,11 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-
 namespace LinqToDB.Common.Internal
 {
+	using Expressions;
+	using Extensions;
+
 	static class MemberCache
 	{
 		static MemberCache()
@@ -19,8 +19,9 @@ namespace LinqToDB.Common.Internal
 			_cache.Clear();
 		}
 
-		static readonly ConcurrentDictionary<MemberInfo,Info> _cache   = new();
-		static readonly Info                                  _default = new();
+		static readonly ConcurrentDictionary<MemberInfo, Info> _cache           = new();
+		static readonly Info                                   _defaultInfo     = new();
+		static readonly Info                                   _isQueryableInfo = new() { IsQueryable = true };
 
 		public static Info GetMemberInfo(MemberInfo member)
 		{
@@ -32,16 +33,16 @@ namespace LinqToDB.Common.Internal
 				{
 					var attrs = m.GetAttribute<IsQueryableAttribute>();
 
-					return attrs != null ? new() { IsQueryable = true } : _default;
+					return attrs != null ? _isQueryableInfo : _defaultInfo;
 				});
 			}
 
-			return _default;
+			return _defaultInfo;
 		}
 
 		public class Info
 		{
-			public bool IsQueryable;
+			public bool IsQueryable { get; init; }
 		}
 	}
 }
