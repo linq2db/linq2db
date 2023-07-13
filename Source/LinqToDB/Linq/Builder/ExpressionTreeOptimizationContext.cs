@@ -760,7 +760,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Extension:
 				{
 					if (ex is ContextRefExpression)
-						return !context.InProjection;
+						return true;
 					if (ex is SqlErrorExpression)
 						return true;
 					if (ex is SqlPlaceholderExpression)

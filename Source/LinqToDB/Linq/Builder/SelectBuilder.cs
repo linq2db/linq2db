@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 				return null;
 
 			// finalizing context
-			_ = builder.MakeExpression(sequence, new ContextRefExpression(buildInfo.Expression.Type, sequence),
+			_ = builder.MakeExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence),
 				ProjectFlags.Expand);
 
 			sequence.SetAlias(selector.Parameters[0].Name);

@@ -90,7 +90,7 @@ namespace LinqToDB.Linq
 
 					if (e is ContextRefExpression contextRef)
 					{
-						return contextRef.WithContext(CorrectContext(contextRef.BuildContext));
+						return contextRef.WithContext(CloneContext(contextRef.BuildContext));
 					}
 				}
 

@@ -595,7 +595,7 @@ namespace LinqToDB.Linq.Builder
 			var constructors = constructType
 				.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
 				.OrderByDescending(c => c.GetParameters().Length == 0)
-				.OrderByDescending(c => c.GetParameters().Length);
+				.ThenByDescending(c => c.GetParameters().Length);
 
 			foreach (var constructor in constructors)
 			{

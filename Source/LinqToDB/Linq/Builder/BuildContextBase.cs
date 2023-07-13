@@ -45,12 +45,12 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		#region Obsolete
-
 		public virtual IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
-			return null;
+			return this;
 		}
+
+		#region Obsolete
 
 		public virtual void CompleteColumns()
 		{

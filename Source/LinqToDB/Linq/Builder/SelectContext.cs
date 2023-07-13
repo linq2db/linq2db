@@ -134,6 +134,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (!flags.IsTable())
 					{
+						if (flags.IsSubquery())
+							result = Builder.RemoveNullPropagation(this, result, flags.SqlFlag(), false);
+
 						if ((flags.IsRoot() || flags.IsTraverse()) &&
 						    !(result is ContextRefExpression || result is MemberExpression ||
 						      result is MethodCallExpression))
@@ -181,6 +184,11 @@ namespace LinqToDB.Linq.Builder
 		public override void CompleteColumns()
 		{
 			ExpressionBuilder.EnsureAggregateColumns(this, SelectQuery);
+		}
+
+		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
+		{
+			return InnerContext?.GetContext(expression, buildInfo);
 		}
 	}
 }

@@ -86,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 			if (flags.IsTable() || flags.IsAggregationRoot())
 				return result;
 
-			if (flags.IsTraverse())
+			if (flags.IsTraverse() || flags.IsSubquery())
 				return result;
 
 			if (ExpressionEqualityComparer.Instance.Equals(corrected, result))

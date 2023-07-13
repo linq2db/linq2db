@@ -67,7 +67,6 @@ namespace LinqToDB.Linq.Builder
 			new LoadWithBuilder            (),
 			new DropBuilder                (),
 			new TruncateBuilder            (),
-			new ChangeTypeExpressionBuilder(),
 			new WithTableExpressionBuilder (),
 			new MergeBuilder                             (),
 			new MergeBuilder.InsertWhenNotMatched        (),
@@ -222,11 +221,43 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException("Sequence has no registered expression");
 		}
 
+		Expression UnwrapSequenceExpression(Expression expression)
+		{
+			var result = expression.Unwrap();
+			return result;
+		}
+
+		Expression ExpandToRoot(Expression expression, BuildInfo buildInfo)
+		{
+			var flags = buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root;
+			
+			flags = buildInfo.GetFlags(flags) | ProjectFlags.Subquery;
+
+			expression = UnwrapSequenceExpression(expression);
+			Expression result;
+			do
+			{
+				result = MakeExpression(buildInfo.Parent, expression, flags);
+				result = UnwrapSequenceExpression(result);
+
+				if (ExpressionEqualityComparer.Instance.Equals(expression, result))
+					break;
+
+				expression = result;
+
+			} while (true);
+			
+			return result;
+		}
+
 		public IBuildContext? TryBuildSequence(BuildInfo buildInfo)
 		{
 			var originalExpression = buildInfo.Expression;
 
-			buildInfo.Expression = buildInfo.Expression.Unwrap();
+			var expanded = ExpandToRoot(buildInfo.Expression, buildInfo);
+
+			if (!ReferenceEquals(expanded, originalExpression))
+				buildInfo = new BuildInfo(buildInfo, expanded);
 
 			var n = _builders[0].BuildCounter;
 
@@ -241,7 +272,7 @@ namespace LinqToDB.Linq.Builder
 
 					_reorder = _reorder || n < builder.BuildCounter;
 
-					if (sequence != null && !buildInfo.IsTest)
+					if (sequence != null)
 					{
 						_sequenceExpressions[sequence] = originalExpression;
 					}
@@ -304,7 +335,9 @@ namespace LinqToDB.Linq.Builder
 
 		public bool IsSequence(BuildInfo buildInfo)
 		{
-			buildInfo.Expression = buildInfo.Expression.Unwrap();
+			var originalExpression = buildInfo.Expression;
+
+			buildInfo.Expression = ExpandToRoot(originalExpression, buildInfo);
 
 			foreach (var builder in _builders)
 				if (builder.CanBuild(this, buildInfo))

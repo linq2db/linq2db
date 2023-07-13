@@ -3894,7 +3894,7 @@ namespace LinqToDB.Linq.Builder
 				var counter = ++_makeCounter;
 
 				Debug.WriteLine($"({counter})ExecuteMake ({projectFlags}):");
-				Debug.WriteLine($"\tCtx: {currentContext}");
+				Debug.WriteLine($"\tCtx: {BuildContextDebuggingHelper.GetContextInfo(currentContext)}");
 				Debug.WriteLine($"\tPath: {path}");
 				Debug.WriteLine($"\tExpr: {expr}");
 

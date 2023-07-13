@@ -19,10 +19,10 @@ namespace LinqToDB.Linq.Builder
 	partial class ExpressionBuilder
 	{
 
-		static void CollectDependencies(Expression expression, HashSet<Expression> dependencies)
+		void CollectDependencies(IBuildContext context, Expression expression, HashSet<Expression> dependencies)
 		{
 			var toIgnore     = new HashSet<Expression>();
-			expression.Visit((dependencies, toIgnore), static (ctx, e) =>
+			expression.Visit((dependencies, context, builder: this, toIgnore), static (ctx, e) =>
 			{
 				if (ctx.toIgnore.Contains(e))
 					return false;
@@ -38,13 +38,18 @@ namespace LinqToDB.Linq.Builder
 						current = me.Expression;
 						if (current is ContextRefExpression)
 						{
-							ctx.dependencies.Add(e);
-
-							return false;
-
 							break;
 						}
 					} while (true);
+
+					if (current is ContextRefExpression)
+					{
+						var testExpr = ctx.builder.ConvertToSqlExpr(ctx.context, e, ProjectFlags.SQL | ProjectFlags.Keys | ProjectFlags.Test);
+						if (testExpr is SqlPlaceholderExpression or SqlGenericConstructorExpression)
+							ctx.dependencies.Add(e);
+
+						return false;
+					}
 				}
 				else if (e is BinaryExpression binary)
 				{
@@ -225,7 +230,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		static string[] _passThroughMethods = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
+		static string[] _passThroughMethodsForUnwrappingDefaultIfEmpty = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
 
 		static Expression UnwrapDefaultIfEmpty(Expression expression)
 		{
@@ -235,7 +240,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (mc.IsQueryable(nameof(Enumerable.DefaultIfEmpty)))
 						expression = mc.Arguments[0];
-					else if (mc.IsQueryable(_passThroughMethods))
+					else if (mc.IsQueryable(_passThroughMethodsForUnwrappingDefaultIfEmpty))
 					{
 						return mc.Update(mc.Object, mc.Arguments.Select(UnwrapDefaultIfEmpty));
 					}
@@ -272,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 			if (itemType == null)
 				throw new InvalidOperationException("Could not retrieve itemType for EagerLoading.");
 
-			clonedParentContext = new EagerContext(clonedParentContext, itemType);
+			clonedParentContext = new EagerContext(clonedParentContext, buildContext.ElementType);
 			
 			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
@@ -284,7 +289,7 @@ namespace LinqToDB.Linq.Builder
 			var correctedSequence  = cloningContext.CloneExpression(sequenceExpression);
 			var correctedPredicate = cloningContext.CloneExpression(eagerLoad.Predicate);
 
-			CollectDependencies(sequenceExpression, dependencies);
+			CollectDependencies(buildContext, sequenceExpression, dependencies);
 
 			dependencies.AddRange(previousKeys);
 
@@ -567,7 +572,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return await _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
 					.ToListAsync(cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 		}
 

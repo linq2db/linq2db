@@ -75,7 +75,7 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 			{
 				return false;
 			}
@@ -107,7 +107,7 @@ namespace LinqToDB.Expressions
 		{
 			if (Predicate != null)
 			{
-				predicate = Expression.AndAlso(Predicate, predicate);
+				predicate = AndAlso(Predicate, predicate);
 			}
 
 			return new SqlEagerLoadExpression(SequenceExpression, predicate);

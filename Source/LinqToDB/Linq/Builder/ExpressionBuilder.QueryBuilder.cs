@@ -137,7 +137,7 @@ namespace LinqToDB.Linq.Builder
 
 			// process eager loading queries
 			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
-			if (!ReferenceEquals(correctedEager, postProcessed))
+			if (!ExpressionEqualityComparer.Instance.Equals((correctedEager, postProcessed)))
 			{
 				// convert all missed references
 				postProcessed = FinalizeConstructors(context, correctedEager);
@@ -686,7 +686,7 @@ namespace LinqToDB.Linq.Builder
 
 				expression = reconstructed;
 
-				if (ReferenceEquals(reconstructed, deduplicated))
+				if (ExpressionEqualityComparer.Instance.Equals(reconstructed, deduplicated))
 					break;
 			} while (true);
 
@@ -807,6 +807,9 @@ namespace LinqToDB.Linq.Builder
 		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, ProjectFlags flags)
 		{
 			if (flags.IsTraverse())
+				return null;
+
+			if (expr is BinaryExpression or ConditionalExpression or DefaultExpression or DefaultValueExpression)
 				return null;
 
 			if (expr is ContextConstructionExpression or SqlGenericConstructorExpression or ConstantExpression or SqlEagerLoadExpression)

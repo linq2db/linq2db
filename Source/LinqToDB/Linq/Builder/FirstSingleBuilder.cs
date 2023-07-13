@@ -321,11 +321,6 @@ namespace LinqToDB.Linq.Builder
 					_isJoinCreated = _isJoinCreated
 				};
 			}
-
-			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
-			{
-				return null;
-			}
 		}
 	}
 }

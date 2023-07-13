@@ -26,6 +26,9 @@ namespace LinqToDB.Linq.Builder
 			var correctedPath = SequenceHelper.CorrectExpression(path, this, Context);
 			var newExpr       = Builder.MakeExpression(Context, correctedPath, flags);
 
+			if (flags.IsAggregationRoot())
+				return newExpr;
+
 			// nothing changed, return as is
 			if (ExpressionEqualityComparer.Instance.Equals(newExpr, correctedPath))
 				return path;

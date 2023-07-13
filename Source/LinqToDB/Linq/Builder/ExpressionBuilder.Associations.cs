@@ -131,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 
 			_associations ??= new Dictionary<SqlCacheKey, Expression>(SqlCacheKey.SqlCacheKeyComparer);
 
-			var key = new SqlCacheKey(expression, associationRoot.BuildContext, null, null, flags.RootFlag());
+			var key = new SqlCacheKey(expression, associationRoot.BuildContext, null, null, flags.RootFlag() & ~ProjectFlags.Subquery);
 
 			if (_associations.TryGetValue(key, out var associationExpression))
 				return associationExpression;
@@ -156,10 +156,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				if (flags.IsSubquery())
-					isOuter = false;
-				else
-					isOuter = isOuter == true || associationDescriptor.CanBeNull || prevIsOuter;
+				isOuter = isOuter == true || associationDescriptor.CanBeNull || prevIsOuter;
 			}
 
 			if (forContext != null)
@@ -168,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			Expression? notNullCheck = null;
-			if (associationDescriptor.IsList && prevIsOuter)
+			if (associationDescriptor.IsList && (prevIsOuter || flags.IsSubquery()))
 			{
 				var keys = MakeExpression(forContext, rootContext, flags.KeyFlag());
 				notNullCheck = ExtractNotNullCheck(keys);

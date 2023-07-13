@@ -415,6 +415,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				base.SetAlias(alias);
 			}
+
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
+			{
+				return RegisterContext.GetContext(expression, buildInfo);
+			}
 		}
 	}
 }

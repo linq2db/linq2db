@@ -61,19 +61,24 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsExpand())
-					return path;
-
 				if (SequenceHelper.IsSameContext(path, this) && (flags.IsRoot() || flags.IsAssociationRoot()))
 					return path;
 
 				var corrected = SequenceHelper.CorrectExpression(path, this, Context);
 
-				if (flags.IsTable() || flags.IsTraverse())
+				if (flags.IsTable() || flags.IsTraverse() || flags.IsSubquery())
 					return corrected;
 
-				var result = Builder.BuildSqlExpression(Context, corrected, flags.SqlFlag());
-				result = Builder.UpdateNesting(Context, result);
+				Expression result;
+				if (flags.IsExpand())
+				{
+					result = Builder.MakeExpression(Context, corrected, flags);
+				}
+				else
+				{
+					result = Builder.BuildSqlExpression(Context, corrected, flags.SqlFlag());
+					result = Builder.UpdateNesting(Context, result);
+				}
 
 				return result;
 			}
