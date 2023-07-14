@@ -3265,43 +3265,6 @@ namespace LinqToDB.SqlProvider
 			return updateStatement;
 		}
 
-		protected SqlUpdateStatement DetachUpdateTableFromUpdateQueryOld(SqlUpdateStatement updateStatement, DataOptions dataOptions)
-		{
-			var updateTable = updateStatement.Update.Table;
-			if (updateTable == null)
-				throw new InvalidOperationException();
-
-			var clonedTable = CloneTable(updateTable, out var replaceTree);
-
-			var newStatement = RemapCloned(updateStatement, replaceTree);
-
-			var reverseTree = replaceTree.ToDictionary(pair => pair.Value, pair => pair.Key);
-			
-			newStatement.Update.TableSource = null;
-			newStatement.Update             = RemapCloned(newStatement.Update, reverseTree, insideColumns: false);
-
-			// correct columns
-			foreach (var item in newStatement.Update.Items)
-			{
-				if (item.Column is SqlColumn column)
-				{
-					var field = QueryHelper.GetUnderlyingField(column.Expression);
-					if (field == null)
-						throw new InvalidOperationException("Expression {column.Expression} cannot be used for update field");
-					item.Column = RemapCloned(field, reverseTree, insideColumns: false);
-				}
-			}
-
-			if (newStatement.Output != null)
-			{
-				newStatement.Output = RemapCloned(newStatement.Output, reverseTree, insideColumns: false);
-			}
-
-			ApplyUpdateTableComparison(newStatement.SelectQuery, updateStatement.Update, clonedTable, dataOptions);
-
-			return newStatement;
-		}
-
 		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, DataOptions dataOptions)
 		{
 			if (statement.SelectQuery.Select.HasModifier)

@@ -1213,6 +1213,9 @@ namespace LinqToDB.SqlQuery
 				if (!selectQuery.Select.OrderBy.IsEmpty)
 					return false;
 
+				if (!selectQuery.Select.Where.IsEmpty)
+					return false;
+
 				if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 				{
 					return false;
