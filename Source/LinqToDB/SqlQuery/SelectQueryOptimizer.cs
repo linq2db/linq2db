@@ -1508,13 +1508,18 @@ namespace LinqToDB.SqlQuery
 		{
 			CorrectCrossJoinQuery(_selectQuery);
 
-			for (var i = 0; i < _selectQuery.From.Tables.Count; i++)
-			{
-				var table = OptimizeSubQuery(_selectQuery, _selectQuery.From.Tables[i], true, false, isApplySupported, true, null);
+			var tableSources = _selectQuery.From.Tables;
 
-				if (table != _selectQuery.From.Tables[i])
+			for (var i = 0; i < tableSources.Count; i++)
+			{
+				if (tableSources.Count > 1 && tableSources[i] is { Source: SelectQuery { GroupBy.IsEmpty: false }})
+					continue;
+
+				var table = OptimizeSubQuery(_selectQuery, tableSources[i], true, false, isApplySupported, true, null);
+
+				if (table != tableSources[i])
 				{
-					if (_selectQuery.From.Tables[i].Source is SelectQuery sql)
+					if (tableSources[i].Source is SelectQuery sql)
 					{
 						ApplySubQueryExtensions(_selectQuery, sql);
 
@@ -1522,7 +1527,7 @@ namespace LinqToDB.SqlQuery
 							ApplySubsequentOrder(_selectQuery, sql);
 					}
 
-					_selectQuery.From.Tables[i] = table;
+					tableSources[i] = table;
 				}
 			}
 

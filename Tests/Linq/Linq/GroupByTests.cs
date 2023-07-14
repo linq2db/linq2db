@@ -4,7 +4,6 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -2710,7 +2709,7 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		public void GroupSubqueryTest([DataSources] string context)
+		public void GroupSubqueryTest1([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2718,16 +2717,49 @@ namespace Tests.Linq
 			(
 				from pmp in
 				(
-					from p  in db.Parent
-					join ins in db.Person on p.ParentID equals ins.ID
 					from pmp  in db.Child
-					group pmp by new { ID = ins.ID, pmp.ParentID, pmp } into g
-					select new { g.Key.ID, g.Key.ParentID, Field1 = g.Max(x => x.ChildID) }
+					group pmp by pmp.ParentID into g
+					select g.Key
 				)
-				//.AsSubQuery()
 				from pmp1 in db.Child
-				group pmp1 by pmp.ID into g
-				select new { g.Key, Field1 = g.Max(x => x.ChildID )}
+				select new { pmp1.ChildID }
+			)
+			.ToList();
+		}
+
+		[Test]
+		public void GroupSubqueryTest2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			_ =
+			(
+				from pmp1 in db.Child
+				from pmp in
+				(
+					from pmp  in db.Child
+					group pmp by pmp.ParentID into g
+					select g.Key
+				)
+				select new { pmp1.ChildID }
+			)
+			.ToList();
+		}
+
+		[Test]
+		public void GroupSubqueryTest3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			_ =
+			(
+				from pmp in
+				(
+					from pmp  in db.Child
+					group pmp by pmp.ParentID into g
+					select g.Key
+				)
+				select new { pmp }
 			)
 			.ToList();
 		}
