@@ -842,7 +842,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ConditionNullTest([DataSources(false)] string context)
+		public void ConditionNullTest([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
