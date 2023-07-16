@@ -332,13 +332,13 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 39)]
 		public bool IsExistsPreferableForContains   { get; set; }
 
-		[DataMember(Order = 40)]
+		[DataMember(Order = 40), DefaultValue(true)]
 		public bool IsProjectionBoolSupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports ROW_NUMBER OVER () without ORDER BY
 		/// </summary>
-		[DataMember(Order = 41)]
+		[DataMember(Order = 41), DefaultValue(true)]
 		public bool SupportsRowNumberWithoutOrderBy { get; set; } = true;
 
 		#region Equality

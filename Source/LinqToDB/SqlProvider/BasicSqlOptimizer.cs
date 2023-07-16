@@ -1431,28 +1431,38 @@ namespace LinqToDB.SqlProvider
 					? RowFeature.Overlaps
 					: RowFeature.Comparisons;
 
-			switch (predicate.Expr2)
+			var expr2 = predicate.Expr2;
+			while (expr2 is SqlNullabilityExpression nullability)
+				expr2 = nullability.SqlExpression;
+
+			switch (expr2)
 			{
 				// ROW(a, b) IS [NOT] NULL
 				case SqlValue { Value: null }:
+				{
 					if (op is not (SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
 						return RowIsNullFallback((SqlRow)predicate.Expr1, op == SqlPredicate.Operator.NotEqual);
 					break;
+				}
 
 				// ROW(a, b) operator ROW(c, d)
 				case SqlRow rhs:
+				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature))
 						return RowComparisonFallback(op, (SqlRow)predicate.Expr1, rhs, context);
 					break;
+				}
 
 				// ROW(a, b) operator (SELECT c, d)
 				case SelectQuery:
+				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature) ||
-						!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.CompareToSelect))
+					    !SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.CompareToSelect))
 						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
+				}
 
 				default:
 					throw new LinqException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
@@ -1462,7 +1472,7 @@ namespace LinqToDB.SqlProvider
 			// We always disable CompareNullsAsValues behavior when comparing SqlRow.
 			return predicate.WithNull == null
 				? predicate
-				: new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, predicate.Expr2, withNull: null);
+				: new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, expr2, withNull: null);
 		}
 
 		protected virtual ISqlPredicate OptimizeRowInList(SqlPredicate.InList predicate)
@@ -2943,6 +2953,37 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
+		static IEnumerable<(ISqlExpression, ISqlExpression)> GenerateRows(
+			ISqlExpression                            target, 
+			ISqlExpression                            source, 
+			Dictionary<IQueryElement, IQueryElement>? mainTree,
+			Dictionary<IQueryElement, IQueryElement>? innerTree, 
+			SelectQuery                               selectQuery)
+		{
+			if (target is SqlRow targetRow && source is SqlRow sourceRow)
+			{
+				if (targetRow.Values.Length != sourceRow.Values.Length)
+					throw new InvalidOperationException("Target and Source SqlRows are different");
+
+				for (int i = 0; i < targetRow.Values.Length; i++)
+				{
+					var tagetRowValue  = targetRow.Values[i];
+					var sourceRowValue = sourceRow.Values[i];
+
+					foreach (var r in GenerateRows(tagetRowValue, sourceRowValue, mainTree, innerTree, selectQuery))
+						yield return r;
+				}
+			}
+			else
+			{
+				var ex         = RemapCloned(source, mainTree, innerTree);
+				var columnExpr = selectQuery.Select.AddNewColumn(ex);
+
+				yield return (target, columnExpr);
+
+			}
+		}
+
 		protected SqlUpdateStatement GetAlternativeUpdate(SqlUpdateStatement updateStatement, DataOptions dataOptions)
 		{
 			if (updateStatement.Update.Table == null)
@@ -3036,15 +3077,7 @@ namespace LinqToDB.SqlProvider
 							if (item.Expression == null)
 								continue;
 
-							var ex = RemapCloned(item.Expression, replaceTree, innerTree);
-
-							var newUpdateExpression = innerQuery.Select.AddNewColumn(ex);
-
-							if (newUpdateExpression == null)
-								throw new InvalidOperationException(
-									$"Could not create column for expression '{item.Expression}'");
-
-							rows.Add((item.Column, newUpdateExpression));
+							rows.AddRange(GenerateRows(item.Column, item.Expression, replaceTree, innerTree, innerQuery));
 						}
 
 						var sqlRow        = new SqlRow(rows.Select(r => r.Item1).ToArray());

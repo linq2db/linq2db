@@ -245,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 						var filtered   = Expression.Convert(body, typeof(IEnumerable<>).MakeGenericType(elementType));
 						var filterBody = memberFilter.GetBody(filtered);
 						body = Expression.Call(
-							Methods.Enumerable.AsQueryable.MakeGenericMethod(objectType), filterBody);
+							Methods.Queryable.AsQueryable.MakeGenericMethod(objectType), filterBody);
 					}
 
 					var loadWithFunc = associationLoadWith.FilterFunc;

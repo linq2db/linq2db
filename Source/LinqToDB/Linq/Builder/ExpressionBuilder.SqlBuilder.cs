@@ -1651,6 +1651,16 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left,  flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, flags | ProjectFlags.Keys, columnDescriptor: columnDescriptor);
 
+			if (leftExpr is SqlPlaceholderExpression { Sql: SqlRow } && rightExpr is SqlEagerLoadExpression)
+			{
+				//SQLRow case
+				//
+
+				var elementType = GetEnumerableElementType(rightExpr.Type);
+				var singleCall  = Expression.Call(Methods.Enumerable.Single.MakeGenericMethod(elementType), right);
+				rightExpr = ConvertToSqlExpr(context, singleCall, flags | ProjectFlags.Keys, columnDescriptor : columnDescriptor);
+			}
+
 			leftExpr  = RemoveNullPropagation(leftExpr, true);
 			rightExpr = RemoveNullPropagation(rightExpr, true);
 

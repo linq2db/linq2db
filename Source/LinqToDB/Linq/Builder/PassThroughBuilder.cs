@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class PassThroughBuilder : MethodCallBuilder
 	{
-		static readonly MethodInfo[] _supportedMethods = { Methods.Enumerable.AsQueryable, Methods.LinqToDB.AsQueryable, Methods.LinqToDB.SqlExt.Alias };
+		static readonly MethodInfo[] _supportedMethods = { Methods.Queryable.AsQueryable, Methods.LinqToDB.AsQueryable, Methods.LinqToDB.SqlExt.Alias };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

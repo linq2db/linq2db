@@ -44,7 +44,7 @@ namespace LinqToDB.SqlQuery
 
 		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			writer.Append('(');
+			writer.Append("Row(");
 
 			for (var index = 0; index < Values.Length; index++)
 			{

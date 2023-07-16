@@ -353,7 +353,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(sourceQuery.Type))
 				{
-					sourceQuery = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(mainType), sourceQuery);
+					sourceQuery = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(mainType), sourceQuery);
 				}
 
 				sourceQuery = Expression.Call(Methods.LinqToDB.SelectDistinct.MakeGenericMethod(mainType), sourceQuery);

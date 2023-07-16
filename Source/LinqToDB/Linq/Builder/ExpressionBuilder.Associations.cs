@@ -288,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 				result = expression;
 				if (!typeof(IQueryable<>).IsSameOrParentOf(result.Type))
 				{
-					result = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType),
+					result = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
 						expression);
 				}
 

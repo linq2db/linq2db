@@ -234,7 +234,7 @@ namespace Tests
 
 				if (typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
 				{
-					newMethodCall = Expression.Call(Methods.Enumerable.AsQueryable.MakeGenericMethod(elementType),
+					newMethodCall = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
 						newMethodCall);
 				}
 
@@ -295,7 +295,7 @@ namespace Tests
 				}
 
 				var queryCall =
-					TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
+					TypeHelper.MakeMethodCall(Methods.Queryable.AsQueryable,
 						itemsExpression);
 
 				return queryCall;

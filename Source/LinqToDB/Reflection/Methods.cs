@@ -42,7 +42,6 @@ namespace LinqToDB.Reflection
 		{
 			public static readonly MethodInfo ToArray     = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToArray());
 			public static readonly MethodInfo ToList      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.ToList());
-			public static readonly MethodInfo AsQueryable = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.AsQueryable());
 
 			public static readonly MethodInfo Select      = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.Select(p => p));
 			public static readonly MethodInfo Where       = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Where((Func<int, bool>)null!));
@@ -72,7 +71,7 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo Join      = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.Join(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IEnumerable<LW1>, IEnumerable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 
-			public static readonly MethodInfo Distinct  = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Distinct());
+			public static readonly MethodInfo Distinct    = MemberHelper.MethodOfGeneric<IEnumerable<int>>(q => q.Distinct());
 		}
 
 		public static class Queryable
@@ -80,12 +79,13 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo ToArray      = MemberHelper.MethodOfGeneric<IQueryable<int>>(e => e.ToArray());
 			public static readonly MethodInfo ToList       = MemberHelper.MethodOfGeneric<IQueryable<int>>(e => e.ToList());
 			public static readonly MethodInfo AsEnumerable = MemberHelper.MethodOfGeneric<IQueryable<int>>(e => e.AsEnumerable());
+			public static readonly MethodInfo AsQueryable  = MemberHelper.MethodOfGeneric<IEnumerable<int>>(e => e.AsQueryable());
 
-			public static readonly MethodInfo Select     = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Select(p => p));
-			public static readonly MethodInfo Where      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Where((Expression<Func<int, bool>>)null!));
-			public static readonly MethodInfo Take       = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Take(1));
-			public static readonly MethodInfo Skip       = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Skip(1));
-			public static readonly MethodInfo Contains   = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Contains(1));
+			public static readonly MethodInfo Select   = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Select(p => p));
+			public static readonly MethodInfo Where    = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Where((Expression<Func<int, bool>>)null!));
+			public static readonly MethodInfo Take     = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Take(1));
+			public static readonly MethodInfo Skip     = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Skip(1));
+			public static readonly MethodInfo Contains = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Contains(1));
 
 			public static readonly MethodInfo First                   = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.First());
 			public static readonly MethodInfo FirstOrDefault          = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.FirstOrDefault());
@@ -100,18 +100,18 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo ElementAtAsync          = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ElementAtAsync(() => 0, default));
 			public static readonly MethodInfo ElementAtOrDefaultAsync = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.ElementAtOrDefaultAsync(() => 0, default));
 
-			public static readonly MethodInfo DefaultIfEmpty       = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DefaultIfEmpty());
-			public static readonly MethodInfo DefaultIfEmptyValue  = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DefaultIfEmpty(0));
+			public static readonly MethodInfo DefaultIfEmpty      = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DefaultIfEmpty());
+			public static readonly MethodInfo DefaultIfEmptyValue = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.DefaultIfEmpty(0));
 
 			public static readonly MethodInfo OfType               = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.OfType<double>());
 
 			public static readonly MethodInfo SelectManySimple     = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectMany(a => Array<int>.Empty));
 			public static readonly MethodInfo SelectManyProjection = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.SelectMany(a => Array<int>.Empty, (m, d) => d));
 
-			public static readonly MethodInfo Join      = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.Join(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
+			public static readonly MethodInfo Join      = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.Join(d, _ => _.Value1, _ => _.Value2, (m,      d) => d));
 			public static readonly MethodInfo GroupJoin = MemberHelper.MethodOfGeneric<IQueryable<LW1>, IQueryable<LW2>>((m, d) => m.GroupJoin(d, _ => _.Value1, _ => _.Value2, (m, d) => d));
 
-			public static readonly MethodInfo Distinct  = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Distinct());
+			public static readonly MethodInfo Distinct    = MemberHelper.MethodOfGeneric<IQueryable<int>>(q => q.Distinct());
 		}
 
 		public static class LinqToDB
