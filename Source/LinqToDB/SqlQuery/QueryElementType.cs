@@ -77,5 +77,6 @@
 		SqlID, //TODO: remove?
 
 		SqlExtension,
+		SqlQueryExtension,
 	}
 }

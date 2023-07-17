@@ -841,7 +841,7 @@ namespace LinqToDB.SqlProvider
 			return new SqlValue(dbDataType, value);
 		}
 
-		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> convertVisitor)
+		public virtual ISqlExpression OptimizeExpression(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> convertVisitor)
 		{
 			switch (expression.ElementType)
 			{
@@ -1586,7 +1586,7 @@ namespace LinqToDB.SqlProvider
 		#endregion
 
 		private readonly SqlDataType _typeWrapper = new (default(DbDataType));
-		public virtual IQueryElement OptimizeQueryElement(ConvertVisitor<RunOptimizationContext> visitor, IQueryElement element)
+		public virtual IQueryElement OptimizeQueryElement(SqlQueryConvertVisitor<RunOptimizationContext> visitor, IQueryElement element)
 		{
 			switch (element.ElementType)
 			{
@@ -1921,7 +1921,7 @@ namespace LinqToDB.SqlProvider
 			return OptimizeElement(mappingSchema, dataOptions, element, context, true, nullability);
 		}
 
-		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			switch (expression.ElementType)
 			{
@@ -2026,13 +2026,13 @@ namespace LinqToDB.SqlProvider
 		public readonly struct RunOptimizationContext
 		{
 			public RunOptimizationContext(
-				OptimizationContext optimizationContext,
-				BasicSqlOptimizer   optimizer,
-				MappingSchema       mappingSchema,
-                DataOptions         dataOptions,
-				NullabilityContext  nullability,
-				bool                register,
-				Func<ConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
+				OptimizationContext                                                                optimizationContext,
+				BasicSqlOptimizer                                                                  optimizer,
+				MappingSchema                                                                      mappingSchema,
+                DataOptions                                                                        dataOptions,
+				NullabilityContext                                                                 nullability,
+				bool                                                                               register,
+				Func<SqlQueryConvertVisitor<RunOptimizationContext>, IQueryElement, IQueryElement> func)
 			{
 				OptimizationContext = optimizationContext;
 				Optimizer           = optimizer;
@@ -2050,18 +2050,18 @@ namespace LinqToDB.SqlProvider
 			public readonly MappingSchema       MappingSchema;
 			public readonly DataOptions         DataOptions;
 
-			public readonly Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> Func;
+			public readonly Func<SqlQueryConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> Func;
 		}
 
 		static IQueryElement RunOptimization(
-			IQueryElement       element,
-			OptimizationContext optimizationContext,
-			BasicSqlOptimizer   optimizer,
-			MappingSchema       mappingSchema,
-			DataOptions         dataOptions,
-			NullabilityContext  nullability,
-			bool                register,
-			Func<ConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
+			IQueryElement                                                                    element,
+			OptimizationContext                                                              optimizationContext,
+			BasicSqlOptimizer                                                                optimizer,
+			MappingSchema                                                                    mappingSchema,
+			DataOptions                                                                      dataOptions,
+			NullabilityContext                                                               nullability,
+			bool                                                                             register,
+			Func<SqlQueryConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
 		{
 			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, dataOptions, nullability, register, func);
 
@@ -2091,11 +2091,11 @@ namespace LinqToDB.SqlProvider
 					},
 					static visitor =>
 					{
-						if (visitor.Context.OptimizationContext.IsOptimized(visitor.CurrentElement, out var expr))
+						/*if (visitor.Context.OptimizationContext.IsOptimized(visitor.CurrentElement, out var expr))
 						{
 							visitor.CurrentElement = expr;
 							return false;
-						}
+						}*/
 						return true;
 					});
 
@@ -2161,7 +2161,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual bool CanCompareSearchConditions => false;
 
-		public virtual ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public virtual ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			switch (predicate.ElementType)
 			{
@@ -2316,8 +2316,8 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected ISqlPredicate ConvertSearchStringPredicateViaLike(
-			SqlPredicate.SearchString              predicate,
-			ConvertVisitor<RunOptimizationContext> visitor)
+			SqlPredicate.SearchString                      predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			if (predicate.Expr2.TryEvaluateExpression(visitor.Context.OptimizationContext.Context, out var patternRaw)
 				&& Converter.TryConvertToString(patternRaw, out var patternRawValue))
@@ -2377,8 +2377,8 @@ namespace LinqToDB.SqlProvider
 		}
 
 		public virtual ISqlPredicate ConvertSearchStringPredicate(
-			SqlPredicate.SearchString              predicate,
-			ConvertVisitor<RunOptimizationContext> visitor)
+			SqlPredicate.SearchString                      predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == false)
 			{

@@ -605,7 +605,7 @@ namespace LinqToDB.Linq.Builder
 				var enumerator = _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
 					.GetAsyncEnumerator(cancellationToken);
 
-				while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				while (await enumerator.MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
 					var e = enumerator.Current;
 					result.Add(e.Key, e.Detail);

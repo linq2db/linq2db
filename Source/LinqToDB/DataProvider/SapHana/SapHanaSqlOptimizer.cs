@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{
@@ -24,7 +25,7 @@ namespace LinqToDB.DataProvider.SapHana
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 

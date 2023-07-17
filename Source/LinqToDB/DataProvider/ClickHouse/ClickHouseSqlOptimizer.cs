@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	sealed class ClickHouseSqlOptimizer : BasicSqlOptimizer
 	{
@@ -96,7 +97,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#endregion
 
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertSearchStringPredicate(
+			SqlPredicate.SearchString                      predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context)
 				?? true;
@@ -152,7 +155,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#region Function/Expression Conversions
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 

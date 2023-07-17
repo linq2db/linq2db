@@ -7,6 +7,8 @@ namespace LinqToDB.DataProvider.Access
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
+
 
 	class AccessSqlOptimizer : BasicSqlOptimizer
 	{
@@ -142,7 +144,8 @@ namespace LinqToDB.DataProvider.Access
 		}
 
 
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext>                                   visitor)
 		{
 			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);
 

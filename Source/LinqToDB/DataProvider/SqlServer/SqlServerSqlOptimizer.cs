@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	abstract class SqlServerSqlOptimizer : BasicSqlOptimizer
 	{
@@ -36,7 +37,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			return statement;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext>                                   visitor)
 		{
 			var like = base.ConvertSearchStringPredicate(predicate, visitor);
 
@@ -205,7 +207,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return updateStatement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 

@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	sealed class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
@@ -39,7 +40,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return statement;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext>                                   visitor)
 		{
 			var searchPredicate = ConvertSearchStringPredicateViaLike(predicate, visitor);
 
@@ -51,7 +53,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return searchPredicate;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 

@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.Informix
 	using SqlProvider;
 	using SqlQuery;
 	using Mapping;
+	using SqlQuery.Visitors;
 
 	sealed class InformixSqlOptimizer : BasicSqlOptimizer
 	{
@@ -116,7 +117,7 @@ namespace LinqToDB.DataProvider.Informix
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 

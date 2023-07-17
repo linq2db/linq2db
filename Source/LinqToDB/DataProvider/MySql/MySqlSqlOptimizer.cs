@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	using SqlBinary = SqlQuery.SqlBinaryExpression;
 
@@ -52,7 +53,7 @@ namespace LinqToDB.DataProvider.MySql
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 
@@ -121,7 +122,8 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext>                                   visitor)
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context);
 

@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlProvider
 {
@@ -109,26 +110,27 @@ namespace LinqToDB.SqlProvider
 			_parametersNormalizer = null;
 		}
 
-		private ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>? _visitor;
+		SqlQueryConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>? _visitor;
 
-		private int _nestingLevel;
+		int _nestingLevel;
+
 		public T ConvertAll<T>(
 			BasicSqlOptimizer.RunOptimizationContext context,
 			T                                        element,
-			Func<ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, IQueryElement, IQueryElement> convertAction,
-			Func<ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, bool>                         parentAction)
+			Func<SqlQueryConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, IQueryElement, IQueryElement> convertAction,
+			Func<SqlQueryConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, bool>                         parentAction)
 			where T : class, IQueryElement
 		{
 			if (_visitor == null)
-				_visitor = new ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>(context, convertAction, true, false, true, parentAction);
+				_visitor = new SqlQueryConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>(false);
 			else
-				_visitor.Reset(context, convertAction, true, false, false, parentAction);
+				_visitor.Cleanup();
 
 			// temporary(?) guard
 			if (_nestingLevel > 0)
 				throw new InvalidOperationException("Nested optimization detected");
 			_nestingLevel++;
-			var res = (T?)_visitor.ConvertInternal(element) ?? element;
+			var res = (T?)_visitor.Convert(element, context, convertAction, false) ?? element;
 			_nestingLevel--;
 			return res;
 		}

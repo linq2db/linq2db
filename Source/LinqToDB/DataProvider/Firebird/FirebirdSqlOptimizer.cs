@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
@@ -61,7 +62,8 @@ namespace LinqToDB.DataProvider.Firebird
 			return false;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext>                                   visitor)
 		{
 			ISqlExpression expr;
 
@@ -153,7 +155,7 @@ namespace LinqToDB.DataProvider.Firebird
 			};
 		}
 
-		public override ISqlExpression OptimizeExpression(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> convertVisitor)
+		public override ISqlExpression OptimizeExpression(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> convertVisitor)
 		{
 			var newExpr = base.OptimizeExpression(expression, convertVisitor);
 
@@ -204,7 +206,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return newExpr;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 
@@ -271,14 +273,14 @@ namespace LinqToDB.DataProvider.Firebird
 					{
 						// prevent removal by ConvertConvertion
 						if (!convertFunc.DoNotOptimize)
-							convertFunc.DoNotOptimize = CastRequired(visitor.Stack);
+							convertFunc.DoNotOptimize = CastRequired(visitor.Stack!);
 						return e;
 					}
 
 					if (paramValue.DbDataType.SystemType == typeof(bool) && visitor.ParentElement is SqlFunction func && func.Name == "CASE")
 						return e;
 
-					if (!CastRequired(visitor.Stack))
+					if (!CastRequired(visitor.Stack!))
 						return e;
 
 					// TODO: temporary guard against cast to unknown type (Variant)

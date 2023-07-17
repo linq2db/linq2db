@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.DB2
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	sealed class DB2SqlOptimizer : BasicSqlOptimizer
 	{
@@ -34,7 +35,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		public override string[] LikeCharactersToEscape => DB2LikeCharactersToEscape;
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 

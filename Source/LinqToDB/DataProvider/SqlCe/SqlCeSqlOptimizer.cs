@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	using Extensions;
 	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery.Visitors;
 
 	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{
@@ -47,7 +48,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override string[] LikeCharactersToEscape => LikeSqlCeCharactersToEscape;
 
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext>                                   visitor)
 		{
 			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);
 
@@ -243,7 +245,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 

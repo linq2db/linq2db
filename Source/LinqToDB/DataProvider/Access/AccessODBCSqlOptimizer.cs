@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.Access
 
 			statement = statement.Convert(static (visitor, e) =>
 			{
-				if (e is SqlParameter p && p.IsQueryParameter && visitor.ParentElement is SqlColumn)
+				if (e is SqlParameter p && p.IsQueryParameter && ReferenceEquals(visitor.ColumnExpression, e))
 					return new SqlExpression(p.Type.SystemType, "CVar({0})", Precedence.Primary, p);
 
 				return e;

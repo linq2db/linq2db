@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	sealed class SQLiteSqlOptimizer : BasicSqlOptimizer
 	{
@@ -45,9 +46,8 @@ namespace LinqToDB.DataProvider.SQLite
 			return statement;
 		}
 
-		public override ISqlPredicate ConvertSearchStringPredicate(
-			SqlPredicate.SearchString              predicate,
-			ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext>                                   visitor)
 		{
 			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);
 
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return like;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 
@@ -159,7 +159,8 @@ namespace LinqToDB.DataProvider.SQLite
 			return expression;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext>               visitor)
 		{
 			if (predicate is SqlPredicate.ExprExpr exprExpr)
 			{

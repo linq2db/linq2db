@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	public class Oracle11SqlOptimizer : BasicSqlOptimizer
 	{
@@ -67,7 +68,8 @@ namespace LinqToDB.DataProvider.Oracle
 			return false;
 		}
 
-		public override ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlPredicate ConvertPredicateImpl(ISqlPredicate predicate,
+			SqlQueryConvertVisitor<RunOptimizationContext>               visitor)
 		{
 			switch (predicate.ElementType)
 			{
@@ -116,7 +118,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return predicate;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			expression = base.ConvertExpressionImpl(expression, visitor);
 

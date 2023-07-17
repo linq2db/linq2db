@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlQueryExtension : ISqlExpressionWalkable
+	public class SqlQueryExtension : IQueryElement, ISqlExpressionWalkable
 	{
 		public string?                           Configuration { get; set; }
 		public Sql.QueryExtensionScope           Scope         { get; set; }
@@ -17,6 +17,16 @@ namespace LinqToDB.SqlQuery
 				Arguments[argument.Key] = argument.Value.Walk(options, context, func)!;
 
 			return null;
+		}
+
+#if DEBUG
+		public string           DebugText   => this.ToDebugString();
+#endif
+
+		public QueryElementType ElementType => QueryElementType.SqlQueryExtension;
+		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		{
+			return writer.Append("extension");
 		}
 	}
 }
