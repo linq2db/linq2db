@@ -234,9 +234,20 @@ namespace LinqToDB.Data
 					SqlStatement.PrepareQueryAndAliases(sql, query.Aliases, out aliases);
 				}
 
+				var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(true);
+				var convertVisitor = sqlOptimizer.CreateConvertVisitor(true);
+
 				for (var i = 0; i < cc; i++)
 				{
-					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent, dataConnection.DataProvider.GetQueryParameterNormalizer);
+					var optimizationContext = new OptimizationContext(evaluationContext, dataConnection.Options,
+						dataConnection.DataProvider.SqlProviderFlags, 
+						dataConnection.MappingSchema, 
+						aliases,
+						optimizeVisitor,
+						convertVisitor,
+						dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent,
+						dataConnection.DataProvider.GetQueryParameterNormalizer);
+
 					sb.Value.Length = 0;
 
 					sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);

@@ -9,9 +9,13 @@ namespace LinqToDB.SqlQuery
 	using SqlProvider;
 	using Common;
 	using Mapping;
+	using Common.Internal;
 
 	public static partial class QueryHelper
 	{
+		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
+			new(() => new SelectQueryOptimizerVisitor(), v => v.Cleanup(), 100);
+
 		public static bool ContainsElement(IQueryElement testedRoot, IQueryElement element)
 		{
 			return null != testedRoot.Find(element, static (element, e) => e == element);
@@ -1818,7 +1822,7 @@ namespace LinqToDB.SqlQuery
 
 		public static void OptimizeSelectQuery(this SelectQuery selectQuery, IQueryElement root, SqlProviderFlags providerFlags, DataOptions dataOptions)
 		{
-			var visitor = BasicSqlOptimizer.SelectOptimizer.Allocate();
+			var visitor = SelectOptimizer.Allocate();
 
 			var evaluationContext = new EvaluationContext(null);
 			visitor.Value.OptimizeQueries(root, providerFlags, dataOptions, evaluationContext, selectQuery, 0);

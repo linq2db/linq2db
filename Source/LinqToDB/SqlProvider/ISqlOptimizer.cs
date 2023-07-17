@@ -25,11 +25,7 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		void ConvertSkipTake(NullabilityContext nullability, MappingSchema mappingSchema, DataOptions dataOptions, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
 
-		/// <summary>
-		/// Converts query element to specific provider dialect.
-		/// </summary>
-		[return: NotNullIfNotNull(nameof(element))]
-		IQueryElement? ConvertElement(MappingSchema mappingSchema, DataOptions dataOptions, IQueryElement? element, OptimizationContext context, NullabilityContext nullability);
-
+		SqlExpressionOptimizerVisitor CreateOptimizerVisitor(bool allowModify);
+		SqlExpressionConvertVisitor   CreateConvertVisitor(bool   allowModify);
 	}
 }

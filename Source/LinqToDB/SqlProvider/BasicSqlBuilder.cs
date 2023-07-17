@@ -131,7 +131,7 @@ namespace LinqToDB.SqlProvider
 		public T? ConvertElement<T>(T? element, NullabilityContext nullability)
 			where T : class, IQueryElement
 		{
-			return (T?)SqlOptimizer.ConvertElement(MappingSchema, DataOptions, element, OptimizationContext, nullability);
+			return OptimizationContext.ConvertAll(element, nullability);
 		}
 
 		#endregion

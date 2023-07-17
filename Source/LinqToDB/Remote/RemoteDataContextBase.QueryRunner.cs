@@ -58,7 +58,15 @@ namespace LinqToDB.Remote
 				using var sqlStringBuilder = Pools.StringBuilder.Allocate();
 				var cc                     = sqlBuilder.CommandCount(query.Statement);
 
-				var optimizationContext = new OptimizationContext(_evaluationContext, query.Aliases!, false, static () => NoopQueryParametersNormalizer.Instance);
+				var optimizationContext = new OptimizationContext(
+					_evaluationContext, 
+					DataContext.Options,
+					DataContext.SqlProviderFlags,
+					DataContext.MappingSchema,
+					query.Aliases!, 
+					sqlOptimizer.CreateOptimizerVisitor(true),
+					sqlOptimizer.CreateConvertVisitor(true),
+					false, static () => NoopQueryParametersNormalizer.Instance);
 
 				for (var i = 0; i < cc; i++)
 				{

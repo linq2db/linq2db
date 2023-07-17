@@ -20,9 +20,6 @@ namespace LinqToDB.SqlProvider
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
-		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
-			new(() => new SelectQueryOptimizerVisitor(), v => v.Cleanup(), 100);
-
 		#region Init
 
 		protected BasicSqlOptimizer(SqlProviderFlags sqlProviderFlags)
@@ -36,6 +33,16 @@ namespace LinqToDB.SqlProvider
 
 		#region ISqlOptimizer Members
 
+		public virtual SqlExpressionOptimizerVisitor CreateOptimizerVisitor(bool allowModify)
+		{
+			return new SqlExpressionOptimizerVisitor(allowModify ? VisitMode.Modify : VisitMode.Transform);
+		}
+
+		public virtual SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new SqlExpressionConvertVisitor(allowModify ? VisitMode.Modify : VisitMode.Transform);
+		}
+
 		public virtual SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			FixRootSelect (statement);
@@ -44,7 +51,7 @@ namespace LinqToDB.SqlProvider
 
 			var evaluationContext = new EvaluationContext(null);
 
-			using var visitor = SelectOptimizer.Allocate();
+			using var visitor = QueryHelper.SelectOptimizer.Allocate();
 
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
@@ -847,11 +854,13 @@ namespace LinqToDB.SqlProvider
 			{
 				case QueryElementType.SqlBinaryExpression :
 				{
+					//DONE
 					return OptimizeBinaryExpression((SqlBinaryExpression)expression, convertVisitor.Context.OptimizationContext.Context);
 				}
 
 				case QueryElementType.SqlFunction :
 				{
+					//DONE
 					var func = (SqlFunction)expression;
 					if (func.DoNotOptimize)
 						break;
@@ -861,6 +870,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlExpression   :
 				{
+					//DONE
 					var se = (SqlExpression)expression;
 
 					if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNullable(convertVisitor.Context.Nullability))
@@ -875,6 +885,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual ISqlExpression OptimizeFunction(NullabilityContext nullability, SqlFunction func, EvaluationContext context)
 		{
+			//DONE
 			if (func.TryEvaluateExpression(context, out var value))
 			{
 				return CreateSqlValue(value, func.GetExpressionType(), func.Parameters);
@@ -1257,6 +1268,7 @@ namespace LinqToDB.SqlProvider
 		{
 			// Avoiding infinite recursion
 			//
+			//DONE
 			if (predicate.ElementType == QueryElementType.ExprPredicate)
 			{
 				var exprPredicate = (SqlPredicate.Expr)predicate;
@@ -1264,8 +1276,9 @@ namespace LinqToDB.SqlProvider
 					return predicate;
 			}
 
+			//DONE
 			if (predicate.ElementType != QueryElementType.SearchCondition
-				&& predicate.TryEvaluateExpression(context, out var value) && value != null)
+			    && predicate.TryEvaluateExpression(context, out var value) && value != null)
 			{
 				return new SqlPredicate.Expr(new SqlValue(value));
 			}
@@ -1273,10 +1286,12 @@ namespace LinqToDB.SqlProvider
 			switch (predicate.ElementType)
 			{
 				case QueryElementType.SearchCondition:
+					//DONE
 					return SelectQueryOptimizer.OptimizeSearchCondition((SqlSearchCondition)predicate, context);
 
 				case QueryElementType.IsTruePredicate:
 				{
+					//DONE
 					var isTrue = (SqlPredicate.IsTrue)predicate;
 					predicate = OptimizeCase(isTrue, context);
 					break;
@@ -1284,6 +1299,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.BetweenPredicate:
 				{
+					//DONE
 					var between = (SqlPredicate.Between)predicate;
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && between.Expr1 is SqlRow)
 					{
@@ -1295,6 +1311,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.ExprExprPredicate:
 				{
+					//DONE
 					var expr = (SqlPredicate.ExprExpr)predicate;
 
 					if (expr.WithNull == null && (expr.Operator == SqlPredicate.Operator.Equal || expr.Operator == SqlPredicate.Operator.NotEqual))
@@ -1355,6 +1372,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.NotExprPredicate:
 				{
+					//DONE
 					var expr = (SqlPredicate.NotExpr)predicate;
 
 					if (expr.IsNot && expr.Expr1 is SqlSearchCondition sc)
@@ -1382,6 +1400,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.InListPredicate:
 				{
+					//DONE
 					var inList = (SqlPredicate.InList)predicate;
 					if (inList.Expr1.ElementType == QueryElementType.SqlRow)
 						return OptimizeRowInList(inList);
@@ -1390,6 +1409,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.IsDistinctPredicate:
 				{
+					//DONE
 					var expr = (SqlPredicate.IsDistinct)predicate;
 
 					if (nullability.IsEmpty)
@@ -1572,6 +1592,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual ISqlPredicate ConvertBetweenPredicate(SqlPredicate.Between between)
 		{
+			//DONE
 			var newPredicate = !between.IsNot
 				? new SqlSearchCondition(
 					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.GreaterOrEqual, between.Expr2, withNull: false)),
@@ -1592,6 +1613,7 @@ namespace LinqToDB.SqlProvider
 			{
 				case QueryElementType.Condition:
 				{
+					//DONE
 					var condition = (SqlCondition)element;
 
 					return SelectQueryOptimizer.OptimizeCondition(condition);
@@ -1599,6 +1621,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlValue:
 				{
+					//DONE
 					var value = (SqlValue)element;
 
 					if (value.Value is Sql.SqlID)
@@ -1626,6 +1649,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual ISqlExpression OptimizeBinaryExpression(SqlBinaryExpression be, EvaluationContext context)
 		{
+			//DONE
 			switch (be.Operation)
 			{
 				case "+":
@@ -1915,17 +1939,12 @@ namespace LinqToDB.SqlProvider
 
 		#region Conversion
 
-		[return: NotNullIfNotNull(nameof(element))]
-		public virtual IQueryElement? ConvertElement(MappingSchema mappingSchema, DataOptions dataOptions, IQueryElement? element, OptimizationContext context, NullabilityContext nullability)
-		{
-			return OptimizeElement(mappingSchema, dataOptions, element, context, true, nullability);
-		}
-
 		public virtual ISqlExpression ConvertExpressionImpl(ISqlExpression expression, SqlQueryConvertVisitor<RunOptimizationContext> visitor)
 		{
 			switch (expression.ElementType)
 			{
 				case QueryElementType.SqlBinaryExpression :
+					//DONE
 				#region SqlBinaryExpression
 				{
 					var be = (SqlBinaryExpression)expression;
@@ -1976,12 +1995,14 @@ namespace LinqToDB.SqlProvider
 				#region SqlFunction
 
 				{
+					//DONE
 					return ConvertFunction(visitor.Context.Nullability, (SqlFunction)expression);
 				}
 				#endregion
 
 				case QueryElementType.SqlExpression   :
 				{
+					//DONE
 					var se = (SqlExpression)expression;
 
 					if (se.Expr == "{0}" && se.Parameters.Length == 1 && se.Parameters[0] != null && se.CanBeNull == se.Parameters[0].CanBeNullable(visitor.Context.Nullability))
@@ -1996,6 +2017,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
 		{
+			//DONE
 			switch (func.Name)
 			{
 				case "Average": return new SqlFunction(func.SystemType, "Avg", func.Parameters);
@@ -2051,112 +2073,6 @@ namespace LinqToDB.SqlProvider
 			public readonly DataOptions         DataOptions;
 
 			public readonly Func<SqlQueryConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> Func;
-		}
-
-		static IQueryElement RunOptimization(
-			IQueryElement                                                                    element,
-			OptimizationContext                                                              optimizationContext,
-			BasicSqlOptimizer                                                                optimizer,
-			MappingSchema                                                                    mappingSchema,
-			DataOptions                                                                      dataOptions,
-			NullabilityContext                                                               nullability,
-			bool                                                                             register,
-			Func<SqlQueryConvertVisitor<RunOptimizationContext>,IQueryElement,IQueryElement> func)
-		{
-			var ctx = new RunOptimizationContext(optimizationContext, optimizer, mappingSchema, dataOptions, nullability, register, func);
-
-			for (;;)
-			{
-				var newElement = optimizationContext.ConvertAll(
-					ctx,
-					element,
-					static (visitor, e) =>
-					{
-						var prev = e;
-
-						for (;;)
-						{
-							var ne = visitor.Context.Func(visitor, e);
-
-							if (ReferenceEquals(ne, e))
-								break;
-
-							e = ne;
-						}
-
-						if (visitor.Context.Register)
-							visitor.Context.OptimizationContext.RegisterOptimized(prev, e);
-
-						return e;
-					},
-					static visitor =>
-					{
-						/*if (visitor.Context.OptimizationContext.IsOptimized(visitor.CurrentElement, out var expr))
-						{
-							visitor.CurrentElement = expr;
-							return false;
-						}*/
-						return true;
-					});
-
-				if (ReferenceEquals(newElement, element))
-					return element;
-
-				element = newElement;
-			}
-		}
-
-		public IQueryElement? OptimizeElement(MappingSchema mappingSchema, DataOptions dataOptions, IQueryElement? element, OptimizationContext optimizationContext, bool withConversion, NullabilityContext nullability)
-		{
-			if (element == null)
-				return null;
-
-			if (optimizationContext.IsOptimized(element, out var newElement))
-				return newElement!;
-
-			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, dataOptions, nullability, !withConversion,
-				static (visitor, e) =>
-				{
-					var ne = e;
-					if (ne is ISqlExpression expr1)
-						ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
-
-					if (ne is ISqlPredicate pred1)
-						ne = visitor.Context.Optimizer.OptimizePredicate(visitor.Context.Nullability, pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
-
-					if (!ReferenceEquals(ne, e))
-						return ne;
-
-					ne = visitor.Context.Optimizer.OptimizeQueryElement(visitor, ne);
-
-					return ne;
-				});
-
-			if (withConversion)
-			{
-				if (mappingSchema == null)
-					throw new InvalidOperationException("MappingSchema is required for conversion");
-
-				newElement = RunOptimization(newElement, optimizationContext, this, mappingSchema, dataOptions, nullability, true,
-					static(visitor, e) =>
-					{
-						var ne = e;
-
-						if (ne is ISqlExpression expr2)
-							ne = visitor.Context.Optimizer.ConvertExpressionImpl(expr2, visitor);
-
-						if (!ReferenceEquals(ne, e))
-							return ne;
-
-						if (ne is ISqlPredicate pred3)
-							ne = visitor.Context.Optimizer.ConvertPredicateImpl(pred3, visitor);
-
-						return ne;
-					});
-
-			}
-
-			return newElement;
 		}
 
 		public virtual bool CanCompareSearchConditions => false;
@@ -3707,8 +3623,8 @@ namespace LinqToDB.SqlProvider
 		{
 			// make skip take as parameters or evaluate otherwise
 
-			takeExpr = ConvertElement(mappingSchema, dataOptions, selectQuery.Select.TakeValue, optimizationContext, nullability) as ISqlExpression;
-			skipExpr = ConvertElement(mappingSchema, dataOptions, selectQuery.Select.SkipValue, optimizationContext, nullability) as ISqlExpression;
+			takeExpr = optimizationContext.ConvertAll(selectQuery.Select.TakeValue, nullability);
+			skipExpr = optimizationContext.ConvertAll(selectQuery.Select.SkipValue, nullability);
 
 			if (takeExpr != null)
 			{

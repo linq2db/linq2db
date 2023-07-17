@@ -1906,7 +1906,7 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+		public virtual IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -2366,7 +2366,7 @@ namespace LinqToDB.SqlQuery
 			return predicate;
 		}
 
-		IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
+		public virtual IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{

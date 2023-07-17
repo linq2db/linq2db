@@ -9,11 +9,20 @@
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
 			MappingSchema mappingSchema, DataOptions dataOptions, AliasesContext aliases, EvaluationContext context)
 		{
-			var optimizationContext = new OptimizationContext(context, aliases, false, static () => NoopQueryParametersNormalizer.Instance);
+			var optimizationContext = new OptimizationContext(
+				context, 
+				dataOptions, 
+				sqlProviderFlags: null, 
+				mappingSchema,
+				aliases, 
+				optimizer.CreateOptimizerVisitor(false), 
+				optimizer.CreateConvertVisitor(false), 
+				isParameterOrderDepended: false,
+				static () => NoopQueryParametersNormalizer.Instance);
 
-			var nullability = NullabilityContext.NonQuery;
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
-			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, dataOptions, statement, optimizationContext, nullability);
+			var newStatement = optimizationContext.ConvertAll(statement, nullability);
 
 			return newStatement;
 		}
@@ -23,7 +32,7 @@
 		{
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
-			var newStatement = (SqlStatement)optimizer.ConvertElement(mappingSchema, dataOptions, statement, optimizationContext, nullability);
+			var newStatement = optimizationContext.ConvertAll(statement, nullability);
 
 			return newStatement;
 		}
