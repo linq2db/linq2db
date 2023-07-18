@@ -11,6 +11,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new SqlServer2005SqlExpressionConvertVisitor(allowModify, SQLVersion);
+		}
+
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			//SQL Server 2005 supports ROW_NUMBER but not OFFSET/FETCH
@@ -24,12 +29,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			statement = ReplaceSkipWithRowNumber(statement);
 
 			return statement;
-		}
-
-		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func, false);
-			return base.ConvertFunction(nullability, func);
 		}
 	}
 }

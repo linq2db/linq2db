@@ -61,6 +61,12 @@
 						length = 1;
 				}
 
+				if (value is SqlParameter param)
+				{
+					typeRequired = true;
+					length       = param.Type.Length ?? 8191; // max possible
+				}
+
 				if (typeRequired)
 					StringBuilder.Append("CAST(");
 

@@ -64,8 +64,8 @@ namespace LinqToDB.Remote
 					DataContext.SqlProviderFlags,
 					DataContext.MappingSchema,
 					query.Aliases!, 
-					sqlOptimizer.CreateOptimizerVisitor(true),
-					sqlOptimizer.CreateConvertVisitor(true),
+					sqlOptimizer.CreateOptimizerVisitor(false),
+					sqlOptimizer.CreateConvertVisitor(false),
 					false, static () => NoopQueryParametersNormalizer.Instance);
 
 				for (var i = 0; i < cc; i++)

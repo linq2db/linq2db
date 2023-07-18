@@ -208,6 +208,34 @@ namespace LinqToDB.DataProvider.Firebird
 				StringBuilder.Append("NOT NULL");
 		}
 
+
+		SqlParameter? _currentParam;
+
+		protected override void BuildParameter(NullabilityContext nullability, SqlParameter parameter)
+		{
+			if (parameter != _currentParam && (BuildStep == Step.Output || BuildStep == Step.SelectClause ||
+			                                   BuildStep == Step.UpdateClause))
+			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.Context.ParameterValues);
+
+				// TODO: temporary guard against cast to unknown type (Variant)
+				if (paramValue.DbDataType.DataType   == DataType.Undefined &&
+				    paramValue.DbDataType.SystemType == typeof(object))
+				{
+					base.BuildParameter(nullability, parameter);
+					return;
+				}
+
+				_currentParam = parameter;
+				BuildTypedExpression(nullability, new SqlDataType(paramValue.DbDataType), parameter);
+				_currentParam = null;
+
+				return;
+			}
+
+			base.BuildParameter(nullability, parameter);
+		}
+
 		SqlField? _identityField;
 
 		public override int CommandCount(SqlStatement statement)
@@ -309,10 +337,6 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			expr = base.WrapColumnExpression(expr);
-			if (expr is SqlParameter param)
-			{
-				return new SqlFunction(param.Type.SystemType, "Convert", false, new SqlDataType(param.Type), param);
-			}
 
 			return expr;
 		}

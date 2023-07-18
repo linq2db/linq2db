@@ -134,6 +134,12 @@ namespace LinqToDB.SqlProvider
 			return OptimizationContext.ConvertAll(element, nullability);
 		}
 
+		[return: NotNullIfNotNull(nameof(element))]
+		public SqlSearchCondition? ConvertSearchCondition(SqlSearchCondition? element, NullabilityContext nullability)
+		{
+			return OptimizationContext.ConvertSearchCondition(element, nullability);
+		}
+
 		#endregion
 
 		#region BuildSql
@@ -2071,7 +2077,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool BuildWhere(NullabilityContext nullability, SelectQuery selectQuery)
 		{
-			var condition = ConvertElement(selectQuery.Where.SearchCondition, nullability);
+			var condition = ConvertSearchCondition(selectQuery.Where.SearchCondition, nullability);
 
 			return condition.Conditions.Count > 0;
 		}
@@ -2163,7 +2169,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildHavingClause(NullabilityContext nullability, SelectQuery selectQuery)
 		{
-			var condition = ConvertElement(selectQuery.Where.Having.SearchCondition, nullability);
+			var condition = ConvertSearchCondition(selectQuery.Where.Having.SearchCondition, nullability);
 			if (condition.Conditions.Count == 0)
 				return;
 
@@ -2243,8 +2249,13 @@ namespace LinqToDB.SqlProvider
 
 			if (NeedTake(takeExpr) && FirstFormat(selectQuery) != null)
 			{
+				var saveStep = BuildStep;
+				BuildStep = Step.OffsetLimit;
+
 				StringBuilder.Append(' ').AppendFormat(
 					FirstFormat(selectQuery)!, WithStringBuilderBuildExpression(nullability, takeExpr!));
+
+				BuildStep = saveStep;
 
 				BuildTakeHints(selectQuery);
 			}
@@ -2962,7 +2973,7 @@ namespace LinqToDB.SqlProvider
 						if (!inlining)
 						{
 							var newParm = OptimizationContext.AddParameter(parm);
-							BuildParameter(newParm);
+							BuildParameter(nullability, newParm);
 						}
 
 						break;
@@ -3040,7 +3051,7 @@ namespace LinqToDB.SqlProvider
 			return MappingSchema.TryConvertToSql(StringBuilder, new (paramValue.DbDataType), DataOptions, paramValue.ProviderValue);
 		}
 
-		protected virtual void BuildParameter(SqlParameter parameter)
+		protected virtual void BuildParameter(NullabilityContext nullability, SqlParameter parameter)
 		{
 			Convert(StringBuilder, parameter.Name!, ConvertType.NameToQueryParameter);
 		}

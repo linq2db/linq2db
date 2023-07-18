@@ -246,6 +246,7 @@ namespace LinqToDB.SqlQuery
 				if (search.Conditions.Count == 1)
 				{
 					var sc = search.Conditions[0];
+
 					return new SqlCondition(condition.IsNot != sc.IsNot, sc.Predicate, condition.IsOr);
 				}
 			}

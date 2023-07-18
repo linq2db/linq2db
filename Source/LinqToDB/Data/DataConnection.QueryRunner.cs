@@ -201,41 +201,42 @@ namespace LinqToDB.Data
 					return new PreparedQuery((CommandWithParameters[])query.Context, query.Statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 				}
 
-				var sql = query.Statement;
+				var statement = query.Statement;
 
 				// custom query handling
 				var preprocessContext = new EvaluationContext(parameterValues);
-				var newSql            = dataConnection.ProcessQuery(sql, preprocessContext);
+				var newSql            = dataConnection.ProcessQuery(statement, preprocessContext);
 
-				if (!ReferenceEquals(sql, newSql))
+				if (!ReferenceEquals(statement, newSql))
 				{
-					sql = newSql;
-					sql.IsParameterDependent = true;
+					statement = newSql;
+					statement.IsParameterDependent = true;
 				}
 
 				var sqlBuilder   = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
 				var sqlOptimizer = dataConnection.DataProvider.GetSqlOptimizer (dataConnection.Options);
 
-				var cc = sqlBuilder.CommandCount(sql);
+				var cc = sqlBuilder.CommandCount(statement);
 				using var sb = Pools.StringBuilder.Allocate();
 
 				var commands = new CommandWithParameters[cc];
 
-				if (!sql.IsParameterDependent)
-					sql.IsParameterDependent = sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, sql);
+				if (!statement.IsParameterDependent)
+					statement.IsParameterDependent = sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement);
 
 				// optimize, optionally with parameters
-				var evaluationContext = new EvaluationContext(sql.IsParameterDependent ? parameterValues : null);
+				var evaluationContext = new EvaluationContext(statement.IsParameterDependent ? parameterValues : null);
 
 				var aliases = query.Aliases;
-				if (aliases == null || !ReferenceEquals(query.Statement, sql))
+				if (aliases == null || !ReferenceEquals(query.Statement, statement))
 				{
 					// correct aliases if needed
-					SqlStatement.PrepareQueryAndAliases(sql, query.Aliases, out aliases);
+					SqlStatement.PrepareQueryAndAliases(statement, query.Aliases, out aliases);
 				}
 
-				var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(true);
-				var convertVisitor = sqlOptimizer.CreateConvertVisitor(true);
+
+				var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(false);
+				var convertVisitor  = sqlOptimizer.CreateConvertVisitor(false);
 
 				for (var i = 0; i < cc; i++)
 				{
@@ -250,12 +251,12 @@ namespace LinqToDB.Data
 
 					sb.Value.Length = 0;
 
-					sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);
+					sqlBuilder.BuildSql(i, statement, sb.Value, optimizationContext, startIndent);
 					commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 					optimizationContext.ClearParameters();
 				}
 
-				if (!sql.IsParameterDependent)
+				if (!statement.IsParameterDependent)
 				{
 					query.Context = commands;
 
@@ -264,7 +265,7 @@ namespace LinqToDB.Data
 					query.Aliases = null;
 				}
 
-				return new PreparedQuery(commands, sql, dataConnection.GetNextCommandHints(!forGetSqlText));
+				return new PreparedQuery(commands, statement, dataConnection.GetNextCommandHints(!forGetSqlText));
 			}
 
 			static DbParameter[]?[] GetParameters(DataConnection dataConnection, PreparedQuery pq, IReadOnlyParameterValues? parameterValues, bool forGetSqlText)

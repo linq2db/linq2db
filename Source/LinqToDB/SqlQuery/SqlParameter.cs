@@ -26,14 +26,15 @@ namespace LinqToDB.SqlQuery
 #endif
 
 		// meh, nullable...
-		public string?    Name             { get; set; }
-		public DbDataType Type             { get; set; }
-		public bool       IsQueryParameter { get; set; }
-		internal int?     AccessorId       { get; set; }
+		public   string?    Name             { get; set; }
+		public   DbDataType Type             { get; set; }
+		public   bool       IsQueryParameter { get; set; }
+		internal int?       AccessorId       { get; set; }
 
 		Type ISqlExpression.SystemType => Type.SystemType;
 
-		public object?    Value            { get; }
+		public object? Value     { get; }
+		public bool    NeedsCast { get; set; }
 
 		public object? CorrectParameterValue(object? rawValue)
 		{

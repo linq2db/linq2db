@@ -21,6 +21,11 @@ namespace LinqToDB.SqlQuery.Visitors
 				_queryVisitor = queryVisitor;
 			}
 
+			public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
+			{
+				return _queryVisitor.NotifyReplaced(newElement, oldElement);
+			}
+
 			public override VisitMode GetVisitMode(IQueryElement element)
 			{
 				var visitMode = VisitMode;
@@ -43,6 +48,15 @@ namespace LinqToDB.SqlQuery.Visitors
 
 				return base.Visit(element);
 			}
+
+			public override IQueryElement VisitCteClauseReference(CteClause element)
+			{
+				if (_queryVisitor.GetReplacement(element, out var newElement))
+					return newElement;
+
+				return base.VisitCteClauseReference(element);
+			}
+
 		}
 
 		public SqlQueryVisitor(VisitMode visitMode) : base(visitMode)
@@ -92,7 +106,8 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					// go through tree and correct references
 
-					var finalized = new Replacer(this).Visit(newElement);
+					var replacer  = new Replacer(this);
+					var finalized = replacer.Visit(newElement);
 					if (!ReferenceEquals(newElement, finalized))
 					{
 						// do we need to run again?

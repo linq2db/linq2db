@@ -2165,14 +2165,14 @@ namespace LinqToDB.SqlQuery
 						    NotifyReplaced(oc, selectQuery.OrderBy);
 						}
 
-						if (selectQuery.HasSetOperators && ReferenceEquals(so, selectQuery.SetOperators))
-							so = new List<SqlSetOperator>(so);
+						if (selectQuery.HasSetOperators && (so == null || ReferenceEquals(so, selectQuery.SetOperators)))
+							so = new List<SqlSetOperator>(selectQuery.SetOperators);
 
-						if (selectQuery.HasUniqueKeys && ReferenceEquals(uk, selectQuery.UniqueKeys))
-							uk = new List<ISqlExpression[]>(uk);
+						if (selectQuery.HasUniqueKeys && (uk == null || ReferenceEquals(uk, selectQuery.UniqueKeys)))
+							uk = new List<ISqlExpression[]>(selectQuery.UniqueKeys);
 
-						if (selectQuery.SqlQueryExtensions != null && ReferenceEquals(ex, selectQuery.SqlQueryExtensions))
-							ex = new List<SqlQueryExtension>(ex);
+						if (selectQuery.SqlQueryExtensions != null && (ex == null || ReferenceEquals(ex, selectQuery.SqlQueryExtensions)))
+							ex = new List<SqlQueryExtension>(selectQuery.SqlQueryExtensions);
 
 						nq.Init(sc, fc, wc, gc, hc, oc, so, uk,
 							selectQuery.ParentSelect,

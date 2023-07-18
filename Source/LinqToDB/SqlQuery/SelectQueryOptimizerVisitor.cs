@@ -158,11 +158,11 @@ namespace LinqToDB.SqlQuery
 		{
 			var saveCurrent = _currentSetOperator;
 			_currentSetOperator = element;
-			base.VisitSqlSetOperator(element);
+			var newElement = base.VisitSqlSetOperator(element);
 
 			_currentSetOperator = saveCurrent;
 
-			return element;
+			return newElement;
 		}
 
 		void OptimizeUnions(SelectQuery selectQuery)

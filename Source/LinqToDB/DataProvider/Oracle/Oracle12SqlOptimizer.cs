@@ -11,6 +11,11 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new Oracle12SqlExpressionConvertVisitor(allowModify);
+		}
+
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			if (statement.IsUpdate() || statement.IsInsert() || statement.IsDelete())
@@ -23,28 +28,6 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			return statement;
-		}
-
-		protected override ISqlExpression ConvertFunction(NullabilityContext nullability, SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func, false);
-
-			switch (func.Name)
-			{
-				case PseudoFunctions.TRY_CONVERT:
-					return new SqlExpression(func.SystemType, "CAST({0} AS {1} DEFAULT NULL ON CONVERSION ERROR)", Precedence.Primary, func.Parameters[2], func.Parameters[0])
-					{
-						CanBeNull = true
-					};
-
-				case PseudoFunctions.TRY_CONVERT_OR_DEFAULT:
-					return new SqlExpression(func.SystemType, "CAST({0} AS {1} DEFAULT {2} ON CONVERSION ERROR)", Precedence.Primary, func.Parameters[2], func.Parameters[0], func.Parameters[3])
-					{
-						CanBeNull = func.Parameters[2].CanBeNullable(nullability) || func.Parameters[3].CanBeNullable(nullability)
-					};
-			}
-
-			return base.ConvertFunction(nullability, func);
 		}
 	}
 }

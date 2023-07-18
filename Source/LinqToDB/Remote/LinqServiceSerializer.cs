@@ -875,6 +875,7 @@ namespace LinqToDB.Remote
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
+							Append(elem.NeedsCast);
 							Append(paramValue.DbDataType);
 
 							var value = paramValue.ProviderValue;
@@ -1764,6 +1765,7 @@ namespace LinqToDB.Remote
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
+							var needsCast        = ReadBool();
 							var dbDataType       = ReadDbDataType();
 
 							var value            = ReadValue(ReadType()!);
@@ -1771,6 +1773,7 @@ namespace LinqToDB.Remote
 							obj = new SqlParameter(dbDataType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
+								NeedsCast = needsCast,
 							};
 
 							break;

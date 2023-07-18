@@ -1,30 +1,25 @@
 ﻿using System;
 using System.Linq;
-using System.Xml.Linq;
-
-using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
-using LinqToDB.SqlQuery.Visitors;
-
-using static LinqToDB.Linq.Builder.ContextParser;
 
 namespace LinqToDB.SqlProvider
 {
+	using Common.Internal;
+	using Extensions;
+	using SqlQuery;
+	using SqlQuery.Visitors;
+
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
 		EvaluationContext  _evaluationContext  = default!;
 		NullabilityContext _nullabilityContext = default!;
-		SqlProviderFlags   _sqlProviderFlags   = default!;
 		DataOptions        _dataOptions        = default!;
+		SqlProviderFlags?  _sqlProviderFlags;
 
-		public SqlExpressionOptimizerVisitor(VisitMode visitMode) : base(visitMode)
+		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform)
 		{
 		}
 
-		public virtual IQueryElement Optimize(EvaluationContext evaluationContext, NullabilityContext nullabilityContext, SqlProviderFlags sqlProviderFlags, DataOptions dataOptions, IQueryElement element)
+		public virtual IQueryElement Optimize(EvaluationContext evaluationContext, NullabilityContext nullabilityContext, SqlProviderFlags? sqlProviderFlags, DataOptions dataOptions, IQueryElement element)
 		{
 			Cleanup();
 			_evaluationContext  = evaluationContext;
@@ -32,43 +27,7 @@ namespace LinqToDB.SqlProvider
 			_sqlProviderFlags   = sqlProviderFlags;
 			_dataOptions        = dataOptions;
 
-			return Visit(element);
-		}
-
-		public static ISqlExpression CreateSqlValue(object? value, SqlBinaryExpression be)
-		{
-			return CreateSqlValue(value, be.GetExpressionType(), be.Expr1, be.Expr2);
-		}
-
-		public static ISqlExpression CreateSqlValue(object? value, DbDataType dbDataType, params ISqlExpression[] basedOn)
-		{
-			SqlParameter? foundParam = null;
-
-			foreach (var element in basedOn)
-			{
-				if (element.ElementType == QueryElementType.SqlParameter)
-				{
-					var param = (SqlParameter)element;
-					if (param.IsQueryParameter)
-					{
-						foundParam = param;
-					}
-					else
-						foundParam ??= param;
-				}
-			}
-
-			if (foundParam != null)
-			{
-				var newParam = new SqlParameter(dbDataType, foundParam.Name, value)
-				{
-					IsQueryParameter = foundParam.IsQueryParameter
-				};
-
-				return newParam;
-			}
-
-			return new SqlValue(dbDataType, value);
+			return ProcessElement(element);
 		}
 
 		public override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
@@ -99,7 +58,6 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-
 		public override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			var newElement = base.VisitSqlSearchCondition(element);
@@ -109,10 +67,12 @@ namespace LinqToDB.SqlProvider
 
 			element = SelectQueryOptimizer.OptimizeSearchCondition(element, _evaluationContext);
 
+			/*
 			if (element.TryEvaluateExpression(_evaluationContext, out var value) && value != null)
 			{
 				return new SqlPredicate.Expr(new SqlValue(value));
 			}
+			*/
 
 			return element;
 		}
@@ -124,23 +84,32 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (predicate.IsNot && predicate.Expr1 is SqlSearchCondition sc)
+			if (predicate.IsNot)
 			{
-				if (sc.Conditions.Count == 1)
+				if (predicate.Expr1 is SqlSearchCondition sc)
 				{
-					var cond = sc.Conditions[0];
-
-					if (cond.IsNot)
-						return cond.Predicate;
-
-					if (cond.Predicate is SqlPredicate.ExprExpr ee)
+					if (sc.Conditions.Count == 1)
 					{
-						if (ee.Operator == SqlPredicate.Operator.Equal)
-							return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+						var cond = sc.Conditions[0];
 
-						if (ee.Operator == SqlPredicate.Operator.NotEqual)
-							return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+						if (cond.IsNot)
+							return cond.Predicate;
+
+						if (cond.Predicate is SqlPredicate.ExprExpr ee)
+						{
+							if (ee.Operator == SqlPredicate.Operator.Equal)
+								return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2,
+									_dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+
+							if (ee.Operator == SqlPredicate.Operator.NotEqual)
+								return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2,
+									_dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+						}
 					}
+				}
+				else if (predicate.Expr1 is IInvertibleElement invertible && invertible.CanInvert())
+				{
+					return invertible.Invert();
 				}
 			}
 
@@ -186,7 +155,19 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			return SelectQueryOptimizer.OptimizeCondition(element);
+			do
+			{
+				var optimizedCondition = SelectQueryOptimizer.OptimizeCondition(element);
+
+				if (ReferenceEquals(optimizedCondition, element))
+				{
+					break;
+				}
+
+				element = optimizedCondition;
+			} while (true);
+
+			return element;
 		}
 
 		public override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
@@ -237,7 +218,7 @@ namespace LinqToDB.SqlProvider
 											oper  = "-";
 										}
 
-										return new SqlBinaryExpression(element.SystemType, be1.Expr1, oper, CreateSqlValue(value, element), element.Precedence);
+										return new SqlBinaryExpression(element.SystemType, be1.Expr1, oper, QueryHelper.CreateSqlValue(value, element), element.Precedence);
 									}
 
 									case "-":
@@ -251,7 +232,7 @@ namespace LinqToDB.SqlProvider
 											oper  = "+";
 										}
 
-										return new SqlBinaryExpression(element.SystemType, be1.Expr1, oper, CreateSqlValue(value, element), element.Precedence);
+										return new SqlBinaryExpression(element.SystemType, be1.Expr1, oper, QueryHelper.CreateSqlValue(value, element), element.Precedence);
 									}
 								}
 
@@ -276,8 +257,8 @@ namespace LinqToDB.SqlProvider
 
 					if (v1 && v2)
 					{
-						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 + i2, element);
-						if (value1 is string || value2 is string) return CreateSqlValue(value1?.ToString() + value2, element);
+						if (value1 is int i1 && value2 is int i2) return QueryHelper.CreateSqlValue(i1 + i2, element);
+						if (value1 is string || value2 is string) return QueryHelper.CreateSqlValue(value1?.ToString() + value2, element);
 					}
 
 					break;
@@ -309,7 +290,7 @@ namespace LinqToDB.SqlProvider
 											oper  = "-";
 										}
 
-										return new SqlBinaryExpression(element.SystemType, be1.Expr1, oper, CreateSqlValue(value, element), element.Precedence);
+										return new SqlBinaryExpression(element.SystemType, be1.Expr1, oper, QueryHelper.CreateSqlValue(value, element), element.Precedence);
 									}
 
 									case "-":
@@ -323,7 +304,7 @@ namespace LinqToDB.SqlProvider
 											oper  = "+";
 										}
 
-										return new SqlBinaryExpression(element.SystemType, be1.Expr1, oper, CreateSqlValue(value, element), element.Precedence);
+										return new SqlBinaryExpression(element.SystemType, be1.Expr1, oper, QueryHelper.CreateSqlValue(value, element), element.Precedence);
 									}
 								}
 
@@ -334,7 +315,7 @@ namespace LinqToDB.SqlProvider
 
 					if (v2 && element.Expr1.TryEvaluateExpression(_evaluationContext, out var value1))
 					{
-						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 - i2, element);
+						if (value1 is int i1 && value2 is int i2) return QueryHelper.CreateSqlValue(i1 - i2, element);
 					}
 
 					break;
@@ -347,7 +328,7 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (value1)
 						{
-							case int i when i == 0 : return CreateSqlValue(0, element);
+							case int i when i == 0 : return QueryHelper.CreateSqlValue(0, element);
 							case int i when i == 1 : return element.Expr2;
 							case int i when
 								element.Expr2    is SqlBinaryExpression be2 &&
@@ -355,7 +336,7 @@ namespace LinqToDB.SqlProvider
 								be2.Expr1.TryEvaluateExpression(_evaluationContext, out var be2v1)  &&
 								be2v1 is int bi :
 							{
-								return new SqlBinaryExpression(be2.SystemType, CreateSqlValue(i * bi, element), "*", be2.Expr2);
+								return new SqlBinaryExpression(be2.SystemType, QueryHelper.CreateSqlValue(i * bi, element), "*", be2.Expr2);
 							}
 						}
 					}
@@ -365,7 +346,7 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (value2)
 						{
-							case int i when i == 0 : return CreateSqlValue(0, element);
+							case int i when i == 0 : return QueryHelper.CreateSqlValue(0, element);
 							case int i when i == 1 : return element.Expr1;
 						}
 					}
@@ -374,10 +355,10 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (value1)
 						{
-							case int    i1 when value2 is int    i2 : return CreateSqlValue(i1 * i2, element);
-							case int    i1 when value2 is double d2 : return CreateSqlValue(i1 * d2, element);
-							case double d1 when value2 is int    i2 : return CreateSqlValue(d1 * i2, element);
-							case double d1 when value2 is double d2 : return CreateSqlValue(d1 * d2, element);
+							case int    i1 when value2 is int    i2 : return QueryHelper.CreateSqlValue(i1 * i2, element);
+							case int    i1 when value2 is double d2 : return QueryHelper.CreateSqlValue(i1 * d2, element);
+							case double d1 when value2 is int    i2 : return QueryHelper.CreateSqlValue(d1 * i2, element);
+							case double d1 when value2 is double d2 : return QueryHelper.CreateSqlValue(d1 * d2, element);
 						}
 					}
 
@@ -400,7 +381,7 @@ namespace LinqToDB.SqlProvider
 
 			if (element.TryEvaluateExpression(_evaluationContext, out var value))
 			{
-				return CreateSqlValue(value, element.GetExpressionType(), element.Parameters);
+				return QueryHelper.CreateSqlValue(value, element.GetExpressionType(), element.Parameters);
 			}
 
 			switch (element.Name)
@@ -411,13 +392,13 @@ namespace LinqToDB.SqlProvider
 					if (parms.Length == 2)
 					{
 						if (parms[0] is SqlValue val1 && parms[1] is not SqlValue)
-							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, CreateSqlValue(val1.Value, parms[1].GetExpressionType(), parms[0]), parms[1])
+							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, QueryHelper.CreateSqlValue(val1.Value, parms[1].GetExpressionType(), parms[0]), parms[1])
 							{
 								DoNotOptimize = true,
 								CanBeNull     = element.CanBeNull
 							};
 						else if (parms[1] is SqlValue val2 && parms[0] is not SqlValue)
-							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, parms[0], CreateSqlValue(val2.Value, parms[0].GetExpressionType(), parms[1]))
+							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, parms[0], QueryHelper.CreateSqlValue(val2.Value, parms[0].GetExpressionType(), parms[1]))
 							{
 								DoNotOptimize = true,
 								CanBeNull     = element.CanBeNull
@@ -490,12 +471,12 @@ namespace LinqToDB.SqlProvider
 						// TODO: is it correct?
 						// type constant by value from other branch
 						if (parms[1] is SqlValue val1 && parms[2] is not SqlValue)
-							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, parms[0], CreateSqlValue(val1.Value, parms[2].GetExpressionType(), parms[1]), parms[2])
+							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, parms[0], QueryHelper.CreateSqlValue(val1.Value, parms[2].GetExpressionType(), parms[1]), parms[2])
 							{
 								DoNotOptimize = true
 							};
 						else if (parms[2] is SqlValue val2 && parms[1] is not SqlValue)
-							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, parms[0], parms[1], CreateSqlValue(val2.Value, parms[1].GetExpressionType(), parms[2]))
+							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, parms[0], parms[1], QueryHelper.CreateSqlValue(val2.Value, parms[1].GetExpressionType(), parms[2]))
 							{
 								DoNotOptimize = true
 							};
@@ -585,6 +566,11 @@ namespace LinqToDB.SqlProvider
 
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
+
+			if (predicate.TryEvaluateExpression(_evaluationContext, out var value) && value is bool)
+			{
+				return new SqlPredicate.Expr(new SqlValue(value));
+			}
 
 			/*// Avoiding infinite recursion
 			//

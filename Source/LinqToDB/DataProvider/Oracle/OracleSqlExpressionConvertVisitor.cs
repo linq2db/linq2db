@@ -1,0 +1,189 @@
+﻿using LinqToDB.Extensions;
+using System;
+
+namespace LinqToDB.DataProvider.Oracle
+{
+	using SqlProvider;
+	using SqlQuery;
+
+	public class OracleSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
+	{
+		public OracleSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
+		{
+		}
+
+		#region LIKE
+
+		protected static string[] OracleLikeCharactersToEscape = {"%", "_"};
+
+		public override string[] LikeCharactersToEscape => OracleLikeCharactersToEscape;
+
+		#endregion
+
+		public override IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		{
+			var expr = predicate;
+
+			// Oracle saves empty string as null to database, so we need predicate modification before sending query
+			//
+			if (expr.WithNull == true &&
+			    (expr.Operator == SqlPredicate.Operator.Equal          ||
+			     expr.Operator == SqlPredicate.Operator.NotEqual       ||
+			     expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
+			     expr.Operator == SqlPredicate.Operator.LessOrEqual))
+			{
+				if (expr.Expr1.SystemType == typeof(string) &&
+				    expr.Expr1.TryEvaluateExpression(EvaluationContext, out var value1) && value1 is string string1)
+				{
+					if (string1 == "")
+					{
+						var sc = new SqlSearchCondition();
+						sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
+						sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr2, false), true));
+						return sc;
+					}
+				}
+
+				if (expr.Expr2.SystemType == typeof(string)                             &&
+				    expr.Expr2.TryEvaluateExpression(EvaluationContext, out var value2) && value2 is string string2)
+				{
+					if (string2 == "")
+					{
+						var sc = new SqlSearchCondition();
+						sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
+						sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(expr.Expr1, false), true));
+						return sc;
+					}
+				}
+			}
+
+			return base.ConvertExprExprPredicate(predicate);
+		}
+
+		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
+		{
+			switch (element.Operation)
+			{
+				case "%": return new SqlFunction(element.SystemType, "MOD", element.Expr1, element.Expr2);
+				case "&": return new SqlFunction(element.SystemType, "BITAND", element.Expr1, element.Expr2);
+				case "|": // (a + b) - BITAND(a, b)
+					return Sub(
+						Add(element.Expr1, element.Expr2, element.SystemType),
+						new SqlFunction(element.SystemType, "BITAND", element.Expr1, element.Expr2),
+						element.SystemType);
+
+				case "^": // (a + b) - BITAND(a, b) * 2
+					return Sub(
+						Add(element.Expr1, element.Expr2, element.SystemType),
+						Mul(new SqlFunction(element.SystemType, "BITAND", element.Expr1, element.Expr2), 2),
+						element.SystemType);
+				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
+			}
+
+			return base.ConvertSqlBinaryExpression(element);
+		}
+
+		public override ISqlExpression ConvertSqlExpression(SqlExpression element)
+		{
+			if (element.Expr.StartsWith("To_Number(To_Char(") && element.Expr.EndsWith(", 'FF'))"))
+				return Div(new SqlExpression(element.SystemType, element.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), element.Parameters), 1000);
+
+			return base.ConvertSqlExpression(element);
+		}
+
+		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		{
+			switch (func.Name)
+			{
+				case "Coalesce":
+				{
+					return ConvertCoalesceToBinaryFunc(func, "Nvl");
+				}
+				case "Convert"        :
+				{
+					var ftype = func.SystemType.ToUnderlying();
+
+					if (ftype == typeof(bool))
+					{
+						var ex = AlternativeConvertToBoolean(func, 1);
+						if (ex != null)
+							return ex;
+					}
+
+					if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
+#if NET6_0_OR_GREATER
+						|| ftype == typeof(DateOnly)
+#endif
+						)
+					{
+						if (IsTimeDataType(func.Parameters[0]))
+						{
+							if (func.Parameters[1].SystemType == typeof(string))
+								return func.Parameters[1];
+
+							return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("HH24:MI:SS"));
+						}
+
+						if (IsDateDataType(func.Parameters[0], "Date"))
+						{
+							if (func.Parameters[1].SystemType!.ToUnderlying() == typeof(DateTime)
+								|| func.Parameters[1].SystemType!.ToUnderlying() == typeof(DateTimeOffset))
+							{
+								return new SqlFunction(func.SystemType, "Trunc", func.Parameters[1], new SqlValue("DD"));
+							}
+
+							return new SqlFunction(func.SystemType, "TO_DATE", func.Parameters[1], new SqlValue("YYYY-MM-DD"));
+						}
+						else if (IsDateDataOffsetType(func.Parameters[0]))
+						{
+							if (ftype == typeof(DateTimeOffset))
+								return func.Parameters[1];
+
+							return new SqlFunction(func.SystemType, "TO_TIMESTAMP_TZ", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+						}
+
+						return new SqlFunction(func.SystemType, "TO_TIMESTAMP", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+					}
+					else if (ftype == typeof(string))
+					{
+						var stype = func.Parameters[1].SystemType!.ToUnderlying();
+
+						if (stype == typeof(DateTimeOffset))
+						{
+							return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS TZH:TZM"));
+						}
+						else if (stype == typeof(DateTime))
+						{
+							return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("YYYY-MM-DD HH24:MI:SS"));
+						}
+#if NET6_0_OR_GREATER
+						else if (stype == typeof(DateOnly))
+						{
+							return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("YYYY-MM-DD"));
+						}
+#endif
+					}
+
+					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
+				}
+
+				case "CharIndex"      :
+					return func.Parameters.Length == 2?
+						new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0]):
+						new SqlFunction(func.SystemType, "InStr", func.Parameters[1], func.Parameters[0], func.Parameters[2]);
+				case "Avg"            :
+					return new SqlFunction(
+						func.SystemType,
+						"Round",
+						new SqlFunction(func.SystemType, "AVG", func.Parameters[0]),
+						new SqlValue(27));
+			}
+
+			func = ConvertFunctionParameters(func, false);
+
+			return base.ConvertSqlFunction(func);
+		}
+
+
+	}
+}

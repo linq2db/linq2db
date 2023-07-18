@@ -197,16 +197,11 @@ namespace LinqToDB.SqlQuery
 				writer.AppendElement(Source);
 
 			writer
-				.Append(" as t")
-				.Append(SourceID);
-
-			if (Alias != null)
-			{
-				writer
-					.Append("(")
-					.Append(Alias)
-					.Append(")");
-			}
+				.Append(" as ")
+				.Append(RawAlias != null ? RawAlias : "t")
+				.Append(" (")
+				.Append(SourceID)
+				.Append(")");
 
 			writer.UnIndent();
 

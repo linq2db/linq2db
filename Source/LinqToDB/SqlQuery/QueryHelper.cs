@@ -1903,6 +1903,43 @@ namespace LinqToDB.SqlQuery
 
 			return isNullableParameters ?? true;
 		}
-		
+
+
+		public static ISqlExpression CreateSqlValue(object? value, SqlBinaryExpression be)
+		{
+			return CreateSqlValue(value, be.GetExpressionType(), be.Expr1, be.Expr2);
+		}
+
+		public static ISqlExpression CreateSqlValue(object? value, DbDataType dbDataType, params ISqlExpression[] basedOn)
+		{
+			SqlParameter? foundParam = null;
+
+			foreach (var element in basedOn)
+			{
+				if (element.ElementType == QueryElementType.SqlParameter)
+				{
+					var param = (SqlParameter)element;
+					if (param.IsQueryParameter)
+					{
+						foundParam = param;
+					}
+					else
+						foundParam ??= param;
+				}
+			}
+
+			if (foundParam != null)
+			{
+				var newParam = new SqlParameter(dbDataType, foundParam.Name, value)
+				{
+					IsQueryParameter = foundParam.IsQueryParameter
+				};
+
+				return newParam;
+			}
+
+			return new SqlValue(dbDataType, value);
+		}
+	
 	}
 }
