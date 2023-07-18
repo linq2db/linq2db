@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
+	using System.Xml.Linq;
+
 	using Common.Internal;
 	using LinqToDB.Linq.Builder;
 
@@ -126,22 +128,6 @@ namespace LinqToDB.SqlQuery
 			cloneVisitor.Value.GetReplacements(objectTree);
 
 			return clone;
-		}
-
-		public static void CloneInto<T>(this IReadOnlyList<T> source, IList<T> target, Dictionary<IQueryElement, IQueryElement> objectTree)
-			where T : class, IQueryElement
-		{
-			new CloneVisitor<object?>(objectTree, null).CloneInto(target, source);
-		}
-
-        [return: NotNullIfNotNull(nameof(elements))]
-		public static T[]? Clone<T>(this T[]? elements, Dictionary<IQueryElement, IQueryElement> objectTree)
-			where T : class, IQueryElement
-		{
-			if (elements == null)
-				return null;
-
-			return new CloneVisitor<object?>(objectTree, null).Clone(elements);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]

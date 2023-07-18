@@ -33,8 +33,7 @@ namespace LinqToDB.SqlQuery
 
 		Type ISqlExpression.SystemType => Type.SystemType;
 
-		public object? Value     { get; }
-		public bool    NeedsCast { get; set; }
+		public object? Value { get; }
 
 		public object? CorrectParameterValue(object? rawValue)
 		{
