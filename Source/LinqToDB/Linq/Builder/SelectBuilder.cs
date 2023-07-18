@@ -111,15 +111,5 @@ namespace LinqToDB.Linq.Builder
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 		}
-
-		#region Convert
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
-		#endregion
 	}
 }

@@ -96,12 +96,6 @@ namespace LinqToDB.Linq.Builder
 			return setContext;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		#endregion
 
 		#region Context

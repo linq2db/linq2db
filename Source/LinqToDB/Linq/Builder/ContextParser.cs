@@ -21,11 +21,6 @@ namespace LinqToDB.Linq.Builder
 			return new Context(builder.BuildSequence(new BuildInfo(buildInfo, call.Arguments[0])));
 		}
 
-		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			return builder.IsSequence(new BuildInfo(buildInfo, ((MethodCallExpression)buildInfo.Expression).Arguments[0]));

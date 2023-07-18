@@ -309,12 +309,6 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		sealed class AggregationContext : SequenceContextBase
 		{
 			public AggregationContext(IBuildContext? parent, IBuildContext sequence, string methodName, Type returnType)

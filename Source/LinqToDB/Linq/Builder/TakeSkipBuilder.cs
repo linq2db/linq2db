@@ -69,12 +69,6 @@ namespace LinqToDB.Linq.Builder
 			return sequence;
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		static void BuildTake(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr, TakeHints? hints)
 		{
 			var sql = sequence.SelectQuery;

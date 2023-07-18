@@ -306,20 +306,6 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public SequenceConvertInfo? ConvertSequence(BuildInfo buildInfo, ParameterExpression? param, bool throwExceptionIfCantConvert)
-		{
-			buildInfo.Expression = buildInfo.Expression.Unwrap();
-
-			foreach (var builder in _builders)
-				if (builder.CanBuild(this, buildInfo))
-					return builder.Convert(this, buildInfo, param);
-
-			if (throwExceptionIfCantConvert)
-				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", SqlErrorExpression.PrepareExpression(buildInfo.Expression));
-
-			return null;
-		}
-
 		public Expression ExpandSequenceExpression(BuildInfo buildInfo)
 		{
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
@@ -380,32 +366,6 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 				}
-			}
-
-			SequenceParameter = Expression.Parameter(paramType, "cp");
-
-			var sequence = ConvertSequence(new BuildInfo((IBuildContext?)null, expr, new SelectQuery()), SequenceParameter, false);
-
-			if (sequence != null)
-			{
-				if (sequence.Expression.Type != expr.Type)
-				{
-					if (isQueryable)
-					{
-						var p = sequence.ExpressionsToReplace!.Single(static s => s.Path.NodeType == ExpressionType.Parameter);
-
-						return Expression.Call(
-							((MethodCallExpression)expr).Method.DeclaringType!,
-							"Select",
-							new[] { p.Path.Type, paramType },
-							sequence.Expression,
-							Expression.Lambda(p.Expr, (ParameterExpression)p.Path));
-					}
-
-					throw new InvalidOperationException();
-				}
-
-				return sequence.Expression;
 			}
 
 			return expr;

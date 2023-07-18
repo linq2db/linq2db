@@ -47,12 +47,6 @@ namespace LinqToDB.Linq.Builder
 			return new DistinctContext(outerSubqueryContext);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		class DistinctContext : PassThroughContext
 		{
 			public DistinctContext(IBuildContext context) : base(context)

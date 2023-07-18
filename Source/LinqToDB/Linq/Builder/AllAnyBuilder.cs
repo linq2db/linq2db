@@ -56,12 +56,6 @@ namespace LinqToDB.Linq.Builder
 			return new AllAnyContext(buildInfo.Parent, buildInfo.SelectQuery, methodCall, sequence);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		sealed class AllAnyContext : SequenceContextBase
 		{
 			readonly MethodCallExpression _methodCall;

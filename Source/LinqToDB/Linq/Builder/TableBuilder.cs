@@ -218,11 +218,6 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException();
 		}
 
-		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			return true;

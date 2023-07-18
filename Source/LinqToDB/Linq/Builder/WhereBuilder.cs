@@ -34,38 +34,5 @@ namespace LinqToDB.Linq.Builder
 
 			return result;
 		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
-
-			if (info != null)
-			{
-				info.Expression = methodCall.Transform((methodCall, info, predicate), static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
-
-				if (param != null)
-				{
-					if (param.Type != info.Parameter!.Type)
-						param = Expression.Parameter(info.Parameter.Type, param.Name);
-
-					if (info.ExpressionsToReplace != null && info.ExpressionsToReplace.Count > 0)
-					{
-						foreach (var path in info.ExpressionsToReplace)
-						{
-							path.Path = path.Path.Transform((p: info.Parameter, param), static (context, e) => e == context.p ? context.param : e);
-							path.Expr = path.Expr.Transform((p: info.Parameter, param), static (context, e) => e == context.p ? context.param : e);
-						}
-					}
-				}
-
-				info.Parameter = param;
-
-				return info;
-			}
-
-			return null;
-		}
 	}
 }
