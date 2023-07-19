@@ -33,7 +33,11 @@ namespace LinqToDB.Linq.Builder
 			MemberInfo[]?         loadWithPath,
 			out bool?             isOuter)
 		{
-			var dataContextConstant = Expression.Constant(builder.DataContext, builder.DataContext.GetType());
+			Expression dataContextExpr = ExpressionConstants.DataContextParam;
+			if (dataContextExpr.Type != builder.DataContext.GetType())
+			{
+				dataContextExpr = Expression.Convert(dataContextExpr, builder.DataContext.GetType());
+			}
 
 			// We are trying to keep fast cache hit behaviour, so cache check should be added only if needed
 			//
@@ -61,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 				if (onMember.Arguments == null)
 				{
 					if (definedQueryMethod.Parameters.Count > 1 && typeof(IDataContext).IsSameOrParentOf(definedQueryMethod.Parameters[1].Type))
-						parameterMatch.Add(definedQueryMethod.Parameters[1], dataContextConstant);
+						parameterMatch.Add(definedQueryMethod.Parameters[1], dataContextExpr);
 				}
 				else
 				{
@@ -147,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var queryParam = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(objectType), dataContextConstant);
+				var queryParam = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(objectType), dataContextExpr);
 
 				if (additionalCondition != null)
 				{

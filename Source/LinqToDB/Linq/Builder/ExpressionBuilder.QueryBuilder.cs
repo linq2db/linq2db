@@ -1048,7 +1048,7 @@ namespace LinqToDB.Linq.Builder
 
 			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>>(mappingBody, 
 				QueryRunnerParam, 
-				DataContextParam, 
+				ExpressionConstants.DataContextParam, 
 				DataReaderParam, 
 				ExpressionParam, 
 				ParametersParam, 

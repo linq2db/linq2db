@@ -150,7 +150,6 @@ namespace LinqToDB.Linq.Builder
 		public readonly ParameterExpression[]? CompiledParameters;
 
 		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");

@@ -1098,7 +1098,7 @@ namespace LinqToDB
 					null,
 					Methods.LinqToDB.Merge.MergeWithOutputInto.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
 					currentQuery.Expression,
-					Expression.Constant(outputTable),
+					outputTable.Expression,
 					Expression.Quote(outputExpression)
 				)
 			);
@@ -1140,7 +1140,7 @@ namespace LinqToDB
 					null,
 					MergeWithOutputIntoSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
 					currentQuery.Expression,
-					Expression.Constant(outputTable),
+					outputTable.Expression,
 					Expression.Quote(outputExpression)
 				)
 			);
@@ -1183,7 +1183,7 @@ namespace LinqToDB
 				null,
 				Methods.LinqToDB.Merge.MergeWithOutputInto.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
 				currentQuery.Expression,
-				Expression.Constant(outputTable),
+				outputTable.Expression,
 				Expression.Quote(outputExpression)
 			);
 
@@ -1230,7 +1230,7 @@ namespace LinqToDB
 				null,
 				MergeWithOutputIntoSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
 				currentQuery.Expression,
-				Expression.Constant(outputTable),
+				outputTable.Expression,
 				Expression.Quote(outputExpression)
 			);
 

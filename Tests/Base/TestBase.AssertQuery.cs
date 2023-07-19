@@ -4,10 +4,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Linq;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
@@ -300,6 +302,21 @@ namespace Tests
 
 				return queryCall;
 			}
+
+			var dc = Internals.GetDataContext(query);
+
+			if (dc == null)
+				throw new InvalidOperationException("Could not retrieve DataContext from IQueryable.");
+
+			expr = expr.Transform(e =>
+			{
+				if (e == ExpressionConstants.DataContextParam)
+				{
+					return Expression.Constant(dc, e.Type);
+				}
+
+				return e;
+			});
 
 			var newExpr = expr.Transform(e =>
 			{
