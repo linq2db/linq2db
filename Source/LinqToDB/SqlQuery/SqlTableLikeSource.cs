@@ -13,8 +13,8 @@ namespace LinqToDB.SqlQuery
 
 		internal SqlTableLikeSource(
 			int                   id,
-			SqlValuesTable        sourceEnumerable,
-			SelectQuery           sourceQuery,
+			SqlValuesTable?       sourceEnumerable,
+			SelectQuery?          sourceQuery,
 			IEnumerable<SqlField> sourceFields)
 		{
 			SourceID         = id;

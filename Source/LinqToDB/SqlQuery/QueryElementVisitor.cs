@@ -298,8 +298,8 @@ namespace LinqToDB.SqlQuery
 
 						NotifyReplaced(new SqlTableLikeSource(
 							element.SourceID,
-							sourceEnumerable ?? throw new InvalidOperationException(),
-							sourceQuery      ?? throw new InvalidOperationException(),
+							sourceEnumerable,
+							sourceQuery,
 							newFields), element);
 					}
 
