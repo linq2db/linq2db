@@ -116,7 +116,13 @@ namespace LinqToDB.SqlProvider
 
 			var update = new SqlUpdateClause();
 			update.Items.AddRange(operation.Items);
+
+			var saveStep = BuildStep;
+			BuildStep = Step.MergeUpdateClause;
+
 			BuildUpdateSet(nullability, null, update);
+
+			BuildStep = saveStep;
 		}
 
 		protected virtual void BuildMergeOperationDelete(NullabilityContext nullability, SqlMergeOperationClause operation)
@@ -153,7 +159,13 @@ namespace LinqToDB.SqlProvider
 			var insertClause = new SqlInsertClause();
 			insertClause.Items.AddRange(operation.Items);
 
+			var saveStep = BuildStep;
+
+			BuildStep = Step.MergeInsertClause;
+
 			BuildInsertClause(nullability, new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
+
+			BuildStep = saveStep;
 		}
 
 		protected virtual void BuildMergeOperationUpdateWithDelete(NullabilityContext nullability, SqlMergeOperationClause operation)

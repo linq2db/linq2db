@@ -213,8 +213,10 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildParameter(NullabilityContext nullability, SqlParameter parameter)
 		{
-			if (parameter != _currentParam && (BuildStep == Step.Output || BuildStep == Step.SelectClause ||
-			                                   BuildStep == Step.UpdateClause))
+			if (parameter != _currentParam && (BuildStep == Step.Output       || BuildStep == Step.SelectClause ||
+			                                   BuildStep == Step.InsertClause || BuildStep == Step.UpdateClause ||
+			                                   BuildStep == Step.MergeInsertClause || 
+			                                   BuildStep == Step.MergeUpdateClause))
 			{
 				var paramValue = parameter.GetParameterValue(OptimizationContext.Context.ParameterValues);
 

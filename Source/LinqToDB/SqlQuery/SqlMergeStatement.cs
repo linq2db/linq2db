@@ -35,8 +35,8 @@ namespace LinqToDB.SqlQuery
 
 		public string?                       Hint       { get; internal set; }
 		public SqlTableSource                Target     { get; private  set; }
-		public SqlTableLikeSource            Source     { get; internal set; }  = null!;
-		public SqlSearchCondition            On         { get; private  set; }  = new();
+		public SqlTableLikeSource            Source     { get; internal set; } = null!;
+		public SqlSearchCondition            On         { get; private  set; } = new();
 		public List<SqlMergeOperationClause> Operations { get; private  set; } = new();
 		public SqlOutputClause?              Output     { get; set; }
 

@@ -296,7 +296,7 @@ namespace LinqToDB.SqlQuery
 							NotifyReplaced(newField, oldField);
 						}
 
-						NotifyReplaced(new SqlTableLikeSource(
+						return NotifyReplaced(new SqlTableLikeSource(
 							element.SourceID,
 							sourceEnumerable,
 							sourceQuery,
