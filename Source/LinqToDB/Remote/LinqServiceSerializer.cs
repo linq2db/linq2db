@@ -1764,7 +1764,6 @@ namespace LinqToDB.Remote
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
-							var needsCast        = ReadBool();
 							var dbDataType       = ReadDbDataType();
 
 							var value            = ReadValue(ReadType()!);
