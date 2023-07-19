@@ -342,8 +342,12 @@ namespace LinqToDB.DataProvider.Informix
 			var newExpr = base.WrapBooleanExpression(expr);
 			if (!ReferenceEquals(newExpr, expr))
 			{
-				return new SqlFunction(typeof(bool), "Convert", false, new SqlDataType(DataType.Boolean),
-					newExpr);
+				var sqlDataType = new SqlDataType(DataType.Boolean);
+				return new SqlFunction(typeof(bool), PseudoFunctions.CONVERT, false, sqlDataType, sqlDataType,
+					newExpr)
+				{
+					DoNotOptimize = true
+				};
 			}
 
 			return newExpr;

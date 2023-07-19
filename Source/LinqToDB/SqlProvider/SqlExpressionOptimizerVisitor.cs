@@ -65,7 +65,7 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			element = SelectQueryOptimizer.OptimizeSearchCondition(element, _evaluationContext);
+			element = OptimizationHelper.OptimizeSearchCondition(element, _evaluationContext);
 
 			/*
 			if (element.TryEvaluateExpression(_evaluationContext, out var value) && value != null)
@@ -157,7 +157,7 @@ namespace LinqToDB.SqlProvider
 
 			do
 			{
-				var optimizedCondition = SelectQueryOptimizer.OptimizeCondition(element);
+				var optimizedCondition = OptimizationHelper.OptimizeCondition(element);
 
 				if (ReferenceEquals(optimizedCondition, element))
 				{
@@ -503,21 +503,17 @@ namespace LinqToDB.SqlProvider
 				{
 					var typef = element.SystemType.ToUnderlying();
 
-					if (element.Parameters[2] is SqlFunction from && from.Name == PseudoFunctions.CONVERT && from.Parameters[1].SystemType!.ToUnderlying() == typef)
-						return from.Parameters[2];
+					if (!element.DoNotOptimize)
+					{
+						var from = (SqlDataType)element.Parameters[1];
+						var to   = (SqlDataType)element.Parameters[0];
 
-					break;
-				}
+						if (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type))
+							return element.Parameters[2];
 
-				case "Convert":
-				{
-					var typef = element.SystemType.ToUnderlying();
-
-					if (element.Parameters[1] is SqlFunction from && from.Name == "Convert" && from.Parameters[1].SystemType!.ToUnderlying() == typef)
-						return from.Parameters[1];
-
-					if (element.Parameters[1] is SqlExpression fe && fe.Expr == "Cast({0} as {1})" && fe.Parameters[0].SystemType!.ToUnderlying() == typef)
-						return fe.Parameters[0];
+						if (element.Parameters[2] is SqlFunction paramFunc && paramFunc.Name == PseudoFunctions.CONVERT && paramFunc.Parameters[1].SystemType!.ToUnderlying() == typef)
+							return paramFunc.Parameters[2];
+					}
 
 					break;
 				}

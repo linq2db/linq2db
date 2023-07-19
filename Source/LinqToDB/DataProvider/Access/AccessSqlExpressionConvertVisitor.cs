@@ -1,12 +1,12 @@
-﻿using LinqToDB.Mapping;
-using System;
-
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+﻿using System;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Extensions;
+	using Linq;
+	using SqlProvider;
+	using SqlQuery;
+
 	public class AccessSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public AccessSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -132,6 +132,30 @@ namespace LinqToDB.DataProvider.Access
 				case "Length"                : return func.WithName("LEN");
 			}
 			return base.ConvertSqlFunction(func);
+		}
+
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		{
+			switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
+			{
+				case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
+				case TypeCode.DateTime :
+					if (IsDateDataType(func.Parameters[0], "Date"))
+						func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
+					else if (IsTimeDataType(func.Parameters[0]))
+						func = new SqlFunction(func.SystemType, "TimeValue", func.Parameters[1]);
+					else
+						func = new SqlFunction(func.SystemType, "CDate", func.Parameters[1]);
+					break;
+
+				default:
+					if (func.SystemType == typeof(DateTime))
+						goto case TypeCode.DateTime;
+
+					return func.Parameters[2];
+			}
+
+			return func;
 		}
 	}
 }

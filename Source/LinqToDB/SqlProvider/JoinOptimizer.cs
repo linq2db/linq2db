@@ -176,7 +176,7 @@ namespace LinqToDB.SqlProvider
 
 			//TODO: review dependency checking
 			_selectQuery.VisitParentFirst(ctx, CheckDependency);
-			if (!ctx.Dependent && _selectQuery.ParentSelect == null)
+			if (!ctx.Dependent)
 				_statement.VisitParentFirst(ctx, CheckDependency);
 
 			return ctx.Dependent;

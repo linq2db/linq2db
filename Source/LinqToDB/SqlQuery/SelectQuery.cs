@@ -30,19 +30,17 @@ namespace LinqToDB.SqlQuery
 			SourceID = id;
 		}
 
-		internal void Init(
-			SqlSelectClause         select,
-			SqlFromClause           from,
-			SqlWhereClause          where,
-			SqlGroupByClause        groupBy,
-			SqlWhereClause          having,
-			SqlOrderByClause        orderBy,
-			List<SqlSetOperator>?   setOperators,
-			List<ISqlExpression[]>? uniqueKeys,
-			SelectQuery?            parentSelect,
-			bool                    parameterDependent,
-			string?                 queryName,
-			bool                    doNotSetAliases)
+		internal void Init(SqlSelectClause select,
+			SqlFromClause                  from,
+			SqlWhereClause                 where,
+			SqlGroupByClause               groupBy,
+			SqlWhereClause                 having,
+			SqlOrderByClause               orderBy,
+			List<SqlSetOperator>?          setOperators,
+			List<ISqlExpression[]>?        uniqueKeys,
+			bool                           parameterDependent,
+			string?                        queryName,
+			bool                           doNotSetAliases)
 		{
 			Select               = select;
 			From                 = from;
@@ -51,7 +49,6 @@ namespace LinqToDB.SqlQuery
 			Having               = having;
 			OrderBy              = orderBy;
 			_setOperators        = setOperators;
-			ParentSelect         = parentSelect;
 			IsParameterDependent = parameterDependent;
 			QueryName            = queryName;
 			DoNotSetAliases      = doNotSetAliases;
@@ -80,7 +77,6 @@ namespace LinqToDB.SqlQuery
 		private List<object>? _properties;
 		public  List<object>   Properties => _properties ??= new ();
 
-		public SelectQuery?   ParentSelect         { get; set; }
 		public bool           IsSimple         => IsSimpleOrSet && !HasSetOperators;
 		public bool           IsSimpleOrSet    => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
 		public bool           IsSimpleButWhere => !HasSetOperators && !Select.HasModifier && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
@@ -149,7 +145,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var ts = From[table];
 
-			return ts == null && ParentSelect != null ? ParentSelect.GetTableSource(table) : ts;
+			return ts;
 		}
 
 		internal static SqlTableSource? CheckTableSource(SqlTableSource ts, ISqlTableSource table, string? alias)

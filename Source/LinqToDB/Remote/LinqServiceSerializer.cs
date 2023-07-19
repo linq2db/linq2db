@@ -875,6 +875,7 @@ namespace LinqToDB.Remote
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
+							Append(elem.NeedsCast);
 							Append(paramValue.DbDataType);
 
 							var value = paramValue.ProviderValue;
@@ -1205,7 +1206,6 @@ namespace LinqToDB.Remote
 							Append(elem.GroupBy);
 							Append(elem.Having);
 							Append(elem.OrderBy);
-							Append(elem.ParentSelect?.SourceID ?? 0);
 							Append(elem.IsParameterDependent);
 							Append(elem.QueryName);
 							Append(elem.DoNotSetAliases);
@@ -1764,6 +1764,7 @@ namespace LinqToDB.Remote
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
+							var needCast         = ReadBool();
 							var dbDataType       = ReadDbDataType();
 
 							var value            = ReadValue(ReadType()!);
@@ -1771,6 +1772,7 @@ namespace LinqToDB.Remote
 							obj = new SqlParameter(dbDataType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
+								NeedsCast = needCast,
 							};
 
 							break;
@@ -2080,7 +2082,6 @@ namespace LinqToDB.Remote
 							var groupBy            = Read<SqlGroupByClause>()!;
 							var having             = Read<SqlWhereClause>()!;
 							var orderBy            = Read<SqlOrderByClause>()!;
-							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
 							var queryName          = ReadString();
 							var doNotSetAliases    = ReadBool();
@@ -2098,20 +2099,12 @@ namespace LinqToDB.Remote
 								having,
 								orderBy,
 								unions?.ToList(),
-								null, // we do not serialize unique keys
 								null,
 								parameterDependent,
 								queryName,
 								doNotSetAliases);
 
 							_queries.Add(sid, query);
-
-							if (parentSql != 0)
-								_actions.Add(() =>
-								{
-									if (_queries.TryGetValue(parentSql, out var selectQuery))
-										query.ParentSelect = selectQuery;
-								});
 
 							query.All = Read<SqlField>()!;
 

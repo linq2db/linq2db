@@ -827,8 +827,6 @@ namespace LinqToDB.SqlProvider
 
 				var newDeleteStatement = new SqlDeleteStatement(sql);
 
-				deleteStatement.SelectQuery.ParentSelect = sql;
-
 				var copy      = new SqlTable(table) { Alias = null };
 				var tableKeys = table.GetKeys(true);
 				var copyKeys  = copy. GetKeys(true);
@@ -1151,7 +1149,6 @@ namespace LinqToDB.SqlProvider
 				var sql = new SelectQuery { IsParameterDependent = updateStatement.IsParameterDependent  };
 
 				var newUpdateStatement = new SqlUpdateStatement(sql);
-				updateStatement.SelectQuery.ParentSelect = sql;
 
 				Dictionary<IQueryElement, IQueryElement>? replaceTree = null;
 
@@ -1242,8 +1239,6 @@ namespace LinqToDB.SqlProvider
 							var innerQuery = CloneQuery(clonedQuery, updateStatement.Update.Table, out var iterationTree);
 
 							ex = RemapCloned(ex, replaceTree, iterationTree);
-
-							innerQuery.ParentSelect = sql;
 
 							innerQuery.Select.Columns.Clear();
 
@@ -1853,22 +1848,6 @@ namespace LinqToDB.SqlProvider
 				},
 				allowMutation: true,
 				withStack: false);
-		}
-
-		/// <summary>
-		/// Replaces pagination by Window function ROW_NUMBER().
-		/// </summary>
-		/// <param name="statement">Statement which may contain take/skip modifiers.</param>
-		/// <param name="supportsEmptyOrderBy">Indicates that database supports OVER () syntax.</param>
-		/// <param name="onlySubqueries">Indicates when transformation needed only for subqueries.</param>
-		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceTakeSkipWithRowNumber(SqlStatement statement, bool supportsEmptyOrderBy, bool onlySubqueries)
-		{
-			return ReplaceTakeSkipWithRowNumber(
-				onlySubqueries,
-				statement,
-				static (onlySubqueries, query) => onlySubqueries && query.ParentSelect == null,
-				supportsEmptyOrderBy);
 		}
 
 		/// <summary>

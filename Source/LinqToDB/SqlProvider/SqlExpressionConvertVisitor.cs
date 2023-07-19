@@ -94,7 +94,15 @@ namespace LinqToDB.SqlProvider
 		public virtual IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			if (predicate.Expr1.ElementType == QueryElementType.SqlRow)
-				return ConvertRowExprExpr(predicate, EvaluationContext);
+			{
+				// Do not convert for remote context
+				if (SqlProviderFlags == null)
+					return predicate;
+
+				var newPredicate = ConvertRowExprExpr(predicate, EvaluationContext);
+				if (!ReferenceEquals(newPredicate, predicate))
+					return Visit(newPredicate);
+			}
 
 			var reduced = predicate.Reduce(NullabilityContext, EvaluationContext);
 
@@ -648,9 +656,7 @@ namespace LinqToDB.SqlProvider
 					? RowFeature.Overlaps
 					: RowFeature.Comparisons;
 
-			var expr2 = predicate.Expr2;
-			while (expr2 is SqlNullabilityExpression nullability)
-				expr2 = nullability.SqlExpression;
+			var expr2 = QueryHelper.UnwrapNullablity(predicate.Expr2);
 
 			switch (expr2)
 			{

@@ -46,53 +46,6 @@ namespace LinqToDB.DataProvider.SqlCe
 				{
 					return func.WithName("LEN");
 				}
-				case "Convert":
-				{
-					switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
-					{
-						case TypeCode.UInt64:
-							if (func.Parameters[1].SystemType!.IsFloatType())
-								return new SqlFunction(
-									func.SystemType,
-									func.Name,
-									false,
-									func.Precedence,
-									func.Parameters[0],
-									new SqlFunction(func.SystemType, "Floor", func.Parameters[1]));
-
-							break;
-
-						case TypeCode.DateTime:
-							var type1 = func.Parameters[1].SystemType!.ToUnderlying();
-
-							if (IsTimeDataType(func.Parameters[0]))
-							{
-								if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
-									return new SqlExpression(
-										func.SystemType, "Cast(Convert(NChar, {0}, 114) as DateTime)",
-										Precedence.Primary, func.Parameters[1]);
-
-								if (func.Parameters[1].SystemType == typeof(string))
-									return func.Parameters[1];
-
-								return new SqlExpression(
-									func.SystemType, "Convert(NChar, {0}, 114)", Precedence.Primary,
-									func.Parameters[1]);
-							}
-
-							if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
-							{
-								if (IsDateDataType(func.Parameters[0], "Datetime"))
-									return new SqlExpression(
-										func.SystemType, "Cast(Floor(Cast({0} as Float)) as DateTime)",
-										Precedence.Primary, func.Parameters[1]);
-							}
-
-							break;
-					}
-
-					break;
-				}
 			}
 
 			func = ConvertFunctionParameters(func, false);
@@ -181,5 +134,55 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		{
+			var toType   = func.Parameters[0];
+			var argument = func.Parameters[1];
+
+			switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
+			{
+				case TypeCode.UInt64:
+					if (argument.SystemType!.IsFloatType())
+						return new SqlFunction(
+							func.SystemType,
+							func.Name,
+							false,
+							func.Precedence,
+							toType,
+							new SqlFunction(func.SystemType, "Floor", argument));
+
+					break;
+
+				case TypeCode.DateTime:
+					var type1 = argument.SystemType!.ToUnderlying();
+
+					if (IsTimeDataType(toType))
+					{
+						if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
+							return new SqlExpression(
+								func.SystemType, "Cast(Convert(NChar, {0}, 114) as DateTime)",
+								Precedence.Primary, argument);
+
+						if (argument.SystemType == typeof(string))
+							return argument;
+
+						return new SqlExpression(
+							func.SystemType, "Convert(NChar, {0}, 114)", Precedence.Primary,
+							argument);
+					}
+
+					if (type1 == typeof(DateTime) || type1 == typeof(DateTimeOffset))
+					{
+						if (IsDateDataType(toType, "Datetime"))
+							return new SqlExpression(
+								func.SystemType, "Cast(Floor(Cast({0} as Float)) as DateTime)",
+								Precedence.Primary, argument);
+					}
+
+					break;
+			}
+
+			return base.ConvertConversion(func);
+		}
 	}
 }

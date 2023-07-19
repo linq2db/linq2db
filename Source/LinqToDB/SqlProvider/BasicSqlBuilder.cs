@@ -753,7 +753,11 @@ namespace LinqToDB.SqlProvider
 		{
 			if (!SupportsNullInColumn && expr is SqlValue sqlValue && sqlValue.Value == null)
 			{
-				return new SqlFunction(sqlValue.ValueType.SystemType, "Convert", false, new SqlDataType(sqlValue.ValueType), sqlValue);
+				var sqlDataType = new SqlDataType(sqlValue.ValueType);
+				return new SqlFunction(sqlValue.ValueType.SystemType, PseudoFunctions.CONVERT, false, sqlDataType, sqlDataType, sqlValue)
+				{
+					DoNotOptimize = true
+				};
 			}
 
 			return expr;

@@ -494,15 +494,6 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		public static SelectQuery RootQuery(this SelectQuery query)
-		{
-			while (query.ParentSelect != null)
-			{
-				query = query.ParentSelect;
-			}
-			return query;
-		}
-
 		public static SqlJoinedTable? FindJoin(this SelectQuery query,
 			Func<SqlJoinedTable, bool> match)
 		{
@@ -825,7 +816,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (selectQuery == null) throw new ArgumentNullException(nameof(selectQuery));
 
-			if (selectQuery.OrderBy.IsEmpty || selectQuery.ParentSelect == null)
+			if (selectQuery.OrderBy.IsEmpty)
 				return false;
 
 			var current = selectQuery;
@@ -1932,7 +1923,8 @@ namespace LinqToDB.SqlQuery
 			{
 				var newParam = new SqlParameter(dbDataType, foundParam.Name, value)
 				{
-					IsQueryParameter = foundParam.IsQueryParameter
+					IsQueryParameter = foundParam.IsQueryParameter,
+					NeedsCast = foundParam.NeedsCast
 				};
 
 				return newParam;
@@ -1940,6 +1932,26 @@ namespace LinqToDB.SqlQuery
 
 			return new SqlValue(dbDataType, value);
 		}
-	
+
+		public static List<IQueryElement> CollectElements(IQueryElement root, Func<IQueryElement, bool> filter)
+		{
+			var result = new List<IQueryElement>();
+			root.VisitAll((list: result, filter), static (ctx, e) =>
+			{
+				if (ctx.filter(e))
+					ctx.list.Add(e);
+			});
+
+			return result;
+		}
+
+		public static ISqlExpression UnwrapNullablity(ISqlExpression expr)
+		{
+			while (expr is SqlNullabilityExpression nullability)
+				expr = nullability.SqlExpression;
+
+			return expr;
+		}
+
 	}
 }

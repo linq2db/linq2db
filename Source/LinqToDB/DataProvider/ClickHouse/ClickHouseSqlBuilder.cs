@@ -478,7 +478,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			// force alias generation on nested queries otherwise column in parent query will have composite name subqueryAlias.columnName
 			// (could have many nesting levels) which we don't support and have no plans to support
-			addAlias = addAlias || selectQuery?.ParentSelect != null;
+			addAlias = addAlias || Statement.ParentStatement != null;
 		}
 
 		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)

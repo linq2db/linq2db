@@ -226,30 +226,6 @@ namespace LinqToDB.DataProvider.Access
 						new SqlFunction(func.SystemType, "InStr", new SqlValue(1),    func.Parameters[1], func.Parameters[0], new SqlValue(1)):
 						new SqlFunction(func.SystemType, "InStr", func.Parameters[2], func.Parameters[1], func.Parameters[0], new SqlValue(1));
 					break;
-
-				case "Convert"   :
-					switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
-					{
-						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
-						case TypeCode.DateTime :
-							if (IsDateDataType(func.Parameters[0], "Date"))
-								func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
-							else if (IsTimeDataType(func.Parameters[0]))
-								func = new SqlFunction(func.SystemType, "TimeValue", func.Parameters[1]);
-							else
-								func = new SqlFunction(func.SystemType, "CDate", func.Parameters[1]);
-							break;
-
-						default:
-							if (func.SystemType == typeof(DateTime))
-								goto case TypeCode.DateTime;
-
-							BuildExpression(nullability, func.Parameters[1]);
-
-							return;
-					}
-
-					break;
 			}
 
 			base.BuildFunction(nullability, func);

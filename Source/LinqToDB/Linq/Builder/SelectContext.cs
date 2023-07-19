@@ -168,7 +168,7 @@ namespace LinqToDB.Linq.Builder
 			return Builder.GetSequenceExpression(this);
 		}
 
-		public virtual void SetAlias(string? alias)
+		public override void SetAlias(string? alias)
 		{
 			if (!string.IsNullOrEmpty(alias) && !alias!.Contains("<") && SelectQuery.Select.From.Tables.Count == 1)
 			{

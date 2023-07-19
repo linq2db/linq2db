@@ -110,8 +110,7 @@ namespace LinqToDB.SqlQuery
 
 			if (_correcting == null)
 			{
-				_parentSelect         = saveParent;
-				newQuery.ParentSelect = _parentSelect;
+				_parentSelect = saveParent;
 
 				do
 				{
@@ -287,17 +286,6 @@ namespace LinqToDB.SqlQuery
 
 		bool FinalizeAndValidateInternal(SelectQuery selectQuery)
 		{
-			selectQuery.Visit((this, selectQuery), static (context, e) =>
-			{
-				if (e is SelectQuery sql && sql != context.selectQuery)
-				{
-					sql.ParentSelect = context.selectQuery;
-
-					if (sql.IsParameterDependent)
-						context.selectQuery.IsParameterDependent = true;
-				}
-			});
-
 			var isModified = false;
 
 			RemoveEmptyJoins(selectQuery);

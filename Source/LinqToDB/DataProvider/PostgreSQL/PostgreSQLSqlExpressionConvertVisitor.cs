@@ -40,22 +40,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			switch (func.Name)
 			{
-				case "Convert"   :
-				{
-					if (func.SystemType.ToUnderlying() == typeof(bool))
-					{
-						var ex = AlternativeConvertToBoolean(func, 1);
-						if (ex != null)
-							return ex;
-					}
-
-					// Another cast syntax
-					//
-					// rreturn new SqlExpression(func.SystemType, "{0}::{1}", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
-					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary,
-						FloorBeforeConvert(func), func.Parameters[0]);
-				}
-
 				case "CharIndex" :
 				{
 					return func.Parameters.Length == 2
@@ -78,6 +62,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			return base.ConvertSqlFunction(func);
+		}
+
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		{
+			if (func.SystemType.ToUnderlying() == typeof(bool))
+			{
+				var ex = AlternativeConvertToBoolean(func, 2);
+				if (ex != null)
+					return ex;
+			}
+
+			// Another cast syntax
+			//
+			// rreturn new SqlExpression(func.SystemType, "{0}::{1}", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
+			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary,
+				FloorBeforeConvert(func, func.Parameters[2]), func.Parameters[0]);
 		}
 	}
 }

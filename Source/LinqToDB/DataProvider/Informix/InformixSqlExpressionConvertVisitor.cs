@@ -49,85 +49,87 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				// passing parameter to NVL will result in "A syntax error has occurred." error from server
 				case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
-				case "Convert"  :
-				{
-					var par0 = func.Parameters[0];
-					var par1 = func.Parameters[1];
-
-					var isNull = par1 is SqlValue sqlValue && sqlValue.Value == null;
-
-					if (!isNull)
-					{
-						switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
-						{
-							case TypeCode.String   :
-							{
-								var stype = func.Parameters[1].SystemType!.ToUnderlying();
-								if (stype == typeof(DateTime))
-								{
-									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S.%F"));
-								}
-#if NET6_0_OR_GREATER
-								else if (stype == typeof(DateOnly))
-								{
-									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("%Y-%m-%d"));
-								}
-#endif
-								return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
-							}
-
-							case TypeCode.Boolean  :
-							{
-								var ex = AlternativeConvertToBoolean(func, 1);
-								if (ex != null)
-									return ex;
-								break;
-							}
-
-							case TypeCode.UInt64   :
-								if (func.Parameters[1].SystemType!.IsFloatType())
-									par1 = new SqlFunction(func.SystemType, "Floor", func.Parameters[1]);
-								break;
-
-							case TypeCode.DateTime :
-								if (IsDateDataType(func.Parameters[0], "Date"))
-								{
-									if (func.Parameters[1].SystemType == typeof(string))
-									{
-										return new SqlFunction(
-											func.SystemType,
-											"Date",
-											new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d")));
-									}
-
-									return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
-								}
-
-								if ((IsDateTime2Type(func.Parameters[0], "DateTime2")
-										|| IsDateTimeType(func.Parameters[0], "DateTime")
-										|| IsSmallDateTimeType(func.Parameters[0], "SmallDateTime"))
-									&& func.Parameters[1].SystemType == typeof(string))
-									return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S"));
-
-								if (IsTimeDataType(func.Parameters[0]))
-									return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);
-
-								return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1]);
-
-							default:
-								if (func.SystemType.ToUnderlying() == typeof(DateTimeOffset))
-									goto case TypeCode.DateTime;
-								break;
-						}
-					}
-
-					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, par1, par0);
-				}
 			}
 
 			func = ConvertFunctionParameters(func, false);
 
 			return base.ConvertSqlFunction(func);
+		}
+
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		{
+			var toType   = func.Parameters[0];
+			var argument = func.Parameters[2];
+
+			var isNull = argument is SqlValue sqlValue && sqlValue.Value == null;
+
+			if (!isNull)
+			{
+				switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
+				{
+					case TypeCode.String   :
+					{
+						var stype = argument.SystemType!.ToUnderlying();
+						if (stype == typeof(DateTime))
+						{
+							return new SqlFunction(func.SystemType, "To_Char", argument, new SqlValue("%Y-%m-%d %H:%M:%S.%F"));
+						}
+#if NET6_0_OR_GREATER
+						else if (stype == typeof(DateOnly))
+						{
+							return new SqlFunction(func.SystemType, "To_Char", argument, new SqlValue("%Y-%m-%d"));
+						}
+#endif
+						return new SqlFunction(func.SystemType, "To_Char", argument);
+					}
+
+					case TypeCode.Boolean  :
+					{
+						var ex = AlternativeConvertToBoolean(func, 2);
+						if (ex != null)
+							return ex;
+						break;
+					}
+
+					case TypeCode.UInt64   :
+						if (argument.SystemType!.IsFloatType())
+							argument = new SqlFunction(func.SystemType, "Floor", argument);
+						break;
+
+					case TypeCode.DateTime :
+						if (IsDateDataType(toType, "Date"))
+						{
+							if (argument.SystemType == typeof(string))
+							{
+								return new SqlFunction(
+									func.SystemType,
+									"Date",
+									new SqlFunction(func.SystemType, "To_Date", argument, new SqlValue("%Y-%m-%d")));
+							}
+
+							return new SqlFunction(func.SystemType, "Date", argument);
+						}
+
+						if ((IsDateTime2Type(func.Parameters[0], "DateTime2")
+								|| IsDateTimeType(func.Parameters[0], "DateTime")
+								|| IsSmallDateTimeType(func.Parameters[0], "SmallDateTime"))
+							&& argument.SystemType == typeof(string))
+							return new SqlFunction(func.SystemType, "To_Date", argument, new SqlValue("%Y-%m-%d %H:%M:%S"));
+
+						if (IsTimeDataType(func.Parameters[0]))
+							return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, argument);
+
+						return new SqlFunction(func.SystemType, "To_Date", argument);
+
+					default:
+						if (func.SystemType.ToUnderlying() == typeof(DateTimeOffset))
+							goto case TypeCode.DateTime;
+						break;
+				}
+			}
+
+			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, argument, toType);
+	
 		}
 	}
 }

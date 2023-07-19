@@ -38,53 +38,6 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			switch (func.Name)
 			{
-				case "Convert"    :
-				{
-					var par0 = func.Parameters[0];
-					var par1 = func.Parameters[1];
-
-					var isNull = par1 is SqlValue sqlValue && sqlValue.Value == null;
-
-					if (isNull)
-					{
-						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, par1, par0);
-					}
-
-					if (func.SystemType.ToUnderlying() == typeof(bool))
-					{
-						var ex = AlternativeConvertToBoolean(func, 1);
-						if (ex != null)
-							return ex;
-					}
-
-					if (par0 is SqlDataType type)
-					{
-						if (type.Type.SystemType == typeof(string) && par1.SystemType != typeof(string))
-							return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", par1));
-
-						if (type.Type.Length > 0)
-							return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), par1, new SqlValue(type.Type.Length));
-
-						if (type.Type.Precision > 0)
-							return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), par1, new SqlValue(type.Type.Precision), new SqlValue(type.Type.Scale ?? 0));
-
-						return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), par1);
-					}
-
-					if (par0 is SqlFunction f)
-					{
-						return
-							f.Name == "Char" ?
-								new SqlFunction(func.SystemType, f.Name, par1) :
-							f.Parameters.Length == 1 ?
-								new SqlFunction(func.SystemType, f.Name, par1, f.Parameters[0]) :
-								new SqlFunction(func.SystemType, f.Name, par1, f.Parameters[0], f.Parameters[1]);
-					}
-
-					var e = (SqlExpression)par0;
-					return new SqlFunction(func.SystemType, e.Expr, par1);
-				}
-
 				case "Millisecond"   : return Div(new SqlFunction(func.SystemType, "Microsecond", func.Parameters), 1000);
 				case "SmallDateTime" :
 				case "DateTime"      :
@@ -113,6 +66,53 @@ namespace LinqToDB.DataProvider.DB2
 			func = ConvertFunctionParameters(func, false);
 
 			return base.ConvertSqlFunction(func);
+		}
+
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		{
+			var toType   = func.Parameters[0];
+			var argument = func.Parameters[2];
+
+			var isNull = argument is SqlValue sqlValue && sqlValue.Value == null;
+
+			if (isNull)
+			{
+				return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, argument, toType);
+			}
+
+			if (func.SystemType.ToUnderlying() == typeof(bool))
+			{
+				var ex = AlternativeConvertToBoolean(func, 2);
+				if (ex != null)
+					return ex;
+			}
+
+			if (toType is SqlDataType type)
+			{
+				if (type.Type.SystemType == typeof(string) && argument.SystemType != typeof(string))
+					return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", argument));
+
+				if (type.Type.Length > 0)
+					return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), argument, new SqlValue(type.Type.Length));
+
+				if (type.Type.Precision > 0)
+					return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), argument, new SqlValue(type.Type.Precision), new SqlValue(type.Type.Scale ?? 0));
+
+				return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), argument);
+			}
+
+			if (toType is SqlFunction f)
+			{
+				return
+					f.Name == "Char" ?
+						new SqlFunction(func.SystemType, f.Name, argument) :
+						f.Parameters.Length == 1 ?
+							new SqlFunction(func.SystemType, f.Name, argument, f.Parameters[0]) :
+							new SqlFunction(func.SystemType, f.Name, argument, f.Parameters[0], f.Parameters[1]);
+			}
+
+			var e = (SqlExpression)toType;
+			return new SqlFunction(func.SystemType, e.Expr, argument);
 		}
 	}
 }

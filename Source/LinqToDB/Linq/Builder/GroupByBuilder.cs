@@ -391,7 +391,7 @@ namespace LinqToDB.Linq.Builder
 				ElementContext                 element,
 				bool                           isGroupingGuardDisabled,
 				bool                           addToSql)
-				: this(sequence, new SelectQuery { ParentSelect = sequence.SelectQuery.ParentSelect }, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element, isGroupingGuardDisabled, addToSql)
+				: this(sequence, new SelectQuery(), sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element, isGroupingGuardDisabled, addToSql)
 			{
 			}
 

@@ -59,19 +59,6 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				case "CASE": func = ConvertCase(func, func.SystemType, func.Parameters, 0);
 					break;
-
-				case "Convert":
-				{
-					var ftype = func.SystemType.ToUnderlying();
-
-					if (ftype == typeof(bool))
-					{
-						var ex = AlternativeConvertToBoolean(func, 1);
-						if (ex != null)
-							return ex;
-					}
-					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
-				}
 			}
 
 
@@ -103,6 +90,19 @@ namespace LinqToDB.DataProvider.SapHana
 			}
 
 			return base.ConvertSqlBinaryExpression(element);
+		}
+
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		{
+			var ftype = func.SystemType.ToUnderlying();
+
+			if (ftype == typeof(bool))
+			{
+				var ex = AlternativeConvertToBoolean(func, 2);
+				if (ex != null)
+					return ex;
+			}
+			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func, func.Parameters[2]), func.Parameters[0]);
 		}
 	}
 }

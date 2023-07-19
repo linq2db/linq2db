@@ -2175,7 +2175,6 @@ namespace LinqToDB.SqlQuery
 							ex = new List<SqlQueryExtension>(selectQuery.SqlQueryExtensions);
 
 						nq.Init(sc, fc, wc, gc, hc, oc, so, uk,
-							selectQuery.ParentSelect,
 							selectQuery.IsParameterDependent,
 							selectQuery.QueryName,
 							selectQuery.DoNotSetAliases);

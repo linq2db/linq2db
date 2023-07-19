@@ -33,7 +33,8 @@ namespace LinqToDB.SqlQuery
 
 		Type ISqlExpression.SystemType => Type.SystemType;
 
-		public object? Value { get; }
+		public object? Value     { get; }
+		public bool    NeedsCast { get; set; }
 
 		public object? CorrectParameterValue(object? rawValue)
 		{
@@ -147,6 +148,9 @@ namespace LinqToDB.SqlQuery
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
+			if (NeedsCast)
+				writer.Append("$Cast$(");
+
 			if (Name?.StartsWith("@") == false)
 				writer.Append('@');
 
@@ -161,6 +165,10 @@ namespace LinqToDB.SqlQuery
 					.Append('[')
 					.Append(Value)
 					.Append(']');
+
+			if (NeedsCast)
+				writer.Append(")");
+
 			return writer;
 		}
 

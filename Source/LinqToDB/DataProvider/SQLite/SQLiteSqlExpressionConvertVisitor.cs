@@ -35,30 +35,6 @@ namespace LinqToDB.DataProvider.SQLite
 			switch (func.Name)
 			{
 				case "Space"   : return new SqlFunction(func.SystemType, "PadR", new SqlValue(" "), func.Parameters[0]);
-				case "Convert" :
-				{
-					var ftype = func.SystemType.ToUnderlying();
-
-					if (ftype == typeof(bool))
-					{
-						var ex = AlternativeConvertToBoolean(func, 1);
-						if (ex != null)
-							return ex;
-					}
-
-					if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
-#if NET6_0_OR_GREATER
-							|| ftype == typeof(DateOnly)
-#endif
-					   )
-					{
-						if (IsDateDataType(func.Parameters[0], "Date"))
-							return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
-						return new SqlFunction(func.SystemType, "DateTime", func.Parameters[1]);
-					}
-
-					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, func.Parameters[1], func.Parameters[0]);
-				}
 			}
 
 			return base.ConvertSqlFunction(func);
@@ -189,7 +165,27 @@ namespace LinqToDB.DataProvider.SQLite
 					func.DoNotOptimize = true;
 			}
 		
-			return base.ConvertConversion(func);
+			var ftype = func.SystemType.ToUnderlying();
+
+			if (ftype == typeof(bool))
+			{
+				var ex = AlternativeConvertToBoolean(func, 2);
+				if (ex != null)
+					return ex;
+			}
+
+			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
+#if NET6_0_OR_GREATER
+			                              || ftype == typeof(DateOnly)
+#endif
+			   )
+			{
+				if (IsDateDataType(func.Parameters[0], "Date"))
+					return new SqlFunction(func.SystemType, "Date", func.Parameters[2]);
+				return new SqlFunction(func.SystemType, "DateTime", func.Parameters[2]);
+			}
+
+			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, func.Parameters[2], func.Parameters[0]);
 		}
 	}
 }

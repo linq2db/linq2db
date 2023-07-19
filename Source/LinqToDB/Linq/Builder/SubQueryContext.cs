@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public SubQueryContext(IBuildContext subQuery, bool addToSql = true)
-			: this(subQuery, new SelectQuery { ParentSelect = subQuery.SelectQuery.ParentSelect }, addToSql)
+			: this(subQuery, new SelectQuery(), addToSql)
 		{
 		}
 

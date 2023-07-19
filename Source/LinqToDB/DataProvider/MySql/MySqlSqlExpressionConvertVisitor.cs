@@ -2,6 +2,8 @@
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using System;
+
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -13,6 +15,13 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		public override bool CanCompareSearchConditions => true;
+
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		{
+			var to = (SqlDataType)func.Parameters[0];
+
+			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func, func.Parameters[2]), to);
+		}
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{

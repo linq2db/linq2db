@@ -64,8 +64,6 @@ namespace LinqToDB.Linq.Builder
 				if (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect)
 					sql.Select.IsDistinct = true;
 
-				except.ParentSelect = sql;
-
 				if (setOperation == SetOperation.Except || setOperation == SetOperation.ExceptAll)
 					sql.Where.Not.Exists(except);
 				else

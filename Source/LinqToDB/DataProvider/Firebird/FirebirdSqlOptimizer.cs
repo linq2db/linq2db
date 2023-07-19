@@ -5,6 +5,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using SqlQuery.Visitors;
 
 	public class FirebirdSqlOptimizer : BasicSqlOptimizer
 	{
@@ -67,5 +68,121 @@ namespace LinqToDB.DataProvider.Firebird
 			};
 		}
 
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
+		{
+			statement = base.FinalizeStatement(statement, context, dataOptions);
+			statement = WrapParameters(statement, context);
+			return statement;
+		}
+
+		class WrapParametersVisitor : SqlQueryVisitor
+		{
+			bool                       _needCast;
+
+			public WrapParametersVisitor(VisitMode visitMode) : base(visitMode)
+			{
+			}
+
+			struct NeedCastScope : IDisposable
+			{
+				readonly WrapParametersVisitor _visitor;
+				readonly bool                  _saveValue;
+
+				public NeedCastScope(WrapParametersVisitor visitor, bool needCast)
+				{
+					_visitor           = visitor;
+					_saveValue         = visitor._needCast;
+					visitor._needCast  = needCast;
+				}
+
+				public void Dispose()
+				{
+					_visitor._needCast = _saveValue;
+				}
+			}
+
+			NeedCastScope Needcast(bool needCast)
+			{
+				return new NeedCastScope(this, needCast);
+			}
+
+			public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+			{
+				using var scope = Needcast(true);
+				return base.VisitSqlColumnExpression(column, expression);
+			}
+
+			public override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			{
+				using var scope = Needcast(false);
+				return base.VisitSqlQuery(selectQuery);
+			}
+
+			public override IQueryElement VisitSqlFunction(SqlFunction element)
+			{
+				if (element.Name == PseudoFunctions.CONVERT)
+				{
+					_ = base.VisitSqlFunction(element);
+
+					foreach (var param in element.Parameters)
+					{
+						if (param is SqlParameter sqlParam)
+							sqlParam.NeedsCast = false;
+					}
+				}
+
+				return base.VisitSqlFunction(element);
+			}
+
+			public override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+			{
+				using var scope = Needcast(true);
+				return base.VisitSqlSetExpression(element);
+			}
+
+			public override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			{
+				if (_needCast)
+				{
+					if (!sqlParameter.NeedsCast)
+					{
+						sqlParameter.NeedsCast = true;
+					}
+				}
+
+				return base.VisitSqlParameter(sqlParameter);
+			}
+
+			public override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
+			{
+				using var scope = Needcast(true);
+				return base.VisitSqlOutputClause(element);
+			}
+		}
+
+		#region Wrap Parameters
+
+		private SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		{
+			// for some reason Firebird doesn't use parameter type information (not supported?) is some places, so
+			// we need to wrap parameter into CAST() to add type information explicitly
+			// As it is not clear when type CAST needed, below we should document observations on current behavior.
+			//
+			// When CAST is not needed:
+			// - parameter already in CAST from original query
+			// - parameter used as direct inserted/updated value in insert/update queries (including merge)
+			//
+			// When CAST is needed:
+			// - in select column expression at any position (except nested subquery): select, subquery, merge source
+			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
+
+			var visitor = new WrapParametersVisitor(VisitMode.Modify);
+
+			statement = (SqlStatement)visitor.ProcessElement(statement);
+
+			return statement;
+		}
+
+		#endregion
 	}
 }

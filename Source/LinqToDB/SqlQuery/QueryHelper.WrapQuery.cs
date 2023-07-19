@@ -39,7 +39,6 @@ namespace LinqToDB.SqlQuery
 					var newQuery = new SelectQuery
 					{
 						IsParameterDependent = selectQuery.IsParameterDependent,
-						ParentSelect         = selectQuery.ParentSelect
 					};
 					queries.Add(newQuery);
 				}

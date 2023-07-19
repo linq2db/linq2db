@@ -41,19 +41,6 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			switch (func.Name)
 			{
-				case "Convert" :
-				{
-					if (func.SystemType.ToUnderlying() == typeof(bool))
-					{
-						var ex = AlternativeConvertToBoolean(func, 1);
-						if (ex != null)
-							return ex;
-					}
-
-					return new SqlExpression(func.SystemType, CASTEXPR, Precedence.Primary, FloorBeforeConvert(func),
-						func.Parameters[0]);
-				}
-
 				case PseudoFunctions.CONVERT:
 				{
 					if (func.SystemType.ToUnderlying() == typeof(bool))
@@ -84,32 +71,6 @@ namespace LinqToDB.DataProvider.Firebird
 			func = ConvertFunctionParameters(func, false);
 
 			return base.ConvertSqlFunction(func);
-		}
-
-		public override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
-		{
-			/*if (EvaluationContext.ParameterValues != null && sqlParameter.NeedsCast)
-			{
-				var paramValue = sqlParameter.GetParameterValue(EvaluationContext.ParameterValues);
-
-				// TODO: temporary guard against cast to unknown type (Variant)
-				if (paramValue.DbDataType.DataType == DataType.Undefined && paramValue.DbDataType.SystemType == typeof(object))
-					return sqlParameter;
-
-				return new SqlExpression(
-					paramValue.DbDataType.SystemType, 
-					PseudoFunctions.CONVERT,
-					Precedence.Primary, 
-					new SqlDataType(paramValue.DbDataType),
-					new SqlDataType(paramValue.DbDataType), 
-					sqlParameter)
-				{
-					CanBeNull = sqlParameter.CanBeNull
-				};
-			}*/
-
-
-			return base.VisitSqlParameter(sqlParameter);
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
@@ -194,5 +155,17 @@ namespace LinqToDB.DataProvider.Firebird
 			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
 		}
 
+		protected override ISqlExpression ConvertConversion(SqlFunction func)
+		{
+			if (func.SystemType.ToUnderlying() == typeof(bool))
+			{
+				var ex = AlternativeConvertToBoolean(func, 2);
+				if (ex != null)
+					return ex;
+			}
+
+			return new SqlExpression(func.SystemType, CASTEXPR, Precedence.Primary, FloorBeforeConvert(func, func.Parameters[2]),
+				func.Parameters[0]);
+		}
 	}
 }

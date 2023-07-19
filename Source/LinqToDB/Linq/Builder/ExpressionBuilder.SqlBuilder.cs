@@ -93,12 +93,12 @@ namespace LinqToDB.Linq.Builder
 			var inScopeExpr = SequenceHelper.MoveAllToScopedContext(expr, context);
 
 			var testInfo =
-				new BuildInfo(context, inScopeExpr, new SelectQuery { ParentSelect = context.SelectQuery }) { IsTest = true, CreateSubQuery = true };
+				new BuildInfo(context, inScopeExpr, new SelectQuery()) { IsTest = true, CreateSubQuery = true };
 
 			if (!IsSequence(testInfo))
 				return null;
 
-			var info = new BuildInfo(context, inScopeExpr, new SelectQuery {ParentSelect = context.SelectQuery })
+			var info = new BuildInfo(context, inScopeExpr, new SelectQuery())
 			{
 				CreateSubQuery = true,
 				IsTest         = flags.IsTest()
@@ -898,7 +898,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (testSql.Sql is SqlSearchCondition sc)
 						{
-							sc = SelectQueryOptimizer.OptimizeSearchCondition(sc, new EvaluationContext());
+							sc = OptimizationHelper.OptimizeSearchCondition(sc, new EvaluationContext());
 
 							if (sc.Conditions.Count == 1                                 && !sc.Conditions[0].IsNot &&
 							    sc.Conditions[0].Predicate is SqlPredicate.IsNull isnull && isnull.IsNot)
