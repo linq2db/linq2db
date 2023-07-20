@@ -1611,38 +1611,39 @@ namespace LinqToDB.Linq.Builder
 				bool?           value      = null;
 				ISqlExpression? expression = null;
 				var             isNullable = false;
+
 				if (IsBooleanConstant(left, out value))
 				{
-					isNullable = typeof(bool?) == left.Type || r.CanBeNull;
+					isNullable = value == null && (typeof(bool?) == left.Type || r.CanBeNull);
 					expression = r;
 				}
 				else if (IsBooleanConstant(right, out value))
 				{
-					isNullable = typeof(bool?) == right.Type || l.CanBeNull;
+					isNullable = value == null && (typeof(bool?) == right.Type || l.CanBeNull);
 					expression = l;
 				}
 
-				if (value != null
-					&& expression != null
-					&& !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue)expression).Value == null))
-				{
-					var isNot = !value.Value;
-					var withNull = false;
-					if (op == SqlPredicate.Operator.NotEqual)
-					{
-						isNot = !isNot;
-						withNull = true;
-					}
-					var descriptor = QueryHelper.GetColumnDescriptor(expression);
-					var trueValue  = ConvertToSql(context, ExpressionInstances.True,  false, descriptor);
-					var falseValue = ConvertToSql(context, ExpressionInstances.False, false, descriptor);
-
-					var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
-										(isNullable || NeedNullCheck(expression))
-						? withNull
-						: (bool?)null;
-					predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
-				}
+//				if (value != null
+//					&& expression != null
+//					&& !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue)expression).Value == null))
+//				{
+//					var isNot = !value.Value;
+//					var withNull = false;
+//					if (op == SqlPredicate.Operator.NotEqual)
+//					{
+//						isNot = !isNot;
+//						withNull = true;
+//					}
+//					var descriptor = QueryHelper.GetColumnDescriptor(expression);
+//					var trueValue  = ConvertToSql(context, ExpressionInstances.True,  false, descriptor);
+//					var falseValue = ConvertToSql(context, ExpressionInstances.False, false, descriptor);
+//
+//					var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
+//										(isNullable || NeedNullCheck(expression))
+//						? withNull
+//						: (bool?)null;
+//					predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+//				}
 			}
 
 			predicate ??= new SqlPredicate.ExprExpr(l, op, r, DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
@@ -1652,20 +1653,20 @@ namespace LinqToDB.Linq.Builder
 		private static bool IsBooleanConstant(Expression expr, out bool? value)
 		{
 			value = null;
+
 			if (expr.Type == typeof(bool) || expr.Type == typeof(bool?))
 			{
-				expr = expr.Unwrap();
-				if (expr is ConstantExpression c)
+				switch (expr.Unwrap())
 				{
-					value = c.Value as bool?;
-					return true;
-				}
-				else if (expr is DefaultExpression)
-				{
-					value = expr.Type == typeof(bool) ? false : null;
-					return true;
+					case ConstantExpression c:
+						value = c.Value as bool?;
+						return true;
+					case DefaultExpression:
+						value = expr.Type == typeof(bool) ? false : null;
+						return true;
 				}
 			}
+
 			return false;
 		}
 

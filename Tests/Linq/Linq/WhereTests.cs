@@ -1991,5 +1991,58 @@ namespace Tests.Linq
 				Assert.False(sql.Contains("IS NOT NULL"), sql);
 			}
 		}
+
+		class NullableBoolClass
+		{
+			public bool? Value;
+		}
+
+		[Test, Ignore("For now")]
+		public void NullableBoolTest1([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tt = db.CreateLocalTable(new NullableBoolClass[]
+			{
+				new () { Value = null },
+				new () { Value = true },
+				new () { Value = false },
+			});
+
+			AssertQuery(
+				from t in tt
+				where t.Value == true
+				select t);
+
+			var sql = GetCurrentBaselines();
+
+			Assert.That(sql,
+				Contains.Substring("[t].[Value] = 1").And.Not.
+				Contains("[t].[Value] = 1 AND [t].[Value] IS NOT NULL"));
+
+		}
+
+		[Test, Ignore("For now")]
+		public void NullableBoolTest2([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tt = db.CreateLocalTable(new NullableBoolClass[]
+			{
+				new () { Value = null },
+				new () { Value = true },
+				new () { Value = false },
+			});
+
+			AssertQuery(
+				from t in tt
+				where Sql.AsNotNull(t.Value) == true
+				select t);
+
+			var sql = GetCurrentBaselines();
+
+			Assert.That(sql,
+				Contains.Substring("[t].[Value] = 1").And.Not.
+				Contains("[t].[Value] = 1 AND [t].[Value] IS NOT NULL"));
+
+		}
 	}
 }
