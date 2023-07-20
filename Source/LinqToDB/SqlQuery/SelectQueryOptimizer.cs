@@ -1512,6 +1512,8 @@ namespace LinqToDB.SqlQuery
 
 			for (var i = 0; i < tableSources.Count; i++)
 			{
+				// #4204 fix.
+				//
 				if (tableSources.Count > 1 && tableSources[i] is { Source: SelectQuery { GroupBy.IsEmpty: false }})
 					continue;
 

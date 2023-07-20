@@ -2713,8 +2713,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			_ =
-			(
+			AssertQuery(
 				from pmp in
 				(
 					from pmp  in db.Child
@@ -2722,9 +2721,7 @@ namespace Tests.Linq
 					select g.Key
 				)
 				from pmp1 in db.Child
-				select new { pmp1.ChildID }
-			)
-			.ToList();
+				select new { pmp1.ChildID });
 		}
 
 		[Test]
@@ -2732,8 +2729,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			_ =
-			(
+			AssertQuery(
 				from pmp1 in db.Child
 				from pmp in
 				(
@@ -2741,9 +2737,7 @@ namespace Tests.Linq
 					group pmp by pmp.ParentID into g
 					select g.Key
 				)
-				select new { pmp1.ChildID }
-			)
-			.ToList();
+				select new { pmp1.ChildID });
 		}
 
 		[Test]
@@ -2751,17 +2745,14 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			_ =
-			(
+			AssertQuery(
 				from pmp in
 				(
 					from pmp  in db.Child
 					group pmp by pmp.ParentID into g
 					select g.Key
 				)
-				select new { pmp }
-			)
-			.ToList();
+				select new { pmp });
 		}
 	}
 }
