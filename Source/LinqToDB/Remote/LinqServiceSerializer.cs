@@ -62,8 +62,8 @@ namespace LinqToDB.Remote
 			readonly MappingSchema _mappingSchema;
 
 			protected readonly StringBuilder             Builder        = new ();
-			protected readonly Dictionary<object,int>    ObjectIndices  = new ();
-			protected readonly Dictionary<object,string> DelayedObjects = new ();
+			protected readonly Dictionary<object,int>    ObjectIndices  = new (Utils.ObjectReferenceEqualityComparer<object>.Default);
+			protected readonly Dictionary<object,string> DelayedObjects = new (Utils.ObjectReferenceEqualityComparer<object>.Default);
 			protected int                                Index;
 
 			protected readonly Dictionary<SqlValuesTable, IReadOnlyList<ISqlExpression[]>> EnumerableData = new ();

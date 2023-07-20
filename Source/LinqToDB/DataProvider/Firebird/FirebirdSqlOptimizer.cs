@@ -134,10 +134,10 @@ namespace LinqToDB.DataProvider.Firebird
 				return base.VisitSqlFunction(element);
 			}
 
-			public override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+			public override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 			{
 				using var scope = Needcast(true);
-				return base.VisitSqlSetExpression(element);
+				return base.VisitSqlUpdateStatement(element);
 			}
 
 			public override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
@@ -153,10 +153,22 @@ namespace LinqToDB.DataProvider.Firebird
 				return base.VisitSqlParameter(sqlParameter);
 			}
 
+			public override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+			{
+				using var scope = Needcast(true);
+				return base.VisitSqlInsertOrUpdateStatement(element);
+			}
+
 			public override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
 			{
 				using var scope = Needcast(true);
 				return base.VisitSqlOutputClause(element);
+			}
+
+			public override IQueryElement VisitSqlMergeOperationClause(SqlMergeOperationClause element)
+			{
+				using var scope = Needcast(true);
+				return base.VisitSqlMergeOperationClause(element);
 			}
 		}
 

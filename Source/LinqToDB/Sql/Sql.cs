@@ -285,7 +285,7 @@ namespace LinqToDB
 
 		// TODO: v5 remove. bltoolkit legacy which duplicates Convert function above (without ServerSideOnly, but it shouldn't matter)
 		[CLSCompliant(false)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsThirdParameter)]
+		[Function(PseudoFunctions.CONVERT, 0, 2, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsThirdParameter)]
 		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);

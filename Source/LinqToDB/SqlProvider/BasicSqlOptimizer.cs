@@ -1615,7 +1615,7 @@ namespace LinqToDB.SqlProvider
 				}
 				case QueryElementType.SqlParameter:
 				{
-					return !((SqlParameter)element).IsQueryParameter;
+					return !((SqlParameter)element).IsQueryParameter || !((SqlParameter)element).NeedsCast;
 				}
 				case QueryElementType.SqlQuery:
 				{

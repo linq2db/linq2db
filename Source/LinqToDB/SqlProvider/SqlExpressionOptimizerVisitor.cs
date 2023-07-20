@@ -67,13 +67,6 @@ namespace LinqToDB.SqlProvider
 
 			element = OptimizationHelper.OptimizeSearchCondition(element, _evaluationContext);
 
-			/*
-			if (element.TryEvaluateExpression(_evaluationContext, out var value) && value != null)
-			{
-				return new SqlPredicate.Expr(new SqlValue(value));
-			}
-			*/
-
 			return element;
 		}
 
@@ -158,6 +151,11 @@ namespace LinqToDB.SqlProvider
 			do
 			{
 				var optimizedCondition = OptimizationHelper.OptimizeCondition(element);
+
+				if (optimizedCondition.TryEvaluateExpression(_evaluationContext, out var value) && value != null)
+				{
+					return new SqlPredicate.Expr(new SqlValue(value));
+				}
 
 				if (ReferenceEquals(optimizedCondition, element))
 				{
@@ -505,11 +503,11 @@ namespace LinqToDB.SqlProvider
 
 					if (!element.DoNotOptimize)
 					{
-						var from = (SqlDataType)element.Parameters[1];
-						var to   = (SqlDataType)element.Parameters[0];
-
-						if (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type))
-							return element.Parameters[2];
+						if (element.Parameters[1] is SqlDataType from && element.Parameters[0] is SqlDataType to)
+						{
+							if (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type))
+								return element.Parameters[2];
+						}
 
 						if (element.Parameters[2] is SqlFunction paramFunc && paramFunc.Name == PseudoFunctions.CONVERT && paramFunc.Parameters[1].SystemType!.ToUnderlying() == typef)
 							return paramFunc.Parameters[2];

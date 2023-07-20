@@ -620,21 +620,18 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		protected virtual ISqlExpression ConvertConversion(SqlFunction func)
 		{
-			var from = (SqlDataType)func.Parameters[1];
-			var to   = (SqlDataType)func.Parameters[0];
+			var from = func.Parameters[1];
+			var to   = func.Parameters[0];
 
-			if (!func.DoNotOptimize && (to.Type.SystemType == typeof(object) || from.Type.EqualsDbOnly(to.Type)))
-				return func.Parameters[2];
-
-			if (to.Type.Length > 0)
+			if (to is SqlDataType toDataType && toDataType.Type.Length > 0 && from is SqlDataType fromDataType)
 			{
-				var maxLength = to.Type.SystemType == typeof(string) ? GetMaxDisplaySize(from) : GetMaxLength(from);
-				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(to.Type.Length ?? 0, maxLength.Value) : to.Type.Length;
+				var maxLength = toDataType.SystemType == typeof(string) ? GetMaxDisplaySize(fromDataType) : GetMaxLength(fromDataType);
+				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(toDataType.Type.Length ?? 0, maxLength.Value) : fromDataType.Type.Length;
 
-				if (to.Type.Length != newLength)
-					to = new SqlDataType(to.Type.WithLength(newLength));
+				if (fromDataType.Type.Length != newLength)
+					to = new SqlDataType(fromDataType.Type.WithLength(newLength));
 			}
-			else if (!func.DoNotOptimize && from.Type.SystemType == typeof(short) && to.Type.SystemType == typeof(int))
+			else if (!func.DoNotOptimize && from.SystemType == typeof(short) && to.SystemType == typeof(int))
 				return func.Parameters[2];
 
 			return new SqlFunction(func.SystemType, "Convert", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, to, func.Parameters[2]);

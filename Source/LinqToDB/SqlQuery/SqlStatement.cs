@@ -96,9 +96,6 @@ namespace LinqToDB.SqlQuery
 
 		public static void PrepareQueryAndAliases(SqlStatement statement, AliasesContext? prevAliasContext, out AliasesContext newAliasContext)
 		{
-			if (statement.SelectQuery != null && !(statement is SqlSelectStatement && statement.SelectQuery.From.Tables.Count == 0))
-				statement.SelectQuery.DoNotSetAliases = true;
-
 			var ctx = new PrepareQueryAndAliasesContext(prevAliasContext);
 
 			statement.VisitAll(ctx, static (context, expr) =>
@@ -197,7 +194,7 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.TableSource:
 						{
 							var table = (SqlTableSource)expr;
-							if ((context.TablesVisited ??= new()).Add(table))
+							if ((context.TablesVisited ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default)).Add(table))
 							{
 								if (table.Source is SqlTable sqlTable)
 									context.AllAliases.Add(sqlTable.TableName.Name);

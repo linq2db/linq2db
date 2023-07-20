@@ -154,15 +154,7 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
 		{
-			if (oldElement.ElementType == QueryElementType.Column    ||
-				oldElement.ElementType == QueryElementType.SqlField  ||
-				oldElement.ElementType == QueryElementType.CteClause)
-			{
-				AddReplacement(oldElement, newElement);
-			}
-
-			_replaced ??= new();
-			_replaced.Add(newElement);
+			AddReplacement(oldElement, newElement);
 
 			return base.NotifyReplaced(newElement, oldElement);
 		}
@@ -200,6 +192,9 @@ namespace LinqToDB.SqlQuery.Visitors
 		{
 			_replacements ??= new Dictionary<IQueryElement, IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
+			_replaced ??= new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+			_replaced.Add(newElement);
+
 			_replacements[oldElement] = newElement;
 		}
 
@@ -207,8 +202,13 @@ namespace LinqToDB.SqlQuery.Visitors
 		{
 			_replacements ??= new Dictionary<IQueryElement, IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
+			_replaced ??= new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+
 			foreach (var pair in replacements)
+			{
 				_replacements[pair.Key] = pair.Value;
+				_replaced.Add(pair.Value);
+			}
 		}
 
 		protected bool GetReplacement(IQueryElement element, [NotNullWhen(true)] out IQueryElement? replacement)

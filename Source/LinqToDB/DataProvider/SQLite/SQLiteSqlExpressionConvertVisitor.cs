@@ -136,15 +136,18 @@ namespace LinqToDB.DataProvider.SQLite
 			    !(predicate.Expr1.TryEvaluateExpression(EvaluationContext, out var value1) && value1 == null ||
 			      predicate.Expr2.TryEvaluateExpression(EvaluationContext, out var value2) && value2 == null))
 			{
-				if (!(predicate.Expr1 is SqlFunction func1 && (func1.Name == PseudoFunctions.CONVERT || func1.Name == "DateTime")))
+				var expr1 = QueryHelper.UnwrapNullablity(predicate.Expr1);
+				if (!(expr1 is SqlFunction func1 && (func1.Name == PseudoFunctions.CONVERT || func1.Name == "DateTime")))
 				{
-					var left = PseudoFunctions.MakeConvert(new SqlDataType(leftType), new SqlDataType(leftType), predicate.Expr1);
+					var left = PseudoFunctions.MakeMandatoryConvert(new SqlDataType(leftType), new SqlDataType(leftType), predicate.Expr1);
 					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, null);
 				}
 
-				if (!(predicate.Expr2 is SqlFunction func2 && (func2.Name == PseudoFunctions.CONVERT || func2.Name == "DateTime")))
+				var expr2 = QueryHelper.UnwrapNullablity(predicate.Expr2);
+
+				if (!(expr2 is SqlFunction func2 && (func2.Name == PseudoFunctions.CONVERT || func2.Name == "DateTime")))
 				{
-					var right = PseudoFunctions.MakeConvert(new SqlDataType(rightType), new SqlDataType(rightType), predicate.Expr2);
+					var right = PseudoFunctions.MakeMandatoryConvert(new SqlDataType(rightType), new SqlDataType(rightType), predicate.Expr2);
 					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, null);
 				}
 			}
@@ -154,17 +157,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 		protected override ISqlExpression ConvertConversion(SqlFunction func)
 		{
-			if (!func.DoNotOptimize)
-			{
-				var from = (SqlDataType)func.Parameters[1];
-				var to   = (SqlDataType)func.Parameters[0];
-
-				// prevent same-type conversion removal as it is necessary in case of SQLite
-				// to ensure that we get proper type, because converted value could have any type actually
-				if (from.Type.EqualsDbOnly(to.Type))
-					func.DoNotOptimize = true;
-			}
-		
 			var ftype = func.SystemType.ToUnderlying();
 
 			if (ftype == typeof(bool))

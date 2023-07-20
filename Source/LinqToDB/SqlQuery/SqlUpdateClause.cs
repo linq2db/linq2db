@@ -68,9 +68,14 @@ namespace LinqToDB.SqlQuery
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			writer
-				.Append('\t')
-				.AppendElement(Table)
-				.AppendLine()
+				.Append('\t');
+
+			if (Table != null)
+				writer.AppendElement(Table);
+			if (TableSource != null)
+				writer.AppendElement(TableSource);
+				
+			writer.AppendLine()
 				.Append("SET ")
 				.AppendLine();
 

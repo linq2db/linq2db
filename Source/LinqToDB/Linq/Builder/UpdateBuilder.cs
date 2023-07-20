@@ -491,7 +491,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 				else
-					envelopes.Add(new SetExpressionEnvelope(correctedField, valueExpression));
+					envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression));
 			}
 		}
 

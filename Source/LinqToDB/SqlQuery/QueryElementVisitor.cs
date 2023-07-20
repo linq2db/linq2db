@@ -1405,11 +1405,7 @@ namespace LinqToDB.SqlQuery
 							element.IsRecursive,
 							element.Name);
 
-						var correctedBody = body == null
-							? null
-							: (SelectQuery)new QueryElementCorrectVisitor(element, newCte).Visit(body);
-
-						newCte.Body = correctedBody;
+						newCte.Body = body;
 						return NotifyReplaced(newCte, element);
 					}
 
@@ -3339,13 +3335,25 @@ namespace LinqToDB.SqlQuery
 
 	public class QueryElementCorrectVisitor : QueryElementVisitor
 	{
-		readonly IQueryElement _toReplace;
-		readonly IQueryElement _replaceBy;
+		readonly QueryElementVisitor _visitor;
+		readonly IQueryElement       _toReplace;
+		readonly IQueryElement       _replaceBy;
 
-		public QueryElementCorrectVisitor(IQueryElement toReplace, IQueryElement replaceBy) : base(VisitMode.Modify)
+		public QueryElementCorrectVisitor(VisitMode visitMode, QueryElementVisitor visitor, IQueryElement toReplace, IQueryElement replaceBy) : base(visitMode)
 		{
-			_toReplace = toReplace;
-			_replaceBy = replaceBy;
+			_visitor = visitor;
+			_toReplace    = toReplace;
+			_replaceBy    = replaceBy;
+		}
+
+		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
+		{
+			return _visitor.NotifyReplaced(newElement, oldElement);
+		}
+
+		public override VisitMode GetVisitMode(IQueryElement element)
+		{
+			return _visitor.GetVisitMode(element);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]

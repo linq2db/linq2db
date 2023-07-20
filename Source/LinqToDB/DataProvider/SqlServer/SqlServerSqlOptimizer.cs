@@ -137,6 +137,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			CorrectUpdateSetters(updateStatement);
 
+			if (updateStatement.Update.TableSource != null)
+			{
+				updateStatement.Update.Table = null;
+			}
+
 			return updateStatement;
 		}
 	}
