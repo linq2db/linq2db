@@ -152,9 +152,9 @@ namespace LinqToDB.SqlProvider
 			{
 				var optimizedCondition = OptimizationHelper.OptimizeCondition(element);
 
-				if (optimizedCondition.TryEvaluateExpression(_evaluationContext, out var value) && value != null)
+				if (optimizedCondition.Predicate.TryEvaluateExpression(_evaluationContext, out var value) && value != null)
 				{
-					return new SqlPredicate.Expr(new SqlValue(value));
+					return new SqlCondition(optimizedCondition.IsNot, new SqlPredicate.Expr(new SqlValue(value)), optimizedCondition.IsOr);
 				}
 
 				if (ReferenceEquals(optimizedCondition, element))
