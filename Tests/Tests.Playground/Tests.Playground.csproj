@@ -7,6 +7,8 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\Extensions\QueryHintsTests.cs" Link="QueryHintsTests.cs" />
+		<Compile Include="..\Linq\Linq\AbstractionTests.cs" Link="AbstractionTests.cs" />
+		<Compile Include="..\Linq\Linq\AK107Tests.cs" Link="AK107Tests.cs" />
 		<Compile Include="..\Linq\Linq\AllAnyTests.cs" Link="AllAnyTests.cs" />
 		<Compile Include="..\Linq\Linq\CommonTests.cs" Link="CommonTests.cs" />
 		<Compile Include="..\Linq\Linq\ContainsTests.cs" Link="ContainsTests.cs" />

@@ -275,18 +275,12 @@ namespace LinqToDB.Linq.Builder
 
 							var mexpr         = (MemberExpression)expression;
 							var member        = lastMember = mexpr.Member;
-							var isAssociation = builder.MappingSchema.HasAttribute<AssociationAttribute>(member.ReflectedType!, member);
-
-							if (!isAssociation)
-							{
-								member        = mexpr.Expression!.Type.GetMemberEx(member)!;
-								isAssociation = builder.MappingSchema.HasAttribute<AssociationAttribute>(mexpr.Expression.Type, member);
-							}
+							var isAssociation = builder.IsAssociation(expression, out _);
 
 							if (!isAssociation)
 							{
 								var projected = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
-								if (projected == expression)
+								if (ExpressionEqualityComparer.Instance.Equals(projected, expression))
 									throw new LinqToDBException($"Member '{expression}' is not an association.");
 								expression = projected;
 								break;

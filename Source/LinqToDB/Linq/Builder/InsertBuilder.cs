@@ -322,12 +322,10 @@ namespace LinqToDB.Linq.Builder
 
 					if (expr != null)
 					{
-						insert.Items.Insert(0, new SqlSetExpression(field, expr));
+						var identitySet = new SqlSetExpression(field, expr);
+						insert.Items.Insert(0, identitySet);
 
-						/*if (methodCall.Arguments.Count == 3)
-						{
-							sequence.SelectQuery.Select.Columns.Insert(0, new SqlColumn(sequence.SelectQuery, insert.Items[0].Expression!));
-						}*/
+						QuerySequence.SelectQuery.Select.Columns.Insert(0, new SqlColumn(QuerySequence.SelectQuery, identitySet.Expression!));
 					}
 				}
 
