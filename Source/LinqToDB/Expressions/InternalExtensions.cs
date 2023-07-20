@@ -311,8 +311,8 @@ namespace LinqToDB.Expressions
 			return
 				type == typeof(Queryable) ||
 				enumerable && type == typeof(Enumerable) ||
-				type == typeof(LinqExtensions) ||
-				type == typeof(DataExtensions) ||
+				type == typeof(LinqExtensions)  ||
+				type == typeof(DataExtensions)  ||
 				type == typeof(TableExtensions) ||
 				MemberCache.GetMemberInfo(method.Method).IsQueryable;
 		}
