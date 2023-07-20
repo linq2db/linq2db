@@ -118,7 +118,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = null != pathExpression.Find(this, static (ctx, e) =>
 			{
-				if (ctx.Builder.IsAssociation(e))
+				if (ctx.Builder.IsAssociation(e, out _))
 				{
 					if (e.NodeType == ExpressionType.MemberAccess)
 					{
@@ -277,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = null != expression.Find(builder, static (builder, expr) =>
 			{
-				if (builder.IsAssociation(expr))
+				if (builder.IsAssociation(expr, out _))
 					return true;
 				return false;
 			});

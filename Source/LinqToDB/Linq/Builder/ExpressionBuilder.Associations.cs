@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,18 +15,47 @@ namespace LinqToDB.Linq.Builder
 
 	partial class ExpressionBuilder
 	{
-		public bool IsAssociation(Expression expression)
+		bool IsAssociationInRealization(Expression? expression, MemberInfo member, [NotNullWhen(true)] out MemberInfo? associationMember)
+		{
+			if (InternalExtensions.IsAssociation(member, MappingSchema))
+			{
+				associationMember = member;
+				return true;
+			}
+
+			if (expression?.Type.IsInterface == true)
+			{
+				if (expression is ContextRefExpression contextRef && contextRef.BuildContext.ElementType != expression.Type)
+				{
+					var newMember = contextRef.BuildContext.ElementType.GetMemberEx(member);
+					if (newMember != null)
+					{
+						if (InternalExtensions.IsAssociation(newMember, MappingSchema))
+						{
+							associationMember = newMember;
+							return true;
+						}
+					}
+				}
+			}
+
+			associationMember = null;
+			return false;
+		}
+
+		public bool IsAssociation(Expression expression, [NotNullWhen(true)] out MemberInfo? associationMember)
 		{
 			if (expression is MemberExpression memberExpression)
 			{
-				return memberExpression.IsAssociation(MappingSchema);
+				return IsAssociationInRealization(memberExpression.Expression, memberExpression.Member, out associationMember);
 			}
 
 			if (expression is MethodCallExpression methodCall)
 			{
-				return methodCall.IsAssociation(MappingSchema);
+				return IsAssociationInRealization(methodCall.Object, methodCall.Method, out associationMember);
 			}
 
+			associationMember = null;
 			return false;
 		}
 
@@ -36,20 +66,21 @@ namespace LinqToDB.Linq.Builder
 			Type objectType;
 			if (expression is MemberExpression memberExpression)
 			{
-				if (!memberExpression.IsAssociation(MappingSchema))
+				if (!IsAssociationInRealization(memberExpression.Expression, memberExpression.Member,
+					    out var associationMember))
 					return null;
 
-				var type = memberExpression.Member.ReflectedType ?? memberExpression.Member.DeclaringType;
+				var type = associationMember.ReflectedType ?? associationMember.DeclaringType;
 				if (type == null)
 					return null;
 				objectType = type;
 			}
 			else if (expression is MethodCallExpression methodCall)
 			{
-				if (!methodCall.IsAssociation(MappingSchema))
+				if (!IsAssociationInRealization(methodCall.Object, methodCall.Method, out var associationMember))
 					return null;
 
-				var type = methodCall.Method.IsStatic ? methodCall.Arguments[0].Type : methodCall.Method.DeclaringType;
+				var type = methodCall.Method.IsStatic ? methodCall.Arguments[0].Type : associationMember.DeclaringType;
 				if (type == null)
 					return null;
 				objectType = type;
@@ -119,9 +150,6 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext, IBuildContext? forContext, ProjectFlags flags)
 		{
-			if (!IsAssociation(expression))
-				return expression;
-
 			var associationDescriptor = GetAssociationDescriptor(expression, out var memberInfo);
 
 			if (associationDescriptor == null || memberInfo == null)

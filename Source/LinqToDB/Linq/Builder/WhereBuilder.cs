@@ -22,7 +22,9 @@ namespace LinqToDB.Linq.Builder
 			if (sequence.SelectQuery.Select.IsDistinct        ||
 			    sequence.SelectQuery.Select.TakeValue != null ||
 			    sequence.SelectQuery.Select.SkipValue != null)
+			{
 				sequence = new SubQueryContext(sequence);
+			}
 
 			var result = builder.BuildWhere(buildInfo.Parent, sequence, condition: condition,
 				checkForSubQuery: !isHaving, enforceHaving: isHaving, isTest: buildInfo.IsTest, isAggregationTest: buildInfo.AggregationTest);

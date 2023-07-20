@@ -1249,7 +1249,15 @@ namespace LinqToDB.SqlQuery
 							ext = new List<SqlQueryExtension>(ext);
 						}
 
-						return NotifyReplaced(new SqlRawSqlTable(element, parameters ?? element.Parameters) {SqlQueryExtensions = ext}, element);
+						var newTable =
+							new SqlRawSqlTable(element, parameters ?? element.Parameters) { SqlQueryExtensions = ext };
+
+						for (var index = 0; index < newTable.Fields.Count; index++)
+						{
+							NotifyReplaced(newTable.Fields[index], element.Fields[index]);
+						}
+
+						return NotifyReplaced(newTable, element);
 					}
 
 					break;

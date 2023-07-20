@@ -25,6 +25,19 @@ namespace LinqToDB.Linq.Builder
 						return (Expression)new ContextRefExpression(parameter.Type, s, parameter.Name);
 					}).ToArray());
 
+			if (!ReferenceEquals(body, lambda.Body))
+			{
+				body = body.Transform(e =>
+				{
+					if (e.NodeType == ExpressionType.Convert &&
+					    ((UnaryExpression)e).Operand is ContextRefExpression contextRef)
+					{
+						return contextRef.WithType(e.Type);
+					}
+					return e;
+				});
+			}
+
 			return body;
 		}
 

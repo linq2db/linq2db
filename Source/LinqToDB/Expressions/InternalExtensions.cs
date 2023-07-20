@@ -276,14 +276,19 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
+		public static bool IsAssociation(MemberInfo member, MappingSchema mappingSchema)
+		{
+			return mappingSchema.GetAttribute<AssociationAttribute>(member.DeclaringType!, member) != null;
+		}
+
 		public static bool IsAssociation(this MemberExpression memberExpression, MappingSchema mappingSchema)
 		{
-			return mappingSchema.GetAttribute<AssociationAttribute>(memberExpression.Member.DeclaringType!, memberExpression.Member) != null;
+			return IsAssociation(memberExpression.Member, mappingSchema);
 		}
 
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
 		{
-			return mappingSchema.HasAttribute<AssociationAttribute>(method.Method.DeclaringType!, method.Method);
+			return IsAssociation(method.Method, mappingSchema);
 		}
 
 		private static readonly string[] CteMethodNames = { "AsCte", "GetCte" };

@@ -360,7 +360,9 @@ namespace LinqToDB.Linq.Builder
 				additionalCondition,
 				inline, isOuter, loadwith, loadWithPath, out isOuter);
 
-			var body = queryMethod.GetBody(tableContext);
+			var correctedContext = tableContext.WithType(parentExactType);
+
+			var body = queryMethod.GetBody(correctedContext);
 
 			return body;
 		}

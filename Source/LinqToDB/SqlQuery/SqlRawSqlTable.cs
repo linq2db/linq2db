@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+
 using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery
@@ -40,6 +42,8 @@ namespace LinqToDB.SqlQuery
 			Alias              = table.Alias;
 
 			SequenceAttributes = table.SequenceAttributes;
+
+			AddRange(table.Fields.Select(f => new SqlField(f)));
 
 			SQL                = table.SQL;
 			Parameters         = parameters;

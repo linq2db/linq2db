@@ -4089,7 +4089,7 @@ namespace LinqToDB.Linq.Builder
 
 				path = newPath;
 
-				if (!flags.IsTraverse() && IsAssociation(newPath))
+				if (!flags.IsTraverse() && IsAssociation(newPath, out _))
 				{
 					if (root is ContextRefExpression contextRef)
 					{
@@ -4122,7 +4122,7 @@ namespace LinqToDB.Linq.Builder
 						expression = null;
 					}
 				} 
-				else if (IsAssociation(mc))
+				else if (IsAssociation(mc, out _))
 				{
 					var arguments = mc.Arguments;
 					if (arguments.Count == 0)
