@@ -1606,7 +1606,8 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			ISqlPredicate? predicate = null;
-			if (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual)
+
+			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
 				bool?           value      = null;
 				ISqlExpression? expression = null;
@@ -1623,27 +1624,27 @@ namespace LinqToDB.Linq.Builder
 					expression = l;
 				}
 
-//				if (value != null
-//					&& expression != null
-//					&& !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue)expression).Value == null))
-//				{
-//					var isNot = !value.Value;
-//					var withNull = false;
-//					if (op == SqlPredicate.Operator.NotEqual)
-//					{
-//						isNot = !isNot;
-//						withNull = true;
-//					}
-//					var descriptor = QueryHelper.GetColumnDescriptor(expression);
-//					var trueValue  = ConvertToSql(context, ExpressionInstances.True,  false, descriptor);
-//					var falseValue = ConvertToSql(context, ExpressionInstances.False, false, descriptor);
-//
-//					var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
-//										(isNullable || NeedNullCheck(expression))
-//						? withNull
-//						: (bool?)null;
-//					predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
-//				}
+				if (value != null
+					&& expression != null
+					&& !(expression.ElementType == QueryElementType.SqlValue && ((SqlValue)expression).Value == null))
+				{
+					var isNot = !value.Value;
+					var withNull = false;
+					if (op == SqlPredicate.Operator.NotEqual)
+					{
+						isNot = !isNot;
+						withNull = true;
+					}
+					var descriptor = QueryHelper.GetColumnDescriptor(expression);
+					var trueValue  = ConvertToSql(context, ExpressionInstances.True,  false, descriptor);
+					var falseValue = ConvertToSql(context, ExpressionInstances.False, false, descriptor);
+
+					var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
+										(isNullable || NeedNullCheck(expression))
+						? withNull
+						: (bool?)null;
+					predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+				}
 			}
 
 			predicate ??= new SqlPredicate.ExprExpr(l, op, r, DataOptions.LinqOptions.CompareNullsAsValues ? true : null);

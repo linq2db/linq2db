@@ -1997,7 +1997,7 @@ namespace Tests.Linq
 			public bool? Value;
 		}
 
-		[Test, Ignore("For now")]
+		[Test]
 		public void NullableBoolTest1([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -2021,7 +2021,7 @@ namespace Tests.Linq
 
 		}
 
-		[Test, Ignore("For now")]
+		[Test]
 		public void NullableBoolTest2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
