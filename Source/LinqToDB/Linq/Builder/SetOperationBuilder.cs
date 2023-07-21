@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using Extensions;
-	using Reflection;
 	using SqlQuery;
 	using Common;
-	using System.Collections;
 
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
@@ -308,9 +305,7 @@ namespace LinqToDB.Linq.Builder
 				return alias;
 			}
 
-			static MethodInfo _keySetIdMethosInfo = Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(typeof(int));
-
-			const           string     ProjectionSetIdFieldName = "__projection__set_id__";
+			const string ProjectionSetIdFieldName = "__projection__set_id__";
 
 			Expression EnsureBuilt(Expression expr, ProjectFlags flags)
 			{
@@ -324,21 +319,6 @@ namespace LinqToDB.Linq.Builder
 				} while (true);
 
 				return expr;
-			}
-
-			SetOperationPartContext? _leftPart;
-			SetOperationPartContext? _rightPart;
-
-			SetOperationPartContext GetLeftPart()
-			{
-				_leftPart ??= new SetOperationPartContext(this, 0);
-				return _leftPart;
-			}
-
-			SetOperationPartContext GetRightPart()
-			{
-				_rightPart ??= new SetOperationPartContext(this, 1);
-				return _rightPart;
 			}
 
 			Expression MakeConditionalConstructExpression(Expression path, Expression leftExpression, Expression rightExpression, ProjectFlags flags)
@@ -407,29 +387,6 @@ namespace LinqToDB.Linq.Builder
 
 				_leftSetId  = sequenceLeftSetId;
 				_rightSetId = sequenceRightSetId;
-			}
-
-			Expression ExpandExpression(SubQueryContext context, Expression expression)
-			{
-				var prev = expression;
-				do
-				{
-					var expanded = prev.Transform(e =>
-					{
-						var newExpr = Builder.MakeExpression(context, e, ProjectFlags.Expand);
-						if (ExpressionEqualityComparer.Instance.Equals(newExpr, e))
-							return e;
-						return newExpr;
-					});
-
-					if (ReferenceEquals(prev, expanded))
-						break;
-
-					prev = expanded;
-
-				} while (true);
-
-				return prev;
 			}
 
 			Expression EnsureGenericConstructor(Expression expression)
@@ -519,26 +476,6 @@ namespace LinqToDB.Linq.Builder
 			// For Set we have to ensure hat columns are not optimized
 			protected override bool OptimizeColumns => false;
 
-			bool IsIncompatible(Expression expression)
-			{
-				if (expression is SqlGenericConstructorExpression generic && generic.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
-				{
-					var ed = Builder.MappingSchema.GetEntityDescriptor(generic.ObjectType);
-					if (ed.InheritanceMapping.Count > 0)
-						return true;
-				}
-
-				var isIncompatible = null != expression.Find(expression, (_, e) =>
-				{
-					if (e is MemberExpression || e is ContextRefExpression || e is SqlGenericConstructorExpression)
-						return false;
-
-					return true;
-				});
-
-				return isIncompatible;
-			}
-
 			static bool IsEqualProjections(Expression left, Expression right)
 			{
 				if (left is SqlGenericConstructorExpression leftGeneric &&
@@ -556,122 +493,6 @@ namespace LinqToDB.Linq.Builder
 					return true;
 
 				return false;
-			}
-
-			class MemberOrParameter : IEquatable<MemberOrParameter>
-			{
-				public MemberOrParameter(MemberInfo memberInfo)
-				{
-					Member = memberInfo;
-				}
-
-				public MemberOrParameter(Parameter? parameter)
-				{
-					Parameter = parameter;
-				}
-
-				public readonly MemberInfo? Member;
-				public readonly Parameter?  Parameter;
-
-				public bool Equals(MemberOrParameter? other)
-				{
-					if (ReferenceEquals(null, other))
-					{
-						return false;
-					}
-
-					if (ReferenceEquals(this, other))
-					{
-						return true;
-					}
-
-					return Equals(Member, other.Member) && Equals(Parameter, other.Parameter);
-				}
-
-				public override bool Equals(object? obj)
-				{
-					if (ReferenceEquals(null, obj))
-					{
-						return false;
-					}
-
-					if (ReferenceEquals(this, obj))
-					{
-						return true;
-					}
-
-					if (obj.GetType() != GetType())
-					{
-						return false;
-					}
-
-					return Equals((MemberOrParameter)obj);
-				}
-
-				public override int GetHashCode()
-				{
-					unchecked
-					{
-						return ((Member != null ? Member.GetHashCode() : 0) * 397) ^ (Parameter != null ? Parameter.GetHashCode() : 0);
-					}
-				}
-
-				public static bool operator ==(MemberOrParameter? left, MemberOrParameter? right)
-				{
-					return Equals(left, right);
-				}
-
-				public static bool operator !=(MemberOrParameter? left, MemberOrParameter? right)
-				{
-					return !Equals(left, right);
-				}
-			}
-
-			class Parameter
-			{
-				public Parameter(int paramIndex)
-				{
-					ParamIndex = paramIndex;
-				}
-
-				public readonly MethodInfo? Method;
-				public readonly int         ParamIndex;
-			}
-
-			static List<Expression> CollectDataExpressions(Expression expression)
-			{
-				var result = new List<Expression>();
-				expression.Visit(result, (items, e) =>
-				{
-					if (e is MemberExpression me)
-					{
-						var current = e;
-						while (true)
-						{
-							if (current is MemberExpression cm)
-								current = cm.Expression;
-							else if (current is SqlGenericParamAccessExpression gp)
-								current = gp.Constructor;
-							else
-								break;
-						}
-
-						if (current is ContextRefExpression)
-						{
-							items.Add(e);
-							return false;
-						}
-					}
-					else if (e is SqlEagerLoadExpression)
-					{
-						items.Add(e);
-						return false;
-					}
-
-					return true;
-				});
-
-				return result;
 			}
 
 			static IEnumerable<Expression> CollectDataPathes(Expression expression, Expression currentPath)
@@ -805,101 +626,6 @@ namespace LinqToDB.Linq.Builder
 
 				return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto,
 					currentPath.Type, parameters?.AsReadOnly(), assignments?.AsReadOnly());
-			}
-
-			static List<MemberOrParameter> GetMemberPath(Expression expr)
-			{
-				var result  = new List<MemberOrParameter>();
-				var current = expr;
-
-				while (true)
-				{
-					MemberOrParameter item;
-					if (current is MemberExpression memberExpression)
-					{
-						item = new MemberOrParameter(memberExpression.Member.DeclaringType?.GetMemberEx(memberExpression.Member) ?? throw new InvalidOperationException());
-						current = memberExpression.Expression;
-					}
-					else if (current is SqlGenericParamAccessExpression paramAccess)
-					{
-						throw new NotImplementedException();
-						item    = new MemberOrParameter(new Parameter(paramAccess.ParamIndex));
-						current = paramAccess.Constructor;
-					}
-					else break;
-					result.Insert(0, item);
-				}
-
-				return result;
-			}
-
-			Expression MergeProjections(Type objectType, List<(Expression path, List<MemberOrParameter> pathList)> pathList, int level, ref bool incompatible)
-			{
-				var grouped = pathList.GroupBy(p => p.pathList[level])
-					.Where(g => g.Key.Member != null)
-					.Select(g => new { g.Key, Members = g.ToList() });
-
-				var assignments  = new List<SqlGenericConstructorExpression.Assignment>();
-
-				foreach (var g in grouped)
-				{
-					var member = g.Key.Member;
-
-					List<(Expression path, List<MemberOrParameter> pathList)>? newList = null;
-					(Expression path, List<MemberOrParameter> pathList)        found   = default;
-
-					foreach (var c in g.Members)
-					{
-						if (c.pathList.Count == level + 1)
-						{
-							if (found.path == null)
-							{
-								found = c;
-							}
-						}
-						else
-						{
-							newList ??= new();
-							newList.Add(c);
-						}
-					}
-
-					if (newList != null)
-					{
-						if (found.path != null)
-							incompatible = true;
-
-						assignments.Add(new SqlGenericConstructorExpression.Assignment(member!, MergeProjections(member!.GetMemberType(), newList, level + 1, ref incompatible), false, false));
-					}
-					else
-					{
-						if (found.path != null)
-						{
-							assignments.Add(new SqlGenericConstructorExpression.Assignment(member!, found.path, false, false));
-						}
-					}
-				}
-
-				return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto, objectType, null, assignments.AsReadOnly());
-			}
-
-			static Expression NormalizeToDeclaringTypExpression(Expression expression)
-			{
-				if (expression is MemberExpression me)
-				{
-					if (me.Expression is not MemberExpression)
-					{
-						if (me.Expression.Type != me.Member.DeclaringType && me.Member.DeclaringType != null)
-						{
-							if (me.Expression is ContextRefExpression contextRef)
-								return Expression.MakeMemberAccess(contextRef.WithType(me.Member.DeclaringType),
-									me.Member);
-						}
-					}
-					return me.Update(NormalizeToDeclaringTypExpression(me.Expression));
-				}
-
-				return expression;
 			}
 
 			public bool IsCompatibleForCommonProjection(SqlGenericConstructorExpression projection,
