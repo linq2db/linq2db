@@ -13,12 +13,6 @@ namespace LinqToDB.SqlQuery.Visitors
 			AddReplacements(replacements);
 		}
 
-		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
-		{
-			AddReplacement(oldElement, newElement);
-			return base.NotifyReplaced(newElement, oldElement);
-		}
-
 		public override bool ShouldReplace(IQueryElement element)
 		{
 			if (base.ShouldReplace(element))

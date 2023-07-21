@@ -206,6 +206,8 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			foreach (var pair in replacements)
 			{
+				if (ReferenceEquals(pair.Key, pair.Value))
+					continue;
 				_replacements[pair.Key] = pair.Value;
 				_replaced.Add(pair.Value);
 			}
@@ -217,6 +219,8 @@ namespace LinqToDB.SqlQuery.Visitors
 			{
 				while (_replacements.TryGetValue(current, out var currentReplacement))
 				{
+					if (ReferenceEquals(element, currentReplacement))
+						break;
 					current = currentReplacement;
 				}
 

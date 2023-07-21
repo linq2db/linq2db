@@ -620,8 +620,8 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		protected virtual ISqlExpression ConvertConversion(SqlFunction func)
 		{
-			var from = func.Parameters[1];
 			var to   = func.Parameters[0];
+			var from = func.Parameters[1];
 
 			if (to is SqlDataType toDataType && toDataType.Type.Length > 0 && from is SqlDataType fromDataType)
 			{
@@ -629,7 +629,7 @@ namespace LinqToDB.SqlProvider
 				var newLength = maxLength != null && maxLength >= 0 ? Math.Min(toDataType.Type.Length ?? 0, maxLength.Value) : fromDataType.Type.Length;
 
 				if (fromDataType.Type.Length != newLength)
-					to = new SqlDataType(fromDataType.Type.WithLength(newLength));
+					to = new SqlDataType(toDataType.Type.WithLength(newLength));
 			}
 			else if (!func.DoNotOptimize && from.SystemType == typeof(short) && to.SystemType == typeof(int))
 				return func.Parameters[2];

@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 			}
 
-			struct NeedCastScope : IDisposable
+			readonly struct NeedCastScope : IDisposable
 			{
 				readonly WrapParametersVisitor _visitor;
 				readonly bool                  _saveValue;

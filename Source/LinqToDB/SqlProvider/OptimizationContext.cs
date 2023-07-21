@@ -118,32 +118,5 @@ namespace LinqToDB.SqlProvider
 
 			return (T)newElement;
 		}
-
-
-		[return: NotNullIfNotNull(nameof(element))]
-		public SqlSearchCondition? ConvertSearchCondition(SqlSearchCondition? element, NullabilityContext nullabilityContext)
-		{
-			var newElement = _optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, element);
-			var result = (ISqlPredicate)_convertVisitor.Convert(this, nullabilityContext, _sqlProviderFlags, _dataOptions, _mappingSchema, newElement);
-
-			if (result is not SqlSearchCondition sc)
-			{
-				if (result is SqlPredicate.Expr expr)
-				{
-					if (expr.Expr1 is SqlValue value)
-					{
-						if (value.Value is true)
-							return new SqlSearchCondition();
-						if (value.Value is false)
-							return new SqlSearchCondition(new SqlCondition(false, result));
-					}
-				}
-					
-				throw new NotImplementedException();
-			}
-
-			return sc;
-		}
-
 	}
 }

@@ -134,12 +134,6 @@ namespace LinqToDB.SqlProvider
 			return OptimizationContext.ConvertAll(element, nullability);
 		}
 
-		[return: NotNullIfNotNull(nameof(element))]
-		public SqlSearchCondition? ConvertSearchCondition(SqlSearchCondition? element, NullabilityContext nullability)
-		{
-			return OptimizationContext.ConvertSearchCondition(element, nullability);
-		}
-
 		#endregion
 
 		#region BuildSql
@@ -2081,7 +2075,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual bool BuildWhere(NullabilityContext nullability, SelectQuery selectQuery)
 		{
-			var condition = ConvertSearchCondition(selectQuery.Where.SearchCondition, nullability);
+			var condition = ConvertElement(selectQuery.Where.SearchCondition, nullability);
 
 			return condition.Conditions.Count > 0;
 		}
@@ -2173,7 +2167,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildHavingClause(NullabilityContext nullability, SelectQuery selectQuery)
 		{
-			var condition = ConvertSearchCondition(selectQuery.Where.Having.SearchCondition, nullability);
+			var condition = ConvertElement(selectQuery.Where.Having.SearchCondition, nullability);
 			if (condition.Conditions.Count == 0)
 				return;
 

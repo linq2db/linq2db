@@ -230,11 +230,18 @@ namespace LinqToDB.Linq.Builder
 				definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
 			}
 
-			if (loadWith != null)
+			if (loadWith?.NextInfos != null)
 			{
-				var associationLoadWith = loadWith.NextInfos?
+				var associationLoadWith = loadWith.NextInfos
 					.FirstOrDefault(li =>
 						MemberInfoEqualityComparer.Default.Equals(li.MemberInfo, association.MemberInfo));
+
+				if (associationLoadWith == null)
+				{
+					associationLoadWith = loadWith.NextInfos
+						.FirstOrDefault(li =>
+							li.MemberInfo?.Name == association.MemberInfo.Name);
+				}
 
 				if (associationLoadWith != null &&
 				    (associationLoadWith.MemberFilter != null || associationLoadWith.FilterFunc != null))
