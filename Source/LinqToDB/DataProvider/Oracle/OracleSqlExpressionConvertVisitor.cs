@@ -97,7 +97,10 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				case "Coalesce":
 				{
-					return ConvertCoalesceToBinaryFunc(func, "Nvl");
+					if (func.Parameters.Length == 2)
+						return ConvertCoalesceToBinaryFunc(func, "Nvl");
+							
+					return func;
 				}
 
 				case "CharIndex"      :

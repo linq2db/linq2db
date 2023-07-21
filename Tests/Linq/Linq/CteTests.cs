@@ -1401,5 +1401,59 @@ namespace Tests.Linq
 					   };
 			join.Insert(tb, x => x);
 		}
+
+		[Table]
+		private class Issue4167Table
+		{
+			[PrimaryKey] public int      ID        { get; set; }
+			[Column    ] public string?  Value     { get; set; }
+			[Column    ] public TaxType? EnumValue { get; set; }
+
+			public enum TaxType
+			{
+				NoTax       = 0,
+				NonResident = 3,
+			}
+
+			public static readonly Issue4167Table[] Data = new []
+			{
+				new Issue4167Table() { ID = 1, Value = "000001", EnumValue = TaxType.NoTax },
+				new Issue4167Table() { ID = 2, Value = "000001", EnumValue = TaxType.NonResident },
+				new Issue4167Table() { ID = 3, Value = "000001", EnumValue = null },
+				new Issue4167Table() { ID = 4, Value = "000002", EnumValue = TaxType.NoTax },
+			};
+		}
+
+		[Test]
+		public void Issue4167([CteContextSource] string context, [Values] bool withCte)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue4167Table.Data);
+
+			var query = (
+				from t in tb
+				where t.Value == "000001"
+				group t by new { t.Value, t.EnumValue } into g
+				select new
+				{
+					EnumValue = g.Key.EnumValue.GetValueOrDefault(),
+				});
+
+			if (withCte)
+				query = query.AsCte();
+
+			var result = (
+				from r in query
+				select new
+				{
+					r.EnumValue
+				}).OrderBy(r => r.EnumValue)
+				.ToList();
+
+			Assert.That(result.Count, Is.EqualTo(3));
+			Assert.That(result[0].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
+			Assert.That(result[1].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
+			Assert.That(result[2].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NonResident));
+		}
 	}
 }
