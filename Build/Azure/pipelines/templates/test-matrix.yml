@@ -866,7 +866,7 @@ jobs:
           enable_os_macos: true
           enable_fw_net472: false
           enable_fw_netcore31: false
-          enable_fw_net60: true
+          enable_fw_net60: false
           enable_fw_net70: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
