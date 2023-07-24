@@ -14,3 +14,5 @@ REM create test database
 docker exec mysql mysql -e "CREATE DATABASE testdata DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" -uroot -proot
 docker exec mysql mysql -e "CREATE DATABASE testdataconnector DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" -uroot -proot
 
+REM Suppress ERROR 3948 (42000)
+docker exec mysql mysql -e "SET GLOBAL local_infile=1;" -uroot -proot

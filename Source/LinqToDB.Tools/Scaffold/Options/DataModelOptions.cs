@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
 
@@ -35,6 +35,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public bool GenerateDefaultSchema { get; set; }
+
+		/// <summary>
+		/// Specifies type of generated metadata source.
+		/// <list type="bullet">
+		/// <item>Default: <see cref="MetadataSource.Attributes"/></item>
+		/// <item>In T4 compability mode: <see cref="MetadataSource.Attributes"/></item>
+		/// </list>
+		/// </summary>
+		public MetadataSource Metadata { get; set; } = MetadataSource.Attributes;
 		#endregion
 
 		#region Entities

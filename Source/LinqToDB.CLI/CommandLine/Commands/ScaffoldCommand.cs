@@ -54,6 +54,7 @@ namespace LinqToDB.CommandLine
 			// data model options
 			AddOption(_dataModelOptions, DataModel.GenerateDbName);
 			AddOption(_dataModelOptions, DataModel.GenerateDefaultSchemaName);
+			AddOption(_dataModelOptions, DataModel.Metadata);
 			AddOption(_dataModelOptions, DataModel.BaseEntity);
 			AddOption(_dataModelOptions, DataModel.DataTypeOnTables);
 			AddOption(_dataModelOptions, DataModel.DbTypeOnTables);

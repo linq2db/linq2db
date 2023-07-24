@@ -150,7 +150,7 @@ namespace LinqToDB.Mapping
 		/// for associations (cardinality 1) is derived from nullability.
 		/// Otherwise the default value is <c>true</c> (for collections and when option is disabled).
 		/// </summary>
-		public bool         CanBeNull           
+		public bool         CanBeNull
 		{ 
 			get => ConfiguredCanBeNull ?? true; 
 			set => ConfiguredCanBeNull = value;

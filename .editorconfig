@@ -38,7 +38,7 @@ end_of_line = lf
 
 # Sort using and Import directives with System.* appearing first
 dotnet_sort_system_directives_first = true
-dotnet_separate_import_directive_groups = false
+dotnet_separate_import_directive_groups = true
 
 # Use language keywords instead of framework type names for type references
 dotnet_style_predefined_type_for_locals_parameters_members = true:error
@@ -271,6 +271,7 @@ dotnet_diagnostic.IDE0150.severity = none # IDE0150: null check can be clarified
 dotnet_diagnostic.IDE0210.severity = none # IDE0210: convert to lol-level statements
 dotnet_diagnostic.IDE0220.severity = none # IDE0220: add explicit cast to MS implicity typed collections foreach
 dotnet_diagnostic.IDE0230.severity = none # IDE0230: use utf-8 literal
+dotnet_diagnostic.IDE0251.severity = none # IDE0251: Make member 'readonly'
 dotnet_diagnostic.IDE0270.severity = none # IDE0270: Null check can be simplified
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 

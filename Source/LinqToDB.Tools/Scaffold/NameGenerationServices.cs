@@ -35,7 +35,7 @@ namespace LinqToDB.Scaffold.Internal
 				var isOneToOne = !isBackReference && thisColumns.All(c => isPrimaryKeyColumn(thisTable, c));
 
 				// if column name provided - generate association name based on column name
-				if (!isOneToOne && thisColumns[0].ToLowerInvariant().EndsWith("id"))
+				if (!isOneToOne && thisColumns.Length == 1 && thisColumns[0].ToLowerInvariant().EndsWith("id"))
 				{
 					// if column name provided and ends with ID suffix
 					// we trim ID part and possible _ connectors before it

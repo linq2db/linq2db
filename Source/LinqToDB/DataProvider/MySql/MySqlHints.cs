@@ -13,7 +13,6 @@ namespace LinqToDB.DataProvider.MySql
 	using SqlProvider;
 	using SqlQuery;
 
-
 	public static partial class MySqlHints
 	{
 		// https://dev.mysql.com/doc/refman/8.0/en/optimizer-hints.html#optimizer-hints-index-level
@@ -217,12 +216,14 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlSpecificTable<TSource> TableHint<TSource>(this IMySqlSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -243,12 +244,14 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] TParam        hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -269,14 +272,16 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		#endregion
@@ -377,12 +382,14 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlSpecificTable<TSource> TableIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableIndexHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableIndexHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -403,12 +410,14 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] TParam        hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableIndexHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableIndexHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -429,14 +438,16 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableIndexHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableIndexHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		#endregion
@@ -720,14 +731,16 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params Sql.SqlID[]                  tableIDs)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(SubQueryTableHint, table, hint, tableIDs),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryTableHint, table, hint, tableIDs),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -749,15 +762,17 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params Sql.SqlID[]                  tableIDs)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(SubQueryTableHint, table, hint, hint2, tableIDs),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.Constant(hint2),
-				Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryTableHint, table, hint, hint2, tableIDs),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.Constant(hint2),
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using LinqToDB.Configuration;
 using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 
@@ -457,6 +457,23 @@ If you don't specify some property, CLI will use default value for current optio
 					_t4ModeOptions.DataModel.GenerateDefaultSchema);
 
 			/// <summary>
+			/// Specifies type of generated metadata source.
+			/// </summary>
+			public static readonly CliOption Metadata = new StringEnumCliOption(
+					"metadata",
+					null,
+					false,
+					false,
+					"specify type of generated metadata",
+					null,
+					null,
+					null,
+					false,
+					new StringEnumOption(_defaultOptions.DataModel.Metadata == MetadataSource.None         , _t4ModeOptions.DataModel.Metadata == MetadataSource.None         , "none"      , "don't emit metadata for model"         ),
+					new StringEnumOption(_defaultOptions.DataModel.Metadata == MetadataSource.Attributes   , _t4ModeOptions.DataModel.Metadata == MetadataSource.Attributes   , "attributes", "annotate model with mapping attributes"),
+					new StringEnumOption(_defaultOptions.DataModel.Metadata == MetadataSource.FluentMapping, _t4ModeOptions.DataModel.Metadata == MetadataSource.FluentMapping, "fluent"    , "annotate model using fluent mapping"   ));
+
+			/// <summary>
 			/// Base entity class option.
 			/// </summary>
 			public static readonly CliOption BaseEntity = new StringCliOption(
@@ -866,18 +883,19 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					null,
 					false,
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) != 0, "sync-pk-table"       , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this ITable<Entity> table, pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) != 0, "async-pk-table"      , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this ITable<Entity> table, pk_fields, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) != 0, "query-pk-table"      , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this ITable<Entity> table, pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) != 0, "sync-pk-context"     , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this DataContext    db   , pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "async-pk-context"    , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this DataContext    db   , pk_fields, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "query-pk-context"    , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this DataContext    db   , pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) != 0, "sync-entity-table"   , "generate sync entity load extension on table object with entity parameter      : Entity?            Find     (this ITable<Entity> table, Entity row)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) != 0, "async-entity-table"  , "generate sync entity load extension on table object with entity parameter      : Task<Entity?>      FindAsync(this ITable<Entity> table, Entity row, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) != 0, "query-entity-table"  , "generate entity query extension on table object with entity parameter          : IQueryable<Entity> FindQuery(this ITable<Entity> table, Entity row)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) != 0, "sync-entity-context" , "generate sync entity load extension on generated context with entity parameter : Entity?            Find     (this DataContext>   db   , Entity row)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) != 0, "async-entity-context", "generate sync entity load extension on generated context with entity parameter : Task<Entity?>      FindAsync(this DataContext    db   , Entity row, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) != 0, "query-entity-context", "generate entity query extension on generated context with entity parameter     : IQueryable<Entity> FindQuery(this DataContext    db   , Entity row)"));
+					new StringEnumOption( _defaultOptions.DataModel.GenerateFindExtensions                                         == 0                                   ,  _t4ModeOptions.DataModel.GenerateFindExtensions                                         == 0                                   , "none"                , "disable generation of Find extensions. Cannot be used with other values"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) == FindTypes.FindByPkOnTable           , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) == FindTypes.FindByPkOnTable           , "sync-pk-table"       , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this ITable<Entity> table, pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) == FindTypes.FindAsyncByPkOnTable      , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) == FindTypes.FindAsyncByPkOnTable      , "async-pk-table"      , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this ITable<Entity> table, pk_fields, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) == FindTypes.FindQueryByPkOnTable      , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) == FindTypes.FindQueryByPkOnTable      , "query-pk-table"      , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this ITable<Entity> table, pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) == FindTypes.FindByPkOnContext         , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) == FindTypes.FindByPkOnContext         , "sync-pk-context"     , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this DataContext    db   , pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) == FindTypes.FindAsyncByPkOnContext    , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) == FindTypes.FindAsyncByPkOnContext    , "async-pk-context"    , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this DataContext    db   , pk_fields, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnContext    ) == FindTypes.FindQueryByPkOnContext    , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnContext    ) == FindTypes.FindQueryByPkOnContext    , "query-pk-context"    , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this DataContext    db   , pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) == FindTypes.FindByRecordOnTable       , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) == FindTypes.FindByRecordOnTable       , "sync-entity-table"   , "generate sync entity load extension on table object with entity parameter      : Entity?            Find     (this ITable<Entity> table, Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) == FindTypes.FindAsyncByRecordOnTable  , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) == FindTypes.FindAsyncByRecordOnTable  , "async-entity-table"  , "generate sync entity load extension on table object with entity parameter      : Task<Entity?>      FindAsync(this ITable<Entity> table, Entity row, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) == FindTypes.FindQueryByRecordOnTable  , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) == FindTypes.FindQueryByRecordOnTable  , "query-entity-table"  , "generate entity query extension on table object with entity parameter          : IQueryable<Entity> FindQuery(this ITable<Entity> table, Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) == FindTypes.FindByRecordOnContext     , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) == FindTypes.FindByRecordOnContext     , "sync-entity-context" , "generate sync entity load extension on generated context with entity parameter : Entity?            Find     (this DataContext>   db   , Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) == FindTypes.FindAsyncByRecordOnContext, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) == FindTypes.FindAsyncByRecordOnContext, "async-entity-context", "generate sync entity load extension on generated context with entity parameter : Task<Entity?>      FindAsync(this DataContext    db   , Entity row, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) == FindTypes.FindQueryByRecordOnContext, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) == FindTypes.FindQueryByRecordOnContext, "query-entity-context", "generate entity query extension on generated context with entity parameter     : IQueryable<Entity> FindQuery(this DataContext    db   , Entity row)"));
 
 			/// <summary>
 			/// Order Find extension method parameters by primary key column ordinal instead of order by parameter name option.

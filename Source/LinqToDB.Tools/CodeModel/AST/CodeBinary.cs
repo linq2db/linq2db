@@ -14,8 +14,10 @@ namespace LinqToDB.CodeModel
 
 			switch (operation)
 			{
-				case BinaryOperation.Equal:
-				case BinaryOperation.And  :
+				case BinaryOperation.Equal   :
+				case BinaryOperation.NotEqual:
+				case BinaryOperation.And     :
+				case BinaryOperation.Or      :
 					_type = WellKnownTypes.System.Boolean;
 					break;
 				case BinaryOperation.Add  :

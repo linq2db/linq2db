@@ -4,17 +4,16 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using Extensions;
-	using LinqToDB.Expressions;
 	using Interceptors;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Common;
 
 	partial class TableBuilder
 	{
@@ -321,7 +320,7 @@ namespace LinqToDB.Linq.Builder
 
 			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
 			{
-				var members = new List<(ColumnDescriptor column, ConvertFromDataReaderExpression expr)>();
+				var members = new List<(ColumnDescriptor column, MemberInfo storage, ConvertFromDataReaderExpression expr)>();
 
 				foreach (var idx in index)
 				{
@@ -332,12 +331,20 @@ namespace LinqToDB.Linq.Builder
 							if (cd.ColumnName != idx.Item2.PhysicalName)
 								continue;
 
-							if (cd.Storage != null ||
-								!(cd.MemberAccessor.MemberInfo is PropertyInfo info) ||
-								info.GetSetMethod(true) != null)
+							MemberInfo? storage = null;
+
+							if (cd.Storage != null || cd.MemberAccessor.MemberInfo is not PropertyInfo pi)
+								storage = cd.StorageInfo;
+							else if (objectType.HasSetter(ref pi))
 							{
-								members.Add((cd, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
+								if (cd.MemberAccessor.MemberInfo == cd.StorageInfo && cd.MemberAccessor.MemberInfo != pi)
+									storage = pi;
+								else
+									storage = cd.StorageInfo;
 							}
+
+							if (storage != null)
+								members.Add((cd, storage, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
 						}
 					}
 				}
@@ -346,7 +353,7 @@ namespace LinqToDB.Linq.Builder
 					members
 						// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
 						.Where(static m => !m.column.MemberAccessor.IsComplex)
-						.Select(static m => (MemberBinding)Expression.Bind(m.column.StorageInfo, m.expr))
+						.Select(static m => (MemberBinding)Expression.Bind(m.storage, m.expr))
 				);
 
 				var        hasComplex = members.Count > initExpr.Bindings.Count;
@@ -360,7 +367,7 @@ namespace LinqToDB.Linq.Builder
 					var exprs = new List<Expression> { Expression.Assign(obj, expr) };
 
 					if (hasComplex)
-						foreach (var (column, exp) in members)
+						foreach (var (column, _, exp) in members)
 							if (column.MemberAccessor.IsComplex)
 								exprs.Add(column.MemberAccessor.SetterExpression.GetBody(obj, exp));
 
@@ -1251,19 +1258,13 @@ namespace LinqToDB.Linq.Builder
 
 								var expr   = queryMethod.GetBody(ma);
 
-								buildInfo.IsAssociationBuilt = true;
-
-								DefaultIfEmptyBuilder.DefaultIfEmptyContext? defaultIfEmpty = null;
-								if (tableLevel.Context is TableContext tc)
-									defaultIfEmpty = tc.Parent as DefaultIfEmptyBuilder.DefaultIfEmptyContext;
-
-								if (defaultIfEmpty != null)
-									defaultIfEmpty.Disabled = true;
+								buildInfo.IsAssociationBuilt  = true;
+								var oldDefaultIfEmpty         = Builder.DisableDefaultIfEmpty;
+								Builder.DisableDefaultIfEmpty = true;
 
 								var result =  Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
-								if (defaultIfEmpty != null)
-									defaultIfEmpty.Disabled = false;
+								Builder.DisableDefaultIfEmpty = oldDefaultIfEmpty;
 
 								return result;
 							}

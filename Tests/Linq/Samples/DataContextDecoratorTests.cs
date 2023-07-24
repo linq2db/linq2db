@@ -42,6 +42,7 @@ namespace Tests.Samples
 			public List<string>                    QueryHints            => _context.QueryHints;
 			public SqlProviderFlags                SqlProviderFlags      => _context.SqlProviderFlags;
 			public TableOptions                    SupportedTableOptions => _context.SupportedTableOptions;
+			public string?                         ConfigurationString   => _context.ConfigurationString;
 
 			public MappingSchema MappingSchema { get; }
 			public bool          CloseAfterUse { get; set; }

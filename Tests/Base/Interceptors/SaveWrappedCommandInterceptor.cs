@@ -26,7 +26,7 @@ namespace Tests
 		public override DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
 		{
 			Parameters = command.Parameters.Cast<DbParameter>().ToArray();
-			Command    = _unwrap ? (DbCommand)((dynamic)command).InternalCommand : command;
+			Command    = _unwrap ? (DbCommand)((dynamic)command).WrappedCommand : command;
 
 			return command;
 		}

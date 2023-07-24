@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,6 +50,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			SetCharField("bpchar"   , (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("character", (r,i) => r.GetString(i).TrimEnd(' '));
+
+			if (Adapter.SupportsBigInteger)
+				SetProviderField<DbDataReader, BigInteger, decimal>((DbDataReader rd, int idx) => rd.GetFieldValue<BigInteger>(idx));
 
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
@@ -227,20 +231,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				// set DateTime.Kind to expected value for timestamp and timestamptz parameters to prevent npgsql 6.0.0 complains
 				else if (value is DateTime dt)
 				{
-					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
-					if (dt.Kind == DateTimeKind.Utc
-						&& (dataType.DataType == DataType.DateTime2 || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp))
-						value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
 					// timestamptz should have UTC Kind
-					else if (dt.Kind != DateTimeKind.Utc
-						&& (dataType.DataType == DataType.DateTimeOffset || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
-						value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+					if ((dataType.DataType == DataType.DateTimeOffset || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
+					{
+						if (dt.Kind != DateTimeKind.Utc)
+							value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+					}
+					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
+					else if (dataType.DataType == DataType.DateTime2 || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp)
+					{
+						if (dt.Kind == DateTimeKind.Utc)
+							value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+					}
 				}
 			}
 
 			return value;
 		}
-
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{

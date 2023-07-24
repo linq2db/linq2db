@@ -71,7 +71,7 @@ namespace LinqToDB.Scaffold
 		public CodeFile[] GenerateCodeModel(
 			       ISqlBuilder               sqlBuilder,
 			       DatabaseModel             dataModel,
-			       IMetadataBuilder          metadataBuilder,
+			       IMetadataBuilder?         metadataBuilder,
 			params ConvertCodeModelVisitor[] modelConverters)
 		{
 			var generator = new DataModelGenerator(

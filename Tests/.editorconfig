@@ -3,6 +3,7 @@
 dotnet_diagnostic.ide0001.severity = none # IDE0001: Simplify name
 # casts used a lot in test linq expressions
 dotnet_diagnostic.ide0004.severity = none # IDE0004: Remove unnecessary cast
+dotnet_diagnostic.CA1852.severity = none # CA1852: Type can be sealed
 
 # ReSharper properties
 resharper_space_before_new_parentheses = true

@@ -59,8 +59,8 @@ namespace LinqToDB.Remote.Grpc
 		{
 			return new GrpcDataContext(Address, ChannelOptions)
 			{
-				MappingSchema = MappingSchema,
-				Configuration = Configuration
+				MappingSchema       = MappingSchema,
+				ConfigurationString = ConfigurationString
 			};
 		}
 

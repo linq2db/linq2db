@@ -11,13 +11,23 @@ namespace LinqToDB.CodeModel
 	internal sealed class CSharpCodeGenerator : CodeGenerationVisitor<CSharpCodeGenerator>
 	{
 		/// <summary>
+		/// Code fragments for unary operators.
+		/// </summary>
+		private static readonly IReadOnlyDictionary<UnaryOperation, string> _unaryOperators = new Dictionary<UnaryOperation, string>()
+		{
+			{ UnaryOperation.Not, "!" },
+		};
+
+		/// <summary>
 		/// Code fragments for binary operators.
 		/// </summary>
 		private static readonly IReadOnlyDictionary<BinaryOperation, string> _operators = new Dictionary<BinaryOperation, string>()
 		{
-			{ BinaryOperation.Equal, " == " },
-			{ BinaryOperation.And  , " && " },
-			{ BinaryOperation.Add  , " + "  },
+			{ BinaryOperation.Equal   , " == " },
+			{ BinaryOperation.NotEqual, " != " },
+			{ BinaryOperation.And     , " && " },
+			{ BinaryOperation.Or      , " || " },
+			{ BinaryOperation.Add     , " + "  },
 		};
 
 		// newline sequences according to language specs
@@ -136,12 +146,22 @@ namespace LinqToDB.CodeModel
 		{
 			// hardcoded sequence with newline spacers
 			VisitList(file.Header);
-			Visit(CodeEmptyLine.Instance);
+			WriteLine();
 			VisitList(file.Imports);
-			Visit(CodeEmptyLine.Instance);
+			WriteLine();
 
 			_currentImports = file.Imports;
 			VisitList(file);
+		}
+
+		protected override void Visit(CodeUnary expression)
+		{
+			if (_unaryOperators.TryGetValue(expression.Operation, out var operatorCode))
+				Write(operatorCode);
+			else
+				throw new NotImplementedException($"Unary operator {expression.Operation} support missing from C# code generator");
+
+			Visit(expression.Argument);
 		}
 
 		protected override void Visit(CodeBinary expression)
@@ -154,6 +174,15 @@ namespace LinqToDB.CodeModel
 				throw new NotImplementedException($"Binary operator {expression.Operation} support missing from C# code generator");
 
 			Visit(expression.Right);
+		}
+
+		protected override void Visit(CodeTernary expression)
+		{
+			Visit(expression.Condition);
+			Write(" ? ");
+			Visit(expression.True);
+			Write(" : ");
+			Visit(expression.False);
 		}
 
 		protected override void Visit(CodeLambda method)
@@ -441,13 +470,16 @@ namespace LinqToDB.CodeModel
 		private            void WriteCall(CodeCallBase       call)
 		{
 			// TODO: check if we can ommit "this" or it will result in name conflicts
-			if (call.Callee != null && call.Callee.ElementType != CodeElementType.This)
+			var hasCalle = call.Callee != null && call.Callee.ElementType != CodeElementType.This;
+			if (hasCalle)
 			{
 				if (call.Extension)
 					// TODO: here we could need () around parameter value if it is complex expression
 					Visit(call.Parameters[0]);
 				else
-					Visit(call.Callee);
+					Visit(call.Callee!);
+
+				WriteTrivia(call.WrapTrivia);
 				Write('.');
 			}
 
@@ -463,6 +495,9 @@ namespace LinqToDB.CodeModel
 			Write('(');
 			WriteDelimitedList(call.Extension ? call.Parameters.Skip(1) : call.Parameters, ", ", false);
 			Write(')');
+
+			if (hasCalle)
+				UndoTrivia(call.WrapTrivia);
 		}
 
 		protected override void Visit(CodeReturn statement)
@@ -1176,8 +1211,10 @@ namespace LinqToDB.CodeModel
 				OpenBlock(false);
 				foreach (var stmt in statements.Items)
 				{
+					WriteTrivia(stmt.Before);
 					Visit(stmt);
 					WriteLine(';');
+					WriteTrivia(stmt.After);
 				}
 				CloseBlock(false, true);
 			}

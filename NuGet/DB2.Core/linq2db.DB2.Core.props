@@ -23,8 +23,8 @@
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
-		<PackageReference Include="Net.IBM.Data.Db2" Version="6.0.0.300" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
-		<PackageReference Include="Net.IBM.Data.Db2-lnx" Version="6.0.0.300" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
-		<PackageReference Include="Net.IBM.Data.Db2-osx" Version="6.0.0.300" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
+		<PackageReference Include="Net.IBM.Data.Db2" Version="7.0.0.200" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
+		<PackageReference Include="Net.IBM.Data.Db2-lnx" Version="7.0.0.200" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
+		<PackageReference Include="Net.IBM.Data.Db2-osx" Version="7.0.0.200" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
 	</ItemGroup>
 </Project>

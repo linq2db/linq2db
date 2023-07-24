@@ -92,6 +92,47 @@ namespace LinqToDB.CodeModel
 		protected string[] SplitByNewLine(string text) => text.Split(NewLineSequences, StringSplitOptions.None);
 
 		/// <summary>
+		/// Emits trivia.
+		/// </summary>
+		protected void WriteTrivia(IEnumerable<SimpleTrivia>? trivia)
+		{
+			if (trivia == null)
+				return;
+
+			foreach (var e in trivia)
+			{
+				switch (e)
+				{
+					case SimpleTrivia.NewLine:
+						WriteLine();
+						break;
+					case SimpleTrivia.Padding:
+						IncreaseIdent();
+						break;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Undo trivia.
+		/// </summary>
+		protected void UndoTrivia(IEnumerable<SimpleTrivia>? trivia)
+		{
+			if (trivia == null)
+				return;
+
+			foreach (var e in trivia)
+			{
+				switch (e)
+				{
+					case SimpleTrivia.Padding:
+						DecreaseIdent();
+						break;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Generates code for provided code elements with specified delimiter between elements.
 		/// </summary>
 		/// <typeparam name="T">Code element type.</typeparam>

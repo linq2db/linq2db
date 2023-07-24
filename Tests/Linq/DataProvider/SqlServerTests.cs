@@ -13,7 +13,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -23,12 +25,15 @@ using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
+
 using Microsoft.SqlServer.Types;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.DataProvider
 {
+	using Model;
+
 	[TestFixture]
 	public class SqlServerTests : DataProviderTestBase
 	{
@@ -2155,6 +2160,41 @@ DROP TABLE IF EXISTS TemporalTable3History
 				Assert.AreEqual(readOnly, column!.SkipOnInsert);
 				Assert.AreEqual(readOnly, column!.SkipOnUpdate);
 			}
+		}
+
+		[Test]
+		public void GetDataConnectionTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var cs = DataConnection.GetConnectionString(context);
+			_ = SqlServerTools.CreateDataConnection(cs);
+		}
+
+		[Test]
+		public void TestVariantConverters([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConverter<object, DataParameter>(obj => new DataParameter(null, obj is TimeSpan ts ? ts.Ticks : obj));
+
+			using var db = GetDataConnection(context, ms);
+			using var tb = db.CreateLocalTable<VariantTable>();
+
+			db.BulkCopy(new[]
+			{
+				new VariantTable() { Id = 1, Value = "string value" },
+				new VariantTable() { Id = 2, Value = TimeSpan.FromDays(2) },
+			});
+
+			var res = tb.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(res.Length, Is.EqualTo(2));
+			Assert.That(res[0].Value, Is.EqualTo("string value"));
+			Assert.That(res[1].Value, Is.EqualTo(TimeSpan.FromDays(2).Ticks));
+		}
+
+		sealed class VariantTable
+		{
+			public int     Id    { get; set; }
+			public object? Value { get; set; }
 		}
 	}
 }

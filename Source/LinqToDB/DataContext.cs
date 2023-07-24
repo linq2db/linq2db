@@ -16,6 +16,7 @@ namespace LinqToDB
 	using Data;
 	using DataProvider;
 	using Linq;
+	using LinqToDB.Common.Internal;
 	using Mapping;
 	using SqlProvider;
 
@@ -45,7 +46,7 @@ namespace LinqToDB
 		public DataContext(string? configurationString)
 			: this(configurationString == null
 				? DataConnection.DefaultDataOptions
-				: DataConnection.ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(configurationString))))
+				: DataConnection.ConnectionOptionsByConfigurationString.GetOrAdd(configurationString, _ => new(new(ConfigurationString : configurationString))))
 		{
 		}
 
@@ -107,10 +108,31 @@ namespace LinqToDB
 		/// </summary>
 		public string        ContextName         => DataProvider.Name;
 
+		int  _msID;
+		int? _configurationID;
 		/// <summary>
 		/// Gets or sets ContextID.
 		/// </summary>
-		public int           ConfigurationID     => DataProvider.ID;
+		public int           ConfigurationID
+		{
+			// can we just delegate it to underlying DataConnection?
+			get
+			{
+				if (_configurationID == null || _msID != ((IConfigurationID)MappingSchema).ConfigurationID)
+				{
+					using var idBuilder = new IdentifierBuilder();
+					_configurationID = idBuilder
+						.Add(_msID = ((IConfigurationID)MappingSchema).ConfigurationID)
+						// GetDataConnection :-/
+						.Add(ConfigurationString ?? ConnectionString ?? GetDataConnection().Connection.ConnectionString)
+						.Add(Options)
+						.Add(GetType())
+						.CreateID();
+				}
+
+				return _configurationID.Value;
+			}
+		}
 
 		/// <summary>
 		/// Gets or sets mapping schema. Uses provider's mapping schema by default.
@@ -331,6 +353,7 @@ namespace LinqToDB
 					if (_dataConnection.QueryHints.    Count > 0) QueryHints.    AddRange(_queryHints!);
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
 
+					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 					await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					_dataConnection = null;
 				}
@@ -434,6 +457,7 @@ namespace LinqToDB
 				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
 				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
+				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				_dataConnection.Dispose();
 				_dataConnection = null;
 			}
@@ -451,6 +475,7 @@ namespace LinqToDB
 				if (_dataConnection.QueryHints.    Count > 0) (_queryHints     ??= new ()).AddRange(_dataConnection.QueryHints);
 				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
+				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
 				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				_dataConnection = null;
 			}

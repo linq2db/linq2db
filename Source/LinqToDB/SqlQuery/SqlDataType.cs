@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 
 	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;
@@ -115,14 +116,29 @@ namespace LinqToDB.CommandLine
 				}
 			}
 
+			// Metadata source
+			if (options.Remove(DataModel.Metadata, out value))
+			{
+				var str = (string)value!;
+				settings.Metadata = str switch
+				{
+					"none"       => MetadataSource.None,
+					"attributes" => MetadataSource.Attributes,
+					"fluent"     => MetadataSource.FluentMapping,
+					_            => throw new InvalidOperationException($"Unsuppored value for option {DataModel.Metadata.Name}: {str}")
+				};
+			}
+
 			// Find method variants
 			if (options.Remove(DataModel.GenerateFind, out value))
 			{
 				var findTypes = FindTypes.None;
+				var hasNone   = false;
 				foreach (var strVal in (string[])value!)
 				{
 					switch (strVal)
 					{
+						case "none"                : hasNone = true                                   ; break;
 						case "sync-pk-table"       : findTypes |= FindTypes.FindByPkOnTable           ; break;
 						case "async-pk-table"      : findTypes |= FindTypes.FindAsyncByPkOnTable      ; break;
 						case "query-pk-table"      : findTypes |= FindTypes.FindQueryByPkOnTable      ; break;
@@ -138,6 +154,10 @@ namespace LinqToDB.CommandLine
 						default                    : throw new InvalidOperationException($"Unsuppored value for option {DataModel.GenerateFind.Name}: {strVal}");
 					}
 				}
+
+				if (hasNone && findTypes != FindTypes.None)
+					throw new InvalidOperationException($"Option {DataModel.GenerateFind.Name} combines `none` value with other values ({string.Join(',', (string[])value!)})");
+
 				settings.GenerateFindExtensions = findTypes;
 			}
 

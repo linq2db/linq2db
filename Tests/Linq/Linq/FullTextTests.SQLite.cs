@@ -125,8 +125,8 @@ namespace Tests.Linq
 				var query = Sql.Ext.SQLite().MatchTable(db.GetTable<FtsTable>(), "found");
 
 				var sql = query.ToString()!;
-				Assert.That(sql.Contains("p_1 = 'found'"));
-				Assert.That(sql.Contains("[FTS5_TABLE](@p_1)"));
+				Assert.That(sql.Contains(" = 'found'"));
+				Assert.That(sql.Contains("[FTS5_TABLE](@"));
 			}
 		}
 

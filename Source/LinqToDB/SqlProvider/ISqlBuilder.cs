@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Text;
 
@@ -31,7 +30,7 @@ namespace LinqToDB.SqlProvider
 		string           ApplyQueryHints               (string sqlText, IReadOnlyCollection<string> queryHints);
 		string           GetReserveSequenceValuesSql   (int count, string sequenceName);
 		string           GetMaxValueSql                (EntityDescriptor entity, ColumnDescriptor column);
-		void             BuildExpression               (StringBuilder sb, ISqlExpression expr, bool buildTableName);
+		void             BuildExpression               (StringBuilder sb, ISqlExpression expr, bool buildTableName, object? context = null);
 
 		string                                 Name             { get; }
 		MappingSchema                          MappingSchema    { get; }

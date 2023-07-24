@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -108,8 +109,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				switch (attr.Scope)
 				{
-					case Sql.QueryExtensionScope.TableHint:
-					case Sql.QueryExtensionScope.IndexHint:
+					case Sql.QueryExtensionScope.TableHint    :
+					case Sql.QueryExtensionScope.IndexHint    :
+					case Sql.QueryExtensionScope.TableNameHint:
 					{
 						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
 						attr.ExtendTable(table.SqlTable, list);

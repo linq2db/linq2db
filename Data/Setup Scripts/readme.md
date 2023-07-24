@@ -1,15 +1,26 @@
 Contains database setup scripts for local testing
 
 - `wait.cmd` : helper script to pause caller till specific string not found in docker logs. Accepts docker image name and string to look for
+- `wait-err.cmd` : helper script to pause caller till specific string not found in docker error logs. Accepts docker image name and string to look for
 
 ### Linux (WSL2) images
 
+- `all.cmd` : Windows script to create or update docker containers with all the instances below
 - `clickhouse.cmd` : Windows script to create or update docker container with ClickHouse instance
 - `db2.cmd` : Windows script to create or update docker container with DB2 instance
+- `firebird25.cmd` : Windows script to create or update docker container with FFirebird 2.5 instance
+- `firebird30.cmd` : Windows script to create or update docker container with FFirebird 3.0 instance
+- `firebird40.cmd` : Windows script to create or update docker container with FFirebird 4.0 instance
 - `informix.cmd` : Windows script to create or update docker container with Informix instance
 - `mariadb.cmd` : Windows script to create or update docker container with MariaDB instance
+- `mysql55.cmd` : Windows script to create or update docker container with MySQL 5.5 instance
+- `mysql80.cmd` : Windows script to create or update docker container with latest MySQL 8.x instance
 - `oracle11.cmd` : Windows script to create or update docker container with Oracle 11 instance
+- `oracle12.cmd` : Windows script to create or update docker container with Oracle 12 instance
+- `oracle18.cmd` : Windows script to create or update docker container with Oracle 18 instance
+- `oracle19.cmd` : Windows script to create or update docker container with Oracle 19 instance
 - `oracle21.cmd` : Windows script to create or update docker container with Oracle 21 instance
+- `oracle23.cmd` : Windows script to create or update docker container with Oracle 23 instance
 - `pgsql92.cmd` : Windows script to create or update docker container with PostgreSQL 9.2 instance
 - `pgsql93.cmd` : Windows script to create or update docker container with PostgreSQL 9.3 instance
 - `pgsql95.cmd` : Windows script to create or update docker container with PostgreSQL 9.5 instance

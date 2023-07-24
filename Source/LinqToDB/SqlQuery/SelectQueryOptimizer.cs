@@ -162,7 +162,7 @@ namespace LinqToDB.SqlQuery
 
 						if (n != q.Select.Columns.Count)
 							if (!q.GroupBy.IsEmpty || q.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
-								q.GroupBy.Items.Add(field);
+								q.GroupBy.Expr(field);
 
 						return q.Select.Columns[idx];
 					}
@@ -865,7 +865,9 @@ namespace LinqToDB.SqlQuery
 		{
 			if (subQuery.OrderBy.Items.Count > 0)
 			{
-				var filterItems = mainQuery.Select.IsDistinct || !mainQuery.GroupBy.IsEmpty;
+				var filterItems = mainQuery.Select.IsDistinct
+					|| !mainQuery.GroupBy.IsEmpty
+					|| mainQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
 				foreach (var item in subQuery.OrderBy.Items)
 				{

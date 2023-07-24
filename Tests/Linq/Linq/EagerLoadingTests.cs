@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -1638,5 +1640,152 @@ FROM
 			var result = table.Select(Test3799ItemModel.Selector).ToList();
 		}
 		#endregion
+
+		#region Issue 4057
+		[Test]
+		public async Task Issue4057_Async([DataSources] string context)
+		{
+			DataOptions options;
+
+			await using (var db = GetDataContext(context))
+			{
+				options = db.Options;
+				await db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefaultAsync(x => x.ParentID == 3);
+			}
+
+			await using (var db = new DataContext(options))
+			{
+				db.KeepConnectionAlive = true;
+
+				await db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefaultAsync(x => x.ParentID == 3);
+			}
+
+			await using (var db = new DataContext(options))
+			{
+				db.KeepConnectionAlive = false;
+
+				await db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefaultAsync(x => x.ParentID == 3);
+			}
+		}
+
+		[Test]
+		public void Issue4057_Sync([DataSources] string context)
+		{
+			DataOptions options;
+			using (var db = GetDataContext(context))
+			{
+				options = db.Options;
+
+				db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefault(x => x.ParentID == 3);
+			}
+
+			using (var db = new DataContext(options))
+			{
+				db.KeepConnectionAlive = true;
+
+				db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefault(x => x.ParentID == 3);
+			}
+
+			using (var db = new DataContext(options))
+			{
+				db.KeepConnectionAlive = false;
+
+				db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefault(x => x.ParentID == 3);
+			}
+		}
+
+		[Test]
+		public async Task Issue4057_Async_ExplicitTransaction([DataSources] string context)
+		{
+			DataOptions options;
+
+			await using (var db = GetDataContext(context))
+			{
+				using var _ = db.BeginTransaction();
+				options = db.Options;
+				await db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefaultAsync(x => x.ParentID == 3);
+			}
+
+			await using (var db = new DataContext(options))
+			{
+				db.KeepConnectionAlive = true;
+
+				using var _ = db.BeginTransaction();
+				await db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefaultAsync(x => x.ParentID == 3);
+			}
+
+			await using (var db = new DataContext(options))
+			{
+				db.KeepConnectionAlive = false;
+
+				using var _ = db.BeginTransaction();
+				await db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefaultAsync(x => x.ParentID == 3);
+			}
+		}
+
+		[Test]
+		public void Issue4057_Sync_ExplicitTransaction([DataSources] string context)
+		{
+			DataOptions options;
+			using (var db = GetDataContext(context))
+			{
+				options = db.Options;
+
+				using var _ = db.BeginTransaction();
+				db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefault(x => x.ParentID == 3);
+			}
+
+			using (var db = new DataContext(options))
+			{
+				db.KeepConnectionAlive = true;
+
+				using var _ = db.BeginTransaction();
+				db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefault(x => x.ParentID == 3);
+			}
+
+			using (var db = new DataContext(options))
+			{
+				db.KeepConnectionAlive = false;
+
+				using var _ = db.BeginTransaction();
+				db.GetTable<Parent>()
+					.LoadWith(x => x.Children)
+					.FirstOrDefault(x => x.ParentID == 3);
+			}
+		}
+		#endregion
+
+		[Test, ActiveIssue(4060)]
+		public void Issue4060([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Person.Where(p => p.ID == 2)
+				.Concat(db.Person.Where(p => p.ID == 3))
+				.LoadWith(p => p.Patient)
+				.ToList();
+		}
 	}
 }
