@@ -95,10 +95,6 @@ namespace LinqToDB.Linq
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return (TResult)value!;
-			}
-				return (TResult)value!;
-			}
-			return (TResult)value!;
 		}
 
 		IDisposable? StartLoadTransaction(Query query)
