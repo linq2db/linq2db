@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+
 using NUnit.Framework.Internal;
 
 namespace Tests
 {
-	internal sealed class BaselinesWriter
+	public sealed class BaselinesWriter
 	{
 		// used to detect baseline overwrites by another test(case)
 		// case-insensitive to support windoze file system
 		private static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-		internal static void Write(string baselinesPath, string baseline)
+		public static void Write(string baselinesPath, string baseline)
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 
@@ -34,11 +35,16 @@ namespace Tests
 				return;
 
 			var fixturePath = Path.Combine(baselinesPath, target, context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
-			Directory.CreateDirectory(fixturePath);
+			var fileName    = $"{NormalizeFileName(test.FullName)}.sql";
 
-			var fileName = $"{NormalizeFileName(test.FullName)}.sql";
+			Write(fixturePath, fileName, baseline);
+		}
 
-			var fullPath = Path.Combine(fixturePath, fileName);
+		public static void Write(string path, string fileName, string baseline)
+		{
+			Directory.CreateDirectory(path);
+
+			var fullPath = Path.Combine(path, fileName);
 
 			if (!_baselines.Add(fullPath))
 				throw new InvalidOperationException($"Baseline already in use: {fullPath}");

@@ -69,7 +69,7 @@ namespace Tests
 
 		private const int TRACES_LIMIT = 50000;
 
-		private static string? _baselinesPath;
+		public static string? BaselinesPath;
 
 		protected static string? LastQuery;
 
@@ -271,7 +271,7 @@ namespace Tests
 			{
 				var baselinesPath = Path.GetFullPath(testSettings.BaselinesPath);
 				if (Directory.Exists(baselinesPath))
-					_baselinesPath = baselinesPath;
+					BaselinesPath = baselinesPath;
 			}
 		}
 
@@ -1430,11 +1430,11 @@ namespace Tests
 			// dump baselines
 			var ctx = CustomTestContext.Get();
 
-			if (_baselinesPath != null)
+			if (BaselinesPath != null)
 			{
 				var baseline = ctx.Get<StringBuilder>(CustomTestContext.BASELINE);
 				if (baseline != null)
-					BaselinesWriter.Write(_baselinesPath, baseline.ToString());
+					BaselinesWriter.Write(BaselinesPath, baseline.ToString());
 			}
 
 			var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Tools;
@@ -131,6 +132,10 @@ public class TestsInitialization
 		Console.    WriteLine(str);
 		Debug.      WriteLine(str);
 		TestContext.WriteLine(str);
+
+		if (TestBase.BaselinesPath != null)
+			BaselinesWriter.Write(TestBase.BaselinesPath, "Metrics.txt", str);
+
 #else
 		var str = "Metrics are off";
 		Console.    WriteLine(str);

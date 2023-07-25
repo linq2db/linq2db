@@ -2,7 +2,7 @@
 
 namespace Tests
 {
-	internal sealed class CustomTestContext
+	public sealed class CustomTestContext
 	{
 		public static string BASELINE          = "key-baseline";
 		public static string TRACE             = "key-trace";
