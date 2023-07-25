@@ -11,14 +11,24 @@ namespace Tests
 	{
 		// used to detect baseline overwrites by another test(case)
 		// case-insensitive to support windoze file system
-		private static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+		static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+		static string? _context;
 
 		public static void Write(string baselinesPath, string baseline)
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 
-			var context = GetTestContextName(test);
+			_context = GetTestContextName(test);
 
+			var baselinePath = test.ClassName!.Replace('.', Path.DirectorySeparatorChar);
+			var fileName     = $"{NormalizeFileName(test.FullName)}.sql";
+
+			Write(baselinesPath, baselinePath, fileName,  baseline);
+		}
+
+		public static void Write(string root, string baselinePath, string fileName, string baseline)
+		{
 #if NET472
 			var target = "net472";
 #elif NETCOREAPP3_1
@@ -31,17 +41,11 @@ namespace Tests
 #error "Build Target must be specified here."
 #endif
 
-			if (context == null)
+			if (_context == null)
 				return;
 
-			var fixturePath = Path.Combine(baselinesPath, target, context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
-			var fileName    = $"{NormalizeFileName(test.FullName)}.sql";
+			var path = Path.Combine(root, target, _context, baselinePath);
 
-			Write(fixturePath, fileName, baseline);
-		}
-
-		public static void Write(string path, string fileName, string baseline)
-		{
 			Directory.CreateDirectory(path);
 
 			var fullPath = Path.Combine(path, fileName);
