@@ -12,6 +12,7 @@ using LinqToDB.Tools;
 using NUnit.Framework;
 
 using Tests;
+using Tests.Tools;
 
 /// <summary>
 /// 1. Don't add namespace to this class! It's intentional
@@ -23,9 +24,7 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-#if METRICS
-		_testMetricWatcher = Metrics.TestTotal.Start();
-#endif
+		_testMetricWatcher = TestMetrics.TestTotal.Start();
 
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
@@ -105,17 +104,14 @@ public class TestsInitialization
 #endif
 	}
 
-#if METRICS
-	Metric.Watcher? _testMetricWatcher;
-#endif
+	IActivity? _testMetricWatcher;
 
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
-#if METRICS
 		_testMetricWatcher?.Dispose();
 
-		var str = Metrics.All.Select(m => new
+		var str = TestMetrics.All.Select(m => new
 		{
 			m.Name,
 			m.Elapsed,
@@ -129,17 +125,9 @@ public class TestsInitialization
 		})
 		.ToDiagnosticString();
 
-		Console.    WriteLine(str);
-		Debug.      WriteLine(str);
-		TestContext.WriteLine(str);
+		Debug.WriteLine(str);
 
-		if (TestBase.BaselinesPath != null)
-			BaselinesWriter.Write(TestBase.BaselinesPath, "", "Metrics.txt", str);
-#else
-		var str = "Metrics are off";
-		Console.    WriteLine(str);
-		Debug.      WriteLine(str);
-		TestContext.WriteLine(str);
-#endif
+		if (!string.IsNullOrWhiteSpace(TestBase.BaselinesPath))
+			BaselinesWriter.Write(TestBase.BaselinesPath!, "", "Metrics.txt", str, true);
 	}
 }

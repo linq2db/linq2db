@@ -15,6 +15,7 @@ namespace Tests.Tools
 	{
 		public string?                             BasedOn              { get; set; }
 		public string?                             BaselinesPath        { get; set; }
+		public string?                             BaselinesContextPath { get; set; }
 		public string[]?                           Providers            { get; set; }
 		public string[]?                           Skip                 { get; set; }
 		public string?                             TraceLevel           { get; set; }
@@ -47,6 +48,7 @@ namespace Tests.Tools
 				settings1.DefaultConfiguration ??= settings2.DefaultConfiguration;
 				settings1.NoLinqService        ??= settings2.NoLinqService;
 				settings1.BaselinesPath        ??= settings2.BaselinesPath;
+				settings1.BaselinesContextPath ??= settings2.BaselinesContextPath;
 			}
 
 			var defaultSettings = JsonSerializer.Deserialize<Dictionary<string,TestSettings>>(defaultJson, _jsonOptions)!;

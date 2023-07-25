@@ -70,6 +70,7 @@ namespace Tests
 		private const int TRACES_LIMIT = 50000;
 
 		public static string? BaselinesPath;
+		public static string? BaselinesContextPath;
 
 		protected static string? LastQuery;
 
@@ -270,8 +271,12 @@ namespace Tests
 			if (!string.IsNullOrWhiteSpace(testSettings.BaselinesPath))
 			{
 				var baselinesPath = Path.GetFullPath(testSettings.BaselinesPath);
+
 				if (Directory.Exists(baselinesPath))
-					BaselinesPath = baselinesPath;
+				{
+					BaselinesPath        = baselinesPath;
+					BaselinesContextPath = testSettings.BaselinesContextPath;
+				}
 			}
 		}
 
@@ -1438,6 +1443,7 @@ namespace Tests
 			}
 
 			var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+
 			if (trace != null && TestContext.CurrentContext.Result.FailCount > 0 && ctx.Get<bool>(CustomTestContext.LIMITED))
 			{
 				// we need to set ErrorInfo.Message element text

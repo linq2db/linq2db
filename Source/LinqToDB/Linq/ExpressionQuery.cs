@@ -7,6 +7,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq
 {
 	using Async;
@@ -292,9 +294,7 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-#if METRICS
-			using var m = Tools.Metrics.QueryProviderExecuteT.Start();
-#endif
+			using var m = Metrics.Start(Metric.QueryProviderExecuteT);
 
 			var query = GetQuery(ref expression, false, out _);
 
@@ -311,9 +311,7 @@ namespace LinqToDB.Linq
 
 		object? IQueryProvider.Execute(Expression expression)
 		{
-#if METRICS
-			using var m = Tools.Metrics.QueryProviderExecute.Start();
-#endif
+			using var m = Metrics.Start(Metric.QueryProviderExecute);
 
 			var query = GetQuery(ref expression, false, out _);
 
@@ -334,9 +332,7 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-#if METRICS
-			using var m = Tools.Metrics.QueryProviderGetEnumeratorT.Start();
-#endif
+			using var _ = Metrics.Start(Metric.QueryProviderGetEnumeratorT);
 
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
@@ -354,9 +350,7 @@ namespace LinqToDB.Linq
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-#if METRICS
-			using var m = Tools.Metrics.QueryProviderGetEnumerator.Start();
-#endif
+			using var _ = Metrics.Start(Metric.QueryProviderGetEnumerator);
 
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true, out var dependsOnParameters);

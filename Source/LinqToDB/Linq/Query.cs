@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 // ReSharper disable StaticMemberInGenericType
 
 namespace LinqToDB.Linq
@@ -474,12 +476,11 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
-#if METRICS
-			using var mt = LinqToDB.Tools.Metrics.GetQueryTotal.Start();
+			using var mt = Metrics.Start(Metric.GetQueryTotal);
 
-			var mf  = LinqToDB.Tools.Metrics.GetQueryFind.      Start();
-			var mfe = LinqToDB.Tools.Metrics.GetQueryFindExpose.Start();
-#endif
+			var mf  = Metrics.Start(Metric.GetQueryFind);
+			var mfe = Metrics.Start(Metric.GetQueryFindExpose);
+
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
 			expr = optimizationContext.ExpandExpression(expr);
@@ -492,10 +493,9 @@ namespace LinqToDB.Linq
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
 
-#if METRICS
-			mfe.Dispose();
-			var mff = LinqToDB.Tools.Metrics.GetQueryFindFind.Start();
-#endif
+			mfe?.Dispose();
+
+			var mff = Metrics.Start(Metric.GetQueryFindFind);
 
 			var dataOptions = dataContext.Options;
 
@@ -505,16 +505,12 @@ namespace LinqToDB.Linq
 			var queryFlags = dataContext.GetQueryFlags();
 			var query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
 
-#if METRICS
-			mff.Dispose();
-			mf. Dispose();
-#endif
+			mff?.Dispose();
+			mf ?.Dispose();
 
 			if (query == null)
 			{
-#if METRICS
-				using var mc = LinqToDB.Tools.Metrics.GetQueryCreate.Start();
-#endif
+				using var mc = Metrics.Start(Metric.GetQueryCreate);
 
 				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 

@@ -27,7 +27,7 @@ namespace Tests
 			Write(baselinesPath, baselinePath, fileName,  baseline);
 		}
 
-		public static void Write(string root, string baselinePath, string fileName, string baseline)
+		public static void Write(string root, string baselinePath, string fileName, string baseline, bool removeLinqService = false)
 		{
 #if NET472
 			var target = "net472";
@@ -44,7 +44,15 @@ namespace Tests
 			if (_context == null)
 				return;
 
-			var path = Path.Combine(root, target, _context, baselinePath);
+			var context = _context;
+
+			if (removeLinqService)
+				context = context.Replace(".LinqService", "");
+
+			if (!string.IsNullOrWhiteSpace(TestBase.BaselinesContextPath))
+				context += "." + TestBase.BaselinesContextPath;
+
+			var path = Path.Combine(root, target, context, baselinePath);
 
 			Directory.CreateDirectory(path);
 
@@ -73,6 +81,7 @@ namespace Tests
 		private static string? GetTestContextName(Test test)
 		{
 			var parameters = test.Method!.GetParameters();
+
 			for (var i = 0; i < parameters.Length; i++)
 			{
 				var attr = parameters[i].GetCustomAttributes<DataSourcesBaseAttribute>(true);

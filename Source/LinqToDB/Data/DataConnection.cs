@@ -8,6 +8,8 @@ using System.Threading;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data
 {
 	using Async;
@@ -484,9 +486,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		static void OnTraceInternal(TraceInfo info)
 		{
-#if METRICS
-			using var m = LinqToDB.Tools.Metrics.OnTraceInternal.Start();
-#endif
+			using var m = Metrics.Start(Metric.OnTraceInternal);
+
 			var dc = info.DataConnection;
 
 			switch (info.TraceInfoStep)

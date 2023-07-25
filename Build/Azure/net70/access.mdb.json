@@ -1,5 +1,6 @@
 ﻿{
 	"NET70.Azure": {
+		"BaselinesContextPath": "Mdb",
 		"Providers": [
 			// Access with Jet OLE DB provider
 			"Access",

@@ -9,6 +9,8 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
@@ -182,16 +184,14 @@ namespace LinqToDB.Linq.Builder
 
 		public Query<T> Build<T>()
 		{
-#if METRICS
-			using var m = LinqToDB.Tools.Metrics.Build.Start();
-#endif
+			using var m = Metrics.Start(Metric.Build);
+
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
 			if (_reorder)
 			{
-#if METRICS
-				using var mr = LinqToDB.Tools.Metrics.ReorderBuilders.Start();
-#endif
+				using var mr = Metrics.Start(Metric.ReorderBuilders);
+
 				lock (_sync)
 				{
 					_reorder          = false;
@@ -199,9 +199,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-#if METRICS
-			using var mq = LinqToDB.Tools.Metrics.BuildQuery.Start();
-#endif
+			using var mq = Metrics.Start(Metric.BuildQuery);
+
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
 			var param = Expression.Parameter(typeof(Query<T>), "info");
@@ -215,9 +214,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(BuildInfo buildInfo)
 		{
-#if METRICS
-			using var m = LinqToDB.Tools.Metrics.BuildSequence.Start();
-#endif
+			using var m = Metrics.Start(Metric.BuildSequence);
 
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
@@ -225,19 +222,14 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var builder in _builders)
 			{
-#if METRICS
-				var mc = LinqToDB.Tools.Metrics.BuildSequenceCanBuild.Start();
-#endif
-				var	canBuild = builder.CanBuild(this, buildInfo);
-#if METRICS
-				mc.Dispose();
-#endif
+				var mc       = Metrics.Start(Metric.BuildSequenceCanBuild);
+				var canBuild = builder.CanBuild(this, buildInfo);
+
+				mc?.Dispose();
 
 				if (canBuild)
 				{
-#if METRICS
-					using var mb = LinqToDB.Tools.Metrics.BuildSequenceBuild.Start();
-#endif
+					using var mb = Metrics.Start(Metric.BuildSequenceBuild);
 
 					var sequence = builder.BuildSequence(this, buildInfo);
 
