@@ -134,8 +134,7 @@ public class TestsInitialization
 		TestContext.WriteLine(str);
 
 		if (TestBase.BaselinesPath != null)
-			BaselinesWriter.Write(TestBase.BaselinesPath, "Metrics.txt", str);
-
+			BaselinesWriter.Write(TestBase.BaselinesPath, "", "Metrics.txt", str);
 #else
 		var str = "Metrics are off";
 		Console.    WriteLine(str);
