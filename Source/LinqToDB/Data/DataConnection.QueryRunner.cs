@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data
 {
 	using Common.Internal;
@@ -239,7 +241,9 @@ namespace LinqToDB.Data
 					var optimizationContext = new OptimizationContext(evaluationContext, aliases, dataConnection.DataProvider.SqlProviderFlags.IsParameterOrderDependent, dataConnection.DataProvider.GetQueryParameterNormalizer);
 					sb.Value.Length = 0;
 
-					sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);
+					using (ActivityService.Start(ActivityID.BuildSql))
+						sqlBuilder.BuildSql(i, sql, sb.Value, optimizationContext, startIndent);
+
 					commands[i] = new CommandWithParameters(sb.Value.ToString(), optimizationContext.GetParameters());
 					optimizationContext.ClearParameters();
 				}

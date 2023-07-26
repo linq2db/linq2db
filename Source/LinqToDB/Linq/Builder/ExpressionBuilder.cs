@@ -184,13 +184,13 @@ namespace LinqToDB.Linq.Builder
 
 		public Query<T> Build<T>()
 		{
-			using var m = Metrics.Start(Metric.Build);
+			using var m = ActivityService.Start(ActivityID.Build);
 
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
 			if (_reorder)
 			{
-				using var mr = Metrics.Start(Metric.ReorderBuilders);
+				using var mr = ActivityService.Start(ActivityID.ReorderBuilders);
 
 				lock (_sync)
 				{
@@ -199,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			using var mq = Metrics.Start(Metric.BuildQuery);
+			using var mq = ActivityService.Start(ActivityID.BuildQuery);
 
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(BuildInfo buildInfo)
 		{
-			using var m = Metrics.Start(Metric.BuildSequence);
+			using var m = ActivityService.Start(ActivityID.BuildSequence);
 
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
@@ -222,14 +222,14 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var builder in _builders)
 			{
-				var mc       = Metrics.Start(Metric.BuildSequenceCanBuild);
+				var mc       = ActivityService.Start(ActivityID.BuildSequenceCanBuild);
 				var canBuild = builder.CanBuild(this, buildInfo);
 
 				mc?.Dispose();
 
 				if (canBuild)
 				{
-					using var mb = Metrics.Start(Metric.BuildSequenceBuild);
+					using var mb = ActivityService.Start(ActivityID.BuildSequenceBuild);
 
 					var sequence = builder.BuildSequence(this, buildInfo);
 

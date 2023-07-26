@@ -294,7 +294,7 @@ namespace LinqToDB.Linq
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)
 		{
-			using var m = Metrics.Start(Metric.QueryProviderExecuteT);
+			using var m = ActivityService.Start(ActivityID.QueryProviderExecuteT);
 
 			var query = GetQuery(ref expression, false, out _);
 
@@ -311,7 +311,7 @@ namespace LinqToDB.Linq
 
 		object? IQueryProvider.Execute(Expression expression)
 		{
-			using var m = Metrics.Start(Metric.QueryProviderExecute);
+			using var m = ActivityService.Start(ActivityID.QueryProviderExecute);
 
 			var query = GetQuery(ref expression, false, out _);
 
@@ -332,7 +332,7 @@ namespace LinqToDB.Linq
 
 		IEnumerator<T> IEnumerable<T>.GetEnumerator()
 		{
-			using var _ = Metrics.Start(Metric.QueryProviderGetEnumeratorT);
+			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumeratorT);
 
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
@@ -350,7 +350,7 @@ namespace LinqToDB.Linq
 
 		IEnumerator IEnumerable.GetEnumerator()
 		{
-			using var _ = Metrics.Start(Metric.QueryProviderGetEnumerator);
+			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumerator);
 
 			var expression = Expression;
 			var query      = GetQuery(ref expression, true, out var dependsOnParameters);

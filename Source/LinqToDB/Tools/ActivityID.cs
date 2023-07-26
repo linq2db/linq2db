@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Tools
 {
-	public enum Metric
+	public enum ActivityID
 	{
 		QueryProviderExecuteT,
 		QueryProviderExecute,
@@ -14,7 +14,7 @@ namespace LinqToDB.Tools
 				GetQueryFindFind,
 			GetQueryCreate,
 				Build,
-					BuildSequence,
+				BuildSequence,
 						BuildSequenceCanBuild,
 						BuildSequenceBuild,
 					ReorderBuilders,
@@ -33,6 +33,14 @@ namespace LinqToDB.Tools
 		ExecuteNonQuery2Async,
 		ExecuteScalar2,
 		ExecuteScalar2Async,
+			BuildSql,
 			OnTraceInternal,
+
+			CommandExecuteScalar,
+			CommandExecuteScalarAsync,
+			CommandExecuteReader,
+			CommandExecuteReaderAsync,
+			CommandExecuteNonQuery,
+			CommandExecuteNonQueryAsync,
 	}
 }

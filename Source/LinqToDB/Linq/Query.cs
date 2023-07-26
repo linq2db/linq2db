@@ -476,10 +476,10 @@ namespace LinqToDB.Linq
 
 		public static Query<T> GetQuery(IDataContext dataContext, ref Expression expr, out bool dependsOnParameters)
 		{
-			using var mt = Metrics.Start(Metric.GetQueryTotal);
+			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
 
-			var mf  = Metrics.Start(Metric.GetQueryFind);
-			var mfe = Metrics.Start(Metric.GetQueryFindExpose);
+			var mf  = ActivityService.Start(ActivityID.GetQueryFind);
+			var mfe = ActivityService.Start(ActivityID.GetQueryFindExpose);
 
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
@@ -495,7 +495,7 @@ namespace LinqToDB.Linq
 
 			mfe?.Dispose();
 
-			var mff = Metrics.Start(Metric.GetQueryFindFind);
+			var mff = ActivityService.Start(ActivityID.GetQueryFindFind);
 
 			var dataOptions = dataContext.Options;
 
@@ -510,7 +510,7 @@ namespace LinqToDB.Linq
 
 			if (query == null)
 			{
-				using var mc = Metrics.Start(Metric.GetQueryCreate);
+				using var mc = ActivityService.Start(ActivityID.GetQueryCreate);
 
 				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 

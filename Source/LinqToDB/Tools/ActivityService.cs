@@ -1,0 +1,19 @@
+﻿using System;
+
+namespace LinqToDB.Tools
+{
+	public static class ActivityService
+	{
+		public static IActivity? Start(ActivityID metric)
+		{
+			return _factory?.Invoke(metric);
+		}
+
+		static Func<ActivityID,IActivity>? _factory;
+
+		public static void SetMetricFactory(Func<ActivityID,IActivity>? factory)
+		{
+			_factory = factory;
+		}
+	}
+}

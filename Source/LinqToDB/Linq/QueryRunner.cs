@@ -228,7 +228,7 @@ namespace LinqToDB.Linq
 
 		static void FinalizeQuery(Query query)
 		{
-			using var m = Metrics.Start(Metric.FinalizeQuery);
+			using var m = ActivityService.Start(ActivityID.FinalizeQuery);
 
 			foreach (var sql in query.Queries)
 			{
@@ -400,7 +400,7 @@ namespace LinqToDB.Linq
 			object?[]?   preambles,
 			int          queryNumber)
 		{
-			using var _      = Metrics.Start(Metric.ExecuteQuery);
+			using var _      = ActivityService.Start(ActivityID.ExecuteQuery);
 			using var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
 			using var dr     = runner.ExecuteReader();
 
@@ -448,7 +448,7 @@ namespace LinqToDB.Linq
 			TakeSkipDelegate? takeAction,
 			CancellationToken cancellationToken)
 		{
-			using var _ = Metrics.Start(Metric.ExecuteQueryAsync);
+			using var _ = ActivityService.Start(ActivityID.ExecuteQueryAsync);
 
 			var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
 #if NATIVE_ASYNC
@@ -663,7 +663,7 @@ namespace LinqToDB.Linq
 
 			query.GetIEnumerable = (db, expr, ps, preambles) =>
 			{
-				using var _ = Metrics.Start(Metric.GetIEnumerable);
+				using var _ = ActivityService.Start(ActivityID.GetIEnumerable);
 				return runQuery(query, db, mapper, expr, ps, preambles, 0);
 			};
 
@@ -810,7 +810,7 @@ namespace LinqToDB.Linq
 			object?[]?     ps,
 			object?[]?     preambles)
 		{
-			using var m      = Metrics.Start(Metric.ExecuteElement);
+			using var m      = ActivityService.Start(ActivityID.ExecuteElement);
 			using var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
 			using var dr     = runner.ExecuteReader();
 
@@ -836,7 +836,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = Metrics.Start(Metric.ExecuteElementAsync);
+			using var m = ActivityService.Start(ActivityID.ExecuteElementAsync);
 
 			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
 #if NATIVE_ASYNC
@@ -887,7 +887,7 @@ namespace LinqToDB.Linq
 
 		static object? ScalarQuery(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using var m      = Metrics.Start(Metric.ExecuteScalar);
+			using var m      = ActivityService.Start(ActivityID.ExecuteScalar);
 			using var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 			return runner.ExecuteScalar();
 		}
@@ -900,7 +900,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = Metrics.Start(Metric.ExecuteScalarAsync);
+			using var m = ActivityService.Start(ActivityID.ExecuteScalarAsync);
 
 			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
 #if NATIVE_ASYNC
@@ -930,7 +930,7 @@ namespace LinqToDB.Linq
 
 		static int NonQueryQuery(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using var m      = Metrics.Start(Metric.ExecuteNonQuery);
+			using var m      = ActivityService.Start(ActivityID.ExecuteNonQuery);
 			using var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 
 			return runner.ExecuteNonQuery();
@@ -944,7 +944,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = Metrics.Start(Metric.ExecuteNonQueryAsync);
+			using var m = ActivityService.Start(ActivityID.ExecuteNonQueryAsync);
 
 			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
 #if NATIVE_ASYNC
@@ -974,7 +974,7 @@ namespace LinqToDB.Linq
 
 		static int NonQueryQuery2(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using var m      = Metrics.Start(Metric.ExecuteNonQuery2);
+			using var m      = ActivityService.Start(ActivityID.ExecuteNonQuery2);
 			using var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 			var       n      = runner.ExecuteNonQuery();
 
@@ -994,7 +994,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = Metrics.Start(Metric.ExecuteNonQuery2Async);
+			using var m = ActivityService.Start(ActivityID.ExecuteNonQuery2Async);
 
 			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 #if NATIVE_ASYNC
@@ -1033,7 +1033,7 @@ namespace LinqToDB.Linq
 
 		static int QueryQuery2(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using var m      = Metrics.Start(Metric.ExecuteScalar2);
+			using var m      = ActivityService.Start(ActivityID.ExecuteScalar2);
 			using var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 			var       n      = runner.ExecuteScalar();
 
@@ -1053,7 +1053,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = Metrics.Start(Metric.ExecuteScalar2Async);
+			using var m = ActivityService.Start(ActivityID.ExecuteScalar2Async);
 
 			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 #if NATIVE_ASYNC

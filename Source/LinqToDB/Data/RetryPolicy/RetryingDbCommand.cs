@@ -4,6 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data.RetryPolicy
 {
 	using Configuration;
@@ -81,31 +83,37 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
 		{
+			using var m = ActivityService.Start(ActivityID.CommandExecuteReader);
 			return _policy.Execute(() => _command.ExecuteReader(behavior));
 		}
 
 		public override int ExecuteNonQuery()
 		{
+			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQuery);
 			return _policy.Execute(_command.ExecuteNonQuery);
 		}
 
 		public override object? ExecuteScalar()
 		{
+			using var m = ActivityService.Start(ActivityID.CommandExecuteScalar);
 			return _policy.Execute(_command.ExecuteScalar);
 		}
 
 		protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
 		{
+			using var m = ActivityService.Start(ActivityID.CommandExecuteReaderAsync);
 			return _policy.ExecuteAsync(ct => _command.ExecuteReaderAsync(behavior, ct), cancellationToken);
 		}
 
 		public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
+			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQueryAsync);
 			return _policy.ExecuteAsync(_command.ExecuteNonQueryAsync, cancellationToken);
 		}
 
 		public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
+			using var m = ActivityService.Start(ActivityID.CommandExecuteScalarAsync);
 			return _policy.ExecuteAsync(_command.ExecuteScalarAsync, cancellationToken);
 		}
 

@@ -5,6 +5,8 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data
 {
 	using Async;
@@ -378,6 +380,8 @@ namespace LinqToDB.Data
 				result = await _commandInterceptor.ExecuteNonQueryAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
+			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQueryAsync);
+
 			return result.HasValue
 				? result.Value
 				: await CurrentCommand!.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -459,6 +463,8 @@ namespace LinqToDB.Data
 			if (_commandInterceptor != null)
 				result = await _commandInterceptor.ExecuteScalarAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+			using var m = ActivityService.Start(ActivityID.CommandExecuteScalarAsync);
 
 			return result.HasValue
 				? result.Value
@@ -543,9 +549,12 @@ namespace LinqToDB.Data
 				result = await _commandInterceptor.ExecuteReaderAsync(new (this), CurrentCommand!, commandBehavior, result, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var dr = result.HasValue
-				? result.Value
-				: await CurrentCommand!.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			DbDataReader? dr;
+
+			using (ActivityService.Start(ActivityID.CommandExecuteReaderAsync))
+				dr = result.HasValue
+					? result.Value
+					: await CurrentCommand!.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (_commandInterceptor != null)
 				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, dr);

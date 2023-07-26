@@ -486,7 +486,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		static void OnTraceInternal(TraceInfo info)
 		{
-			using var m = Metrics.Start(Metric.OnTraceInternal);
+			using var m = ActivityService.Start(ActivityID.OnTraceInternal);
 
 			var dc = info.DataConnection;
 
@@ -834,13 +834,15 @@ namespace LinqToDB.Data
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
 			if (_commandInterceptor == null)
-				return command.ExecuteNonQuery();
+				using(ActivityService.Start(ActivityID.CommandExecuteNonQuery))
+					return command.ExecuteNonQuery();
 
 			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
 
-			return result.HasValue
-				? result.Value
-				: command.ExecuteNonQuery();
+			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQuery);
+				return result.HasValue
+					? result.Value
+					: command.ExecuteNonQuery();
 		}
 
 		internal int ExecuteNonQuery()
@@ -981,6 +983,8 @@ namespace LinqToDB.Data
 			if (_commandInterceptor != null)
 				result = _commandInterceptor.ExecuteScalar(new (this), command, result);
 
+			using var m = ActivityService.Start(ActivityID.CommandExecuteScalar);
+
 			return result.HasValue
 				? result.Value
 				: command.ExecuteScalar();
@@ -1053,9 +1057,12 @@ namespace LinqToDB.Data
 			if (_commandInterceptor != null)
 				result = _commandInterceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
 
-			var rd = result.HasValue
-				? result.Value
-				: _command!.ExecuteReader(commandBehavior);
+			DbDataReader? rd;
+
+			using (ActivityService.Start(ActivityID.CommandExecuteReader))
+				rd = result.HasValue
+					? result.Value
+					: _command!.ExecuteReader(commandBehavior);
 
 			if (_commandInterceptor != null)
 				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
