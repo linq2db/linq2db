@@ -70,7 +70,7 @@ namespace Tests
 		private const int TRACES_LIMIT = 50000;
 
 		public static string? BaselinesPath;
-		public static string? BaselinesContextPath;
+		public static string? MetricBaselinePath;
 
 		protected static string? LastQuery;
 
@@ -274,8 +274,10 @@ namespace Tests
 
 				if (Directory.Exists(baselinesPath))
 				{
-					BaselinesPath        = baselinesPath;
-					BaselinesContextPath = testSettings.BaselinesContextPath;
+					BaselinesPath = baselinesPath;
+
+					if (!string.IsNullOrWhiteSpace(testSettings.MetricBaselinePath))
+						MetricBaselinePath = Path.Combine(baselinesPath, testSettings.MetricBaselinePath);
 				}
 			}
 		}

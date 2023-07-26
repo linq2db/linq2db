@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,6 +6,8 @@ namespace LinqToDB.Linq
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using Tools;
+
 
 	static partial class QueryRunner
 	{
@@ -21,6 +22,8 @@ namespace LinqToDB.Linq
 				bool?        ifExists,
 				TableOptions tableOptions)
 			{
+				using var m = ActivityService.Start(ActivityID.DropTable);
+
 				var sqlTable  = SqlTable.Create<T>(dataContext);
 				var dropTable = new SqlDropTableStatement(sqlTable);
 
@@ -57,6 +60,8 @@ namespace LinqToDB.Linq
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
+				using var m = ActivityService.Start(ActivityID.DropTableAsync);
+
 				var sqlTable  = SqlTable.Create<T>(dataContext);
 				var dropTable = new SqlDropTableStatement(sqlTable);
 

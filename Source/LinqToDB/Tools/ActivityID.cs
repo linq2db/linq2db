@@ -34,7 +34,17 @@ namespace LinqToDB.Tools
 		ExecuteScalar2,
 		ExecuteScalar2Async,
 			BuildSql,
-			OnTraceInternal,
+
+		CreateTable,
+		CreateTableAsync,
+		DropTable,
+		DropTableAsync,
+
+		CommandInfoExecute,
+		CommandInfoExecuteT,
+		CommandInfoExecuteCustom,
+		CommandInfoExecuteAsync,
+		CommandInfoExecuteAsyncT,
 
 			CommandExecuteScalar,
 			CommandExecuteScalarAsync,
@@ -42,5 +52,9 @@ namespace LinqToDB.Tools
 			CommandExecuteReaderAsync,
 			CommandExecuteNonQuery,
 			CommandExecuteNonQueryAsync,
+
+		GetSqlText,
+
+			OnTraceInternal,
 	}
 }

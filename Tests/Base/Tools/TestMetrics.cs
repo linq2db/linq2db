@@ -30,6 +30,7 @@ namespace Tests.Tools
 				BuildQuery                      = new("        BuildQuery"),
 				FinalizeQuery                   = new("          FinalizeQuery"),
 				GetIEnumerable                  = new("  GetIEnumerable"),
+
 				ExecuteTotal                    = new("Execute",
 					ExecuteQuery                = new("  Execute Query"),
 					ExecuteQueryAsync           = new("  Execute Query Async"),
@@ -42,7 +43,18 @@ namespace Tests.Tools
 					ExecuteNonQuery             = new("  Execute NonQuery"),
 					ExecuteNonQueryAsync        = new("  Execute NonQuery Async"),
 					ExecuteNonQuery2            = new("  Execute NonQuery 2"),
-					ExecuteNonQuery2Async       = new("  Execute NonQuery 2Async")
+					ExecuteNonQuery2Async       = new("  Execute NonQuery 2Async"),
+
+					CommandInfoExecute          = new("  SQL Execute"),
+					CommandInfoExecuteT         = new("  SQL Execute<T>"),
+					CommandInfoExecuteCustom    = new("  SQL ExecuteCustom"),
+					CommandInfoExecuteAsync     = new("  SQL ExecuteAsync"),
+					CommandInfoExecuteAsyncT    = new("  SQL ExecuteAsync<T>"),
+
+					CreateTable                 = new("  CreateTable"),
+					CreateTableAsync            = new("  CreateTable Async"),
+					DropTable                   = new("  DropTable"),
+					DropTableAsync              = new("  DropTable Async")
 				),
 				ExecuteQuery,
 				ExecuteQueryAsync,
@@ -56,11 +68,21 @@ namespace Tests.Tools
 				ExecuteNonQueryAsync,
 				ExecuteNonQuery2,
 				ExecuteNonQuery2Async,
+
+				CreateTable,
+				CreateTableAsync,
+				DropTable,
+				DropTableAsync,
+
 				BuildSql                        = new("    BuildSql"),
-				OnTraceInternal                 = new("    OnTraceInternal"),
+
+				CommandInfoExecute,
+				CommandInfoExecuteT,
+				CommandInfoExecuteCustom,
+				CommandInfoExecuteAsync,
+				CommandInfoExecuteAsyncT,
 
 				ExecuteCommand                  = new("    Execute Command",
-
 					CommandExecuteScalar        = new("      ExecuteScalar"),
 					CommandExecuteScalarAsync   = new("      ExecuteScalarAsync"),
 					CommandExecuteReader        = new("      ExecuteReader"),
@@ -68,13 +90,16 @@ namespace Tests.Tools
 					CommandExecuteNonQuery      = new("      ExecuteNonQuery"),
 					CommandExecuteNonQueryAsync = new("      ExecuteNonQueryAsync")
 				),
-
 				CommandExecuteScalar,
 				CommandExecuteScalarAsync,
 				CommandExecuteReader,
 				CommandExecuteReaderAsync,
 				CommandExecuteNonQuery,
 				CommandExecuteNonQueryAsync,
+
+				OnTraceInternal                 = new("    OnTraceInternal"),
+
+				GetSqlText                      = new("  GetSqlText"),
 
 				TestTotal                       = new("Total")
 			};
@@ -115,14 +140,28 @@ namespace Tests.Tools
 				ActivityID.ExecuteNonQueryAsync        => ExecuteNonQueryAsync,
 				ActivityID.ExecuteNonQuery2            => ExecuteNonQuery2,
 				ActivityID.ExecuteNonQuery2Async       => ExecuteNonQuery2Async,
+
+				ActivityID.CreateTable                 => CreateTable,
+				ActivityID.CreateTableAsync            => CreateTableAsync,
+				ActivityID.DropTable                   => DropTable,
+				ActivityID.DropTableAsync              => DropTableAsync,
+
 				ActivityID.BuildSql                    => BuildSql,
-				ActivityID.OnTraceInternal             => OnTraceInternal,
+
 				ActivityID.CommandExecuteScalar        => CommandExecuteScalar,
 				ActivityID.CommandExecuteScalarAsync   => CommandExecuteScalarAsync,
 				ActivityID.CommandExecuteReader        => CommandExecuteReader,
 				ActivityID.CommandExecuteReaderAsync   => CommandExecuteReaderAsync,
 				ActivityID.CommandExecuteNonQuery      => CommandExecuteNonQuery,
 				ActivityID.CommandExecuteNonQueryAsync => CommandExecuteNonQueryAsync,
+				ActivityID.CommandInfoExecute          => CommandInfoExecute,
+				ActivityID.CommandInfoExecuteT         => CommandInfoExecuteT,
+				ActivityID.CommandInfoExecuteCustom    => CommandInfoExecuteCustom,
+				ActivityID.CommandInfoExecuteAsync     => CommandInfoExecuteAsync,
+				ActivityID.CommandInfoExecuteAsyncT    => CommandInfoExecuteAsyncT,
+				ActivityID.GetSqlText                  => GetSqlText,
+				ActivityID.OnTraceInternal             => OnTraceInternal,
+
 				_ => throw new InvalidOperationException($"Unknown metric type {metric}")
 			});
 
@@ -162,8 +201,19 @@ namespace Tests.Tools
 		static TestMetric ExecuteNonQueryAsync;
 		static TestMetric ExecuteNonQuery2;
 		static TestMetric ExecuteNonQuery2Async;
+
+		static TestMetric CreateTable;
+		static TestMetric CreateTableAsync;
+		static TestMetric DropTable;
+		static TestMetric DropTableAsync;
+
 		static TestMetric BuildSql;
-		static TestMetric OnTraceInternal;
+
+		static TestMetric CommandInfoExecute;
+		static TestMetric CommandInfoExecuteT;
+		static TestMetric CommandInfoExecuteCustom;
+		static TestMetric CommandInfoExecuteAsync;
+		static TestMetric CommandInfoExecuteAsyncT;
 
 		static TestMetricSum ExecuteCommand;
 
@@ -173,6 +223,11 @@ namespace Tests.Tools
 		static TestMetric CommandExecuteReaderAsync;
 		static TestMetric CommandExecuteNonQuery;
 		static TestMetric CommandExecuteNonQueryAsync;
+
+		static TestMetric GetSqlText;
+
+		static TestMetric OnTraceInternal;
+
 
 		public static TestMetric TestTotal;
 
@@ -211,6 +266,10 @@ namespace Tests.Tools
 						else
 							_parent._children.Add(this);
 					}
+				}
+
+				if (activityID == ActivityID.FinalizeQuery && _parent == null)
+				{
 				}
 			}
 

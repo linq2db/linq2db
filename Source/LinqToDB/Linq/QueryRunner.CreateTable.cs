@@ -1,12 +1,13 @@
-﻿using System.Linq.Expressions;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
 	using LinqToDB.Expressions;
-	using SqlQuery;
 	using Mapping;
+	using SqlQuery;
+	using Tools;
 
 	static partial class QueryRunner
 	{
@@ -25,6 +26,8 @@ namespace LinqToDB.Linq
 				DefaultNullable   defaultNullable,
 				TableOptions      tableOptions)
 			{
+				using var m = ActivityService.Start(ActivityID.CreateTable);
+
 				var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor) : SqlTable.Create<T>(dataContext);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 
@@ -76,6 +79,8 @@ namespace LinqToDB.Linq
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
+				using var m = ActivityService.Start(ActivityID.CreateTableAsync);
+
 				var sqlTable    = tableDescriptor != null ? new SqlTable(tableDescriptor) : SqlTable.Create<T>(dataContext);
 				var createTable = new SqlCreateTableStatement(sqlTable);
 

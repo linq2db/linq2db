@@ -1,6 +1,5 @@
 ﻿{
 	"NET472.Azure": {
-		"BaselinesContextPath": "Ace",
 		"Providers": [
 			"Access",
 			"Access.Odbc"

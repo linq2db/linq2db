@@ -14,6 +14,8 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data
 {
 	using Async;
@@ -880,13 +882,17 @@ namespace LinqToDB.Data
 		/// <returns>Number of records, affected by command execution.</returns>
 		public int Execute()
 		{
-			var startedOn     = DateTime.UtcNow;
-			var stopwatch     = Stopwatch.StartNew();
+			using var m = ActivityService.Start(ActivityID.CommandInfoExecute);
+
+			var startedOn = DateTime.UtcNow;
+			var stopwatch = Stopwatch.StartNew();
+
 			InitCommand();
 
 			var commandResult = DataConnection.ExecuteNonQuery();
 
 			stopwatch.Stop();
+
 			if (DataConnection.TraceSwitchConnection.TraceInfo)
 			{
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
@@ -912,13 +918,17 @@ namespace LinqToDB.Data
 		/// <returns>Number of records, affected by command execution.</returns>
 		internal int ExecuteCustom(Func<DbCommand, int> customExecute)
 		{
-			var startedOn     = DateTime.UtcNow;
-			var stopwatch     = Stopwatch.StartNew();
+			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteCustom);
+
+			var startedOn = DateTime.UtcNow;
+			var stopwatch = Stopwatch.StartNew();
+
 			InitCommand();
 
 			var commandResult = DataConnection.ExecuteNonQueryCustom(customExecute);
 
 			stopwatch.Stop();
+
 			if (DataConnection.TraceSwitchConnection.TraceInfo)
 			{
 				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
@@ -960,6 +970,8 @@ namespace LinqToDB.Data
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public async Task<int> ExecuteAsync(CancellationToken cancellationToken = default)
 		{
+			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteAsync);
+
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var startedOn     = DateTime.UtcNow;
@@ -1011,6 +1023,8 @@ namespace LinqToDB.Data
 		/// <returns>Resulting value.</returns>
 		public T Execute<T>()
 		{
+			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteT);
+
 			var startedOn     = DateTime.UtcNow;
 			var stopwatch     = Stopwatch.StartNew();
 			var hasParameters = InitCommand();
@@ -1085,6 +1099,8 @@ namespace LinqToDB.Data
 		/// <returns>Task with resulting value.</returns>
 		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken = default)
 		{
+			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteAsyncT);
+
 			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			var startedOn = DateTime.UtcNow;

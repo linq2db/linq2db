@@ -1,6 +1,5 @@
 ﻿{
 	"NET472.Azure": {
-		"BaselinesContextPath": "Ace.x64",
 		"Providers": [
 			//"Access", x64 oledb provider crashes with AVE https://github.com/dotnet/runtime/issues/46187
 			"Access.Odbc"

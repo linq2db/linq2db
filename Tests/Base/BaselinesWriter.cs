@@ -13,22 +13,12 @@ namespace Tests
 		// case-insensitive to support windoze file system
 		static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-		static string? _context;
-
-		public static void Write(string baselinesPath, string baseline)
+		internal static void Write(string baselinesPath, string baseline)
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 
-			_context = GetTestContextName(test);
+			var context = GetTestContextName(test);
 
-			var baselinePath = test.ClassName!.Replace('.', Path.DirectorySeparatorChar);
-			var fileName     = $"{NormalizeFileName(test.FullName)}.sql";
-
-			Write(baselinesPath, baselinePath, fileName,  baseline);
-		}
-
-		public static void Write(string root, string baselinePath, string fileName, string baseline, bool removeLinqService = false)
-		{
 #if NET472
 			var target = "net472";
 #elif NETCOREAPP3_1
@@ -41,22 +31,15 @@ namespace Tests
 #error "Build Target must be specified here."
 #endif
 
-			if (_context == null)
+			if (context == null)
 				return;
 
-			var context = _context;
+			var fixturePath = Path.Combine(baselinesPath, target, context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
+			Directory.CreateDirectory(fixturePath);
 
-			if (removeLinqService)
-				context = context.Replace(".LinqService", "");
+			var fileName = $"{NormalizeFileName(test.FullName)}.sql";
 
-			if (!string.IsNullOrWhiteSpace(TestBase.BaselinesContextPath))
-				context += "." + TestBase.BaselinesContextPath;
-
-			var path = Path.Combine(root, target, context, baselinePath);
-
-			Directory.CreateDirectory(path);
-
-			var fullPath = Path.Combine(path, fileName);
+			var fullPath = Path.Combine(fixturePath, fileName);
 
 			if (!_baselines.Add(fullPath))
 				throw new InvalidOperationException($"Baseline already in use: {fullPath}");
@@ -93,6 +76,11 @@ namespace Tests
 			}
 
 			return null;
+		}
+
+		public static void WriteMetrics(string metricBaselinesPath, string baseline)
+		{
+			File.WriteAllText(metricBaselinesPath, baseline, Encoding.UTF8);
 		}
 	}
 }

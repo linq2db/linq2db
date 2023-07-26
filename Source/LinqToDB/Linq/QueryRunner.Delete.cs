@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
 	using Common.Internal.Cache;
 	using SqlQuery;
 

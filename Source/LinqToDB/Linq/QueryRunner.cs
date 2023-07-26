@@ -1079,8 +1079,10 @@ namespace LinqToDB.Linq
 
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles))
-				return runner.GetSqlText();
+			using var m      = ActivityService.Start(ActivityID.GetSqlText);
+			using var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
+
+			return runner.GetSqlText();
 		}
 
 		#endregion

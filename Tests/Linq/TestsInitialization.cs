@@ -127,7 +127,7 @@ public class TestsInitialization
 
 		Debug.WriteLine(str);
 
-		if (!string.IsNullOrWhiteSpace(TestBase.BaselinesPath))
-			BaselinesWriter.Write(TestBase.BaselinesPath!, "", "Metrics.txt", str, true);
+		if (!string.IsNullOrWhiteSpace(TestBase.MetricBaselinePath))
+			BaselinesWriter.WriteMetrics(TestBase.MetricBaselinePath!, str);
 	}
 }
