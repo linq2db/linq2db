@@ -11,7 +11,7 @@ namespace LinqToDB.Tools
 
 		static Func<ActivityID,IActivity>? _factory;
 
-		public static void SetMetricFactory(Func<ActivityID,IActivity>? factory)
+		public static void SetFactory(Func<ActivityID,IActivity>? factory)
 		{
 			_factory = factory;
 		}

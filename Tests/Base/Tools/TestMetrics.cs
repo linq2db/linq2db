@@ -5,8 +5,6 @@ using System.Text;
 
 using LinqToDB.Tools;
 
-using NUnit.Framework;
-
 namespace Tests.Tools
 {
 	public static class TestMetrics
@@ -81,7 +79,7 @@ namespace Tests.Tools
 				TestTotal                       = new("Total")
 			};
 
-			ActivityService.SetMetricFactory(TestMetricFactory);
+			ActivityService.SetFactory(TestMetricFactory);
 		}
 
 		static IActivity TestMetricFactory(ActivityID metric)
@@ -214,11 +212,12 @@ namespace Tests.Tools
 							_parent._children.Add(this);
 					}
 				}
-
 			}
 
+#pragma warning disable RS0030
 			[ThreadStatic]
 			static ActivityHierarchy? _current;
+#pragma warning restore RS0030
 
 			public void Dispose()
 			{

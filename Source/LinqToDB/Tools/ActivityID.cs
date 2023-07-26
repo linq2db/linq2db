@@ -14,7 +14,7 @@ namespace LinqToDB.Tools
 				GetQueryFindFind,
 			GetQueryCreate,
 				Build,
-				BuildSequence,
+					BuildSequence,
 						BuildSequenceCanBuild,
 						BuildSequenceBuild,
 					ReorderBuilders,
