@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.Tools.Activity
 {
-	class StatActivitySum : IStatActivity
+	sealed class StatActivitySum : IStatActivity
 	{
 		public StatActivitySum(string name, params StatActivity[] metrics)
 		{

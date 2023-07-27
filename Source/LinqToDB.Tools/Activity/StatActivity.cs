@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace LinqToDB.Tools.Activity
 {
-	class StatActivity : IStatActivity
+	sealed class StatActivity : IStatActivity
 	{
 		public StatActivity(string name)
 		{
@@ -19,9 +19,9 @@ namespace LinqToDB.Tools.Activity
 		private long     _callCount;
 		public  long     CallCount => _callCount;
 
-		public Watcher Start()
+		public IActivity Start()
 		{
-			return new(this);
+			return new Watcher(this);
 		}
 
 		void Stop(Stopwatch stopwatch)
@@ -30,7 +30,7 @@ namespace LinqToDB.Tools.Activity
 			Interlocked.Add(ref _elapsedTicks, stopwatch.ElapsedTicks);
 		}
 
-		public class Watcher : IActivity
+		sealed class Watcher : IActivity
 		{
 			readonly StatActivity _metric;
 			readonly Stopwatch    _stopwatch = new();

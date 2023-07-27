@@ -1838,11 +1838,6 @@ namespace Tests.Linq
 		{
 			List<int>? list = null;
 
-			if (list is [..])
-			{
-			}
-
-
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
 			{
