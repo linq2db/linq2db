@@ -43,6 +43,5 @@ namespace Tests
 		{
 			_state.AddOrUpdate(name, value, (key, old) => value);
 		}
-
 	}
 }

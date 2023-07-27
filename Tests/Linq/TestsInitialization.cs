@@ -116,7 +116,8 @@ public class TestsInitialization
 	{
 		var str = ActivityStatistics.GetReport();
 
-		TestBase.WriteTrace(str, "Metrics", TraceLevel.Info, false);
+		Debug.WriteLine(str);
+		TestContext.Progress.WriteLine(str);
 
 		if (!string.IsNullOrWhiteSpace(TestBase.MetricBaselinePath))
 			BaselinesWriter.WriteMetrics(TestBase.MetricBaselinePath!, str);

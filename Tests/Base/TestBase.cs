@@ -78,7 +78,10 @@ namespace Tests
 		static TestBase()
 		{
 			TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
-			TestContext.WriteLine("CLR Version: {0}...",     Environment.Version);
+
+			TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
+
+			var traceCount = 0;
 
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (message, name, level) =>
@@ -102,8 +105,27 @@ namespace Tests
 					}
 				}
 
-				if (message != null)
-					WriteTrace(message, name, level);
+				if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
+				{
+					var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+					if (trace == null)
+					{
+						trace = new StringBuilder();
+						ctx.Set(CustomTestContext.TRACE, trace);
+					}
+
+					lock (trace)
+						trace.AppendLine($"{name}: {message}");
+
+					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
+					{
+						ctx.Set(CustomTestContext.LIMITED, true);
+						TestContext.WriteLine("{0}: {1}", name, message);
+						Debug.WriteLine(message, name);
+					}
+
+					traceCount++;
+				}
 			};
 
 			Configuration.Linq.TraceMapperExpression = false;
@@ -259,52 +281,22 @@ namespace Tests
 					{
 						MetricBaselinePath = Path.Combine(baselinesPath, testSettings.MetricBaselinePath);
 
-						WriteTrace($"MetricBaselinePath : '{MetricBaselinePath}'", "Metrics", TraceLevel.Info);
+						TestContext.Progress.WriteLine($"MetricBaselinePath : '{MetricBaselinePath}'");
 
 						var fp = Path.GetFullPath(MetricBaselinePath);
 
 						if (!Directory.Exists(fp))
 						{
-							WriteTrace($"Creating directory '{MetricBaselinePath}'...", "Metrics", TraceLevel.Info);
+							TestContext.Progress.WriteLine($"Creating directory '{MetricBaselinePath}'...");
 
 							Directory.CreateDirectory(fp);
 						}
 					}
 					else
 					{
-						WriteTrace("MetricBaseline is off", "Metrics", TraceLevel.Info);
+						TestContext.Progress.WriteLine("Metric Baseline is off");
 					}
 				}
-			}
-		}
-
-		static int _traceCount;
-
-		public static void WriteTrace(string message, string? name, TraceLevel level, bool limitTrace = true)
-		{
-			var ctx = CustomTestContext.Get();
-
-			if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
-			{
-				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-
-				if (trace == null)
-				{
-					trace = new StringBuilder();
-					ctx.Set(CustomTestContext.TRACE, trace);
-				}
-
-				lock (trace)
-					trace.AppendLine($"{name}: {message}");
-
-				if (_traceCount < TRACES_LIMIT || level == TraceLevel.Error || limitTrace == false)
-				{
-					ctx.Set(CustomTestContext.LIMITED, true);
-					TestContext.WriteLine("{0}: {1}", name, message);
-					Debug.WriteLine(message, name);
-				}
-
-				_traceCount++;
 			}
 		}
 
