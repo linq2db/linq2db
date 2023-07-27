@@ -4,11 +4,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Data.RetryPolicy
 {
 	using Configuration;
+	using Tools;
 
 	sealed class RetryingDbCommand : DbCommand, IProxy<DbCommand>
 	{

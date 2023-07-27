@@ -5,13 +5,12 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
 	using RetryPolicy;
+	using Tools;
 
 	public partial class DataConnection
 	{

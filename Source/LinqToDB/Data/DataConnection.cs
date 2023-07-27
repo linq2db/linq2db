@@ -8,8 +8,6 @@ using System.Threading;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Data
 {
 	using Async;
@@ -19,6 +17,8 @@ namespace LinqToDB.Data
 	using Expressions;
 	using Mapping;
 	using RetryPolicy;
+	using Tools;
+
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
@@ -663,6 +663,7 @@ namespace LinqToDB.Data
 				if (_connection == null)
 				{
 					DbConnection connection;
+
 					if (_connectionFactory != null)
 						connection = _connectionFactory(Options);
 					else
@@ -839,10 +840,12 @@ namespace LinqToDB.Data
 
 			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
 
+			if (result.HasValue)
+				return result.Value;
+
 			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQuery);
-				return result.HasValue
-					? result.Value
-					: command.ExecuteNonQuery();
+
+			return command.ExecuteNonQuery();
 		}
 
 		internal int ExecuteNonQuery()
@@ -983,11 +986,12 @@ namespace LinqToDB.Data
 			if (_commandInterceptor != null)
 				result = _commandInterceptor.ExecuteScalar(new (this), command, result);
 
+			if (result.HasValue)
+				return result.Value;
+
 			using var m = ActivityService.Start(ActivityID.CommandExecuteScalar);
 
-			return result.HasValue
-				? result.Value
-				: command.ExecuteScalar();
+			return command.ExecuteScalar();
 		}
 
 		object? ExecuteScalar()
@@ -1059,13 +1063,17 @@ namespace LinqToDB.Data
 
 			DbDataReader? rd;
 
-			using (ActivityService.Start(ActivityID.CommandExecuteReader))
-				rd = result.HasValue
-					? result.Value
-					: _command!.ExecuteReader(commandBehavior);
+			if (result.HasValue)
+			{
+				rd = result.Value;
+			}
+			else
+			{
+				using var m = ActivityService.Start(ActivityID.CommandExecuteReader);
+				rd = _command!.ExecuteReader(commandBehavior);
+			}
 
-			if (_commandInterceptor != null)
-				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
+			_commandInterceptor?.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
 
 			var wrapper = new DataReaderWrapper(this, rd, _command!);
 

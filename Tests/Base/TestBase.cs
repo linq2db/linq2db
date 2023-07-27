@@ -6,9 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
@@ -19,14 +19,15 @@ using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
 using NUnit.Framework.Internal;
-using Tests.Remote.ServerContainer;
 
 namespace Tests
 {
 	using Model;
 	using Tools;
+	using Remote.ServerContainer;
 
 	public partial class TestBase
 	{
@@ -277,7 +278,14 @@ namespace Tests
 					BaselinesPath = baselinesPath;
 
 					if (!string.IsNullOrWhiteSpace(testSettings.MetricBaselinePath))
+					{
 						MetricBaselinePath = Path.Combine(baselinesPath, testSettings.MetricBaselinePath);
+
+						var fp = Path.GetFullPath(MetricBaselinePath);
+
+						if (!Directory.Exists(fp))
+							Directory.CreateDirectory(fp);
+					}
 				}
 			}
 		}

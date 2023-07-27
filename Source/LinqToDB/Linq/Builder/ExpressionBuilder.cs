@@ -9,8 +9,6 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
@@ -19,6 +17,8 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
+	using Tools;
+
 
 	sealed partial class ExpressionBuilder
 	{

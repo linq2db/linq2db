@@ -7,13 +7,12 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Linq
 {
 	using Async;
 	using Extensions;
 	using Data;
+	using Tools;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{

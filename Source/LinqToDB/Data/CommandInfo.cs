@@ -14,8 +14,6 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Data
 {
 	using Async;
@@ -27,6 +25,7 @@ namespace LinqToDB.Data
 	using Linq;
 	using Mapping;
 	using Reflection;
+	using Tools;
 
 	/// <summary>
 	/// Provides database connection command abstraction.

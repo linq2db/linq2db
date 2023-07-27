@@ -8,8 +8,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Tools;
-
 // ReSharper disable StaticMemberInGenericType
 
 namespace LinqToDB.Linq
@@ -25,6 +23,8 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using Tools;
+
 
 	public abstract class Query
 	{

@@ -8,6 +8,7 @@ namespace LinqToDB.Linq
 {
 	using Common.Internal.Cache;
 	using SqlQuery;
+	using Tools;
 
 	static partial class QueryRunner
 	{
@@ -78,6 +79,8 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
+				using var a = ActivityService.Start(ActivityID.DeleteObject);
+
 				var type        = GetType<T>(obj!, dataContext);
 				var dataOptions = dataContext.Options;
 
@@ -117,6 +120,8 @@ namespace LinqToDB.Linq
 			{
 				if (Equals(default(T), obj))
 					return 0;
+
+				using var a = ActivityService.Start(ActivityID.DeleteObjectAsync);
 
 				var type = GetType<T>(obj!, dataContext);
 				var ei   = dataContext.Options.LinqOptions.DisableQueryCache

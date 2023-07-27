@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Async
 {
 	/// <summary>
@@ -53,13 +55,28 @@ namespace LinqToDB.Async
 
 		public virtual DbCommand CreateCommand() => Connection.CreateCommand();
 
-		public virtual void Open     ()                                    => Connection.Open();
-		public virtual Task OpenAsync(CancellationToken cancellationToken) => Connection.OpenAsync(cancellationToken);
+		public virtual void Open()
+		{
+			using var _ = ActivityService.Start(ActivityID.ConnectionOpen);
+			Connection.Open();
+		}
 
-		public virtual void Close     () => Connection.Close();
+		public virtual Task OpenAsync(CancellationToken cancellationToken)
+		{
+			using var _ = ActivityService.Start(ActivityID.ConnectionOpenAsync);
+			return Connection.OpenAsync(cancellationToken);
+		}
+
+		public virtual void Close     ()
+		{
+			using var _ = ActivityService.Start(ActivityID.ConnectionClose);
+			Connection.Close();
+		}
+
 		public virtual Task CloseAsync()
 		{
 #if NETSTANDARD2_1PLUS
+			using var _ = ActivityService.Start(ActivityID.ConnectionCloseAsync);
 			return Connection.CloseAsync();
 #else
 			Close();
@@ -101,7 +118,12 @@ namespace LinqToDB.Async
 #endif
 
 		#region IDisposable
-		public virtual void Dispose() => Connection.Dispose();
+		public virtual void Dispose()
+		{
+			using var _ = ActivityService.Start(ActivityID.ConnectionDispose);
+			Connection.Dispose();
+		}
+
 		#endregion
 
 		#region IAsyncDisposable

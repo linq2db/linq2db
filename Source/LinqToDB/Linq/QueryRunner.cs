@@ -10,8 +10,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Linq
 {
 #if !NATIVE_ASYNC
@@ -26,6 +24,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
+	using Tools;
 
 	static partial class QueryRunner
 	{

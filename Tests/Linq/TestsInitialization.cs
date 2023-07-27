@@ -8,6 +8,7 @@ using System.Text;
 
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Tools;
+using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;
 
@@ -24,7 +25,13 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-		_testMetricWatcher = TestMetrics.TestTotal.Start();
+		ActivityService.AddFactory(ActivityStatistics.Factory);
+		ActivityService.AddFactory(ActivityHierarchyFactory);
+
+		static IActivity ActivityHierarchyFactory(ActivityID activityID)
+		{
+			return new ActivityHierarchy(activityID, s => Debug.WriteLine(s));
+		}
 
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
@@ -104,26 +111,10 @@ public class TestsInitialization
 #endif
 	}
 
-	IActivity? _testMetricWatcher;
-
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
-		_testMetricWatcher?.Dispose();
-
-		var str = TestMetrics.All.Select(m => new
-		{
-			m.Name,
-			m.Elapsed,
-			m.CallCount,
-			TimePerCall = m.CallCount switch
-			{
-				0 => TimeSpan.Zero,
-				1 => m.Elapsed,
-				_ => new TimeSpan(m.Elapsed.Ticks / m.CallCount)
-			}
-		})
-		.ToDiagnosticString();
+		var str = ActivityStatistics.GetReport();
 
 		Debug.WriteLine(str);
 

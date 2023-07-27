@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
-	using Mapping;
 	using Common.Internal.Cache;
-	using System.Linq;
+	using Mapping;
+	using SqlQuery;
+	using Tools;
 
 	static partial class QueryRunner
 	{
@@ -84,6 +84,8 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
+				using var a = ActivityService.Start(ActivityID.InsertObject);
+
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
@@ -124,6 +126,8 @@ namespace LinqToDB.Linq
 			{
 				if (Equals(default(T), obj))
 					return 0;
+
+				using var a = ActivityService.Start(ActivityID.InsertObjectAsync);
 
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
