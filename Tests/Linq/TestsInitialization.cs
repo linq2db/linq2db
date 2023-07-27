@@ -116,7 +116,11 @@ public class TestsInitialization
 	{
 		var str = ActivityStatistics.GetReport();
 
+#if DEBUG
 		Debug.WriteLine(str);
+#else
+		TestContext.WriteLine(str);
+#endif
 
 		if (!string.IsNullOrWhiteSpace(TestBase.MetricBaselinePath))
 			BaselinesWriter.WriteMetrics(TestBase.MetricBaselinePath!, str);
