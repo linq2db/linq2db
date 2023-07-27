@@ -1,6 +1,5 @@
 ﻿{
 	"NET70.Azure": {
-		"MetricBaselinePath": "net70\\Metrics\\SqlServer2022.txt",
 		"Providers": [
 			"SqlServer.2022",
 			"SqlServer.2022.MS"
