@@ -102,7 +102,8 @@ namespace Tests
 					}
 				}
 
-				WriteTrace(message, name, level);
+				if (message != null)
+					WriteTrace(message, name, level);
 			};
 
 			Configuration.Linq.TraceMapperExpression = false;
@@ -279,7 +280,7 @@ namespace Tests
 
 		static int _traceCount;
 
-		public static void WriteTrace(string message, string name, TraceLevel level, bool limitTrace = true)
+		public static void WriteTrace(string message, string? name, TraceLevel level, bool limitTrace = true)
 		{
 			var ctx = CustomTestContext.Get();
 
