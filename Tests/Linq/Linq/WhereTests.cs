@@ -1836,8 +1836,6 @@ namespace Tests.Linq
 		[Test]
 		public void CaseOptimization([DataSources] string context)
 		{
-			List<int>? list = null;
-
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(new List<WhereWithString>{new()
 			{
