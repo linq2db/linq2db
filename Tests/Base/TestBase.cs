@@ -78,10 +78,7 @@ namespace Tests
 		static TestBase()
 		{
 			TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
-
-			TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
-
-			var traceCount = 0;
+			TestContext.WriteLine("CLR Version: {0}...",     Environment.Version);
 
 			DataConnection.TurnTraceSwitchOn();
 			DataConnection.WriteTraceLine = (message, name, level) =>
@@ -105,27 +102,7 @@ namespace Tests
 					}
 				}
 
-				if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
-				{
-					var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
-					if (trace == null)
-					{
-						trace = new StringBuilder();
-						ctx.Set(CustomTestContext.TRACE, trace);
-					}
-
-					lock (trace)
-						trace.AppendLine($"{name}: {message}");
-
-					if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
-					{
-						ctx.Set(CustomTestContext.LIMITED, true);
-						TestContext.WriteLine("{0}: {1}", name, message);
-						Debug.WriteLine(message, name);
-					}
-
-					traceCount++;
-				}
+				WriteTrace(message, name, level);
 			};
 
 			Configuration.Linq.TraceMapperExpression = false;
@@ -281,25 +258,52 @@ namespace Tests
 					{
 						MetricBaselinePath = Path.Combine(baselinesPath, testSettings.MetricBaselinePath);
 
-						TestContext.WriteLine($"MetricBaselinePath : '{MetricBaselinePath}'");
-						TestExternals.Log    ($"MetricBaselinePath : '{MetricBaselinePath}'");
+						WriteTrace($"MetricBaselinePath : '{MetricBaselinePath}'", "Metrics", TraceLevel.Info);
 
 						var fp = Path.GetFullPath(MetricBaselinePath);
 
 						if (!Directory.Exists(fp))
 						{
-							TestContext.WriteLine($"Creating directory '{MetricBaselinePath}'...");
-							TestExternals.Log    ($"Creating directory '{MetricBaselinePath}'...");
+							WriteTrace($"Creating directory '{MetricBaselinePath}'...", "Metrics", TraceLevel.Info);
 
 							Directory.CreateDirectory(fp);
 						}
 					}
 					else
 					{
-						TestContext.WriteLine("MetricBaseline is off");
-						TestExternals.Log    ("MetricBaseline is off");
+						WriteTrace("MetricBaseline is off", "Metrics", TraceLevel.Info);
 					}
 				}
+			}
+		}
+
+		static int _traceCount;
+
+		public static void WriteTrace(string message, string name, TraceLevel level, bool limitTrace = true)
+		{
+			var ctx = CustomTestContext.Get();
+
+			if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
+			{
+				var trace = ctx.Get<StringBuilder>(CustomTestContext.TRACE);
+
+				if (trace == null)
+				{
+					trace = new StringBuilder();
+					ctx.Set(CustomTestContext.TRACE, trace);
+				}
+
+				lock (trace)
+					trace.AppendLine($"{name}: {message}");
+
+				if (_traceCount < TRACES_LIMIT || level == TraceLevel.Error || limitTrace == false)
+				{
+					ctx.Set(CustomTestContext.LIMITED, true);
+					TestContext.WriteLine("{0}: {1}", name, message);
+					Debug.WriteLine(message, name);
+				}
+
+				_traceCount++;
 			}
 		}
 

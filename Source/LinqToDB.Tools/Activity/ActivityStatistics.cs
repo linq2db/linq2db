@@ -124,6 +124,8 @@ namespace LinqToDB.Tools.Activity
 				ConnectionClose,
 				ConnectionCloseAsync,
 				ConnectionDispose,
+				ConnectionBeginTransaction,
+				ConnectionBeginTransactionAsync,
 				TransactionCommit,
 				TransactionCommitAsync,
 				TransactionRollback,
