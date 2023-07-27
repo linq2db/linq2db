@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Tools;
-
 namespace LinqToDB.Async
 {
+	using Tools;
+
 	/// <summary>
 	/// Implements <see cref="IAsyncDbConnection"/> wrapper over <see cref="DbConnection"/> instance with
 	/// synchronous implementation of asynchronous methods.
@@ -84,40 +84,67 @@ namespace LinqToDB.Async
 #endif
 		}
 
-		public virtual IAsyncDbTransaction BeginTransaction() => AsyncFactory.Create(Connection.BeginTransaction());
-		public virtual IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel) => AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
+		public virtual IAsyncDbTransaction BeginTransaction()
+		{
+			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction);
+			return AsyncFactory.Create(Connection.BeginTransaction());
+		}
+
+		public virtual IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel)
+		{
+			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction);
+			return AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
+		}
 
 #if !NATIVE_ASYNC
-			public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
-				=> Task.FromResult(BeginTransaction());
+
+		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
+		{
+			return Task.FromResult(BeginTransaction());
+		}
+
+		public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
+		{
+			return Task.FromResult(BeginTransaction(isolationLevel));
+		}
+
 #elif !NETSTANDARD2_1PLUS
+
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
-			=> new(BeginTransaction());
+		{
+			return new(BeginTransaction());
+		}
+
+		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
+		{
+			return new(BeginTransaction(isolationLevel));
+		}
+
 #else
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{
+			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransactionAsync);
+
 			var transaction = await Connection.BeginTransactionAsync(cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 			return AsyncFactory.Create(transaction);
 		}
-#endif
 
-#if !NATIVE_ASYNC
-			public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
-				=> Task.FromResult(BeginTransaction(isolationLevel));
-#elif !NETSTANDARD2_1PLUS
-		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
-			=> new(BeginTransaction(isolationLevel));
-#else
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
 		{
+			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransactionAsync);
+
 			var transaction = await Connection.BeginTransactionAsync(isolationLevel, cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 			return AsyncFactory.Create(transaction);
 		}
+
 #endif
 
 		#region IDisposable
+
 		public virtual void Dispose()
 		{
 			using var _ = ActivityService.Start(ActivityID.ConnectionDispose);

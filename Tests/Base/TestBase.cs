@@ -281,10 +281,23 @@ namespace Tests
 					{
 						MetricBaselinePath = Path.Combine(baselinesPath, testSettings.MetricBaselinePath);
 
+						TestContext.WriteLine($"MetricBaselinePath : '{MetricBaselinePath}'");
+						TestExternals.Log    ($"MetricBaselinePath : '{MetricBaselinePath}'");
+
 						var fp = Path.GetFullPath(MetricBaselinePath);
 
 						if (!Directory.Exists(fp))
+						{
+							TestContext.WriteLine($"Creating directory '{MetricBaselinePath}'...");
+							TestExternals.Log    ($"Creating directory '{MetricBaselinePath}'...");
+
 							Directory.CreateDirectory(fp);
+						}
+					}
+					else
+					{
+						TestContext.WriteLine("MetricBaseline is off");
+						TestExternals.Log    ("MetricBaseline is off");
 					}
 				}
 			}

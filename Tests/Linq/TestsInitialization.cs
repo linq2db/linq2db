@@ -120,6 +120,7 @@ public class TestsInitialization
 		Debug.WriteLine(str);
 #else
 		TestContext.WriteLine(str);
+		TestExternals.Log(str);
 #endif
 
 		if (!string.IsNullOrWhiteSpace(TestBase.MetricBaselinePath))

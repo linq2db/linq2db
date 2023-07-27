@@ -16,7 +16,7 @@ namespace LinqToDB.Tools
 			if (list.Length == 1)
 				return factory(activityID);
 
-			var activities = new IActivity[list.Length];
+			var activities = new IActivity?[list.Length];
 
 			for (var i = 0; i < list.Length; i++)
 				activities[i] = ((Func<ActivityID, IActivity>)list[i])(activityID);
@@ -24,18 +24,18 @@ namespace LinqToDB.Tools
 			return new MultiActivity(activities);
 		}
 
-		static Func<ActivityID,IActivity>? _factory;
+		static Func<ActivityID,IActivity?>? _factory;
 
-		public static void AddFactory(Func<ActivityID,IActivity>? factory)
+		public static void AddFactory(Func<ActivityID,IActivity?>? factory)
 		{
 			_factory += factory;
 		}
 
 		class MultiActivity : IActivity
 		{
-			readonly IActivity[] _activities;
+			readonly IActivity?[] _activities;
 
-			public MultiActivity(IActivity[] activities)
+			public MultiActivity(IActivity?[] activities)
 			{
 				_activities = activities;
 			}
@@ -43,7 +43,7 @@ namespace LinqToDB.Tools
 			public void Dispose()
 			{
 				foreach (var activity in _activities)
-					activity.Dispose();
+					activity?.Dispose();
 			}
 		}
 	}
