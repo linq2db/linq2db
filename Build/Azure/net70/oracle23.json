@@ -1,6 +1,5 @@
 ﻿{
 	"NET70.Azure": {
-		"true": true,
 		"Providers": [
 			"Oracle.23.Managed"
 		]

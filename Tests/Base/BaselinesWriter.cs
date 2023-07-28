@@ -97,10 +97,11 @@ namespace Tests
 #error "Build Target must be specified here."
 #endif
 
-			var fixturePath = Path.Combine(baselinesPath, target, _context, "");
+			var fixturePath = Path.Combine(baselinesPath, target);
+
 			Directory.CreateDirectory(fixturePath);
 
-			var fileName = $"{NormalizeFileName("Metrics.txt")}.sql";
+			var fileName = $"{_context}.{Environment.OSVersion.Platform}.Metrics.txt";
 
 			var fullPath = Path.Combine(fixturePath, fileName);
 

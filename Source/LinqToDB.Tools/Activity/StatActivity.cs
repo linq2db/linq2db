@@ -13,20 +13,20 @@ namespace LinqToDB.Tools.Activity
 
 		public string    Name    { get; }
 
-		private long _elapsedTicks;
+		private long    _elapsedTicks;
 		public  TimeSpan Elapsed => new(_elapsedTicks);
 
-		private long     _callCount;
+		private long    _callCount;
 		public  long     CallCount => _callCount;
 
 		public IActivity Start()
 		{
+			Interlocked.Increment(ref _callCount);
 			return new Watcher(this);
 		}
 
 		void Stop(Stopwatch stopwatch)
 		{
-			Interlocked.Increment(ref _callCount);
 			Interlocked.Add(ref _elapsedTicks, stopwatch.ElapsedTicks);
 		}
 

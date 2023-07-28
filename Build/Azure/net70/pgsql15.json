@@ -1,6 +1,5 @@
 ﻿{
 	"NET70.Azure": {
-		"StoreMetrics": true,
 		"Providers": [
 			"PostgreSQL.15"
 		]
