@@ -28,9 +28,13 @@ public class TestsInitialization
 		ActivityService.AddFactory(ActivityStatistics.Factory);
 		ActivityService.AddFactory(ActivityHierarchyFactory);
 
-		static IActivity ActivityHierarchyFactory(ActivityID activityID)
+		static IActivity? ActivityHierarchyFactory(ActivityID activityID)
 		{
-			return new ActivityHierarchy(activityID, s => Debug.WriteLine(s));
+			var ctx = CustomTestContext.Get();
+
+			if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
+				return new ActivityHierarchy(activityID, s => Debug.WriteLine(s));
+			return null;
 		}
 
 		// required for tests expectations
