@@ -102,7 +102,7 @@ namespace LinqToDB.Common
 		/// Set to 0 to truncate all string data.
 		/// </remarks>
 		public static int MaxStringParameterLengthLogging { get; set; } = 200;
-		
+
 		private static bool _useNullableTypesMetadata;
 		/// <summary>
 		/// Whether or not Nullable Reference Types annotations from C#
@@ -112,16 +112,21 @@ namespace LinqToDB.Common
 		/// annotations in [Column], [Association], or [Nullable].
 		/// </summary>
 		/// <remarks>Defaults to false.</remarks>
-		public static bool UseNullableTypesMetadata 
-		{ 
+		public static bool UseNullableTypesMetadata
+		{
 			get => _useNullableTypesMetadata;
-			set 
+			set
 			{
-				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.				
+				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.
 				if (value) Mapping.Nullability.EnsureSupport();
 				_useNullableTypesMetadata = value;
 			}
-		}	
+		}
+
+		/// <summary>
+		/// Enables tracing of object materialization activity. It can significantly break performance if tracing consumer performs slow.
+		/// </summary>
+		public static bool TraceMaterializationActivity { get; set; }
 
 		public static class Data
 		{

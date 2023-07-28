@@ -79,6 +79,7 @@ namespace LinqToDB.Tools
 
 		GetSqlText,
 
+			Materialization,
 			OnTraceInternal,
 	}
 }

@@ -79,6 +79,8 @@ namespace LinqToDB.Linq
 
 			public T Map(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader, ref ReaderMapperInfo mapperInfo)
 			{
+				var a = Configuration.TraceMaterializationActivity ? ActivityService.Start(ActivityID.Materialization) : null;
+
 				try
 				{
 					return mapperInfo.Mapper(queryRunner, dataReader);
@@ -92,6 +94,10 @@ namespace LinqToDB.Linq
 						throw;
 
 					return ReMapOnException(context, queryRunner, dataReader, ref mapperInfo, ex);
+				}
+				finally
+				{
+					a?.Dispose();
 				}
 			}
 
@@ -409,10 +415,12 @@ namespace LinqToDB.Linq
 			{
 				var origDataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dataReader) ?? dataReader;
 				var mapperInfo     = mapper.GetMapperInfo(dataContext, runner, origDataReader);
+				var traceMapping   = Configuration.TraceMaterializationActivity;
 
 				do
 				{
-					T res;
+					T   res;
+					var a = traceMapping ? ActivityService.Start(ActivityID.Materialization) : null;
 
 					try
 					{
@@ -426,6 +434,11 @@ namespace LinqToDB.Linq
 							throw;
 
 						res = mapper.ReMapOnException(dataContext, runner, origDataReader, ref mapperInfo, ex);
+						runner.RowsCount++;
+					}
+					finally
+					{
+						a?.Dispose();
 					}
 
 					yield return res;

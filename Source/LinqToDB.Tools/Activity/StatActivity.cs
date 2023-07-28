@@ -11,13 +11,14 @@ namespace LinqToDB.Tools.Activity
 			Name = name;
 		}
 
-		public string    Name    { get; }
+		public string     Name    { get; }
 
-		private long    _elapsedTicks;
-		public  TimeSpan Elapsed => new(_elapsedTicks);
+		private long     _elapsedTicks;
+		public  TimeSpan _elapsed;
+		public  TimeSpan  Elapsed => _elapsedTicks > 0 ? new(_elapsedTicks) : _elapsed;
 
-		private long    _callCount;
-		public  long     CallCount => _callCount;
+		private long     _callCount;
+		public  long      CallCount => _callCount;
 
 		public IActivity Start()
 		{
@@ -27,7 +28,11 @@ namespace LinqToDB.Tools.Activity
 
 		void Stop(Stopwatch stopwatch)
 		{
-			Interlocked.Add(ref _elapsedTicks, stopwatch.ElapsedTicks);
+			if (Stopwatch.IsHighResolution)
+				Interlocked.Add(ref _elapsedTicks, stopwatch.ElapsedTicks);
+			else
+				lock (this)
+					_elapsed += stopwatch.Elapsed;
 		}
 
 		sealed class Watcher : IActivity

@@ -2,9 +2,7 @@
 using System.Data.Common;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Tools;
@@ -13,7 +11,6 @@ using LinqToDB.Tools.Activity;
 using NUnit.Framework;
 
 using Tests;
-using Tests.Tools;
 
 /// <summary>
 /// 1. Don't add namespace to this class! It's intentional
@@ -25,7 +22,10 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+		LinqToDB.Common.Configuration.TraceMaterializationActivity = true;
 		ActivityService.AddFactory(ActivityStatistics.Factory);
+
+#if DEBUG
 		ActivityService.AddFactory(ActivityHierarchyFactory);
 
 		static IActivity? ActivityHierarchyFactory(ActivityID activityID)
@@ -36,6 +36,7 @@ public class TestsInitialization
 				return new ActivityHierarchy(activityID, s => Debug.WriteLine(s));
 			return null;
 		}
+#endif
 
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };

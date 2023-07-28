@@ -140,6 +140,7 @@ namespace LinqToDB.Tools.Activity
 				CommandExecuteNonQueryAsync,
 
 				OnTraceInternal                     = new("    OnTraceInternal"),
+				Materialization                     = new("    Materialization"),
 
 				GetSqlText                          = new("  GetSqlText"),
 
@@ -226,6 +227,7 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.CommandInfoExecuteAsyncT        => CommandInfoExecuteAsyncT,
 				ActivityID.GetSqlText                      => GetSqlText,
 				ActivityID.OnTraceInternal                 => OnTraceInternal,
+				ActivityID.Materialization                 => Materialization,
 
 				_ => throw new InvalidOperationException($"Unknown metric type {metric}")
 			};
@@ -333,6 +335,7 @@ namespace LinqToDB.Tools.Activity
 		static StatActivity GetSqlText;
 
 		static StatActivity OnTraceInternal;
+		static StatActivity Materialization;
 
 		static StatActivitySum ExecuteTotal;
 		static StatActivitySum ExecuteAdo;
