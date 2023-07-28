@@ -28,6 +28,7 @@ namespace Tests
 	using Model;
 	using Tools;
 	using Remote.ServerContainer;
+	using StackExchange.Profiling.Internal;
 
 	public partial class TestBase
 	{
@@ -71,7 +72,7 @@ namespace Tests
 		private const int TRACES_LIMIT = 50000;
 
 		public static string? BaselinesPath;
-		public static string? MetricBaselinePath;
+		public static bool?   StoreMetrics;
 
 		protected static string? LastQuery;
 
@@ -276,26 +277,7 @@ namespace Tests
 				if (Directory.Exists(baselinesPath))
 				{
 					BaselinesPath = baselinesPath;
-
-					if (!string.IsNullOrWhiteSpace(testSettings.MetricBaselinePath))
-					{
-						MetricBaselinePath = Path.Combine(baselinesPath, testSettings.MetricBaselinePath);
-
-						TestContext.Progress.WriteLine($"MetricBaselinePath : '{MetricBaselinePath}'");
-
-						var fp = Path.GetFullPath(MetricBaselinePath);
-
-						if (!Directory.Exists(fp))
-						{
-							TestContext.Progress.WriteLine($"Creating directory '{MetricBaselinePath}'...");
-
-							Directory.CreateDirectory(fp);
-						}
-					}
-					else
-					{
-						TestContext.Progress.WriteLine("Metric Baseline is off");
-					}
+					StoreMetrics  = testSettings.StoreMetrics;
 				}
 			}
 		}

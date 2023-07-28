@@ -1,6 +1,6 @@
 ﻿{
 	"NET70.Azure": {
-		"MetricBaselinePath": "net70/Metrics.PostgreSQL.15.txt",
+		"StoreMetrics": true,
 		"Providers": [
 			"PostgreSQL.15"
 		]

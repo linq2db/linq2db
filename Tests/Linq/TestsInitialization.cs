@@ -123,7 +123,7 @@ public class TestsInitialization
 		Debug.WriteLine(str);
 		TestContext.Progress.WriteLine(str);
 
-		if (!string.IsNullOrWhiteSpace(TestBase.MetricBaselinePath))
-			BaselinesWriter.WriteMetrics(TestBase.MetricBaselinePath!, str);
+		if (TestBase.StoreMetrics == true)
+			BaselinesWriter.WriteMetrics(TestBase.BaselinesPath!, str);
 	}
 }

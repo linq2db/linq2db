@@ -1,6 +1,6 @@
 ﻿{
 	"NET70.Azure": {
-		"MetricBaselinePath": "net70/Metrics.Oracle.23.Managed.txt",
+		"true": true,
 		"Providers": [
 			"Oracle.23.Managed"
 		]

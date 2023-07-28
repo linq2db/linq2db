@@ -13,11 +13,13 @@ namespace Tests
 		// case-insensitive to support windoze file system
 		static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+		static string? _context;
+
 		internal static void Write(string baselinesPath, string baseline)
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 
-			var context = GetTestContextName(test);
+			_context = GetTestContextName(test);
 
 #if NET472
 			var target = "net472";
@@ -31,10 +33,10 @@ namespace Tests
 #error "Build Target must be specified here."
 #endif
 
-			if (context == null)
+			if (_context == null)
 				return;
 
-			var fixturePath = Path.Combine(baselinesPath, target, context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
+			var fixturePath = Path.Combine(baselinesPath, target, _context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
 			Directory.CreateDirectory(fixturePath);
 
 			var fileName = $"{NormalizeFileName(test.FullName)}.sql";
@@ -78,9 +80,31 @@ namespace Tests
 			return null;
 		}
 
-		public static void WriteMetrics(string metricBaselinesPath, string baseline)
+		public static void WriteMetrics(string baselinesPath, string baseline)
 		{
-			File.WriteAllText(metricBaselinesPath, baseline, Encoding.UTF8);
+			if (_context == null)
+				return;
+
+#if NET472
+			var target = "net472";
+#elif NETCOREAPP3_1
+			var target = "core31";
+#elif NET6_0
+			var target = "net60";
+#elif NET7_0
+			var target = "net70";
+#else
+#error "Build Target must be specified here."
+#endif
+
+			var fixturePath = Path.Combine(baselinesPath, target, _context, "");
+			Directory.CreateDirectory(fixturePath);
+
+			var fileName = $"{NormalizeFileName("Metrics.txt")}.sql";
+
+			var fullPath = Path.Combine(fixturePath, fileName);
+
+			File.WriteAllText(fullPath, baseline, Encoding.UTF8);
 		}
 	}
 }
