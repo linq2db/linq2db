@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 		static ParameterExpression[] AccessorParameters =
 		{
 			ExpressionBuilder.ExpressionParam,
-			ExpressionBuilder.DataContextParam,
+			ExpressionConstants.DataContextParam,
 			ExpressionBuilder.ParametersParam
 		};
 
@@ -409,8 +409,8 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			// see #820
-			accessorExpression         = CorrectAccessorExpression(accessorExpression,         dataContext, ExpressionBuilder.DataContextParam);
-			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, ExpressionBuilder.DataContextParam);
+			accessorExpression         = CorrectAccessorExpression(accessorExpression,         dataContext, ExpressionConstants.DataContextParam);
+			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, ExpressionConstants.DataContextParam);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),

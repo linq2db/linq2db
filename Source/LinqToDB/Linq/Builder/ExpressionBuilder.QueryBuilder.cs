@@ -840,7 +840,7 @@ namespace LinqToDB.Linq.Builder
 				BuildBlock(expr), new[]
 				{
 					QueryRunnerParam,
-					DataContextParam,
+					ExpressionConstants.DataContextParam,
 					DataReaderParam,
 					ExpressionParam,
 					ParametersParam,
@@ -880,7 +880,7 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Call(
 					null,
 					MemberHelper.MethodOf(() => ExecuteSubQuery(null!, null!, null!)),
-						DataContextParam,
+						ExpressionConstants.DataContextParam,
 						Expression.NewArrayInit(typeof(object), parameters),
 						Expression.Constant(queryReader)
 					);

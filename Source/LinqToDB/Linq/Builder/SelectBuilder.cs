@@ -88,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 					Builder.BuildBlock(expr), new []
 					{
 						ExpressionBuilder.QueryRunnerParam,
-						ExpressionBuilder.DataContextParam,
+						ExpressionConstants.DataContextParam,
 						ExpressionBuilder.DataReaderParam,
 						ExpressionBuilder.ExpressionParam,
 						ExpressionBuilder.ParametersParam,

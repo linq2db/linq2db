@@ -3629,7 +3629,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(AsQueryable, source, dataContext),
 					Expression.Constant(source),
-					Expression.Constant(dataContext)
+					ExpressionConstants.DataContextParam
 				));
 
 			return query;

@@ -165,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 
 				// here we use light version of optimization, only for comparing trees
 				var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-				var optimizedExpr       = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
+				var optimizedExpr       = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionConstants.DataContextParam);
 
 				optimizedExpr = optimizationContext.ExposeExpression(optimizedExpr);
 				optimizedExpr = optimizationContext.ExpandQueryableMethods(optimizedExpr);
@@ -174,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			var filtered  = (IQueryable)filterFunc.DynamicInvoke(fakeQuery, builder.DataContext)!;
-			var optimized = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionBuilder.DataContextParam);
+			var optimized = ExpressionBuilder.CorrectDataConnectionReference(filtered.Expression, ExpressionConstants.DataContextParam);
 
 			optimized = builder.ConvertExpressionTree(optimized);
 			optimized = builder.ConvertExpression(optimized);
