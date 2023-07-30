@@ -61,17 +61,9 @@ namespace LinqToDB.Linq.Builder
 
 		public IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
 		{
-			if (requestFlag != RequestFor.Field)
+			if (requestFlag != RequestFor.Field || expression == null)
 			{
 				return IsExpressionResult.False;
-			}
-
-			if (expression != null)
-			{
-				if (expression is ParameterExpression)
-				{
-					throw new NotImplementedException();
-				}
 			}
 
 			throw new NotImplementedException();

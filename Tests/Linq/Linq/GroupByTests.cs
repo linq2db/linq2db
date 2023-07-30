@@ -2395,6 +2395,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "CH 23.7.1 regression")]
 		[Test]
 		public void Issue3668Test([DataSources] string context)
 		{

@@ -780,6 +780,446 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void InsertWithSetterWithOutputIntoTempTableByTableName([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				const int idsLimit = 1000;
+
+				try
+				{
+					var id = idsLimit + 1;
+
+					db.Child.Delete(c => c.ChildID > idsLimit);
+
+					var param = 10050;
+					using var t = db.CreateTempTable<Child>("TInserted");
+					var tRef = db.GetTable<Child>()
+						.TableOptions(TableOptions.IsTemporary)
+						.TableName(t.TableName);
+					var output =
+						db.Child
+							.Where(c => c.ChildID == 11)
+							.InsertWithOutputInto(
+								db.Child,
+								c => new Child()
+								{
+									ParentID = c.ParentID,
+									ChildID  = id + Sql.AsSql(param)
+								},
+								tRef);
+
+					Assert.AreEqual(1, output);
+
+					AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
+						.Select(
+						c => new Child()
+						{
+							ParentID = c.ParentID,
+							ChildID  = c.ChildID
+						}),
+						t.Select(c => new Child()
+						{
+							ParentID = c.ParentID,
+							ChildID  = c.ChildID
+						}
+						)
+					);
+				}
+				finally
+				{
+					db.Child.Delete(c => c.ChildID > idsLimit);
+				}
+			}
+		}
+		
+		[Test]
+		public async Task InsertWithSetterWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+
+			try
+			{
+				var id = idsLimit + 1;
+
+				db.Child.Delete(c => c.ChildID > idsLimit);
+
+				var param = 10050;
+				using var t = db.CreateTempTable<Child>("TInserted");
+				var tRef = db.GetTable<Child>()
+					.TableOptions(TableOptions.IsTemporary)
+					.TableName(t.TableName);
+				var output = await
+					db.Child
+						.Where(c => c.ChildID == 11)
+						.InsertWithOutputIntoAsync(
+							db.Child,
+							c => new Child()
+							{
+								ParentID = c.ParentID,
+								ChildID  = id + Sql.AsSql(param)
+							},
+							tRef);
+
+				Assert.AreEqual(1, output);
+
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit)
+					.Select(
+					c => new Child()
+					{
+						ParentID = c.ParentID,
+						ChildID  = c.ChildID
+					}),
+					t.Select(c => new Child()
+					{
+						ParentID = c.ParentID,
+						ChildID  = c.ChildID
+					}
+					)
+				);
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
+			}
+		}
+
+		[Test]
+		public void InsertSingleRowOutputIntoTempTableByTableName([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>("TableWithData_source");
+			using var output = db.CreateTempTable<TableWithData>("TableWithData_output");
+			var outputRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(output.TableName);
+
+			Expression<Func<TableWithData>> setter = () => new TableWithData
+			{
+				Value    = 42123,
+				Id       = 42,
+				ValueStr = "SomeStr"
+			};
+
+			var rowCount = source.InsertWithOutputInto(setter, outputRef);
+			Assert.AreEqual(1, rowCount);
+
+			var sourceData = source.ToArray();
+			Assert.AreEqual(1, sourceData.Length);
+			Assert.AreEqual(42, sourceData[0].Id);
+			Assert.AreEqual(42123, sourceData[0].Value);
+			Assert.AreEqual("SomeStr", sourceData[0].ValueStr);
+
+			var outputData = output.ToArray();
+			Assert.AreEqual(1, outputData.Length);
+			Assert.AreEqual(42, outputData[0].Id);
+			Assert.AreEqual(42123, outputData[0].Value);
+			Assert.AreEqual("SomeStr", outputData[0].ValueStr);
+		}
+		
+		[Test]
+		public async Task InsertSingleRowOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>("TableWithData_source");
+			using var output = db.CreateTempTable<TableWithData>("TableWithData_output");
+			var outputRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(output.TableName);
+
+			Expression<Func<TableWithData>> setter = () => new TableWithData
+			{
+				Value    = 42123,
+				Id       = 42,
+				ValueStr = "SomeStr"
+			};
+
+			var rowCount = await source.InsertWithOutputIntoAsync(setter, outputRef);
+			Assert.AreEqual(1, rowCount);
+
+			var sourceData = source.ToArray();
+			Assert.AreEqual(1, sourceData.Length);
+			Assert.AreEqual(42, sourceData[0].Id);
+			Assert.AreEqual(42123, sourceData[0].Value);
+			Assert.AreEqual("SomeStr", sourceData[0].ValueStr);
+
+			var outputData = output.ToArray();
+			Assert.AreEqual(1, outputData.Length);
+			Assert.AreEqual(42, outputData[0].Id);
+			Assert.AreEqual(42123, outputData[0].Value);
+			Assert.AreEqual("SomeStr", outputData[0].ValueStr);
+		}
+
+		[Test]
+		public void InsertSingleRowOutputIntoProjTempTableByTableName([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>("TableWithData_source");
+			using var output = db.CreateTempTable<DestinationTable>("DestinationTable_output");
+			var outputRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(output.TableName);
+
+			Expression<Func<TableWithData>> setter = () => new TableWithData
+			{
+				Value    = 42123,
+				Id       = 42,
+				ValueStr = "SomeStr"
+			};
+
+			var rowCount = source.InsertWithOutputInto(setter, outputRef, v => new DestinationTable
+			{
+				Value = v.Value * 2,
+				Id = v.Id + 1,
+				ValueStr = "Foo" + v.ValueStr
+			});
+			Assert.AreEqual(1, rowCount);
+
+			var sourceData = source.ToArray();
+			Assert.AreEqual(1, sourceData.Length);
+			Assert.AreEqual(42, sourceData[0].Id);
+			Assert.AreEqual(42123, sourceData[0].Value);
+			Assert.AreEqual("SomeStr", sourceData[0].ValueStr);
+
+			var outputData = output.ToArray();
+			Assert.AreEqual(1, outputData.Length);
+			Assert.AreEqual(43, outputData[0].Id);
+			Assert.AreEqual(84246, outputData[0].Value);
+			Assert.AreEqual("FooSomeStr", outputData[0].ValueStr);
+		}
+
+		[Test]
+		public async Task InsertSingleRowOutputIntoProjTempTableByTableNameAsync([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable<TableWithData>("TableWithData_source");
+			using var output = db.CreateTempTable<DestinationTable>("DestinationTable_output");
+			var outputRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(output.TableName);
+
+			Expression<Func<TableWithData>> setter = () => new TableWithData
+			{
+				Value    = 42123,
+				Id       = 42,
+				ValueStr = "SomeStr"
+			};
+
+			var rowCount = await source.InsertWithOutputIntoAsync(setter, outputRef, v => new DestinationTable
+			{
+				Value = v.Value * 2,
+				Id = v.Id + 1,
+				ValueStr = "Foo" + v.ValueStr
+			});
+			Assert.AreEqual(1, rowCount);
+
+			var sourceData = source.ToArray();
+			Assert.AreEqual(1, sourceData.Length);
+			Assert.AreEqual(42, sourceData[0].Id);
+			Assert.AreEqual(42123, sourceData[0].Value);
+			Assert.AreEqual("SomeStr", sourceData[0].ValueStr);
+
+			var outputData = output.ToArray();
+			Assert.AreEqual(1, outputData.Length);
+			Assert.AreEqual(43, outputData[0].Id);
+			Assert.AreEqual(84246, outputData[0].Value);
+			Assert.AreEqual("FooSomeStr", outputData[0].ValueStr);
+		}
+
+		[Test]
+		public void InsertWithSetterWithOutputIntoProjTempTableByTableName([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+			const int param = 4242;
+
+			try
+			{
+				var id = idsLimit + 1;
+
+				db.Child.Delete(c => c.ChildID > idsLimit);
+
+				using var t = db.CreateTempTable<Child>("TInserted");
+				var tRef = db.GetTable<Child>()
+					.TableOptions(TableOptions.IsTemporary)
+					.TableName(t.TableName);
+
+				var output =
+					db.Child
+						.Where(c => c.ChildID == 11)
+						.InsertWithOutputInto(db.Child, c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = id
+							},
+							tRef,
+							inserted =>
+								new Child
+								{
+									ChildID  = inserted.ChildID,
+									ParentID = inserted.ParentID + param
+								}
+						);
+
+				Assert.AreEqual(1, output);
+
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
+					{
+						ParentID = c.ParentID,
+						ChildID = c.ChildID
+					}),
+					t.Select(c => new Child
+					{
+						ParentID = c.ParentID - param,
+						ChildID = c.ChildID
+					}
+					)
+				);
+
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
+			}
+		}
+
+		[Test]
+		public async Task InsertWithSetterWithOutputIntoProjTempTableByTableNameAsync([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using var db = GetDataContext(context);
+			const int idsLimit = 1000;
+			const int param = 4242;
+
+			try
+			{
+				var id = idsLimit + 1;
+
+				db.Child.Delete(c => c.ChildID > idsLimit);
+
+				using var t = db.CreateTempTable<Child>("TInserted");
+				var tRef = db.GetTable<Child>()
+					.TableOptions(TableOptions.IsTemporary)
+					.TableName(t.TableName);
+
+				var output = await
+					db.Child
+						.Where(c => c.ChildID == 11)
+						.InsertWithOutputIntoAsync(db.Child, c => new Child
+							{
+								ParentID = c.ParentID,
+								ChildID  = id
+							},
+							tRef,
+							inserted =>
+								new Child
+								{
+									ChildID  = inserted.ChildID,
+									ParentID = inserted.ParentID + param
+								}
+						);
+
+				Assert.AreEqual(1, output);
+
+				AreEqual(db.Child.Where(c => c.ChildID > idsLimit).Select(c => new Child
+					{
+						ParentID = c.ParentID,
+						ChildID = c.ChildID
+					}),
+					t.Select(c => new Child
+					{
+						ParentID = c.ParentID - param,
+						ChildID = c.ChildID
+					}
+					)
+				);
+
+			}
+			finally
+			{
+				db.Child.Delete(c => c.ChildID > idsLimit);
+			}
+		}
+
+		[Test]
+		public void InsertWithConfiguredQueryIntoTempTableByTableName([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateTempTable<TableWithData>("TableWithData_target");
+			var targetRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(target.TableName);
+			using var output = db.CreateTempTable<TableWithData>("TableWithData_output");
+			var outputRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(output.TableName);
+
+			var rowCount = db.Person
+				.Where(p => p.Gender == Gender.Female)
+				.Select(p => new TableWithData
+				{
+					Id = p.ID,
+					Value = p.ID * 10,
+					ValueStr = p.FirstName + " " + p.LastName
+				})
+				.Into(targetRef)
+				.InsertWithOutputInto(outputRef);
+
+			Assert.AreEqual(1, rowCount);
+
+			var targetData = target.ToArray();
+			Assert.AreEqual(1, targetData.Length);
+			Assert.AreEqual(3, targetData[0].Id);
+			Assert.AreEqual(30, targetData[0].Value);
+			Assert.AreEqual("Jane Doe", targetData[0].ValueStr);
+
+			var outputData = output.ToArray();
+			Assert.AreEqual(1, outputData.Length);
+			Assert.AreEqual(3, outputData[0].Id);
+			Assert.AreEqual(30, outputData[0].Value);
+			Assert.AreEqual("Jane Doe", outputData[0].ValueStr);
+		}
+
+		[Test]
+		public async Task InsertWithConfiguredQueryIntoTempTableByTableNameAsync([IncludeDataSources(FeatureInsertOutputInto)] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var target = db.CreateTempTable<TableWithData>("TableWithData_target");
+			var targetRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(target.TableName);
+			using var output = db.CreateTempTable<TableWithData>("TableWithData_output");
+			var outputRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(output.TableName);
+
+			var rowCount = await db.Person
+				.Where(p => p.Gender == Gender.Female)
+				.Select(p => new TableWithData
+				{
+					Id = p.ID,
+					Value = p.ID * 10,
+					ValueStr = p.FirstName + " " + p.LastName
+				})
+				.Into(targetRef)
+				.InsertWithOutputIntoAsync(outputRef);
+
+			Assert.AreEqual(1, rowCount);
+
+			var targetData = target.ToArray();
+			Assert.AreEqual(1, targetData.Length);
+			Assert.AreEqual(3, targetData[0].Id);
+			Assert.AreEqual(30, targetData[0].Value);
+			Assert.AreEqual("Jane Doe", targetData[0].ValueStr);
+
+			var outputData = output.ToArray();
+			Assert.AreEqual(1, outputData.Length);
+			Assert.AreEqual(3, outputData[0].Id);
+			Assert.AreEqual(30, outputData[0].Value);
+			Assert.AreEqual("Jane Doe", outputData[0].ValueStr);
+		}
+
+		[Test]
 		public void InsertWithOutputWithSchema([IncludeDataSources(true, FeatureInsertOutputWithSchema)] string context, [Values(1, 2)] int value)
 		{
 			using (var db     = GetDataContext(context))
