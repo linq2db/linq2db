@@ -9,7 +9,7 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class UniqueParametersNormalizerTests
 	{
-		// Test 1: Sending a few unique strings
+		// Test sending a few unique strings
 		[Test]
 		public void TestNormalizeUniqueStrings()
 		{
@@ -23,7 +23,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// Test 2: Sending some duplicated strings
+		// Test sending some duplicated strings
 		[Test]
 		public void TestNormalizeDuplicatedStrings()
 		{
@@ -39,7 +39,7 @@ namespace Tests.DataProvider
 		}
 
 
-		// Test 3: Sending a few unique strings that are 52 characters long
+		// Test sending a few unique strings that are 52 characters long
 		[Test]
 		public void TestNormalizeUniqueLongStrings()
 		{
@@ -65,7 +65,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// Test 4: Sending some duplicated strings that are 52 characters long
+		// Test sending some duplicated strings that are 52 characters long
 		[Test]
 		public void TestNormalizeDuplicatedLongStrings()
 		{
@@ -92,7 +92,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// Test 5: Sending "abcd" string 23 times and expecting specific responses
+		// Test sending "abcd" string 23 times and expecting specific responses
 		[Test]
 		public void TestNoInfiniteLoop()
 		{
@@ -114,7 +114,7 @@ namespace Tests.DataProvider
 			Assert.Throws<InvalidOperationException>(() => normalizer.Normalize(inputString));
 		}
 
-		// Test 6: Sending strings with a variety of uppercase, lowercase, numbers, $ and _ characters
+		// Test sending strings with a variety of uppercase, lowercase, numbers, $ and _ characters
 		[TestCase("1ABCD", "ABCD")]
 		[TestCase("$abcd", "abcd")]
 		[TestCase("AB1cd", "AB1cd")]
@@ -146,7 +146,7 @@ namespace Tests.DataProvider
 			Assert.AreEqual(expected, normalizedStr);
 		}
 
-		//Test 7: Normalizing a string that does not fit on the stack
+		//Test normalizing a string that does not fit on the stack
 		[Test]
 		public void TestNormalizeVeryLongString()
 		{
@@ -157,14 +157,45 @@ namespace Tests.DataProvider
 			Assert.AreEqual(expected, actual);
 		}
 
+		[TestCase("")]
+		[TestCase(null)]
+		public void TestDefaultName(string? input)
+		{
+			Assert.AreEqual("p", new UniqueParametersNormalizer().Normalize(input));
+		}
+
+		//Test with invalid properties; results are undefined, but just ensure there is no infinite loop or stack overflow
+		[TestCase(0, "p")]
+		[TestCase(-1, "p")]
+		[TestCase(50, "")]
+		[TestCase(50, null)]
+		[TestCase(1, "")]
+		[TestCase(1, null)]
+		public void TestInvalidProperties(int maxLength, string? defaultName)
+		{
+			var normalizer = new TestNormalizer(maxLength, defaultName!);
+			try
+			{
+				// specify null to use default name
+				normalizer.Normalize(null);
+				normalizer.Normalize(null);
+			}
+			catch // note: stack overflow exceptions cannot be caught
+			{
+			}
+		}
+
 		private class TestNormalizer : UniqueParametersNormalizer
 		{
 			private readonly int _maxLength;
-			public TestNormalizer(int maxLength)
+			private readonly string _defaultName;
+			public TestNormalizer(int maxLength, string defaultName = "p")
 			{
 				_maxLength = maxLength;
+				_defaultName = defaultName;
 			}
 			protected override int MaxLength => _maxLength;
+			protected override string DefaultName => _defaultName;
 		}
 	}
 }

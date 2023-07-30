@@ -27,7 +27,6 @@ namespace LinqToDB.DataProvider
 
 		/// <summary>
 		/// Method should validate name characters and remove or replace invalid characters.
-		/// Implementation must not add additional characters, as it will lead to infinte loop from caller.
 		/// Default implementation removes all characters except ASCII letters/digits and underscore.
 		/// </summary>
 		protected virtual string MakeValidName(string name)
@@ -132,7 +131,7 @@ namespace LinqToDB.DataProvider
 					break;
 
 				// if the original name is already reduced to a single character, being the first character
-				// of the default name, throw an exception
+				// of the default name, throw an exception, so as to prevent an infinite loop
 				if (originalName.Length == 1)
 				{
 					originalName = originalName[0] != DefaultName[0]
