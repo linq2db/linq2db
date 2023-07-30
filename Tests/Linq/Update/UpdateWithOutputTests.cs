@@ -1,6 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -660,6 +660,54 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void UpdateITableWithOutputIntoTempTableByTableName([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateLocalTable("DestinationTable_target", sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateTempTable<DestinationTable>(tableName: "DestinationTable_destination");
+			var destRef = db.GetTable<DestinationTable>().TableOptions(TableOptions.IsTemporary).TableName(destination.TableName);
+
+			source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputInto(
+					target,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destRef);
+
+			AreEqual(
+				target.ToArray(),
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+		
+		[Test]
+		public async Task UpdateITableWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateLocalTable("DestinationTable_target", sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateTempTable<DestinationTable>(tableName: "DestinationTable_destination");
+			var destRef = db.GetTable<DestinationTable>().TableOptions(TableOptions.IsTemporary).TableName(destination.TableName);
+
+			await source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputIntoAsync(
+					target,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destRef);
+
+			AreEqual(
+				target.ToArray(),
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
+		[Test]
 		public void UpdateITableWithProjectionOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -725,6 +773,74 @@ namespace Tests.xUpdate
 					destination.ToArray(),
 					ComparerBuilder.GetEqualityComparer<TableWithData>());
 			}
+		}
+		
+		[Test]
+		public void UpdateITableWithProjectionOutputIntoTempTableByTableName([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateLocalTable("DestinationTable_target", sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateTempTable<TableWithData>(tableName: "TableWithData_destination");
+			var destRef = db.GetTable<TableWithData>().TableOptions(TableOptions.IsTemporary).TableName(destination.TableName);
+				
+			var expected = sourceData
+				.Select(s => new TableWithData
+				{
+					Id = s.Id,
+					Value = s.Value + 1,
+					ValueStr = s.ValueStr,
+				})
+				.ToArray();
+
+			source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputInto(
+					target,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destRef,
+					(source, deleted, inserted) => new TableWithData { Id = source.s.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
+		}
+
+		[Test]
+		public async Task UpdateITableWithProjectionOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateLocalTable("DestinationTable_target", sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateTempTable<TableWithData>(tableName: "TableWithData_destination");
+			var destRef = db.GetTable<TableWithData>().TableOptions(TableOptions.IsTemporary).TableName(destination.TableName);
+				
+			var expected = sourceData
+				.Select(s => new TableWithData
+				{
+					Id = s.Id,
+					Value = s.Value + 1,
+					ValueStr = s.ValueStr,
+				})
+				.ToArray();
+
+			await source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputIntoAsync(
+					target,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destRef,
+					(source, deleted, inserted) => new TableWithData { Id = source.s.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 
 		#endregion
@@ -1324,6 +1440,58 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void UpdateExpressionWithDefaultOutputIntoTempTableByTableName([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateLocalTable("DestinationTable_target", sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateTempTable<DestinationTable>(tableName: "DestinationTable_destination");
+			var destRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+
+			source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputInto(
+					s => s.t,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destRef);
+
+			AreEqual(
+				target.ToArray(),
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
+		[Test]
+		public async Task UpdateExpressionWithDefaultOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateLocalTable("DestinationTable_target", sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateTempTable<DestinationTable>(tableName: "DestinationTable_destination");
+			var destRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+
+			await source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputIntoAsync(
+					s => s.t,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destRef);
+
+			AreEqual(
+				target.ToArray(),
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
+		[Test]
 		public void UpdateExpressionWithProjectionOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData    = GetSourceData();
@@ -1389,6 +1557,78 @@ namespace Tests.xUpdate
 					destination.ToArray(),
 					ComparerBuilder.GetEqualityComparer<TableWithData>());
 			}
+		}
+		
+		[Test]
+		public void UpdateExpressionWithProjectionOutputIntoTempTableByTableName([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateLocalTable("DestinationTable_target", sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateTempTable<TableWithData>(tableName: "TableWithData_destination");
+			var destRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+				
+			var expected = sourceData
+				.Select(s => new TableWithData
+				{
+					Id = s.Id,
+					Value = s.Value + 1,
+					ValueStr = s.ValueStr,
+				})
+				.ToArray();
+
+			source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputInto(
+					s => s.t,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destRef,
+					(source, deleted, inserted) => new TableWithData { Id = source.s.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
+		}
+		
+		[Test]
+		public async Task UpdateExpressionWithProjectionOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData    = GetSourceData();
+			using var db     = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var target = db.CreateLocalTable("DestinationTable_target", sourceData
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value + 1, ValueStr = (s.Value + 1).ToString() + "Dst", }));
+			using var destination = db.CreateTempTable<TableWithData>(tableName: "TableWithData_destination");
+			var destRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+				
+			var expected = sourceData
+				.Select(s => new TableWithData
+				{
+					Id = s.Id,
+					Value = s.Value + 1,
+					ValueStr = s.ValueStr,
+				})
+				.ToArray();
+
+			await source
+				.SelectMany(s => target.Where(t => t.Id == s.Id), (s, t) => new { s, t, })
+				.UpdateWithOutputIntoAsync(
+					s => s.t,
+					s => new DestinationTable { Id = s.s.Id, Value = s.s.Value, ValueStr = s.s.ValueStr, },
+					destRef,
+					(source, deleted, inserted) => new TableWithData { Id = source.s.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 
 		#endregion
@@ -1782,6 +2022,62 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		public void UpdateSourceWithDefaultOutputIntoTempTableByTableName([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var destination = db.CreateTempTable<TableWithData>("TableWithData_destination");
+			var destRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+				
+			var expected = sourceData
+				.Where(s => s.Id > 3)
+				.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
+				.ToArray();
+
+			source
+				.Where(s => s.Id > 3)
+				.UpdateWithOutputInto(
+					s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					destRef);
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
+		}
+
+		[Test]
+		public async Task UpdateSourceWithDefaultOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var destination = db.CreateTempTable<TableWithData>("TableWithData_destination");
+			var destRef = db.GetTable<TableWithData>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+				
+			var expected = sourceData
+				.Where(s => s.Id > 3)
+				.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
+				.ToArray();
+
+			await source
+				.Where(s => s.Id > 3)
+				.UpdateWithOutputIntoAsync(
+					s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					destRef);
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
+		}
+
+		[Test]
 		public void UpdateSourceWithProjectionOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
@@ -1833,6 +2129,64 @@ namespace Tests.xUpdate
 					destination.ToArray(),
 					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
+		}
+
+		[Test]
+		public void UpdateSourceWithProjectionOutputIntoTempTableByTableName([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData         = GetSourceData();
+			var db          = GetDataContext(context);
+			var source      = db.CreateLocalTable("TableWithData_source", sourceData);
+			var destination = db.CreateTempTable<DestinationTable>("DestinationTable_destination");
+			var destRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+
+			var expected = sourceData
+				.Where(s => s.Id > 3)
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
+				.ToArray();
+
+			source
+				.Where(s => s.Id > 3)
+				.UpdateWithOutputInto(
+					s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					destRef,
+					(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
+		[Test]
+		public async Task UpdateSourceWithProjectionOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData         = GetSourceData();
+			var db          = GetDataContext(context);
+			var source      = db.CreateLocalTable("TableWithData_source", sourceData);
+			var destination = db.CreateTempTable<DestinationTable>("DestinationTable_destination");
+			var destRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+
+			var expected = sourceData
+				.Where(s => s.Id > 3)
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
+				.ToArray();
+
+			await source
+				.Where(s => s.Id > 3)
+				.UpdateWithOutputIntoAsync(
+					s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
+					destRef,
+					(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		#endregion
@@ -2200,7 +2554,7 @@ namespace Tests.xUpdate
 					output);
 			}
 		}
-
+		
 		[Test]
 		public void UpdateIUpdatableWithDefaultOutputIntoTest([IncludeDataSources(true, FeatureUpdateOutputInto)] string context)
 		{
@@ -2255,6 +2609,62 @@ namespace Tests.xUpdate
 					destination.ToArray(),
 					ComparerBuilder.GetEqualityComparer<TableWithData>());
 			}
+		}
+
+		[Test]
+		public void UpdateIUpdateableWithOutputIntoTempTableByTableName([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var destination = db.CreateTempTable<TableWithData>("TableWithData_destination");
+			var destRef = db.GetTable<TableWithData>().TableOptions(TableOptions.IsTemporary).TableName(destination.TableName);
+			
+			var expected = sourceData
+				.Where(s => s.Id > 3)
+				.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
+				.ToArray();
+
+			source
+				.Where(s => s.Id > 3)
+				.AsUpdatable()
+				.Set(s => s.Value, s => s.Value + 1)
+				.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+				.UpdateWithOutputInto(
+					destRef);
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
+		}
+
+		[Test]
+		public async Task UpdateIUpdateableWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using var db = GetDataContext(context);
+			using var source = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var destination = db.CreateTempTable<TableWithData>("TableWithData_destination");
+			var destRef = db.GetTable<TableWithData>().TableOptions(TableOptions.IsTemporary).TableName(destination.TableName);
+			
+			var expected = sourceData
+				.Where(s => s.Id > 3)
+				.Select(s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", })
+				.ToArray();
+
+			await source
+				.Where(s => s.Id > 3)
+				.AsUpdatable()
+				.Set(s => s.Value, s => s.Value + 1)
+				.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+				.UpdateWithOutputIntoAsync(
+					destRef);
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 
 		[Test]
@@ -2313,6 +2723,68 @@ namespace Tests.xUpdate
 					destination.ToArray(),
 					ComparerBuilder.GetEqualityComparer<DestinationTable>());
 			}
+		}
+
+		[Test]
+		public void UpdateIUpdatableWithProjectionOutputIntoTempTableByTableName([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using var db          = GetDataContext(context);
+			using var source      = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var destination = db.CreateTempTable<DestinationTable>("DestinationTable_destination");
+			var destRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+
+			var expected = sourceData
+				.Where(s => s.Id > 3)
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
+				.ToArray();
+
+			source
+				.Where(s => s.Id > 3)
+				.AsUpdatable()
+				.Set(s => s.Value, s => s.Value + 1)
+				.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+				.UpdateWithOutputInto(
+					destRef,
+					(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
+		}
+
+		[Test]
+		public async Task UpdateIUpdatableWithProjectionOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureUpdateOutputInto)] string context)
+		{
+			var sourceData         = GetSourceData();
+			using var db          = GetDataContext(context);
+			using var source      = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var destination = db.CreateTempTable<DestinationTable>("DestinationTable_destination");
+			var destRef = db.GetTable<DestinationTable>()
+				.TableOptions(TableOptions.IsTemporary)
+				.TableName(destination.TableName);
+
+			var expected = sourceData
+				.Where(s => s.Id > 3)
+				.Select(s => new DestinationTable { Id = s.Id, Value = s.Value, ValueStr = s.ValueStr + "Upd", })
+				.ToArray();
+
+			await source
+				.Where(s => s.Id > 3)
+				.AsUpdatable()
+				.Set(s => s.Value, s => s.Value + 1)
+				.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
+				.UpdateWithOutputIntoAsync(
+					destRef,
+					(deleted, inserted) => new DestinationTable { Id = inserted.Id, Value = deleted.Value, ValueStr = inserted.ValueStr, });
+
+			AreEqual(
+				expected,
+				destination.ToArray(),
+				ComparerBuilder.GetEqualityComparer<DestinationTable>());
 		}
 
 		[Test]
