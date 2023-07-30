@@ -838,7 +838,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
 			{
-				var sql = ConvertToSqlConvertible(expression);
+				var sql = ConvertToSqlConvertible(expression, DataContext);
 				if (sql != null)
 					return sql;
 			}
@@ -1244,8 +1244,10 @@ namespace LinqToDB.Linq.Builder
 			return sqlExpression;
 		}
 
-		public static ISqlExpression ConvertToSqlConvertible(Expression expression)
+		public static ISqlExpression ConvertToSqlConvertible(Expression expression, IDataContext context)
 		{
+			expression = expression.Replace(ExpressionConstants.DataContextParam, Expression.Constant(context, typeof(IDataContext)));
+
 			var l = Expression.Lambda<Func<IToSqlConverter>>(Expression.Convert(expression, typeof(IToSqlConverter)));
 			var f = l.CompileExpression();
 			var c = f();

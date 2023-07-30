@@ -4,10 +4,10 @@ using System.Reflection;
 namespace LinqToDB.Linq
 {
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Expressions;
 
 	sealed class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 		where T : notnull

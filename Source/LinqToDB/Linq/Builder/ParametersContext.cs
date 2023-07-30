@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
 			{
 				//TODO: Check this
-				var sql = ExpressionBuilder.ConvertToSqlConvertible(expression);
+				var sql = ExpressionBuilder.ConvertToSqlConvertible(expression, DataContext);
 				if (sql != null)
 					return null;
 			}

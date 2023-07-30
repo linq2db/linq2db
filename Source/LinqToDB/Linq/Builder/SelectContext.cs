@@ -923,7 +923,10 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.Parameter    :
 						{
-							var sequence  = GetSequence(expression, level)!;
+							if (levelExpression == ExpressionConstants.DataContextParam)
+								break;
+
+							var sequence   = GetSequence(expression, level)!;
 							var paramIndex = Sequence.Length == 0 ? 0 : Array.IndexOf(Sequence, sequence);
 							var parameter  = paramIndex >= 0 ? Lambda.Parameters[paramIndex] : null;
 
