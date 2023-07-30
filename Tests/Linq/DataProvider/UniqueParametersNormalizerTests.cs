@@ -23,13 +23,19 @@ namespace Tests.DataProvider
 			}
 		}
 
-		// Test sending some duplicated strings
+		// Test sending some duplicated strings (and validate that capitalization is ignored by default)
 		[Test]
 		public void TestNormalizeDuplicatedStrings()
 		{
 			var normalizer = new UniqueParametersNormalizer();
-			var duplicatedStrings = new[] { "test", "test", "test", "hello", "hello", "hello" };
-			var expectedStrings = new[] { "test", "test_1", "test_2", "hello", "hello_1", "hello_2" };
+			var duplicatedStrings = new[] { 
+				"test", "test", "TEST", "hello", "hello", "HELLO",
+				"test", "test", "test", "test", "test", "test", "test", "test",
+			};
+			var expectedStrings = new[] { 
+				"test", "test_1", "TEST_2", "hello", "hello_1", "HELLO_2",
+				"test_3", "test_4", "test_5", "test_6", "test_7", "test_8", "test_9", "test_10",
+			};
 
 			for (int i = 0; i < duplicatedStrings.Length; i++)
 			{
@@ -76,6 +82,15 @@ namespace Tests.DataProvider
 				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
 				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
 				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890abcdef",
 			};
 			var expectedStrings = new[]
 			{
@@ -83,6 +98,15 @@ namespace Tests.DataProvider
 				"abcdefghijklmnopqrstuvwxyz12345678901234567890abc",
 				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab",
 				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab_1",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab_2",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab_3",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab_4",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab_5",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab_6",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab_7",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab_8",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890ab_9",
+				"abcdefghijklmnopqrstuvwxyz12345678901234567890a",
 			};
 
 			for (int i = 0; i < duplicatedLongStrings.Length; i++)
