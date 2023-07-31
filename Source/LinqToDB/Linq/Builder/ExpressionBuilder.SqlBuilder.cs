@@ -1248,11 +1248,10 @@ namespace LinqToDB.Linq.Builder
 		{
 			expression = expression.Replace(ExpressionConstants.DataContextParam, Expression.Constant(context, typeof(IDataContext)));
 
-			var l = Expression.Lambda<Func<IToSqlConverter>>(Expression.Convert(expression, typeof(IToSqlConverter)));
-			var f = l.CompileExpression();
-			var c = f();
+			if (Expression.Convert(expression, typeof(IToSqlConverter)).EvaluateExpression() is not IToSqlConverter converter)
+				throw new LinqToDBException($"Expression '{expression}' cannot be converted to `IToSqlConverter`");
 
-			return c.ToSql(expression);
+			return converter.ToSql(expression);
 		}
 
 		readonly HashSet<Expression> _convertedPredicates = new ();
