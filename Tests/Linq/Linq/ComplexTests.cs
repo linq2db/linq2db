@@ -584,6 +584,5 @@ namespace Tests.Linq
 				Assert.AreEqual(User.TestData[0].Residence!.Street, result[0].Residence!.Street);
 			}
 		}
-
 	}
 }

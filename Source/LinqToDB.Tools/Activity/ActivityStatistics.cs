@@ -60,7 +60,9 @@ namespace LinqToDB.Tools.Activity
 					InsertWithIdentityObject        = new("  InsertWithIdentity Object"),
 					InsertWithIdentityObjectAsync   = new("  InsertWithIdentity Object Async"),
 					UpdateObject                    = new("  Update Object"),
-					UpdateObjectAsync               = new("  Update Object Async")
+					UpdateObjectAsync               = new("  Update Object Async"),
+					BulkCopy                        = new("  BulkCopy"),
+					BulkCopyAsync                   = new("  BulkCopy Async")
 				),
 				ExecuteQuery,
 				ExecuteQueryAsync,
@@ -89,6 +91,8 @@ namespace LinqToDB.Tools.Activity
 				InsertWithIdentityObjectAsync,
 				UpdateObject,
 				UpdateObjectAsync,
+				BulkCopy,
+				BulkCopyAsync,
 
 				BuildSql                            = new("    BuildSql"),
 
@@ -198,6 +202,8 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.InsertWithIdentityObjectAsync   => InsertWithIdentityObjectAsync,
 				ActivityID.UpdateObject                    => UpdateObject,
 				ActivityID.UpdateObjectAsync               => UpdateObjectAsync,
+				ActivityID.BulkCopy                        => BulkCopy,
+				ActivityID.BulkCopyAsync                   => BulkCopyAsync,
 
 				ActivityID.BuildSql                        => BuildSql,
 
@@ -303,6 +309,8 @@ namespace LinqToDB.Tools.Activity
 		static StatActivity InsertWithIdentityObjectAsync;
 		static StatActivity UpdateObject;
 		static StatActivity UpdateObjectAsync;
+		static StatActivity BulkCopy;
+		static StatActivity BulkCopyAsync;
 
 		static StatActivity BuildSql;
 

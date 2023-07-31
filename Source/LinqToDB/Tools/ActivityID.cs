@@ -48,6 +48,8 @@ namespace LinqToDB.Tools
 		InsertWithIdentityObjectAsync,
 		UpdateObject,
 		UpdateObjectAsync,
+		BulkCopy,
+		BulkCopyAsync,
 
 			BuildSql,
 
