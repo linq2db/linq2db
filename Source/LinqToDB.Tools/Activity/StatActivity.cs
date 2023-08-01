@@ -14,7 +14,7 @@ namespace LinqToDB.Tools.Activity
 		public string     Name    { get; }
 
 		private long     _elapsedTicks;
-		public  TimeSpan _elapsed;
+		private TimeSpan _elapsed;
 		public  TimeSpan  Elapsed => _elapsedTicks > 0 ? new(_elapsedTicks) : _elapsed;
 
 		private long     _callCount;
@@ -23,16 +23,19 @@ namespace LinqToDB.Tools.Activity
 		public IActivity Start()
 		{
 			Interlocked.Increment(ref _callCount);
-			return new Watcher(this);
+
+			return Stopwatch.IsHighResolution ? (IActivity)new Watcher(this) : new WatcherLowRes(this);
 		}
 
 		void Stop(Stopwatch stopwatch)
 		{
-			if (Stopwatch.IsHighResolution)
-				Interlocked.Add(ref _elapsedTicks, stopwatch.ElapsedTicks);
-			else
-				lock (this)
-					_elapsed += stopwatch.Elapsed;
+			Interlocked.Add(ref _elapsedTicks, stopwatch.ElapsedTicks);
+		}
+
+		void Stop(TimeSpan time)
+		{
+			lock (this)
+				_elapsed += time;
 		}
 
 		sealed class Watcher : IActivity
@@ -50,6 +53,23 @@ namespace LinqToDB.Tools.Activity
 			{
 				_stopwatch.Stop();
 				_metric.Stop(_stopwatch);
+			}
+		}
+
+		sealed class WatcherLowRes : IActivity
+		{
+			readonly StatActivity _metric;
+			readonly DateTime     _time;
+
+			public WatcherLowRes(StatActivity metric)
+			{
+				_time   = DateTime.Now;;
+				_metric = metric;
+			}
+
+			public void Dispose()
+			{
+				_metric.Stop(DateTime.Now - _time);
 			}
 		}
 	}
