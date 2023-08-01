@@ -259,9 +259,22 @@ namespace LinqToDB.Tools.Activity
 					1 => m.Elapsed,
 					_ => new TimeSpan(m.Elapsed.Ticks / m.CallCount)
 				},
-				Percent = $"{(m.CallCount == 0 ? (decimal?)null : m.Elapsed.Ticks / totalTime),7:P}"
+				Percent = FixUnixPercentFormat($"{(m.CallCount == 0 ? (decimal?)null : m.Elapsed.Ticks / totalTime),7:P}")
 			})
 			.ToDiagnosticString();
+
+			static string FixUnixPercentFormat(string str)
+			{
+				if (Environment.OSVersion.Platform is PlatformID.Unix)
+				{
+					str = str.Replace(" %", "%");
+
+					if (str.Length == 6)
+						str = ' ' + str;
+				}
+
+				return str;
+			}
 		}
 
 		static StatActivity QueryProviderExecuteT;
