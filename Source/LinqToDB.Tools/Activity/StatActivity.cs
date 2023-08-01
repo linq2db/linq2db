@@ -24,7 +24,7 @@ namespace LinqToDB.Tools.Activity
 		{
 			Interlocked.Increment(ref _callCount);
 
-			return Stopwatch.IsHighResolution ? (IActivity)new Watcher(this) : new WatcherLowRes(this);
+			return Environment.OSVersion.Platform != PlatformID.Unix ? (IActivity)new Watcher(this) : new WatcherLowRes(this);
 		}
 
 		void Stop(Stopwatch stopwatch)
