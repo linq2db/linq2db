@@ -131,6 +131,8 @@ jobs:
 #  Windows 2022   #
 ###################
 - job: test_windows_job
+  pool:
+    vmImage: 'windows-2022'
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -154,16 +156,6 @@ jobs:
             net60: ${{ test_config.enable_fw_net60 }}
             net70: ${{ test_config.enable_fw_net70 }}
             x86: ${{ test_config.x86 }}
-      microsofthosted:
-        poolName: Azure Pipelines
-        vmImage: 'windows-2022'
-      selfhosted:
-        poolName: IT Build
-        vmImage:
-
-  pool:
-    name: $(poolName)
-    vmImage: $(vmImage)
 
   steps:
   - template: test-workflow-windows.yml
