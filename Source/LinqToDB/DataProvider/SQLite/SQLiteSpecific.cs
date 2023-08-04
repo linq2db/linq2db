@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -23,7 +24,7 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static partial class SQLiteTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISQLiteSpecificTable<TSource> AsSQLite<TSource>(this ITable<TSource> table)
 			where TSource : notnull
