@@ -21,7 +21,7 @@ REM create test schema
 REM clear memory limits
 %hdbsql% -n localhost:39017 -u SYSTEM -p Passw0rd "ALTER USER SYSTEM CLEAR PARAMETER STATEMENT MEMORY LIMIT"
 REM create linked server for FQN names testing
-%hdbsql% -n localhost:39017 -u SYSTEM -p Passw0rd "CREATE REMOTE SOURCE ""LINKED_DB"" ADAPTER ""hanaodbc"" CONFIGURATION 'DRIVER=libodbcHDB.so;ServerNode=127.0.0.1:39017;DatabaseName=HXE'"
+%hdbsql% -n localhost:39017 -u SYSTEM -p Passw0rd "CREATE REMOTE SOURCE ""LINKED_DB"" ADAPTER ""hanaodbc"" CONFIGURATION 'DRIVER=libodbcHDB.so;ServerNode=127.0.0.1:39017;'"
 %hdbsql% -n localhost:39017 -u SYSTEM -p Passw0rd "CREATE CREDENTIAL FOR USER SYSTEM COMPONENT 'SAPHANAFEDERATION' PURPOSE 'LINKED_DB' TYPE 'PASSWORD' USING 'user=SYSTEM;password=Passw0rd'"
 
 REM free some memory (diserver ~300mb, webdispatcher ~500m), so we can run tests

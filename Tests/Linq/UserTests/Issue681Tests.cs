@@ -126,7 +126,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public async Task TestCreate(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllSapHana)] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
@@ -149,7 +149,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public async Task TestCreateAsync(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllSapHana)] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
@@ -171,7 +171,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public async Task TestDrop(
-			[DataSources] string context,
+			[DataSources(TestProvName.AllSapHana)] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
