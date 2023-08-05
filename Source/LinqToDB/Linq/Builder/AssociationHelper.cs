@@ -217,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>() ??
+							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>(builder.DataContext) ??
 							                     throw new LinqException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
 							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
@@ -458,13 +458,13 @@ namespace LinqToDB.Linq.Builder
 			return currentObj;
 		}
 
-		public static Delegate? GetLoadWithFunc(List<LoadWithInfo[]>? loadWith, MemberInfo memberInfo)
+		public static Delegate? GetLoadWithFunc(List<LoadWithInfo[]>? loadWith, MemberInfo memberInfo, IDataContext dataContext)
 		{
 			Delegate? loadWithFunc = null;
 			if (loadWith != null)
 			{
 				loadWithFunc = GetLoadWith(loadWith)?
-					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, memberInfo))?.Info.FilterFunc?.EvaluateExpression() as Delegate;
+					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, memberInfo))?.Info.FilterFunc?.EvaluateExpression<Delegate>(dataContext);
 			}
 
 			return loadWithFunc;

@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence    = builder.BuildSequence(new(buildInfo, methodCall.Arguments[0]));
 			var elementType = methodCall.Arguments[0].Type.GetGenericArguments()[0];
 
-			sequence.SelectQuery.QueryName = (string?)methodCall.Arguments[1].EvaluateExpression();
+			sequence.SelectQuery.QueryName = (string?)methodCall.Arguments[1].EvaluateExpression(builder.DataContext);
 
 			if (typeof(IGrouping<,>).IsSameOrParentOf(elementType))
 			{

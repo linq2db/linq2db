@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (methodCall.Arguments[1].Type == typeof(bool))
 				{
-					ifExists = !(bool)methodCall.Arguments[1].EvaluateExpression()!;
+					ifExists = !(bool)methodCall.Arguments[1].EvaluateExpression(builder.DataContext)!;
 				}
 			}
 

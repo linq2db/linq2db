@@ -199,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.TableConstant:
 					{
 						return ApplyQueryFilters(builder, buildInfo, null,
-							AddTableInScope(new(builder, buildInfo, ((IQueryable)buildInfo.Expression.EvaluateExpression()!).ElementType)));
+							AddTableInScope(new(builder, buildInfo, buildInfo.Expression.EvaluateExpression<IQueryable>(builder.DataContext)!.ElementType)));
 					}
 				case BuildContextType.GetTableMethod         :
 				case BuildContextType.MemberAccess           :

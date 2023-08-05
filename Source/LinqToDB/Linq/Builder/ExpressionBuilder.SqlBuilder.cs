@@ -442,7 +442,7 @@ namespace LinqToDB.Linq.Builder
 							throw new ArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
 
 						var entity           = ConvertExpression(expr.Arguments[0]);
-						var memberName       = (string)expr.Arguments[1].EvaluateExpression()!;
+						var memberName       = expr.Arguments[1].EvaluateExpression<string>(DataContext)!;
 						var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type, DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 						var memberInfo = entityDescriptor[memberName]?.MemberInfo;
@@ -786,7 +786,7 @@ namespace LinqToDB.Linq.Builder
 				if (unwrapped.NodeType == ExpressionType.Call)
 					preparedExpression = ((MethodCallExpression)unwrapped).Arguments[0];
 				else
-					preparedExpression = ((Sql.IQueryableContainer)unwrapped.EvaluateExpression()!).Query.Expression;
+					preparedExpression = unwrapped.EvaluateExpression<Sql.IQueryableContainer>(DataContext)!.Query.Expression;
 				return ConvertToExtensionSql(context, preparedExpression, columnDescriptor);
 			}
 
@@ -1246,9 +1246,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static ISqlExpression ConvertToSqlConvertible(Expression expression, IDataContext context)
 		{
-			expression = expression.Replace(ExpressionConstants.DataContextParam, Expression.Constant(context, typeof(IDataContext)));
-
-			if (Expression.Convert(expression, typeof(IToSqlConverter)).EvaluateExpression() is not IToSqlConverter converter)
+			if (Expression.Convert(expression, typeof(IToSqlConverter)).EvaluateExpression(context) is not IToSqlConverter converter)
 				throw new LinqToDBException($"Expression '{expression}' cannot be converted to `IToSqlConverter`");
 
 			return converter.ToSql(expression);
@@ -1317,7 +1315,7 @@ namespace LinqToDB.Linq.Builder
 					expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
 			}
 
-			var value = expr.EvaluateExpression();
+			var value = expr.EvaluateExpression(DataContext);
 
 			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
 
@@ -1344,7 +1342,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (arg.NodeType == ExpressionType.Constant || arg.NodeType == ExpressionType.Default)
 				{
-					var comparison = (StringComparison)(arg.EvaluateExpression() ?? throw new InvalidOperationException());
+					var comparison = (StringComparison)(arg.EvaluateExpression(DataContext) ?? throw new InvalidOperationException());
 					return new SqlValue(comparison == StringComparison.CurrentCulture   ||
 					                    comparison == StringComparison.InvariantCulture ||
 					                    comparison == StringComparison.Ordinal);

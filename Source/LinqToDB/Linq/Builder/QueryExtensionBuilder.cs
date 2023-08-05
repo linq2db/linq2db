@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 						var ex = ae.Expressions[j];
 
 						if (evaluateElements)
-							ex = Expression.Constant(ex.EvaluateExpression());
+							ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
 
 						list.Add(new($"{name}.{j}", ex, p, j));
 					}
@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 					var ex   = methodCall.Arguments[i];
 
 					if (p.HasAttribute<SqlQueryDependentAttribute>())
-						ex = Expression.Constant(ex.EvaluateExpression());
+						ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
 
 					list.Add(new(name, ex, p));
 				}
