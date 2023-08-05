@@ -36,8 +36,8 @@ docker logs hana2
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'CREATE CREDENTIAL FOR USER SYSTEM COMPONENT '"'"'SAPHANAFEDERATION'"'"' PURPOSE '"'"'LINKED_DB'"'"' TYPE '"'"'PASSWORD'"'"' USING '"'"'user=SYSTEM;password=Passw0rd'"'"''
 
 # free some memory (diserver ~300mb, webdispatcher ~500m), so we can run tests
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','hxehost') UNSET ('"'"'diserver'"'"','"'"'instances'"'"') WITH RECONFIGURE'
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','hxehost') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') UNSET ('"'"'diserver'"'"','"'"'instances'"'"') WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
 
 cat <<-EOJSON > HanaDataProviders.json
 {
@@ -50,12 +50,6 @@ cat <<-EOJSON > HanaDataProviders.json
                 "ConnectionString": "Driver=$HOME/linq2db_ci/providers/saphana/linux/ODBC/libodbcHDB.so;SERVERNODE=localhost:39017;CS=TESTDB;UID=SYSTEM;PWD=Passw0rd;"
             }
         }
-    },
-    "CORE31.Azure": {
-        "BasedOn": "BASE.Azure",
-        "Providers": [
-            "SapHana.Odbc"
-        ]
     },
     "NET60.Azure": {
         "BasedOn": "BASE.Azure",
