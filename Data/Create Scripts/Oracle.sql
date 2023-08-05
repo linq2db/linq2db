@@ -48,12 +48,6 @@ DROP table "t_test_user_contract"
 /
 DROP table "t_test_user"
 /
-DROP USER "c##sequence_schema" CASCADE
-/
-CREATE USER "c##sequence_schema" IDENTIFIED BY "secret_password"
-/
-GRANT CREATE SEQUENCE TO "c##sequence_schema"
-/
 DROP sequence "sq_test_user_contract"
 /
 DROP table "t_entity"
@@ -702,9 +696,6 @@ create table "t_test_user_contract"
 	unique           ("user_id", "contract_no")
 )
 /
-
-create sequence "c##sequence_schema"."sq_test_user"
-/
 create sequence "sq_test_user_contract"
 /
 
@@ -773,7 +764,6 @@ CREATE TABLE "AllTypes"
 	"guidDataType"             raw(16)                        NULL,
 	"longDataType"             long                           NULL,
 
-	"uriDataType"              UriType                        NULL,
 	"xmlDataType"              XmlType                        NULL
 )
 /
@@ -826,7 +816,6 @@ INSERT INTO "AllTypes"
 	"guidDataType",
 	"longDataType",
 
-	"uriDataType",
 	"xmlDataType"
 )
 SELECT
@@ -859,7 +848,6 @@ SELECT
 	NULL guidDataType,
 	NULL longDataType,
 
-	NULL uriDataType,
 	NULL xmlDataType
 FROM dual
 UNION ALL
@@ -893,7 +881,6 @@ SELECT
 	sys_guid(),
 	'LONG',
 
-	SYS.URIFACTORY.GETURI('http://www.linq2db.com'),
 	XMLTYPE('<root><element strattr="strvalue" intattr="12345"/></root>')
 FROM dual
 /
@@ -1006,9 +993,9 @@ CREATE TABLE "TestMerge2"
 /
 
 CREATE OR REPLACE
-PROCEDURE AddIssue792Record() IS
+PROCEDURE AddIssue792Record IS
 BEGIN
-	INSERT INTO dbo."AllTypes"("char20DataType") VALUES('issue792');
+	INSERT INTO "AllTypes"("char20DataType") VALUES('issue792');
 END;
 /
 
@@ -1047,7 +1034,6 @@ PROCEDURE AllOutputParameters
 	bfileDataType            IN OUT bfile                          ,
 	guidDataType             IN OUT raw                            ,
 
-	--uriDataType              IN OUT UriType                      ,
 	xmlDataType              IN OUT XmlType
 
 ) IS
@@ -1084,7 +1070,6 @@ BEGIN
  		at."bfileDataType",
 		at."guidDataType",
 
-		--at."uriDataType",
 		at."xmlDataType"
 
 		INTO
@@ -1120,7 +1105,6 @@ BEGIN
 		bfileDataType,
 		guidDataType,
 
-		--uriDataType,
 		xmlDataType
 
 	FROM "AllTypes" at
@@ -1171,4 +1155,102 @@ COMMENT ON COLUMN "SchemaTestTable"."Id" IS 'This is column'
 COMMENT ON COLUMN "SchemaTestView"."Id" IS 'This is view column'
 /
 COMMENT ON COLUMN "SchemaTestMatView"."Id" IS 'This is matview column'
+/
+
+DROP TABLE "CollatedTable"
+/
+CREATE TABLE "CollatedTable"
+(
+	"Id"				INT NOT NULL,
+	"CaseSensitive"		VARCHAR2(20) NOT NULL,
+	"CaseInsensitive"	VARCHAR2(20) NOT NULL
+)
+/
+
+DROP TYPE tf_table
+/
+
+CREATE OR REPLACE TYPE tf_type IS OBJECT (O INT)
+/
+
+CREATE OR REPLACE TYPE tf_table IS TABLE OF tf_type
+/
+
+CREATE OR REPLACE PACKAGE TEST_PACKAGE1 AS
+	FUNCTION TEST_FUNCTION(i INT) RETURN INT;
+	FUNCTION TEST_TABLE_FUNCTION(i INT) RETURN tf_table PIPELINED;
+	PROCEDURE TEST_PROCEDURE(i INT, o OUT INT);
+END TEST_PACKAGE1;
+/
+
+CREATE OR REPLACE PACKAGE BODY TEST_PACKAGE1 AS
+	FUNCTION TEST_FUNCTION(i INT)
+		RETURN INT IS
+		BEGIN 
+			RETURN i + 1;
+		END;
+	FUNCTION TEST_TABLE_FUNCTION(i IN INT)
+		RETURN tf_table PIPELINED IS
+		BEGIN
+			FOR r IN (SELECT * FROM "Person") LOOP
+				PIPE ROW(tf_type(i + 1));
+			END LOOP;
+			RETURN;
+		END;
+	PROCEDURE TEST_PROCEDURE(i INT, o OUT INT) AS
+		BEGIN 
+			o := i + 1;
+		END;
+END TEST_PACKAGE1;
+/
+
+CREATE OR REPLACE PACKAGE TEST_PACKAGE2 AS 
+	FUNCTION TEST_FUNCTION(i INT) RETURN INT;
+	FUNCTION TEST_TABLE_FUNCTION(i INT) RETURN tf_table PIPELINED;
+	PROCEDURE TEST_PROCEDURE(i INT, o OUT INT);
+END TEST_PACKAGE2;
+/
+
+CREATE OR REPLACE PACKAGE BODY TEST_PACKAGE2 AS
+	FUNCTION TEST_FUNCTION(i INT)
+		RETURN INT IS
+		BEGIN 
+			RETURN i + 2;
+		END;
+	FUNCTION TEST_TABLE_FUNCTION(i IN INT)
+		RETURN tf_table PIPELINED IS
+		BEGIN
+			FOR r IN (SELECT * FROM "Person") LOOP
+				PIPE ROW(tf_type(i + 2));
+			END LOOP;
+			RETURN;
+		END;
+	PROCEDURE TEST_PROCEDURE(i INT, o OUT INT) AS
+		BEGIN 
+			o := i + 2;
+		END;
+END TEST_PACKAGE2;
+/
+
+CREATE OR REPLACE FUNCTION TEST_FUNCTION(i INT)
+RETURN INT IS
+BEGIN 
+	RETURN i + 3;
+END;
+/
+
+CREATE OR REPLACE FUNCTION TEST_TABLE_FUNCTION(i IN INT)
+RETURN tf_table PIPELINED IS
+BEGIN
+  FOR r IN (SELECT * FROM "Person") LOOP
+    PIPE ROW(tf_type(i + 3));
+  END LOOP;
+  RETURN;
+END;
+/
+
+CREATE OR REPLACE PROCEDURE TEST_PROCEDURE(i INT, o OUT int) AS
+BEGIN 
+	o := i + 3;
+END;
 /

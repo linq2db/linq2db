@@ -6,11 +6,11 @@ using NUnit.Framework.Internal;
 
 namespace Tests
 {
-	internal class BaselinesWriter
+	internal sealed class BaselinesWriter
 	{
 		// used to detect baseline overwrites by another test(case)
 		// case-insensitive to support windoze file system
-		private static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+		private static readonly ISet<string> _baselines = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
 		internal static void Write(string baselinesPath, string baseline)
 		{
@@ -20,12 +20,12 @@ namespace Tests
 
 #if NET472
 			var target = "net472";
-#elif NETCOREAPP2_1
-			var target = "core21";
 #elif NETCOREAPP3_1
 			var target = "core31";
-#elif NET5_0
-			var target = "net50";
+#elif NET6_0
+			var target = "net60";
+#elif NET7_0
+			var target = "net70";
 #else
 #error "Build Target must be specified here."
 #endif

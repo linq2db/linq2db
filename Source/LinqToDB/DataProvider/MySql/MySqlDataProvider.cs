@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,27 +12,21 @@ namespace LinqToDB.DataProvider.MySql
 	using Mapping;
 	using SqlProvider;
 
-	public class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
+	sealed class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
+	sealed class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
+
+	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
-		public MySqlDataProvider(string name)
-			: this(name, null)
+		protected MySqlDataProvider(string name)
+			: base(name, GetMappingSchema(name), MySqlProviderAdapter.GetInstance(name))
 		{
-		}
-
-		protected MySqlDataProvider(string name, MappingSchema? mappingSchema)
-			: base(
-				  name,
-				  mappingSchema != null
-					? new MappingSchema(mappingSchema, MySqlProviderAdapter.GetInstance(name).MappingSchema)
-					: GetMappingSchema(name, MySqlProviderAdapter.GetInstance(name).MappingSchema),
-				  MySqlProviderAdapter.GetInstance(name))
-		{
-
-			SqlProviderFlags.IsDistinctOrderBySupported        = true;
+			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
+			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 
@@ -50,6 +45,16 @@ namespace LinqToDB.DataProvider.MySql
 
 			SetProviderField(Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
 			SetToTypeField  (Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
+
+			if (Adapter.GetTimeSpanMethodName != null) SetProviderField(typeof(TimeSpan), Adapter.GetTimeSpanMethodName, Adapter.DataReaderType);
+			if (Adapter.GetSByteMethodName    != null) SetProviderField(typeof(sbyte)   , Adapter.GetSByteMethodName   , Adapter.DataReaderType);
+			if (Adapter.GetUInt16MethodName   != null) SetProviderField(typeof(ushort)  , Adapter.GetUInt16MethodName  , Adapter.DataReaderType);
+			if (Adapter.GetUInt32MethodName   != null) SetProviderField(typeof(uint)    , Adapter.GetUInt32MethodName  , Adapter.DataReaderType);
+			if (Adapter.GetUInt64MethodName   != null) SetProviderField(typeof(ulong)   , Adapter.GetUInt64MethodName  , Adapter.DataReaderType);
+#if NET6_0_OR_GREATER
+			if (Adapter.GetTimeOnlyMethodName != null) SetProviderField(typeof(TimeOnly), Adapter.GetTimeOnlyMethodName, Adapter.DataReaderType);
+			if (Adapter.GetDateOnlyMethodName != null) SetProviderField(typeof(DateOnly), Adapter.GetDateOnlyMethodName, Adapter.DataReaderType);
+#endif
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -64,49 +69,50 @@ namespace LinqToDB.DataProvider.MySql
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
-			return new MySqlSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new MySqlSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
-		private static MappingSchema GetMappingSchema(string name, MappingSchema providerSchema)
+		private static MappingSchema GetMappingSchema(string name)
 		{
 			return name switch
 			{
-				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(providerSchema),
-				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(providerSchema),
+				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(),
+				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(),
 			};
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions)
 		{
 			return _sqlOptimizer;
 		}
 
-#if !NETFRAMEWORK
-		public override bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
-			return true;
-		}
-#endif
-
-		public override void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
-		{
-			switch (dataType.DataType)
+			// mysql.data bugs workaround
+			if (Adapter.MySqlDecimalType != null && Adapter.MySqlDecimalGetter != null && value?.GetType() == Adapter.MySqlDecimalType)
 			{
-				case DataType.Decimal   :
-				case DataType.VarNumeric:
-					if (Adapter.MySqlDecimalGetter != null && value != null && value.GetType() == Adapter.MySqlDecimalType)
-						value = Adapter.MySqlDecimalGetter(value);
-					break;
+				value    = Adapter.MySqlDecimalGetter(value);
+				// yep, MySql.Data just crash here on large decimals even for string value as it tries to convert it back
+				// to decimal for DataType.Decimal just to convert it back to string ¯\_(ツ)_/¯
+				// https://github.com/mysql/mysql-connector-net/blob/8.0/MySQL.Data/src/Types/MySqlDecimal.cs#L103
+				dataType = dataType.WithDataType(DataType.VarChar);
 			}
+
+#if NET6_0_OR_GREATER
+			if (!Adapter.IsDateOnlySupported && value is DateOnly d)
+			{
+				value = d.ToDateTime(TimeOnly.MinValue);
+			}
+#endif
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
 		}
 
-		protected override void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected override void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			// VarNumeric - mysql.data trims fractional part
 			// Date/DateTime2 - mysql.data trims time part
@@ -123,42 +129,47 @@ namespace LinqToDB.DataProvider.MySql
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(MySqlOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(MySqlOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
 
-#if !NETFRAMEWORK
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+#if NATIVE_ASYNC
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (source == null)
 				throw new ArgumentNullException(nameof(source));
 
 			return new MySqlBulkCopy(this).BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? MySqlTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(MySqlOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,

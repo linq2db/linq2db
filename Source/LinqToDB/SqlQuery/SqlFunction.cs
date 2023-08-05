@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -26,7 +25,7 @@ namespace LinqToDB.SqlQuery
 			: this(systemType, name, isAggregate, true, precedence, parameters)
 		{
 		}
-		
+
 		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, params ISqlExpression[] parameters)
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
@@ -54,7 +53,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool DoNotOptimize { get; set; }
 
-		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*")); }
+		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*", new SqlValue(table.SourceID))); }
 
 		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    false, SqlQuery.Precedence.Comparison, subQuery); }
 		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   false, SqlQuery.Precedence.Comparison, subQuery); }
@@ -76,12 +75,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, func)!;
+				Parameters[i] = Parameters[i].Walk(options, context, func)!;
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -106,28 +105,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this, clone = new SqlFunction(
-					SystemType,
-					Name,
-					IsAggregate,
-					Precedence,
-					Parameters.Select(e => (ISqlExpression)e.Clone(objectTree, doClone)).ToArray())
-				{
-					CanBeNull = CanBeNull, DoNotOptimize = DoNotOptimize
-				});
-			}
-
-			return clone;
-		}
+		#region Equals Members
 
 		int? _hashCode;
 
@@ -156,7 +134,7 @@ namespace LinqToDB.SqlQuery
 				return true;
 
 
-			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length && SystemType != func.SystemType)
+			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length || SystemType != func.SystemType)
 				return false;
 
 			for (var i = 0; i < Parameters.Length; i++)
@@ -192,7 +170,22 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
+		public void Deconstruct(out Type systemType, out string name)
+		{
+			systemType = SystemType;
+			name       = Name;
+		}
 
+		public void Deconstruct(out string name)
+		{
+			name = Name;
+		}
 
+		public void Deconstruct(out Type systemType, out string name, out ISqlExpression[] parameters)
+		{
+			systemType = SystemType;
+			name       = Name;
+			parameters = Parameters;
+		}
 	}
 }

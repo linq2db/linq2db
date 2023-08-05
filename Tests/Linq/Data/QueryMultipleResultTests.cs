@@ -12,8 +12,7 @@ namespace Tests.Data
 	[TestFixture]
 	public class QueryMultipleResultTests : TestBase
 	{
-
-		class MultipleResultExample
+		sealed class MultipleResultExample
 		{
 			[ResultSetIndex(0)] public IEnumerable<Person>  AllPersons   { get; set; } = null!;
 			[ResultSetIndex(1)] public IList<Doctor>        AllDoctors   { get; set; } = null!;
@@ -24,7 +23,7 @@ namespace Tests.Data
 		[Test]
 		public void TestQueryMulti([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = db.QueryMultiple<MultipleResultExample>(
 					"select * from Person;" +
@@ -44,7 +43,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestQueryMultiAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = await db.QueryMultipleAsync<MultipleResultExample>(
 					"select * from Person;" +
@@ -61,7 +60,7 @@ namespace Tests.Data
 			}
 		}
 
-		class MultipleResultExampleWithoutAttributes
+		sealed class MultipleResultExampleWithoutAttributes
 		{
 			public IEnumerable<Person>  AllPersons   { get; set; } = null!;
 			public IList<Doctor>        AllDoctors   { get; set; } = null!;
@@ -72,7 +71,7 @@ namespace Tests.Data
 		[Test]
 		public void TestQueryMultiWithoutAttributes([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = db.QueryMultiple<MultipleResultExampleWithoutAttributes>(
 					"select * from Person;" +
@@ -92,7 +91,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestQueryMultiWithoutAttributesAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = await db.QueryMultipleAsync<MultipleResultExampleWithoutAttributes>(
 					"select * from Person;" +
@@ -111,7 +110,7 @@ namespace Tests.Data
 
 
 		[Table]
-		class ProcedureMultipleResultExample
+		sealed class ProcedureMultipleResultExample
 		{
 			[ResultSetIndex(0)] public IList<int>           MatchingPersonIds { get; set; } = null!;
 			[ResultSetIndex(1)] public IEnumerable<Person>  MatchingPersons   { get; set; } = null!;
@@ -125,7 +124,7 @@ namespace Tests.Data
 		[Test]
 		public void TestSearchStoredProdecure([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = db.QueryProcMultiple<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -148,7 +147,7 @@ namespace Tests.Data
 		[Test]
 		public void TestSearchStoredProdecureWithAnonymParameter([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = db.QueryProcMultiple<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -171,7 +170,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestSearchStoredProdecureAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -194,7 +193,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestSearchStoredProdecureWithTokenAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -218,7 +217,7 @@ namespace Tests.Data
 		[Test]
 		public void TestSearchStoredProdecure2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = db.QueryProcMultiple<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -241,7 +240,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestSearchStoredProdecure2Async([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExample>(
 					"PersonSearch",
@@ -263,7 +262,7 @@ namespace Tests.Data
 
 
 		[Table]
-		class ProcedureMultipleResultExampleWithoutAttributes
+		sealed class ProcedureMultipleResultExampleWithoutAttributes
 		{
 			public IList<int>           MatchingPersonIds { get; set; } = null!;
 			public IEnumerable<Person>  MatchingPersons   { get; set; } = null!;
@@ -277,7 +276,7 @@ namespace Tests.Data
 		[Test]
 		public void TestSearchStoredProdecureWithoutAttributes([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = db.QueryProcMultiple<ProcedureMultipleResultExampleWithoutAttributes>(
 					"PersonSearch",
@@ -300,7 +299,7 @@ namespace Tests.Data
 		[Test]
 		public async Task TestSearchStoredProdecureWithoutAttributesAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var res = await db.QueryProcMultipleAsync<ProcedureMultipleResultExampleWithoutAttributes>(
 					"PersonSearch",

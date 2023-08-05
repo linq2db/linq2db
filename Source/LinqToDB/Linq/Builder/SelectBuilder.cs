@@ -11,8 +11,9 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using Reflection;
+	using System.Data.Common;
 
-	class SelectBuilder : MethodCallBuilder
+	sealed class SelectBuilder : MethodCallBuilder
 	{
 		#region SelectBuilder
 
@@ -52,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 				new SelectContext2(buildInfo.Parent, selector, sequence);
 
 #if DEBUG
-			context.MethodCall = methodCall;
+			context.Debug_MethodCall = methodCall;
 			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);
 #endif
 			return context;
@@ -67,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region SelectContext2
 
-		class SelectContext2 : SelectContext
+		sealed class SelectContext2 : SelectContext
 		{
 			public SelectContext2(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence)
 				: base(parent, lambda, sequence)
@@ -83,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 				if (expr.Type != typeof(T))
 					expr = Expression.Convert(expr, typeof(T));
 
-				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,IDataReader,Expression,object?[]?,object?[]?,int,T>>(
+				var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,int,T>>(
 					Builder.BuildBlock(expr), new []
 					{
 						ExpressionBuilder.QueryRunnerParam,
@@ -135,7 +136,8 @@ namespace LinqToDB.Linq.Builder
 			if (info != null)
 			{
 				methodCall = (MethodCallExpression)methodCall.Transform(
-					ex => ConvertMethod(methodCall, 0, info, selector.Parameters[0], ex));
+					(methodCall, info, selector),
+					static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.selector.Parameters[0], ex));
 				selector   = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 			}
 
@@ -174,7 +176,7 @@ namespace LinqToDB.Linq.Builder
 								Expression.MemberInit(
 									Expression.New(btype),
 									Expression.Bind(fields[0], psel),
-									Expression.Bind(fields[1], selector.Body.Transform(e => e == pold ? psel : e))),
+									Expression.Bind(fields[1], selector.Body.Replace(pold, psel))),
 								psel));
 
 						selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
@@ -185,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 						var expr = Expression.MakeMemberAccess(param, fields[0]);
 
 						foreach (var t in list)
-							t.Expr = t.Expr.Transform(ex => ReferenceEquals(ex, pold) ? expr : ex);
+							t.Expr = t.Expr.Transform((pold, expr), static(context, ex) => ReferenceEquals(ex, context.pold) ? context.expr : ex);
 
 						return new SequenceConvertInfo
 						{
@@ -199,8 +201,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						foreach (var path in info.ExpressionsToReplace)
 						{
-							path.Path = path.Path.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
-							path.Expr = path.Expr.Transform(e => ReferenceEquals(e, info.Parameter) ? p.Path : e);
+							path.Path = path.Path.Transform((p, info), static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
+							path.Expr = path.Expr.Transform((p, info), static (context, e) => ReferenceEquals(e, context.info.Parameter) ? context.p.Path : e);
 							path.Level += p.Level;
 
 							list.Add(path);
@@ -219,7 +221,7 @@ namespace LinqToDB.Linq.Builder
 								.Where (e => !ReferenceEquals(e, p))
 								.Select(ei =>
 								{
-									ei.Expr = ei.Expr.Transform(e => ReferenceEquals(e, p.Expr) ? p.Path : e);
+									ei.Expr = ei.Expr.Transform(p, static (p, e) => ReferenceEquals(e, p.Expr) ? p.Path : e);
 									return ei;
 								})
 								.ToList()
@@ -267,7 +269,7 @@ namespace LinqToDB.Linq.Builder
 							.Select((m,i) => new { m, i })
 							.ToDictionary(_ => _.m.MemberInfo.Name, _ => _.i);
 
-						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic[b.Member.Name]))
+						foreach (var binding in expr.Bindings.Cast<MemberAssignment>().OrderBy(b => dic.TryGetValue(b.Member.Name, out var idx) ? idx : int.MaxValue))
 						{
 							var q = GetExpressions(param, Expression.MakeMemberAccess(path, binding.Member), level + 1, binding.Expression);
 							foreach (var e in q)
@@ -276,7 +278,23 @@ namespace LinqToDB.Linq.Builder
 
 						break;
 					}
-
+				// new MyObject { MyProp = p.MyProp == null ? null : new MyObject2 { ... } ... }
+				//
+				case ExpressionType.Conditional:
+					{
+						var expr = (ConditionalExpression)expression;
+						var shouldNotNullExpr = expr.IfTrue.IsNullValue()
+							? expr.IfFalse : expr.IfFalse.IsNullValue()
+							? expr.IfTrue : null;
+						if(shouldNotNullExpr == null)
+						{
+							break;
+						}
+						var q = GetExpressions(param, path, level, shouldNotNullExpr);
+						foreach (var e in q)
+							yield return e;
+						break;
+					}
 				// parameter
 				//
 				case ExpressionType.Parameter  :
@@ -288,7 +306,7 @@ namespace LinqToDB.Linq.Builder
 					yield return new SequenceConvertPath { Path = path, Expr = expression, Level = level };
 					break;
 
-				// Queriable method.
+				// Queryable method.
 				//
 				case ExpressionType.Call       :
 					{

@@ -1,0 +1,66 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:latest" #>
+<#@ output extension=".generated.cs"                                                              #>
+<#@ include file="CLI.ttinclude"                                               once="true"        #>
+<#
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	var targetDir     = Path.Combine(solutionsPath, "Tests", "Tests.T4", "Cli", "All");
+	var mode          = "default";
+
+	var dbPath        = $@"{solutionsPath}Tests\Linq\bin\Debug\net472\Database\TestData.ODBC.mdb";
+	var accessOdbcCN  = $"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={dbPath};ExtendedAnsiSQL=1";
+
+	dbPath            = $@"{solutionsPath}Tests\Linq\bin\Debug\net472\Database\TestData.mdb";
+	var accessOleDbCN = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={dbPath};Locale Identifier=1033;Persist Security Info=True";
+
+	var sqliteCN      = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sqlite");
+	var sqliteNwCN    = "Data Source=" + Path.Combine(solutionsPath, "Data", "Northwind.sqlite");
+	var sqlceCN       = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sdf");
+
+	var db2ProviderLocation = $@"{solutionsPath}Tests\Linq\bin\Debug\netcoreapp3.1\IBM.Data.DB2.Core.dll";
+
+	var options = new string[]
+	{
+		"--prefer-provider-types true",
+		"--ignore-duplicate-fk false",
+		"--safe-schema-only false",
+		"--load-sproc-schema true",
+		"--include-datatype true",
+		"--include-db-type true",
+		"--include-length true",
+		"--include-precision true",
+		"--include-scale true",
+		"--add-association-extensions true",
+		"--add-db-type-to-procedures true",
+		"--equatable-entities true",
+		"--mssql-enable-return-value-parameter true",
+		"--objects table,view,foreign-key,stored-procedure,scalar-function,table-function,aggregate-function",
+		"--find-methods sync-pk-table,async-pk-table,query-pk-table,sync-pk-context,async-pk-context,query-pk-context,sync-entity-table,async-entity-table,query-entity-table,sync-entity-context,async-entity-context,query-entity-context",
+		"--add-options-ctor true"
+	};
+
+	var extraOptions = string.Join(" ", options);
+	// due to conflicting type names
+	var extraOptionsWithoutTypes = extraOptions.Replace("--prefer-provider-types true", "");
+
+	// to skip scaffold, just comment line for specific database/connection
+	RunCliTool("Access"         , null                 , "Cli.All.Access.Odbc"        , Path.Combine(targetDir, "AccessOdbc")         , mode, connectionString: accessOdbcCN, extraOptions: extraOptions);
+	RunCliTool("Access"         , null                 , "Cli.All.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN, extraOptions: extraOptions);
+	RunCliTool("Access"         , null                 , "Cli.All.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN, extraOptions: extraOptions);
+	RunCliTool("DB2"            , "DB2"                , "Cli.All.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
+	RunCliTool("Firebird"       , "Firebird4"          , "Cli.All.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
+	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.All.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
+	RunCliTool("MySQL"          , "MariaDB"            , "Cli.All.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode, extraOptions: extraOptionsWithoutTypes);
+	RunCliTool("MySQL"          , "MySqlConnector"     , "Cli.All.MySql"              , Path.Combine(targetDir, "MySql")              , mode, extraOptions: extraOptionsWithoutTypes);
+	RunCliTool("Oracle"         , "Oracle.11.Managed"  , "Cli.All.Oracle"             , Path.Combine(targetDir, "Oracle")             , mode, extraOptions: extraOptions);
+	RunCliTool("PostgreSQL"     , "PostgreSQL.10"      , "Cli.All.PostgreSQL"         , Path.Combine(targetDir, "PostgreSQL")         , mode, extraOptions: extraOptions);
+	RunCliTool("SapHana"        , "SapHana.Native"     , "Cli.All.SapHana"            , Path.Combine(targetDir, "SapHana")            , mode, extraOptions: extraOptions);
+	RunCliTool("SqlCe"          , null                 , "Cli.All.SqlCe"              , Path.Combine(targetDir, "SqlCe")              , mode, connectionString: sqlceCN, providerLocation: @"c:\Program Files\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll", extraOptions: extraOptions);
+	RunCliTool("SQLite"         , null                 , "Cli.All.SQLiteNorthwind"    , Path.Combine(targetDir, "SQLiteNorthwind")    , mode, connectionString: sqliteNwCN, extraOptions: extraOptions);
+	RunCliTool("SQLite"         , null                 , "Cli.All.SQLite"             , Path.Combine(targetDir, "SQLite")             , mode, connectionString: sqliteCN, extraOptions: extraOptions);
+	RunCliTool("SQLServer"      , "SqlServer.Northwind", "Cli.All.SqlServerNorthwind" , Path.Combine(targetDir, "SqlServerNorthwind") , mode, extraOptions: extraOptions);
+	RunCliTool("SQLServer"      , "SqlServer.2017"     , "Cli.All.SqlServer"          , Path.Combine(targetDir, "SqlServer")          , mode, extraOptions: extraOptions);
+	RunCliTool("Sybase"         , "Sybase.Managed"     , "Cli.All.Sybase"             , Path.Combine(targetDir, "Sybase")             , mode, extraOptions: extraOptions);
+	RunCliTool("ClickHouseMySql", "ClickHouse.MySql"   , "Cli.All.ClickHouse.MySql"   , Path.Combine(targetDir, "ClickHouse.MySql")   , mode, extraOptions: extraOptions);
+	RunCliTool("ClickHouseHttp" , "ClickHouse.Client"  , "Cli.All.ClickHouse.Client"  , Path.Combine(targetDir, "ClickHouse.Client")  , mode, extraOptions: extraOptions);
+	RunCliTool("ClickHouseTcp"  , "ClickHouse.Octonica", "Cli.All.ClickHouse.Octonica", Path.Combine(targetDir, "ClickHouse.Octonica"), mode, extraOptions: extraOptions);
+#>

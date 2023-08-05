@@ -1,23 +1,24 @@
-﻿using JetBrains.Annotations;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Async
 {
+	using Common;
+	using Expressions;
+	using Extensions;
+
 	/// <summary>
-	/// Provides factory methods to create async wrappers for <see cref="IDbConnection"/> and <see cref="IDbTransaction"/> instances.
+	/// Provides factory methods to create async wrappers for <see cref="DbConnection"/> and <see cref="DbTransaction"/> instances.
 	/// </summary>
 	[PublicAPI]
 	public static class AsyncFactory
@@ -27,17 +28,15 @@ namespace LinqToDB.Async
 		private static readonly Type[] _tokenParams            = new Type[] { typeof(CancellationToken) };
 		private static readonly Type[] _beginTransactionParams = new Type[] { typeof(IsolationLevel)   , typeof(CancellationToken) };
 
-		private static readonly ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>> _connectionFactories
-			= new ConcurrentDictionary<Type, Func<IDbConnection, IAsyncDbConnection>>();
+		private static readonly ConcurrentDictionary<Type, Func<DbConnection, IAsyncDbConnection>> _connectionFactories = new ();
 
-		private static readonly ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>> _transactionFactories
-			= new ConcurrentDictionary<Type, Func<IDbTransaction, IAsyncDbTransaction>>();
+		private static readonly ConcurrentDictionary<Type, Func<DbTransaction, IAsyncDbTransaction>> _transactionFactories = new ();
 
-#if NETFRAMEWORK
-		private static readonly MethodInfo _transactionWrap      = MemberHelper.MethodOf(() => Wrap<IDbTransaction>(default!)).GetGenericMethodDefinition();
+#if !NATIVE_ASYNC
+		private static readonly MethodInfo _transactionWrap      = MemberHelper.MethodOf(() => Wrap<DbTransaction>(default!)).GetGenericMethodDefinition();
 #else
 #pragma warning disable CA2012 // ValueTask instances returned from method calls should be directly awaited...
-		private static readonly MethodInfo _transactionValueWrap = MemberHelper.MethodOf(() => WrapValue<IDbTransaction>(default!)).GetGenericMethodDefinition();
+		private static readonly MethodInfo _transactionValueWrap = MemberHelper.MethodOf(() => WrapValue<DbTransaction>(default!)).GetGenericMethodDefinition();
 #pragma warning restore CA2012 // ValueTask instances returned from method calls should be directly awaited...
 #endif
 
@@ -46,8 +45,8 @@ namespace LinqToDB.Async
 		/// </summary>
 		/// <typeparam name="TConnection">Connection type, which should use provided factory.</typeparam>
 		/// <param name="factory"><see cref="IAsyncDbConnection"/> factory.</param>
-		public static void RegisterConnectionFactory<TConnection>(Func<IDbConnection, IAsyncDbConnection> factory)
-			where TConnection : IDbConnection
+		public static void RegisterConnectionFactory<TConnection>(Func<DbConnection, IAsyncDbConnection> factory)
+			where TConnection : DbConnection
 		{
 			_connectionFactories.AddOrUpdate(typeof(TConnection), factory, (t, old) => factory);
 		}
@@ -57,18 +56,18 @@ namespace LinqToDB.Async
 		/// </summary>
 		/// <typeparam name="TTransaction">Transaction type, which should use provided factory.</typeparam>
 		/// <param name="factory"><see cref="IAsyncDbTransaction"/> factory.</param>
-		public static void RegisterTransactionFactory<TTransaction>(Func<IDbTransaction, IAsyncDbTransaction> factory)
-			where TTransaction : IDbTransaction
+		public static void RegisterTransactionFactory<TTransaction>(Func<DbTransaction, IAsyncDbTransaction> factory)
+			where TTransaction : DbTransaction
 		{
 			_transactionFactories.AddOrUpdate(typeof(TTransaction), factory, (t, old) => factory);
 		}
 
 		/// <summary>
-		/// Wraps <see cref="IDbConnection"/> instance into type, implementing <see cref="IAsyncDbConnection"/>.
+		/// Wraps <see cref="DbConnection"/> instance into type, implementing <see cref="IAsyncDbConnection"/>.
 		/// </summary>
 		/// <param name="connection">Connection to wrap.</param>
 		/// <returns><see cref="IAsyncDbConnection"/> implementation for provided connection instance.</returns>
-		public static IAsyncDbConnection Create(IDbConnection connection)
+		public static IAsyncDbConnection Create(DbConnection connection)
 		{
 			if (connection == null)
 				throw new ArgumentNullException(nameof(connection));
@@ -81,11 +80,11 @@ namespace LinqToDB.Async
 		}
 
 		/// <summary>
-		/// Wraps <see cref="IDbTransaction"/> instance into type, implementing <see cref="IAsyncDbTransaction"/>.
+		/// Wraps <see cref="DbTransaction"/> instance into type, implementing <see cref="IAsyncDbTransaction"/>.
 		/// </summary>
 		/// <param name="transaction">Transaction to wrap.</param>
 		/// <returns><see cref="IAsyncDbTransaction"/> implementation for provided transaction instance.</returns>
-		public static IAsyncDbTransaction Create(IDbTransaction transaction)
+		public static IAsyncDbTransaction Create(DbTransaction transaction)
 		{
 			if (transaction == null)
 				throw new ArgumentNullException(nameof(transaction));
@@ -98,51 +97,53 @@ namespace LinqToDB.Async
 		}
 
 		private static async Task<IAsyncDbTransaction> Wrap<TTransaction>(Task<TTransaction> transaction)
-			where TTransaction: IDbTransaction
+			where TTransaction: DbTransaction
 		{
 			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		private static async ValueTask<IAsyncDbTransaction> WrapValue<TTransaction>(ValueTask<TTransaction> transaction)
-			where TTransaction : IDbTransaction
+			where TTransaction : DbTransaction
 		{
 			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
 #endif
 
-		private static Func<IDbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)
+		private static Func<DbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)
 		{
 			// Task CommitAsync(CancellationToken)
 			// Availability:
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
-			var commitAsync   = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "CommitAsync"  , _tokenParams     , _tokenParams     , _tokenParams     , false, false);
+			// - FirebirdSql.Data.FirebirdClient 8+
+			var commitAsync   = CreateDelegate<Func<DbTransaction, CancellationToken, Task>, DbTransaction>(type, "CommitAsync"  , _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// Task RollbackAsync(CancellationToken)
 			// Availability:
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector
 			// - npgsql
-			var rollbackAsync = CreateDelegate<Func<IDbTransaction, CancellationToken, Task>, IDbTransaction>(type, "RollbackAsync", _tokenParams     , _tokenParams     , _tokenParams     , false, false);
+			// - FirebirdSql.Data.FirebirdClient 8+
+			var rollbackAsync = CreateDelegate<Func<DbTransaction, CancellationToken, Task>, DbTransaction>(type, "RollbackAsync", _tokenParams     , _tokenParams     , _tokenParams     , false, false);
 
 			// ValueTask DisposeAsync()
 			// Availability:
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
-#if NETFRAMEWORK
-			var disposeAsync  = CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
+#if !NATIVE_ASYNC
+			var disposeAsync  = CreateDelegate<Func<DbTransaction               ,      Task>, DbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
 #else
-			var disposeAsync  = CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true )
+			var disposeAsync  = CreateDelegate<Func<DbTransaction               , ValueTask>, DbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true )
 #endif
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
-#if NETFRAMEWORK
-							 ?? CreateDelegate<Func<IDbConnection               ,      Task>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
+#if !NATIVE_ASYNC
+							 ?? CreateDelegate<Func<DbTransaction               ,      Task>, DbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
 #else
-							 ?? CreateDelegate<Func<IDbConnection               , ValueTask>, IDbConnection >(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true );
+							 ?? CreateDelegate<Func<DbTransaction               , ValueTask>, DbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true );
 #endif
 
 			if (commitAsync      != null
@@ -155,80 +156,83 @@ namespace LinqToDB.Async
 			return tr => new AsyncDbTransaction(tr);
 		}
 
-		private static Func<IDbConnection, IAsyncDbConnection> ConnectionFactory(Type type)
+		private static Func<DbConnection, IAsyncDbConnection> ConnectionFactory(Type type)
 		{
-			// ValueTask<IDbTransaction> BeginTransactionAsync(CancellationToken)
+			// ValueTask<DbTransaction> BeginTransactionAsync(CancellationToken)
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
-#if NETFRAMEWORK
-			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      true, false)
+#if !NATIVE_ASYNC
+			var beginTransactionAsync   = CreateTaskTDelegate<Func<DbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      true, false)
 #else
-			var beginTransactionAsync   = CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, true, true)
+			var beginTransactionAsync   = CreateTaskTDelegate<Func<DbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, true, true)
 #endif
-			// Task<IDbTransaction> BeginTransactionAsync(CancellationToken)
+			// Task<DbTransaction> BeginTransactionAsync(CancellationToken)
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
-#if NETFRAMEWORK
-									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      false, false);
+			// - FirebirdSql.Data.FirebirdClient 8+
+#if !NATIVE_ASYNC
+									   ?? CreateTaskTDelegate<Func<DbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      false, false);
 #else
-									   ?? CreateTaskTDelegate<Func<IDbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, false, true);
+									   ?? CreateTaskTDelegate<Func<DbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, false, true);
 #endif
 
-			// ValueTask<IDbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
+			// ValueTask<DbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
-#if NETFRAMEWORK
-			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      true, false)
+#if !NATIVE_ASYNC
+			var beginTransactionIlAsync = CreateTaskTDelegate<Func<DbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      true, false)
 #else
-			var beginTransactionIlAsync = CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, true, true)
+			var beginTransactionIlAsync = CreateTaskTDelegate<Func<DbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, true, true)
 #endif
-			// Task<IDbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
+			// Task<DbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
-#if NETFRAMEWORK
-									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      false, false);
+			// - FirebirdSql.Data.FirebirdClient 8+
+#if !NATIVE_ASYNC
+									   ?? CreateTaskTDelegate<Func<DbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      false, false);
 #else
-									   ?? CreateTaskTDelegate<Func<IDbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, IDbConnection, IDbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, false, true);
+									   ?? CreateTaskTDelegate<Func<DbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, false, true);
 #endif
 
 			// Task OpenAsync(CancellationToken)
 			// Availability:
 			// - (stub) DbConnection
-			var openAsync               = CreateDelegate<Func<IDbConnection, CancellationToken, Task>, IDbConnection>(type, "OpenAsync", _tokenParams, _tokenParams, _tokenParams, false, false);
+			var openAsync               = CreateDelegate<Func<DbConnection, CancellationToken, Task>, DbConnection>(type, "OpenAsync", _tokenParams, _tokenParams, _tokenParams, false, false);
 
 			// Task CloseAsync(CancellationToken)
 			// Availability:
-			var closeAsync              = CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   _tokenParams     , _noTokenParams,    false, false)
+			var closeAsync              = CreateDelegate<Func<DbConnection, Task>, DbConnection>(type, "CloseAsync", Array<Type>.Empty,   _tokenParams     , _noTokenParams,    false, false)
 			// Task CloseAsync()
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySql.Data
 			// - MySqlConnector 0.57+
 			// - npgsql 4.1.0+
-									   ?? CreateDelegate<Func<IDbConnection, Task>, IDbConnection>(type, "CloseAsync", Array<Type>.Empty,   Array<Type>.Empty, Array<Type>.Empty, false, false);
+			// - FirebirdSql.Data.FirebirdClient 8+
+									   ?? CreateDelegate<Func<DbConnection, Task>, DbConnection>(type, "CloseAsync", Array<Type>.Empty,   Array<Type>.Empty, Array<Type>.Empty, false, false);
 
 			// ValueTask DisposeAsync()
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
-#if NETFRAMEWORK
-			var disposeAsync            = CreateDelegate<Func<IDbConnection, Task     >, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
+#if !NATIVE_ASYNC
+			var disposeAsync            = CreateDelegate<Func<DbConnection, Task     >, DbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
 #else
-			var disposeAsync            = CreateDelegate<Func<IDbConnection, ValueTask>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true)
+			var disposeAsync            = CreateDelegate<Func<DbConnection, ValueTask>, DbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true)
 #endif
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
-#if NETFRAMEWORK
-									   ?? CreateDelegate<Func<IDbConnection,      Task>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
+#if !NATIVE_ASYNC
+									   ?? CreateDelegate<Func<DbConnection,      Task>, DbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
 #else
-									   ?? CreateDelegate<Func<IDbConnection, ValueTask>, IDbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true);
+									   ?? CreateDelegate<Func<DbConnection, ValueTask>, DbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true);
 #endif
 
 
@@ -250,8 +254,7 @@ namespace LinqToDB.Async
 			return connection => new AsyncDbConnection(connection);
 		}
 
-		[return: MaybeNull]
-		private static TDelegate CreateDelegate<TDelegate, TInstance>(
+		private static TDelegate? CreateDelegate<TDelegate, TInstance>(
 			Type    instanceType,
 			string  methodName,
 			Type[]  delegateParameterTypes,
@@ -266,10 +269,10 @@ namespace LinqToDB.Async
 			if (mi == null
 				|| (!returnsValueTask && mi.ReturnType          != typeof(Task))
 				|| (returnsValueTask  && mi.ReturnType.FullName != "System.Threading.Tasks.ValueTask"))
-				return default!;
+				return default;
 
 			var pInstance      = Expression.Parameter(typeof(TInstance));
-			var parameters     = delegateParameterTypes.Select(t => Expression.Parameter(t)).ToArray();
+			var parameters     = delegateParameterTypes.Select(Expression.Parameter).ToArray();
 
 			var callParameters = new List<Expression>();
 			for (var i = 0; i < methodParameterTypes.Length; i++)
@@ -284,7 +287,7 @@ namespace LinqToDB.Async
 				//convert a ValueTask result to a Task
 				body = ToTask(body);
 			}
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 			else if (!returnsValueTask && returnValueTask)
 			{
 				//convert a Task result to a ValueTask
@@ -307,7 +310,7 @@ namespace LinqToDB.Async
 			return Expression.Call(body, "AsTask", Array<Type>.Empty);
 		}
 
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Returns an expression which returns a <see cref="ValueTask"/> from a <see cref="Task"/>.
 		/// </summary>
@@ -318,7 +321,7 @@ namespace LinqToDB.Async
 			var valueTaskType = typeof(ValueTask);
 
 			// constructor = <<< new ValueTask(Task task) >>>
-			var constructor = valueTaskType.GetConstructor(new Type[] { taskType });
+			var constructor = valueTaskType.GetConstructor(new Type[] { taskType })!;
 
 			// return new ValueTask(body);
 			return Expression.New(constructor, body);
@@ -340,15 +343,14 @@ namespace LinqToDB.Async
 			var valueTaskType = typeof(ValueTask<>).MakeGenericType(dataType);
 
 			// constructor = <<< new ValueTask<TResult>(Task<TResult> task) >>>
-			var constructor = valueTaskType.GetConstructor(new Type[] { taskType });
+			var constructor = valueTaskType.GetConstructor(new Type[] { taskType })!;
 
 			// return new ValueTask<TResult>(body);
 			return Expression.New(constructor, body);
 		}
 #endif
 
-		[return: MaybeNull]
-		private static TDelegate CreateTaskTDelegate<TDelegate, TInstance, TTask>(
+		private static TDelegate? CreateTaskTDelegate<TDelegate, TInstance, TTask>(
 			Type       instanceType,
 			string     methodName,
 			Type[]     parametersTypes,
@@ -364,10 +366,10 @@ namespace LinqToDB.Async
 				|| !typeof(TTask).IsAssignableFrom(mi.ReturnType.GetGenericArguments()[0])
 				|| (!returnsValueTask && mi.ReturnType.GetGenericTypeDefinition()          != typeof(Task<>))
 				|| ( returnsValueTask && mi.ReturnType.GetGenericTypeDefinition().FullName != "System.Threading.Tasks.ValueTask`1"))
-				return default!;
+				return default;
 
 			var pInstance  = Expression.Parameter(typeof(TInstance));
-			var parameters = parametersTypes.Select(t => Expression.Parameter(t)).ToArray();
+			var parameters = parametersTypes.Select(Expression.Parameter).ToArray();
 
 			Expression body = Expression.Call(Expression.Convert(pInstance, instanceType), mi, parameters);
 			if (returnsValueTask && !returnValueTask)
@@ -375,7 +377,7 @@ namespace LinqToDB.Async
 				//convert a ValueTask result to a Task
 				body = ToTask(body);
 			}
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 			else if (!returnsValueTask && returnValueTask)
 			{
 				//convert a Task result to a ValueTask

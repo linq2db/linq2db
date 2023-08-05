@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.IO;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Xml;
 
@@ -10,14 +12,123 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Expressions;
-	using LinqToDB.Metadata;
+	using Extensions;
 	using Mapping;
+	using Metadata;
 	using SqlQuery;
 
-	public class SqlServerMappingSchema : MappingSchema
+	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{
-		public SqlServerMappingSchema()
-			: base(ProviderName.SqlServer)
+		// TIME(p)
+		private const string TIME_TICKS_FORMAT                        = "CAST({0} AS BIGINT)";
+		private const string TIME_FROMPARTS_FORMAT                    = "TIMEFROMPARTS({0}, {1}, {2}, {3}, {4})";
+		private static readonly string[] TIME_TYPED_FORMATS           = new[]
+		{
+			"CAST('{0:hh\\:mm\\:ss}' AS TIME(0))",
+			"CAST('{0:hh\\:mm\\:ss\\.f}' AS TIME(1))",
+			"CAST('{0:hh\\:mm\\:ss\\.ff}' AS TIME(2))",
+			"CAST('{0:hh\\:mm\\:ss\\.fff}' AS TIME(3))",
+			"CAST('{0:hh\\:mm\\:ss\\.ffff}' AS TIME(4))",
+			"CAST('{0:hh\\:mm\\:ss\\.fffff}' AS TIME(5))",
+			"CAST('{0:hh\\:mm\\:ss\\.ffffff}' AS TIME(6))",
+			"CAST('{0:hh\\:mm\\:ss\\.fffffff}' AS TIME)"
+		};
+		private static readonly string[] TIME_RAW_FORMATS            = new[]
+		{
+			"hh\\:mm\\:ss",
+			"hh\\:mm\\:ss\\.f",
+			"hh\\:mm\\:ss\\.ff",
+			"hh\\:mm\\:ss\\.fff",
+			"hh\\:mm\\:ss\\.ffff",
+			"hh\\:mm\\:ss\\.fffff",
+			"hh\\:mm\\:ss\\.ffffff",
+			"hh\\:mm\\:ss\\.fffffff"
+		};
+		// DATE
+		private const string DATE_FROMPARTS_FORMAT                       = "DATEFROMPARTS({0}, {1}, {2})";
+		private const string DATE_FORMAT                                 = "'{0:yyyy-MM-dd}'";
+		private const string DATE_TYPED_FORMAT                           = "CAST('{0:yyyy-MM-dd}' AS DATE)";
+		private const string DATE_AS_DATETIME_TYPED_FORMAT               = "CAST('{0:yyyy-MM-dd}' AS DATETIME)";
+		// SMALLDATETIME
+		private const string SMALLDATETIME_TYPED_FORMAT                  = "CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS SMALLDATETIME)";
+		// DATETIME
+		private const string DATETIME_FROMPARTS_FORMAT                   = "DATETIMEFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6})";
+		// precision=3 to match SqlClient behavior for parameters
+		// alternative option will be to generate parameter value explicitly
+		private const string DATETIME_FORMAT                             = "'{0:yyyy-MM-ddTHH:mm:ss.fff}'";
+		private const string DATETIME_TYPED_FORMAT                       = "CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)";
+		private static readonly string[] DATETIME_WITH_PRECISION_FORMATS = new[]
+		{
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.f}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)"
+		};
+		// DATETIME2(p)
+		private const string DaTETIME2_FROMPARTS_FORMAT                = "DATETIME2FROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7})";
+		private static readonly string[] DATETIME2_TYPED_FORMATS       = new[]
+		{
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss}' AS DATETIME2(0))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.f}' AS DATETIME2(1))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ff}' AS DATETIME2(2))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME2(3))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffff}' AS DATETIME2(4))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffff}' AS DATETIME2(5))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffff}' AS DATETIME2(6))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffff}' AS DATETIME2)"
+		};
+		// DATETIMEOFFSET(p)
+		private const string DaTETIMEOFFSET_FROMPARTS_FORMAT          = "DATETIMEOFFSETFROMPARTS({0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9})";
+		private static readonly string[] DATETIMEOFFSET_FORMATS       = new[]
+		{
+			"'{0:yyyy-MM-ddTHH:mm:sszzz}'",
+			"'{0:yyyy-MM-ddTHH:mm:ss.fzzz}'",
+			"'{0:yyyy-MM-ddTHH:mm:ss.ffzzz}'",
+			"'{0:yyyy-MM-ddTHH:mm:ss.fffzzz}'",
+			"'{0:yyyy-MM-ddTHH:mm:ss.ffffzzz}'",
+			"'{0:yyyy-MM-ddTHH:mm:ss.fffffzzz}'",
+			"'{0:yyyy-MM-ddTHH:mm:ss.ffffffzzz}'",
+			"'{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}'",
+		};
+		private static readonly string[] DATETIMEOFFSET_RAW_FORMATS   = new[]
+		{
+			"yyyy-MM-ddTHH:mm:sszzz",
+			"yyyy-MM-ddTHH:mm:ss.fzzz",
+			"yyyy-MM-ddTHH:mm:ss.ffzzz",
+			"yyyy-MM-ddTHH:mm:ss.fffzzz",
+			"yyyy-MM-ddTHH:mm:ss.ffffzzz",
+			"yyyy-MM-ddTHH:mm:ss.fffffzzz",
+			"yyyy-MM-ddTHH:mm:ss.ffffffzzz",
+			"yyyy-MM-ddTHH:mm:ss.fffffffzzz",
+		};
+		private static readonly string[] DATETIMEOFFSET_TYPED_FORMATS = new[]
+		{
+			"CAST('{0:yyyy-MM-ddTHH:mm:sszzz}' AS DATETIMEOFFSET(0))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fzzz}' AS DATETIMEOFFSET(1))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffzzz}' AS DATETIMEOFFSET(2))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffzzz}' AS DATETIMEOFFSET(3))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffzzz}' AS DATETIMEOFFSET(4))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffzzz}' AS DATETIMEOFFSET(5))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ffffffzzz}' AS DATETIMEOFFSET(6))",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fffffffzzz}' AS DATETIMEOFFSET)"
+		};
+		private static readonly string[] DATETIMEOFFSET_AS_DATETIME_TYPED_FORMATS = new[]
+		{
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.f}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.ff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+			"CAST('{0:yyyy-MM-ddTHH:mm:ss.fff}' AS DATETIME)",
+		};
+
+		SqlServerMappingSchema() : base(ProviderName.SqlServer)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -55,25 +166,26 @@ namespace LinqToDB.DataProvider.SqlServer
 			AddScalarType(typeof(SqlString?),   SqlString.  Null, true, DataType.NVarChar);
 			AddScalarType(typeof(SqlXml),       SqlXml.     Null, true, DataType.Xml);
 
-			AddScalarType(typeof(DateTime),  DataType.DateTime);
-			AddScalarType(typeof(DateTime?), DataType.DateTime);
+			AddScalarType(typeof(DateTime),  DataType.DateTime2);
 
 			SqlServerTypes.Configure(this);
 
-			SetValueToSqlConverter(typeof(string),         (sb,dt,v) => ConvertStringToSql        (sb, dt, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),           (sb,dt,v) => ConvertCharToSql          (sb, dt, (char)v));
-			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,v) => ConvertDateTimeToSql      (sb, null, (DateTime)v));
-			SetValueToSqlConverter(typeof(TimeSpan),       (sb,dt,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v));
-			SetValueToSqlConverter(typeof(byte[]),         (sb,dt,v) => ConvertBinaryToSql        (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),         (sb,dt,v) => ConvertBinaryToSql        (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string), (sb,dt,_,v) => ConvertStringToSql(sb, dt.Type.DataType, v.ToString()!));
+			SetValueToSqlConverter(typeof(char),   (sb,dt,_,v) => ConvertCharToSql  (sb, dt, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
 
-			AddMetadataReader(new SystemDataSqlServerAttributeReader());
+			if (SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider != null)
+				AddMetadataReader(SystemDataSqlServerAttributeReader.SystemDataSqlClientProvider);
+			if (SystemDataSqlServerAttributeReader.MicrosoftDataSqlClientProvider != null)
+				AddMetadataReader(SystemDataSqlServerAttributeReader.MicrosoftDataSqlClientProvider);
+			if (SystemDataSqlServerAttributeReader.MicrosoftSqlServerServerProvider != null)
+				AddMetadataReader(SystemDataSqlServerAttributeReader.MicrosoftSqlServerServerProvider);
 		}
 
-		internal static SqlServerMappingSchema Instance = new SqlServerMappingSchema();
+		static SqlServerMappingSchema Instance = new ();
 
 		// TODO: move to SqlServerTypes.Configure?
 		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
@@ -98,6 +210,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.TryGetConvertExpression(@from, to);
 		}
 
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
 			stringBuilder
@@ -107,11 +220,11 @@ namespace LinqToDB.DataProvider.SqlServer
 				;
 		}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, string value)
+		static void ConvertStringToSql(StringBuilder stringBuilder, DataType dataType, string value)
 		{
 			string? startPrefix;
 
-			switch (sqlDataType.Type.DataType)
+			switch (dataType)
 			{
 				case DataType.Char    :
 				case DataType.VarChar :
@@ -123,7 +236,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "+", startPrefix, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, char value)
@@ -142,68 +255,245 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, start, AppendConversionAction, value);
 		}
 
-		internal static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType? dt, DateTime value)
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dt, DateTime value, bool v2008plus, bool supportsFromParts)
 		{
-			var format =
-				dt?.Type.DataType == DataType.DateTime2
-					? dt.Type.Precision == 0
-						  ? "yyyy-MM-ddTHH:mm:ss"
-						  : "yyyy-MM-ddTHH:mm:ss." + new string('f', dt.Type.Precision ?? 7)
-					: value.Millisecond == 0
-						? "yyyy-MM-ddTHH:mm:ss"
-						: "yyyy-MM-ddTHH:mm:ss.fff";
-			
-			stringBuilder
-				.Append('\'')
-				.Append(value.ToString(format))
-				.Append('\'')
-				;
+			switch (dt.Type.DataType, v2008plus, supportsFromParts)
+			{
+				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _)
+					when value.Hour == 0 && value.Minute == 0 && value.Second == 0 && value.Millisecond == 0 :
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+					break;
+				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _):
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
+					break;
+
+				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _)
+					when value.Hour == 0 && value.Minute == 0 && value.Second == 0 && value.Millisecond == 0 :
+					stringBuilder.Append('N');
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+					break;
+				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _):
+					stringBuilder.Append('N');
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FORMAT, value);
+					break;
+
+				case (DataType.SmallDateTime, _, _):
+					// don't use SMALLDATETIMEFROMPARTS as it doesn't accept seconds/milliseconds, which used for rounding
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, SMALLDATETIME_TYPED_FORMAT, value);
+					break;
+
+				case (DataType.Date, true, true):
+					// DATEFROMPARTS ( year, month, day )
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FROMPARTS_FORMAT, value.Year, value.Month, value.Day);
+					break;
+				case (DataType.Date, true, false):
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_TYPED_FORMAT, value);
+					break;
+				case (DataType.Date, false, _):
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_AS_DATETIME_TYPED_FORMAT, value);
+					break;
+
+				case (DataType.DateTime2, true, true):
+				{
+					var precision = dt.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
+
+					// DATETIME2FROMPARTS ( year, month, day, hour, minute, seconds, fractions, precision )
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DaTETIME2_FROMPARTS_FORMAT, value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, GetFractionalSecondFromTicks(value.Ticks, precision), precision);
+					break;
+				}
+				case (DataType.DateTime2, true, false):
+				{
+					var precision = dt.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME2_TYPED_FORMATS[precision], value);
+					break;
+				}
+				case (DataType.DateTime2, false, _):
+				{
+					var precision = dt.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"DATETIME2 type precision is out-of-bounds: {precision}");
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_WITH_PRECISION_FORMATS[precision], value);
+					break;
+				}
+
+				default:
+					// default: DATETIME
+					if (supportsFromParts)
+						// DATETIMEFROMPARTS ( year, month, day, hour, minute, seconds, milliseconds )
+						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_FROMPARTS_FORMAT, value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, value.Millisecond);
+					else
+						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIME_TYPED_FORMAT, value);
+					break;
+			}
 		}
 
-		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value)
+		internal static string ConvertTimeSpanToString(TimeSpan value, int precision)
 		{
-			if (sqlDataType.Type.DataType == DataType.Int64)
-			{
-				stringBuilder.Append(value.Ticks);
-			}
-			else
-			{
-				var format = value.Days > 0
-					? value.Ticks % 10000000 != 0
-						? "d\\.hh\\:mm\\:ss\\.fffffff"
-						: "d\\.hh\\:mm\\:ss"
-					: value.Ticks % 10000000 != 0
-						? "hh\\:mm\\:ss\\.fffffff"
-						: "hh\\:mm\\:ss";
+			if (precision < 0 || precision > 7)
+				throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
 
-				stringBuilder
-					.Append('\'')
-					.Append(value.ToString(format))
-					.Append('\'')
-					;
+			return value.ToString(TIME_RAW_FORMATS[precision]);
+		}
+
+		internal static string ConvertDateTimeOffsetToString(DateTimeOffset value, int precision)
+		{
+			if (precision < 0 || precision > 7)
+				throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+
+			return value.ToString(DATETIMEOFFSET_RAW_FORMATS[precision]);
+		}
+
+		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value, bool supportsTime, bool supportsFromParts)
+		{
+			switch (sqlDataType.Type.DataType, supportsTime, supportsFromParts)
+			{
+				case (DataType.Int64, _, _):
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+
+					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIME_TICKS_FORMAT, ticks);
+					break;
+				}
+				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _):
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+
+					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "'{0:c}'", TimeSpan.FromTicks(ticks));
+					break;
+				}
+				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _) or (_, false, _):
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+
+					var ticks = value.Ticks - (value.Ticks % ValueExtensions.TICKS_DIVIDERS[precision]);
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "N'{0:c}'", TimeSpan.FromTicks(ticks));
+					break;
+				}
+				default:
+				{
+					if (value < TimeSpan.Zero || value >= TimeSpan.FromDays(1))
+						throw new InvalidOperationException($"TIME value is out-of-bounds: {value:c}");
+
+					var precision = sqlDataType.Type.Precision ?? 7;
+
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
+
+					if (supportsFromParts)
+						// TIMEFROMPARTS ( hour, minute, seconds, fractions, precision )
+						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIME_FROMPARTS_FORMAT, value.Hours, value.Minutes, value.Seconds, GetFractionalSecondFromTicks(value.Ticks, precision), precision);
+					else
+						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, TIME_TYPED_FORMATS[precision], value);
+					break;
+				}
 			}
 		}
 
-		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateTimeOffset value)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static long GetFractionalSecondFromTicks(long ticks, int precision) => (ticks % ValueExtensions.TICKS_DIVIDERS[0]) / ValueExtensions.TICKS_DIVIDERS[precision];
+
+#if NET6_0_OR_GREATER
+		static void ConvertDateToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateOnly value, bool v2008plus, bool supportsFromParts)
 		{
-			var format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'";
-
-			switch (sqlDataType.Type.Precision ?? sqlDataType.Type.Scale)
+			switch (sqlDataType.Type.DataType, v2008plus, supportsFromParts)
 			{
-				case 0 : format = "'{0:yyyy-MM-dd HH:mm:ss zzz}'"; break;
-				case 1 : format = "'{0:yyyy-MM-dd HH:mm:ss.f zzz}'"; break;
-				case 2 : format = "'{0:yyyy-MM-dd HH:mm:ss.ff zzz}'"; break;
-				case 3 : format = "'{0:yyyy-MM-dd HH:mm:ss.fff zzz}'"; break;
-				case 4 : format = "'{0:yyyy-MM-dd HH:mm:ss.ffff zzz}'"; break;
-				case 5 : format = "'{0:yyyy-MM-dd HH:mm:ss.fffff zzz}'"; break;
-				case 6 : format = "'{0:yyyy-MM-dd HH:mm:ss.ffffff zzz}'"; break;
-				case 7 : format = "'{0:yyyy-MM-dd HH:mm:ss.fffffff zzz}'"; break;
-			}
+				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _):
+					stringBuilder.Append('N');
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+					break;
+				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _):
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
+					break;
 
-			stringBuilder.AppendFormat(format, value);
+				case (_, false, _):
+					ConvertDateTimeToSql(stringBuilder, sqlDataType, value.ToDateTime(default), v2008plus, supportsFromParts);
+					break;
+
+				default:
+				{
+					if (supportsFromParts)
+						// DATEFROMPARTS ( year, month, day )
+						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FROMPARTS_FORMAT, value.Year, value.Month, value.Day);
+					else
+						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_TYPED_FORMAT, value);
+					break;
+				}
+			}
+		}
+#endif
+
+		static void ConvertDateTimeOffsetToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, DateTimeOffset value, bool v2008plus, bool supportsFromParts)
+		{
+			switch (sqlDataType.Type.DataType, v2008plus, supportsFromParts)
+			{
+				case (DataType.Text, _, _) or (DataType.Char, _, _) or (DataType.VarChar, _, _):
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_FORMATS[precision], value);
+					break;
+				}
+				case (DataType.NText, _, _) or (DataType.NChar, _, _) or (DataType.NVarChar, _, _):
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+
+					stringBuilder.Append('N');
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_FORMATS[precision], value);
+					break;
+				}
+
+				case (DataType.Date, _, _) or (DataType.DateTime, _, _) or (DataType.DateTime2, _, _) or (DataType.SmallDateTime, _, _):
+					ConvertDateTimeToSql(stringBuilder, sqlDataType, value.LocalDateTime, v2008plus, supportsFromParts);
+					return;
+
+				case (_, false, _):
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_AS_DATETIME_TYPED_FORMATS[precision], value.LocalDateTime);
+					break;
+				}
+
+				default:
+				{
+					var precision = sqlDataType.Type.Precision ?? 7;
+					if (precision < 0 || precision > 7)
+						throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
+
+					if (supportsFromParts)
+						// DATETIMEOFFSETFROMPARTS ( year, month, day, hour, minute, seconds, fractions, hour_offset, minute_offset, precision )
+						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DaTETIMEOFFSET_FROMPARTS_FORMAT, value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second, GetFractionalSecondFromTicks(value.Ticks, precision), value.Offset.Hours, value.Offset.Minutes, precision);
+					else
+						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATETIMEOFFSET_TYPED_FORMATS[precision], value);
+					break;
+				}
+			}
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -211,79 +501,183 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.Append("0x");
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
-		
-	}
 
-	public class SqlServer2000MappingSchema : MappingSchema
-	{
-		public SqlServer2000MappingSchema()
-			: base(ProviderName.SqlServer2000, SqlServerMappingSchema.Instance)
+		public sealed class SqlServer2005MappingSchema : LockedMappingSchema
 		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+			public SqlServer2005MappingSchema() : base(ProviderName.SqlServer2005, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				AddScalarType(typeof(DateTime) , DataType.DateTime);
+				AddScalarType(typeof(DateTime?), DataType.DateTime);
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , false, false));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, false, false));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , false, false));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , false, false));
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , false, false));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type from, Type to)
+			{
+				return Instance.TryGetConvertExpression(from, to);
+			}
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public sealed class SqlServer2008MappingSchema : LockedMappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+			public SqlServer2008MappingSchema() : base(ProviderName.SqlServer2008, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-	public class SqlServer2005MappingSchema : MappingSchema
-	{
-		public SqlServer2005MappingSchema()
-			: base(ProviderName.SqlServer2005, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-		}
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, false));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, false));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, false));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, false));
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
-		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, false));
+#endif
+			}
 
-	public class SqlServer2008MappingSchema : MappingSchema
-	{
-		public SqlServer2008MappingSchema()
-			: base(ProviderName.SqlServer2008, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			public override LambdaExpression? TryGetConvertExpression(Type from, Type to)
+			{
+				return Instance.TryGetConvertExpression(from, to);
+			}
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public sealed class SqlServer2012MappingSchema : LockedMappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+			public SqlServer2012MappingSchema() : base(ProviderName.SqlServer2012, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-	public class SqlServer2012MappingSchema : MappingSchema
-	{
-		public SqlServer2012MappingSchema()
-			: base(ProviderName.SqlServer2012, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
-		}
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
-		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
-		}
-	}
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
 
-	public class SqlServer2017MappingSchema : MappingSchema
-	{
-		public SqlServer2017MappingSchema()
-			: base(ProviderName.SqlServer2017, SqlServerMappingSchema.Instance)
-		{
-			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => SqlServerMappingSchema.ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
 		}
 
-		public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+		public sealed class SqlServer2014MappingSchema : LockedMappingSchema
 		{
-			return SqlServerMappingSchema.Instance.TryGetConvertExpression(@from, to);
+			public SqlServer2014MappingSchema() : base(ProviderName.SqlServer2014, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
+		public sealed class SqlServer2016MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2016MappingSchema() : base(ProviderName.SqlServer2016, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
+		public sealed class SqlServer2017MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2017MappingSchema() : base(ProviderName.SqlServer2017, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
+		public sealed class SqlServer2019MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2019MappingSchema() : base(ProviderName.SqlServer2019, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
+		}
+
+		public sealed class SqlServer2022MappingSchema : LockedMappingSchema
+		{
+			public SqlServer2022MappingSchema() : base(ProviderName.SqlServer2022, Instance)
+			{
+				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
+
+				SetValueToSqlConverter(typeof(TimeSpan)      , (sb,dt,_,v) => ConvertTimeSpanToSql      (sb, dt, (TimeSpan)v             , true, true));
+				SetValueToSqlConverter(typeof(SqlDateTime)   , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)(SqlDateTime)v, true, true));
+				SetValueToSqlConverter(typeof(DateTime)      , (sb,dt,_,v) => ConvertDateTimeToSql      (sb, dt, (DateTime)v             , true, true));
+				SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeOffsetToSql(sb, dt, (DateTimeOffset)v       , true, true));
+
+#if NET6_0_OR_GREATER
+				SetValueToSqlConverter(typeof(DateOnly)      , (sb,dt,_,v) => ConvertDateToSql          (sb, dt, (DateOnly)v             , true, true));
+#endif
+			}
+
+			public override LambdaExpression? TryGetConvertExpression(Type @from, Type to)
+			{
+				return Instance.TryGetConvertExpression(@from, to);
+			}
 		}
 	}
 }

@@ -1,29 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class TakeSkipBuilder : MethodCallBuilder
+	sealed class TakeSkipBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "Skip", "Take" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("Skip", "Take");
+			return methodCall.IsQueryable(MethodNames);
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
-			var arg = methodCall.Arguments[1].Unwrap();
+			var arg      = methodCall.Arguments[1].Unwrap();
 
 			ISqlExpression expr;
-			var parameterize = Common.Configuration.Linq.ParameterizeTakeSkip;
+
+			var linqOptions  = builder.DataContext.Options.LinqOptions;
+			var parameterize = linqOptions.ParameterizeTakeSkip;
+
 			if (arg.NodeType == ExpressionType.Lambda)
 			{
 				arg  = ((LambdaExpression)arg).Body.Unwrap();
@@ -32,12 +33,12 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				// revert unwrap
-				arg = methodCall.Arguments[1];
-
+				arg  = methodCall.Arguments[1];
 				expr = builder.ConvertToSql(sequence, arg);
+
 				if (expr.ElementType == QueryElementType.SqlValue)
 				{
-					var param   = builder.BuildParameter(methodCall.Arguments[1], null, true).SqlParameter;
+					var param   = builder.ParametersContext.BuildParameter(methodCall.Arguments[1], null, true).SqlParameter;
 					param.Name  = methodCall.Method.Name == "Take" ? "take" : "skip";
 					param.IsQueryParameter = param.IsQueryParameter && parameterize;
 					expr = param;
@@ -69,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				info.Expression =
 					Expression.Call(
-						methodCall.Method.DeclaringType,
+						methodCall.Method.DeclaringType!,
 						methodCall.Method.Name,
 						new[] { info.Expression.Type.GetGenericArguments()[0] },
 						info.Expression, methodCall.Arguments[1]);

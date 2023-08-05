@@ -6,6 +6,8 @@ using System.Reflection;
 
 namespace LinqToDB.Common
 {
+	using Extensions;
+
 	public static class TypeHelper
 	{
 		/// <summary>
@@ -42,9 +44,10 @@ namespace LinqToDB.Common
 			if (templateType.IsGenericType)
 			{
 				var currentTemplateArguments = templateType.GetGenericArguments();
-				var replacedArguments        = replaced.GetGenericArguments();
-				if (replacedArguments.Length == 0 && replaced.IsArray)
-					replacedArguments = new[] { replaced.GetElementType()! };
+				var replacedAnalogue         = templateType.GetGenericTypeDefinition().GetGenericType(replaced) ?? replaced;
+				var replacedArguments        = replacedAnalogue.GetGenericArguments();
+				if (replacedArguments.Length == 0 && replacedAnalogue.IsArray)
+					replacedArguments = new[] { replacedAnalogue.GetElementType()! };
 
 				for (int i = 0; i < currentTemplateArguments.Length; i++)
 				{
@@ -94,7 +97,7 @@ namespace LinqToDB.Common
 		/// <param name="methodInfo"></param>
 		/// <param name="arguments"></param>
 		/// <returns>New MethodCallExpression.</returns>
-		public static MethodInfo MakeGenericMethod(MethodInfo methodInfo, params Expression[] arguments)
+		public static MethodInfo MakeGenericMethod(MethodInfo methodInfo, Expression[] arguments)
 		{
 			if (!methodInfo.IsGenericMethod)
 				return methodInfo;

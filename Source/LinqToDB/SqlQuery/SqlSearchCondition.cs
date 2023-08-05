@@ -11,12 +11,18 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlSearchCondition(IEnumerable<SqlCondition> list)
+		public SqlSearchCondition(SqlCondition condition)
 		{
-			Conditions.AddRange(list);
+			Conditions.Add(condition);
 		}
 
-		public SqlSearchCondition(params SqlCondition[] list)
+		public SqlSearchCondition(SqlCondition condition1, SqlCondition condition2)
+		{
+			Conditions.Add(condition1);
+			Conditions.Add(condition2);
+		}
+
+		public SqlSearchCondition(IEnumerable<SqlCondition> list)
 		{
 			Conditions.AddRange(list);
 		}
@@ -76,12 +82,12 @@ namespace LinqToDB.SqlQuery
 
 		public Type SystemType => typeof(bool);
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			foreach (var condition in Conditions)
-				condition.Predicate.Walk(options, func);
+				condition.Predicate.Walk(options, context, func);
 
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -135,30 +141,23 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			return this == other;
+			return other is ISqlPredicate otherPredicate
+				&& Equals(otherPredicate, comparer);
 		}
 
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
+		public bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			if (!doClone(this))
-				return this;
+			if (other is not SqlSearchCondition otherCondition
+				|| Conditions.Count != otherCondition.Conditions.Count)
+				return false;
 
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				var sc = new SqlSearchCondition();
+			for (var i = 0; i < Conditions.Count; i++)
+				if (!Conditions[i].Equals(otherCondition.Conditions[i], comparer))
+					return false;
 
-				objectTree.Add(this, clone = sc);
-
-				sc.Conditions.AddRange(Conditions.Select(c => (SqlCondition)c.Clone(objectTree, doClone)));
-			}
-
-			return clone;
+			return true;
 		}
 
 		#endregion

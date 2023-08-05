@@ -18,15 +18,19 @@ string   NamespaceName
 	set { Model.Namespace.Name = value; }
 }
 
+public static string BaseDataContextClass;
+public static bool   EnforceModelNullability = true;
+public static string GetDataOptionsMethod;
+
 public string   ServerName;
 public string   DatabaseName;
 public string   DataContextName;
-public string   BaseDataContextClass;
 public string   BaseEntityClass;
 public string   OneToManyAssociationType      = "IEnumerable<{0}>";
 
 public bool     GenerateDatabaseInfo          = true;
 public bool     GenerateDatabaseName;
+public bool     GenerateDatabaseNameFromTable;
 public bool     GenerateConstructors          = true;
 public string   DefaultConfiguration;
 public bool     GenerateAssociations          = true;
@@ -41,13 +45,16 @@ public bool PluralizeClassNames;
 public bool SingularizeClassNames               = true;
 public bool PluralizeDataContextPropertyNames   = true;
 public bool SingularizeDataContextPropertyNames;
+public bool PluralizeForeignKeyNames            = true;
+public bool SingularizeForeignKeyNames          = true;
 
+public bool NormalizeParameterName              = true;
+public bool NormalizeProcedureColumnName        = true;
 public bool NormalizeNames                      = true;
 public bool NormalizeNamesWithoutUnderscores;
-public static bool EnforceModelNullability      = true;
 
-private Func<string, bool, string> _toValidName;
-public Func<string, bool, string> ToValidName
+private Func<string,bool,string> _toValidName;
+public  Func<string,bool,string>  ToValidName
 {
 	get { return _toValidName ?? ToValidNameDefault; }
 	set { _toValidName = value;                      }
@@ -58,6 +65,13 @@ public Func<string, bool, string> ConvertToCompilable
 {
 	get { return _convertToCompilabl ?? ConvertToCompilableDefault; }
 	set { _convertToCompilabl = value;                              }
+}
+
+private Func<string, bool, string> _normalizeName;
+public Func<string, bool, string>   NormalizeName
+{
+	get { return _normalizeName ?? NormalizeNameDefault; }
+	set { _normalizeName = value;                        }
 }
 
 private Func<ForeignKey, string> _getAssociationExtensionPluralName;
@@ -101,13 +115,17 @@ public static Func<string, bool>  IsValueType    = IsValueTypeDefault;
 public static Func<string,string> ToPlural       = s => s + "s";
 public static Func<string,string> ToSingular     = s => s;
 
+static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema = (dataConnection, schemaOptions) =>
+{
+	var sp = dataConnection.DataProvider.GetSchemaProvider();
+	return sp.GetSchema(dataConnection, schemaOptions);
+};
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
-	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
 
-	var sp = dataConnection.DataProvider.GetSchemaProvider();
-	var db = sp.GetSchema(dataConnection, GetSchemaOptions);
+	var db = LoadDatabaseSchema(dataConnection, GetSchemaOptions);
 
 	if (DatabaseName == null && GenerateDatabaseName)
 		DatabaseName = db.Database;
@@ -134,7 +152,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 			{
 				TableSchema             = t,
 				IsDefaultSchema         = t.IsDefaultSchema,
-				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.SchemaName) ? null : t.SchemaName,
+				Schema                  = t.IsDefaultSchema && !IncludeDefaultSchema || string.IsNullOrEmpty(t.GroupName ?? t.SchemaName) ? null : t.GroupName ?? t.SchemaName,
 				BaseClass               = BaseEntityClass,
 				TableName               = t.TableName,
 				TypeName                = t.TypeName,
@@ -250,6 +268,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 		var keyName = (key.k.OtherTable.IsDefaultSchema ? null : key.k.OtherTable.SchemaName + ".")
 			+ key.k.OtherTable.TableName + "."
 			+ key.KeyName;
+
 		key.t.table.ForeignKeys.Add(keyName, key.key);
 
 		if (key.k.BackReference != null)
@@ -257,19 +276,21 @@ void LoadServerMetadata(DataConnection dataConnection)
 
 		key.key.MemberName = key.key.MemberName.Replace(".", string.Empty);
 
-		key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany ?
-			ToPlural(key.key.MemberName) : ToSingular(key.key.MemberName);
+		key.key.MemberName = key.key.AssociationType == AssociationType.OneToMany
+			? PluralizeForeignKeyNames   ? ToPlural  (key.key.MemberName) : key.key.MemberName
+			: SingularizeForeignKeyNames ? ToSingular(key.key.MemberName) : key.key.MemberName;
 	}
 
 	var procedures = db.Procedures
 		.Select(p => new
 		{
 			p,
-			key = p.IsDefaultSchema ? p.ProcedureName : p.SchemaName + "." + p.ProcedureName,
+			key = p.IsDefaultSchema ? (p.PackageName == null ? null : (p.PackageName + ".")) + p.ProcedureName : p.SchemaName + "." + (p.PackageName == null ? null : (p.PackageName + ".")) + p.ProcedureName,
 			proc = new Procedure
 			{
 				Schema              = (p.IsDefaultSchema && !IncludeDefaultSchema) || string.IsNullOrEmpty(p.SchemaName)? null : p.SchemaName,
 				ProcedureName       = p.ProcedureName,
+				PackageName         = p.PackageName,
 				Name                = ToValidName(p.MemberName, true),
 				IsFunction          = p.IsFunction,
 				IsTableFunction     = p.IsTableFunction,
@@ -321,7 +342,7 @@ void LoadServerMetadata(DataConnection dataConnection)
 						Size          = pr.Size,
 						ParameterName = CheckParameterName(CheckType(pr.SystemType, pr.ParameterName)),
 						ParameterType = pr.ParameterType,
-						SystemType    = pr.SystemType,
+						SystemType    = pr.SystemType ?? typeof(object),
 						DataType      = pr.DataType.ToString(),
 						IsNullable    = pr.IsNullable,
 						Description   = pr.Description,
@@ -366,6 +387,7 @@ Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> k
 
 string CheckType(Type type, string typeName)
 {
+	type = type ?? typeof(object);
 	if (!Model.Usings.Contains(type.Namespace))
 		Model.Usings.Add(type.Namespace);
 
@@ -397,8 +419,9 @@ string CheckColumnName(string memberName)
 			.Replace(".", "_")
 			.Replace("\u00A3", "Pound");
 
-		if (KeyWords.Contains(memberName))
-			memberName = "@" + memberName;
+		IsProcedureColumn = true;
+		memberName = NormalizeName(memberName, false);
+		IsProcedureColumn = false;
 	}
 	return memberName;
 }
@@ -436,21 +459,12 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var t in Tables.Values)
 	{
-		if (KeyWords.Contains(t.TypeName))
-			t.TypeName = "@" + t.TypeName;
-
-		if (KeyWords.Contains(t.DataContextPropertyName))
-			t.DataContextPropertyName = "@" + t.DataContextPropertyName;
-
-		t.TypeName                = ConvertToCompilable(t.TypeName,                true);
-		t.DataContextPropertyName = ConvertToCompilable(t.DataContextPropertyName, true);
+		t.TypeName                = NormalizeName(t.TypeName,                true);
+		t.DataContextPropertyName = NormalizeName(t.DataContextPropertyName, true);
 
 		foreach (var col in t.Columns.Values)
 		{
-			if (KeyWords.Contains(col.MemberName))
-				col.MemberName = "@" + col.MemberName;
-
-			col.MemberName = ConvertToCompilable(col.MemberName, true);
+			col.MemberName = NormalizeName(col.MemberName, true);
 
 			if (col.MemberName == t.TypeName)
 				col.MemberName += "Column";
@@ -458,10 +472,7 @@ void LoadMetadata(DataConnection dataConnection)
 
 		foreach (var fk in t.ForeignKeys.Values)
 		{
-			if (KeyWords.Contains(fk.MemberName))
-				fk.MemberName = "@" + fk.MemberName;
-
-			fk.MemberName = ConvertToCompilable(fk.MemberName, true);
+			fk.MemberName = NormalizeName(fk.MemberName, true);
 
 			if (fk.MemberName == t.TypeName)
 				fk.MemberName += "_FK";
@@ -471,10 +482,10 @@ void LoadMetadata(DataConnection dataConnection)
 	foreach (var t in Tables.Values)
 	{
 		var hasDuplicates = t.Columns.Values
-				.Select(c => c.MemberName)
-				.Concat(t.ForeignKeys.Values.Select(f => f.MemberName))
-				.ToLookup(n => n)
-				.Any(g => g.Count() > 1);
+			.Select(c => c.MemberName)
+			.Concat(t.ForeignKeys.Values.Select(f => f.MemberName))
+			.ToLookup(n => n)
+			.Any(g => g.Count() > 1);
 
 		if (hasDuplicates)
 		{
@@ -501,16 +512,16 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var proc in Procedures.Values)
 	{
-		proc.Name = ConvertToCompilable(proc.Name, false);
+		proc.Name = NormalizeName(proc.Name, false);
 
-		if (KeyWords.Contains(proc.Name))
-			proc.Name = "@" + proc.Name;
-
+		// for now indicate parameter using instance field to not break API
+		// if requested, we can add enum with name types and pass it to normalization delegates API
+		IsParameter = true;
 		foreach (var param in proc.ProcParameters)
 		{
-			if (KeyWords.Contains(param.ParameterName))
-				param.ParameterName = ConvertToCompilable("@" + param.ParameterName, true);
+			param.ParameterName = NormalizeName(param.ParameterName, true);
 		}
+		IsParameter = false;
 	}
 
 	AfterLoadMetadata();
@@ -556,6 +567,16 @@ string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, stri
 	}
 
 	return result;
+}
+
+string NormalizeNameDefault(string name, bool mayRemoveUnderscore)
+{
+	name = ConvertToCompilable(name, mayRemoveUnderscore);
+
+	if (KeyWords.Contains(name))
+		name = "@" + name;
+
+	return name;
 }
 
 string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
@@ -755,7 +776,7 @@ public partial class Column : Property
 	public bool      IsIdentity;
 	public string    ColumnType; // Type of the column in database
 	public string    DataType;
-	public long?     Length;
+	public int?      Length;
 	public int?      Precision;
 	public int?      Scale;
 	public DbType    DbType;
@@ -830,6 +851,7 @@ public partial class Procedure : Method
 {
 	public string Schema              { get; set; }
 	public string ProcedureName       { get; set; }
+	public string PackageName         { get; set; }
 	public bool   IsFunction          { get; set; }
 	public bool   IsTableFunction     { get; set; }
 	public bool   IsAggregateFunction { get; set; }
@@ -850,7 +872,7 @@ public class Parameter
 	public bool     IsIn          { get; set; }
 	public bool     IsOut         { get; set; }
 	public bool     IsResult      { get; set; }
-	public long?    Size          { get; set; }
+	public int?     Size          { get; set; }
 
 	public string   ParameterName { get; set; }
 	public string   ParameterType { get; set; }
@@ -864,9 +886,13 @@ public class Parameter
 
 private int _counter = 0;
 
+public bool IsParameter;
+public bool IsProcedureColumn;
+
 string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 {
-	if (NormalizeNames)
+	var normalize = IsParameter && NormalizeParameterName || IsProcedureColumn && NormalizeProcedureColumnName || (!IsParameter && !IsProcedureColumn && NormalizeNames);
+	if (normalize)
 	{
 		if (mayRemoveUnderscore && name.Contains("_"))
 			name = SplitAndJoin(name, "", '_');
@@ -885,9 +911,12 @@ string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 	if (string.IsNullOrEmpty(name))
 		name = "_" + _counter++;
 
-	if (NormalizeNames)
+	if (normalize)
 	{
-		name = char.ToUpper(name[0]) + name.Substring(1);
+		if (IsParameter)
+			name = char.ToLower(name[0]) + name.Substring(1);
+		else
+			name = char.ToUpper(name[0]) + name.Substring(1);
 	}
 
 	return name;
@@ -903,7 +932,7 @@ static string SplitAndJoin(string value, string join, params char[] split)
 
 static string NormalizeFragment(string s)
 {
-	return char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
+	return s.Length == 0 ? s : char.ToUpper(s[0]) + (s.Substring(1).All(char.IsUpper) ? s.Substring(1).ToLower() : s.Substring(1));
 }
 
 private string GetAssociationExtensionSingularNameDefault(ForeignKey key)

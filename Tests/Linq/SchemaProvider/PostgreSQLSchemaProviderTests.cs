@@ -64,13 +64,13 @@ namespace Tests.SchemaProvider
 							new ColumnSchema { ColumnName = "moneyDataType",       ColumnType = "money",                           MemberName = "moneyDataType",       MemberType = "decimal?",                    SystemType = typeof(decimal),                                                 IsNullable = true, DataType = DataType.Money          },
 							new ColumnSchema { ColumnName = "doubleDataType",      ColumnType = "float8",                          MemberName = "doubleDataType",      MemberType = "double?",                     SystemType = typeof(double),                                                  IsNullable = true, DataType = DataType.Double         },
 							new ColumnSchema { ColumnName = "realDataType",        ColumnType = "float4",                          MemberName = "realDataType",        MemberType = "float?",                      SystemType = typeof(float),                                                   IsNullable = true, DataType = DataType.Single         },
-							new ColumnSchema { ColumnName = "timestampDataType",   ColumnType = "timestamp (0) without time zone", MemberName = "timestampDataType",   MemberType = "DateTime?",                   SystemType = typeof(DateTime),                   ProviderSpecificType = "NpgsqlDateTime", IsNullable = true, DataType = DataType.DateTime2      },
-							new ColumnSchema { ColumnName = "timestampTZDataType", ColumnType = "timestamp (0) with time zone",    MemberName = "timestampTZDataType", MemberType = "DateTimeOffset?",             SystemType = typeof(DateTimeOffset),             ProviderSpecificType = "NpgsqlDateTime", IsNullable = true, DataType = DataType.DateTimeOffset },
-							new ColumnSchema { ColumnName = "dateDataType",        ColumnType = "date",                            MemberName = "dateDataType",        MemberType = "DateTime?",                   SystemType = typeof(DateTime),                   ProviderSpecificType = "NpgsqlDate",     IsNullable = true, DataType = DataType.Date           },
+							new ColumnSchema { ColumnName = "timestampDataType",   ColumnType = "timestamp (0) without time zone", MemberName = "timestampDataType",   MemberType = "DateTime?",                   SystemType = typeof(DateTime),                                                IsNullable = true, DataType = DataType.DateTime2      },
+							new ColumnSchema { ColumnName = "timestampTZDataType", ColumnType = "timestamp (0) with time zone",    MemberName = "timestampTZDataType", MemberType = "DateTimeOffset?",             SystemType = typeof(DateTimeOffset),                                          IsNullable = true, DataType = DataType.DateTimeOffset },
+							new ColumnSchema { ColumnName = "dateDataType",        ColumnType = "date",                            MemberName = "dateDataType",        MemberType = "DateTime?",                   SystemType = typeof(DateTime),                                                IsNullable = true, DataType = DataType.Date           },
 							new ColumnSchema { ColumnName = "timeDataType",        ColumnType = "time (0) without time zone",      MemberName = "timeDataType",        MemberType = "TimeSpan?",                   SystemType = typeof(TimeSpan),                                                IsNullable = true, DataType = DataType.Time           },
 							new ColumnSchema { ColumnName = "timeTZDataType",      ColumnType = "time (0) with time zone",         MemberName = "timeTZDataType",      MemberType = "DateTimeOffset?",             SystemType = typeof(DateTimeOffset),                                          IsNullable = true, DataType = DataType.Time           },
-							new ColumnSchema { ColumnName = "intervalDataType",    ColumnType = "interval",                        MemberName = "intervalDataType",    MemberType = "TimeSpan?",                   SystemType = typeof(TimeSpan),                                                IsNullable = true, DataType = DataType.Interval       },
-							new ColumnSchema { ColumnName = "intervalDataType2",   ColumnType = "interval",                        MemberName = "intervalDataType2",   MemberType = "TimeSpan?",                   SystemType = typeof(TimeSpan),                                                IsNullable = true, DataType = DataType.Interval       },
+							new ColumnSchema { ColumnName = "intervalDataType",    ColumnType = "interval",                        MemberName = "intervalDataType",    MemberType = "TimeSpan?",                   SystemType = typeof(TimeSpan),       ProviderSpecificType = "NpgsqlInterval", IsNullable = true, DataType = DataType.Interval       },
+							new ColumnSchema { ColumnName = "intervalDataType2",   ColumnType = "interval",                        MemberName = "intervalDataType2",   MemberType = "TimeSpan?",                   SystemType = typeof(TimeSpan),       ProviderSpecificType = "NpgsqlInterval", IsNullable = true, DataType = DataType.Interval       },
 							new ColumnSchema { ColumnName = "charDataType",        ColumnType = "character(1)",                    MemberName = "charDataType",        MemberType = "char?",                       SystemType = typeof(char),                                                    IsNullable = true, DataType = DataType.NChar          },
 							new ColumnSchema { ColumnName = "char20DataType",      ColumnType = "character(20)",                   MemberName = "char20DataType",      MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.NChar          },
 							new ColumnSchema { ColumnName = "varcharDataType",     ColumnType = "character varying(20)",           MemberName = "varcharDataType",     MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.NVarChar       },
@@ -273,15 +273,13 @@ namespace Tests.SchemaProvider
 			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
 			[ValueSource(nameof(ProcedureTestCases))] ProcedureTestCase testCase)
 		{
-			var macaddr8Supported =  context.Contains(TestProvName.PostgreSQL10)
-				|| context.Contains(TestProvName.PostgreSQL11)
-				|| context.Contains(TestProvName.PostgreSQL12)
-				|| context.Contains(TestProvName.PostgreSQL13);
-			var jsonbSupported    = !context.Contains(ProviderName.PostgreSQL92) && !context.Contains(ProviderName.PostgreSQL93);
+			var macaddr8Supported = context.IsAnyOf(TestProvName.AllPostgreSQL10Plus);
+			var jsonbSupported    = context.IsAnyOf(TestProvName.AllPostgreSQL95Plus);
+
 			using (var db = (DataConnection)GetDataContext(context))
 			{
 				var expectedProc = testCase.Schema;
-				expectedProc.CatalogName = TestUtils.GetDatabaseName(db);
+				expectedProc.CatalogName = TestUtils.GetDatabaseName(db, context);
 
 				// schema load takes too long if system schema included
 				// added SchemaProceduresLoadedTest to test system schema
@@ -438,7 +436,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void DescriptionTest([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 
@@ -453,7 +451,7 @@ namespace Tests.SchemaProvider
 		[Test]
 		public void TestMaterializedViewSchema([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 

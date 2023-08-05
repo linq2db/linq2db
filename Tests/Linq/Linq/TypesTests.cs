@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -116,6 +117,7 @@ namespace Tests.Linq
 					from p in db.Person select new { p.Patient, IsPatient = p.Patient != null });
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void BoolResult2([DataSources] string context)
 		{
@@ -125,6 +127,7 @@ namespace Tests.Linq
 					from p in db.Person select new { IsPatient = Sql.AsSql(p.Patient != null) });
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void BoolResult3([DataSources] string context)
 		{
@@ -210,29 +213,22 @@ namespace Tests.Linq
 		{
 			using (new DisableBaseline("Server-side guid generation test"))
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
-				try
+				db.Types.Insert(() => new LinqDataTypes
 				{
-					db.Types.Delete(_ => _.ID > 1000);
-					db.Types.Insert(() => new LinqDataTypes
-					{
-						ID            = 1001,
-						MoneyValue    = 1001,
-						DateTimeValue = Sql.CurrentTimestamp,
-						BoolValue     = true,
-						GuidValue     = Sql.NewGuid(),
-						BinaryValue   = new Binary(new byte[] { 1 }),
-						SmallIntValue = 1001
-					});
+					ID            = 1001,
+					MoneyValue    = 1001,
+					DateTimeValue = Sql.CurrentTimestamp,
+					BoolValue     = true,
+					GuidValue     = Sql.NewGuid(),
+					BinaryValue   = new Binary(new byte[] { 1 }),
+					SmallIntValue = 1001
+				});
 
-					var guid = db.Types.Single(_ => _.ID == 1001).GuidValue;
+				var guid = db.Types.Single(_ => _.ID == 1001).GuidValue;
 
-					Assert.AreEqual(1001, db.Types.Single(_ => _.GuidValue == guid).ID);
-				}
-				finally
-				{
-					db.Types.Delete(_ => _.ID > 1000);
-				}
+				Assert.AreEqual(1001, db.Types.Single(_ => _.GuidValue == guid).ID);
 			}
 		}
 
@@ -285,6 +281,7 @@ namespace Tests.Linq
 		public void UpdateBinary1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
 				db.Types
 					.Where(t => t.ID == 1)
@@ -303,6 +300,7 @@ namespace Tests.Linq
 		public void UpdateBinary2([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
 			{
 				var ints     = new[] { 1, 2 };
 				var binaries = new[] { new byte[] { 1, 2, 3, 4, 5 }, new byte[] { 5, 4, 3, 2, 1 } };
@@ -356,7 +354,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -387,7 +385,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -421,7 +419,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllAccess,
-				ProviderName.SqlServer2000, ProviderName.SqlServer2005,
+				TestProvName.AllSqlServer2005,
 				ProviderName.DB2,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
@@ -529,25 +527,21 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-			using (new DeletePerson(db))
+			using (new RestoreBaseTables(db))
 			{
 				db.BeginTransaction();
 
-				var id =
-					db.Person
-						.InsertWithIdentity(() => new Person
-						{
-							FirstName = "擊敗奴隸",
-							LastName  = "Юникодкин",
-							Gender    = Gender.Male
-						});
-
-				Assert.NotNull(id);
+				db.Insert(new Person()
+				{
+					ID        = 100,
+					FirstName = "擊敗奴隸",
+					LastName  = "Юникодкин",
+					Gender    = Gender.Male
+				});
 
 				var person = db.Person.Single(p => p.FirstName == "擊敗奴隸" && p.LastName == "Юникодкин");
 
 				Assert.NotNull (person);
-				Assert.AreEqual(id, person.ID);
 				Assert.AreEqual("擊敗奴隸", person.FirstName);
 				Assert.AreEqual("Юникодкин", person.LastName);
 			}
@@ -597,7 +591,7 @@ namespace Tests.Linq
 		{
 			List<PersonCharTest> list;
 
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				list = db.GetTable<PersonCharTest>().ToList();
 
 			using (var db = GetDataContext(context))
@@ -611,7 +605,7 @@ namespace Tests.Linq
 		{
 			List<PersonCharTest> list;
 
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				list = db.GetTable<PersonCharTest>().ToList();
 
 			using (var db = GetDataContext(context))
@@ -625,7 +619,7 @@ namespace Tests.Linq
 		{
 			List<PersonCharTest> list;
 
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				list = db.GetTable<PersonCharTest>().ToList();
 
 			using (var db = GetDataContext(context))
@@ -758,5 +752,139 @@ namespace Tests.Linq
 					from t in GetTypes(context) where (param1 == null || t.SmallIntValue == param1) && (param2 == null || t.BoolValue == param2) select t,
 					from t in db.Types          where (param1 == null || t.SmallIntValue == param1) && (param2 == null || t.BoolValue == param2) select t);
 		}
+
+		// AllTypes is mess...
+		[Table]
+		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		sealed class AllTypes
+		{
+			[Column] public int     ID             { get; set; }
+
+			[Column]
+			[Column("REALDATATYPE", Configuration = ProviderName.DB2)]
+			[Column("realDataType", Configuration = ProviderName.Informix)]
+			[Column("realDataType", Configuration = ProviderName.Oracle)]
+			[Column("realDataType", Configuration = ProviderName.PostgreSQL)]
+			[Column("realDataType", Configuration = ProviderName.SapHana)]
+			[Column("realDataType", Configuration = ProviderName.SqlCe)]
+			[Column("realDataType", Configuration = ProviderName.SqlServer)]
+			[Column("realDataType", Configuration = ProviderName.Sybase)]
+			public float? floatDataType { get; set; }
+
+
+			[Column]
+			[Column("DOUBLEDATATYPE", Configuration = ProviderName.DB2)]
+			[Column("realDataType"  , Configuration = ProviderName.Access)]
+			[Column("realDataType"  , Configuration = ProviderName.SQLite)]
+			[Column("floatDataType" , Configuration = ProviderName.Informix)]
+			[Column("floatDataType" , Configuration = ProviderName.Oracle)]
+			[Column("floatDataType" , Configuration = ProviderName.SapHana)]
+			[Column("floatDataType" , Configuration = ProviderName.SqlCe)]
+			[Column("floatDataType" , Configuration = ProviderName.SqlServer)]
+			[Column("floatDataType" , Configuration = ProviderName.Sybase)]
+			public double? doubleDataType { get; set; }
+		}
+
+		[Test]
+		public void TestSpecialValues(
+			[DataSources(
+				TestProvName.AllSQLite,
+				TestProvName.AllAccess,
+				TestProvName.AllInformix,
+				TestProvName.AllSybase,
+				TestProvName.AllSqlServer,
+				TestProvName.AllMySql,
+				TestProvName.AllSapHana,
+				ProviderName.DB2,
+				// SQL CE allows special values using parameters, but no idea how to generate them as literal
+				ProviderName.SqlCe
+				)] string context,
+			[Values] bool inline)
+		{
+			// TODO: update condition to include only Firebird 2.5 when
+			// https://github.com/FirebirdSQL/firebird/issues/6750 releases
+			var skipFloatInf = context.IsAnyOf(TestProvName.AllFirebird) && inline;
+			var skipId       = context.IsAnyOf(ProviderName.DB2) || context.IsAnyOf(TestProvName.AllSybase) || context.IsAnyOf(ProviderName.SqlCe);
+
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				db.InlineParameters = inline;
+
+				var maxID = db.GetTable<AllTypes>().Select(_ => _.ID).Max();
+				var real  = float.NaN;
+				var dbl   = double.NaN;
+				if (skipId)
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						floatDataType = real,
+						doubleDataType = dbl,
+					});
+				else
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						ID             = 1000,
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
+				real = skipFloatInf ? float.NaN : float.NegativeInfinity;
+				dbl  = double.NegativeInfinity;
+				if (skipId)
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
+				else
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						ID             = 1001,
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
+				real = skipFloatInf ? float.NaN : float.PositiveInfinity;
+				dbl  = double.PositiveInfinity;
+				if (skipId)
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
+				else
+					db.GetTable<AllTypes>().Insert(() => new AllTypes()
+					{
+						ID             = 1002,
+						floatDataType  = real,
+						doubleDataType = dbl,
+					});
+
+				var res = db.GetTable<AllTypes>()
+					.Where(_ => _.ID > maxID)
+					.OrderBy(_ => _.ID)
+					.Select(_ => new { _.floatDataType, _.doubleDataType})
+					.ToArray();
+
+				Assert.AreEqual (3   , res.Length);
+				Assert.IsNaN    (res[0].floatDataType);
+				Assert.IsNaN    (res[0].doubleDataType);
+
+				Assert.IsNotNull(res[1].floatDataType);
+				Assert.IsNotNull(res[1].doubleDataType);
+				if (skipFloatInf)
+					Assert.IsNaN(res[0].floatDataType);
+				else
+					Assert.True(float.IsNegativeInfinity(res[1].floatDataType!.Value));
+				Assert.True(double.IsNegativeInfinity(res[1].doubleDataType!.Value));
+
+				Assert.IsNotNull(res[2].floatDataType);
+				Assert.IsNotNull(res[2].doubleDataType);
+				if (skipFloatInf)
+					Assert.IsNaN(res[0].floatDataType);
+				else
+					Assert.True     (float.IsPositiveInfinity(res[2].floatDataType!.Value));
+				Assert.True     (double.IsPositiveInfinity(res[2].doubleDataType!.Value));
+			}
+		}
+
 	}
 }

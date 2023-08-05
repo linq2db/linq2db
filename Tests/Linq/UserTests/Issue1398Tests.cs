@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
@@ -61,8 +62,11 @@ namespace Tests.UserTests
 		{
 			const int recordsCount = 20;
 
+			// sqlite connection pooling is not compatible with tested template
+			SQLiteTools.ClearAllPools();
+
 			using (new DisableBaseline("Multi-threading"))
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable<InsertTable>())
 			{
 				var tasks = new List<Task>();
@@ -81,7 +85,7 @@ namespace Tests.UserTests
 
 		private void Insert(string context, int value)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				db.GetTable<InsertTable>().Insert(() => new InsertTable { Value = value });
 			}
@@ -90,7 +94,7 @@ namespace Tests.UserTests
 		[Retry(3)] // could fail due to deadlock
 		[Test]
 		public void TestMerge([MergeDataContextSource(
-			ProviderName.Firebird, TestProvName.Firebird3, ProviderName.SybaseManaged, TestProvName.AllInformix)]
+			TestProvName.AllFirebird, ProviderName.SybaseManaged, TestProvName.AllInformix)]
 			string context)
 		{
 			const int repeatsCount = 20;

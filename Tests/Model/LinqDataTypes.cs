@@ -8,11 +8,15 @@ namespace Tests.Model
 {
 	public class LinqDataTypes : IEquatable<LinqDataTypes>, IComparable
 	{
+		[PrimaryKey(Configuration = ProviderName.ClickHouse)]
 		public int       ID;
+		[Column(DataType = DataType.Decimal64, Scale = 4, Configuration = ProviderName.ClickHouse)]
 		public decimal   MoneyValue;
+		[Column(Precision = 3, Configuration = ProviderName.ClickHouse)]
 		public DateTime  DateTimeValue;
 		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		public bool      BoolValue;
+		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.Informix)]
 		public Guid      GuidValue;
 		public Binary?   BinaryValue;
 		public short     SmallIntValue;
@@ -81,14 +85,17 @@ namespace Tests.Model
 		// type it explicitly for sql server, because SQL Server 2005+ provider maps DateTime .Net type to DataType.DateTime2 by default
 		[Column(DataType = DataType.DateTime,  Configuration = ProviderName.SqlServer)]
 		[Column(DataType = DataType.DateTime2, Configuration = ProviderName.Oracle)]
+		[Column(Precision = 3, Configuration = ProviderName.ClickHouse)]
 		[Column]                                        public DateTime? DateTimeValue;
 		[Column]                                        public DateTime? DateTimeValue2;
 		[Column(DataType = DataType.Int16, Configuration = ProviderName.Oracle)]
 		[Column]                                        public bool?     BoolValue;
+		[Column(DataType = DataType.Char, Length = 36, Configuration = ProviderName.Informix)]
 		[Column]                                        public Guid?     GuidValue;
 		[Column]                                        public short?    SmallIntValue;
 		[Column]                                        public int?      IntValue;
 		[Column]                                        public long?     BigIntValue;
+		[Column(DataType = DataType.NVarChar, Length = 50, Configuration = ProviderName.Firebird)]
 		[Column]                                        public string?   StringValue;
 
 		public override bool Equals(object? obj)
@@ -142,6 +149,23 @@ namespace Tests.Model
 		public override string ToString()
 		{
 			return string.Format("{{{0,2}, {1,7}, {2:O}, {3,5}, {4}, {5}, '{6}'}}", ID, MoneyValue, DateTimeValue, BoolValue, GuidValue, SmallIntValue, StringValue);
+		}
+
+		public LinqDataTypes2 Clone()
+		{
+			return new ()
+			{
+				ID             = ID,
+				MoneyValue     = MoneyValue,
+				DateTimeValue  = DateTimeValue,
+				DateTimeValue2 = DateTimeValue2,
+				BoolValue      = BoolValue,
+				GuidValue      = GuidValue,
+				SmallIntValue  = SmallIntValue,
+				IntValue       = IntValue,
+				BigIntValue    = BigIntValue,
+				StringValue    = StringValue,
+			};
 		}
 	}
 }

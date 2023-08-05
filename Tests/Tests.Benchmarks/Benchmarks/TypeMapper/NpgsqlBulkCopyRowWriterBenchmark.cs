@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Attributes;
@@ -30,9 +31,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 		private Action<MappingSchema, Wrapped.NpgsqlBinaryImporter, ColumnDescriptor[], TestEntity> _rowWriter = null!;
 
-		class Original
+		sealed class Original
 		{
-			public class NpgsqlBinaryImporter
+			public sealed class NpgsqlBinaryImporter
 			{
 				[MethodImpl(MethodImplOptions.NoInlining)]
 				public void StartRow()
@@ -49,10 +50,10 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			}
 		}
 
-		class Wrapped
+		sealed class Wrapped
 		{
 			[Wrapper]
-			public class NpgsqlBinaryImporter : TypeWrapper
+			public sealed class NpgsqlBinaryImporter : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -108,7 +109,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 						pWriter,
 						"Write",
 						new[] { typeof(object) },
-						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetValue", Array<Type>.Empty, pMapping, pEntity),
+						Expression.Call(Expression.ArrayIndex(pColumns, Expression.Constant(i)), "GetProviderValue", Array<Type>.Empty, pEntity),
 						Expression.Convert(Expression.Constant(Wrapped.NpgsqlDbType.Test), typeof(Original.NpgsqlDbType))));
 			}
 
@@ -131,7 +132,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 			importer.StartRow();
 
 			for (var i = 0; i < _columns.Length; i++)
-				importer.Write(_columns[i].GetValue(TestEntity.Instance), Original.NpgsqlDbType.Test);
+				importer.Write(_columns[i].GetProviderValue(TestEntity.Instance), Original.NpgsqlDbType.Test);
 		}
 	}
 }

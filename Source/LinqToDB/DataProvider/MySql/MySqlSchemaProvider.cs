@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Data;
 	using LinqToDB.SchemaProvider;
 
-	class MySqlSchemaProvider : SchemaProviderBase
+	sealed class MySqlSchemaProvider : SchemaProviderBase
 	{
 		private readonly MySqlDataProvider _provider;
 
@@ -59,9 +59,8 @@ namespace LinqToDB.DataProvider.MySql
 					{
 						// The latest MySql returns FK information with lowered schema names.
 						//
-						TableID            = catalog.ToLower() + ".." + name,
+						TableID            = catalog.ToLowerInvariant() + ".." + name,
 						CatalogName        = catalog,
-						SchemaName         = string.Empty,
 						TableName          = name,
 						IsDefaultSchema    = true,
 						IsView             = type == "VIEW" || type == "SYSTEM VIEW",
@@ -116,13 +115,13 @@ SELECT
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					var dataType   = rd.GetString(0);
 					var columnType = rd.GetString(1);
-					var tableId    = rd.GetString(2).ToLower() + ".." + rd.GetString(3);
+					var tableId    = rd.GetString(2).ToLowerInvariant() + ".." + rd.GetString(3);
 					var name       = rd.GetString(4);
 					var isNullable = rd.GetString(5) == "YES";
 					var ordinal    = Converter.ChangeTypeTo<int>(rd[6]);
 					var length     = Converter.ChangeTypeTo<long?>(rd[7]);
-					var precision  = Converter.ChangeTypeTo<int?>(rd[8]);
-					var scale      = Converter.ChangeTypeTo<int?>(rd[9]);
+					var precision  = Converter.ChangeTypeTo<long?>(rd[8]);
+					var scale      = Converter.ChangeTypeTo<long?>(rd[9]);
 					var extra      = rd.GetString(10);
 
 					return new ColumnInfo()
@@ -132,9 +131,10 @@ SELECT
 						IsNullable   = isNullable,
 						Ordinal      = ordinal,
 						DataType     = dataType,
-						Length       = length,
-						Precision    = precision,
-						Scale        = scale,
+						// length could be > int.MaxLength for LONGBLOB/LONGTEXT types, but they always have fixed length and it cannot be used in type name
+						Length       = length > int.MaxValue ? null : (int?)length,
+						Precision    = (int?)precision,
+						Scale        = (int?)scale,
 						ColumnType   = columnType,
 						IsIdentity   = extra.Contains("auto_increment"),
 						Description  = rd.GetString(11),
@@ -175,10 +175,10 @@ SELECT
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
 					return new ForeignKeyInfo()
 					{
-						ThisTableID  = rd.GetString(0).ToLower() + ".." + rd.GetString(1),
+						ThisTableID  = rd.GetString(0).ToLowerInvariant() + ".." + rd.GetString(1),
 						Name         = rd.GetString(2),
 						ThisColumn   = rd.GetString(3),
-						OtherTableID = rd.GetString(4).ToLower() + ".." + rd.GetString(5),
+						OtherTableID = rd.GetString(4).ToLowerInvariant() + ".." + rd.GetString(5),
 						OtherColumn  = rd.GetString(6),
 						Ordinal      = Converter.ChangeTypeTo<int>(rd[7]),
 					};
@@ -203,9 +203,9 @@ SELECT
 				.ToList();
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, long? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
-			return dataType?.ToLower() switch
+			return dataType?.ToLowerInvariant() switch
 			{
 				"tinyint unsigned"  => DataType.Byte,
 				"smallint unsigned" => DataType.UInt16,
@@ -261,15 +261,13 @@ SELECT
 					{
 						ProcedureID         = catalog + "." + name,
 						CatalogName         = catalog,
-						SchemaName          = null,
 						ProcedureName       = name,
 						IsFunction          = Converter.ChangeTypeTo<string>(rd[2]) == "FUNCTION",
-						IsTableFunction     = false,
-						IsAggregateFunction = false,
 						IsDefaultSchema     = true,
-						ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3])
-				};
-				}, "SELECT ROUTINE_SCHEMA, ROUTINE_NAME, ROUTINE_TYPE, ROUTINE_DEFINITION FROM INFORMATION_SCHEMA.routines WHERE ROUTINE_SCHEMA = database()")
+						ProcedureDefinition = Converter.ChangeTypeTo<string>(rd[3]),
+						Description         = Converter.ChangeTypeTo<string>(rd[4]),
+					};
+				}, "SELECT ROUTINE_SCHEMA, ROUTINE_NAME, ROUTINE_TYPE, ROUTINE_DEFINITION, ROUTINE_COMMENT FROM INFORMATION_SCHEMA.routines WHERE ROUTINE_TYPE IN ('PROCEDURE', 'FUNCTION') AND ROUTINE_SCHEMA = database()")
 				.ToList();
 		}
 
@@ -281,22 +279,27 @@ SELECT
 				.Query(rd =>
 				{
 					// IMPORTANT: reader calls must be ordered to support SequentialAccess
-					var procId  = rd.GetString(0) + "." + rd.GetString(1);
-					var mode    = Converter.ChangeTypeTo<string>(rd[2]);
-					var ordinal = Converter.ChangeTypeTo<int>(rd[3]);
+					var procId    = rd.GetString(0) + "." + rd.GetString(1);
+					var mode      = Converter.ChangeTypeTo<string>(rd[2]);
+					var ordinal   = Converter.ChangeTypeTo<int>(rd[3]);
+					var name      = Converter.ChangeTypeTo<string>(rd[4]);
+					var precision = Converter.ChangeTypeTo<int?>(rd[5]);
+					var scale     = Converter.ChangeTypeTo<long?>(rd[6]);
+					var type      = rd.GetString(7).ToUpperInvariant();
+					var length    = Converter.ChangeTypeTo<long?>(rd[8]);
 
 					return new ProcedureParameterInfo()
 					{
 						ProcedureID   = procId,
-						ParameterName = Converter.ChangeTypeTo<string>(rd[4]),
+						ParameterName = name,
 						IsIn          = mode == "IN"  || mode == "INOUT",
 						IsOut         = mode == "OUT" || mode == "INOUT",
-						Precision     = Converter.ChangeTypeTo<int?>(rd[5]),
-						Scale         = Converter.ChangeTypeTo<int?>(rd[6]),
+						Precision     = precision,
+						Scale         = (int?)scale,
 						Ordinal       = ordinal,
 						IsResult      = mode == null,
-						DataType      = rd.GetString(7).ToUpper(),
-						Length        = Converter.ChangeTypeTo<long?>(rd[8]),
+						DataType      = type,
+						Length        = length > int.MaxValue ? null : (int?)length,
 						DataTypeExact = Converter.ChangeTypeTo<string>(rd[9]),
 						IsNullable    = true
 					};
@@ -327,7 +330,7 @@ SELECT
 			// now we have similar issue with MySqlConnector
 			// https://github.com/mysql-net/MySqlConnector/issues/722
 			if (rv != null && rv.AsEnumerable()
-					.Any(r => r.Field<string>("ColumnName").StartsWith("@_cnet_param_")
+					.Any(r => r.Field<string>("ColumnName")!.StartsWith("@_cnet_param_")
 						||    r.Field<string>("ColumnName") == "\ue001\b\v"))
 				rv = null;
 
@@ -358,7 +361,7 @@ SELECT
 					IsNullable           = isNullable,
 					MemberName           = ToValidName(columnName.Trim('`')),
 					MemberType           = ToTypeName(systemType, isNullable),
-					SystemType           = systemType ?? typeof(object),
+					SystemType           = systemType,
 					DataType             = GetDataType(dataType, null, length, precision, scale),
 					ProviderSpecificType = GetProviderSpecificType(dataType),
 					IsIdentity           = r.IsNull("IsIdentity") ? false : r.Field<bool>("IsIdentity")
@@ -373,7 +376,7 @@ SELECT
 
 		protected override string? GetProviderSpecificType(string? dataType)
 		{
-			switch (dataType?.ToLower())
+			switch (dataType?.ToLowerInvariant())
 			{
 				case "geometry"  : return _provider.Adapter.MySqlGeometryType.Name;
 				case "decimal"   : return _provider.Adapter.MySqlDecimalType?.Name;
@@ -386,9 +389,9 @@ SELECT
 			return base.GetProviderSpecificType(dataType);
 		}
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, long? length, int? precision, int? scale, GetSchemaOptions options)
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options)
 		{
-			switch (dataType?.ToLower())
+			switch (dataType?.ToLowerInvariant())
 			{
 				case "bit"               :
 					{
@@ -406,12 +409,13 @@ SELECT
 				case "int unsigned"      : return typeof(uint);
 				case "bigint unsigned"   : return typeof(ulong);
 				case "tinyint"           :
-					{
-						var size = precision > 0 ? precision : length;
-						if (columnType == "tinyint(1)" || size == 1)
-							return typeof(bool);
-						return columnType?.Contains("unsigned") == true ? typeof(byte) : typeof(sbyte);
-					}
+				{
+					var size = precision > 0 ? precision : length;
+					if (columnType == "tinyint(1)" || size == 1)
+						return typeof(bool);
+					return columnType?.Contains("unsigned") == true ? typeof(byte) : typeof(sbyte);
+				}
+				//case "tinyint"           : return columnType?.Contains("unsigned") == true ? typeof(byte)   : typeof(sbyte);
 				case "smallint"          : return columnType?.Contains("unsigned") == true ? typeof(ushort) : typeof(short);
 				case "mediumint"         :
 				case "int"               : return columnType?.Contains("unsigned") == true ? typeof(uint)   : typeof(int);
@@ -419,6 +423,7 @@ SELECT
 				case "json"              :
 				case "longtext"          : return typeof(string);
 				case "timestamp"         : return typeof(DateTime);
+				//case "bool"              : return typeof(sbyte);
 				case "bool"              : return typeof(bool);
 				case "point"             :
 				case "linestring"        :

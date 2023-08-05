@@ -11,13 +11,13 @@ namespace Tests.xUpdate
 	// could be added on request
 	public partial class MergeTests
 	{
-		class DynamicColumns1
+		sealed class DynamicColumns1
 		{
 			[DynamicColumnsStore]
 			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
 		}
 
-		class DynamicColumns2
+		sealed class DynamicColumns2
 		{
 			[DynamicColumnsStore]
 			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
@@ -27,14 +27,15 @@ namespace Tests.xUpdate
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<DynamicColumns1>().HasTableName("TestMerge1")
 					.HasPrimaryKey(x => Sql.Property<int>(x, "Id"))
 					.Property(x => Sql.Property<int?>(x, "Field1"))
 					.Property(x => Sql.Property<int?>(x, "Field2"))
 					.Property(x => Sql.Property<int?>(x, "Field3")).HasSkipOnInsert(true)
 					.Property(x => Sql.Property<int?>(x, "Field4")).HasSkipOnUpdate(true)
-					.Property(x => Sql.Property<int?>(x, "Field5")).HasSkipOnInsert(true).HasSkipOnUpdate(true);
+					.Property(x => Sql.Property<int?>(x, "Field5")).HasSkipOnInsert(true).HasSkipOnUpdate(true)
+				.Build();
 
 			return ms;
 		}

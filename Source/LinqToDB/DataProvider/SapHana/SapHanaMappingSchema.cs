@@ -1,28 +1,26 @@
-﻿
+﻿using System;
+using System.Data.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
 	using Common;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
-	using System.Text;
 
-	public class SapHanaMappingSchema : MappingSchema
+	public class SapHanaMappingSchema : LockedMappingSchema
 	{
-		public SapHanaMappingSchema() : this(ProviderName.SapHana)
-		{
-		}
-
-		protected SapHanaMappingSchema(string configuration) : base(configuration)
+		SapHanaMappingSchema() : base(ProviderName.SapHana)
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
-			SetValueToSqlConverter(typeof(string), (sb, dt, v) => ConvertStringToSql(sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char)  , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]), (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary), (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(char)  , (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 		}
+
+		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
@@ -46,30 +44,26 @@ namespace LinqToDB.DataProvider.SapHana
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
 		{
-			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversion, value, null);
+			DataTools.ConvertStringToSql(stringBuilder, "||", null, AppendConversionAction, value, null);
 		}
 
 		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
 		{
-			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversion, value);
+			DataTools.ConvertCharToSql(stringBuilder, "'", AppendConversionAction, value);
 		}
 
-		internal static readonly SapHanaMappingSchema Instance = new SapHanaMappingSchema();
+		internal static readonly SapHanaMappingSchema Instance = new ();
 
-#if NETFRAMEWORK || NETCOREAPP
-		public class NativeMappingSchema : MappingSchema
+		public sealed class NativeMappingSchema : LockedMappingSchema
 		{
-			public NativeMappingSchema()
-				: base(ProviderName.SapHanaNative, Instance)
+			public NativeMappingSchema() : base(ProviderName.SapHanaNative, Instance)
 			{
 			}
 		}
-#endif
 
-		public class OdbcMappingSchema : MappingSchema
+		public sealed class OdbcMappingSchema : LockedMappingSchema
 		{
-			public OdbcMappingSchema()
-				: base(ProviderName.SapHanaOdbc, Instance)
+			public OdbcMappingSchema() : base(ProviderName.SapHanaOdbc, Instance)
 			{
 			}
 		}

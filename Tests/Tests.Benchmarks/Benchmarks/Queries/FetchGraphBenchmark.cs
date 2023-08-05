@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+
 using BenchmarkDotNet.Attributes;
+
 using LinqToDB.Benchmarks.Mappings;
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.DataProvider;
@@ -13,9 +14,9 @@ namespace LinqToDB.Benchmarks.Queries
 {
 	public class FetchGraphBenchmark
 	{
-		private Func<Db, IQueryable<SalesOrderHeader>> _compiled = null!;
-		private QueryResult[] _results = null!;
-		private IDataProvider _provider = new SqlServerDataProvider(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient);
+		Func<Db,IQueryable<SalesOrderHeader>> _compiled = null!;
+		QueryResult[]                         _results  = null!;
+		IDataProvider                         _provider = SqlServerTools.GetDataProvider(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient);
 
 		[GlobalSetup]
 		public void Setup()

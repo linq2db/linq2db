@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlCondition : IQueryElement, ICloneableElement
+	public class SqlCondition : IQueryElement
 	{
 		public SqlCondition(bool isNot, ISqlPredicate predicate)
 		{
@@ -27,17 +27,6 @@ namespace LinqToDB.SqlQuery
 			IsNot ? SqlQuery.Precedence.LogicalNegation :
 				IsOr  ? SqlQuery.Precedence.LogicalDisjunction :
 					SqlQuery.Precedence.LogicalConjunction;
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlCondition(IsNot, (ISqlPredicate)Predicate.Clone(objectTree, doClone), IsOr));
-
-			return clone;
-		}
 
 		public bool CanBeNull => Predicate.CanBeNull;
 
@@ -74,5 +63,12 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public bool Equals(SqlCondition other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			return IsNot == other.IsNot
+				&& IsOr  == other.IsOr
+				&& Predicate.Equals(other.Predicate, comparer);
+		}
 	}
 }

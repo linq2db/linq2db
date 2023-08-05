@@ -47,7 +47,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="attribute">Mapping attribute to add to specified member.</param>
 		/// <returns>Returns current column or association mapping builder.</returns>
-		public PropertyMappingBuilder<TEntity, TProperty> HasAttribute(Attribute attribute)
+		public PropertyMappingBuilder<TEntity, TProperty> HasAttribute(MappingAttribute attribute)
 		{
 			_entity.HasAttribute(_memberInfo, attribute);
 			return this;
@@ -100,7 +100,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, TOther>>   prop,
 			Expression<Func<TEntity, TThisKey>> thisKey,
 			Expression<Func<TOther, TOtherKey>> otherKey,
-			bool                                canBeNull = true)
+			bool?                               canBeNull = null)
 		{
 			return _entity.Association(prop, thisKey, otherKey, canBeNull);
 		}
@@ -120,7 +120,7 @@ namespace LinqToDB.Mapping
 			Expression<Func<TEntity, IEnumerable<TPropElement>>> prop,
 			Expression<Func<TEntity, TThisKey>>                  thisKey,
 			Expression<Func<TPropElement, TOtherKey>>            otherKey,
-			bool                                                 canBeNull = true)
+			bool?                                                canBeNull = null)
 		{
 			return _entity.Association(prop, thisKey, otherKey, canBeNull);
 		}
@@ -136,7 +136,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>> prop,
 			Expression<Func<TEntity, TOther, bool>>        predicate,
-			bool                                           canBeNull = true)
+			bool?                                          canBeNull = null)
 		{
 			return _entity.Association(prop, predicate, canBeNull);
 		}
@@ -152,7 +152,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
 			Expression<Func<TEntity, TOther>>       prop,
 			Expression<Func<TEntity, TOther, bool>> predicate,
-			bool                                    canBeNull = true)
+			bool?                                   canBeNull = null)
 		{
 			return _entity.Association(prop, predicate, canBeNull);
 		}
@@ -168,7 +168,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, IEnumerable<TOther>> Association<TOther>(
 			Expression<Func<TEntity, IEnumerable<TOther>>>              prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                                                        canBeNull = true)
+			bool?                                                       canBeNull = null)
 		{
 			return _entity.Association(prop, queryExpression, canBeNull);
 		}
@@ -184,7 +184,7 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TOther> Association<TOther>(
 			Expression<Func<TEntity, TOther>>                           prop,
 			Expression<Func<TEntity, IDataContext, IQueryable<TOther>>> queryExpression,
-			bool                                                        canBeNull = true)
+			bool?                                                       canBeNull = null)
 		{
 			return _entity.Association(prop, queryExpression, canBeNull);
 		}
@@ -214,11 +214,10 @@ namespace LinqToDB.Mapping
 		{
 			var getter     = _memberGetter;
 			var memberName = null as string;
-			var me         = _memberGetter.Body.Unwrap() as MemberExpression;
 
-			if (me != null && me.Expression is MemberExpression)
+			if (_memberGetter.Body.Unwrap() is MemberExpression { Expression: MemberExpression } me)
 			{
-				for (MemberExpression? m = me; m != null; m = m.Expression as MemberExpression)
+				for (var m = me; m != null; m = m.Expression as MemberExpression)
 				{
 					memberName = m.Member.Name + (memberName != null ? "." + memberName : "");
 				}
@@ -231,7 +230,6 @@ namespace LinqToDB.Mapping
 						return a;
 					},
 					setColumn,
-					a => a.Configuration,
 					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
 				return this;
@@ -247,7 +245,6 @@ namespace LinqToDB.Mapping
 						return a;
 					 },
 					(_,a) => setColumn(a),
-					a     => a.Configuration,
 					a     => new ColumnAttribute(a),
 					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
 
@@ -366,6 +363,15 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TProperty> IsNullable(bool isNullable = true)
 		{
 			return SetColumn(a => a.CanBeNull = isNullable);
+		}
+
+		/// <summary>
+		/// Sets whether a column can contain <c>NULL</c> values.
+		/// </summary>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<TEntity, TProperty> IsNotNull()
+		{
+			return SetColumn(a => a.CanBeNull = false);
 		}
 
 		/// <summary>
@@ -494,6 +500,27 @@ namespace LinqToDB.Mapping
 		public PropertyMappingBuilder<TEntity, TProperty> HasConversion<TProvider>(Expression<Func<TProperty, TProvider>> toProvider, Expression<Func<TProvider, TProperty>> toModel, bool handlesNulls = false)
 		{
 			return HasAttribute(new ValueConverterAttribute { ValueConverter = new ValueConverter<TProperty, TProvider>(toProvider, toModel, handlesNulls) });
+		}
+
+		/// <summary>
+		/// Specifies value generation sequence for current column.
+		/// See <see cref="SequenceNameAttribute"/> notes for list of supported databases.
+		/// </summary>
+		/// <param name="sequenceName">Name of sequence.</param>
+		/// <param name="schema">Optional sequence schema name.</param>
+		/// <param name="configuration">Optional mapping configuration name. If not specified, entity configuration used.</param>
+		/// <returns>Returns current column mapping builder.</returns>
+		public PropertyMappingBuilder<TEntity, TProperty> UseSequence(string sequenceName, string? schema = null, string? configuration = null)
+		{
+			return HasAttribute(new SequenceNameAttribute(configuration ?? _entity.Configuration, sequenceName) { Schema = schema });
+		}
+
+		/// <summary>
+		/// Adds configured mappings to builder's mapping schema.
+		/// </summary>
+		public FluentMappingBuilder Build()
+		{
+			return _entity.Build();
 		}
 	}
 }

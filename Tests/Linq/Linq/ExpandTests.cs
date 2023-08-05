@@ -12,7 +12,7 @@ namespace Tests.Linq
 	public class ExpandTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -35,7 +35,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InvocationTestLocal([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void InvocationTestLocal([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			Expression<Func<SampleClass,bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
@@ -55,7 +55,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CompileTestLocal([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void CompileTestLocal([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
@@ -76,7 +76,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NonCompileTestLocal([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void NonCompileTestLocal([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			Expression<Func<SampleClass, bool>> predicate = c => c.Value > param;
 			var sampleData = GenerateData();
@@ -101,7 +101,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InvocationTestFunction([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void InvocationTestFunction([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			var sampleData = GenerateData();
 
@@ -120,7 +120,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LocalInvocation([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(2, 3)] int param)
+		public void LocalInvocation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(2, 3)] int param)
 		{
 			var sampleData = GenerateData();
 
@@ -141,7 +141,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InvocationTestByInvoke([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int param)
+		public void InvocationTestByInvoke([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int param)
 		{
 			var sampleData = GenerateData();
 

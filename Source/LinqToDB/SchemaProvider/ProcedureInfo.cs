@@ -19,6 +19,10 @@
 		/// </summary>
 		public string? SchemaName;
 		/// <summary>
+		/// Gets or sets package/module/library name for procedure.
+		/// </summary>
+		public string? PackageName;
+		/// <summary>
 		/// Gets or sets procedure name.
 		/// </summary>
 		public string ProcedureName = null!;

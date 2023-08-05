@@ -6,17 +6,18 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.Data
 {
+	using Model;
+
 	[TestFixture]
 	public class DataExtensionsTests : TestBase
 	{
 		[Test]
-		public void TestScalar1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestScalar1([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query(rd => rd[0], "SELECT 1").ToList();
 
@@ -25,9 +26,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestScalar2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void TestScalar2([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query<int>("SELECT 1").ToList();
 
@@ -38,7 +39,7 @@ namespace Tests.Data
 		[Test]
 		public void TestScalar3([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query<DateTimeOffset>("SELECT CURRENT_TIMESTAMP").ToList();
 
@@ -46,7 +47,7 @@ namespace Tests.Data
 			}
 		}
 
-		class QueryObject
+		sealed class QueryObject
 		{
 			public int      Column1;
 			public DateTime Column2;
@@ -55,7 +56,7 @@ namespace Tests.Data
 		[Test]
 		public void TestObject1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query<QueryObject>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
@@ -66,7 +67,7 @@ namespace Tests.Data
 		[Test]
 		public void TestObject2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query(
 					new
@@ -122,7 +123,7 @@ namespace Tests.Data
 		[Test]
 		public void TestObject51([DataSources(false)] string context)
 		{
-			using (var conn = new TestDataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				conn.InlineParameters = true;
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
@@ -152,7 +153,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void TestObjectLeftJoinProjection([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestObjectLeftJoinProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var conn = GetDataContext(context))
 			{
@@ -171,6 +172,49 @@ namespace Tests.Data
 			}
 		}
 
+		[Test]
+		public void TestGrouping1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
+			using (var dc = new DataContext(context))
+			{
+				var dictionary = dc.GetTable<Person>()
+					.GroupBy(p => p.FirstName)
+					.ToDictionary(p => p.Key);
+
+				var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
+			}
+		}
+
+		[Test]
+		public void TestGrouping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (new GuardGrouping(false))
+			using (new PreloadGroups(false))
+			{
+				using (var dc = new DataContext(context))
+				{
+					var query =
+						from p in dc.GetTable<Person>()
+						group p by new { p.FirstName } into g
+						select new
+						{
+							g.Key.FirstName,
+							List = g.Select(k => k.ID),
+						};
+
+					var array = query.ToArray();
+					Assert.IsTrue(array.Length > 0);
+
+					foreach (var row in array)
+					{
+						var ids = row.List.ToArray();
+						Assert.IsTrue(ids.Length > 0);
+					}
+				}
+			}
+		}
 
 		[Test]
 		public void TestObject6()
@@ -197,7 +241,7 @@ namespace Tests.Data
 		[Test]
 		public void TestStruct1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var list = conn.Query<QueryStruct>("SELECT 1 as Column1, CURRENT_TIMESTAMP as Column2").ToList();
 
@@ -208,7 +252,7 @@ namespace Tests.Data
 		[Test]
 		public void TestDataReader([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var conn   = new DataConnection(context))
+			using (var conn   = GetDataConnection(context))
 			using (var reader = conn.ExecuteReader("SELECT 1; SELECT '2'"))
 			{
 				var n = reader.Execute<int>();
@@ -222,7 +266,7 @@ namespace Tests.Data
 		}
 
 		[ScalarType]
-		class TwoValues
+		sealed class TwoValues
 		{
 			public int Value1;
 			public int Value2;
@@ -245,8 +289,9 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
 		[Test]
-		public void TestDataParameterMapping2([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDataParameterMapping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -262,8 +307,9 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
 		[Test]
-		public void TestDataParameterMapping3([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestDataParameterMapping3([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
@@ -286,9 +332,9 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void CacheTest([IncludeDataSources(TestProvName.Northwind)] string context)
+		public void CacheTest([IncludeDataSources(TestProvName.AllNorthwind)] string context)
 		{
-			using (var dc= new DataConnection(context))
+			using (var dc= GetDataConnection(context))
 			{
 				dc.Execute("CREATE TABLE #t1(v1 int not null)");
 				dc.Execute("INSERT INTO #t1(v1) values (1)");

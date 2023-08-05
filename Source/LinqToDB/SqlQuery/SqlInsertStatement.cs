@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -28,6 +27,8 @@ namespace LinqToDB.SqlQuery
 			set => _insert = value;
 		}
 
+		internal bool HasInsert => _insert != null;
+
 		#endregion
 
 		#region Output
@@ -42,38 +43,15 @@ namespace LinqToDB.SqlQuery
 			return sb;
 		}
 
-		public override ISqlExpression? Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			With?.Walk(options, func);
-			((ISqlExpressionWalkable?)_insert)?.Walk(options, func);
+			With?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)_insert)?.Walk(options, context, func);
+			((ISqlExpressionWalkable?)Output)?.Walk(options, context, func);
 
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, func);
+			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
 
-			return null;
-		}
-
-		public override ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			var clone = new SqlInsertStatement((SelectQuery)SelectQuery.Clone(objectTree, doClone));
-
-			if (_insert != null)
-				clone._insert = (SqlInsertClause)_insert.Clone(objectTree, doClone);
-
-			if (With != null)
-				clone.With = (SqlWithClause)With.Clone(objectTree, doClone);
-
-			objectTree.Add(this, clone);
-
-			return clone;
-		}
-
-		public override IEnumerable<IQueryElement> EnumClauses()
-		{
-			if (_insert != null)
-				yield return _insert;
+			return base.Walk(options, context, func);
 		}
 
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table)

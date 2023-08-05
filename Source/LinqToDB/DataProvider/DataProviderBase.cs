@@ -4,17 +4,18 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-
 using System.Xml;
 using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
 	using Common;
+	using Common.Internal;
 	using Data;
 	using Expressions;
 	using Mapping;
@@ -29,43 +30,58 @@ namespace LinqToDB.DataProvider
 		{
 			Name             = name;
 			MappingSchema    = mappingSchema;
-			SqlProviderFlags = new SqlProviderFlags
+			// set default flags values explicitly even for default values
+			SqlProviderFlags = new SqlProviderFlags()
 			{
+				IsSybaseBuggyGroupBy                 = false,
+				IsParameterOrderDependent            = false,
 				AcceptsTakeAsParameter               = true,
+				AcceptsTakeAsParameterIfSkip         = false,
 				IsTakeSupported                      = true,
 				IsSkipSupported                      = true,
+				IsSkipSupportedIfTake                = false,
+				TakeHintsSupported                   = null,
 				IsSubQueryTakeSupported              = true,
 				IsSubQueryColumnSupported            = true,
+				IsSubQueryOrderBySupported           = false,
 				IsCountSubQuerySupported             = true,
+				IsIdentityParameterRequired          = false,
+				IsApplyJoinSupported                 = false,
 				IsInsertOrUpdateSupported            = true,
 				CanCombineParameters                 = true,
 				MaxInListValuesCount                 = int.MaxValue,
-				IsGroupByExpressionSupported         = true,
-				IsDistinctOrderBySupported           = true,
-				IsSubQueryOrderBySupported           = false,
 				IsUpdateSetTableAliasSupported       = true,
-				TakeHintsSupported                   = null,
+				OutputDeleteUseSpecialTable          = false,
+				OutputInsertUseSpecialTable          = false,
+				OutputUpdateUseSpecialTables         = false,
+				IsGroupByColumnRequred               = false,
 				IsCrossJoinSupported                 = true,
 				IsInnerJoinAsCrossSupported          = true,
+				IsCommonTableExpressionsSupported    = false,
+				IsDistinctOrderBySupported           = true,
 				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
+				IsCountDistinctSupported             = false,
+				AcceptsOuterExpressionInAggregate    = true,
 				IsUpdateFromSupported                = true,
+				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
+				RowConstructorSupport                = RowFeature.None,
 			};
 
-			SetField<IDataReader,bool>    ((r,i) => r.GetBoolean (i));
-			SetField<IDataReader,byte>    ((r,i) => r.GetByte    (i));
-			SetField<IDataReader,char>    ((r,i) => r.GetChar    (i));
-			SetField<IDataReader,short>   ((r,i) => r.GetInt16   (i));
-			SetField<IDataReader,int>     ((r,i) => r.GetInt32   (i));
-			SetField<IDataReader,long>    ((r,i) => r.GetInt64   (i));
-			SetField<IDataReader,float>   ((r,i) => r.GetFloat   (i));
-			SetField<IDataReader,double>  ((r,i) => r.GetDouble  (i));
-			SetField<IDataReader,string>  ((r,i) => r.GetString  (i));
-			SetField<IDataReader,decimal> ((r,i) => r.GetDecimal (i));
-			SetField<IDataReader,DateTime>((r,i) => r.GetDateTime(i));
-			SetField<IDataReader,Guid>    ((r,i) => r.GetGuid    (i));
-			SetField<IDataReader,byte[]>  ((r,i) => (byte[])r.GetValue(i));
+			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));
+			SetField<DbDataReader, byte>    ((r,i) => r.GetByte    (i));
+			SetField<DbDataReader, char>    ((r,i) => r.GetChar    (i));
+			SetField<DbDataReader, short>   ((r,i) => r.GetInt16   (i));
+			SetField<DbDataReader, int>     ((r,i) => r.GetInt32   (i));
+			SetField<DbDataReader, long>    ((r,i) => r.GetInt64   (i));
+			SetField<DbDataReader, float>   ((r,i) => r.GetFloat   (i));
+			SetField<DbDataReader, double>  ((r,i) => r.GetDouble  (i));
+			SetField<DbDataReader, string>  ((r,i) => r.GetString  (i));
+			SetField<DbDataReader, decimal> ((r,i) => r.GetDecimal (i));
+			SetField<DbDataReader, DateTime>((r,i) => r.GetDateTime(i));
+			SetField<DbDataReader, Guid>    ((r,i) => r.GetGuid    (i));
+			SetField<DbDataReader, byte[]>  ((r,i) => (byte[])r.GetValue(i));
 		}
 
 		#endregion
@@ -78,10 +94,30 @@ namespace LinqToDB.DataProvider
 		public virtual  MappingSchema    MappingSchema         { get; }
 		public          SqlProviderFlags SqlProviderFlags      { get; }
 		public abstract TableOptions     SupportedTableOptions { get; }
+		public virtual  bool             TransactionsSupported => true;
 
-		public static Func<IDataProvider,IDbConnection,IDbConnection>? OnConnectionCreated { get; set; }
+		public static Func<IDataProvider, DbConnection, DbConnection>? OnConnectionCreated { get; set; }
 
-		public IDbConnection CreateConnection(string connectionString)
+		public virtual void InitContext(IDataContext dataContext)
+		{
+		}
+
+		private int? _id;
+		public  int   ID
+		{
+			get
+			{
+				if (_id == null)
+				{
+					using var idBuilder = new IdentifierBuilder(Name);
+					_id = idBuilder.CreateID();
+				}
+
+				return _id.Value;
+			}
+		}
+
+		public DbConnection CreateConnection(string connectionString)
 		{
 			var connection = CreateConnectionInternal(connectionString);
 
@@ -91,24 +127,40 @@ namespace LinqToDB.DataProvider
 			return connection;
 		}
 
-		protected abstract IDbConnection CreateConnectionInternal (string connectionString);
-		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema mappingSchema);
-		public    abstract ISqlOptimizer GetSqlOptimizer ();
+		protected abstract DbConnection  CreateConnectionInternal (string connectionString);
+		public    abstract ISqlBuilder   CreateSqlBuilder(MappingSchema   mappingSchema, DataOptions dataOptions);
+		public    abstract ISqlOptimizer GetSqlOptimizer (DataOptions     dataOptions);
 
-		public virtual void InitCommand(DataConnection dataConnection, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
+		public virtual DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters)
 		{
-			dataConnection.Command.CommandType = commandType;
+			command.CommandType = commandType;
 
-			if (dataConnection.Command.Parameters.Count != 0)
-				dataConnection.Command.Parameters.Clear();
+			ClearCommandParameters(command);
 
-			dataConnection.Command.CommandText = commandText;
+			command.CommandText = commandText;
+
+			return command;
 		}
 
-		public virtual void DisposeCommand(DataConnection dataConnection)
+		public virtual void ClearCommandParameters(DbCommand command)
 		{
-			dataConnection.Command.Dispose();
+			if (command.Parameters.Count != 0)
+				command.Parameters.Clear();
 		}
+
+		public virtual void DisposeCommand(DbCommand command)
+		{
+			ClearCommandParameters(command);
+			command.Dispose();
+		}
+
+#if NETSTANDARD2_1PLUS
+		public virtual ValueTask DisposeCommandAsync(DbCommand command)
+		{
+			ClearCommandParameters(command);
+			return command.DisposeAsync();
+		}
+#endif
 
 		public virtual object? GetConnectionInfo(DataConnection dataConnection, string parameterName)
 		{
@@ -120,23 +172,27 @@ namespace LinqToDB.DataProvider
 			return commandBehavior;
 		}
 
-		public virtual IDisposable? ExecuteScope(DataConnection dataConnection)
-		{
-			return null;
-		}
+		/// <summary>
+		/// Creates disposable object, which should be disposed by caller after database query execution completed.
+		/// Could be used to execute provider's method with scope-specific settings, e.g. with Invariant culture to
+		/// workaround incorrect culture handling in provider.
+		/// </summary>
+		/// <param name="dataConnection">Current data connection object.</param>
+		/// <returns>Scoped execution disposable object or <c>null</c> if provider doesn't need scoped configuration.</returns>
+		public virtual IExecutionScope? ExecuteScope(DataConnection dataConnection) => null;
 
 		#endregion
 
 		#region Helpers
 
-		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ConcurrentDictionary<ReaderInfo,Expression>();
+		public readonly ConcurrentDictionary<ReaderInfo,Expression> ReaderExpressions = new ();
 
-		protected void SetCharField(string dataTypeName, Expression<Func<IDataReader,int,string>> expr)
+		protected void SetCharField(string dataTypeName, Expression<Func<DbDataReader, int,string>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
 		}
 
-		protected void SetCharFieldToType<T>(string dataTypeName, Expression<Func<IDataReader, int, string>> expr)
+		protected void SetCharFieldToType<T>(string dataTypeName, Expression<Func<DbDataReader, int, string>> expr)
 		{
 			ReaderExpressions[new ReaderInfo { ToType = typeof(T), FieldType = typeof(string), DataTypeName = dataTypeName }] = expr;
 		}
@@ -185,15 +241,15 @@ namespace LinqToDB.DataProvider
 
 		#region GetReaderExpression
 
-		public virtual Expression GetReaderExpression(IDataReader reader, int idx, Expression readerExpression, Type toType)
+		public virtual Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type? toType)
 		{
-			var fieldType    = ((DbDataReader)reader).GetFieldType(idx);
-			var providerType = ((DbDataReader)reader).GetProviderSpecificFieldType(idx);
-			string? typeName = ((DbDataReader)reader).GetDataTypeName(idx);
+			var fieldType    = reader.GetFieldType(idx);
+			var providerType = reader.GetProviderSpecificFieldType(idx);
+			var typeName     = reader.GetDataTypeName(idx);
 
 			if (fieldType == null)
 			{
-				var name = ((DbDataReader)reader).GetName(idx);
+				var name = reader.GetName(idx);
 				throw new LinqToDBException($"Can't create '{typeName}' type or '{providerType}' specific type for {name}.");
 			}
 
@@ -202,22 +258,21 @@ namespace LinqToDB.DataProvider
 #if DEBUG1
 			Debug.WriteLine("ToType                ProviderFieldType     FieldType             DataTypeName          Expression");
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
-			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}".Args(
+			Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21}",
 				toType       == null ? "(null)" : toType.Name,
 				providerType == null ? "(null)" : providerType.Name,
 				fieldType.Name,
-				typeName ?? "(null)"));
+				typeName ?? "(null)");
 			Debug.WriteLine("--------------------- --------------------- --------------------- --------------------- ---------------------");
 
 			foreach (var ex in ReaderExpressions)
 			{
-				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}"
-					.Args(
-						ex.Key.ToType            == null ? null : ex.Key.ToType.Name,
-						ex.Key.ProviderFieldType == null ? null : ex.Key.ProviderFieldType.Name,
-						ex.Key.FieldType         == null ? null : ex.Key.FieldType.Name,
-						ex.Key.DataTypeName,
-						ex.Value));
+				Debug.WriteLine("{0,-21} {1,-21} {2,-21} {3,-21} {4}",
+					ex.Key.ToType?.Name,
+					ex.Key.ProviderFieldType?.Name,
+					ex.Key.FieldType?.Name,
+					ex.Key.DataTypeName,
+					ex.Value);
 			}
 #endif
 
@@ -225,6 +280,7 @@ namespace LinqToDB.DataProvider
 
 			if (FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out var expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType, ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo { DataReaderType = dataReaderType,                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
@@ -238,6 +294,7 @@ namespace LinqToDB.DataProvider
 
 			if (FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType, FieldType = fieldType                          }, out expr) ||
+			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType,                        DataTypeName = typeName }, out expr) ||
 			    FindExpression(new ReaderInfo { ToType = toType, ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType                                                 }, out expr) ||
 			    FindExpression(new ReaderInfo {                  ProviderFieldType = providerType, FieldType = fieldType, DataTypeName = typeName }, out expr) ||
@@ -249,9 +306,9 @@ namespace LinqToDB.DataProvider
 			    FindExpression(new ReaderInfo {                                                    FieldType = fieldType                          }, out expr))
 				return expr;
 
-			var getValueMethodInfo = MemberHelper.MethodOf<IDataReader>(r => r.GetValue(0));
+			var getValueMethodInfo = MemberHelper.MethodOf<DbDataReader>(r => r.GetValue(0));
 			return Expression.Convert(
-				Expression.Call(readerExpression, getValueMethodInfo, Expression.Constant(idx)),
+				Expression.Call(readerExpression, getValueMethodInfo, ExpressionInstances.Int32Array(idx)),
 				fieldType);
 		}
 
@@ -277,9 +334,9 @@ namespace LinqToDB.DataProvider
 			return false;
 		}
 
-		public virtual bool? IsDBNullAllowed(IDataReader reader, int idx)
+		public virtual bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
-			var st = ((DbDataReader)reader).GetSchemaTable();
+			var st = reader.GetSchemaTable();
 			return st == null || st.Rows[idx].IsNull("AllowDBNull") || (bool)st.Rows[idx]["AllowDBNull"];
 		}
 
@@ -287,7 +344,7 @@ namespace LinqToDB.DataProvider
 
 		#region SetParameter
 
-		public virtual void SetParameter(DataConnection dataConnection, IDbDataParameter parameter, string name, DbDataType dataType, object? value)
+		public virtual void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			switch (dataType.DataType)
 			{
@@ -371,7 +428,7 @@ namespace LinqToDB.DataProvider
 
 		public abstract ISchemaProvider GetSchemaProvider     ();
 
-		protected virtual void SetParameterType(DataConnection dataConnection, IDbDataParameter parameter, DbDataType dataType)
+		protected virtual void SetParameterType(DataConnection dataConnection, DbParameter parameter, DbDataType dataType)
 		{
 			DbType dbType;
 
@@ -413,25 +470,30 @@ namespace LinqToDB.DataProvider
 
 		#region BulkCopy
 
-		public virtual BulkCopyRowsCopied BulkCopy<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public virtual BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
+			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopy(options.BulkCopyType, table, options, source);
+			return new BasicBulkCopy().BulkCopy(options.BulkCopyOptions.BulkCopyType, table, options, source);
 		}
 
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
+			where T : notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 
-#if !NETFRAMEWORK
-		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+#if NATIVE_ASYNC
+		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			where T: notnull
 		{
-			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyType, table, options, source, cancellationToken);
+			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 #endif
 
 		#endregion
+
+		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
 	}
 }

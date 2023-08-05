@@ -12,6 +12,7 @@ namespace LinqToDB.SqlQuery
 		CreateTable,
 		DropTable,
 		TruncateTable,
-		Merge
+		Merge,
+		MultiInsert,
 	}
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -20,12 +19,14 @@ namespace LinqToDB.Linq.Builder
 				methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null,
 				out var format, out var arguments);
 
-			var sqlArguments = arguments.Select(a => builder.ConvertToSql(buildInfo.Parent, a)).ToArray();
+			var sqlArguments = new ISqlExpression[arguments.Count];
+			for (var i = 0; i < arguments.Count; i++)
+				sqlArguments[i] = builder.ConvertToSql(buildInfo.Parent, arguments[i]);
 
 			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments);
 		}
 
-		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IEnumerable<Expression> arguments)
+		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IReadOnlyList<Expression> arguments)
 		{
 			// Consider that FormattableString is used
 			if (formatArg.NodeType == ExpressionType.Call)
@@ -35,7 +36,12 @@ namespace LinqToDB.Linq.Builder
 				if (mc.Arguments[1].NodeType != ExpressionType.NewArrayInit)
 				{
 					format    = (string)mc.Arguments[0].EvaluateExpression()!;
-					arguments = mc.Arguments.Skip(1).ToArray();
+					var args  = new Expression[mc.Arguments.Count - 1];
+
+					for (var i = 0; i < args.Length; i++)
+						args[i] = mc.Arguments[i + 1];
+
+					arguments = args;
 				}
 				else
 				{
@@ -49,22 +55,30 @@ namespace LinqToDB.Linq.Builder
 #if !NET45
 				if (evaluatedSql is FormattableString formattable)
 				{
-					format    = formattable.Format;
+					format     = formattable.Format;
 
-					arguments = formattable.GetArguments().Select((a, i) =>
+					var array = formattable.GetArguments();
+					var args   = new Expression[array.Length];
+
+					for (var i = 0; i < array.Length; i++)
 					{
-						var type = a?.GetType() ?? typeof(object);
+						var type = array[i]?.GetType() ?? typeof(object);
 
 						if (typeof(ISqlExpression).IsAssignableFrom(type))
-							return Expression.Constant(a);
+						{
+							args[i] = Expression.Constant(array[i]);
+							continue;
+						}
 
-						Expression expr = Expression.Call(formatArg, ReflectionHelper.Functions.FormattableString.GetArguments, Expression.Constant(i));
+						Expression expr = Expression.Call(formatArg, ReflectionHelper.Functions.FormattableString.GetArguments, ExpressionInstances.Int32Array(i));
 
 						if (type != typeof(object))
 							expr = Expression.Convert(expr, type);
 
-						return expr;
-					});
+						args[i] = expr;
+					}
+
+					arguments = args;
 				}
 				else
 #endif
@@ -81,29 +95,35 @@ namespace LinqToDB.Linq.Builder
 					else
 					{
 						var array = (object[])arrayExpr.EvaluateExpression()!;
-						arguments = array.Select((a, i) =>
+						var args  = new Expression[array.Length];
+						for (var i = 0; i < array.Length; i++)
 						{
-							var type = a?.GetType() ?? typeof(object);
+							var type = array[i]?.GetType() ?? typeof(object);
 
 							if (typeof(ISqlExpression).IsAssignableFrom(type))
-								return Expression.Constant(a);
+							{
+								args[i] = Expression.Constant(array[i]);
+								continue;
+							}
 
-							Expression expr = Expression.ArrayIndex(arrayExpr, Expression.Constant(i));
+							Expression expr = Expression.ArrayIndex(arrayExpr, ExpressionInstances.Int32(i));
 							if (type != typeof(object))
 								expr = Expression.Convert(expr, type);
 
-							return expr;
-						});
+							args[i] = expr;
+						}
+
+						arguments = args;
 					}
 				}
 			}
 		}
 
 		//TODO: We have to separate TableContext in proper hierarchy
-		class RawSqlContext : TableContext
+		sealed class RawSqlContext : TableContext
 		{
-			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, params ISqlExpression[] parameters)
-				: base(builder, buildInfo, new SqlRawSqlTable(builder.MappingSchema, originalType, sql, parameters))
+			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
+				: base(builder, buildInfo, new SqlRawSqlTable(builder.MappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, parameters))
 			{
 				// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder 
 				if (isScalar)

@@ -13,20 +13,20 @@ namespace LinqToDB.DataProvider.SapHana
 
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			switch (statement.QueryType)
 			{
-				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
-				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
+				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
+				case QueryType.Update: statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions); break;
 			}
+
 			return statement;
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
-			EvaluationContext context)
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			if (expression is SqlFunction func)
 			{
@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 					if (ftype == typeof(bool))
 					{
-						var ex = AlternativeConvertToBoolean(func, 1);
+						var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
 						if (ex != null)
 							return ex;
 					}
@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.SapHana
 				{
 					case "%":
 						return new SqlFunction(be.SystemType, "MOD", be.Expr1, be.Expr2);
-					case "&": 
+					case "&":
 						return new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2);
 					case "|":
 						return Sub(
@@ -61,9 +61,9 @@ namespace LinqToDB.DataProvider.SapHana
 							Add(be.Expr1, be.Expr2, be.SystemType),
 							Mul(new SqlFunction(be.SystemType, "BITAND", be.Expr1, be.Expr2), 2),
 							be.SystemType);
-					case "+": 
-						return be.SystemType == typeof(string) ? 
-							new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : 
+					case "+":
+						return be.SystemType == typeof(string) ?
+							new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) :
 							expression;
 				}
 			}
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.SapHana
 				}
 				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
 			}
-			
+
 			return new SqlFunction(systemType, name,
 				cond,
 				parameters[start + 1],

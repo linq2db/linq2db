@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	static partial class QueryRunner
@@ -20,13 +21,18 @@ namespace LinqToDB.Linq
 				bool?        ifExists,
 				TableOptions tableOptions)
 			{
-				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
+				var sqlTable  = SqlTable.Create<T>(dataContext);
 				var dropTable = new SqlDropTableStatement(sqlTable);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				{
+					sqlTable.TableName = new(
+						          tableName    ?? sqlTable.TableName.Name,
+						Server  : serverName   ?? sqlTable.TableName.Server,
+						Database: databaseName ?? sqlTable.TableName.Database,
+						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+				}
+
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				sqlTable.Set(ifExists, TableOptions.DropIfExists);
@@ -38,7 +44,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				query.GetElement(dataContext, Expression.Constant(null), null, null);
+				query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
 			}
 
 			public static async Task QueryAsync(
@@ -51,13 +57,18 @@ namespace LinqToDB.Linq
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
-				var sqlTable  = new SqlTable<T>(dataContext.MappingSchema);
+				var sqlTable  = SqlTable.Create<T>(dataContext);
 				var dropTable = new SqlDropTableStatement(sqlTable);
 
-				if (tableName    != null) sqlTable.PhysicalName = tableName;
-				if (serverName   != null) sqlTable.Server       = serverName;
-				if (databaseName != null) sqlTable.Database     = databaseName;
-				if (schemaName   != null) sqlTable.Schema       = schemaName;
+				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				{
+					sqlTable.TableName = new(
+						          tableName    ?? sqlTable.TableName.Name,
+						Server  : serverName   ?? sqlTable.TableName.Server,
+						Database: databaseName ?? sqlTable.TableName.Database,
+						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+				}
+
 				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
 
 				sqlTable.Set(ifExists, TableOptions.DropIfExists);
@@ -69,7 +80,7 @@ namespace LinqToDB.Linq
 
 				SetNonQueryQuery(query);
 
-				await query.GetElementAsync(dataContext, Expression.Constant(null), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

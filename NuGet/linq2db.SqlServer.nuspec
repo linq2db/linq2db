@@ -11,30 +11,35 @@
 			This package includes a T4 template to generate data models for SqlServer database and references to the linq2db.
 		</summary>
 		<tags>linq linq2db SqlServer LinqToDB ORM database DB SQL</tags>
+		<readme>README.md</readme>
 		<dependencies>
-			<dependency id="linq2db" version="3.0.0" />
+			<dependency id="linq2db" version="5.0.0" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"             target="tools"                                                                                              />
-		<file src="..\Tests\Tests.T4\bin\Azure\net472\Humanizer.dll"             target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.SqlServer.Types.dll" target="tools"                                                                                              />
+		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
+		<file src="..\Nuget\readme.T4.txt"                                           target="readme.txt"                                                                                         />
 
-		<file src="..\NuGet\SqlServer\linq2db.SqlServer.props"                   target="build"                                                                                              />
+		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.SqlServer.Types.dll"     target="tools"                                                                                              />
+		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />
 
-		<file src="..\NuGet\SqlServer\*.*"                                       target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
-		<file src="..\NuGet\t4models\*.ttinclude"                                target="contentFiles\any\any\LinqToDB.Templates"                                                            />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                     target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
-		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"        target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
-		<file src="..\Source\LinqToDB.Templates\*.SqlServer.ttinclude"           target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+		<file src="..\NuGet\SqlServer\linq2db.SqlServer.props"                       target="build"                                                                                              />
 
-		<file src="..\NuGet\SqlServer\*.*"                                       target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
-		<file src="..\NuGet\t4models\*.ttinclude"                                target="content\LinqToDB.Templates"                                                                         />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                     target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
-		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"        target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
-		<file src="..\Source\LinqToDB.Templates\*.SqlServer.ttinclude"           target="content\LinqToDB.Templates"                                                                         />
+		<file src="..\NuGet\SqlServer\*.*"                                           target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
+		<file src="..\NuGet\t4models\*.ttinclude"                                    target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
+		<file src="..\Source\LinqToDB.Templates\*.SqlServer.ttinclude"               target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+
+		<file src="..\NuGet\SqlServer\*.*"                                           target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
+		<file src="..\NuGet\t4models\*.ttinclude"                                    target="content\LinqToDB.Templates"                                                                         />
+		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
+		<file src="..\Source\LinqToDB.Templates\*.SqlServer.ttinclude"               target="content\LinqToDB.Templates"                                                                         />
 	</files>
 </package>

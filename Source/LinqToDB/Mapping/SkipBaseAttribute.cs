@@ -8,15 +8,15 @@ namespace LinqToDB.Mapping
 	[Flags]
 	public enum SkipModification
 	{
-		/// <summary> 
+		/// <summary>
 		/// No value should be skipped.
 		/// </summary>
 		None = 0x0,
-		/// <summary> 
+		/// <summary>
 		/// A value should be skipped on insert.
 		/// </summary>
 		Insert = 0x1,
-		/// <summary> 
+		/// <summary>
 		/// A value should be skipped on update.
 		/// </summary>
 		Update = 0x2
@@ -26,7 +26,7 @@ namespace LinqToDB.Mapping
 	/// Abstract Attribute to be used for skipping values
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
-	public abstract class SkipBaseAttribute : Attribute
+	public abstract class SkipBaseAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Check if object contains values that should be skipped.
@@ -42,11 +42,9 @@ namespace LinqToDB.Mapping
 	  /// </summary>
 		public abstract SkipModification Affects { get; }
 
-		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration { get; set; }
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{(int)Affects}.";
+		}
 	}
 }

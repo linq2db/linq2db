@@ -11,39 +11,29 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlValue(Type systemType, object? value)
 		{
-			_valueType  = new DbDataType(systemType);
-			_value     = value;
+			_valueType    = new DbDataType(systemType);
+			Value         = value;
 		}
 
 		public SqlValue(DbDataType valueType, object? value)
 		{
-			_valueType = valueType;
-			_value     = value;
+			_valueType    = valueType;
+			Value         = value;
 		}
 
 		public SqlValue(object value)
 		{
-			_value     = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
-			_valueType = new DbDataType(value.GetType());
+			Value         = value ?? throw new ArgumentNullException(nameof(value), "Untyped null value");
+			_valueType    = new DbDataType(value.GetType());
 		}
 
-		object? _value;
-		
-		public object? Value
-		{
-			get => _value;
-			internal set
-			{
-				if (_value == value)
-					return;
-				
-				_value    = value;
-				_hashCode = null;
-			}
-		}
+		/// <summary>
+		/// Provider specific value
+		/// </summary>
+		public object? Value { get; }
 
 		DbDataType _valueType;
-		
+
 		public DbDataType ValueType
 		{
 			get => _valueType;
@@ -79,9 +69,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression,ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -131,21 +121,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement,ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-				objectTree.Add(this, clone = new SqlValue(ValueType, Value));
-
-			return clone;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public QueryElementType ElementType => QueryElementType.SqlValue;
@@ -165,5 +140,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out object? value)
+		{
+			value = Value;
+		}
 	}
 }

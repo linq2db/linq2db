@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Data.Common;
-using System.Reflection;
-using NUnit.Framework;
-
-#if !NET472
 using System.IO;
-#endif
+using System.Reflection;
 
+using LinqToDB.DataProvider.ClickHouse;
+using NUnit.Framework;
 using Tests;
 
 /// <summary>
@@ -19,13 +17,16 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+		// required for tests expectations
+		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
+
 		// uncomment it to run tests with SeqentialAccess command behavior
 		//LinqToDB.Common.Configuration.OptimizeForSequentialAccess = true;
 		//DbCommandProcessorExtensions.Instance = new SequentialAccessCommandProcessor();
 
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
-		RegisterSapHanaFactory();
+		CopySQLiteRuntime();
 		RegisterSqlCEFactory();
 
 #if NET472 && !AZURE
@@ -54,26 +55,27 @@ public class TestsInitialization
 
 		// uncomment to run FEC for all tests and comment reset line in TestBase.OnAfterTest
 		//LinqToDB.Common.Compilation.SetExpressionCompiler(_ => FastExpressionCompiler.ExpressionCompiler.CompileFast(_, true));
+
+		//custom initialization logic
+		CustomizationSupport.Init();
 	}
 
-	private void RegisterSapHanaFactory()
+	// workaround for
+	// https://github.com/ericsink/SQLitePCL.raw/issues/389
+	// https://github.com/dotnet/efcore/issues/19396
+	private void CopySQLiteRuntime()
 	{
-#if !NET472
-		try
-		{
-			// woo-hoo, hardcoded pathes! default install location on x64 system
-			var srcPath = @"c:\Program Files (x86)\sap\hdbclient\dotnetcore\v2.1\Sap.Data.Hana.Core.v2.1.dll";
-			var targetPath = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory!, Path.GetFileName(srcPath));
-			if (File.Exists(srcPath))
-			{
-				// original path contains spaces which breaks broken native dlls discovery logic in SAP provider
-				// if you run tests from path with spaces - it will not help you
-				File.Copy(srcPath, targetPath, true);
-				var sapHanaAssembly = Assembly.LoadFrom(targetPath);
-				DbProviderFactories.RegisterFactory("Sap.Data.Hana", sapHanaAssembly.GetType("Sap.Data.Hana.HanaFactory")!);
-			}
-		}
-		catch { }
+#if NET472
+		const string runtimeFile = "e_sqlite3.dll";
+		var destPath             = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, runtimeFile);
+		var sourcePath           = Path.Combine(
+			AppDomain.CurrentDomain.BaseDirectory,
+			"runtimes",
+			IntPtr.Size == 4 ? "win-x86" : "win-x64",
+			"native",
+			runtimeFile);
+
+		File.Copy(sourcePath, destPath, true);
 #endif
 	}
 

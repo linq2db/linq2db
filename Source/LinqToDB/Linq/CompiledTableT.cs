@@ -7,7 +7,8 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common.Internal.Cache;
 
-	class CompiledTable<T>
+	sealed class CompiledTable<T>
+		where T : notnull
 	{
 		public CompiledTable(LambdaExpression lambda, Expression expression)
 		{
@@ -20,24 +21,32 @@ namespace LinqToDB.Linq
 
 		Query<T> GetInfo(IDataContext dataContext)
 		{
-			var contextID       = dataContext.ContextID;
-			var contextType     = dataContext.GetType();
-			var mappingSchemaID = dataContext.MappingSchema.ConfigurationID;
+			var configurationID = dataContext.ConfigurationID;
+			var dataOptions     = dataContext.Options;
 
-			var key = new { Operation = "CT", contextID, contextType, mappingSchemaID, Expression = _expression };
+			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
+				(
+					operation: "CT",
+					configurationID,
+					expression : _expression,
+					queryFlags : dataContext.GetQueryFlags()
+				),
+				(dataContext, lambda: _lambda, dataOptions),
+				static (o, key, ctx) =>
+				{
+					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
-			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(key, o =>
-			{
-				o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
+					var query = new Query<T>(ctx.dataContext, key.expression);
 
-				var query = new Query<T>(dataContext, _expression);
+					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
+					var parametersContext = new ParametersContext(key.expression, optimizationContext, ctx.dataContext);
 
-				query = new ExpressionBuilder(query, dataContext, _expression, _lambda.Parameters.ToArray())
-					.Build<T>();
+					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, key.expression, ctx.lambda.Parameters.ToArray())
+						.Build<T>();
 
-				query.ClearMemberQueryableInfo();
-				return query;
-			});
+					query.ClearMemberQueryableInfo();
+					return query;
+				})!;
 
 
 			return result;

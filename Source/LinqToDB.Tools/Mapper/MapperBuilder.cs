@@ -59,8 +59,7 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <returns>Mapping expression.</returns>
 		[Pure]
-		public Mapper<TFrom,TTo> GetMapper()
-			=> new Mapper<TFrom,TTo>(this);
+		public Mapper<TFrom,TTo> GetMapper() => new (this);
 
 		/// <summary>
 		/// Sets mapping schema.
@@ -107,8 +106,7 @@ namespace LinqToDB.Tools.Mapper
 			if (memberName == null) throw new ArgumentNullException(nameof(memberName));
 			if (mapName    == null) throw new ArgumentNullException(nameof(mapName));
 
-			if (FromMappingDictionary == null)
-				FromMappingDictionary = new Dictionary<Type,Dictionary<string,string>>();
+			FromMappingDictionary ??= new Dictionary<Type,Dictionary<string,string>>();
 
 			if (!FromMappingDictionary.TryGetValue(type, out var dic))
 				FromMappingDictionary[type] = dic = new Dictionary<string,string>();
@@ -187,8 +185,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> ToMapping(Type type, string memberName, string mapName)
 		{
-			if (ToMappingDictionary == null)
-				ToMappingDictionary = new Dictionary<Type,Dictionary<string,string>>();
+			ToMappingDictionary ??= new Dictionary<Type,Dictionary<string,string>>();
 
 			if (!ToMappingDictionary.TryGetValue(type, out var dic))
 				ToMappingDictionary[type] = dic = new Dictionary<string,string>();
@@ -336,8 +333,7 @@ namespace LinqToDB.Tools.Mapper
 			if (toMember == null) throw new ArgumentNullException(nameof(toMember));
 			if (setter   == null) throw new ArgumentNullException(nameof(setter));
 
-			if (MemberMappers == null)
-				MemberMappers = new List<MemberMapperInfo>();
+			MemberMappers ??= new List<MemberMapperInfo>();
 
 			MemberMappers.Add(new MemberMapperInfo { ToMember = toMember, Setter = setter });
 
@@ -395,7 +391,7 @@ namespace LinqToDB.Tools.Mapper
 		/// </summary>
 		/// <returns><see cref="ExpressionBuilder"/>.</returns>
 		internal ExpressionBuilder GetExpressionMapper()
-			=> new ExpressionBuilder(this, MemberMappers?.Select(mm => Tuple.Create(GetMembersInfo(mm.ToMember), mm.Setter)).ToArray());
+			=> new (this, MemberMappers?.Select(mm => Tuple.Create(GetMembersInfo(mm.ToMember), mm.Setter)).ToArray());
 
 		/// <summary>
 		/// Gets the <see cref="MemberInfo"/>.
@@ -466,7 +462,7 @@ namespace LinqToDB.Tools.Mapper
 
 							yield return member;
 
-							expression = mExpr.Expression;
+							expression = mExpr.Expression!;
 
 							break;
 						}

@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using Expressions;
 	using LinqToDB.Extensions;
 	using Linq.Builder;
 	using Mapping;
@@ -16,46 +12,24 @@ namespace LinqToDB.SqlQuery
 
 	public class SqlObjectExpression : ISqlExpression
 	{
-		readonly Dictionary<int, Func<object, object>> _getters = new Dictionary<int,Func<object,object>>();
-		readonly SqlInfo[]                             _infoParameters;
+		readonly SqlInfo[] _infoParameters;
 
-		public SqlObjectExpression(MappingSchema mappingSchema, params SqlInfo[] infoParameters)
+		public SqlObjectExpression(MappingSchema mappingSchema, SqlInfo[] infoParameters)
 		{
 			MappingSchema   = mappingSchema;
 			_infoParameters = infoParameters;
 		}
 
-		public object? GetValue(object obj, int index)
+		public SqlValue GetSqlValue(object obj, int index)
 		{
 			var p  = _infoParameters[index];
 			var mi = p.MemberChain[p.MemberChain.Length - 1];
 
-			if (!_getters.TryGetValue(index, out var getter))
-			{
-				var ta        = TypeAccessor.GetAccessor(mi.DeclaringType!);
-				var valueType = mi.GetMemberType();
-				getter        = ta[mi.Name].Getter!;
+			var ta        = TypeAccessor.GetAccessor(mi.DeclaringType!);
+			var valueType = mi.GetMemberType();
+			var value     = ta[mi.Name].Getter!(obj);
 
-				if (valueType.ToNullableUnderlying().IsEnum)
-				{
-					var toType           = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType)!;
-					var convExpr         = MappingSchema.GetConvertExpression(valueType, toType)!;
-					var convParam        = Expression.Parameter(typeof(object));
-					var getterExpression = Expression.Constant(getter);
-					var callGetter       = Expression.Invoke(getterExpression, convParam);
-
-
-					var lex = Expression.Lambda<Func<object, object>>(
-						Expression.Convert(convExpr.GetBody(Expression.Convert(callGetter, valueType)), typeof(object)),
-						convParam);
-
-					getter = lex.CompileExpression();
-				}
-
-				_getters.Add(index, getter);
-			}
-
-			return getter(obj);
+			return MappingSchema.GetSqlValue(valueType, value);
 		}
 
 		public Type? SystemType => null;
@@ -76,14 +50,14 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk(WalkOptions options, Func<ISqlExpression, ISqlExpression> func)
+		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < _infoParameters.Length; i++)
 			{
 				var parameter = _infoParameters[i];
-				_infoParameters[i] = parameter.WithSql(parameter.Sql.Walk(options, func)!);
+				_infoParameters[i] = parameter.WithSql(parameter.Sql.Walk(options, context, func)!);
 			}
-			return func(this);
+			return func(context, this);
 		}
 
 		#endregion
@@ -127,26 +101,6 @@ namespace LinqToDB.SqlQuery
 		public bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return ReferenceEquals(this, other);
-		}
-
-		#endregion
-
-		#region ICloneableElement Members
-
-		public ICloneableElement Clone(Dictionary<ICloneableElement, ICloneableElement> objectTree, Predicate<ICloneableElement> doClone)
-		{
-			if (!doClone(this))
-				return this;
-
-			if (!objectTree.TryGetValue(this, out var clone))
-			{
-				objectTree.Add(this,
-					clone = new SqlObjectExpression(MappingSchema,
-						_infoParameters.Select(p => p.WithSql((ISqlExpression)p.Sql.Clone(objectTree, doClone)))
-							.ToArray()));
-			}
-
-			return clone;
 		}
 
 		#endregion

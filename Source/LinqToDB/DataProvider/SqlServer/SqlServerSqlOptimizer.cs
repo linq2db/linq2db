@@ -16,23 +16,94 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected SqlStatement ReplaceSkipWithRowNumber(SqlStatement statement)
-			=> ReplaceTakeSkipWithRowNumber(statement, query => query.Select.SkipValue != null, false);
+			=> ReplaceTakeSkipWithRowNumber((object?)null, statement, static (_, query) => query.Select.SkipValue != null, false);
 
 		protected SqlStatement WrapRootTakeSkipOrderBy(SqlStatement statement)
 		{
 			return QueryHelper.WrapQuery(
+				(object?)null,
 				statement,
-				query => query.ParentSelect == null && (query.Select.SkipValue != null ||
+				static (_, query, _) => query.ParentSelect == null && (query.Select.SkipValue != null ||
 				                                        query.Select.TakeValue != null ||
 				                                        query.Select.TakeHints != null || !query.OrderBy.IsEmpty),
-				(query, wrappedQuery) => { }
-			);
+				null,
+				allowMutation: true,
+				withStack: false);
 		}
 
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor visitor,
-			EvaluationContext context)
+
+		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
 		{
-			expression = base.ConvertExpressionImpl(expression, visitor, context);
+			var like = base.ConvertSearchStringPredicate(predicate, visitor);
+
+			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
+			{
+				SqlPredicate.ExprExpr? subStrPredicate = null;
+
+				switch (predicate.Kind)
+				{
+					case SqlPredicate.SearchString.SearchKind.StartsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
+									typeof(string), "LEFT", predicate.Expr1,
+									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+
+						break;
+					}
+
+					case SqlPredicate.SearchString.SearchKind.EndsWith:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, new SqlFunction(
+									typeof(string), "RIGHT", predicate.Expr1,
+									new SqlFunction(typeof(int), "Length", predicate.Expr2))),
+								SqlPredicate.Operator.Equal,
+								new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, predicate.Expr2),
+								null
+							);
+
+						break;
+					}
+					case SqlPredicate.SearchString.SearchKind.Contains:
+					{
+						subStrPredicate =
+							new SqlPredicate.ExprExpr(
+								new SqlFunction(typeof(int), "CHARINDEX",
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr2),
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
+										predicate.Expr1)),
+								SqlPredicate.Operator.Greater,
+								new SqlValue(0), null);
+
+						break;
+					}
+
+				}
+
+				if (subStrPredicate != null)
+				{
+					var result = new SqlSearchCondition(
+						new SqlCondition(false, like, predicate.IsNot),
+						new SqlCondition(predicate.IsNot, subStrPredicate));
+
+					return result;
+				}
+			}
+
+			return like;
+		}
+
+		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
+		{
+			expression = base.ConvertExpressionImpl(expression, visitor);
 
 			switch (expression.ElementType)
 			{

@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Defines relation between tables or views.
 	/// Could be applied to:
@@ -17,26 +20,17 @@ namespace LinqToDB.Mapping
 	/// <see cref="IEquatable{T}"/> collection.
 	/// 
 	/// By default associations are used only for joins generation in LINQ queries and will have <c>null</c> value for loaded
-	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
+	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 	/// </summary>
 	[PublicAPI]
 	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Field, AllowMultiple=false)]
-	public class AssociationAttribute : Attribute
+	public class AssociationAttribute : MappingAttribute
 	{
 		/// <summary>
 		/// Creates attribute instance.
 		/// </summary>
 		public AssociationAttribute()
-		{
-			CanBeNull = true;
-		}
-
-		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string?      Configuration       { get; set; }
+		{ }
 
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on this side of association.
@@ -66,7 +60,6 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public Expression?  Predicate           { get; set; }
 
-
 		/// <summary>
 		/// Specifies static property or method without parameters, that returns IQueryable expression. If is set, other association keys are ignored.
 		/// Result of query method should be lambda which takes two parameters: this record, IDataContext and returns IQueryable result.
@@ -95,7 +88,7 @@ namespace LinqToDB.Mapping
 		/// <para>
 		/// <example>
 		/// <code>
-		/// var Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; associationQuery;
+		/// Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; associationQuery;
 		/// <para />
 		/// associationQuery = (e, db) =&gt; db.GetTable&lt;SomeOtherEntity&gt;().Where(se =&gt; se.Id == e.Id);
 		/// </code>
@@ -105,38 +98,63 @@ namespace LinqToDB.Mapping
 		public Expression?  QueryExpression       { get; set; }
 
 		/// <summary>
-		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},System.Linq.Expressions.Expression{System.Func{TEntity,TProperty}})"/> method.
+		/// Specify name of property or field to store association value, loaded using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 		/// When not specified, current association member will be used.
 		/// </summary>
 		public string?      Storage             { get; set; }
 
 		/// <summary>
+		/// Specifies static property or method without parameters, that returns a setter expression. 
+		/// If is set, it will be used to set the storage member when using LoadWith().
+		/// Result of method should be Action which takes two parameters: the storage member and the value to assign to it.
+		/// <para>
+		/// <example>
+		/// <code>
+		/// public class SomeEntity
+		/// {
+		///     [Association(SetExpressionMethod = nameof(OtherImpl), CanBeNull = true)]
+		///     public SomeOtherEntity Other { get; set; }
+		/// 
+		///     public static Expression&lt;Action&lt;SomeContainerType,SomeOtherEntity&gt;&gt; OtherImpl()
+		///     {
+		///         return (container, value) =&gt; container.Value = value;
+		///     }
+		/// }
+		/// </code>
+		/// </example>
+		/// </para>
+		/// </summary>
+		public string? AssociationSetterExpressionMethod { get; set; }
+
+		/// <summary>
+		/// Specifies a setter expression. If is set, it will be used to set the storage member when using LoadWith().
+		/// Action takes two parameters: the storage member and the value to assign to it.
+		/// <para>
+		/// <example>
+		/// <code>
+		/// Expression&lt;Action&lt;SomeContainerType,SomeOtherEntity&gt;&gt; setContainerValue;
+		/// <para />
+		/// setContainerValue = (container, value) =&gt; container.Value = value;
+		/// </code>
+		/// </example>
+		/// </para>
+		/// </summary>
+		public Expression? AssociationSetterExpression { get; set; }
+
+		internal bool?      ConfiguredCanBeNull;
+		/// <summary>
 		/// Defines type of join:
 		/// - inner join for <c>CanBeNull = false</c>;
-		/// - left join for <c>CanBeNull = true</c>.
-		/// Default value: <c>true</c>.
+		/// - outer join for <c>CanBeNull = true</c>.
+		/// When using Configuration.UseNullableTypesMetadata, the default value 
+		/// for associations (cardinality 1) is derived from nullability.
+		/// Otherwise the default value is <c>true</c> (for collections and when option is disabled).
 		/// </summary>
-		public bool         CanBeNull           { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		public string?      KeyName             { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		public string?      BackReferenceName   { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		public bool         IsBackReference     { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		public Relationship Relationship        { get; set; }
+		public bool         CanBeNull
+		{ 
+			get => ConfiguredCanBeNull ?? true; 
+			set => ConfiguredCanBeNull = value;
+		}
 
 		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
@@ -147,12 +165,17 @@ namespace LinqToDB.Mapping
 		/// Returns <see cref="ThisKey"/> value as a list of key member names.
 		/// </summary>
 		/// <returns>List of key members.</returns>
-		public string[] GetThisKeys () { return AssociationDescriptor.ParseKeys(ThisKey);  }
+		public string[] GetThisKeys() => AssociationDescriptor.ParseKeys(ThisKey);
 
 		/// <summary>
 		/// Returns <see cref="OtherKey"/> value as a list of key member names.
 		/// </summary>
 		/// <returns>List of key members.</returns>
-		public string[] GetOtherKeys() { return AssociationDescriptor.ParseKeys(OtherKey); }
+		public string[] GetOtherKeys() => AssociationDescriptor.ParseKeys(OtherKey);
+
+		public override string GetObjectID()
+		{
+			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{AssociationSetterExpressionMethod}.{IdentifierBuilder.GetObjectID(AssociationSetterExpression)}.{(CanBeNull?1:0)}.{AliasName}.";
+		}
 	}
 }

@@ -7,7 +7,7 @@ namespace LinqToDB.SchemaProvider
 	{
 		public string  TableID = null!;
 		public string? CatalogName;
-		public string  SchemaName = null!;
+		public string? SchemaName;
 		public string  TableName = null!;
 		public string? Description;
 		public bool    IsDefaultSchema;

@@ -7,6 +7,6 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude" once="true" #>
 <#
 	NamespaceName = "TestAzureSQL";
-	LoadSqlServerMetadata(GetConnectionString("SqlAzure"));
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.Azure"));
 	GenerateModel();
 #>

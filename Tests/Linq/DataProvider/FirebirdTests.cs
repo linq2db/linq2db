@@ -4,25 +4,30 @@ using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
+using System.Linq.Expressions;
+using System.Numerics;
+using System.Reflection;
+using System.Threading.Tasks;
 
 using FirebirdSql.Data.FirebirdClient;
+using FirebirdSql.Data.Types;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
+using LinqToDB.Linq;
+using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Collections.Generic;
-	using System.Data;
-	using System.Globalization;
-	using System.Linq.Expressions;
-	using System.Threading.Tasks;
-	using LinqToDB.Linq;
+	using LinqToDB.Expressions;
 	using Model;
 
 	[TestFixture]
@@ -31,7 +36,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as int) FROM \"Dual\"",      new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char(1)) FROM \"Dual\"",  new { p = "1" }), Is.EqualTo("1"));
@@ -45,7 +50,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<long?>    (conn, "\"bigintDataType\"",    DataType.Int64),    Is.EqualTo(1000000L));
 				Assert.That(TestType<short?>   (conn, "\"smallintDataType\"",  DataType.Int16),    Is.EqualTo(25555));
@@ -64,6 +69,15 @@ namespace Tests.DataProvider
 				Assert.That(TestType<string>   (conn, "\"textDataType\"",      DataType.NText),    Is.EqualTo("567"));
 
 				Assert.That(TestType<byte[]>   (conn, "\"blobDataType\"",      DataType.Binary),   Is.EqualTo(new byte[] { 49, 50, 51, 52, 53 }));
+
+				if (context == TestProvName.Firebird4)
+				{
+					TestType<FbDecFloat?     >(conn, "\"decfloat16DataType\"" , DataType.DecFloat);
+					TestType<FbDecFloat?     >(conn, "\"decfloat34DataType\"" , DataType.DecFloat);
+					TestType<BigInteger?     >(conn, "\"int128DataType\""     , DataType.Int128);
+					TestType<FbZonedDateTime?>(conn, "\"timestampTZDataType\"", DataType.DateTimeOffset);
+					TestType<FbZonedTime?    >(conn, "\"timeTZDataType\""     , DataType.TimeTZ);
+				}
 			}
 		}
 
@@ -138,7 +152,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
 				TestSimple<short>  (conn, 1,    DataType.Int16);
@@ -189,7 +203,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -205,7 +219,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as char) FROM \"Dual\""),        Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as char) FROM \"Dual\""),        Is.EqualTo('1'));
@@ -238,7 +252,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(5)) FROM \"Dual\""),     Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as char(20)) FROM \"Dual\""),    Is.EqualTo("12345"));
@@ -268,7 +282,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] { 50, 51         };
 			var arr2 = new byte[] { 49, 50, 51, 52 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT Cast('23' as blob) FROM \"Dual\""),   Is.EqualTo(           arr1));
 				Assert.That(conn.Execute<Binary>("SELECT Cast('1234' as blob) FROM \"Dual\""), Is.EqualTo(new Binary(arr2)));
@@ -293,7 +307,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(
 					conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as char(38)) FROM \"Dual\""),
@@ -331,7 +345,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\""),            Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as varchar(100)) FROM \"Dual\"").ToString(), Is.EqualTo("<xml />"));
@@ -357,7 +371,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum> ("SELECT Cast('A' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT Cast('A' as char) FROM \"Dual\""), Is.EqualTo(TestEnum.AA));
@@ -369,7 +383,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = TestEnum.AA }),            Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as char) FROM \"Dual\"", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
@@ -431,7 +445,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table("LinqDataTypes")]
-		class MyLinqDataType
+		sealed class MyLinqDataType
 		{
 			[Column]
 			public byte[]? BinaryValue { get; set; }
@@ -454,7 +468,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -485,7 +499,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -547,14 +561,14 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class TestDropTable
+		sealed class TestDropTable
 		{
 			[Column]
 			public int Field;
 		}
 
 		[Table]
-		class TestIdentityDropTable
+		sealed class TestIdentityDropTable
 		{
 			[Column, Identity]
 			public int Field;
@@ -576,6 +590,7 @@ namespace Tests.DataProvider
 					test<TestDropTable>();
 
 				void test<TTable>()
+					where TTable : notnull
 				{
 					// first drop deletes table if it remains from previous test run
 					// second drop deletes non-existing table
@@ -650,18 +665,18 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestProcedureNonLatinParameters1([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				int? id = null;
 				try
 				{
 					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
 					Assert.AreEqual(1, id1.Count);
-					Assert.IsNotNull(id1[0].PersonID);
+					Assert.IsNotNull(id1[0].PERSONID);
 
 					// TODO: see TestProcedureNonLatinParameters2
 					// output parameter value is not set
-					id = id1[0].PersonID;
+					id = id1[0].PERSONID;
 
 					var record = db.Person.Single(p => p.ID == id);
 
@@ -670,7 +685,7 @@ namespace Tests.DataProvider
 					Assert.AreEqual("Отчество", record.MiddleName);
 					Assert.AreEqual(Gender.Male, record.Gender);
 					Assert.IsNotNull(id);
-					Assert.AreEqual(id, id1[0].PersonID);
+					Assert.AreEqual(id, id1[0].PERSONID);
 				}
 				finally
 				{
@@ -684,14 +699,14 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestProcedureNonLatinParameters2([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				int? id = null;
 				try
 				{
 					var id1 = db.PersonInsert("Имя", "Фамилия", "Отчество", 'M', out id).ToList();
 					Assert.AreEqual(1, id1.Count);
-					Assert.IsNotNull(id1[0].PersonID);
+					Assert.IsNotNull(id1[0].PERSONID);
 
 					var record = db.Person.Single(p => p.ID == id);
 
@@ -700,7 +715,7 @@ namespace Tests.DataProvider
 					Assert.AreEqual("Отчество", record.MiddleName);
 					Assert.AreEqual(Gender.Male, record.Gender);
 					Assert.IsNotNull(id);
-					Assert.AreEqual(id, id1[0].PersonID);
+					Assert.AreEqual(id, id1[0].PERSONID);
 				}
 				finally
 				{
@@ -749,7 +764,7 @@ namespace Tests.DataProvider
 		{
 			Query.ClearCaches();
 			using (new FirebirdQuoteMode(quoteMode))
-			using (var db      = new TestDataConnection(context))
+			using (var db      = GetDataConnection(context))
 			using (var cards   = db.CreateLocalTable<Card>())
 			using (var clients = db.CreateLocalTable<Client>())
 			{
@@ -773,27 +788,424 @@ namespace Tests.DataProvider
 			Query.ClearCaches();
 		}
 		#endregion
+
+		[Table]
+		public partial class TestFbTypesTable
+		{
+			[Column("Id"), PrimaryKey] public int              Id         { get; set; }
+			[Column(Precision = 16)  ] public FbDecFloat?      DecFloat16 { get; set; }
+			[Column(Precision = 30)  ] public FbDecFloat?      DecFloat30 { get; set; }
+			[Column(Precision = 34)  ] public FbDecFloat?      DecFloat34 { get; set; }
+			[Column                  ] public FbDecFloat?      DecFloat   { get; set; }
+			[Column                  ] public FbZonedDateTime? DateTimeTZ { get; set; }
+			[Column                  ] public FbZonedTime?     TimeTZ     { get; set; }
+			[Column                  ] public BigInteger?      Int128     { get; set; }
+
+			public static TestFbTypesTable[] Data = new []
+			{
+				new TestFbTypesTable()
+				{
+					Id         = 1,
+					DecFloat16 = new FbDecFloat(1234567890123456, 5),
+					DecFloat30 = new FbDecFloat(BigInteger.Parse("1234567890123456789012345678901234"), 15),
+					DecFloat34 = new FbDecFloat(BigInteger.Parse("1234567890123456789012345678901235"), 15),
+					DecFloat   = new FbDecFloat(BigInteger.Parse("1234567890123456789012345678901236"), 15),
+					DateTimeTZ = new FbZonedDateTime(TestData.DateTimeUtc, "UTC"),
+					TimeTZ     = new FbZonedTime(TestData.TimeOfDay, "UTC"),
+					Int128     = BigInteger.Parse("-170141183460469231731687303715884105728"),
+				}
+			};
+		}
+
+		[Test]
+		public void TestFb4TypesProcedureSchema([IncludeDataSources(false, TestProvName.Firebird4)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (var t = db.CreateLocalTable(TestFbTypesTable.Data))
+			{
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions()
+				{
+					GetTables     = false,
+					GetProcedures = true,
+					LoadProcedure = t => t.ProcedureName == "TEST_V4_TYPES"
+				});
+
+				var proc = schema.Procedures.Where(t => t.ProcedureName == "TEST_V4_TYPES").SingleOrDefault()!;
+
+				Assert.IsNotNull(proc);
+				Assert.AreEqual(5, proc.Parameters.Count);
+				Assert.IsNotNull(proc.ResultTable);
+				Assert.AreEqual(5, proc.ResultTable!.Columns.Count);
+
+				AssertParameter("DECFLOAT16" , "DECFLOAT"                , DataType.DecFloat      , typeof(FbDecFloat)     , 16  , "FbDecFloat"     );
+				AssertParameter("DECFLOAT34" , "DECFLOAT"                , DataType.DecFloat      , typeof(FbDecFloat)     , 34  , "FbDecFloat"     );
+				AssertParameter("TSTZ"       , "TIMESTAMP WITH TIME ZONE", DataType.DateTimeOffset, typeof(FbZonedDateTime), null, "FbZonedDateTime");
+				AssertParameter("TTZ"        , "TIME WITH TIME ZONE"     , DataType.TimeTZ        , typeof(FbZonedTime)    , null, "FbZonedTime"    );
+				AssertParameter("INT_128"    , "INT128"                  , DataType.Int128        , typeof(BigInteger)     , null, null             );
+
+				AssertColumn("COL_DECFLOAT16" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 16  , "FbDecFloat"     );
+				AssertColumn("COL_DECFLOAT34" , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , null, "FbDecFloat"     );
+				AssertColumn("COL_TSTZ"       , "timestamp with time zone", DataType.DateTimeOffset, typeof(FbZonedDateTime), null, "FbZonedDateTime");
+				AssertColumn("COL_TTZ"        , "time with time zone"     , DataType.TimeTZ        , typeof(FbZonedTime)    , null, "FbZonedTime"    );
+				AssertColumn("COL_INT_128"    , "int128"                  , DataType.Int128        , typeof(BigInteger)     , null, null             );
+
+				void AssertColumn(string name, string dbType, DataType dataType, Type type, int? precision, string? providerSpecificType)
+				{
+					var column = proc.ResultTable!.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
+					Assert.IsNotNull(column);
+					Assert.AreEqual(dbType              , column.ColumnType);
+					Assert.AreEqual(dataType            , column.DataType);
+					Assert.AreEqual(providerSpecificType, column.ProviderSpecificType);
+					Assert.AreEqual(type                , column.SystemType);
+					Assert.AreEqual(type == typeof(object) ? "object" : type.Name + "?", column.MemberType);
+					Assert.AreEqual(precision           , column.Precision);
+				}
+
+				void AssertParameter(string name, string dbType, DataType dataType, Type type, int? precision, string? providerSpecificType)
+				{
+					var parameter = proc!.Parameters.Where(c => c.ParameterName == name).SingleOrDefault()!;
+					Assert.IsNotNull(parameter);
+					Assert.AreEqual(dbType              , parameter.SchemaType);
+					Assert.AreEqual(dataType            , parameter.DataType);
+					Assert.AreEqual(providerSpecificType, parameter.ProviderSpecificType);
+					Assert.AreEqual(type                , parameter.SystemType);
+					Assert.AreEqual(type == typeof(object) ? "object" : type.Name + "?", parameter.ParameterType);
+				}
+			}
+		}
+
+		[Test]
+		public void TestFb4TypesCreateTable([IncludeDataSources(false, TestProvName.Firebird4)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (var t = db.CreateTempTable<TestFbTypesTable>())
+			{
+				var sql = db.LastQuery!;
+
+				// create table
+				Assert.True(sql.Contains("\"Id\"         Int                      NOT NULL,"));
+				Assert.True(sql.Contains("\"DecFloat16\" DECFLOAT(16),"));
+				Assert.True(sql.Contains("\"DecFloat30\" DECFLOAT,"));
+				Assert.True(sql.Contains("\"DecFloat34\" DECFLOAT,"));
+				Assert.True(sql.Contains("\"DecFloat\"   DECFLOAT,"));
+				Assert.True(sql.Contains("\"DateTimeTZ\" TIMESTAMP WITH TIME ZONE,"));
+				Assert.True(sql.Contains("\"TimeTZ\"     TIME WITH TIME ZONE,"));
+				Assert.True(sql.Contains("\"Int128\"     INT128,"));
+			}
+		}
+
+		[Test]
+		public void TestFb4TypesParametersAndLiterals(
+			[IncludeDataSources(false, TestProvName.Firebird4)] string context,
+			[Values] bool inline)
+		{
+			using (var db = new TestDataConnection(context))
+			using (var t = db.CreateLocalTable(TestFbTypesTable.Data))
+			{
+				db.InlineParameters = inline;
+
+				var sql = db.LastQuery!;
+
+				Assert.AreEqual(1, t.Where(_ => _.DecFloat16 == TestFbTypesTable.Data[0].DecFloat16).Count());
+				Assert.AreEqual(true, db.LastQuery!.Contains("@"));
+				Assert.AreEqual(1, t.Where(_ => _.DecFloat30 == TestFbTypesTable.Data[0].DecFloat30).Count());
+				Assert.AreEqual(true, db.LastQuery!.Contains("@"));
+				Assert.AreEqual(1, t.Where(_ => _.DecFloat34 == TestFbTypesTable.Data[0].DecFloat34).Count());
+				Assert.AreEqual(true, db.LastQuery!.Contains("@"));
+				Assert.AreEqual(1, t.Where(_ => _.DecFloat == TestFbTypesTable.Data[0].DecFloat).Count());
+				Assert.AreEqual(true, db.LastQuery!.Contains("@"));
+				Assert.AreEqual(1, t.Where(_ => _.DateTimeTZ == TestFbTypesTable.Data[0].DateTimeTZ).Count());
+				Assert.AreEqual(true, db.LastQuery!.Contains("@"));
+				Assert.AreEqual(1, t.Where(_ => _.TimeTZ == TestFbTypesTable.Data[0].TimeTZ).Count());
+				Assert.AreEqual(true, db.LastQuery!.Contains("@"));
+				Assert.AreEqual(1, t.Where(_ => _.Int128 == TestFbTypesTable.Data[0].Int128).Count());
+				Assert.AreEqual(!inline, db.LastQuery!.Contains("@"));
+			}
+		}
+
+		public class FB4LiteralTestCase
+		{
+			private readonly string _caseName;
+
+			public FB4LiteralTestCase(BigInteger int127, string literal)
+			{
+				Int128  = int127;
+				Literal = literal;
+
+				_caseName = $"INT128: {literal}";
+			}
+
+			public BigInteger?      Int128     { get; }
+			public string           Literal    { get; }
+
+			public override string ToString() => _caseName;
+		}
+
+		// we don't generate literals for Fb* types due:
+		// - DECFLOAT: lack of support for special values (INF, (s)NaN)
+		// - time-zoned types: could require datetime/time conversion to timezone which is:
+		//   - extra work
+		//   - could fail if timezone not known to runtime
+		public static readonly IEnumerable<FB4LiteralTestCase> FB4LiteralTestCases
+			= new []
+			{
+				// INT128
+				new FB4LiteralTestCase(BigInteger.Parse("-170141183460469231731687303715884105728"), "= -170141183460469231731687303715884105728"),
+				new FB4LiteralTestCase(BigInteger.Parse("170141183460469231731687303715884105727"), "= 170141183460469231731687303715884105727"),
+				new FB4LiteralTestCase(BigInteger.Parse("0"), "= 0"),
+				new FB4LiteralTestCase(BigInteger.Parse("1"), "= 1"),
+				new FB4LiteralTestCase(BigInteger.Parse("-1"), "= -1"),
+			};
+
+		[Test]
+		public void TestFb4TypesLiterals(
+			[IncludeDataSources(false, TestProvName.Firebird4)] string context,
+			[ValueSource(nameof(FB4LiteralTestCases))] FB4LiteralTestCase testCase)
+		{
+			using (var db = new TestDataConnection(context))
+			using (var t = db.CreateLocalTable<TestFbTypesTable>())
+			{
+				t.Insert(() => new TestFbTypesTable()
+				{
+					Id         = 1,
+					Int128     = testCase.Int128,
+				});
+
+				db.InlineParameters = true;
+
+				Assert.AreEqual(1, t.Where(_ => _.Int128 == testCase.Int128).Count());
+
+				Assert.True(db.LastQuery!.Contains(testCase.Literal));
+			}
+		}
+
+		[Test]
+		public void TestFb4TypesTableSchema([IncludeDataSources(false, TestProvName.Firebird4)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			using (var t = db.CreateLocalTable(TestFbTypesTable.Data))
+			{
+				// schema
+				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions()
+				{
+					GetTables     = true,
+					GetProcedures = false,
+					LoadTable     = t => t.Name == nameof(TestFbTypesTable)
+				});
+
+				var table = schema.Tables.Where(t => t.TableName == nameof(TestFbTypesTable)).SingleOrDefault()!;
+
+				Assert.IsNotNull(table);
+				Assert.AreEqual(8, table.Columns.Count);
+
+				AssertColumn(nameof(TestFbTypesTable.DecFloat16), "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 16  , "FbDecFloat"     );
+				AssertColumn(nameof(TestFbTypesTable.DecFloat30), "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 34  , "FbDecFloat"     );
+				AssertColumn(nameof(TestFbTypesTable.DecFloat34), "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 34  , "FbDecFloat"     );
+				AssertColumn(nameof(TestFbTypesTable.DecFloat)  , "decfloat"                , DataType.DecFloat      , typeof(FbDecFloat)     , 34  , "FbDecFloat"     );
+				AssertColumn(nameof(TestFbTypesTable.DateTimeTZ), "timestamp with time zone", DataType.DateTimeOffset, typeof(FbZonedDateTime), null, "FbZonedDateTime");
+				AssertColumn(nameof(TestFbTypesTable.TimeTZ)    , "time with time zone"     , DataType.TimeTZ        , typeof(FbZonedTime)    , null, "FbZonedTime"    );
+				AssertColumn(nameof(TestFbTypesTable.Int128)    , "int128"                  , DataType.Int128        , typeof(BigInteger)     , null, null             );
+
+				void AssertColumn(string name, string dbType, DataType dataType, Type type, int? precision, string? providerSpecificType)
+				{
+					var column = table.Columns.Where(c => c.ColumnName == name).SingleOrDefault()!;
+
+					Assert.IsNotNull(column);
+					Assert.AreEqual(dbType              , column.ColumnType);
+					Assert.AreEqual(dataType            , column.DataType);
+					Assert.AreEqual(providerSpecificType, column.ProviderSpecificType);
+					Assert.AreEqual(type                , column.SystemType);
+					Assert.AreEqual(type == typeof(object) ? "object" : type.Name + "?"     , column.MemberType);
+					Assert.AreEqual(precision           , column.Precision);
+				}
+			}
+		}
+
+		[Test]
+		public void TestFb4TypesProcedure([IncludeDataSources(false, TestProvName.Firebird4)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				var tstz       = new FbZonedDateTime(TestData.DateTime4Utc, "UTC");
+				var ttz        = new FbZonedTime(TestData.TimeOfDay4, "UTC");
+				var decfloat16 = new FbDecFloat(1234567890123456, 5);
+				var decfloat34 = new FbDecFloat(BigInteger.Parse("1234567890123456789012345678901235"), 15);
+				var int128     = BigInteger.Parse("-170141183460469231731687303715884105728");
+
+				var res = db.TestV4Types(tstz, ttz, decfloat16, decfloat34, int128).ToList();
+
+				Assert.AreEqual(1         , res.Count);
+
+				Assert.AreEqual(tstz      , res[0].COL_TSTZ);
+				Assert.AreEqual(ttz       , res[0].COL_TTZ);
+				Assert.AreEqual(decfloat16, res[0].COL_DECFLOAT16);
+				Assert.AreEqual(decfloat34, res[0].COL_DECFLOAT34);
+				Assert.AreEqual(int128    , res[0].COL_INT_128);
+			}
+		}
+
+		[Test]
+		public void TestModule([IncludeDataSources(false, TestProvName.AllFirebird3Plus)] string context)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				var parameters = new []
+				{
+					new DataParameter("I", 1, DataType.Int32),
+					new DataParameter("O", null, DataType.Int32)
+					{
+						Direction = ParameterDirection.Output
+					}
+				};
+
+				db.ExecuteProc("TEST_PROCEDURE", parameters);
+				Assert.AreEqual(4, parameters[1].Value);
+				db.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+				Assert.AreEqual(2, parameters[1].Value);
+				db.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+				Assert.AreEqual(3, parameters[1].Value);
+
+				Assert.AreEqual(4, db.Person.Select(p => FirebirdModuleFunctions.TestFunction(1)).First());
+				Assert.AreEqual(2, db.Person.Select(p => FirebirdModuleFunctions.TestFunctionP1(1)).First());
+				Assert.AreEqual(3, db.Person.Select(p => FirebirdModuleFunctions.TestFunctionP2(1)).First());
+
+				Assert.AreEqual(4, FirebirdModuleFunctions.TestTableFunction(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(2, FirebirdModuleFunctions.TestTableFunctionP1(db, 1).Select(r => r.O).First());
+				Assert.AreEqual(3, FirebirdModuleFunctions.TestTableFunctionP2(db, 1).Select(r => r.O).First());
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4065")]
+		public void TestParameterlessProcedure([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			// call as proc
+			db.ExecuteProc("\"Person_SelectAll\"");
+			db.QueryProc<PersonSelectAllResult>("\"Person_SelectAll\"").ToList();
+
+			// call as table function
+			PersonSelectAll(db).ToList();
+		}
+
+		[Sql.TableFunction("Person_SelectAll", ArgIndices = new int[0])]
+		public static IQueryable<PersonSelectAllResult> PersonSelectAll(IDataContext ctx)
+		{
+			return ctx.GetTable<PersonSelectAllResult>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, ctx);
+		}
+
+		public partial class PersonSelectAllResult
+		{
+			[Column("PERSONID"  , DataType = DataType.Int32   , DbType = "integer")    ] public int?    Personid   { get; set; }
+			[Column("FIRSTNAME" , DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Firstname  { get; set; }
+			[Column("LASTNAME"  , DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Lastname   { get; set; }
+			[Column("MIDDLENAME", DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Middlename { get; set; }
+			[Column("GENDER"    , DataType = DataType.NChar   , DbType = "char(1)")    ] public string? Gender     { get; set; }
+		}
+	}
+
+	static class FirebirdModuleFunctions
+	{
+		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+		public static int TestFunction(int param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		[Sql.Function("TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
+		public static int TestFunctionP1(int param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		[Sql.Function("TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
+		public static int TestFunctionP2(int param)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 })]
+		public static LinqToDB.ITable<Record> TestTableFunction(IDataContext db, int param1)
+		{
+			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+		}
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE1")]
+		public static LinqToDB.ITable<Record> TestTableFunctionP1(IDataContext db, int param1)
+		{
+			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+		}
+
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", argIndices: new[] { 1 }, Package = "TEST_PACKAGE2")]
+		public static LinqToDB.ITable<Record> TestTableFunctionP2(IDataContext db, int param1)
+		{
+			return db.GetTable<Record>(null, (MethodInfo)MethodBase.GetCurrentMethod()!, db, param1);
+		}
+
+		public sealed class Record
+		{
+			public int O { get; set; }
+		}
 	}
 
 	static class FirebirdProcedures
 	{
-		public partial class PersonInsertResult
+		public sealed class PersonInsertResult
 		{
-			public int? PersonID { get; set; }
+			public int? PERSONID { get; set; }
 		}
 
 		public static IEnumerable<PersonInsertResult> PersonInsert(this DataConnection dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
 		{
-			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"",
-				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar),
-				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar),
-				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar),
-				new DataParameter("GENDER",   GENDER,   DataType.NChar),
-				new DataParameter("PERSONID", null, DataType.Int32) { Direction = ParameterDirection.Output, Size = 4 }).ToList();
+			var parameters = new []
+			{
+				new DataParameter("FIRSTNAME", FIRSTNAME, DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("LASTNAME", LASTNAME, DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("MIDDLENAME", MIDDLENAME, DataType.NVarChar)
+				{
+					Size = 50
+				},
+				new DataParameter("GENDER",   GENDER, DataType.NChar)
+				{
+					Size = 1
+				},
+				new DataParameter("PERSONID", null, DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 4
+				}
+			};
 
-			PERSONID = Converter.ChangeTypeTo<int?>(((IDbDataParameter)dataConnection.Command.Parameters["PERSONID"]).Value);
+			var ret = dataConnection.QueryProc<PersonInsertResult>("\"Person_Insert\"", parameters).ToList();
+
+			PERSONID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
+		}
+
+		public static IEnumerable<TestV4TYPESResult> TestV4Types(this DataConnection dataConnection, FbZonedDateTime? TSTZ, FbZonedTime? TTZ, FbDecFloat? DECFLOAT16, FbDecFloat? DECFLOAT34, BigInteger? INT_128)
+		{
+			return dataConnection.QueryProc<TestV4TYPESResult>("TEST_V4_TYPES",
+				new DataParameter("TSTZ",       TSTZ,       DataType.DateTimeOffset),
+				new DataParameter("TTZ",        TTZ,        DataType.TimeTZ),
+				new DataParameter("DECFLOAT16", DECFLOAT16, DataType.DecFloat),
+				new DataParameter("DECFLOAT34", DECFLOAT34, DataType.DecFloat),
+				new DataParameter("INT_128",    INT_128,    DataType.Int128));
+		}
+
+		public sealed class TestV4TYPESResult
+		{
+			public FbZonedDateTime? COL_TSTZ       { get; set; }
+			public FbZonedTime?     COL_TTZ        { get; set; }
+			public FbDecFloat?      COL_DECFLOAT16 { get; set; }
+			public FbDecFloat?      COL_DECFLOAT34 { get; set; }
+			public BigInteger?      COL_INT_128    { get; set; }
 		}
 	}
 }

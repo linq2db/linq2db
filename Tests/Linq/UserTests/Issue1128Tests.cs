@@ -13,7 +13,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 		}
 
-		class FluentDerived : FluentBase
+		sealed class FluentDerived : FluentBase
 		{
 			public string? StringValue { get; set; }
 		}
@@ -25,7 +25,7 @@ namespace Tests.UserTests
 			public int Id { get; set; }
 		}
 
-		class AttributeDerived : AttributeBase
+		sealed class AttributeDerived : AttributeBase
 		{
 			public string? StringValue { get; set; }
 		}
@@ -34,11 +34,12 @@ namespace Tests.UserTests
 		{
 			var ms            = new MappingSchema();
 			var tableName     = nameof(AttributeBase);
-			var fluentBuilder = ms.GetFluentMappingBuilder();
+			var fluentBuilder = new FluentMappingBuilder(ms);
 
 			fluentBuilder.Entity<FluentBase>()
 				.HasTableName(tableName)
-				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey();
+				.Property(x => x.Id).IsColumn().IsNullable(false).HasColumnName("Id").IsPrimaryKey()
+				.Build();
 
 			return ms;
 		}
@@ -53,9 +54,9 @@ namespace Tests.UserTests
 			var ed3 = ms.GetEntityDescriptor(typeof(AttributeBase));
 			var ed4 = ms.GetEntityDescriptor(typeof(AttributeBase));
 
-			Assert.AreEqual(ed1.TableName, ed2.TableName);
-			Assert.AreEqual(ed3.TableName, ed4.TableName);
-			Assert.AreEqual(ed1.TableName, ed4.TableName);
+			Assert.AreEqual(ed1.Name.Name, ed2.Name.Name);
+			Assert.AreEqual(ed3.Name.Name, ed4.Name.Name);
+			Assert.AreEqual(ed1.Name.Name, ed4.Name.Name);
 		}
 
 		[Test]
@@ -67,7 +68,8 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<FluentBase>())
 			{
 				var res = db.Insert<FluentBase>(new FluentDerived { Id = 1 });
-				Assert.AreEqual(1, res);
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.AreEqual(1, res);
 			}
 		}
 
@@ -80,7 +82,8 @@ namespace Tests.UserTests
 			using (db.CreateLocalTable<AttributeBase>())
 			{
 				var res = db.Insert<AttributeBase>(new AttributeDerived { Id = 1 });
-				Assert.AreEqual(1, res);
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.AreEqual(1, res);
 			}
 		}
 	}

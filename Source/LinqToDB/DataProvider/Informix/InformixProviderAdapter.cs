@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Linq.Expressions;
-	using LinqToDB.Common;
-	using LinqToDB.DataProvider.DB2;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
+	using Common;
+	using DB2;
+	using Expressions;
+	using Extensions;
+	using Mapping;
 
 	// Note on informix providers: there are actually 3 providers:
 	// - SQLI Provider(IBM.Data.Informix) : netfx only, no bulk copy
@@ -22,8 +24,8 @@ namespace LinqToDB.DataProvider.Informix
 		public const string IfxProviderFactoryName = "IBM.Data.Informix";
 		public const string IfxTypesNamespace      = "IBM.Data.Informix";
 
-		private static readonly object _ifxSyncRoot = new object();
-		private static readonly object _db2SyncRoot = new object();
+		private static readonly object _ifxSyncRoot = new ();
+		private static readonly object _db2SyncRoot = new ();
 
 		private static InformixProviderAdapter? _ifxAdapter;
 		private static InformixProviderAdapter? _db2Adapter;
@@ -43,8 +45,8 @@ namespace LinqToDB.DataProvider.Informix
 			Type  ifxDateTimeType,
 			Type? ifxTimeSpanType,
 
-			Action<IDbDataParameter, IfxType> ifxTypeSetter,
-			Func  <IDbDataParameter, IfxType> ifxTypeGetter,
+			Action<DbParameter, IfxType> ifxTypeSetter,
+			Func  <DbParameter, IfxType> ifxTypeGetter,
 
 			Func<TimeSpan, object>? timeSpanFactory,
 			BulkCopyAdapter? bulkCopy)
@@ -123,11 +125,11 @@ namespace LinqToDB.DataProvider.Informix
 		/// </summary>
 		public bool IsIDSProvider { get; }
 
-		public Action<IDbDataParameter, IfxType>? SetIfxType { get; }
-		public Func  <IDbDataParameter, IfxType>? GetIfxType { get; }
+		public Action<DbParameter, IfxType>? SetIfxType { get; }
+		public Func  <DbParameter, IfxType>? GetIfxType { get; }
 
-		public Action<IDbDataParameter, DB2ProviderAdapter.DB2Type>? SetDB2Type { get; }
-		public Func  <IDbDataParameter, DB2ProviderAdapter.DB2Type>? GetDB2Type { get; }
+		public Action<DbParameter, DB2ProviderAdapter.DB2Type>? SetDB2Type { get; }
+		public Func  <DbParameter, DB2ProviderAdapter.DB2Type>? GetDB2Type { get; }
 
 		public Type  BlobType     { get; }
 		public Type  ClobType     { get; }
@@ -151,15 +153,15 @@ namespace LinqToDB.DataProvider.Informix
 		public class BulkCopyAdapter
 		{
 			internal BulkCopyAdapter(
-				Func<IDbConnection, IfxBulkCopyOptions, IfxBulkCopy> bulkCopyCreator,
-				Func<int, string, IfxBulkCopyColumnMapping> bulkCopyColumnMappingCreator)
+				Func<DbConnection, IfxBulkCopyOptions, IfxBulkCopy> bulkCopyCreator,
+				Func<int, string, IfxBulkCopyColumnMapping>         bulkCopyColumnMappingCreator)
 			{
 				Create              = bulkCopyCreator;
 				CreateColumnMapping = bulkCopyColumnMappingCreator;
 			}
 
-			public Func<IDbConnection, IfxBulkCopyOptions, IfxBulkCopy> Create              { get; }
-			public Func<int, string, IfxBulkCopyColumnMapping>          CreateColumnMapping { get; }
+			public Func<DbConnection, IfxBulkCopyOptions, IfxBulkCopy> Create              { get; }
+			public Func<int, string, IfxBulkCopyColumnMapping>         CreateColumnMapping { get; }
 		}
 
 		public static InformixProviderAdapter GetInstance(string name)
@@ -168,8 +170,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				if (_ifxAdapter == null)
 					lock (_ifxSyncRoot)
-						if (_ifxAdapter == null)
-							_ifxAdapter = CreateIfxAdapter();
+						_ifxAdapter ??= CreateIfxAdapter();
 
 				return _ifxAdapter;
 			}
@@ -177,8 +178,7 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				if (_db2Adapter == null)
 					lock (_db2SyncRoot)
-						if (_db2Adapter == null)
-							_db2Adapter = new InformixProviderAdapter(DB2ProviderAdapter.GetInstance());
+						_db2Adapter ??= new (DB2ProviderAdapter.Instance);
 
 				return _db2Adapter;
 			}
@@ -186,7 +186,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		private static InformixProviderAdapter CreateIfxAdapter()
 		{
-			var assembly = Common.Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
+			var assembly = Tools.TryLoadAssembly(IfxAssemblyName, IfxProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {IfxAssemblyName}");
 
@@ -197,7 +197,7 @@ namespace LinqToDB.DataProvider.Informix
 			var transactionType = assembly.GetType($"{IfxClientNamespace}.IfxTransaction", true)!;
 			var dbType          = assembly.GetType($"{IfxClientNamespace}.IfxType"       , true)!;
 
-			var mappingSchema = new MappingSchema();
+			var mappingSchema = new InformixAdapterMappingSchema();
 			var blobType      = loadType("IfxBlob"    , DataType.VarBinary)!;
 			var clobType      = loadType("IfxClob"    , DataType.Text)!;
 			var dateTimeType  = loadType("IfxDateTime", DataType.DateTime2)!;
@@ -234,7 +234,7 @@ namespace LinqToDB.DataProvider.Informix
 				typeMapper.FinalizeMappings();
 
 				bulkCopy = new BulkCopyAdapter(
-					typeMapper.BuildWrappedFactory((IDbConnection connection, IfxBulkCopyOptions options) => new IfxBulkCopy((IfxConnection)connection, options)),
+					typeMapper.BuildWrappedFactory((DbConnection connection, IfxBulkCopyOptions options) => new IfxBulkCopy((IfxConnection)(object)connection, options)),
 					typeMapper.BuildWrappedFactory((int source, string destination) => new IfxBulkCopyColumnMapping(source, destination)));
 			}
 			else
@@ -259,8 +259,8 @@ namespace LinqToDB.DataProvider.Informix
 				decimalType,
 				dateTimeType,
 				timeSpanType,
-				dbTypeBuilder.BuildSetter<IDbDataParameter>(),
-				dbTypeBuilder.BuildGetter<IDbDataParameter>(),
+				dbTypeBuilder.BuildSetter<DbParameter>(),
+				dbTypeBuilder.BuildGetter<DbParameter>(),
 				timespanFactory,
 				bulkCopy);
 
@@ -270,7 +270,7 @@ namespace LinqToDB.DataProvider.Informix
 				if (type == null)
 					return null;
 
-				if (obsolete && type.GetCustomAttributes(typeof(ObsoleteAttribute), false).Length > 0)
+				if (obsolete && type.HasAttribute<ObsoleteAttribute>(false))
 					return null;
 
 				if (register)
@@ -283,10 +283,17 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
+		sealed class InformixAdapterMappingSchema : LockedMappingSchema
+		{
+			public InformixAdapterMappingSchema() : base("InformixAdapter")
+			{
+			}
+		}
+
 		#region Wrappers
 
 		[Wrapper]
-		private class IfxParameter
+		private sealed class IfxParameter
 		{
 			public IfxType IfxType { get; set; }
 		}
@@ -404,7 +411,9 @@ namespace LinqToDB.DataProvider.Informix
 			public IfxBulkCopy(IfxConnection connection, IfxBulkCopyOptions options) => throw new NotImplementedException();
 
 			void IDisposable.Dispose ()                       => ((Action<IfxBulkCopy>)CompiledWrappers[0])(this);
+#pragma warning disable RS0030 // API mapping must preserve type
 			public void WriteToServer(IDataReader dataReader) => ((Action<IfxBulkCopy, IDataReader>)CompiledWrappers[1])(this, dataReader);
+#pragma warning restore RS0030 //  API mapping must preserve type
 
 			public int NotifyAfter
 			{
@@ -505,7 +514,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		[Wrapper]
-		internal class IfxTimeSpan : TypeWrapper
+		internal sealed class IfxTimeSpan : TypeWrapper
 		{
 			public IfxTimeSpan(object instance) : base(instance, null)
 			{

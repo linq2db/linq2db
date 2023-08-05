@@ -28,7 +28,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestParameters([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as int)",       new { p =  1  }), Is.EqualTo("1"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)",  new { p = "1" }), Is.EqualTo("1"));
@@ -42,7 +42,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDataTypes([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(TestType<long?>    (conn, "bigintDataType",    DataType.UInt64,    skipUndefinedNull:true), Is.EqualTo(1000000L));
 				Assert.That(TestType<decimal?> (conn, "numericDataType",   DataType.Decimal,   skipUndefinedNull:true), Is.EqualTo(9999999m));
@@ -120,7 +120,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestNumerics([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				TestSimple<bool>   (conn, true, DataType.Boolean);
 				TestSimple<sbyte>  (conn, 1,    DataType.SByte);
@@ -170,7 +170,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestDateTime([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var dateTime = new DateTime(2012, 12, 12, 12, 12, 12);
 
@@ -187,7 +187,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestChar([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<char> ("SELECT Cast('1' as nchar)"),        Is.EqualTo('1'));
 				Assert.That(conn.Execute<char?>("SELECT Cast('1' as nchar)"),        Is.EqualTo('1'));
@@ -223,7 +223,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestString([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar)"),         Is.EqualTo("12345"));
 				Assert.That(conn.Execute<string>("SELECT Cast('12345' as nchar(20))"),     Is.EqualTo("12345"));
@@ -255,7 +255,7 @@ namespace Tests.DataProvider
 			var arr1 = new byte[] {       48, 57 };
 			var arr2 = new byte[] { 0, 0, 48, 57 };
 
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<byte[]>("SELECT Cast(12345 as binary(2))"),    Is.EqualTo(           arr1));
 				Assert.That(conn.Execute<Binary>("SELECT Cast(12345 as binary(4))"),    Is.EqualTo(new Binary(arr2)));
@@ -282,7 +282,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestSqlTypes([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var arr = new byte[] { 48, 57 };
 
@@ -323,7 +323,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestGuid([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(
 					conn.Execute<Guid>("SELECT Cast('6F9619FF-8B86-D011-B42D-00C04FC964FF' as uniqueidentifier)"),
@@ -343,7 +343,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestTimestamp([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				var arr = new byte[] { 0, 0, 0, 0, 0, 0, 0, 1 };
 
@@ -358,7 +358,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestXml([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>     ("SELECT Cast('<xml/>' as nvarchar)"),            Is.EqualTo("<xml/>"));
 				Assert.That(conn.Execute<XDocument>  ("SELECT Cast('<xml/>' as nvarchar)").ToString(), Is.EqualTo("<xml />"));
@@ -384,7 +384,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum1([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<TestEnum> ("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
 				Assert.That(conn.Execute<TestEnum?>("SELECT 'A'"), Is.EqualTo(TestEnum.AA));
@@ -396,7 +396,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void TestEnum2([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var conn = new DataConnection(context))
+			using (var conn = GetDataConnection(context))
 			{
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = TestEnum.AA }), Is.EqualTo("A"));
 				Assert.That(conn.Execute<string>("SELECT Cast(@p as nvarchar)", new { p = (TestEnum?)TestEnum.BB }), Is.EqualTo("B"));
@@ -435,7 +435,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -466,7 +466,7 @@ namespace Tests.DataProvider
 		{
 			foreach (var bulkCopyType in new[] { BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific })
 			{
-				using (var db = new DataConnection(context))
+				using (var db = GetDataConnection(context))
 				{
 					try
 					{
@@ -495,7 +495,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue695Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			{
 				var sp = db.DataProvider.GetSchemaProvider();
 				var sh = sp.GetSchema(db);
@@ -504,16 +504,17 @@ namespace Tests.DataProvider
 				Assert.AreEqual(2, t.Columns.Count);
 				Assert.AreEqual(1, t.Columns.Count(_ => _.IsPrimaryKey));
 				Assert.AreEqual(1, t.ForeignKeys.Count);
+				Assert.AreEqual(1, t.ForeignKeys[0].ThisColumns.Count);
 			}
 		}
 
 		[Test]
 		public void SelectTableWithHintTest([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(Person, db.Person.With("TABLOCK"));
-			}
+			using var db = GetDataContext(context);
+			AreEqual(Person, db.Person.With("TABLOCK"), ps => ps.OrderBy(p => p.ID));
+
+			Assert.That(LastQuery, Contains.Substring("[Person] [t1] WITH (TABLOCK)"));
 		}
 
 		[Test]
@@ -537,11 +538,12 @@ namespace Tests.DataProvider
 		public void ParametersInlining([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] bool inline)
 		{
 			Query.ClearCaches();
-			var defaultValue = SqlCeConfiguration.InlineFunctionParameters;
+			var defaultValue = SqlCeOptions.Default.InlineFunctionParameters;
 			try
 			{
-				SqlCeConfiguration.InlineFunctionParameters = inline;
-				using (var db = new DataConnection(context))
+				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = inline };
+
+				using (var db = GetDataConnection(context))
 				{
 					var values = db.GetTable<TestInline>()
 						.Where(_ => (_.DateTimeValue ?? SqlDateTime.MinValue.Value) <= TestData.DateTime)
@@ -552,7 +554,7 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				SqlCeConfiguration.InlineFunctionParameters = defaultValue;
+				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = defaultValue };
 			}
 		}
 
@@ -562,13 +564,13 @@ namespace Tests.DataProvider
 			[Column(DbType = "int"), PrimaryKey, Identity]
 			public int ID { get; set; }
 			[Column(DataType = DataType.Image), Nullable]
-			public byte[]? imageDataType { get; set; } 
+			public byte[]? imageDataType { get; set; }
 		}
 
 		[Test]
 		public void Issue393Test([IncludeDataSources(ProviderName.SqlCe)] string context)
 		{
-			using (var db = new DataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				var image = TestData.Binary(9000);

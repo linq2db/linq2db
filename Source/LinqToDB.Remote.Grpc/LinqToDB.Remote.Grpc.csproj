@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.Remote.Grpc</AssemblyName>
+		<RootNamespace>LinqToDB.Remote.Grpc</RootNamespace>
+
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.grpc.xml</DocumentationFile>
+
+		<!--published targets-->
+		<TargetFrameworks>netstandard2.0;net7.0</TargetFrameworks>
+		<!--add test-only targets separately for better visibility-->
+		<TargetFrameworks>$(TargetFrameworks);net472;netcoreapp3.1;net6.0</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.Net.Client" />
+		<PackageReference Include="protobuf-net.Grpc" />
+	</ItemGroup>
+</Project>

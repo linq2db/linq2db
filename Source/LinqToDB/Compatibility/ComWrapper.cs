@@ -13,7 +13,7 @@ namespace LinqToDB
 	/// This class is used as COM object wrapper instead of dynamic keyword, as dynamic for COM is not supported on .net core till v5.
 	/// See original issue https://github.com/dotnet/runtime/issues/12587.
 	/// </summary>
-	internal class ComWrapper : DynamicObject, IDisposable
+	internal sealed class ComWrapper : DynamicObject, IDisposable
 	{
 		private object _instance;
 
@@ -26,7 +26,16 @@ namespace LinqToDB
 		[SecurityCritical]
 		public static dynamic Create(string progID)
 		{
+#if NETFRAMEWORK
 			return new ComWrapper(Activator.CreateInstance(Type.GetTypeFromProgID(progID, true)!)!);
+#else
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				return new ComWrapper(Activator.CreateInstance(Type.GetTypeFromProgID(progID, true)!)!);
+			}
+#endif
+
+			throw new PlatformNotSupportedException();
 		}
 
 		public static dynamic Wrap(object instance)
@@ -59,7 +68,7 @@ namespace LinqToDB
 			return true;
 		}
 
-		public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object? result)
+		public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
 		{
 			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.InvokeMethod, Type.DefaultBinder, _instance, args);
 
@@ -72,7 +81,15 @@ namespace LinqToDB
 			var instance = Interlocked.Exchange(ref _instance, null!);
 			if (instance != null)
 			{
+#if NETFRAMEWORK
 				Marshal.ReleaseComObject(instance);
+#else
+				if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+				{
+					Marshal.ReleaseComObject(instance);
+				}
+#endif
+
 				GC.SuppressFinalize(this);
 			}
 		}

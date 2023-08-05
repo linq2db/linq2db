@@ -30,7 +30,7 @@ namespace LinqToDB.Reflection
 					Expression<Func<T>> mi;
 
 					if (type.IsAbstract) mi = () => ThrowAbstractException();
-					else                     mi = () => ThrowException();
+					else                 mi = () => ThrowException();
 
 					var body = Expression.Call(null, ((MethodCallExpression)mi.Body).Method);
 
@@ -42,41 +42,106 @@ namespace LinqToDB.Reflection
 				}
 			}
 
-			_members.AddRange(type.GetPublicInstanceValueMembers());
+			var interfaces = !type.IsInterface && !type.IsArray ? type.GetInterfaces() : Array<Type>.Empty;
 
-			// Add explicit interface implementation properties support
-			// Or maybe we should support all private fields/properties?
-			//
-			if (!type.IsInterface && !type.IsArray)
+			if (interfaces.Length == 0)
 			{
-				var interfaceMethods = type.GetInterfaces().SelectMany(ti => type.GetInterfaceMapEx(ti).TargetMethods)
-					.ToList();
+				_members.AddRange(type.GetPublicInstanceValueMembers());
+			}
+			else
+			{
+				// load properties takin into account explicit interface implementations
+				var interfacePropertiesList = new List<PropertyInfo?>();
+				var interfaceProperties     = new Dictionary<(Type? declaringType, string name, Type type), int>();
 
-				if (interfaceMethods.Count > 0)
+				// as interface could be re-implemented multiple times, we should track which inteface property accessors
+				// are not mapped yet and reduce this list walking inheritance hierarchy from top to base type
+				HashSet<MethodInfo>? unmappedAccessors = null;
+
+				// fill unmappedAccessors with accessors, except those from public properties
+				foreach (var iface in type.GetInterfaces())
 				{
-					foreach (var pi in type.GetNonPublicPropertiesEx())
-					{
-						if (pi.GetIndexParameters().Length == 0)
-						{
-							var getMethod = pi.GetGetMethod(true);
-							var setMethod = pi.GetSetMethod(true);
+					var map = type.GetInterfaceMapEx(iface);
 
-							if ((getMethod == null || interfaceMethods.Contains(getMethod)) &&
-								(setMethod == null || interfaceMethods.Contains(setMethod)))
+					for (var i = 0; i < map.InterfaceMethods.Length; i++)
+					{
+						if (!map.InterfaceMethods[i].IsStatic)
+							(unmappedAccessors ??= new()).Add(map.InterfaceMethods[i]);
+					}
+				}
+
+				// go down in hierarchy and pick first found explicit implementation for interface properties
+				var implementor = type;
+				while (unmappedAccessors != null && unmappedAccessors.Count > 0)
+				{
+					Dictionary<MethodInfo, List<MethodInfo>>? methods = null;
+
+					foreach (var iface in implementor.GetInterfaces())
+					{
+						var map = implementor.GetInterfaceMapEx(iface);
+
+						for (var i = 0; i < map.InterfaceMethods.Length; i++)
+						{
+							if (map.InterfaceMethods[i].IsStatic)
+								continue;
+
+							methods ??= new();
+							if (methods.TryGetValue(map.TargetMethods[i], out var interfaceMethods))
+								interfaceMethods.Add(map.InterfaceMethods[i]);
+							else
+								methods.Add(map.TargetMethods[i], new List<MethodInfo>() { map.InterfaceMethods[i] });
+						}
+					}
+
+					if (methods != null)
+					{
+						foreach (var pi in implementor.GetDeclaredPropertiesEx())
+						{
+							if ((pi.GetMethod == null || (methods.TryGetValue(pi.GetMethod, out var ifaceGetters) && RemoveAll(unmappedAccessors, ifaceGetters))) &&
+								(pi.SetMethod == null || (methods.TryGetValue(pi.SetMethod, out var ifaceSetters) && RemoveAll(unmappedAccessors, ifaceSetters))))
 							{
-								_members.Add(pi);
+								interfaceProperties.Add((pi.DeclaringType, pi.Name, pi.PropertyType), interfacePropertiesList.Count);
+								interfacePropertiesList.Add(pi);
 							}
 						}
 					}
+
+					if (implementor.BaseType == null || implementor.BaseType == typeof(object) || implementor.BaseType == typeof(ValueType))
+						break;
+
+					implementor = implementor.BaseType;
 				}
+
+				var uniqueNames = new HashSet<string>();
+				foreach (var mi in type.GetPublicInstanceValueMembers())
+				{
+					if (mi is PropertyInfo pi && interfaceProperties.TryGetValue((pi.DeclaringType, pi.Name, pi.PropertyType), out var idx))
+						interfacePropertiesList[idx] = null;
+
+					if (uniqueNames.Add(mi.Name))
+						_members.Add(mi);
+				}
+
+				foreach (var pi in interfacePropertiesList)
+					if (pi != null && uniqueNames.Add(pi.Name))
+						_members.Add(pi);
 			}
 
 			// ObjectFactory
 			//
-			var attr = type.GetFirstAttribute<ObjectFactoryAttribute>();
+			var attr = type.GetAttribute<ObjectFactoryAttribute>();
 
 			if (attr != null)
 				_objectFactory = attr.ObjectFactory;
+
+			static bool RemoveAll(HashSet<MethodInfo> unmappedAccessors, List<MethodInfo> ifaceAccessors)
+			{
+				var removed = true;
+				foreach (var accessor in ifaceAccessors)
+					removed = unmappedAccessors.Remove(accessor) && removed;
+
+				return removed;
+			}
 		}
 
 		static T ThrowException()
@@ -89,7 +154,7 @@ namespace LinqToDB.Reflection
 			throw new LinqToDBException($"Cant create an instance of abstract class '{typeof(T).FullName}'.");
 		}
 
-		static readonly List<MemberInfo> _members = new List<MemberInfo>();
+		static readonly List<MemberInfo> _members = new();
 		static readonly IObjectFactory?  _objectFactory;
 
 		internal TypeAccessor()

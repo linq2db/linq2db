@@ -12,6 +12,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using System.Linq.Expressions;
+	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -230,10 +231,10 @@ namespace Tests.Linq
 					await db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>().ToListAsync());
 		}
 
-		class ParentEx : Parent
+		sealed class ParentEx : Parent
 		{
 			[NotColumn]
-			protected bool Field1;
+			public bool Field1;
 
 			public static void Test(InheritanceTests inheritance, string context)
 			{
@@ -251,14 +252,14 @@ namespace Tests.Linq
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
-		class PersonEx : Person
+		sealed class PersonEx : Person
 		{
 		}
 
 		[Test]
 		public void SimplTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 				Assert.AreEqual(1, db.GetTable<PersonEx>().Where(_ => _.FirstName == "John").Select(_ => _.ID).Single());
 		}
 
@@ -284,7 +285,7 @@ namespace Tests.Linq
 		[Test]
 		public void InheritanceMappingIssueTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var q1 = db.GetTable<Parent222>();
 				var q  = q1.Where(_ => _.Value.ID == 1);
@@ -402,7 +403,7 @@ namespace Tests.Linq
 		}
 
 		[Table(Name="Child")]
-		class ChildTest14 : IChildTest14
+		sealed class ChildTest14 : IChildTest14
 		{
 			[PrimaryKey] public int ChildID { get; set; }
 
@@ -513,7 +514,7 @@ namespace Tests.Linq
 		[Test]
 		public void GuidTest()
 		{
-			using (var db = new TestDataConnection())
+			using (var db = new DataConnection())
 			{
 				var list = db.GetTable<InheritanceA>().Where(a => a.Bs.Any()).ToList();
 			}
@@ -742,7 +743,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Invalid mappings?")]
+		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
 		[Test]
 		public void Issue2429PropertiesTest2([DataSources] string context)
 		{
@@ -761,7 +762,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Invalid mappings?")]
+		[ActiveIssue(Details = "Expression 'x.BaseValue' is not a Field. (Invalid mappings?)")]
 		[Test]
 		public void Issue2429MethodsTest2([DataSources] string context)
 		{

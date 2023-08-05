@@ -1,7 +1,0 @@
-﻿{
-	"CORE21.Azure": {
-		"Providers": [
-			"Informix.DB2"
-		]
-	}
-}

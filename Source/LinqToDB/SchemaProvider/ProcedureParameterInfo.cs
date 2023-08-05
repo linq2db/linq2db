@@ -29,7 +29,7 @@
 		/// <summary>
 		/// Gets or sets parameter type length attribute.
 		/// </summary>
-		public long?  Length;
+		public int?  Length;
 		/// <summary>
 		/// Gets or sets parameter type precision attribute.
 		/// </summary>

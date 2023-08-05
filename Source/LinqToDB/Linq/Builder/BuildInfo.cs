@@ -4,7 +4,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
 
-	class BuildInfo
+	sealed class BuildInfo
 	{
 		public BuildInfo(IBuildContext? parent, Expression expression, SelectQuery selectQuery)
 		{
@@ -38,7 +38,7 @@ namespace LinqToDB.Linq.Builder
 		public bool                 IsSubQuery => Parent != null;
 
 		private bool _isAssociationBuilt;
-		public  bool  IsAssociationBuilt
+		public bool   IsAssociationBuilt
 		{
 			get => _isAssociationBuilt;
 			set

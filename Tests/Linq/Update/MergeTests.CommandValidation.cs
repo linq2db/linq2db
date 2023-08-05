@@ -13,12 +13,14 @@ namespace Tests.xUpdate
 	{
 		[Test]
 		public void NotSupportedProviders([DataSources(
-			ProviderName.DB2, TestProvName.AllFirebird,
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer,
 			TestProvName.AllInformix,
-			TestProvName.AllSapHana)]
+			TestProvName.AllSapHana,
+			TestProvName.AllPostgreSQL)]
 			string context)
 		{
 			using (var db = GetDataContext(context, testLinqService : false))
@@ -28,9 +30,9 @@ namespace Tests.xUpdate
 				GetProviderName(context, out var isLinq);
 				if (!isLinq)
 					Assert.Throws<LinqToDBException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
-#if NET472
+#if NETFRAMEWORK
 					else
-						Assert.Throws<FaultException<ExceptionDetail>>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
+						Assert.Throws<FaultException>(() => table.Merge().Using(GetSource1(db)).OnTargetKey().InsertWhenNotMatched().Merge());
 #endif
 			}
 		}

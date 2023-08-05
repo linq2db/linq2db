@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
@@ -8,21 +7,7 @@ namespace LinqToDB.SqlQuery
 
 	public class EvaluationContext
 	{
-		public class EvaluationInfo
-		{
-			public EvaluationInfo(bool isEvaluated, object? value, string? errorMessage)
-			{
-				IsEvaluated  = isEvaluated;
-				Value        = value;
-				ErrorMessage = errorMessage;
-			}
-
-			public bool    IsEvaluated  { get; }
-			public object? Value        { get; }
-			public string? ErrorMessage { get; }
-		}
-
-		private Dictionary<IQueryElement, EvaluationInfo>? _evaluationCache;
+		private Dictionary<IQueryElement, (object? value, bool success)>? _evaluationCache;
 
 		public EvaluationContext(IReadOnlyParameterValues? parameterValues = null)
 		{
@@ -31,7 +16,7 @@ namespace LinqToDB.SqlQuery
 
 		public IReadOnlyParameterValues? ParameterValues { get; }
 
-		public bool TryGetValue(IQueryElement expr, [MaybeNullWhen(false)] out EvaluationInfo? info)
+		internal bool TryGetValue(IQueryElement expr, [NotNullWhen(true)] out (object? value, bool success)? info)
 		{
 			if (_evaluationCache == null)
 			{
@@ -39,14 +24,26 @@ namespace LinqToDB.SqlQuery
 				return false;
 			}
 
-			return _evaluationCache.TryGetValue(expr, out info);
+			if (_evaluationCache.TryGetValue(expr, out var infoValue))
+			{
+				info = infoValue;
+				return true;
+			}
+
+			info = null;
+			return false;
 		}
 
-		public void Register(IQueryElement expr, EvaluationInfo info)
+		public void Register(IQueryElement expr, object? value)
 		{
-			_evaluationCache ??= new Dictionary<IQueryElement, EvaluationInfo>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
-			_evaluationCache.Add(expr, info);
+			_evaluationCache ??= new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+			_evaluationCache.Add(expr, (value, true));
 		}
 
+		public void RegisterError(IQueryElement expr)
+		{
+			_evaluationCache ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+			_evaluationCache.Add(expr, (null, false));
+		}
 	}
 }

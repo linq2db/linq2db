@@ -10,14 +10,14 @@ namespace Tests.UserTests
 	public class Issue1064Tests : TestBase
 	{
 		[Table]
-		class TableTest1064
+		sealed class TableTest1064
 		{
 			[Column]
 			public int Column1064 { get; set; }
 		}
 
 		[Table("TableTest1064")]
-		class TableTest1064Renamed
+		sealed class TableTest1064Renamed
 		{
 			[Column("#Column1064")]
 			public int Column1064 { get; set; }
@@ -27,7 +27,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllSybase)] string configuration)
 		{
-			using (var db = new DataConnection(configuration))
+			using (var db = GetDataConnection(configuration))
 			{
 				using (db.CreateLocalTable<TableTest1064>())
 				{

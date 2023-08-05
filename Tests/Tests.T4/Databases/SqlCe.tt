@@ -6,7 +6,8 @@
 <#
 	NamespaceName = "SqlCeDataContext";
 
-	GenerateAssociationExtensions = true;
+	GenerateAssociationExtensions   = true;
+	GenerateDataOptionsConstructors = false;
 
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
 	LoadSqlCeMetadata(solutionsPath + @"\Data\", "TestData.sdf");

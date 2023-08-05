@@ -1,4 +1,5 @@
-﻿
+﻿using System.Globalization;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -25,14 +26,16 @@ namespace Tests.UserTests
 			schema.SetConvertExpression<MyInt,   int>          (x => x.Value);
 			schema.SetConvertExpression<int,     MyInt>        (x => new MyInt { Value = x });
 			schema.SetConvertExpression<long,    MyInt>        (x => new MyInt { Value = (int)x }); //SQLite
+			schema.SetConvertExpression<string,  MyInt>        (x => new MyInt { Value = int.Parse(x, CultureInfo.InvariantCulture) }); //ClickHouse.MySql
 			schema.SetConvertExpression<decimal, MyInt>        (x => new MyInt { Value = (int)x }); //Oracle
 			schema.SetConvertExpression<MyInt,   DataParameter>(x => new DataParameter { DataType = DataType.Int32, Value = x.Value });
 
-			schema.GetFluentMappingBuilder()
+			new FluentMappingBuilder(schema)
 				  .Entity<Entity>()
 				  .HasTableName("Issue464")
 				  .HasColumn(x => x.Id)
-				  .HasColumn(x => x.Value);
+				  .HasColumn(x => x.Value)
+				  .Build();
 
 			using (var db = new  DataConnection(context).AddMappingSchema(schema))
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
@@ -48,7 +51,7 @@ namespace Tests.UserTests
 						new Entity {Id = 3, Value = new MyInt {Value = 3}}
 					};
 
-					temptable.BulkCopy(data);
+					temptable.BulkCopy(GetDefaultBulkCopyOptions(context), data);
 
 					AreEqual(data, temptable.ToList());
 				}

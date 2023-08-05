@@ -2,42 +2,43 @@
 
 namespace LinqToDB.DataProvider
 {
-	public class ReaderInfo : IEquatable<ReaderInfo>
+	// TODO: V4: refactor to readonly struct
+	public struct ReaderInfo : IEquatable<ReaderInfo>
 	{
 		int _hashCode;
 
 		private Type? _toType;
 		public  Type?  ToType
 		{
-			get => _toType;
+			readonly get => _toType;
 			set { _toType = value; CalcHashCode(); }
 		}
 
 		private Type? _fieldType;
 		public  Type?  FieldType
 		{
-			get => _fieldType;
+			readonly get => _fieldType;
 			set { _fieldType = value; CalcHashCode(); }
 		}
 
 		private Type? _providerFieldType;
 		public  Type?  ProviderFieldType
 		{
-			get => _providerFieldType;
+			readonly get => _providerFieldType;
 			set { _providerFieldType = value; CalcHashCode(); }
 		}
 
 		private string? _dataTypeName;
 		public  string?  DataTypeName
 		{
-			get => _dataTypeName;
+			readonly get => _dataTypeName;
 			set { _dataTypeName = value?.ToLowerInvariant(); CalcHashCode(); }
 		}
 
 		private Type? _dataReaderType;
 		public Type? DataReaderType
 		{
-			get => _dataReaderType;
+			readonly get => _dataReaderType;
 			set { _dataReaderType = value; CalcHashCode(); }
 		}
 
@@ -57,18 +58,17 @@ namespace LinqToDB.DataProvider
 
 		public override bool Equals(object? obj)
 		{
-			return Equals(obj as ReaderInfo);
+			return obj is ReaderInfo ri && Equals(ri);
 		}
 
-		public override int GetHashCode()
+		public readonly override int GetHashCode()
 		{
 			return _hashCode;
 		}
 
-		public bool Equals(ReaderInfo? other)
+		public bool Equals(ReaderInfo other)
 		{
 			return
-				other             != null &&
 				ToType            == other.ToType &&
 				FieldType         == other.FieldType &&
 				ProviderFieldType == other.ProviderFieldType &&

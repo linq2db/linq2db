@@ -1,18 +1,20 @@
 ``` ini
 
-BenchmarkDotNet=v0.12.1, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
-Intel Core i7-3770K CPU 3.50GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
-Frequency=3417996 Hz, Resolution=292.5691 ns, Timer=TSC
-  [Host]     : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
-  Job-OGAWJV : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
-  Job-ZLSLVN : .NET Core 2.1.18 (CoreCLR 4.6.28801.04, CoreFX 4.6.28802.05), X64 RyuJIT
-  Job-IOHEYN : .NET Core 3.1.4 (CoreCLR 4.700.20.20201, CoreFX 4.700.20.22101), X64 RyuJIT
+BenchmarkDotNet=v0.13.5, OS=Windows 10 (10.0.17763.4010/1809/October2018Update/Redstone5), VM=Hyper-V
+AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
+.NET SDK=7.0.201
+  [Host]     : .NET 7.0.3 (7.0.323.6910), X64 RyuJIT AVX2
+  Job-ZOLDKB : .NET 6.0.14 (6.0.1423.7309), X64 RyuJIT AVX2
+  Job-EHWHZK : .NET 7.0.3 (7.0.323.6910), X64 RyuJIT AVX2
+  Job-LWJRKG : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-AGOWOF : .NET Framework 4.8 (4.8.4614.0), X64 RyuJIT VectorSize=256
 
 Jit=RyuJit  Platform=X64  
 
 ```
-| Method |       Runtime |     Mean | Ratio |    Gen 0 | Gen 1 | Gen 2 | Allocated |
-|------- |-------------- |---------:|------:|---------:|------:|------:|----------:|
-|   Test |    .NET 4.6.2 | 2.330 ms |  1.00 |        - |     - |     - | 659.43 KB |
-|   Test | .NET Core 2.1 | 1.788 ms |  0.77 | 136.7188 |     - |     - | 564.89 KB |
-|   Test | .NET Core 3.1 | 1.639 ms |  0.71 | 105.4688 |     - |     - | 431.99 KB |
+| Method |              Runtime |     Mean | Allocated |
+|------- |--------------------- |---------:|----------:|
+|   Test |             .NET 6.0 | 1.836 ms | 590.64 KB |
+|   Test |             .NET 7.0 | 1.736 ms | 587.78 KB |
+|   Test |        .NET Core 3.1 | 2.028 ms | 590.46 KB |
+|   Test | .NET Framework 4.7.2 | 2.778 ms | 931.07 KB |

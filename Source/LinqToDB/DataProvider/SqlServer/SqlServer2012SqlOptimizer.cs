@@ -1,8 +1,8 @@
 ﻿using System;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using SqlQuery;
 	using SqlProvider;
 
 	class SqlServer2012SqlOptimizer : SqlServerSqlOptimizer
@@ -15,12 +15,12 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			// SQL Server 2012 supports OFFSET/FETCH providing there is an ORDER BY
 			// UPDATE queries do not directly support ORDER BY, TOP, OFFSET, or FETCH, but they are supported in subqueries
 
-			if (statement.IsUpdate() || statement.IsDelete()) 
+			if (statement.IsUpdate() || statement.IsDelete())
 				statement = WrapRootTakeSkipOrderBy(statement);
 
 			statement = AddOrderByForSkip(statement);
@@ -33,7 +33,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </summary>
 		protected SqlStatement AddOrderByForSkip(SqlStatement statement)
 		{
-			statement = ConvertVisitor.Convert(statement, (visitor, element) => 
+			statement = statement.Convert(static (visitor, element) =>
 			{
 				if (element.ElementType == QueryElementType.OrderByClause)
 				{
@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false) });
 					}
-				}	
+				}
 				return element;
 			});
 			return statement;
@@ -54,35 +54,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			switch (func.Name)
 			{
+				case PseudoFunctions.TRY_CONVERT:
+					return new SqlFunction(func.SystemType, "TRY_CONVERT", false, true, func.Parameters[0], func.Parameters[2]) { CanBeNull = true };
+
 				case "CASE"     :
 
 					if (func.Parameters.Length <= 5)
 						func = ConvertCase(func.CanBeNull, func.SystemType, func.Parameters, 0);
-
-					break;
-
-				case "Coalesce" :
-
-					if (func.Parameters.Length > 2)
-					{
-						var parms = new ISqlExpression[func.Parameters.Length - 1];
-
-						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-
-						func = new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-							new SqlFunction(func.SystemType, func.Name, parms));
-
-						break;
-					}
-
-					var sc = new SqlSearchCondition();
-
-					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
-
-					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0])
-					{
-						CanBeNull = func.CanBeNull
-					};
 
 					break;
 			}
@@ -103,7 +81,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						false,
 						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
 			}
-			
+
 			if (len == 3)
 				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]) { CanBeNull = canBeNull };
 
@@ -112,6 +90,5 @@ namespace LinqToDB.DataProvider.SqlServer
 				parameters[start + 1],
 				ConvertCase(canBeNull, systemType, parameters, start + 2)) { CanBeNull = canBeNull };
 		}
-
 	}
 }

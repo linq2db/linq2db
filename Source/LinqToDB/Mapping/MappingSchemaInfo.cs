@@ -6,19 +6,33 @@ using System.Linq;
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Common.Internal;
 	using Expressions;
 	using Metadata;
 	using SqlQuery;
 
-	class MappingSchemaInfo
+	class MappingSchemaInfo : IConfigurationID
 	{
-		public MappingSchemaInfo(string? configuration)
+		public MappingSchemaInfo(string configuration)
 		{
 			Configuration = configuration;
+
+			if (configuration.Length == 0)
+				_configurationID = 0;
 		}
 
-		public string?          Configuration;
-		public IMetadataReader? MetadataReader;
+		public  string           Configuration;
+		private MetadataReader? _metadataReader;
+
+		public MetadataReader? MetadataReader
+		{
+			get => _metadataReader;
+			set
+			{
+				_metadataReader = value;
+				ResetID();
+			}
+		}
 
 		#region Default Values
 
@@ -32,14 +46,16 @@ namespace LinqToDB.Mapping
 			return _defaultValues.TryGetValue(type, out var o) ? Option<object?>.Some(o) : Option<object?>.None;
 		}
 
-		public void SetDefaultValue(Type type, object? value)
+		public void SetDefaultValue(Type type, object? value, bool resetId = true)
 		{
 			if (_defaultValues == null)
 				lock (this)
-					if (_defaultValues == null)
-						_defaultValues = new ConcurrentDictionary<Type,object?>();
+					_defaultValues ??= new ();
 
 			_defaultValues[type] = value;
+
+			if (resetId)
+				ResetID();
 		}
 
 		#endregion
@@ -56,14 +72,16 @@ namespace LinqToDB.Mapping
 			return _canBeNull.TryGetValue(type, out var o) ? Option<bool>.Some(o) : Option<bool>.None;
 		}
 
-		public void SetCanBeNull(Type type, bool value)
+		public void SetCanBeNull(Type type, bool value, bool resetId = true)
 		{
 			if (_canBeNull == null)
 				lock (this)
-					if (_canBeNull == null)
-						_canBeNull = new ConcurrentDictionary<Type,bool>();
+					_canBeNull ??= new ();
 
 			_canBeNull[type] = value;
+
+			if (resetId)
+				ResetID();
 		}
 
 		#endregion
@@ -86,7 +104,14 @@ namespace LinqToDB.Mapping
 
 						if (args.Length == types.Length)
 						{
-							if (type.Value.Aggregate(false, (cur,ts) => cur || ts.SequenceEqual(types)))
+							var stop = false;
+							foreach (var value in type.Value)
+								if (value.SequenceEqual(types))
+								{
+									stop = true;
+									break;
+								}
+							if (stop)
 								continue;
 
 							var gtype    = type.Key.MakeGenericType(types);
@@ -109,8 +134,7 @@ namespace LinqToDB.Mapping
 		{
 			if (_genericConvertProviders == null)
 				lock (this)
-					if (_genericConvertProviders == null)
-						_genericConvertProviders = new Dictionary<Type,List<Type[]>>();
+					_genericConvertProviders ??= new Dictionary<Type,List<Type[]>>();
 
 			if (!_genericConvertProviders.ContainsKey(type))
 				lock (_genericConvertProviders)
@@ -124,11 +148,13 @@ namespace LinqToDB.Mapping
 
 		ConvertInfo? _convertInfo;
 
-		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr)
+		public void SetConvertInfo(DbDataType from, DbDataType to, ConvertInfo.LambdaInfo expr, bool resetId = true)
 		{
-			if (_convertInfo == null)
-				_convertInfo = new ConvertInfo();
+			_convertInfo ??= new ();
 			_convertInfo.Set(from, to, expr);
+
+			if (resetId)
+				ResetID();
 		}
 
 		public void SetConvertInfo(Type from, Type to, ConvertInfo.LambdaInfo expr)
@@ -138,14 +164,11 @@ namespace LinqToDB.Mapping
 
 		public ConvertInfo.LambdaInfo? GetConvertInfo(DbDataType from, DbDataType to)
 		{
-			return _convertInfo == null ? null : _convertInfo.Get(from, to);
+			return _convertInfo?.Get(from, to);
 		}
 
 		private ConcurrentDictionary<object,Func<object,object>>? _converters;
-		public  ConcurrentDictionary<object,Func<object,object>>   Converters
-		{
-			get { return _converters ??= new ConcurrentDictionary<object,Func<object,object>>(); }
-		}
+		public  ConcurrentDictionary<object,Func<object,object>>   Converters => _converters ??= new ();
 
 		#endregion
 
@@ -155,11 +178,8 @@ namespace LinqToDB.Mapping
 
 		public Option<bool> GetScalarType(Type type)
 		{
-			if (_scalarTypes != null)
-			{
-				if (_scalarTypes.TryGetValue(type, out var isScalarType))
-					return Option<bool>.Some(isScalarType);
-			}
+			if (_scalarTypes != null && _scalarTypes.TryGetValue(type, out var isScalarType))
+				return Option<bool>.Some(isScalarType);
 
 			return Option<bool>.None;
 		}
@@ -168,10 +188,11 @@ namespace LinqToDB.Mapping
 		{
 			if (_scalarTypes == null)
 				lock (this)
-					if (_scalarTypes == null)
-						_scalarTypes = new ConcurrentDictionary<Type,bool>();
+					_scalarTypes ??= new ();
 
 			_scalarTypes[type] = isScalarType;
+
+			ResetID();
 		}
 
 		#endregion
@@ -200,23 +221,33 @@ namespace LinqToDB.Mapping
 		{
 			if (_dataTypes == null)
 				lock (this)
-					if (_dataTypes == null)
-						_dataTypes = new ConcurrentDictionary<Type,SqlDataType>();
+					_dataTypes ??= new ();
 
 			_dataTypes[type] = dataType;
+
+			ResetID();
 		}
 
 		#endregion
 
 		#region Comparers
 
-		public StringComparer? ColumnNameComparer { get; set; }
+		private StringComparer? _columnNameComparer;
+		public  StringComparer?  ColumnNameComparer
+		{
+			get => _columnNameComparer;
+			set
+			{
+				_columnNameComparer = value;
+				ResetID();
+			}
+		}
 
 		#endregion
 
 		#region Enum
 
-		volatile ConcurrentDictionary<Type, Type>? _defaultFromEnumTypes;
+		volatile ConcurrentDictionary<Type,Type>? _defaultFromEnumTypes;
 
 		public Type? GetDefaultFromEnumType(Type enumType)
 		{
@@ -231,10 +262,11 @@ namespace LinqToDB.Mapping
 		{
 			if (_defaultFromEnumTypes == null)
 				lock (this)
-					if (_defaultFromEnumTypes == null)
-						_defaultFromEnumTypes = new ConcurrentDictionary<Type, Type>();
+					_defaultFromEnumTypes ??= new ();
 
 			_defaultFromEnumTypes[enumType] = defaultFromType;
+
+			ResetID();
 		}
 
 		#endregion
@@ -247,14 +279,72 @@ namespace LinqToDB.Mapping
 		/// <returns>
 		/// Returns array with all types, mapped by fluent mappings.
 		/// </returns>
-		public Type[] GetRegisteredTypes()
-		{
-			if (MetadataReader is FluentMetadataReader fluent)
-				return fluent.GetRegisteredTypes();
-			return Array<Type>.Empty;
-		}
+		public IEnumerable<Type> GetRegisteredTypes() => MetadataReader?.GetRegisteredTypes() ?? Array<Type>.Empty;
 
 		#endregion
 
+		#region ConfigurationID
+
+		int? _configurationID;
+
+		internal bool HasConfigurationID => _configurationID != null;
+
+		public virtual void ResetID()
+		{
+			_configurationID = null;
+		}
+
+		/// <summary>
+		/// Unique schema configuration identifier. For internal use only.
+		/// </summary>
+		public int ConfigurationID
+		{
+			get          => _configurationID ??= GenerateID();
+			internal set => _configurationID = value;
+		}
+
+		protected virtual int GenerateID()
+		{
+			using var idBuilder = new IdentifierBuilder(Configuration);
+
+			ProcessDictionary(_defaultValues);
+			ProcessDictionary(_canBeNull);
+			ProcessDictionary(_scalarTypes);
+			ProcessDictionary(_dataTypes);
+			ProcessDictionary(_defaultFromEnumTypes);
+
+			void ProcessDictionary<T>(ConcurrentDictionary<Type,T>? dic)
+			{
+				idBuilder.Add(dic?.Count);
+
+				if (dic?.Count > 0)
+				{
+					foreach (var (id, value) in
+						from t in dic
+						let id = IdentifierBuilder.GetObjectID(t.Key)
+						orderby id
+						select (id, t.Value))
+					{
+						idBuilder
+							.Add(id)
+							.Add(IdentifierBuilder.GetObjectID(value))
+							;
+					}
+				}
+			}
+
+			if (_convertInfo == null)
+				idBuilder.Add(string.Empty);
+			else
+				idBuilder.Add(_convertInfo.GetConfigurationID());
+
+			idBuilder.Add(IdentifierBuilder.GetObjectID(_columnNameComparer));
+
+			return idBuilder.CreateID();
+		}
+
+		public virtual bool IsLocked => false;
+
+		#endregion
 	}
 }

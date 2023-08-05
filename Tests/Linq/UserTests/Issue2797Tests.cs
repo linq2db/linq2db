@@ -10,14 +10,14 @@ namespace Tests.UserTests
 	public class Issue2797Tests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int? Value { get; set; }
 		}
 
 		[Test]
-		public void TestCaseGeneration([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestCaseGeneration([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>())

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
@@ -67,29 +65,26 @@ namespace LinqToDB.Common
 			foreach (var item in items)
 			{
 				var name = nameFunc(item);
-				if (!name.IsNullOrEmpty() && currentNames?.Contains(name) != true && validatorFunc(name, namesParameter))
+				if (!string.IsNullOrEmpty(name) && currentNames?.Contains(name!) != true && validatorFunc(name!, namesParameter))
 				{
-					if (currentNames == null)
-						currentNames = new HashSet<string>(comparer);
-					currentNames.Add(name);
-					nameSetter(item, name, namesParameter);
+					currentNames ??= new HashSet<string>(comparer);
+					currentNames.Add(name!);
+					nameSetter(item, name!, namesParameter);
 					continue;
 				}
 
-				if (currentNames == null)
-					currentNames = new HashSet<string>(comparer);
-				if (currentCounters == null)
-					currentCounters = new Dictionary<string, int>(comparer);
+				currentNames ??= new HashSet<string>(comparer);
+				currentCounters ??= new Dictionary<string, int>(comparer);
 
 				name = defaultName(item);
 
-				if (name.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(name))
 					name = nameFunc(item);
-				if (name.IsNullOrEmpty())
+				if (string.IsNullOrEmpty(name))
 					name = "t";
 
 				var digitCount = 0;
-				while (char.IsDigit(name[name.Length - 1 - digitCount]))
+				while (char.IsDigit(name![name.Length - 1 - digitCount]))
 				{
 					++digitCount;
 				}
@@ -140,6 +135,26 @@ namespace LinqToDB.Common
 			}
 		}
 
+		public static void RemoveDuplicatesFromTail<T>(this IList<T> list, Func<T, T, bool> compareFunc)
+		{
+			if (list.Count <= 1)
+				return;
+
+			for (var i = list.Count - 1; i >= 0; i--)
+			{
+				var current = list[i];
+				for (int j = 0; j < i; j++)
+				{
+					if (compareFunc(current, list[j]))
+					{
+						list.RemoveAt(j);
+						--j;
+						--i;
+					}
+				}
+			}
+		}
+
 		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
 			where T: notnull
 		{
@@ -147,7 +162,7 @@ namespace LinqToDB.Common
 
 			#region IEqualityComparer<T> Members
 
-			public bool Equals([AllowNull] T x, [AllowNull] T y)
+			public bool Equals(T? x, T? y)
 			{
 				return ReferenceEquals(x, y);
 			}

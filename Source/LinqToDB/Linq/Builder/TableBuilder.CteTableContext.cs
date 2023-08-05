@@ -79,17 +79,17 @@ namespace LinqToDB.Linq.Builder
 			return cteContext;
 		}
 
-		class CteTableContext : TableContext
+		sealed class CteTableContext : TableContext
 		{
 			private readonly CteClause      _cte;
 			private readonly Expression     _cteExpression;
 			private          IBuildContext? _cteQueryContext;
 
 			public CteTableContext(ExpressionBuilder builder, BuildInfo buildInfo, CteClause cte, Expression cteExpression)
-				: base(builder, buildInfo, new SqlCteTable(builder.MappingSchema, cte))
+				: base(builder, buildInfo, new SqlCteTable(cte, builder.MappingSchema.GetEntityDescriptor(cte.ObjectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated)))
 			{
-				_cte             = cte;
-				_cteExpression   = cteExpression;
+				_cte           = cte;
+				_cteExpression = cteExpression;
 			}
 
 			IBuildContext? GetQueryContext()
@@ -133,6 +133,8 @@ namespace LinqToDB.Linq.Builder
 					ConvertToSql(null, 0, ConvertFlags.All);
 				}
 
+				expression = SequenceHelper.CorrectExpression(expression, this, queryContext);
+
 				var infos  = queryContext.ConvertToIndex(expression, level, flags);
 
 				var result = infos
@@ -140,11 +142,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var baseInfo = baseInfos.FirstOrDefault(bi => bi.CompareMembers(info));
 						var alias    = flags == ConvertFlags.Field ? GenerateAlias(expression) : null;
-						if (alias == null)
-						{
-							alias = baseInfo?.MemberChain.LastOrDefault()?.Name ??
-						                  info.MemberChain.LastOrDefault()?.Name;
-						}	
+						alias ??= baseInfo?.MemberChain.LastOrDefault()?.Name ?? info.MemberChain.LastOrDefault()?.Name;
 						var field    = RegisterCteField(baseInfo?.Sql, info.Sql, info.Index, alias);
 						return new SqlInfo(info.MemberChain, field);
 					})
@@ -176,8 +174,7 @@ namespace LinqToDB.Linq.Builder
 					alias = field?.Name;
 				}
 
-				if (alias == null)
-					alias = column.Alias;
+				alias ??= column.Alias;
 
 				return alias;
 			}
@@ -234,7 +231,7 @@ namespace LinqToDB.Linq.Builder
 					return newField;
 				});
 
-				var field = SqlTable[cteField.Name!];
+				var field = SqlTable.FindFieldByMemberName(cteField.Name!);
 				if (field == null)
 				{
 					field = new SqlField(cteField);

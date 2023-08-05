@@ -2,23 +2,22 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-	internal class CacheEntryHelper
+	internal sealed class CacheEntryHelper<TKey,TEntry>
+		where TKey : notnull
 	{
-		private static readonly AsyncLocal<CacheEntryStack> _scopes = new AsyncLocal<CacheEntryStack>();
+		private static readonly AsyncLocal<CacheEntryStack<TKey,TEntry>> _scopes = new ();
 
-		[MaybeNull]
-		internal static CacheEntryStack Scopes
+		internal static CacheEntryStack<TKey,TEntry>? Scopes
 		{
 			get => _scopes.Value;
-			set => _scopes.Value = value;
+			set => _scopes.Value = value!;
 		}
 
-		internal static CacheEntry? Current
+		internal static CacheEntry<TKey,TEntry>? Current
 		{
 			get
 			{
@@ -27,7 +26,7 @@ namespace LinqToDB.Common.Internal.Cache
 			}
 		}
 
-		internal static IDisposable EnterScope(CacheEntry entry)
+		internal static IDisposable EnterScope(CacheEntry<TKey,TEntry> entry)
 		{
 			var scopes = GetOrCreateScopes();
 
@@ -37,23 +36,16 @@ namespace LinqToDB.Common.Internal.Cache
 			return scopeLease;
 		}
 
-		private static CacheEntryStack GetOrCreateScopes()
+		private static CacheEntryStack<TKey,TEntry> GetOrCreateScopes()
 		{
-			var scopes = Scopes;
-			if (scopes == null)
-			{
-				scopes = CacheEntryStack.Empty;
-				Scopes = scopes;
-			}
-
-			return scopes;
+			return Scopes ??= CacheEntryStack<TKey,TEntry>.Empty;
 		}
 
 		private sealed class ScopeLease : IDisposable
 		{
-			readonly CacheEntryStack _cacheEntryStack;
+			readonly CacheEntryStack<TKey,TEntry> _cacheEntryStack;
 
-			public ScopeLease(CacheEntryStack cacheEntryStack)
+			public ScopeLease(CacheEntryStack<TKey,TEntry> cacheEntryStack)
 			{
 				_cacheEntryStack = cacheEntryStack;
 			}

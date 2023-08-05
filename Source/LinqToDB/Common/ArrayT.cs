@@ -22,7 +22,7 @@ namespace LinqToDB.Common
 		internal static T[] Append(T[] array, T newElement)
 		{
 			var oldSize = array.Length;
-			
+
 			Array.Resize(ref array, oldSize + 1);
 
 			array[oldSize] = newElement;
@@ -30,13 +30,13 @@ namespace LinqToDB.Common
 			return array;
 		}
 
-		internal static T[] Append(T[] array, T[] otherArray)
+		internal static T[] Append(T[] array, T[]? otherArray)
 		{
 			if (otherArray == null || otherArray.Length == 0)
 				return array;
 
 			var oldSize = array.Length;
-			
+
 			Array.Resize(ref array, oldSize + otherArray.Length);
 
 			for (int i = 0; i < otherArray.Length; i++)
@@ -46,6 +46,5 @@ namespace LinqToDB.Common
 
 			return array;
 		}
-
 	}
 }

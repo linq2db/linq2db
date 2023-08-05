@@ -20,7 +20,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Task")]
-		class TaskTable
+		sealed class TaskTable
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -33,7 +33,7 @@ namespace Tests.UserTests
 		}
 
 		[Table("Task")]
-		class BdaTask: Task
+		sealed class BdaTask : Task
 		{
 			public const string Code = "bda.Requests";
 
@@ -41,7 +41,7 @@ namespace Tests.UserTests
 			public string? BdaValue { get; set; }
 		}
 
-		class SelectAllAndExpand<T>
+		sealed class SelectAllAndExpand<T>
 		{
 			public T Instance { get; set; } = default!;
 		}

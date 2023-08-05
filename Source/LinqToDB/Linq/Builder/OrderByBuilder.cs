@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
-	class OrderByBuilder : MethodCallBuilder
+	sealed class OrderByBuilder : MethodCallBuilder
 	{
+		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
+
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			if (!methodCall.IsQueryable("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending"))
+			if (!methodCall.IsQueryable(MethodNames))
 				return false;
 
 			var body = ((LambdaExpression)methodCall.Arguments[1].Unwrap()).Body.Unwrap();
@@ -40,8 +41,7 @@ namespace LinqToDB.Linq.Builder
 
 			var wrapped = false;
 
-			if (sequence.SelectQuery.Select.TakeValue != null ||
-				sequence.SelectQuery.Select.SkipValue != null)
+			if (sequence.SelectQuery.Select.HasModifier)
 			{
 				sequence = new SubQueryContext(sequence);
 				wrapped = true;
@@ -75,11 +75,10 @@ namespace LinqToDB.Linq.Builder
 					var isImmutable = QueryHelper.IsConstant(sqlInfo.Sql);
 					if (isImmutable)
 						continue;
-					
+
 					// possible we have to extend this list
 					//
-					isComplex = null != new QueryVisitor().Find(sqlInfo.Sql,
-						e => e.ElementType == QueryElementType.SqlQuery);
+					isComplex = null != sqlInfo.Sql.Find(QueryElementType.SqlQuery);
 					if (isComplex)
 						break;
 				}
@@ -91,8 +90,8 @@ namespace LinqToDB.Linq.Builder
 				wrapped = true;
 			}
 
-	
-			if (!isContinuousOrder && !Configuration.Linq.DoNotClearOrderBys)
+
+			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 
 			foreach (var expr in sql)
@@ -101,17 +100,11 @@ namespace LinqToDB.Linq.Builder
 				//
 				if (QueryHelper.IsConstant(expr.Sql))
 					continue;
-			
+
 				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));
 			}
 
 			return sequence;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
 		}
 	}
 }

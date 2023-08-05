@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -64,6 +64,20 @@ namespace LinqToDB.Linq.Builder
 										Sequence.ConvertToSql(expression, level + 1, flags);
 								}
 							}
+							else if (root.IsNullValue())
+							{
+								return Array<SqlInfo>.Empty;
+							}
+							// except null, handled above
+							else if (root.NodeType == ExpressionType.Constant)
+							{
+								return Builder.ConvertExpressions(this, expression!, flags, null);
+							}
+							else if (root.NodeType == ExpressionType.New)
+							{
+								if (((NewExpression)root).Arguments.Count == 0)
+									return Array<SqlInfo>.Empty;
+							}
 
 							break;
 						}
@@ -85,9 +99,14 @@ namespace LinqToDB.Linq.Builder
 			switch (requestFlag)
 			{
 				case RequestFor.Root        :
-					return new IsExpressionResult(Lambda!.Parameters.Count == 1 ?
-						ReferenceEquals(expression, Lambda.Parameters[0]) :
-						Lambda.Parameters.Any(p => ReferenceEquals(expression, p)));
+					if (Lambda!.Parameters.Count == 1)
+						return IsExpressionResult.GetResult(ReferenceEquals(expression, Lambda.Parameters[0]));
+
+					foreach (var param in Lambda.Parameters)
+						if (ReferenceEquals(expression, param))
+							return IsExpressionResult.True;
+
+					return IsExpressionResult.False;
 
 				case RequestFor.Table       :
 				case RequestFor.Association :
@@ -144,6 +163,7 @@ namespace LinqToDB.Linq.Builder
 
 			switch (expression!.NodeType)
 			{
+				case ExpressionType.Default    :
 				case ExpressionType.Constant   :
 				case ExpressionType.New        :
 				case ExpressionType.MemberInit : return null;

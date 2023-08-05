@@ -13,14 +13,14 @@ namespace Tests.UserTests
 	public class Issue2560Tests : TestBase
 	{
 		[Table]
-		class DataClass
+		sealed class DataClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public LocalDateTime Value { get; set; }
 		}
 
 		[Test]
-		public void TestNodaTimeInsert([IncludeDataSources(TestProvName.AllSqlServer2005Plus)] string context)
+		public void TestNodaTimeInsert([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 

@@ -75,7 +75,7 @@ namespace Tests.Common
 			Assert.AreEqual(10m, Convert<int,decimal>.From(10));
 		}
 
-		class TestData1
+		sealed class TestData1
 		{
 			public int Value;
 
@@ -85,7 +85,7 @@ namespace Tests.Common
 			}
 		}
 
-		class TestData2
+		sealed class TestData2
 		{
 			public int Value;
 
@@ -490,8 +490,7 @@ namespace Tests.Common
 		{
 			public decimal? Amount;
 
-			public static explicit operator CustomMoneyType(decimal? amount) =>
-				new CustomMoneyType() { Amount = amount };
+			public static explicit operator CustomMoneyType(decimal? amount) => new () { Amount = amount };
 		}
 	}
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Text;
+using System.Data.Common;
 
 namespace LinqToDB.DataProvider.Sybase
 {
@@ -9,27 +9,20 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlProvider;
 	using Mapping;
 
-	partial class SybaseSqlBuilder : BasicSqlBuilder
+	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		private readonly SybaseDataProvider? _provider;
-
-		public SybaseSqlBuilder(
-			SybaseDataProvider? provider,
-			MappingSchema       mappingSchema,
-			ISqlOptimizer       sqlOptimizer,
-			SqlProviderFlags    sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
-			_provider = provider;
 		}
 
-		// remote context
-		public SybaseSqlBuilder(
-			MappingSchema    mappingSchema,
-			ISqlOptimizer    sqlOptimizer,
-			SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
+		SybaseSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
+		}
+
+		protected override ISqlBuilder CreateSqlBuilder()
+		{
+			return new SybaseSqlBuilder(this) { _skipAliases = _isSelect };
 		}
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
@@ -39,20 +32,15 @@ namespace LinqToDB.DataProvider.Sybase
 				.AppendLine("SELECT @@IDENTITY");
 		}
 
+		protected override bool SupportsColumnAliasesInSource => true;
+
 		protected override string FirstFormat(SelectQuery selectQuery)
 		{
 			return "TOP {0}";
 		}
 
-		private  bool _isSelect;
-		readonly bool _skipAliases;
-
-		SybaseSqlBuilder(SybaseDataProvider? provider, bool skipAliases, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(mappingSchema, sqlOptimizer, sqlProviderFlags)
-		{
-			_provider    = provider;
-			_skipAliases = skipAliases;
-		}
+		bool _isSelect;
+		bool _skipAliases;
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
@@ -68,17 +56,13 @@ namespace LinqToDB.DataProvider.Sybase
 			if (_skipAliases) addAlias = false;
 		}
 
-		protected override ISqlBuilder CreateSqlBuilder()
-		{
-			return new SybaseSqlBuilder(_provider, _isSelect, MappingSchema, SqlOptimizer, SqlProviderFlags);
-		}
-
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
 		{
 			switch (type.Type.DataType)
 			{
-				case DataType.DateTime2 : StringBuilder.Append("DateTime");       return;
-				case DataType.NVarChar:
+				case DataType.Guid      : StringBuilder.Append("VARCHAR(36)"); return;
+				case DataType.DateTime2 : StringBuilder.Append("DateTime");    return;
+				case DataType.NVarChar  :
 					// yep, 5461...
 					if (type.Type.Length == null || type.Type.Length > 5461 || type.Type.Length < 1)
 					{
@@ -90,7 +74,16 @@ namespace LinqToDB.DataProvider.Sybase
 					break;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
+		}
+
+		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
+		{
+			// BIT cannot be nullable in ASE
+			if (field.CanBeNull && field.Type.DataType == DataType.Boolean)
+				return;
+
+			base.BuildCreateTableNullAttribute(field, defaultNullable);
 		}
 
 		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
@@ -121,7 +114,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
-			if (updateClause.Table != null && updateClause.Table != selectQuery.From.Tables[0].Source)
+			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
 				BuildPhysicalTable(updateClause.Table, null);
 			else
 				BuildTableName(selectQuery.From.Tables[0], true, false);
@@ -140,7 +133,10 @@ namespace LinqToDB.DataProvider.Sybase
 					if (value.Length > 26)
 						value = value.Substring(0, 26);
 
-					return sb.Append('@').Append(value);
+					if (value.Length == 0 || value[0] != '@')
+						sb.Append('@');
+
+					return sb.Append(value);
 
 				case ConvertType.NameToQueryField:
 				case ConvertType.NameToQueryFieldAlias:
@@ -154,9 +150,10 @@ namespace LinqToDB.DataProvider.Sybase
 
 					return sb.Append('[').Append(value).Append(']');
 
-				case ConvertType.NameToDatabase:
-				case ConvertType.NameToSchema:
+				case ConvertType.NameToDatabase  :
+				case ConvertType.NameToSchema    :
 				case ConvertType.NameToQueryTable:
+				case ConvertType.NameToProcedure :
 					if (_skipBrackets || value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
 						return sb.Append(value);
 
@@ -197,16 +194,16 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.Append(')');
 		}
 
-		protected override string? GetProviderTypeName(IDbDataParameter parameter)
+		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (_provider != null)
+			if (DataProvider is SybaseDataProvider provider)
 			{
-				var param = _provider.TryGetProviderParameter(parameter, MappingSchema);
+				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return _provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetDbType(param).ToString();
 			}
 
-			return base.GetProviderTypeName(parameter);
+			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
 		protected override void BuildTruncateTable(SqlTruncateTableStatement truncateTable)
@@ -227,74 +224,62 @@ namespace LinqToDB.DataProvider.Sybase
 			if (statement is SqlTruncateTableStatement trun)
 			{
 				StringBuilder.Append("sp_chgattribute ");
-				ConvertTableName(StringBuilder, trun.Table!.Server, trun.Table.Database, trun.Table.Schema, trun.Table.PhysicalName!, trun.Table.TableOptions);
+				BuildObjectName(StringBuilder, trun.Table!.TableName, ConvertType.NameToQueryTable, true, trun.Table.TableOptions);
 				StringBuilder.AppendLine(", 'identity_burn_max', 0, '0'");
 			}
 		}
 
-		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		private void BuildIdentityInsert(SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 
-		public override string? GetTableDatabaseName(SqlTable table)
+		private string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
 		{
-			if (IsTemporary(table))
-				return null;
+			if (physicalName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
+				return physicalName;
 
-			return base.GetTableDatabaseName(table);
+			switch (tableOptions & TableOptions.IsTemporaryOptionSet)
+			{
+				case TableOptions.IsTemporary                                                                              :
+				case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
+				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
+				case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+				case                                                                     TableOptions.IsLocalTemporaryData :
+				case                            TableOptions.IsLocalTemporaryStructure                                     :
+				case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
+					return $"#{physicalName}";
+				case TableOptions.IsGlobalTemporaryStructure                                                               :
+				case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
+					return $"##{physicalName}";
+				case var value :
+					throw new InvalidOperationException($"Incompatible table options '{value}'");
+			}
 		}
 
-		public override string? GetTablePhysicalName(SqlTable table)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
 		{
-			if (table.PhysicalName == null)
-				return null;
+			if (name.Database != null && IsTemporary(name.Name, tableOptions))
+				name = name with { Database = null };
 
-			var physicalName = table.PhysicalName.StartsWith("#") ? table.PhysicalName : GetName();
+			name = name with { Name = GetTablePhysicalName(name.Name, tableOptions) };
 
-			string GetName()
-			{
-				if (table.TableOptions.IsTemporaryOptionSet())
-				{
-					switch (table.TableOptions & TableOptions.IsTemporaryOptionSet)
-					{
-						case TableOptions.IsTemporary                                                                              :
-						case TableOptions.IsTemporary |                                          TableOptions.IsLocalTemporaryData :
-						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure                                     :
-						case TableOptions.IsTemporary | TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-						case                                                                     TableOptions.IsLocalTemporaryData :
-						case                            TableOptions.IsLocalTemporaryStructure                                     :
-						case                            TableOptions.IsLocalTemporaryStructure | TableOptions.IsLocalTemporaryData :
-							return $"#{table.PhysicalName}";
-						case TableOptions.IsGlobalTemporaryStructure                                                               :
-						case TableOptions.IsGlobalTemporaryStructure | TableOptions.IsGlobalTemporaryData                          :
-							return $"##{table.PhysicalName}";
-						case var value :
-							throw new InvalidOperationException($"Incompatible table options '{value}'");
-					}
-				}
-				else
-				{
-					return table.PhysicalName;
-				}
-			}
-
-			return Convert(new StringBuilder(), physicalName, ConvertType.NameToQueryTable).ToString();
+			return base.BuildObjectName(sb, name, objectType, escape, tableOptions);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			var table = dropTable.Table!;
 
+			BuildTag(dropTable);
+
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 			{
-				var defaultDatabaseName = IsTemporary(table) ? "tempdb" : null;
-
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine("') IS NOT NULL)");
 				_skipBrackets = false;
 
@@ -314,12 +299,11 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				var table = createTable.Table;
 
-				var isTemporary         = IsTemporary(table);
-				var defaultDatabaseName = isTemporary ? "tempdb" : null;
+				var isTemporary = IsTemporary(table.TableName.Name, table.TableOptions);
 
 				_skipBrackets = true;
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
+				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine("') IS NULL)");
 				_skipBrackets = false;
 
@@ -341,7 +325,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
-				if (!IsTemporary(createTable.Table))
+				if (!IsTemporary(createTable.Table.TableName.Name, createTable.Table.TableOptions))
 				{
 					Indent--;
 					AppendIndent().AppendLine("')");
@@ -351,9 +335,11 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		static bool IsTemporary(SqlTable table)
+		static bool IsTemporary(string tableName, TableOptions tableOptions)
 		{
-			return table.TableOptions.IsTemporaryOptionSet() || table.PhysicalName!.StartsWith("#");
+			return tableOptions.IsTemporaryOptionSet() || tableName.StartsWith("#");
 		}
+
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 	}
 }

@@ -1,15 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tools</AssemblyName>
 		<RootNamespace>LinqToDB.Tools</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
+		
+		<!--published targets-->
 		<TargetFrameworks>net45;net46;netstandard2.0</TargetFrameworks>
+		<!--add test-only targets separately for better visibility-->
+		<TargetFrameworks>$(TargetFrameworks);net472;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+
+		<PackageReference Include="Humanizer.Core" />
+
+		<None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Schemas.generated.cs</LastGenOutput>
+		</None>
+		<Compile Update="DataProvider\SqlServer\Schemas\Schemas.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Schemas.tt</DependentUpon>
+		</Compile>
+
 	</ItemGroup>
 </Project>

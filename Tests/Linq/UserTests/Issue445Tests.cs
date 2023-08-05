@@ -15,10 +15,10 @@ namespace Tests.UserTests
 	public class Issue445Tests : TestBase
 	{
 		[AttributeUsage(AttributeTargets.Parameter)]
-		class IssueContextSourceAttribute : IncludeDataSourcesAttribute
+		sealed class IssueContextSourceAttribute : IncludeDataSourcesAttribute
 		{
 			public IssueContextSourceAttribute(bool includeLinqService = true)
-				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)
+				: base(includeLinqService, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)
 			{ }
 		}
 

@@ -14,7 +14,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests : TestBase
 	{
 		[Table(Name = "AllTypes2")]
-		class AllTypes2
+		sealed class AllTypes2
 		{
 			[Column(DbType = "int"), PrimaryKey, Identity]
 			public int ID { get; set; }
@@ -30,7 +30,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InSource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -74,7 +74,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InPredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -116,7 +116,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InPredicate2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -163,7 +163,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InInsert([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -219,7 +219,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void Issue200InUpdate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = new TestDataConnection(context))
+			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
 			{
 				db.GetTable<AllTypes2>().Delete();
@@ -280,7 +280,7 @@ namespace Tests.xUpdate
 		#region https://github.com/linq2db/linq2db/issues/1007
 
 		[Table("Person")]
-		class Person1007
+		sealed class Person1007
 		{
 			[Column("PersonID"), Identity]
 			public int ID { get; set; }
@@ -668,7 +668,7 @@ namespace Tests.xUpdate
 					.Merge()
 					.Using(ReviewIndex.Data)
 					.OnTargetKey()
-					.UpdateWhenNotMatchedBySource(t =>  new ReviewIndex() { Id = 2, Value = "3"})
+					.UpdateWhenNotMatchedBySource(t =>  new ReviewIndex() { Id = 2, Value = "3" })
 					.Merge();
 			}
 		}
@@ -720,7 +720,7 @@ namespace Tests.xUpdate
 		#endregion
 
 		#region https://github.com/linq2db/linq2db/issues/2377
-		class CacheTestTable
+		sealed class CacheTestTable
 		{
 			[PrimaryKey] public int Id;
 			[Column    ] public int Value;
@@ -794,7 +794,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestNullableParameterInSourceQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, ProviderName.PostgreSQL15)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var target = db.CreateLocalTable<TestNullableParameterTarget>())
@@ -821,5 +821,39 @@ namespace Tests.xUpdate
 			}
 		}
 		#endregion
+
+		[Test(Description = "Test query filter not used for target, but preserved for source")]
+		public void Issue3729Test([MergeDataContextSource] string context)
+		{
+			// prepare data before fiters applied
+			using (var db1 = GetDataContext(context))
+				PrepareData(db1);
+
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms).Entity<TestMapping1>().HasQueryFilter((t, _) => t.Where(_ => _.Id > 5)).Build();
+
+			using var db = GetDataContext(context, ms);
+
+			var table = GetTarget(db);
+
+			var rows = table
+				.Merge()
+				.Using(GetSource1(db))
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+
+			var result = table.IgnoreFilters().OrderBy(_ => _.Id).ToList();
+
+			AssertRowCount(1, rows, context);
+
+			Assert.AreEqual(5, result.Count);
+
+			AssertRow(InitialTargetData[0], result[0], null, null);
+			AssertRow(InitialTargetData[1], result[1], null, null);
+			AssertRow(InitialTargetData[2], result[2], null, 203);
+			AssertRow(InitialTargetData[3], result[3], null, null);
+			AssertRow(InitialSourceData[3], result[4], null, 216);
+		}
 	}
 }

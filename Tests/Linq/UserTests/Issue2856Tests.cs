@@ -20,7 +20,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestIssue2856([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestIssue2856([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var s = GetDataContext(context))
 			using (s.CreateLocalTable<GlobalTaskDTO>())

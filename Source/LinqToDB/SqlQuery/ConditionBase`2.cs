@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System;
+
+namespace LinqToDB.SqlQuery
 {
 	#region ConditionBase
 
@@ -55,14 +57,14 @@
 				public T2 Any     (SelectQuery   subQuery)    { return Expr(SqlFunction.CreateAny (subQuery)); }
 			}
 
-			public Op_ Equal          => new Op_(this, SqlPredicate.Operator.Equal);
-			public Op_ NotEqual       => new Op_(this, SqlPredicate.Operator.NotEqual);
-			public Op_ Greater        => new Op_(this, SqlPredicate.Operator.Greater);
-			public Op_ GreaterOrEqual => new Op_(this, SqlPredicate.Operator.GreaterOrEqual);
-			public Op_ NotGreater     => new Op_(this, SqlPredicate.Operator.NotGreater);
-			public Op_ Less           => new Op_(this, SqlPredicate.Operator.Less);
-			public Op_ LessOrEqual    => new Op_(this, SqlPredicate.Operator.LessOrEqual);
-			public Op_ NotLess        => new Op_(this, SqlPredicate.Operator.NotLess);
+			public Op_ Equal          => new (this, SqlPredicate.Operator.Equal);
+			public Op_ NotEqual       => new (this, SqlPredicate.Operator.NotEqual);
+			public Op_ Greater        => new (this, SqlPredicate.Operator.Greater);
+			public Op_ GreaterOrEqual => new (this, SqlPredicate.Operator.GreaterOrEqual);
+			public Op_ NotGreater     => new (this, SqlPredicate.Operator.NotGreater);
+			public Op_ Less           => new (this, SqlPredicate.Operator.Less);
+			public Op_ LessOrEqual    => new (this, SqlPredicate.Operator.LessOrEqual);
+			public Op_ NotLess        => new (this, SqlPredicate.Operator.NotLess);
 
 			#endregion
 
@@ -91,22 +93,22 @@
 
 			#region Predicate.In
 
-			public T2 In   (SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, false, subQuery)); }
-			public T2 NotIn(SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, true,  subQuery)); }
+			public T2 InSubQuery   (SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, false, subQuery)); }
+			public T2 NotInSubQuery(SelectQuery subQuery) { return Add(new SqlPredicate.InSubQuery(_expr, true,  subQuery)); }
 
-			SqlPredicate.InList CreateInList(bool isNot, object[] exprs)
+			SqlPredicate.InList CreateInList(bool isNot, bool compareNullsAsValues, object[]? exprs)
 			{
-				var list = new SqlPredicate.InList(_expr, Common.Configuration.Linq.CompareNullsAsValues ? false : (bool?)null, isNot, null);
+				var list = new SqlPredicate.InList(_expr, compareNullsAsValues ? false : null, isNot);
 
-				if (exprs != null && exprs.Length > 0)
+				if (exprs?.Length > 0)
 				{
 					foreach (var item in exprs)
 					{
-						if (item == null || item is SqlValue && ((SqlValue)item).Value == null)
+						if (item == null || item is SqlValue { Value : null })
 							continue;
 
-						if (item is ISqlExpression)
-							list.Values.Add((ISqlExpression)item);
+						if (item is ISqlExpression expression)
+							list.Values.Add(expression);
 						else
 							list.Values.Add(new SqlValue(item));
 					}
@@ -115,8 +117,8 @@
 				return list;
 			}
 
-			public T2 In   (params object[] exprs) { return Add(CreateInList(false, exprs)); }
-			public T2 NotIn(params object[] exprs) { return Add(CreateInList(true,  exprs)); }
+			public T2 In   (bool compareNullsAsValues, params object[] exprs) { return Add(CreateInList(false, compareNullsAsValues, exprs));  }
+			public T2 NotIn(bool compareNullsAsValues, params object[] exprs) { return Add(CreateInList(true,  compareNullsAsValues,  exprs)); }
 
 			#endregion
 		}
@@ -151,7 +153,7 @@
 			return (T1)this;
 		}
 
-		public Not_  Not => new Not_(this);
+		public Not_  Not => new (this);
 
 		public Expr_ Expr    (ISqlExpression expr)        { return new Expr_(this, false, expr); }
 		public Expr_ Field   (SqlField       field)       { return Expr(field);                  }

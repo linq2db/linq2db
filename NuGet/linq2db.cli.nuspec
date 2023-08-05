@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>linq2db.cli</id>
+		<title>LINQ to DB command-line tools</title>
+		<description>LINQ to DB CLI is a dotnet tool for Linq To DB database model scaffolding.</description>
+		<summary />
+		<tags>linq2db LinqToDB ORM O/RM Access DB2 Firebird Informix MySql MariaDB Oracle PostgeSQL Postgres SAP SAPHANA SqlCe SqlServerCe SQLite SqlServer Sybase Ase</tags>
+		<readme>README.md</readme>
+		<packageTypes>
+			<packageType name="DotnetTool" />
+		</packageTypes>
+	</metadata>
+	<files>
+		<file src="..\Source\LinqToDB.CLI\bin\Release\netcoreapp3.1\**\*" target="tools\netcoreapp3.1\any\" />
+		<file src="..\NuGet\CLI\DotnetToolSettings.xml"                   target="tools\netcoreapp3.1\any\" />
+		<file src="..\Source\LinqToDB.CLI\bin\Release\net6.0\**\*"        target="tools\net6.0\any\"        />
+		<file src="..\NuGet\CLI\DotnetToolSettings.xml"                   target="tools\net6.0\any\"        />
+		<file src="..\Source\LinqToDB.CLI\bin\Release\net7.0\**\*"        target="tools\net7.0\any\"        />
+		<file src="..\NuGet\CLI\DotnetToolSettings.xml"                   target="tools\net7.0\any\"        />
+		<file src="..\NuGet\CLI\README.md"                                target="README.md"                />
+	</files>
+</package>

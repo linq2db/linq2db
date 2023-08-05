@@ -5,6 +5,7 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
 
@@ -23,14 +24,14 @@ namespace Tests.Tools
 			public virtual void M() {}
 		}
 
-		class B : A
+		sealed class B : A
 		{
 			public override int Overridable { get; set; }
 
 			public override void M() {}
 		}
 
-		class C : A
+		sealed class C : A
 		{
 		}
 
@@ -118,13 +119,22 @@ namespace Tests.Tools
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-		class TestClass
+		sealed class TestClass
 		{
 			public int     Field1;
+			public int?    Field2;
 			public string? Prop2 { get; set; }
 
 			static int _n;
 			       int _field = ++_n;
+		}
+
+		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
+		struct TestStruct
+		{
+			public int     Field1;
+			public int?    Field2;
+			public string? Prop2 { get; set; }
 		}
 
 		[Test]
@@ -148,7 +158,22 @@ namespace Tests.Tools
 			Assert.That(eq.Equals(new TestClass(), new TestClass { Field1 = 1 }), Is.False);
 		}
 
-		class NoMemberClass
+		[Test]
+		public void StructEqualsTest()
+		{
+			var eq = ComparerBuilder.GetEqualityComparer<TestStruct?>();
+
+			Assert.That(eq.Equals(new TestStruct(), new TestStruct()), Is.True);
+			Assert.That(eq.Equals(null, null), Is.True);
+			Assert.That(eq.Equals(null, new TestStruct()), Is.False);
+			Assert.That(eq.Equals(new TestStruct(), null), Is.False);
+			Assert.That(eq.Equals(new TestStruct(), new TestStruct { Field1 = 1 }), Is.False);
+			Assert.That(eq.Equals(new TestStruct() { Field1 = 1 }, new TestStruct { Field1 = 1 }), Is.True);
+			Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 2 }), Is.False);
+			Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 1 }), Is.True);
+		}
+
+		sealed class NoMemberClass
 		{
 		}
 
@@ -164,7 +189,7 @@ namespace Tests.Tools
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-		class OneMemberClass
+		sealed class OneMemberClass
 		{
 			public int Field1;
 		}
@@ -255,12 +280,12 @@ namespace Tests.Tools
 		}
 
 		[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-		class IdentifierAttribute : Attribute
+		sealed class IdentifierAttribute : Attribute
 		{
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-		class TestClass2
+		sealed class TestClass2
 		{
 			[Identifier]
 			public int EntityType { get; set; }
@@ -273,7 +298,7 @@ namespace Tests.Tools
 		static IEnumerable<MemberAccessor> GetIdentifiers(TypeAccessor typeAccessor)
 		{
 			foreach (var member in typeAccessor.Members)
-				if (member.MemberInfo.GetCustomAttribute<IdentifierAttribute>() != null)
+				if (member.MemberInfo.HasAttribute<IdentifierAttribute>())
 					yield return member;
 		}
 

@@ -22,10 +22,9 @@ namespace LinqToDB.Data
 
 			return dataConnection
 				.MappingSchema
-				.GetEntityDescriptor(typeof(T))
+				.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated)
 				.Columns
-				.Where(c => !c.IsPrimaryKey && !c.IsIdentity && !c.SkipOnUpdate)
-				.Any();
+				.Any(c => !c.IsPrimaryKey && !c.IsIdentity && !c.SkipOnUpdate);
 		}
 
 		/// <summary>

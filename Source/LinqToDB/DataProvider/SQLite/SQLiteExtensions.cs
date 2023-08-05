@@ -1,11 +1,10 @@
-using LinqToDB.Data;
+﻿using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.SqlProvider;
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -531,19 +530,19 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void FTS5Delete<TEntity>(this DataConnection dc, ITable<TEntity> table, int rowid, TEntity record)
 			where TEntity : class
 		{
-			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity));
+			var ed = dc.MappingSchema.GetEntityDescriptor(typeof(TEntity), dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			var columns = new string[ed.Columns.Count];
 			var parameterTokens = new string[ed.Columns.Count];
 			var parameters = new DataParameter[ed.Columns.Count];
 
-			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
+			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
 
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
 				columns[i]         = sqlBuilder.ConvertInline(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
 				parameterTokens[i] = $"@p{i}";
-				parameters[i]      = DataParameter.VarChar($"p{i}", (string)ed.Columns[i].GetValue(record)!);
+				parameters[i]      = DataParameter.VarChar($"@p{i}", (string)ed.Columns[i].GetProviderValue(record)!);
 			}
 
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rowid, {string.Join(", ", columns)}) VALUES('delete', {rowid.ToString(NumberFormatInfo.InvariantInfo)}, {string.Join(", ", parameterTokens)})", parameters);
@@ -628,7 +627,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static void FTS5Rank<TEntity>(this DataConnection dc, ITable<TEntity> table, string function)
 			where TEntity : class
 		{
-			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("rank", function));
+			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rank) VALUES('rank', @rank)", DataParameter.VarChar("@rank", function));
 		}
 
 		/// <summary>

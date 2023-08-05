@@ -1,52 +1,64 @@
 ``` ini
 
-BenchmarkDotNet=v0.12.1, OS=Windows 10.0.16299.125 (1709/FallCreatorsUpdate/Redstone3)
-Intel Core i7-3770K CPU 3.50GHz (Ivy Bridge), 1 CPU, 8 logical and 4 physical cores
-Frequency=3417995 Hz, Resolution=292.5692 ns, Timer=TSC
-  [Host]     : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
-  Job-FSMYUH : .NET Framework 4.8 (4.8.3928.0), X64 RyuJIT
-  Job-TSQXSD : .NET Core 2.1.17 (CoreCLR 4.6.28619.01, CoreFX 4.6.28619.01), X64 RyuJIT
-  Job-OUTKHJ : .NET Core 3.1.3 (CoreCLR 4.700.20.11803, CoreFX 4.700.20.12001), X64 RyuJIT
+BenchmarkDotNet=v0.13.3, OS=Windows 10 (10.0.17763.3650/1809/October2018Update/Redstone5), VM=Hyper-V
+AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
+.NET SDK=7.0.102
+  [Host]     : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
+  Job-HCNGBR : .NET 6.0.13 (6.0.1322.58009), X64 RyuJIT AVX2
+  Job-XBFFOD : .NET 7.0.2 (7.0.222.60605), X64 RyuJIT AVX2
+  Job-INBZNN : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-THZJXI : .NET Framework 4.8 (4.8.4515.0), X64 RyuJIT VectorSize=256
 
-Jit=RyuJit  Platform=X64  MaxIterationCount=5  
-MinIterationCount=3  WarmupCount=2  
+Jit=RyuJit  Platform=X64  
 
 ```
-|                                 Method |       Runtime |       Mean | Ratio | Gen 0 | Gen 1 | Gen 2 | Allocated |
-|--------------------------------------- |-------------- |-----------:|------:|------:|------:|------:|----------:|
-|        TypeMapperReadOracleTimeStampTZ |    .NET 4.6.2 | 129.497 ns |  2.14 |     - |     - |     - |         - |
-|      DirectAccessReadOracleTimeStampTZ |    .NET 4.6.2 |  60.647 ns |  1.00 |     - |     - |     - |         - |
-|       TypeMapperReadOracleTimeStampLTZ |    .NET 4.6.2 | 138.949 ns |  2.29 |     - |     - |     - |         - |
-|     DirectAccessReadOracleTimeStampLTZ |    .NET 4.6.2 |  61.201 ns |  1.01 |     - |     - |     - |         - |
-|         TypeMapperReadOracleDecimalAdv |    .NET 4.6.2 |  39.916 ns |  0.66 |     - |     - |     - |         - |
-|       DirectAccessReadOracleDecimalAdv |    .NET 4.6.2 |   6.384 ns |  0.11 |     - |     - |     - |         - |
-|   TypeMapperReadOracleDecimalAsDecimal |    .NET 4.6.2 |  26.224 ns |  0.43 |     - |     - |     - |         - |
-| DirectAccessReadOracleDecimalAsDecimal |    .NET 4.6.2 |   5.968 ns |  0.10 |     - |     - |     - |         - |
-|       TypeMapperReadOracleDecimalAsInt |    .NET 4.6.2 |  29.067 ns |  0.48 |     - |     - |     - |         - |
-|     DirectAccessReadOracleDecimalAsInt |    .NET 4.6.2 |   8.924 ns |  0.15 |     - |     - |     - |         - |
-|      TypeMapperReadOracleDecimalAsLong |    .NET 4.6.2 |  29.713 ns |  0.49 |     - |     - |     - |         - |
-|    DirectAccessReadOracleDecimalAsLong |    .NET 4.6.2 |   9.005 ns |  0.15 |     - |     - |     - |         - |
-|        TypeMapperReadOracleTimeStampTZ | .NET Core 2.1 |  64.720 ns |  1.07 |     - |     - |     - |         - |
-|      DirectAccessReadOracleTimeStampTZ | .NET Core 2.1 |  61.070 ns |  1.01 |     - |     - |     - |         - |
-|       TypeMapperReadOracleTimeStampLTZ | .NET Core 2.1 |  64.598 ns |  1.07 |     - |     - |     - |         - |
-|     DirectAccessReadOracleTimeStampLTZ | .NET Core 2.1 |  62.522 ns |  1.03 |     - |     - |     - |         - |
-|         TypeMapperReadOracleDecimalAdv | .NET Core 2.1 |  20.838 ns |  0.34 |     - |     - |     - |         - |
-|       DirectAccessReadOracleDecimalAdv | .NET Core 2.1 |   9.333 ns |  0.15 |     - |     - |     - |         - |
-|   TypeMapperReadOracleDecimalAsDecimal | .NET Core 2.1 |  10.606 ns |  0.18 |     - |     - |     - |         - |
-| DirectAccessReadOracleDecimalAsDecimal | .NET Core 2.1 |   8.698 ns |  0.14 |     - |     - |     - |         - |
-|       TypeMapperReadOracleDecimalAsInt | .NET Core 2.1 |  12.354 ns |  0.20 |     - |     - |     - |         - |
-|     DirectAccessReadOracleDecimalAsInt | .NET Core 2.1 |  10.795 ns |  0.18 |     - |     - |     - |         - |
-|      TypeMapperReadOracleDecimalAsLong | .NET Core 2.1 |  12.243 ns |  0.20 |     - |     - |     - |         - |
-|    DirectAccessReadOracleDecimalAsLong | .NET Core 2.1 |  10.768 ns |  0.18 |     - |     - |     - |         - |
-|        TypeMapperReadOracleTimeStampTZ | .NET Core 3.1 |  68.432 ns |  1.13 |     - |     - |     - |         - |
-|      DirectAccessReadOracleTimeStampTZ | .NET Core 3.1 |  61.173 ns |  1.01 |     - |     - |     - |         - |
-|       TypeMapperReadOracleTimeStampLTZ | .NET Core 3.1 |  69.777 ns |  1.15 |     - |     - |     - |         - |
-|     DirectAccessReadOracleTimeStampLTZ | .NET Core 3.1 |  63.957 ns |  1.06 |     - |     - |     - |         - |
-|         TypeMapperReadOracleDecimalAdv | .NET Core 3.1 |  12.739 ns |  0.21 |     - |     - |     - |         - |
-|       DirectAccessReadOracleDecimalAdv | .NET Core 3.1 |   7.887 ns |  0.13 |     - |     - |     - |         - |
-|   TypeMapperReadOracleDecimalAsDecimal | .NET Core 3.1 |   7.059 ns |  0.12 |     - |     - |     - |         - |
-| DirectAccessReadOracleDecimalAsDecimal | .NET Core 3.1 |   3.538 ns |  0.06 |     - |     - |     - |         - |
-|       TypeMapperReadOracleDecimalAsInt | .NET Core 3.1 |   8.981 ns |  0.15 |     - |     - |     - |         - |
-|     DirectAccessReadOracleDecimalAsInt | .NET Core 3.1 |   7.253 ns |  0.12 |     - |     - |     - |         - |
-|      TypeMapperReadOracleDecimalAsLong | .NET Core 3.1 |   9.911 ns |  0.16 |     - |     - |     - |         - |
-|    DirectAccessReadOracleDecimalAsLong | .NET Core 3.1 |   6.173 ns |  0.10 |     - |     - |     - |         - |
+|                                 Method |              Runtime |       Mean | Allocated |
+|--------------------------------------- |--------------------- |-----------:|----------:|
+|        TypeMapperReadOracleTimeStampTZ |             .NET 6.0 |  43.598 ns |         - |
+|      DirectAccessReadOracleTimeStampTZ |             .NET 6.0 |  43.215 ns |         - |
+|       TypeMapperReadOracleTimeStampLTZ |             .NET 6.0 |  45.503 ns |         - |
+|     DirectAccessReadOracleTimeStampLTZ |             .NET 6.0 |  29.129 ns |         - |
+|         TypeMapperReadOracleDecimalAdv |             .NET 6.0 |  13.653 ns |         - |
+|       DirectAccessReadOracleDecimalAdv |             .NET 6.0 |   7.055 ns |         - |
+|   TypeMapperReadOracleDecimalAsDecimal |             .NET 6.0 |   6.326 ns |         - |
+| DirectAccessReadOracleDecimalAsDecimal |             .NET 6.0 |   4.237 ns |         - |
+|       TypeMapperReadOracleDecimalAsInt |             .NET 6.0 |  11.314 ns |         - |
+|     DirectAccessReadOracleDecimalAsInt |             .NET 6.0 |   8.001 ns |         - |
+|      TypeMapperReadOracleDecimalAsLong |             .NET 6.0 |  11.888 ns |         - |
+|    DirectAccessReadOracleDecimalAsLong |             .NET 6.0 |   8.618 ns |         - |
+|        TypeMapperReadOracleTimeStampTZ |             .NET 7.0 |  45.988 ns |         - |
+|      DirectAccessReadOracleTimeStampTZ |             .NET 7.0 |  42.317 ns |         - |
+|       TypeMapperReadOracleTimeStampLTZ |             .NET 7.0 |  42.511 ns |         - |
+|     DirectAccessReadOracleTimeStampLTZ |             .NET 7.0 |  43.590 ns |         - |
+|         TypeMapperReadOracleDecimalAdv |             .NET 7.0 |  12.598 ns |         - |
+|       DirectAccessReadOracleDecimalAdv |             .NET 7.0 |   3.512 ns |         - |
+|   TypeMapperReadOracleDecimalAsDecimal |             .NET 7.0 |   5.536 ns |         - |
+| DirectAccessReadOracleDecimalAsDecimal |             .NET 7.0 |   3.354 ns |         - |
+|       TypeMapperReadOracleDecimalAsInt |             .NET 7.0 |   9.561 ns |         - |
+|     DirectAccessReadOracleDecimalAsInt |             .NET 7.0 |   7.623 ns |         - |
+|      TypeMapperReadOracleDecimalAsLong |             .NET 7.0 |   8.085 ns |         - |
+|    DirectAccessReadOracleDecimalAsLong |             .NET 7.0 |   6.000 ns |         - |
+|        TypeMapperReadOracleTimeStampTZ |        .NET Core 3.1 |  63.736 ns |         - |
+|      DirectAccessReadOracleTimeStampTZ |        .NET Core 3.1 |  68.913 ns |         - |
+|       TypeMapperReadOracleTimeStampLTZ |        .NET Core 3.1 |  75.763 ns |         - |
+|     DirectAccessReadOracleTimeStampLTZ |        .NET Core 3.1 |  70.156 ns |         - |
+|         TypeMapperReadOracleDecimalAdv |        .NET Core 3.1 |  12.029 ns |         - |
+|       DirectAccessReadOracleDecimalAdv |        .NET Core 3.1 |   9.610 ns |         - |
+|   TypeMapperReadOracleDecimalAsDecimal |        .NET Core 3.1 |   8.076 ns |         - |
+| DirectAccessReadOracleDecimalAsDecimal |        .NET Core 3.1 |   3.305 ns |         - |
+|       TypeMapperReadOracleDecimalAsInt |        .NET Core 3.1 |  11.885 ns |         - |
+|     DirectAccessReadOracleDecimalAsInt |        .NET Core 3.1 |   7.857 ns |         - |
+|      TypeMapperReadOracleDecimalAsLong |        .NET Core 3.1 |  13.451 ns |         - |
+|    DirectAccessReadOracleDecimalAsLong |        .NET Core 3.1 |   8.088 ns |         - |
+|        TypeMapperReadOracleTimeStampTZ | .NET Framework 4.7.2 | 138.186 ns |         - |
+|      DirectAccessReadOracleTimeStampTZ | .NET Framework 4.7.2 |  65.889 ns |         - |
+|       TypeMapperReadOracleTimeStampLTZ | .NET Framework 4.7.2 | 147.381 ns |         - |
+|     DirectAccessReadOracleTimeStampLTZ | .NET Framework 4.7.2 |  66.851 ns |         - |
+|         TypeMapperReadOracleDecimalAdv | .NET Framework 4.7.2 |  50.260 ns |         - |
+|       DirectAccessReadOracleDecimalAdv | .NET Framework 4.7.2 |   7.688 ns |         - |
+|   TypeMapperReadOracleDecimalAsDecimal | .NET Framework 4.7.2 |  34.604 ns |         - |
+| DirectAccessReadOracleDecimalAsDecimal | .NET Framework 4.7.2 |   5.823 ns |         - |
+|       TypeMapperReadOracleDecimalAsInt | .NET Framework 4.7.2 |  36.328 ns |         - |
+|     DirectAccessReadOracleDecimalAsInt | .NET Framework 4.7.2 |   9.854 ns |         - |
+|      TypeMapperReadOracleDecimalAsLong | .NET Framework 4.7.2 |  36.254 ns |         - |
+|    DirectAccessReadOracleDecimalAsLong | .NET Framework 4.7.2 |  10.860 ns |         - |

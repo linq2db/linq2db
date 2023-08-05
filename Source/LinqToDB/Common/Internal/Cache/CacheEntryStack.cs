@@ -5,34 +5,30 @@ using System;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-	internal class CacheEntryStack
+	internal sealed class CacheEntryStack<TKey,TEntry>
+		where TKey: notnull
 	{
-		private readonly CacheEntryStack? _previous;
-		private readonly CacheEntry? _entry;
+		private readonly CacheEntryStack<TKey,TEntry>? _previous;
+		private readonly CacheEntry<TKey,TEntry>?      _entry;
 
 		private CacheEntryStack()
 		{
 		}
 
-		private CacheEntryStack(CacheEntryStack previous, CacheEntry entry)
+		private CacheEntryStack(CacheEntryStack<TKey,TEntry> previous, CacheEntry<TKey,TEntry> entry)
 		{
-			if (previous == null)
-			{
-				throw new ArgumentNullException(nameof(previous));
-			}
-
-			_previous = previous;
-			_entry = entry;
+			_previous = previous ?? throw new ArgumentNullException(nameof(previous));
+			_entry    = entry;
 		}
 
-		public static CacheEntryStack Empty { get; } = new CacheEntryStack();
+		public static CacheEntryStack<TKey,TEntry> Empty { get; } = new();
 
-		public CacheEntryStack Push(CacheEntry c)
+		public CacheEntryStack<TKey,TEntry> Push(CacheEntry<TKey,TEntry> c)
 		{
-			return new CacheEntryStack(this, c);
+			return new(this, c);
 		}
 
-		public CacheEntry? Peek()
+		public CacheEntry<TKey,TEntry>? Peek()
 		{
 			return _entry;
 		}

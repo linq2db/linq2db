@@ -18,10 +18,10 @@ namespace Tests.UserTests
 			[Column]
 			public string? Name {get; set;}
 
-			[Association(QueryExpressionMethod = nameof(ArticleExpr), CanBeNull = true, Relationship = Relationship.OneToOne)]
+			[Association(QueryExpressionMethod = nameof(ArticleExpr), CanBeNull = true)]
 			public Article? BoughtQuery {get; set; }
 
-			[Association(ThisKey = nameof(ID), OtherKey = nameof(Article.PersonId), CanBeNull = true, Relationship = Relationship.OneToOne)]
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(Article.PersonId), CanBeNull = true)]
 			public Article? Bought {get; set; }
 
 			public static Expression<Func<Person1974, IDataContext, IQueryable<Article>>> ArticleExpr()
@@ -43,7 +43,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SelectAssociations([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SelectAssociations([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []

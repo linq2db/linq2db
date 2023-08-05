@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DropBuilder : MethodCallBuilder
+	sealed class DropBuilder : MethodCallBuilder
 	{
 		#region DropBuilder
 
@@ -23,9 +23,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (methodCall.Arguments.Count == 2)
 			{
-				if (methodCall.Arguments[1] is ConstantExpression c)
+				if (methodCall.Arguments[1].Type == typeof(bool))
 				{
-					ifExists = !(bool)c.Value;
+					ifExists = !(bool)methodCall.Arguments[1].EvaluateExpression()!;
 				}
 			}
 
@@ -35,17 +35,11 @@ namespace LinqToDB.Linq.Builder
 			return new DropContext(buildInfo.Parent, sequence);
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
 		#endregion
 
 		#region DropContext
 
-		class DropContext : SequenceContextBase
+		sealed class DropContext : SequenceContextBase
 		{
 			public DropContext(IBuildContext? parent, IBuildContext sequence)
 				: base(parent, sequence, null)

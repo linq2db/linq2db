@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Data;
 
 namespace LinqToDB.Common
 {
+	using Data;
+	using Internal;
 	using Mapping;
 
-	class ConvertInfo
+	sealed class ConvertInfo
 	{
-		public static ConvertInfo Default = new ConvertInfo();
+		public static ConvertInfo Default = new ();
 
-		public class LambdaInfo
+		public sealed class LambdaInfo : IEquatable<LambdaInfo>
 		{
 			public LambdaInfo(
 				LambdaExpression  checkNullLambda,
@@ -25,10 +27,10 @@ namespace LinqToDB.Common
 				IsSchemaSpecific = isSchemaSpecific;
 			}
 
-			public LambdaExpression Lambda;
-			public LambdaExpression CheckNullLambda;
-			public Delegate?        Delegate;
-			public bool             IsSchemaSpecific;
+			public readonly LambdaExpression Lambda;
+			public readonly LambdaExpression CheckNullLambda;
+			public readonly Delegate?        Delegate;
+			public readonly bool             IsSchemaSpecific;
 
 			private Func<object?, DataParameter>? _convertValueToParameter;
 			public  Func<object?, DataParameter>   ConvertValueToParameter
@@ -48,10 +50,55 @@ namespace LinqToDB.Common
 					return _convertValueToParameter;
 				}
 			}
+
+			public bool Equals(LambdaInfo? other)
+			{
+				if (ReferenceEquals(null, other)) return false;
+				if (ReferenceEquals(this, other)) return true;
+
+				return
+					IsSchemaSpecific  == other.IsSchemaSpecific  &&
+					CheckNullLambdaID == other.CheckNullLambdaID &&
+					LambdaID          == other.LambdaID;
+			}
+
+			public override bool Equals(object? obj)
+			{
+				if (ReferenceEquals(null, obj)) return false;
+				if (ReferenceEquals(this, obj)) return true;
+				if (obj.GetType() != GetType()) return false;
+
+				return Equals((LambdaInfo)obj);
+			}
+
+			int? _hashCode;
+			int? _checkNullLambdaID;
+			int? _lambdaID;
+
+			int CheckNullLambdaID => _checkNullLambdaID ??= IdentifierBuilder.GetObjectID(CheckNullLambda);
+			int LambdaID          => _lambdaID          ??= IdentifierBuilder.GetObjectID(Lambda);
+
+			// ReSharper disable NonReadonlyMemberInGetHashCode
+			public override int GetHashCode()
+			{
+				if (_hashCode != null)
+					return _hashCode.Value;
+
+				unchecked
+				{
+					var hashCode = IsSchemaSpecific ? 397 : 0;
+					//if (Delegate != null)
+					//	hashCode ^= Delegate.Method.GetHashCode();
+					hashCode  = (hashCode * 397) ^ CheckNullLambdaID;
+					hashCode  = (hashCode * 397) ^ LambdaID;
+					_hashCode = hashCode;
+				}
+
+				return _hashCode.Value;
+			}
 		}
 
-		readonly ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> _expressions =
-			new ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>();
+		readonly ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> _expressions = new ();
 
 		public void Set(Type from, Type to, LambdaInfo expr)
 		{
@@ -66,7 +113,7 @@ namespace LinqToDB.Common
 		static void Set(ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> expressions, DbDataType from, DbDataType to, LambdaInfo expr)
 		{
 			if (!expressions.TryGetValue(from, out var dic))
-				expressions[from] = dic = new ConcurrentDictionary<DbDataType, LambdaInfo>();
+				expressions[from] = dic = new ();
 
 			dic[to] = expr;
 		}
@@ -95,6 +142,30 @@ namespace LinqToDB.Common
 			Set(_expressions, from, to , ret);
 
 			return ret;
+		}
+
+		public int GetConfigurationID()
+		{
+			if (_expressions.IsEmpty)
+				return 0;
+
+			using var idBuilder = new IdentifierBuilder(_expressions.Count);
+
+			foreach (var (id, types) in _expressions
+				.Select (static e => (id : IdentifierBuilder.GetObjectID(e.Key), types : e.Value))
+				.OrderBy(static t => t.id))
+			{
+				idBuilder.Add(id).Add(types.Count);
+
+				foreach (var (id2, value) in types
+					.Select (static e => (id2 : IdentifierBuilder.GetObjectID(e.Key), value : e.Value))
+					.OrderBy(static t => t.id2))
+				{
+					idBuilder.Add(id2).Add(IdentifierBuilder.GetObjectID(value));
+				}
+			}
+
+			return idBuilder.CreateID();
 		}
 	}
 }

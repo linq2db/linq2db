@@ -1,71 +1,125 @@
 parameters:
-  artifacts: ''
-  framework: ''
-  titleFramework: ''
   with_baselines: false
 
 steps:
 - checkout: none
 
 - task: UseDotNet@2
-  displayName: 'Install .net 5'
+  displayName: 'Install .net core 3.1'
   inputs:
     packageType: sdk
-    version: 5.x
-  condition: eq('${{ parameters.framework }}', 'net5.0')
+    version: 3.1.x
+  condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 6'
+  inputs:
+    packageType: sdk
+    version: 6.x
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 7'
+  inputs:
+    packageType: sdk
+    version: 7.x
+  condition: and(variables.title, succeeded())
 
 - task: CmdLine@2
   inputs:
     script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Checkout test baselines
-  condition: and(variables.title, ${{ parameters.with_baselines }})
+  condition: and(variables.title, ${{ parameters.with_baselines }}, succeeded())
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifactName: ${{ parameters.artifacts }}
+    artifactName: test_artifacts
     targetPath: '$(System.DefaultWorkingDirectory)'
-  condition: variables.title
+  condition: and(variables.title, succeeded())
+  displayName: Extract test files
 
 - task: CmdLine@2
   inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/$(config).json UserDataProviders.json'
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/netcore31/$(config).json netcore31/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
-  condition: variables.title
-
-- task: NuGet@0
-  displayName: Install nugets
-  inputs:
-    command: 'install'
-    arguments: '$(nuget) -ExcludeVersion'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.nuget)
+  condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
-    script: 'chmod +x $(script)'
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net60/$(config).json net60/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy .NET 6 test config
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net70/$(config).json net70/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy .NET 7 test config
+  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'chmod +x $(script_global)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
-  condition: and(variables.title, variables.script)
+  condition: and(variables.title, variables.script_global, succeeded())
   displayName: Mark script as executable
 
 - task: CmdLine@2
   inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  condition: and(variables.title, variables.script)
+    script: 'chmod +x $(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.script_local, succeeded())
+  displayName: Mark script as executable
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_global)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/scripts'
+  condition: and(variables.title, variables.script_global, succeeded())
   displayName: Setup tests
 
-- script: dotnet test ./linq2db.Tests.dll /TestCaseFilter:"TestCategory != SkipCI" /Framework:${{ parameters.framework }} /logger:trx
-  condition: and(variables.title, succeeded())
-  displayName: 'Execute tests: $(title)'
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31'
+  condition: and(variables.title, variables.script_local, eq(variables.netcore31, 'true'), succeeded())
+  displayName: Setup tests
+
+- script: dotnet test ./netcore31/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
+  condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
+  displayName: 'Tests (CORE31): $(title)'
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net60'
+  condition: and(variables.title, variables.script_local, eq(variables.net60, 'true'), succeeded())
+  displayName: Setup tests
+
+- script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+  displayName: 'Tests (NET60): $(title)'
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net70'
+  condition: and(variables.title, variables.script_local, eq(variables.net70, 'true'), succeeded())
+  displayName: Setup .NET 7 tests
+
+- script: dotnet test ./net70/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net70 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
+  displayName: 'Tests (.NET 7): $(title)'
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
   inputs:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
-    testRunTitle: 'Linux / ${{ parameters.titleFramework }} / $(title)'
+    testRunTitle: 'Linux / $(title)'
 
 - task: PowerShell@2
   inputs:
@@ -78,7 +132,7 @@ steps:
           exit 1
       }
       Write-Host "Create commit"
-      $output = git commit -m "[Linux / ${{ parameters.titleFramework }} / $(title)] baselines"
+      $output = git commit -m "[Linux / $(title)] baselines"
       if ($output -match "nothing to commit") {
           Write-Host "No baselines changes detected"
           exit 0
