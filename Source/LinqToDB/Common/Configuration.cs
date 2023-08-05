@@ -102,7 +102,19 @@ namespace LinqToDB.Common
 		/// Set to 0 to truncate all string data.
 		/// </remarks>
 		public static int MaxStringParameterLengthLogging { get; set; } = 200;
-		
+
+		/// <summary>
+		/// Determines number of items after which logging of collection data in SQL will be truncated.
+		/// This is to avoid Out-Of-Memory exceptions when getting SqlText from <see cref="TraceInfo"/>
+		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
+		/// </summary>
+		/// <remarks>
+		/// This value defaults to 8 elements.
+		/// Use a value of -1 to disable and always log full collection.
+		/// Set to 0 to truncate all data.
+		/// </remarks>
+		public static int MaxArrayParameterLengthLogging { get; set; } = 8;
+
 		private static bool _useNullableTypesMetadata;
 		/// <summary>
 		/// Whether or not Nullable Reference Types annotations from C#
