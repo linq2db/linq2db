@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -34,7 +35,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public static partial class PostgreSQLTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IPostgreSQLSpecificQueryable<TSource> AsPostgreSQL<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
