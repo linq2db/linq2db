@@ -109,11 +109,11 @@ namespace LinqToDB.Common
 		/// or <see cref="IExpressionQuery"/> for logging or other purposes.
 		/// </summary>
 		/// <remarks>
-		/// This value defaults to 50.
+		/// This value defaults to 8 elements.
 		/// Use a value of -1 to disable and always log full collection.
 		/// Set to 0 to truncate all data.
 		/// </remarks>
-		public static int MaxArrayParameterLengthLogging { get; set; } = 50;
+		public static int MaxArrayParameterLengthLogging { get; set; } = 8;
 
 		private static bool _useNullableTypesMetadata;
 		/// <summary>
