@@ -831,7 +831,6 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("OPTION (USE HINT('ASSUME_JOIN_PREDICATE_DEPENDS_ON_FILTERS'))"));
 		}
 
-
 		[Test]
 		public void OptionUseTableTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -856,6 +855,46 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("OPTION (TABLE HINT(c_1, NoLock))"));
+		}
+
+		[Test]
+		public void SubQueryTest1([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				select new
+				{
+					cc =
+					(
+						from c1 in db.Child
+						.AsSqlServer().WithNoLock()
+						where c1.ParentID == c.ParentID select c1
+					).Count()
+				};
+
+			_ = q.ToList();
+		}
+
+		[Test]
+		public void SubQueryTest2([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				select new
+				{
+					cc =
+					(
+						from c1 in db.Child
+						.AsSqlServer().WithNoLock()
+						where c1.ParentID == c.ParentID select c1.ChildID
+					).FirstOrDefault()
+				};
+
+			_ = q.ToList();
 		}
 	}
 }

@@ -1016,7 +1016,7 @@ namespace LinqToDB.Linq.Builder
 					var t = ConvertToSql(context, e.IfTrue);
 					var f = ConvertToSql(context, e.IfFalse);
 
-					if (QueryHelper.UnwrapExpression(f, checkNullability: true) is SqlFunction c && c.Name == "CASE")
+					if (QueryHelper.UnwrapExpression(f, checkNullability: true) is SqlFunction("CASE") c)
 					{
 						var parms = new ISqlExpression[c.Parameters.Length + 2];
 
@@ -1024,10 +1024,10 @@ namespace LinqToDB.Linq.Builder
 						parms[1] = t;
 						c.Parameters.CopyTo(parms, 2);
 
-						return new SqlFunction(e.Type, "CASE", parms) { CanBeNull = false };
+						return new SqlFunction(e.Type, "CASE", parms) { CanBeNull = t.CanBeNull || f.CanBeNull };
 					}
 
-					return new SqlFunction(e.Type, "CASE", s, t, f) { CanBeNull = false };
+					return new SqlFunction(e.Type, "CASE", s, t, f) { CanBeNull = t.CanBeNull || f.CanBeNull };
 				}
 
 				case ExpressionType.MemberAccess:
