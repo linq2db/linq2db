@@ -1,17 +1,33 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
+using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+using LinqToDB.Tools;
+
+using Microsoft.FSharp.Core;
 
 using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
 	[TestFixture]
-	public class UniqueParametersNormalizerTests
+	public class UniqueParametersNormalizerTests : TestBase
 	{
 		// Test sending a few unique strings
 		[Test]
-		public void TestNormalizeUniqueStrings()
+		public void NormalizeUniqueStrings()
 		{
 			var normalizer = new UniqueParametersNormalizer();
 			var uniqueStrings = new[] { "test1", "test2", "test3" };
@@ -25,14 +41,14 @@ namespace Tests.DataProvider
 
 		// Test sending some duplicated strings (and validate that capitalization is ignored by default)
 		[Test]
-		public void TestNormalizeDuplicatedStrings()
+		public void NormalizeDuplicatedStrings()
 		{
 			var normalizer = new UniqueParametersNormalizer();
-			var duplicatedStrings = new[] { 
+			var duplicatedStrings = new[] {
 				"test", "test", "TEST", "hello", "hello", "HELLO",
 				"test", "test", "test", "test", "test", "test", "test", "test",
 			};
-			var expectedStrings = new[] { 
+			var expectedStrings = new[] {
 				"test", "test_1", "TEST_2", "hello", "hello_1", "HELLO_2",
 				"test_3", "test_4", "test_5", "test_6", "test_7", "test_8", "test_9", "test_10",
 			};
@@ -47,7 +63,7 @@ namespace Tests.DataProvider
 
 		// Test sending a few unique strings that are 52 characters long
 		[Test]
-		public void TestNormalizeUniqueLongStrings()
+		public void NormalizeUniqueLongStrings()
 		{
 			var normalizer = new UniqueParametersNormalizer();
 			var uniqueLongStrings = new[]
@@ -73,7 +89,7 @@ namespace Tests.DataProvider
 
 		// Test sending some duplicated strings that are 52 characters long
 		[Test]
-		public void TestNormalizeDuplicatedLongStrings()
+		public void NormalizeDuplicatedLongStrings()
 		{
 			var normalizer = new UniqueParametersNormalizer();
 			var duplicatedLongStrings = new[]
@@ -118,7 +134,7 @@ namespace Tests.DataProvider
 
 		// Test sending "abcd" string 23 times and expecting specific responses
 		[Test]
-		public void TestNoInfiniteLoop()
+		public void NoInfiniteLoop()
 		{
 			var normalizer = new TestNormalizer(3);
 			var inputString = "abcd";
@@ -163,7 +179,7 @@ namespace Tests.DataProvider
 		[TestCase("ab_1_cd", "ab_1_cd")]
 		[TestCase("$ab_cd$", "ab_cd")]
 		[TestCase("_ab_cd_", "ab_cd_")]
-		public void TestNormalizeSpecialCharacters(string input, string expected)
+		public void NormalizeSpecialCharacters(string input, string expected)
 		{
 			var normalizer = new UniqueParametersNormalizer();
 			var normalizedStr = normalizer.Normalize(input);
@@ -172,7 +188,7 @@ namespace Tests.DataProvider
 
 		//Test normalizing a string that does not fit on the stack
 		[Test]
-		public void TestNormalizeVeryLongString()
+		public void NormalizeVeryLongString()
 		{
 			var input = new string('a', 600) + "$" + new string('b', 600);
 			var normalizer = new TestNormalizer(int.MaxValue);
@@ -183,7 +199,7 @@ namespace Tests.DataProvider
 
 		[TestCase("")]
 		[TestCase(null)]
-		public void TestDefaultName(string? input)
+		public void DefaultName(string? input)
 		{
 			Assert.AreEqual("p", new UniqueParametersNormalizer().Normalize(input));
 		}
@@ -195,7 +211,7 @@ namespace Tests.DataProvider
 		[TestCase(50, null)]
 		[TestCase(1, "")]
 		[TestCase(1, null)]
-		public void TestInvalidProperties(int maxLength, string? defaultName)
+		public void InvalidProperties(int maxLength, string? defaultName)
 		{
 			var normalizer = new TestNormalizer(maxLength, defaultName!);
 			try
@@ -220,6 +236,167 @@ namespace Tests.DataProvider
 			}
 			protected override int MaxLength => _maxLength;
 			protected override string DefaultName => _defaultName;
+		}
+
+		// Ensures that "search" is always passed to IQueryParametersNormalizer.Normalize as the originalName
+		[Test]
+		public async Task CalledWithCorrectNames([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			db.DataProvider = new WrapperProvider(db.DataProvider, (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase));
+
+			await using var dbTable1 = await db.CreateTempTableAsync<Table1>("table1");
+			await using var dbTable2 = await db.CreateTempTableAsync<Table2>("table2");
+			await using var dbTable3 = await db.CreateTempTableAsync<Table3>("table3");
+
+			var query1 = GenerateQuery("test");
+			_ = await query1.ToListAsync();
+
+			IQueryable<int> GenerateQuery(string search) =>
+				(
+					from row1 in dbTable1
+					join row2 in dbTable2 on row1.Id equals row2.Table1Id
+					where row2.Field2.StartsWith(search)
+					select row1.Id)
+				.Union(
+					from row1 in dbTable1
+					join row3 in dbTable3 on row1.Id equals row3.Table1Id
+					where row3.Field3 == search
+					select row1.Id)
+				.Union(
+					from row1 in dbTable1
+					where row1.Field1!.StartsWith(search)
+					select row1.Id);
+		}
+
+		// Ensures that subsequent executions of the same query execute the same SQL
+		[Test]
+		public async Task ExecutesDeterministically([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			string? lastSql = null;
+			var defaultTrace = db.OnTraceConnection;
+			db.OnTraceConnection = info =>
+			{
+				if (info.TraceInfoStep == TraceInfoStep.BeforeExecute)
+				{
+					lastSql = info.SqlText;
+				}
+				defaultTrace(info);
+			};
+
+			await using var dbTable1 = await db.CreateTempTableAsync<Table1>("table1");
+			await using var dbTable2 = await db.CreateTempTableAsync<Table2>("table2");
+			await using var dbTable3 = await db.CreateTempTableAsync<Table3>("table3");
+
+			var query1 = GenerateQuery("test");
+			_ = await query1.ToListAsync();
+			var sql1 = lastSql;
+			lastSql = null;
+
+			var query2 = GenerateQuery("test"); // should execute identical SQL
+			_ = await query2.ToListAsync();
+			var sql2 = lastSql;
+
+			Assert.AreEqual(sql1, sql2);
+
+			IQueryable<int> GenerateQuery(string search) =>
+				(
+					from row1 in dbTable1
+					join row2 in dbTable2 on row1.Id equals row2.Table1Id
+					where row2.Field2.StartsWith(search)
+					select row1.Id)
+				.Union(
+					from row1 in dbTable1
+					join row3 in dbTable3 on row1.Id equals row3.Table1Id
+					where row3.Field3 == search
+					select row1.Id)
+				.Union(
+					from row1 in dbTable1
+					where row1.Field1!.StartsWith(search)
+					select row1.Id);
+		}
+
+		/// <summary>
+		/// Validates that the 'originalName' passed to <see cref="IQueryParametersNormalizer.Normalize(string?)"/> is "search".
+		/// </summary>
+		private class ValidateOriginalNameNormalizer : IQueryParametersNormalizer
+		{
+			private readonly IQueryParametersNormalizer _normalizerBase;
+
+			public ValidateOriginalNameNormalizer(IQueryParametersNormalizer normalizerBase)
+			{
+				_normalizerBase = normalizerBase;
+			}
+
+			public string? Normalize(string? originalName)
+			{
+				if (originalName != "search")
+					throw new InvalidOperationException($"Expected originalName is 'search' but instead was '{originalName}'.");
+				return _normalizerBase.Normalize(originalName);
+			}
+		}
+
+		/// <summary>
+		/// Wraps another <see cref="IDataProvider"/> instance, overriding only the <see cref="IDataProvider.GetQueryParameterNormalizer"/> function.
+		/// </summary>
+		private class WrapperProvider : IDataProvider
+		{
+			private readonly IDataProvider _baseProvider;
+			private readonly Func<IQueryParametersNormalizer, IQueryParametersNormalizer> _normalizerFactory;
+			public WrapperProvider(IDataProvider baseProvider, Func<IQueryParametersNormalizer, IQueryParametersNormalizer> normalizerFactory)
+			{
+				_baseProvider = baseProvider;
+				_normalizerFactory = normalizerFactory;
+			}
+
+			public string Name => _baseProvider.Name;
+			public int ID => _baseProvider.ID;
+			public string? ConnectionNamespace => _baseProvider.ConnectionNamespace;
+			public Type DataReaderType => _baseProvider.DataReaderType;
+			public MappingSchema MappingSchema => _baseProvider.MappingSchema;
+			public SqlProviderFlags SqlProviderFlags => _baseProvider.SqlProviderFlags;
+			public TableOptions SupportedTableOptions => _baseProvider.SupportedTableOptions;
+			public bool TransactionsSupported => _baseProvider.TransactionsSupported;
+			public BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source) where T : notnull => _baseProvider.BulkCopy(options, table, source);
+			public Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table, IEnumerable<T> source, CancellationToken cancellationToken) where T : notnull => _baseProvider.BulkCopyAsync(options, table, source, cancellationToken);
+			public Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken) where T : notnull => _baseProvider.BulkCopyAsync(options, table, source, cancellationToken);
+			public Type ConvertParameterType(Type type, DbDataType dataType) => _baseProvider.ConvertParameterType(type, dataType);
+			public DbConnection CreateConnection(string connectionString) => _baseProvider.CreateConnection(connectionString);
+			public ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions) => _baseProvider.CreateSqlBuilder(mappingSchema, dataOptions);
+			public void DisposeCommand(DbCommand command) => _baseProvider.DisposeCommand(command);
+#if NETSTANDARD2_1PLUS
+			public ValueTask DisposeCommandAsync(DbCommand command) => _baseProvider.DisposeCommandAsync(command);
+#endif
+			public IExecutionScope? ExecuteScope(DataConnection dataConnection) => _baseProvider.ExecuteScope(dataConnection);
+			public CommandBehavior GetCommandBehavior(CommandBehavior commandBehavior) => _baseProvider.GetCommandBehavior(commandBehavior);
+			public object? GetConnectionInfo(DataConnection dataConnection, string parameterName) => _baseProvider.GetConnectionInfo(dataConnection, parameterName);
+			public IQueryParametersNormalizer GetQueryParameterNormalizer() => _normalizerFactory(_baseProvider.GetQueryParameterNormalizer());
+			public Expression GetReaderExpression(DbDataReader reader, int idx, Expression readerExpression, Type toType) => _baseProvider.GetReaderExpression(reader, idx, readerExpression, toType);
+			public ISchemaProvider GetSchemaProvider() => _baseProvider.GetSchemaProvider();
+			public ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _baseProvider.GetSqlOptimizer(dataOptions);
+			public DbCommand InitCommand(DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters) => _baseProvider.InitCommand(dataConnection, command, commandType, commandText, parameters, withParameters);
+			public void InitContext(IDataContext dataContext) => _baseProvider.InitContext(dataContext);
+			public bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx) => _baseProvider.IsDBNullAllowed(options, reader, idx);
+			public void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value) => _baseProvider.SetParameter(dataConnection, parameter, name, dataType, value);
+		}
+
+		public class Table1
+		{
+			public int Id { get; set; }
+			public string Field1 { get; set; } = null!;
+		}
+
+		public class Table2
+		{
+			public int Table1Id { get; set; }
+			public string Field2 { get; set; } = null!;
+		}
+
+		public class Table3
+		{
+			public int Table1Id { get; set; }
+			public string Field3 { get; set; } = null!;
 		}
 	}
 }
