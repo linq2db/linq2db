@@ -30,27 +30,27 @@ namespace Tests.Linq
 			Value3,
 			Null
 		}
-		
+
 		[Table("ValueConversion")]
 		sealed class MainClass
 		{
 			[PrimaryKey]
 			public int Id    { get; set; }
-			
-			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)] 
+
+			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public JToken? Value1 { get; set; }
-			
-			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)] 
+
+			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public List<ItemClass>? Value2 { get; set; }
 
 
-			[Column(DataType = DataType.NVarChar, Length = 50)] 
+			[Column(DataType = DataType.NVarChar, Length = 50)]
 			public EnumValue Enum { get; set; }
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public EnumValue? EnumNullable { get; set; }
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public EnumValue EnumWithNull { get; set; }
 
 
@@ -99,24 +99,24 @@ namespace Tests.Linq
 		{
 			[PrimaryKey]
 			public int Id    { get; set; }
-			
-			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)] 
+
+			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public string? Value1 { get; set; }
-			
-			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)] 
+
+			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public string? Value2 { get; set; }
 
 
 			[Column(DataType = DataType.NVarChar, Length = 50)]
 			public string Enum { get; set; } = null!;
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public string? EnumNullable { get; set; }
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public string? EnumWithNull { get; set; }
 
-			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)] 
+			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public string? EnumWithNullDeclarative { get; set; }
 
 			[Column(DataType = DataType.VarChar, Length = 1, CanBeNull = false)]
@@ -150,7 +150,7 @@ namespace Tests.Linq
 				.Property(e => e.EnumWithNull)
 				.HasConversion(
 					v => v == EnumValue.Null ? null : v.ToString(),
-					p => p == null ? EnumValue.Null : (EnumValue)Enum.Parse(typeof(EnumValue), p), 
+					p => p == null ? EnumValue.Null : (EnumValue)Enum.Parse(typeof(EnumValue), p),
 					true
 				)
 				.Property(e => e.BoolValue)
@@ -203,12 +203,12 @@ namespace Tests.Linq
 
 				Assert.That(result[9].Value1, Is.Null);
 				Assert.That(result[9].Value2, Is.Null);
-		
+
 				Assert.That(result[0].BoolValue, Is.EqualTo(true));
 				Assert.That(result[1].BoolValue, Is.EqualTo(false));
 				Assert.That(result[2].BoolValue, Is.EqualTo(false));
 				Assert.That(result[3].BoolValue, Is.EqualTo(false));
-				
+
 
 				var query = from t in table
 					select new
@@ -222,9 +222,9 @@ namespace Tests.Linq
 
 				Assert.That(selectResult[0].Value1, Is.Not.Null);
 				Assert.That(selectResult[0].Value2!.Count, Is.GreaterThan(0));
-				
+
 				var subqueryResult = query.AsSubQuery().OrderBy(_ => _.Id).ToArray();
-				
+
 				Assert.That(subqueryResult[0].Value1, Is.Not.Null);
 				Assert.That(subqueryResult[0].Value2!.Count, Is.GreaterThan(0));
 
@@ -255,7 +255,7 @@ namespace Tests.Linq
 				var testedList = testData[0].Value2;
 
 				var query = from t in table
-					where testedList == t.Value2 
+					where testedList == t.Value2
 					select new
 					{
 						t.Id,
@@ -264,7 +264,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(1));
 			}
 		}
@@ -319,7 +319,7 @@ namespace Tests.Linq
 				{
 					var elements = item.ToArray();
 				}
-			
+
 			}
 		}
 
@@ -339,7 +339,7 @@ namespace Tests.Linq
 					select t;
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(1));
 			}
 		}
@@ -364,7 +364,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(3));
 			}
 		}
@@ -389,7 +389,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(7));
 			}
 		}
@@ -476,7 +476,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(9));
 			}
 		}
@@ -491,7 +491,7 @@ namespace Tests.Linq
 			using (var table = db.CreateLocalTable(testData))
 			{
 				var query = from t in table
-					where null == t.Value2 
+					where null == t.Value2
 					select new
 					{
 						t.Id,
@@ -500,7 +500,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(1));
 			}
 		}
@@ -517,7 +517,7 @@ namespace Tests.Linq
 				List<ItemClass>? testedList = null;
 
 				var query = from t in table
-					where testedList == t.Value2 
+					where testedList == t.Value2
 					select new
 					{
 						t.Id,
@@ -526,7 +526,7 @@ namespace Tests.Linq
 					};
 
 				var selectResult = query.ToArray();
-				
+
 				Assert.That(selectResult.Length, Is.EqualTo(1));
 			}
 		}
@@ -560,7 +560,7 @@ namespace Tests.Linq
 
 				var toUpdate2 = new MainClass
 				{
-					Id = 2, 
+					Id = 2,
 					Value1 = JToken.Parse("{ some: \"updated2}\" }"),
 					Value2 = new List<ItemClass> { new ItemClass { Value = "updated2" } },
 					EnumWithNull = EnumValue.Value2,
@@ -576,14 +576,14 @@ namespace Tests.Linq
 				Assert.That(update2Check.EnumWithNull, Is.EqualTo("Value2"));
 				Assert.That(update2Check.EnumWithNullDeclarative, Is.EqualTo("Value2"));
 
-				
+
 				var toUpdate3 = new MainClass
 				{
-					Id = 3, 
+					Id = 3,
 					Value1 = null,
 					Value2 = null,
-					EnumWithNull = EnumValue.Null, 
-					EnumWithNullDeclarative = EnumValue.Null, 
+					EnumWithNull = EnumValue.Null,
+					EnumWithNullDeclarative = EnumValue.Null,
 				};
 				db.Update(toUpdate3);
 
@@ -625,7 +625,7 @@ namespace Tests.Linq
 				Assert.That(insert1Check.EnumWithNullDeclarative, Is.Null);
 				Assert.That(insert1Check.BoolValue, Is.EqualTo('Y'));
 				Assert.That(insert1Check.AnotherBoolValue, Is.EqualTo('T'));
-				
+
 				table
 					.Value(e => e.Id, 2)
 					.Value(e => e.Value1, (JToken?)null)
@@ -648,7 +648,7 @@ namespace Tests.Linq
 
 				var toInsert = new MainClass
 				{
-					Id = 3, 
+					Id = 3,
 					Value1 = JToken.Parse("{ some: \"inserted3}\" }"),
 					Value2 = new List<ItemClass> { new ItemClass { Value = "inserted3" } },
 					Enum = EnumValue.Value3,
@@ -672,7 +672,7 @@ namespace Tests.Linq
 				Assert.That(table.Count(), Is.EqualTo(3));
 			}
 		}
-		
+
 		[Test]
 		public void InsertExpression([DataSources(false)] string context, [Values(1, 2)] int iteration)
 		{
@@ -839,6 +839,33 @@ namespace Tests.Linq
 				Assert.AreEqual(record.Bool2, result[0].Bool2);
 				Assert.AreEqual(record.Bool3, result[0].Bool3);
 			}
+		}
+
+		[Test]
+		public void ConditionNullTest([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from p in Parent
+				from i in new[] { 0, 1 }
+				select new
+				{
+					ID    = i == 0 ? null : (int?)p.ParentID,
+					Value = p.Value1
+				} into p
+				where p.ID == p.Value
+				select p
+				,
+				from p in db.Parent
+				from i in new[] { 0, 1 }
+				select new
+				{
+					ID    = i == 0 ? null : (int?)p.ParentID,
+					Value = p.Value1
+				} into p
+				where p.ID == p.Value
+				select p);
 		}
 	}
 }

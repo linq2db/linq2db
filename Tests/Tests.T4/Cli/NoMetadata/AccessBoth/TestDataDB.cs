@@ -21,22 +21,17 @@ namespace Cli.NoMetadata.Access.Both
 	{
 		public TestDataDB()
 		{
-			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
-			InitDataContext();
 		}
 
 		public TestDataDB(DataOptions<TestDataDB> options)
 			: base(options.Options)
 		{
-			InitDataContext();
 		}
-
-		partial void InitDataContext();
 
 		public ITable<AllType>             AllTypes             => this.GetTable<AllType>();
 		public ITable<Child>               Children             => this.GetTable<Child>();

@@ -235,6 +235,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public NormalizationOptions DataContextClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
+
+		/// <summary>
+		/// Enables generation of InitDataContext partial method on data context class.
+		/// <list type="bullet">
+		/// <item>Default: <c>true</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
+		/// </list>
+		/// </summary>
+		public bool GenerateInitDataContextMethod { get; set; } = true;
 		#endregion
 
 		#region Associations
