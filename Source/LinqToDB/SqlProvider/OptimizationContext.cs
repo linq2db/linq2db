@@ -20,18 +20,18 @@ namespace LinqToDB.SqlProvider
 		public OptimizationContext(
 			EvaluationContext                context,
 			AliasesContext                   aliases,
-			bool                             isParameterOrderDepended,
+			bool                             isParameterOrderDependent,
 			Func<IQueryParametersNormalizer> parametersNormalizerFactory)
 		{
 			Aliases                      = aliases ?? throw new ArgumentNullException(nameof(aliases));
 			Context                      = context;
-			IsParameterOrderDepended     = isParameterOrderDepended;
+			IsParameterOrderDependent    = isParameterOrderDependent;
 			_parametersNormalizerFactory = parametersNormalizerFactory;
 		}
 
-		public EvaluationContext Context                  { get; }
-		public bool              IsParameterOrderDepended { get; }
-		public AliasesContext    Aliases                  { get; }
+		public EvaluationContext Context                   { get; }
+		public bool              IsParameterOrderDependent { get; }
+		public AliasesContext    Aliases                   { get; }
 
 		public bool IsOptimized(IQueryElement element, [NotNullWhen(true)] out IQueryElement? newExpr)
 		{
@@ -66,18 +66,18 @@ namespace LinqToDB.SqlProvider
 
 		public SqlParameter AddParameter(SqlParameter parameter)
 		{
-			var alreadyRegistered = _actualParameters?.Contains(parameter) == true;
-			if (IsParameterOrderDepended || !alreadyRegistered)
+			var existingIndex = _actualParameters?.IndexOf(parameter) ?? -1;
+			if (IsParameterOrderDependent || existingIndex == -1)
 			{
-				if (alreadyRegistered)
+				var newName = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
+
+				if (IsParameterOrderDependent || newName != parameter.Name)
 				{
-					parameter = new SqlParameter(parameter.Type, parameter.Name, parameter.Value)
+					parameter = new SqlParameter(parameter.Type, newName, parameter.Value)
 					{
 						AccessorId = parameter.AccessorId
 					};
 				}
-
-				parameter.Name = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
 
 				(_actualParameters ??= new()).Add(parameter);
 			}
