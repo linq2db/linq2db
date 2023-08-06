@@ -223,7 +223,7 @@ namespace LinqToDB.SqlQuery
 
 			var keys = GetKeys(true);
 
-			if (keys.Count == 1)
+			if (keys?.Count == 1)
 				return (SqlField)keys[0];
 
 			return null;

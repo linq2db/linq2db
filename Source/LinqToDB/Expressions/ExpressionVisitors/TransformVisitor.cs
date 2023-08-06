@@ -234,9 +234,9 @@ namespace LinqToDB.Expressions
 				return adjustType.Update(Transform(adjustType.Expression));
 			}
 
-			if (expr is SqlKeyHolderExpression keyHolder)
+			if (expr is SqlPathExpression keyHolder)
 			{
-				return keyHolder.Update(Transform(keyHolder.Expression));
+				//return keyHolder.Update(Transform(keyHolder.Expression));
 			}
 
 			return expr;

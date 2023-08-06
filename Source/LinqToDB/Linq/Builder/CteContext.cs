@@ -33,6 +33,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
 		Dictionary<Expression, SqlPlaceholderExpression> _recursiveMap = new (ExpressionEqualityComparer.Instance);
+		Dictionary<Expression, SqlPlaceholderExpression>? _currentRecursiveProcessingMap;
 
 		bool _isRecursiveCall;
 
@@ -47,36 +48,28 @@ namespace LinqToDB.Linq.Builder
 			var cteBuildInfo = new BuildInfo((IBuildContext?)null, Expression!, new SelectQuery());
 
 			_isRecursiveCall = true;
-			try
+
+			var cteInnerQueryContext = Builder.BuildSequence(cteBuildInfo);
+
+			CteInnerQueryContext = cteInnerQueryContext;
+			CteClause.Body       = cteInnerQueryContext.SelectQuery;
+			SelectQuery          = cteInnerQueryContext.SelectQuery;
+			SubqueryContext      = new SubQueryContext(cteInnerQueryContext);
+
+			_isRecursiveCall = false;
+
+			if (_recursiveMap.Count > 0)
 			{
-				var cteInnerQueryContext = Builder.BuildSequence(cteBuildInfo);
+				var subQueryExpr = new ContextRefExpression(SubqueryContext.ElementType, SubqueryContext);
+				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments |
+				                 ExpressionBuilder.BuildFlags.IgnoreNullComparison;
 
-				CteInnerQueryContext = cteInnerQueryContext;
-				CteClause.Body       = cteInnerQueryContext.SelectQuery;
-				SelectQuery          = cteInnerQueryContext.SelectQuery;
-				SubqueryContext      = new SubQueryContext(cteInnerQueryContext);
+				var all = Builder.BuildSqlExpression(SubqueryContext, subQueryExpr, ProjectFlags.SQL,
+					buildFlags : buildFlags);
 
-				if (_recursiveMap.Count > 0)
-				{
-					var subQueryExpr = new ContextRefExpression(SubqueryContext.ElementType, SubqueryContext);
-					var all = Builder.ConvertToSqlExpr(SubqueryContext, subQueryExpr, ProjectFlags.SQL);
+				var cteExpr = subQueryExpr.WithContext(this);
 
-					var cteExpr = subQueryExpr.WithContext(this);
-
-					foreach (var pair in _recursiveMap)
-					{
-						_knownMap.Add(pair.Key, pair.Value);
-					}
-				
-
-					PostProcessExpression(all, cteExpr);
-					var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(all);
-				}
-
-			}
-			finally
-			{
-				_isRecursiveCall = false;
+				PostProcessExpression(all, cteExpr);
 			}
 		}
 
@@ -87,16 +80,21 @@ namespace LinqToDB.Linq.Builder
 
 			if (_isRecursiveCall)
 			{
+				if (SequenceHelper.IsSameContext(path, this) && _recursiveMap.Count > 0)
+				{
+					if (_recursiveMap.TryGetValue(path, out var value))
+						return value;
+					return path;
+				}
+
+				if (_knownMap.TryGetValue(path, out var alreadyTranslated))
+					return alreadyTranslated;
+
 				if (!_recursiveMap.TryGetValue(path, out var newPlaceholder))
 				{
-					var index = CteClause.Fields.Count;
-					var field = TableLikeHelpers.RegisterFieldMapping(CteClause.Fields, index, () =>
-					{
-						var newField = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path), true);
-						return newField;
-					});
+					var field = new SqlField(new DbDataType(path.Type), TableLikeHelpers.GenerateColumnAlias(path) ?? "field", true);
 
-					newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, index: index, trackingPath: path);
+					newPlaceholder = ExpressionBuilder.CreatePlaceholder((SelectQuery?)null, field, path, trackingPath: path);
 					_recursiveMap[path] = newPlaceholder;
 				}
 
@@ -113,11 +111,18 @@ namespace LinqToDB.Linq.Builder
 
 			if (!ReferenceEquals(subqueryPath, path))
 			{
-				correctedPath = Builder.ConvertToSqlExpr(SubqueryContext, correctedPath, flags);
+				_isRecursiveCall = true;
+
+				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments | ExpressionBuilder.BuildFlags.IgnoreNullComparison;
+				correctedPath = Builder.BuildSqlExpression(SubqueryContext, correctedPath, flags.SqlFlag(), buildFlags: buildFlags);
+
+				_isRecursiveCall = false;
 
 				if (!flags.HasFlag(ProjectFlags.Test))
 				{
-					return PostProcessExpression(correctedPath, path);
+					var postProcessed = PostProcessExpression(correctedPath, path);
+
+					return postProcessed;
 				}
 			}
 
@@ -131,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 			correctedPath = RemapRecursive(correctedPath);
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(correctedPath);
 
-			var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, null, CteClause.Fields, _knownMap, correctedPath,
+			var remapped = TableLikeHelpers.RemapToFields(SubqueryContext!, null, CteClause.Fields, _knownMap, _currentRecursiveProcessingMap, correctedPath,
 				placeholders);
 			return remapped;
 		}
@@ -141,7 +146,22 @@ namespace LinqToDB.Linq.Builder
 			if (_recursiveMap.Count == 0)
 				return expression;
 
-			var transformed = expression.Transform(_recursiveMap, static (map, e) =>
+			var toProcess = _recursiveMap.ToList();
+
+			_currentRecursiveProcessingMap = _recursiveMap;
+
+			_recursiveMap = new (ExpressionEqualityComparer.Instance);
+
+			var toRemap = toProcess.ToDictionary(e => e.Key,
+				e =>
+				{
+					var converted = MakeExpression(e.Key, ProjectFlags.SQL);
+
+					return converted;
+				}, ExpressionEqualityComparer.Instance);
+
+			/*
+			var transformed = expression.Transform(toRemap, static (map, e) =>
 			{
 				if (map.TryGetValue(e, out var newPlaceholder))
 				{
@@ -150,8 +170,9 @@ namespace LinqToDB.Linq.Builder
 
 				return e;
 			});
+			*/
 
-			return transformed;
+			return expression;
 		}
 
 		public override IBuildContext Clone(CloningContext context)

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
+
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -344,6 +347,39 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void EagerDifferentDetails([DataSources] string context, [Values(SetOperation.UnionAll, SetOperation.Except, SetOperation.ExceptAll)] SetOperation operation)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 = 
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from b in a.Books.OfType<Roman>()
+				select new
+				{
+					Id = b.BookId,
+					b.BookName,
+					Authors = b.Authors.ToList()
+				};
+
+			var query2 = 
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from b in a.Books.OfType<Novel>()
+				select new
+				{
+					Id = b.BookId,
+					b.BookName,
+					Authors = b.Authors.Where(a => a.AuthorName != "A").ToList()
+				};
+
+			var query = Combine(query1, query2, operation);
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void ConcatEagerDifferentDetails([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
@@ -375,6 +411,41 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+
+		[Test]
+		public void UnionDictionary([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 = 
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from b in a.Books.OfType<Roman>()
+				select 
+					new Dictionary<string, string>{
+						{"Discriminator", b.Discriminator},
+						{b.BookName, b.BookName}
+					};
+
+			var query2 = 
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from b in a.Books.OfType<Novel>()
+			select 
+				new Dictionary<string, string>{
+						{"Discriminator", b.Discriminator},
+						{b.BookName, b.BookName}
+					};
+
+			var query = query1.Union(query2);
+
+			// TODO: Assert query fails.
+			FluentActions.Enumerating(() => query).Should().NotThrow();
+
+		}
+
 
 	}
 }

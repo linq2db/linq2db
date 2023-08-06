@@ -1761,13 +1761,13 @@ namespace Tests.Linq
 				.Select(r => new
 					{
 						r.Table2,
-						r.Table2.Table3,
+						r.Table2!.Table3,
 					} 
 				)
 				.ToList();
 
 			Assert.AreEqual(1, results.Count);
-			Assert.AreEqual(1, results[0].Table2.ID);
+			Assert.AreEqual(1, results[0].Table2!.ID);
 		}
 		#endregion
 	}

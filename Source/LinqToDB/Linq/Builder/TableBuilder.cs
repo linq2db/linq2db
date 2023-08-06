@@ -19,7 +19,6 @@ namespace LinqToDB.Linq.Builder
 			TableConstant,
 			GetTableMethod,
 			MemberAccess,
-			Association,
 			TableFunctionAttribute,
 			AsCteMethod,
 			CteConstant,
@@ -192,16 +191,6 @@ namespace LinqToDB.Linq.Builder
 							AddTableInScope(new(builder, buildInfo,
 								buildInfo.Expression.Type.GetGenericArguments()[0])));
 					}
-				case BuildContextType.Association            :
-				{
-					//TODO: Temporary workaround
-					if (parentContext is GroupByBuilder.GroupByContext)
-						return parentContext!.GetContext(null, buildInfo);
-
-					var ctx = builder.GetContext(parentContext, buildInfo.Expression);
-
-					return ctx!.GetContext(buildInfo.Expression, buildInfo);
-				}
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);

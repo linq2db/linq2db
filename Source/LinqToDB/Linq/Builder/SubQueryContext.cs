@@ -81,13 +81,17 @@ namespace LinqToDB.Linq.Builder
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
-			var result = Builder.ConvertToSqlExpr(SubQuery, corrected, flags);
+			if (flags.IsExtractProjection() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTable() || flags.IsExpand() || flags.IsAssociationRoot() || flags.IsRoot())
+			{
+				var processed = Builder.MakeExpression(SubQuery, corrected, flags);
+				return processed;
+			}
 
-			if (flags.IsTable() || flags.IsAggregationRoot())
-				return result;
+			var buildFlags = ExpressionBuilder.BuildFlags.None;
+			if (flags.IsSql())
+				buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments;
 
-			if (flags.IsTraverse() || flags.IsSubquery())
-				return result;
+			var result = Builder.BuildSqlExpression(SubQuery, corrected, flags, buildFlags: buildFlags);
 
 			if (ExpressionEqualityComparer.Instance.Equals(corrected, result))
 				return path;

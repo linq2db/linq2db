@@ -43,12 +43,17 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public SelectContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences)
-			: this(parent, SequenceHelper.PrepareBody(lambda, sequences), sequences[0], isSubQuery)
+			: this(parent, SequenceHelper.PrepareBody(lambda, sequences), sequences[0], sequences[0].SelectQuery, isSubQuery)
 		{
 		}
 
 		public SelectContext(IBuildContext? parent, Expression body, IBuildContext innerContext, bool isSubQuery)
-			: this(parent, innerContext.Builder, innerContext, body, innerContext.SelectQuery, isSubQuery)
+			: this(parent, body, innerContext, innerContext.SelectQuery, isSubQuery)
+		{
+		}
+
+		public SelectContext(IBuildContext? parent, Expression body, IBuildContext innerContext, SelectQuery selectQuery, bool isSubQuery)
+			: this(parent, innerContext.Builder, innerContext, body, selectQuery, isSubQuery)
 		{
 		}
 
@@ -56,6 +61,11 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			if (flags.IsExtractProjection() && ContextId == 22)
+			{
+
+			}
+
 			Expression result;
 
 			if (flags.IsAggregationRoot() && InnerContext != null)
@@ -84,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) /*|| flags.HasFlag(ProjectFlags.Expand)*/ || flags.HasFlag(ProjectFlags.Table) || flags.HasFlag(ProjectFlags.Traverse))
+				if (flags.IsRoot() || flags.IsAssociationRoot() /*|| flags.HasFlag(ProjectFlags.Expand)*/ || flags.IsTable() || flags.IsTraverse())
 				{
 					if (Body is ContextRefExpression bodyRef)
 					{
@@ -123,12 +133,15 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				result = Body;
+				result = SequenceHelper.RemapToNewPathSimple(result, path, flags);
 			}
 			else
 			{
 				// We can omit strict for expression building. It will help to do not crash when user uses Automapper and it tries to map non accessible fields
 				//
 				result = Builder.Project(this, path, null, 0, flags, Body, strict: !flags.IsExpression());
+
+				result = SequenceHelper.RemapToNewPathSimple(result, path, flags);
 
 				if (!ReferenceEquals(result, Body))
 				{

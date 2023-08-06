@@ -194,7 +194,8 @@ namespace LinqToDB.SqlQuery
 						{
 							var scol = setOperator.SelectQuery.Select.Columns[i];
 
-							newIndexes[scol.Expression] = i;
+							if (!newIndexes.ContainsKey(scol.Expression))
+								newIndexes[scol.Expression] = i;
 						}
 
 						if (!CheckSetColumns(newIndexes, subQuery, setOperator.Operation))
@@ -224,7 +225,12 @@ namespace LinqToDB.SqlQuery
 
 						foreach (var op in setQuery.SetOperators)
 						{
-							op.SelectQuery.Select.Columns.RemoveAt(index);
+							if (op.SelectQuery.SourceID == 115)
+							{
+
+							}
+							if (index < op.SelectQuery.Select.Columns.Count)
+								op.SelectQuery.Select.Columns.RemoveAt(index);
 						}
 
 						--index;
@@ -1228,6 +1234,9 @@ namespace LinqToDB.SqlQuery
 					return false;
 			}
 
+			if (!selectQuery.GroupBy.IsEmpty && !subQuery.GroupBy.IsEmpty)
+				return false;
+
 			if (selectQuery.GroupBy.IsEmpty && !subQuery.GroupBy.IsEmpty)
 			{
 				if (tableSource.Joins.Count > 0)
@@ -1272,7 +1281,8 @@ namespace LinqToDB.SqlQuery
 				{
 					var scol = selectQuery.Select.Columns[i];
 
-					newIndexes[scol.Expression] = i;
+					if (!newIndexes.ContainsKey(scol.Expression))
+						newIndexes[scol.Expression] = i;
 				}
 
 				if (!CheckSetColumns(newIndexes, subQuery, operation))

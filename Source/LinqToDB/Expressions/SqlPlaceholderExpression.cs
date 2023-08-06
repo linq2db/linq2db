@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Threading;
 
 namespace LinqToDB.Expressions
 {
@@ -9,6 +10,11 @@ namespace LinqToDB.Expressions
 
 	public sealed class SqlPlaceholderExpression : Expression
 	{
+#if DEBUG
+		static int _placeholderCounter;
+		public int Id { get; }
+#endif
+
 		public SqlPlaceholderExpression(SelectQuery? selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
 			#if DEBUG
@@ -27,6 +33,8 @@ namespace LinqToDB.Expressions
 			Index        = index;
 			Sql          = sql;
 			TrackingPath = trackingPath;
+
+			Id = Interlocked.Increment(ref _placeholderCounter);
 		}
 
 		public SelectQuery?   SelectQuery  { get; }
@@ -82,7 +90,7 @@ namespace LinqToDB.Expressions
 
 		public SqlPlaceholderExpression WithSelectQuery(SelectQuery selectQuery)
 		{
-			if (SelectQuery != null && SelectQuery.Equals(selectQuery))
+			if (ReferenceEquals(SelectQuery, selectQuery))
 				return this;
 
 			return new SqlPlaceholderExpression(selectQuery, Sql, Path, Type, Alias, Index, TrackingPath);
@@ -108,34 +116,40 @@ namespace LinqToDB.Expressions
 		{
 			var pathStr = "#" + ExpressionEqualityComparer.Instance.GetHashCode(Path)/* + " " + Path*/;
 
+			var startStr = "SQL";
+#if DEBUG
+			startStr += "[" + Id + "]";
+#endif
 			string result;
 			if (SelectQuery == null)
 			{
 				if (Sql is SqlColumn column)
 				{
 					var sourceId = column.Parent!.SourceID;
-					result = $"SQL[{Index}]({sourceId})";
+					result = $"{startStr}[{Index}]({sourceId})";
 				}
 				else
-					result = $"SQL";
+					result = $"{startStr}";
 			}
 			else
-				result = $"SQL({SelectQuery.SourceID})";
+				result = $"{startStr}({SelectQuery.SourceID})";
 
 			var sqlStr = $"{{{Sql}}}";
 			if (Sql.CanBeNullable(NullabilityContext.NonQuery) && Sql is not SqlColumn)
 				sqlStr += "?";
 			result += $": {sqlStr} ({pathStr})";
 
-			/*if (TrackingPath != null)
+			/*
+			if (TrackingPath != null)
 			{
 				result += " TP: " + TrackingPath;
-			}*/
+			}
+			*/
 
 			return result;
 		}
 
-		protected bool Equals(SqlPlaceholderExpression other)
+		public bool Equals(SqlPlaceholderExpression other)
 		{
 			return Equals(SelectQuery, other.SelectQuery)                       &&
 			       ExpressionEqualityComparer.Instance.Equals(Path, other.Path) &&

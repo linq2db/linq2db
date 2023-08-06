@@ -5,7 +5,9 @@ namespace LinqToDB.Linq.Builder
 {
 	static class ProjectFlagExtensions
 	{
-		const ProjectFlags FlagsToPreserve = ProjectFlags.Test | ProjectFlags.ForceOuterAssociation | ProjectFlags.Expand | ProjectFlags.Traverse | ProjectFlags.Subquery;
+		const ProjectFlags FlagsToPreserve = ProjectFlags.Test   | ProjectFlags.ForceOuterAssociation |
+		                                     ProjectFlags.Expand | ProjectFlags.Traverse | ProjectFlags.Subquery |
+		                                     ProjectFlags.ExtractProjection;
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,9 +41,8 @@ namespace LinqToDB.Linq.Builder
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ProjectFlags SqlFlag(this ProjectFlags flags)
 		{
-			if (flags.IsTest())
-				return ProjectFlags.SQL | ProjectFlags.Test;
-			return ProjectFlags.SQL;
+			var result = (flags & (ProjectFlags.Test | ProjectFlags.Keys)) | ProjectFlags.SQL;
+			return result;
 		}
 
 		[DebuggerStepThrough]

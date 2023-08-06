@@ -235,13 +235,7 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="path">Actual expression which should be translated to grouping keys.</param>
 		static void AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders, ExpressionBuilder builder, IBuildContext onSequence, Expression path, ProjectFlags flags)
 		{
-			var groupSqlExpr = builder.ConvertToSqlExpr(onSequence, path, flags | ProjectFlags.Keys);
-
-			if (!flags.IsTest())
-			{
-				// only keys
-				groupSqlExpr = builder.UpdateNesting(sequence, groupSqlExpr);
-			}
+			var groupSqlExpr = builder.BuildSqlExpression(onSequence, path, flags.SqlFlag() | ProjectFlags.Keys, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
 
 			AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
 		}
@@ -256,7 +250,9 @@ namespace LinqToDB.Linq.Builder
 				if (currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path)) == null)
 				{
 					currentPlaceholders.Add(p);
-					query.GroupBy.Expr(p.Sql);
+
+					var updated = (SqlPlaceholderExpression)builder.UpdateNesting(query, p);
+					query.GroupBy.Expr(updated.Sql);
 				}
 			}
 		}
@@ -351,8 +347,11 @@ namespace LinqToDB.Linq.Builder
 
 				var result = base.MakeExpression(path, newFlags);
 
-				if (newFlags.HasFlag(ProjectFlags.SQL))
+				if (newFlags.IsSql() || newFlags.IsExpression() || newFlags.IsExtractProjection())
 				{
+					if (newFlags.IsExtractProjection())
+						newFlags = newFlags & ~ProjectFlags.ExtractProjection | ProjectFlags.SQL;
+
 					result = Builder.ConvertToSqlExpr(this, result, newFlags);
 
 					if (!newFlags.IsTest())

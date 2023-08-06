@@ -48,7 +48,7 @@ namespace LinqToDB.Expressions
 
 			sealed class AssignmentEqualityComparer : IEqualityComparer<Assignment>
 			{
-				public bool Equals(Assignment x, Assignment y)
+				public bool Equals(Assignment? x, Assignment? y)
 				{
 					if (ReferenceEquals(x, y))
 					{
@@ -123,7 +123,7 @@ namespace LinqToDB.Expressions
 
 			sealed class MemberInfoExpressionParamTypeEqualityComparer : IEqualityComparer<Parameter>
 			{
-				public bool Equals(Parameter x, Parameter y)
+				public bool Equals(Parameter? x, Parameter? y)
 				{
 					if (ReferenceEquals(x, y))
 					{
@@ -216,7 +216,7 @@ namespace LinqToDB.Expressions
 			}
 			else
 			{
-				Parameters = GetMethodParameters(newExpression.Constructor, newExpression.Arguments);
+				Parameters = GetMethodParameters(newExpression.Constructor!, newExpression.Arguments);
 			}
 
 			Constructor   = newExpression.Constructor;
@@ -272,11 +272,14 @@ namespace LinqToDB.Expressions
 			if (memberInitExpression.NewExpression.Members != null)
 				throw new NotImplementedException();
 
+#pragma warning disable CS8604 // Possible null reference argument.
 			Parameters = GetMethodParameters(memberInitExpression.NewExpression.Constructor, memberInitExpression.NewExpression.Arguments);
+#pragma warning restore CS8604 // Possible null reference argument.
 			
 			var items = GetBindingsAssignments(memberInitExpression.Bindings);
 
 			NewExpression = memberInitExpression.NewExpression;
+			Constructor   = memberInitExpression.NewExpression.Constructor;
 			ConstructType = CreateType.MemberInit;
 			ObjectType    = memberInitExpression.Type;
 			Assignments   = items.AsReadOnly();
@@ -468,6 +471,8 @@ namespace LinqToDB.Expressions
 
 		public static Expression Parse(Expression createExpression)
 		{
+			if (createExpression.Type.IsNullable())
+				return createExpression;
 			switch (createExpression.NodeType)
 			{
 				case ExpressionType.New:
@@ -510,7 +515,7 @@ namespace LinqToDB.Expressions
 				var hashCode = 0;
 				foreach (var item in collection)
 				{
-					hashCode = (hashCode * 397) ^ comparer.GetHashCode(item);
+					hashCode = (hashCode * 397) ^ (item == null ? 0 : comparer.GetHashCode(item));
 				}
 
 				return hashCode;

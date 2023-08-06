@@ -84,9 +84,12 @@ namespace LinqToDB.DataProvider.SqlCe
 									var source = q.Select.From.Tables[0].Source;
 									var keys   = source.GetKeys(true);
 
-									foreach (var key in keys)
+									if (keys != null)
 									{
-										q.Select.AddNew(key);
+										foreach (var key in keys)
+										{
+											q.Select.AddNew(key);
+										}
 									}
 								}
 

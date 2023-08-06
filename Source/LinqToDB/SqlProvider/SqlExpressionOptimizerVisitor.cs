@@ -536,6 +536,37 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
+		public override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+		{
+			if (!predicate.Expr1.CanBeNullable(_nullabilityContext))
+			{
+				return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
+			}
+
+			return base.VisitIsNullPredicate(predicate);
+		}
+
+		public override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
+		{
+			var newNode = base.VisitSqlNullabilityExpression(element);
+
+			if (!ReferenceEquals(newNode, element))
+				return Visit(newNode);
+
+			if (element.SqlExpression is SqlNullabilityExpression nullabilityExpression)
+			{
+				return SqlNullabilityExpression.ApplyNullability(nullabilityExpression.SqlExpression,
+					element.CanBeNullable(_nullabilityContext));
+			}
+
+			if (element.SqlExpression is SqlSearchCondition)
+			{
+				return element.SqlExpression;
+			}
+
+			return element;
+		}
+
 		public override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
 		{
 			var newElement = base.VisitBetweenPredicate(predicate);

@@ -64,11 +64,11 @@ namespace LinqToDB.Linq.Builder
 						return false;
 					}
 				}
-				/*else if (e is SqlKeyHolderExpression keyHolder)
+				else if (e is SqlPlaceholderExpression placeholder)
 				{
-					//ctx.dependencies.Add(keyHolder.Expression);
+					ctx.dependencies.Add(placeholder);
 					return false;
-				}*/
+				}
 
 				return true;
 			});
@@ -304,8 +304,6 @@ namespace LinqToDB.Linq.Builder
 				++i;
 			}
 
-			cloningContext.UpdateContextParents();
-
 			Expression resultExpression;
 
 			var mainType   = clonedParentContext.ElementType;
@@ -319,7 +317,7 @@ namespace LinqToDB.Linq.Builder
 
 				resultExpression = (Expression)_buildPreambleQueryDetachedMethodInfo
 					.MakeGenericMethod(detailType)
-					.Invoke(this, parameters);
+					.Invoke(this, parameters)!;
 			}
 			else
 			{
@@ -363,7 +361,7 @@ namespace LinqToDB.Linq.Builder
 				var detailSelectorBody = correctedSequence;
 
 				var detailSelector = (LambdaExpression)_buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(mainType, detailType).Invoke(null, new object[] { detailSelectorBody, mainParameter });
+					.MakeGenericMethod(mainType, detailType).Invoke(null, new object[] { detailSelectorBody, mainParameter })!;
 
 				var selectManyCall =
 					Expression.Call(
@@ -408,6 +406,8 @@ namespace LinqToDB.Linq.Builder
 							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
 					p => cloningContext.CorrectExpression(p.Value), SqlCacheKey.SqlCacheKeyComparer);
 
+				cloningContext.UpdateContextParents();
+
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
 					clonedParentContextRef.BuildContext.SelectQuery));
 
@@ -415,7 +415,7 @@ namespace LinqToDB.Linq.Builder
 
 				resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
-					.Invoke(this, parameters);
+					.Invoke(this, parameters)!;
 
 				_expressionCache = saveExpressionCache;
 				_columnCache     = saveColumnsCache;

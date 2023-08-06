@@ -280,9 +280,9 @@ namespace LinqToDB.Expressions
 						return Find(paramAccess.Constructor);
 					}
 
-					if (expr is SqlKeyHolderExpression keyHolder)
+					if (expr is SqlPathExpression keyHolder)
 					{
-						return Find(keyHolder.Expression);
+						//return Find(keyHolder.Expression);
 					}
 
 					if (expr.CanReduce)

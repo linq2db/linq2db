@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 					var sqlTable   = (SqlTable)statement.Target.Source;
 					var sourceProp = EnsureType(mergeContext.SourceContext.SourcePropAccess, sqlTable.ObjectType);
 					var targetProp = EnsureType(mergeContext.SourceContext.TargetPropAccess, sqlTable.ObjectType);
-					var keys       = sqlTable.GetKeys(false).Cast<SqlField>().ToList();
+					var keys       = (sqlTable.GetKeys(false) ?? Enumerable.Empty<ISqlExpression>()).Cast<SqlField>().ToList();
 
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{

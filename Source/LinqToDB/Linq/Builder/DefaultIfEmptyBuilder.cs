@@ -42,13 +42,13 @@ namespace LinqToDB.Linq.Builder
 				if (SequenceHelper.IsSameContext(path, this) && (flags.IsRoot() || flags.IsAssociationRoot()) || flags.IsExpand())
 					return path;
 
-				var expr = base.MakeExpression(path, flags);
+				var corrected = base.MakeExpression(path, flags);
 
-				if (ExpressionEqualityComparer.Instance.Equals(expr, path))
+				if (ExpressionEqualityComparer.Instance.Equals(corrected, path))
 					return path;
 
-				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable())
-					return expr;
+				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable() || flags.IsExtractProjection())
+					return corrected;
 
 				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))
 				{
@@ -60,11 +60,13 @@ namespace LinqToDB.Linq.Builder
 					return placeholder;
 				}
 
-				expr = Builder.BuildSqlExpression(this, expr, flags.SqlFlag());
+				var expr = Builder.BuildSqlExpression(this, corrected, flags/*.SqlFlag()*/);
+
 				if (!flags.IsTest())
 				{
 					expr = Builder.UpdateNesting(this, expr);
 				}
+
 				expr = SequenceHelper.CorrectTrackingPath(expr, path);
 
 				if (!flags.IsKeys() && expr.UnwrapConvert() is not SqlEagerLoadExpression)
@@ -98,21 +100,34 @@ namespace LinqToDB.Linq.Builder
 								new SqlNullabilityExpression (new SqlValue(1), true), SequenceHelper.CreateSpecialProperty(path, typeof(int?), NotNullPropName), alias: NotNullPropName);
 						}
 
-						if (notNull.Type.IsValueType && !notNull.Type.IsNullable())
+						Expression notNullField = notNull;
+
+						if (flags.IsExtractProjection())
 						{
-							notNull = notNull.MakeNullable();
+							notNullField = notNull.Path;
+							if (notNullField.Type.IsValueType && !notNullField.Type.IsNullable())
+							{
+								notNullField = Expression.Convert(notNullField, notNullField.Type.AsNullable());
+							}
+						}
+						else if (notNull.Type.IsValueType && !notNull.Type.IsNullable())
+						{
+							notNullField = notNull.MakeNullable();
 						}
 
 						var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
 
-						var notNullExpression = Expression.NotEqual(notNull, Expression.Constant(null, notNull.Type));
-						if (expr is ContextConstructionExpression construct)
-							expr = construct.InnerExpression;
+						var notNullExpression = Expression.NotEqual(notNullField, Expression.Constant(null, notNullField.Type));
+
+						if (flags.IsExtractProjection())
+						{
+							expr = corrected;
+						}
 
 						expr = Expression.Condition(notNullExpression, expr, defaultValue);
 
-						if (flags.IsExpression())
-							expr = new ContextConstructionExpression(this, expr);
+						/*if (flags.IsExpression())
+							expr = new ContextConstructionExpression(this, expr);*/
 					}
 				}
 

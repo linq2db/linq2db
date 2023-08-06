@@ -97,7 +97,7 @@ namespace LinqToDB
 
 				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
 
-				return new SqlFunction(expression.Type, expressionStr, IsAggregate, IsPure, Precedence,
+				return new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, Precedence,
 					ToParametersNullabilityType(IsNullable), _canBeNull, parameters);
 			}
 

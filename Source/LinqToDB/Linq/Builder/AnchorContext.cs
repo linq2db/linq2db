@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 
 			var correctedPath = SequenceHelper.CorrectExpression(path, this, Sequence);
 
-			var converted = Builder.ConvertToSqlExpr(Sequence, correctedPath, flags);
+			var converted = Builder.BuildSqlExpression(Sequence, correctedPath, flags);
 
 			converted = converted.Transform(this, static (ctx, e) =>
 			{

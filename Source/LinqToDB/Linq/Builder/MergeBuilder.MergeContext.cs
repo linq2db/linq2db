@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 
 					var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 
-					var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
+					var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef, ProjectFlags.SQL);
 					if (sqlExpr is SqlPlaceholderExpression)
 						outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr));
 					else

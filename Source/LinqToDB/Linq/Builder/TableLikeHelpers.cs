@@ -83,21 +83,22 @@ namespace LinqToDB.Linq.Builder
 				f.PhysicalName = n;
 			}, f => (string.IsNullOrEmpty(f.Name) ? "field" : f.Name) + "_1");
 
-			while (fields.Count < index + 1)
-				fields.Add(null!);
-
-			fields[index] = newField;
+			if (index >= fields.Count)
+				fields.Add(newField);
+			else
+				fields.Insert(index, newField);
 
 			return newField;
 		}
 
 		public static Expression RemapToFields(
-			IBuildContext                                    subQueryContext, 
-			ISqlTableSource?                                 parentTable, 
-			List<SqlField>                                   fields, 
-			Dictionary<Expression, SqlPlaceholderExpression> knownMap, 
-			Expression                                       expression, 
-			List<SqlPlaceholderExpression>                   placeholders)
+			IBuildContext                                     subQueryContext, 
+			ISqlTableSource?                                  parentTable, 
+			List<SqlField>                                    fields, 
+			Dictionary<Expression, SqlPlaceholderExpression>  knownMap, 
+			Dictionary<Expression, SqlPlaceholderExpression>? recursiveMap, 
+			Expression                                        expression, 
+			List<SqlPlaceholderExpression>                    placeholders)
 		{
 			if (placeholders.Count == 0)
 				return expression;
@@ -125,7 +126,16 @@ namespace LinqToDB.Linq.Builder
 					{
 						var alias = GenerateColumnAlias(updatedPlaceholder.Path) ?? GenerateColumnAlias(updatedPlaceholder.Sql);
 						var dataType = QueryHelper.GetDbDataType(updatedPlaceholder.Sql);
-						var newField = new SqlField(dataType, alias, updatedPlaceholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
+
+						SqlField newField;
+						if (recursiveMap != null && recursiveMap.TryGetValue(placeholder.TrackingPath, out var recursiveField))
+						{
+							newField = (SqlField)recursiveField.Sql;
+						}
+						else
+						{
+							newField = new SqlField(dataType, alias, updatedPlaceholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
+						}
 
 						newField.Table = parentTable;
 						return newField;
@@ -135,18 +145,6 @@ namespace LinqToDB.Linq.Builder
 						updatedPlaceholder.Path, trackingPath: updatedPlaceholder.TrackingPath, index: updatedPlaceholder.Index);
 
 					knownMap[updatedPlaceholder.TrackingPath!] = newPlaceholder;
-				}
-				else
-				{
-					if (newPlaceholder.Sql is SqlField sqlField && newPlaceholder.SelectQuery == null)
-					{
-						var idx = placeholder.Index.Value;
-						while (idx >= fields.Count)
-							fields.Add(null!);
-
-						fields[idx]       = sqlField;
-						//knownMap[placeholder.TrackingPath] = newPlaceholder;
-					}
 				}
 
 				if (!ReferenceEquals(newPlaceholder, placeholder))

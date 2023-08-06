@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 			if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Table))
 				return path;
 
-			if (flags.HasFlag(ProjectFlags.Expand))
+			if (flags.IsExpand())
 			{
 				CteContext.InitQuery();
 				return path;
@@ -67,12 +67,14 @@ namespace LinqToDB.Linq.Builder
 			{
 				CteContext.InitQuery();
 
-				var translated = Builder.MakeExpression(CteContext, ctePath, flags);
+				var translated = Builder.BuildSqlExpression(CteContext, ctePath, flags.SqlFlag(), buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
 
 				if (!flags.HasFlag(ProjectFlags.Test))
 				{
+					translated = SequenceHelper.ReplaceContext(translated, CteContext, this);
+
 					// replace tracking path back
-					translated = SequenceHelper.CorrectTrackingPath(translated, path);
+					translated = SequenceHelper.CorrectTrackingPath(translated, CteContext, this);
 
 					var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
 

@@ -111,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var methodName = methodCall.Method.Name.Replace("Async", "");
 			var returnType = methodCall.Method.ReturnType;
@@ -142,6 +142,9 @@ namespace LinqToDB.Linq.Builder
 						var lambda = methodCall.Arguments[1].UnwrapLambda();
 						sequence = builder.BuildWhere(null, sequence, lambda, false, false, buildInfo.IsTest,
 							buildInfo.IsAggregation);
+
+						if (sequence == null)
+							return null;
 					}
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);

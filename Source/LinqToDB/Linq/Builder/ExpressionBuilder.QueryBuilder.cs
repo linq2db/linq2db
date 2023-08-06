@@ -341,9 +341,13 @@ namespace LinqToDB.Linq.Builder
 			return new SqlErrorExpression(context, expression);
 		}
 
-		public Expression BuildSqlExpression(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
+		public Expression BuildFinalProjection(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
 		{
-			var result = expression.Transform(
+			var result = BuildSqlExpression(context, expression, flags, alias);
+
+			return result;
+
+			result = result.Transform(
 				(builder: this, context, flags, alias),
 				static (context, expr) =>
 				{
@@ -637,11 +641,11 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		public Expression FinalizeConstructors(IBuildContext context, Expression expression)
+		public Expression FinalizeConstructors(IBuildContext context, Expression inputExpression)
 		{
 			List<(ParameterExpression variable, Expression assignment)> variables = new();
 
-			expression = FinalizeConstructorInternal(context, expression, variables);
+			var expression = FinalizeConstructorInternal(context, inputExpression, variables);
 
 			if (variables.Count > 0)
 			{
@@ -666,31 +670,31 @@ namespace LinqToDB.Linq.Builder
 		{
 			do
 			{
-				expression = BuildSqlExpression(context, expression, ProjectFlags.Expression);
+				expression = BuildFinalProjection(context, expression, ProjectFlags.Expression);
 
 				expression = OptimizationContext.OptimizeExpressionTree(expression, true);
 
 				var deduplicated = Deduplicate(variables, expression, true);
 				deduplicated = Deduplicate(variables, deduplicated, false);
 
-				var reconstructed = deduplicated.Transform((builder : this, context), (ctx, e) =>
-				{
-					if (e is SqlGenericConstructorExpression generic)
-					{
-						return ctx.builder.Construct(ctx.builder.MappingSchema, generic, ctx.context,
-							ProjectFlags.Expression);
-					}
-
-					return e;
-				});
-
-				expression = reconstructed;
-
-				if (ExpressionEqualityComparer.Instance.Equals(reconstructed, deduplicated))
+				if (ExpressionEqualityComparer.Instance.Equals(expression, deduplicated))
 					break;
+
+				expression = deduplicated;
 			} while (true);
 
-			return expression;
+			var reconstructed = expression.Transform((builder : this, context), (ctx, e) =>
+			{
+				if (e is SqlGenericConstructorExpression generic)
+				{
+					return new TransformInfo(ctx.builder.Construct(ctx.builder.MappingSchema, generic, ctx.context,
+						ProjectFlags.Expression), false, true);
+				}
+
+				return new TransformInfo(e);
+			});
+
+			return reconstructed;
 		}
 
 		sealed class SubQueryContextInfo

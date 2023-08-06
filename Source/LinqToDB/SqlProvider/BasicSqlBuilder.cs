@@ -3144,7 +3144,7 @@ namespace LinqToDB.SqlProvider
 
 		protected object? BuildExpressionContext;
 
-		void ISqlBuilder.BuildExpression(NullabilityContext nullability, StringBuilder sb, ISqlExpression expr, bool buildTableName, object? context = null)
+		void ISqlBuilder.BuildExpression(NullabilityContext nullability, StringBuilder sb, ISqlExpression expr, bool buildTableName, object? context)
 		{
 			WithStringBuilder(sb, static ctx => ctx.this_.BuildExpression(ctx.nullability, ctx.expr, ctx.buildTableName, true), (this_: this, nullability, expr, buildTableName));
 			BuildExpressionContext = null;

@@ -549,7 +549,7 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<SqlCacheKey, Expression> _cachedSql        = new(SqlCacheKey.SqlCacheKeyComparer);
 
-		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			var expr = ConvertToSqlExpr(context, expression, flags, unwrap, columnDescriptor, isPureExpression: isPureExpression);
 
@@ -564,17 +564,17 @@ namespace LinqToDB.Linq.Builder
 			return placeholder;
 		}
 
-		public ISqlExpression ConvertToSql(IBuildContext context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
+		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false)
 		{
 			var placeholder = ConvertToSqlPlaceholder(context, expression, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 
 			return placeholder.Sql;
 		}
 
-		public static SqlPlaceholderExpression CreatePlaceholder(IBuildContext context, ISqlExpression sqlExpression,
+		public static SqlPlaceholderExpression CreatePlaceholder(IBuildContext? context, ISqlExpression sqlExpression,
 			Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
-			var placeholder = new SqlPlaceholderExpression(context.SelectQuery, sqlExpression, path, convertType, alias, index, trackingPath ?? path);
+			var placeholder = new SqlPlaceholderExpression(context?.SelectQuery, sqlExpression, path, convertType, alias, index, trackingPath ?? path);
 			return placeholder;
 		}
 
@@ -596,20 +596,25 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="isPureExpression"></param>
 		/// <param name="alias"></param>
 		/// <returns></returns>
-		public Expression ConvertToSqlExpr(IBuildContext context, Expression expression, ProjectFlags flags = ProjectFlags.SQL,
+		public Expression ConvertToSqlExpr(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL,
 			bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false,
 			string? alias = null)
 		{
+			if (expression is SqlPlaceholderExpression)
+				return expression;
+
 			// remove keys flag. We can cache SQL
 			var cacheFlags = flags & ~ProjectFlags.Keys;
 
 			var cacheKey = new SqlCacheKey(expression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
 
 			var cache = expression is SqlPlaceholderExpression ||
-			            null != expression.Find(1, (_, e) => e is ContextRefExpression);
+			            (null != expression.Find(1, (_, e) => e is ContextRefExpression));
 
 			if (cache && _cachedSql.TryGetValue(cacheKey, out var sqlExpr))
 			{
+				if (sqlExpr is SqlPlaceholderExpression cachedPlaceholder)
+					return cachedPlaceholder.WithTrackingPath(expression);
 				return sqlExpr;
 			}
 
@@ -673,7 +678,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (sql != null)
 				{
-					result = CreatePlaceholder(context.SelectQuery, sql, newExpr, alias: alias);
+					result = CreatePlaceholder(context?.SelectQuery, sql, newExpr, alias: alias);
 				}
 				else
 				{
@@ -682,9 +687,9 @@ namespace LinqToDB.Linq.Builder
 			} 
 
 			// nesting for Expressions updated in finalization
-			var updateNesting = !flags.HasFlag(ProjectFlags.Test);
+			var updateNesting = !flags.IsTest();
 
-			if (updateNesting)
+			if (updateNesting && context != null)
 			{
 				result = UpdateNesting(context, result);
 			}
@@ -696,11 +701,11 @@ namespace LinqToDB.Linq.Builder
 
 				if (cache)
 				{
-					if (updateNesting && placeholder.SelectQuery != context.SelectQuery &&
+					if (updateNesting && placeholder.SelectQuery != context?.SelectQuery &&
 					    placeholder.Sql is not SqlColumn)
 					{
 						// recreate placeholder
-						placeholder = CreatePlaceholder(context.SelectQuery, placeholder.Sql, placeholder.Path,
+						placeholder = CreatePlaceholder(context?.SelectQuery, placeholder.Sql, placeholder.Path,
 							placeholder.ConvertType, placeholder.Alias, placeholder.Index, trackingPath: placeholder.TrackingPath);
 					}
 
@@ -717,7 +722,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		Expression ConvertToSqlInternal(IBuildContext context, Expression expression, ProjectFlags flags, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, string? alias = null)
+		Expression ConvertToSqlInternal(IBuildContext? context, Expression expression, ProjectFlags flags, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, string? alias = null)
 		{
 			switch (expression.NodeType)
 			{
@@ -838,6 +843,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (UnaryExpression)expression;
 
+					if (!flags.IsTest())
+					{
+						e = e.Update(UpdateNesting(context, e.Operand));
+					}
+
 					if (!TryConvertToSql(context, flags, e.Operand, columnDescriptor, out var o, out _))
 						return e;
 
@@ -937,7 +947,13 @@ namespace LinqToDB.Linq.Builder
 						return expression;
 					}
 
-					if (expression is SqlGenericConstructorExpression genericConstructor)
+					if (context != null && expression is SqlGenericConstructorExpression)
+					{
+						var result = BuildSqlExpression(context, expression, flags, buildFlags: BuildFlags.ForceAssignments);
+						return result;
+					}
+
+					/*if (expression is SqlGenericConstructorExpression genericConstructor)
 					{
 						var newConstructor = genericConstructor.ReplaceAssignments(genericConstructor.Assignments.Select(a =>
 							a.WithExpression(ConvertToSqlExpr(context, a.Expression, flags, unwrap, columnDescriptor,
@@ -948,7 +964,7 @@ namespace LinqToDB.Linq.Builder
 								isPureExpression, p.MemberInfo?.Name ?? alias))).ToList());
 
 						return newConstructor;
-					}
+					}*/
 
 					/*
 					if (expression is SqlReaderIsNullExpression readerIsNullExpression && flags.HasFlag(ProjectFlags.SQL))
@@ -1076,7 +1092,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.New:
 				case ExpressionType.MemberInit:
 				{
-					if (SqlGenericConstructorExpression.Parse(expression) is SqlGenericConstructorExpression transformed)
+					if (!flags.IsExpression() && SqlGenericConstructorExpression.Parse(expression) is SqlGenericConstructorExpression transformed)
 					{
 						return ConvertToSqlExpr(context, transformed, flags, unwrap, columnDescriptor, isPureExpression,
 							alias);
@@ -1313,6 +1329,13 @@ namespace LinqToDB.Linq.Builder
 
 					ISqlPredicate? predicate = null;
 
+					if (e.Method.Name          == nameof(Sql.Alias) && e.Object == null && e.Arguments.Count == 2 &&
+					    e.Method.DeclaringType == typeof(Sql))
+					{
+						predicate = ConvertPredicate(context, e.Arguments[0], flags, out error);
+						return predicate;
+					}
+
 					if (e.Method.Name == "Equals" && e.Object != null && e.Arguments.Count == 1)
 						return CheckExpression(ConvertCompareExpression(context, ExpressionType.Equal, e.Object, e.Arguments[0], flags), ref error);
 
@@ -1501,7 +1524,7 @@ namespace LinqToDB.Linq.Builder
 
 				var nullability = new NullabilityContext(context.SelectQuery);
 
-				var notNull = placeholders.Where(p => !p.Sql.CanBeNullable(nullability)).ToList();
+				var notNull = placeholders.Where(p => !p.Sql.CanBeNullable(nullability) && p.Sql is not SqlSearchCondition).ToList();
 				if (notNull.Count == 0)
 					notNull = placeholders;
 
@@ -1670,11 +1693,13 @@ namespace LinqToDB.Linq.Builder
 			if (rightExpr is SqlErrorExpression rightError)
 				return rightError.WithType(typeof(bool));
 
+			/*
 			if (leftExpr is not SqlPlaceholderExpression && leftExpr is not SqlGenericConstructorExpression)
 				return GetOriginalExpression();
 
 			if (rightExpr is not SqlPlaceholderExpression && rightExpr is not SqlGenericConstructorExpression)
 				return GetOriginalExpression();
+				*/
 
 			if (leftExpr is SqlPlaceholderExpression placeholderLeft)
 			{
@@ -1702,7 +1727,7 @@ namespace LinqToDB.Linq.Builder
 						return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
 					}
 
-					if (l is SqlValue lv && lv.Value == null)
+					if (l is SqlValue lv && lv.Value == null || left.IsNullValue())
 					{
 						if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Conditions.Count == 1)
 						{
@@ -1726,7 +1751,7 @@ namespace LinqToDB.Linq.Builder
 						return GenerateNullComparison(rightPlaceholders, isNot);
 					}
 
-					if (r is SqlValue rv && rv.Value == null)
+					if (r is SqlValue rv && rv.Value == null || right.IsNullValue())
 					{
 						if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Conditions.Count == 1)
 						{
@@ -2463,7 +2488,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region ColumnDescriptor Helpers
 
-		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, Expression expr, ProjectFlags flags)
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, Expression expr, ProjectFlags flags)
 		{
 			expr = expr.Unwrap();
 
@@ -2475,13 +2500,12 @@ namespace LinqToDB.Linq.Builder
 			return descriptor;
 		}
 
-		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, Expression expr1, Expression expr2,
-			ProjectFlags flags)
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, Expression expr1, Expression expr2, ProjectFlags flags)
 		{
 			return SuggestColumnDescriptor(context, expr1, flags) ?? SuggestColumnDescriptor(context, expr2, flags);
 		}
 
-		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext context, ReadOnlyCollection<Expression> expressions, ProjectFlags flags)
+		public ColumnDescriptor? SuggestColumnDescriptor(IBuildContext? context, ReadOnlyCollection<Expression> expressions, ProjectFlags flags)
 		{
 			foreach (var expr in expressions)
 			{
@@ -2778,11 +2802,6 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 
-				case ExpressionType.Extension :
-					{
-						break;
-					}
-
 				case ExpressionType.Or     :
 				case ExpressionType.OrElse :
 					{
@@ -2880,8 +2899,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			// TODO: is it correct to return true for DefaultValueExpression for non-reference type or when default value
 			// set to non-null value?
-			return expr.UnwrapConvert().IsNullValue()
-				|| expr is DefaultValueExpression;
+			return expr.UnwrapConvert().IsNullValue();
 		}
 
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
@@ -3506,6 +3524,11 @@ namespace LinqToDB.Linq.Builder
 							return newPath;
 						}
 
+						if (body.IsNullValue())
+						{
+							return Expression.Default(member.GetMemberType());
+						}
+
 						if (body is SqlGenericConstructorExpression genericConstructor)
 						{
 							Expression? bodyExpresion = null;
@@ -3587,11 +3610,9 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.MemberAccess:
 				{
-					if (member != null)
+					if (member != null && nextPath != null)
 					{
-
-						var nextMember = nextPath[nextIndex] as MemberExpression;
-						if (nextMember != null && body.Type.IsSameOrParentOf(nextMember.Expression.Type))
+						if (nextPath[nextIndex] is MemberExpression nextMember && body.Type.IsSameOrParentOf(nextMember.Expression.Type))
 						{
 							var newMember = body.Type.GetMemberEx(nextMember.Member);
 							if (newMember != null)
@@ -3659,7 +3680,15 @@ namespace LinqToDB.Linq.Builder
 
 					if (member == null)
 					{
-						throw new NotImplementedException();
+						if (next is SqlGenericParamAccessExpression paramAccess)
+						{
+							if (paramAccess.ParamIndex >= ne.Arguments.Count)
+								return CreateSqlError(context, nextPath![0]);
+
+							return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[paramAccess.ParamIndex], strict);
+						}
+
+						throw new NotImplementedException($"Projecting '{next}' is not supported yet.");
 					}
 
 					if (ne.Members != null)
@@ -3712,6 +3741,23 @@ namespace LinqToDB.Linq.Builder
 									throw new NotImplementedException();
 								default:
 									throw new NotImplementedException();
+							}
+						}
+
+						if (ne.Constructor != null && ne.Arguments.Count > 0)
+						{
+							var parameters = ne.Constructor.GetParameters();
+							for (int i = 0; i < ne.Arguments.Count; i++)
+							{
+								var parameter     = parameters[i];
+								var memberByParam = SqlGenericConstructorExpression.FindMember(ne.Constructor.DeclaringType, parameter);
+
+								if (memberByParam != null &&
+								    MemberInfoEqualityComparer.Default.Equals(memberByParam, member))
+								{
+									return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
+								}
+
 							}
 						}
 					}
@@ -3877,13 +3923,12 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return CreateSqlError(context, next);
+			return CreateSqlError(context, next!);
 		}
 
 
-		private Dictionary<SqlCacheKey, Expression> _expressionCache = new(SqlCacheKey.SqlCacheKeyComparer);
-		private Dictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache = new(ColumnCacheKey.ColumnCacheKeyComparer);
-		private HashSet<SqlCacheKey> _stackOverflowGuard = new(SqlCacheKey.SqlCacheKeyComparer);
+		Dictionary<SqlCacheKey, Expression>                  _expressionCache    = new(SqlCacheKey.SqlCacheKeyComparer);
+		Dictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache = new(ColumnCacheKey.ColumnCacheKeyComparer);
 
 #if DEBUG
 		int _makeCounter;
@@ -3908,13 +3953,6 @@ namespace LinqToDB.Linq.Builder
 				Debug.WriteLine($"\tPath: {path}");
 				Debug.WriteLine($"\tExpr: {expr}");
 
-				var key = new SqlCacheKey(expr, context, null, null, projectFlags);
-
-				if (!_stackOverflowGuard.Add(key))
-				{
-					//throw new InvalidOperationException("Stack overflow detected.");
-				}
-
 				if (flags.IsExtractProjection())
 				{
 
@@ -3922,10 +3960,9 @@ namespace LinqToDB.Linq.Builder
 
 				var result = context.MakeExpression(expr, projectFlags);
 
-				Debug.WriteLine($"({counter})Result: {result}");
+				Debug.WriteLine($"({counter})Result ({projectFlags}): {result}");
 				Debug.WriteLine("");
 
-				_stackOverflowGuard.Remove(key);
 				return result;
 			}
 #else 
@@ -3989,9 +4026,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			var shouldCache = null != path.Find(1, (_, e) => e is ContextRefExpression);
+
 			var key = new SqlCacheKey(path, null, null, null, flags);
 
-			if (_expressionCache.TryGetValue(key, out var expression) && expression.Type == path.Type && expression is not SqlErrorExpression)
+			if (shouldCache && _expressionCache.TryGetValue(key, out var expression) && expression.Type == path.Type && expression is not SqlErrorExpression)
 			{
 #if DEBUG
 				DebugCacheHit(currentContext, path, expression, flags);
@@ -4098,13 +4137,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				rootContext = CalcRootContext(root);
-			}
-			else if (path is SqlKeyHolderExpression keyHolder)
-			{
-				var inner = MakeExpression(currentContext, keyHolder.Expression, flags);
-				if (flags.IsExpand())
-					return keyHolder.Update(inner);
-				return inner;
 			}
 			else if (path is MethodCallExpression mc)
 			{
@@ -4377,6 +4409,9 @@ namespace LinqToDB.Linq.Builder
 			var placeholderType = sqlPlaceholder.Type;
 			if (placeholderType.IsNullable())
 				placeholderType = placeholderType.UnwrapNullableType();
+
+			if (sqlPlaceholder.SelectQuery == null)
+				throw new InvalidOperationException($"Placeholder with path '{sqlPlaceholder.Path}' and SQL '{sqlPlaceholder.Sql}' has no SelectQuery defined.");
 
 			var key = new ColumnCacheKey(sqlPlaceholder.Path, placeholderType, sqlPlaceholder.SelectQuery, parentQuery);
 

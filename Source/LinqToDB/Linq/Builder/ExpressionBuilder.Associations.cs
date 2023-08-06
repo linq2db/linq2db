@@ -159,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 
 			_associations ??= new Dictionary<SqlCacheKey, Expression>(SqlCacheKey.SqlCacheKeyComparer);
 
-			var key = new SqlCacheKey(expression, associationRoot.BuildContext, null, null, flags.RootFlag() & ~ProjectFlags.Subquery);
+			var key = new SqlCacheKey(expression, associationRoot.BuildContext, null, null, flags.RootFlag() & ~ProjectFlags.Subquery & ~ProjectFlags.ExtractProjection);
 
 			if (_associations.TryGetValue(key, out var associationExpression))
 				return associationExpression;
@@ -193,9 +193,9 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			Expression? notNullCheck = null;
-			if (associationDescriptor.IsList && (prevIsOuter || flags.IsSubquery()))
+			if (associationDescriptor.IsList && (prevIsOuter || flags.IsSubquery()) && !flags.IsExtractProjection()) 
 			{
-				var keys = MakeExpression(forContext, rootContext, flags.KeyFlag());
+				var keys = MakeExpression(forContext, rootContext, flags.SqlFlag().KeyFlag());
 				notNullCheck = ExtractNotNullCheck(keys);
 			}
 
@@ -204,7 +204,7 @@ namespace LinqToDB.Linq.Builder
 
 			associationExpression = association;
 
-			if (!associationDescriptor.IsList && !flags.IsExpand() && !flags.IsSubquery())
+			if (!associationDescriptor.IsList && !flags.IsExpand() && !flags.IsSubquery() && !flags.IsExtractProjection())
 			{
 				// IsAssociation will force to create OuterApply instead of subquery. Handled in FirstSingleContext
 				//
@@ -331,5 +331,22 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		public bool GetAssociationTransformation(IBuildContext buildContext, [NotNullWhen(true)] out Expression? transformation)
+		{
+			transformation = null;
+			if (_associations == null)
+				return false;
+
+			foreach (var pair in _associations)
+			{
+				if (pair.Value is ContextRefExpression contextRef && contextRef.BuildContext == buildContext)
+				{
+					transformation = pair.Key.Expression!;
+					return true;
+				}
+			}
+
+			return false;
+		}
 	}
 }

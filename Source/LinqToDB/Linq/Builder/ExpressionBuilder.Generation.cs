@@ -271,18 +271,20 @@ namespace LinqToDB.Linq.Builder
 		Expression? TryWithConstructor(
 			MappingSchema                                     mappingSchema,
 			TypeAccessor                                      typeAccessor,
-			ConstructorInfo                                   constructorInfo,
+			ConstructorInfo?                                  constructorInfo,
 			SqlGenericConstructorExpression                   constructorExpression, 
 			List<SqlGenericConstructorExpression.Assignment>? missed)
 		{
 			NewExpression newExpression;
 
 			var loadedColumns = new HashSet<int>();
-			var parameters    = constructorInfo.GetParameters();
+			var parameters    = constructorInfo?.GetParameters();
 
-			if (parameters.Length <= 0)
+			if (parameters == null || parameters.Length <= 0)
 			{
-				newExpression = Expression.New(constructorInfo);
+				newExpression = parameters == null
+					? Expression.New(typeAccessor.Type)
+					: Expression.New(constructorInfo!);
 			}
 			else
 			{
@@ -322,7 +324,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 				}
-				newExpression = Expression.New(constructorInfo, parameterValues);
+				newExpression = Expression.New(constructorInfo!, parameterValues);
 			}
 
 
@@ -597,11 +599,19 @@ namespace LinqToDB.Linq.Builder
 				.OrderByDescending(c => c.GetParameters().Length == 0)
 				.ThenByDescending(c => c.GetParameters().Length);
 
+			var foundConstructor = false;
+
 			foreach (var constructor in constructors)
 			{
+				foundConstructor = true;
 				var instantiation = TryWithConstructor(mappingSchema, typeAccessor, constructor, constructorExpression, null);
 				if (instantiation != null)
 					return instantiation;
+			}
+
+			if (!foundConstructor && constructType.IsValueType)
+			{
+				return TryWithConstructor(mappingSchema, typeAccessor, null, constructorExpression, null);
 			}
 
 			return null;

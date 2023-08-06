@@ -24,7 +24,14 @@ namespace LinqToDB.Linq.Builder
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			var corrected = SequenceHelper.CorrectExpression(path, this, Context);
-			return Builder.MakeExpression(Context, corrected, flags);
+			var result = Builder.MakeExpression(Context, corrected, flags);
+
+			if (flags.IsSql() && !flags.IsTest())
+			{
+				result = SequenceHelper.CorrectTrackingPath(result, Context, this);
+			}
+
+			return result;
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

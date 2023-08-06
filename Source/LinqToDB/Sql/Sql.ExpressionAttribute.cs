@@ -463,7 +463,7 @@ namespace LinqToDB
 
 				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter);
 
-				var sqlExpression = new SqlExpression(expression.Type, expressionStr, Precedence,
+				var sqlExpression = new SqlExpression(expression.Type, expressionStr!, Precedence,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 					(IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 					(IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |

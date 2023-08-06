@@ -176,7 +176,7 @@ namespace LinqToDB.Expressions
 						return newParam;
 					}
 
-					var newName = parameterExpression.Name;
+					var newName = parameterExpression!.Name;
 					if (!newName.EndsWith("]") || usedNames.Contains(newName))
 					{
 						for (var i = 1;; i++)

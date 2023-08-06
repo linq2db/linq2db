@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 				var table = insertOrUpdateStatement.Insert.Into;
 				var keys  = table.GetKeys(false);
 
-				if (keys.Count == 0)
+				if (!(keys?.Count > 0))
 					throw new LinqException("InsertOrUpdate method requires the '{0}' table to have a primary key.", table.NameForLogging);
 
 				var q =

@@ -302,7 +302,7 @@ namespace LinqToDB.Expressions
 		public static bool IsNullValue(this Expression expr)
 		{
 			return (expr is ConstantExpression c && c.Value == null)
-				|| (expr is DefaultExpression && expr.Type.IsNullableType());
+				|| (expr is DefaultExpression or DefaultValueExpression && expr.Type.IsNullableType());
 		}
 
 		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)

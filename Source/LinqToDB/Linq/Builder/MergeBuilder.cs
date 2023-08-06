@@ -7,7 +7,6 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using LinqToDB.Expressions;
-	using Common;
 	using SqlQuery;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;

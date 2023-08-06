@@ -245,11 +245,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (!flags.IsTest())
 				{
-					correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, path);
+					// replace tracking path back
+					var translated = SequenceHelper.CorrectTrackingPath(correctedPath, path);
 
-					var memberPath = TableLikeHelpers.GetMemberPath(isTargetAssociation ? path : subqueryPath);
-					var placeholders = ExpressionBuilder.CollectPlaceholders(correctedPath);
-					var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, Source, Source.SourceFields, _knownMap, correctedPath, placeholders);
+					var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
+
+					var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, Source, Source.SourceFields, _knownMap, null, translated, placeholders);
 
 					return remapped;
 				}

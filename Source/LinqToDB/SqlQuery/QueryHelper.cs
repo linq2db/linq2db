@@ -437,7 +437,10 @@ namespace LinqToDB.SqlQuery
 
 		public static bool IsConstantFast(ISqlExpression expr)
 		{
-			return expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter;
+			if (expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter)
+				return true;
+
+			return false;
 		}
 		
 		/// <summary>

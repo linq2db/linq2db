@@ -1,5 +1,7 @@
 ﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -8,7 +10,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Extensions;
 	using SqlQuery;
-	using Common;
 
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
@@ -48,31 +49,6 @@ namespace LinqToDB.Linq.Builder
 			                     !builder.DataContext.SqlProviderFlags.IsDistinctSetOperationsSupported &&
 			                     (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect);
 
-			if (needsEmulation)
-			{
-				// emulation
-
-				var sequence = new SubQueryContext(sequence1);
-				var query    = sequence2;
-				var except   = query.SelectQuery;
-
-				var sql = sequence.SelectQuery;
-
-				if (setOperation == SetOperation.Except || setOperation == SetOperation.Intersect)
-					sql.Select.IsDistinct = true;
-
-				if (setOperation == SetOperation.Except || setOperation == SetOperation.ExceptAll)
-					sql.Where.Not.Exists(except);
-				else
-					sql.Where.Exists(except);
-
-				var searchCondition = builder.GenerateComparison(query, new ContextRefExpression(elementType, sequence), new ContextRefExpression(elementType, query), buildInfo.GetFlags());
-
-				except.Where.EnsureConjunction().ConcatSearchCondition(searchCondition);
-
-				return sequence;
-			}
-
 			var set1 = new SubQueryContext(sequence1);
 			var set2 = new SubQueryContext(sequence2);
 
@@ -88,51 +64,17 @@ namespace LinqToDB.Linq.Builder
 					buildInfo.GetFlags());
 			}
 
+			if (needsEmulation)
+			{
+				return setContext.Emulate();
+			}
+
 			return setContext;
 		}
 
 		#endregion
 
 		#region Context
-
-		sealed class SetOperationPartContext : BuildContextBase
-		{
-			public SetOperationContext SetContext { get; }
-			public int                 PartIndex  { get; }
-
-			public SetOperationPartContext(SetOperationContext setContext, int partIndex) : base(setContext.Builder, setContext.ElementType, setContext.SelectQuery)
-			{
-				SetContext = setContext;
-				PartIndex       = partIndex;
-			}
-
-			public override Expression MakeExpression(Expression path, ProjectFlags flags)
-			{
-				if (SequenceHelper.IsSameContext(path, this))
-				{
-					throw new NotImplementedException();
-				}
-
-				var newPath = SequenceHelper.CorrectExpression(path, this, SetContext);
-
-				return SetContext.MakeExpression(newPath, flags);
-			}
-
-			public override IBuildContext Clone(CloningContext      context)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlStatement  GetResultStatement()
-			{
-				throw new NotImplementedException();
-			}
-
-			public override void          SetRunQuery<T>(Query<T> query, Expression expr)
-			{
-				throw new NotImplementedException();
-			}
-		}
 
 		sealed class SetOperationContext : SubQueryContext
 		{
@@ -157,20 +99,14 @@ namespace LinqToDB.Linq.Builder
 			readonly SubQueryContext      _sequence2;
 			SqlPlaceholderExpression?     _setIdPlaceholder;
 			Expression?                   _setIdReference;
+
 			int?                          _leftSetId;
 			int?                          _rightSetId;
 
-			readonly Dictionary<Expression, SqlPlaceholderExpression> _createdSQL = new(ExpressionEqualityComparer.Instance);
-			readonly Dictionary<Expression, Expression> _generatedExpressions = new(ExpressionEqualityComparer.Instance);
+			Expression _projection1 = default!;
+			Expression _projection2 = default!;
 
-			readonly HashSet<SqlPlaceholderExpression> _eagerPlaceholders1 = new();
-			readonly HashSet<SqlPlaceholderExpression> _eagerPlaceholders2 = new();
-
-
-			static bool IsMatchingNeeded(Expression expr)
-			{
-				return expr.Find(1, (_, e) => e is SqlGenericConstructorExpression or SqlEagerLoadExpression or ContextConstructionExpression) != null;
-			}
+			Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)> _pathMapping = default!;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
@@ -183,110 +119,401 @@ namespace LinqToDB.Linq.Builder
 				if (flags.IsRoot() || flags.IsExpand() || flags.IsTraverse())
 					return path;
 
-				if (_createdSQL.TryGetValue(path, out var foundPlaceholder))
-					return foundPlaceholder;
-
-				if (flags.IsExpression() && _generatedExpressions.TryGetValue(path, out var alreadyGenerated))
-					return alreadyGenerated;
 
 				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))
 				{
 					return _setIdPlaceholder!;
 				}
 
-				var expr1 = BuildProjectionExpression(path, _sequence1, flags);
-				var expr2 = BuildProjectionExpression(path, _sequence2, flags);
-
-				if (IsMatchingNeeded(expr1) || IsMatchingNeeded(expr2))
+				if (ReferenceEquals(_pathMapping, null))
 				{
-					return MatchConstructors(path, expr1, expr2, flags);
+					InitializeProjections();
 				}
 
-				var path1 = SequenceHelper.ReplaceContext(path, this, _sequence1);
-				var path2 = SequenceHelper.ReplaceContext(path, this, _sequence2);
+				Expression projection1;
+				Expression projection2;
 
-				var convertFlags = flags;
-
-				var descriptor = Builder.SuggestColumnDescriptor(_sequence1, path1, flags);
-				descriptor ??= Builder.SuggestColumnDescriptor(_sequence2, path2, flags);
-
-				var sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags, columnDescriptor: descriptor);
-				var sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags, columnDescriptor: descriptor);
-
-				if (flags.IsExpression())
+				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if (IsMatchingNeeded(sql1) || IsMatchingNeeded(sql2))
+					projection1 = _projection1;
+					projection2 = _projection2;
+				}
+				else
+				{
+					projection1 = Builder.Project(this, path, null, 0, flags, _projection1, false);
+					projection2 = Builder.Project(this, path, null, 0, flags, _projection2, false);
+
+					// for Expression we can allow non translatable errors
+					if (flags.IsExpression())
 					{
-						return MatchConstructors(path, sql1, sql2, flags);
+						if (projection1 is SqlErrorExpression)
+							projection1 = Expression.Default(path.Type);
+						if (projection2 is SqlErrorExpression)
+							projection2 = Expression.Default(path.Type);
+					}
+
+					if (projection1 is SqlErrorExpression || projection2 is SqlErrorExpression)
+					{
+						return ExpressionBuilder.CreateSqlError(this, path);
 					}
 				}
 
-				var placeholder1 = sql1 as SqlPlaceholderExpression;
-				var placeholder2 = sql2 as SqlPlaceholderExpression;
+				var projection = MergeProjections(path, projection1, projection2, flags);
 
-				if (flags.IsTest())
-					return placeholder1 ?? placeholder2!;
+				// remap fields
+				var result = RemapPathToPlaceholders(projection, _pathMapping!);
 
-				convertFlags = convertFlags.SqlFlag();
+				return result;
+			}
 
-				if (convertFlags != flags)
+			static Expression RemapPathToPlaceholders(Expression expression,
+				Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)> pathMapping)
+			{
+				var result = expression.Transform(e =>
 				{
-					// convert again
-
-					descriptor =   Builder.SuggestColumnDescriptor(_sequence1, path1, convertFlags);
-					descriptor ??= Builder.SuggestColumnDescriptor(_sequence2, path2, convertFlags);
-
-					sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, convertFlags, columnDescriptor: descriptor);
-					sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, convertFlags, columnDescriptor: descriptor);
-				}
-
-				placeholder1 = sql1 as SqlPlaceholderExpression;
-				placeholder2 = sql2 as SqlPlaceholderExpression;
-
-				if ((placeholder1 == null || ((SqlColumn)placeholder1.Sql).Expression.IsNullValue()) && placeholder2 != null)
-				{
-					placeholder1 = ExpressionBuilder.CreatePlaceholder(_sequence1, new SqlValue(QueryHelper.GetDbDataType(placeholder2.Sql), null), path1);
-				}
-				else if ((placeholder2 == null || ((SqlColumn)placeholder2.Sql).Expression.IsNullValue()) && placeholder1 != null)
-				{
-					placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2.SubQuery, new SqlValue(QueryHelper.GetDbDataType(placeholder1.Sql), null), path2);
-				}
-
-				if (placeholder1 is null || placeholder2 is null)
-				{
-					if (flags.IsExpression())
+					if (e is SqlPathExpression pathExpression)
 					{
-						sql1 = Builder.ConvertToSqlExpr(_sequence1, path1, flags, columnDescriptor: descriptor);
-						sql2 = Builder.ConvertToSqlExpr(_sequence2, path2, flags, columnDescriptor: descriptor);
-
-						sql1 = EnsureBuilt(sql1, flags);
-						sql2 = EnsureBuilt(sql2, flags);
-
-						if (sql1.UnwrapConvert().Find(1, (_, e) => e is SqlEagerLoadExpression) != null ||
-						    sql2.UnwrapConvert().Find(1, (_, e) => e is SqlEagerLoadExpression) != null)
+						if (!pathMapping!.TryGetValue(pathExpression.Path, out var pair))
 						{
-							var thisRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(_type), this);
-							var eager   = (Expression)new SqlEagerLoadExpression(path);
+							throw new InvalidOperationException("Could not find required path for projection.");
+						}
 
-							return eager;
+						Expression result = pair.placeholder1;
+
+						if (result.Type != e.Type)
+						{
+							result = Expression.Convert(result, e.Type);
+						}
+
+						return result;
+					}
+
+					if (e is SqlEagerLoadExpression eager)
+					{
+						return eager.Update(RemapPathToPlaceholders(eager.SequenceExpression, pathMapping), eager.Predicate);
+					}
+
+					return e;
+				});
+
+				return result;
+			}
+
+			Expression MergeProjections(Expression path, Expression projection1, Expression projection2, ProjectFlags flags)
+			{
+				if (TryMergeProjections(projection1, projection2, flags, out var merged))
+					return merged;
+
+				if (_setOperation != SetOperation.UnionAll)
+				{
+					throw new LinqToDBException(
+						$"Could not decide which construction type to use `query.Select(x => new {projection1.Type.Name} {{ ... }})` to specify projection.");
+				}
+
+				EnsureSetIdFieldCreated();
+
+				var sequenceLeftSetId = _leftSetId!.Value;
+
+				if (projection1.Type != path.Type)
+				{
+					projection1 = Expression.Convert(projection1, path.Type);
+				}
+
+				if (projection2.Type != path.Type)
+				{
+					projection2 = Expression.Convert(projection2, path.Type);
+				}
+
+				var resultExpr = Expression.Condition(
+					Expression.Equal(_setIdReference!, Expression.Constant(sequenceLeftSetId)),
+					projection1,
+					projection2
+				);
+
+				return resultExpr;
+			}
+
+			bool IsNullValueOrSqlNull(Expression expression)
+			{
+				if (expression.IsNullValue())
+					return true;
+
+				if (expression is SqlPlaceholderExpression placeholder)
+					return QueryHelper.IsNullValue(placeholder.Sql);
+
+				return false;
+			}
+
+			bool TryMergeProjections(Expression projection1, Expression projection2, ProjectFlags flags, [NotNullWhen(true)] out Expression? merged)
+			{
+				merged = null;
+
+				if (projection1.Type != projection2.Type)
+					return false;
+
+				if (ExpressionEqualityComparer.Instance.Equals(projection1, projection2))
+				{
+					merged = projection1;
+					return true;
+				}
+
+				if (projection1 is SqlGenericConstructorExpression generic1 &&
+				    projection2 is SqlGenericConstructorExpression generic2)
+				{
+					if (generic1.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
+					{
+						if (generic2.ConstructType != SqlGenericConstructorExpression.CreateType.Full)
+						{
+							var constructed = Builder.TryConstruct(Builder.MappingSchema, generic1, this, flags);
+							if (constructed == null)
+								return false;
+							if (TryMergeProjections(SqlGenericConstructorExpression.Parse(constructed), generic2, flags, out merged))
+								return true;
+							return false;
 						}
 					}
 
-					return path;
+					if (generic2.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
+					{
+						if (generic1.ConstructType != SqlGenericConstructorExpression.CreateType.Full)
+						{
+							var constructed = Builder.TryConstruct(Builder.MappingSchema, generic2, this, flags);
+							if (constructed == null)
+								return false;
+							if (TryMergeProjections(generic1, SqlGenericConstructorExpression.Parse(constructed), flags, out merged))
+								return true;
+							return false;
+						}
+					}
+
+					var resultAssignments = new List<SqlGenericConstructorExpression.Assignment>(generic1.Assignments.Count);
+
+					foreach (var a1 in generic1.Assignments)
+					{
+						var found = generic2.Assignments.FirstOrDefault(a2 =>
+							MemberInfoComparer.Instance.Equals(a2.MemberInfo, a1.MemberInfo));
+
+						if (found == null)
+							resultAssignments.Add(a1);
+						else if (!TryMergeProjections(a1.Expression, found.Expression, flags, out var mergedAssignment))
+							return false;
+						else
+							resultAssignments.Add(a1.WithExpression(mergedAssignment));
+					}
+
+					foreach (var a2 in generic2.Assignments)
+					{
+						var found = generic1.Assignments.FirstOrDefault(a1 =>
+							MemberInfoComparer.Instance.Equals(a2.MemberInfo, a1.MemberInfo));
+
+						if (found == null)
+							resultAssignments.Add(a2);
+					}
+
+					if (generic1.Parameters.Count > 0 || generic2.Parameters.Count > 0)
+					{
+						throw new NotImplementedException("Handling parameters not implemented yet.");
+					}
+
+					var resultGeneric = generic1.ReplaceAssignments(resultAssignments);
+
+					if (Builder.TryConstruct(Builder.MappingSchema, resultGeneric, this, flags) == null)
+						return false;
+
+					merged = resultGeneric;
+					return true;
 				}
 
-				placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
-				placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
+				if (projection1 is ConditionalExpression cond1 && projection2 is ConditionalExpression cond2)
+				{
+					if (!ExpressionEqualityComparer.Instance.Equals(cond1.Test, cond2.Test))
+						return false;
 
-				var alias   = GenerateColumnAlias(path1);
-				var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
-				var column2 = Builder.MakeColumn(SelectQuery, placeholder2.WithAlias(alias), true);
+					if (!TryMergeProjections(cond1.IfTrue, cond2.IfTrue, flags, out var ifTrueMerged) ||
+					    !TryMergeProjections(cond1.IfFalse, cond2.IfFalse, flags, out var ifFalseMerged))
+					{
+						return false;
+					}
 
-				var resultPlaceholder = column1.WithPath(path);
+					merged = cond1.Update(cond1.Test, ifTrueMerged, ifFalseMerged);
+					return true;
+				}
 
-				_createdSQL.Add(path, resultPlaceholder);
+				if (projection1 is SqlPathExpression && IsNullValueOrSqlNull(projection2))
+				{
+					merged = projection1;
+					return true;
+				}
 
-				return resultPlaceholder;
+				if (projection2 is SqlPathExpression && IsNullValueOrSqlNull(projection1))
+				{
+					merged = projection2;
+					return true;
+				}
+
+				return false;
+			}
+
+			class PathComparer : IEqualityComparer<Expression[]>
+			{
+				public static readonly PathComparer Instance = new PathComparer();
+
+				public bool Equals(Expression[]? x, Expression[]? y)
+				{
+					if (ReferenceEquals(x, y))
+						return true;
+
+					if (x == null || y == null) 
+						return false;
+
+					return x.SequenceEqual(y, ExpressionEqualityComparer.Instance);
+				}
+
+				public int GetHashCode(Expression[] obj)
+				{
+					return obj.Aggregate(0, (acc, val) => acc ^ ExpressionEqualityComparer.Instance.GetHashCode(val!));
+				}
+			}
+
+			void InitializeProjections()
+			{
+				var ref1 = new ContextRefExpression(ElementType, _sequence1);
+
+				_projection1 = BuildProjectionExpression(ref1, _sequence1, out var placeholders1, out var eager1);
+
+				var ref2 = new ContextRefExpression(ElementType, _sequence2);
+
+				_projection2 = BuildProjectionExpression(ref2, _sequence2, out var placeholders2, out var eager2);
+
+				var pathMapping = new Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)>(PathComparer.Instance);
+
+				switch (_setOperation)
+				{
+					case SetOperation.Union:
+						break;
+					case SetOperation.UnionAll:
+						break;
+					case SetOperation.Except:
+					case SetOperation.ExceptAll:
+						_projection2 = _projection1;
+						eager2       = eager1;
+						break;
+					case SetOperation.Intersect:
+						break;
+					case SetOperation.IntersectAll:
+						break;
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+
+				foreach (var p in placeholders1)
+				{
+					var placeholderPath = new SqlPathExpression(p.path, p.placeholder.Type);
+					var alias           = GenerateColumnAlias(placeholderPath);
+
+					var placeholder1 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence1, p.placeholder);
+					placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
+					placeholder1 = placeholder1.WithPath(placeholderPath).WithAlias(alias);
+
+					var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
+
+					var (placeholder2, _) = placeholders2.FirstOrDefault(p2 => PathComparer.Instance.Equals(p2.path, p.path));
+					if (placeholder2 == null)
+					{
+						placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2,
+							new SqlValue(QueryHelper.GetDbDataType(p.placeholder.Sql), null), placeholderPath);
+					}
+					else
+					{
+						placeholder2 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence2, placeholder2);
+						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
+					}
+
+					placeholder2 = placeholder2.WithPath(placeholderPath).WithAlias(alias);
+					var column2 = Builder.MakeColumn(SelectQuery, placeholder2.WithAlias(alias), true);
+
+					pathMapping.Add(p.path, (column1, column2));
+				}
+
+				if (_setOperation != SetOperation.Except || _setOperation != SetOperation.ExceptAll)
+				{
+					foreach (var p2 in placeholders2)
+					{
+						if (pathMapping.ContainsKey(p2.path))
+							continue;
+
+						var placeholder2 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence2, p2.placeholder);
+						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
+
+						var placeholderPath = new SqlPathExpression(p2.path, placeholder2.Type);
+						var alias           = GenerateColumnAlias(placeholderPath);
+
+						placeholder2 = placeholder2.WithAlias(alias);
+
+						var column1 = ExpressionBuilder.CreatePlaceholder(_sequence1, new SqlValue(QueryHelper.GetDbDataType(placeholder2.Sql), null), placeholderPath);
+						column1 = Builder.MakeColumn(SelectQuery, column1, true);
+
+						var column2 = Builder.MakeColumn(SelectQuery, placeholder2, true);
+
+						pathMapping.Add(p2.path, (column1, column2));
+					}
+				}
+
+				Dictionary<SqlEagerLoadExpression, SqlEagerLoadExpression>? eagerMapping = null;
+				foreach (var e1 in eager1)
+				{
+					if (eagerMapping?.ContainsKey(e1) == true)
+						continue;
+
+					var found = eager2.FirstOrDefault(e2 => ExpressionEqualityComparer.Instance.Equals(e2, e1));
+
+					eagerMapping ??= new(ExpressionEqualityComparer.Instance);
+
+					if (found != null)
+					{
+						eagerMapping.Add(e1, e1);
+					}
+					else
+					{
+						var predicate = Expression.Equal(GetSetIdReference(), Expression.Constant(_leftSetId));
+						eagerMapping.Add(e1, e1.AppendPredicate(predicate));
+					}
+				}
+
+				foreach (var e2 in eager2)
+				{
+					if (eagerMapping?.ContainsKey(e2) == true)
+						continue;
+
+					eagerMapping ??= new(ExpressionEqualityComparer.Instance);
+
+					var predicate = Expression.Equal(GetSetIdReference(), Expression.Constant(_rightSetId));
+					eagerMapping.Add(e2, e2.AppendPredicate(predicate));
+				}
+
+				if (eagerMapping != null)
+				{
+					_projection1 = ReplaceEagerExpressions(_projection1, eagerMapping);
+					_projection2 = ReplaceEagerExpressions(_projection2, eagerMapping);
+				}
+
+				_pathMapping  = pathMapping;
+			}
+
+			static Expression ReplaceEagerExpressions(Expression expression, Dictionary<SqlEagerLoadExpression, SqlEagerLoadExpression> raplacements)
+			{
+				var result = expression.Transform(e =>
+				{
+					if (e is SqlEagerLoadExpression eager)
+					{
+						if (raplacements.TryGetValue(eager, out var newEager))
+							return newEager;
+					}
+
+					return e;
+				});
+
+				return result;
 			}
 
 			static string? GenerateColumnAlias(Expression expr)
@@ -307,67 +534,29 @@ namespace LinqToDB.Linq.Builder
 
 			const string ProjectionSetIdFieldName = "__projection__set_id__";
 
-			Expression EnsureBuilt(Expression expr, ProjectFlags flags)
+			Expression GetSetIdReference()
 			{
-				do
+				if (_setIdReference == null)
 				{
-					var newExpr = Builder.BuildSqlExpression(this, expr, flags);
-					if (ReferenceEquals(expr, newExpr))
-						break;
+					var thisRef = new ContextRefExpression(_type, this);
+					_setIdReference = SequenceHelper.CreateSpecialProperty(thisRef, typeof(int), ProjectionSetIdFieldName);
 
-					expr = newExpr;
-				} while (true);
-
-				return expr;
-			}
-
-			Expression MakeConditionalConstructExpression(Expression path, Expression leftExpression, Expression rightExpression, ProjectFlags flags)
-			{
-				leftExpression  = SequenceHelper.RemapToNewPath(this, leftExpression, path, flags.ExpressionFlag());
-
-				leftExpression = EnsureBuilt(leftExpression, flags);
-
-				rightExpression = SequenceHelper.RemapToNewPath(this, rightExpression, path, flags.ExpressionFlag());
-
-				rightExpression = EnsureBuilt(rightExpression, flags);
-
-				EnsureSetIdFieldCreated();
-
-				var sequenceLeftSetId = _leftSetId!.Value;
-
-				if (leftExpression.Type != path.Type)
-				{
-					leftExpression = Expression.Convert(leftExpression, path.Type);
+					_leftSetId  = Builder.GenerateSetId(_sequence1.SubQuery.SelectQuery.SourceID);
+					_rightSetId = Builder.GenerateSetId(_sequence2.SubQuery.SelectQuery.SourceID);
 				}
 
-				if (rightExpression.Type != path.Type)
-				{
-					rightExpression = Expression.Convert(rightExpression, path.Type);
-				}
-
-				var resultExpr = Expression.Condition(
-					Expression.Equal(_setIdReference!, Expression.Constant(sequenceLeftSetId)),
-					leftExpression,
-					rightExpression
-				);
-
-				return resultExpr;
+				return _setIdReference;
 			}
 
 			void EnsureSetIdFieldCreated()
 			{
-				if (_setIdReference != null)
+				if (_setIdPlaceholder != null)
 					return;
 
-				var sequenceLeftSetId  = Builder.GenerateSetId(_sequence1.SubQuery.SelectQuery.SourceID);
-				var sequenceRightSetId = Builder.GenerateSetId(_sequence2.SubQuery.SelectQuery.SourceID);
+				var setIdReference = GetSetIdReference();
 
-				var sqlValueLeft  = new SqlValue(sequenceLeftSetId);
-				var sqlValueRight = new SqlValue(sequenceRightSetId);
-
-				var thisRef = new ContextRefExpression(_type, this);
-
-				_setIdReference = SequenceHelper.CreateSpecialProperty(thisRef, typeof(int), ProjectionSetIdFieldName);
+				var sqlValueLeft  = new SqlValue(_leftSetId!);
+				var sqlValueRight = new SqlValue(_rightSetId!);
 
 				var leftRef  = new ContextRefExpression(_type, _sequence1);
 				var rightRef = new ContextRefExpression(_type, _sequence2);
@@ -383,48 +572,7 @@ namespace LinqToDB.Linq.Builder
 					keyRight, alias : ProjectionSetIdFieldName);
 				rightIdPlaceholder = Builder.MakeColumn(SelectQuery, rightIdPlaceholder, asNew : true);
 
-				_setIdPlaceholder = leftIdPlaceholder.WithPath(_setIdReference).WithTrackingPath(_setIdReference);
-
-				_leftSetId  = sequenceLeftSetId;
-				_rightSetId = sequenceRightSetId;
-			}
-
-			Expression EnsureGenericConstructor(Expression expression)
-			{
-				var transformed = expression.Transform(e =>
-				{
-					var newExpr = SqlGenericConstructorExpression.Parse(e);
-					if (newExpr != e)
-						return new TransformInfo(newExpr, false, true);
-
-					return new TransformInfo(e);
-				});
-
-				return transformed;
-			}
-
-			List<SqlEagerLoadExpression> CollectEagerLoadExpressions(Expression expression)
-			{
-				var result = new List<SqlEagerLoadExpression>();
-				expression.Visit(result, (result, e) =>
-				{
-					if (e is SqlEagerLoadExpression eager)
-						result.Add(eager);
-				});
-
-				return result;
-			}
-
-			List<ContextRefExpression> CollectContexts(Expression expression)
-			{
-				var result = new List<ContextRefExpression>();
-				expression.Visit(result, (result, e) =>
-				{
-					if (e is ContextRefExpression contextRef)
-						result.Add(contextRef);
-				});
-
-				return result;
+				_setIdPlaceholder = leftIdPlaceholder.WithPath(setIdReference).WithTrackingPath(setIdReference);
 			}
 
 			Expression ResolveReferences(IBuildContext context, Expression expression, ProjectFlags flags, HashSet<SqlPlaceholderExpression> placeholders)
@@ -458,444 +606,346 @@ namespace LinqToDB.Linq.Builder
 				return transformed;
 			}
 
-			Expression BuildProjectionExpression(Expression path, SubQueryContext context, ProjectFlags projectFlags)
+			class ExpressionOptimizerVisitor : ExpressionVisitorBase
+			{
+				protected override Expression VisitConditional(ConditionalExpression node)
+				{
+					var newNode = base.VisitConditional(node);
+					if (!ReferenceEquals(newNode, node))
+						return Visit(newNode);
+
+					if (node.IfTrue is ConditionalExpression condTrue                        &&
+					    ExpressionEqualityComparer.Instance.Equals(node.Test, condTrue.Test) &&  
+					    ExpressionEqualityComparer.Instance.Equals(node.IfFalse, condTrue.IfFalse))
+					{
+						return condTrue;
+					}
+
+					return node;
+				}
+			}
+
+			class ExpressionPathVisitor : ExpressionVisitorBase
+			{
+				Stack<Expression> _stack = new();
+
+				bool _isDictionary;
+
+				public List<(SqlPlaceholderExpression placeholder, Expression[] path)> FoundPlaceholders { get; } = new();
+
+				//public List<(SqlEagerLoadExpression eager, Expression[] path)> FoundEager { get; } = new();
+				public List<SqlEagerLoadExpression> FoundEager { get; } = new();
+
+				protected override Expression VisitConditional(ConditionalExpression node)
+				{
+					_stack.Push(Expression.Constant("?"));
+					_stack.Push(Visit(node.Test));
+					
+					_stack.Push(Expression.Constant(true));
+					var ifTrue = Visit(node.IfTrue);
+					_stack.Pop();
+
+					_stack.Push(Expression.Constant(false));
+					var ifFalse = Visit(node.IfFalse);
+					_stack.Pop();
+
+					var test = _stack.Pop();
+					_stack.Pop();
+
+					return node.Update(test, ifTrue, ifFalse);
+				}
+
+				protected override Expression VisitBinary(BinaryExpression node)
+				{
+					_stack.Push(Expression.Constant("binary"));
+					_stack.Push(Expression.Constant(node.NodeType));
+					_stack.Push(Visit(node.Left));
+					_stack.Push(Visit(node.Right));
+
+					var right = _stack.Pop();
+					var left  = _stack.Pop();
+
+					_stack.Pop();
+					_stack.Pop();
+
+					return node.Update(left, node.Conversion, right);
+				}
+
+				public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
+				{
+					var stack = _stack.ToArray();
+					Array.Reverse(stack);
+
+					FoundPlaceholders.Add((node, stack));
+
+					return new SqlPathExpression(stack, node.Type);
+				}
+
+				internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+				{
+					_stack.Push(Expression.Constant("construct"));
+
+					if (node.Assignments.Count > 0)
+					{
+						var newAssignments = new List<SqlGenericConstructorExpression.Assignment>(node.Assignments.Count);
+
+						foreach(var a in node.Assignments)
+						{
+							var memberInfo = a.MemberInfo.DeclaringType?.GetMemberEx(a.MemberInfo) ?? a.MemberInfo;
+
+							_stack.Push(Expression.Constant(memberInfo));
+							newAssignments.Add(a.WithExpression(Visit(a.Expression)));
+							_stack.Pop();
+						}
+
+						node = node.ReplaceAssignments(newAssignments);
+					}
+
+					if (node.Parameters.Count > 0)
+					{
+						var newParameters = new List<SqlGenericConstructorExpression.Parameter>(node.Parameters.Count);
+						for (var index = 0; index < node.Parameters.Count; index++)
+						{
+							var param = node.Parameters[index];
+
+							if (param.MemberInfo != null)
+							{
+								// mimic assignment
+								var memberInfo = param.MemberInfo.DeclaringType?.GetMemberEx(param.MemberInfo) ?? param.MemberInfo;
+								_stack.Push(Expression.Constant(memberInfo));
+								newParameters.Add(param.WithExpression(Visit(param.Expression)));
+								_stack.Pop();
+							}
+							else
+							{
+								_stack.Push(Expression.Constant(index));
+								newParameters.Add(param.WithExpression(Visit(param.Expression)));
+								_stack.Pop();
+							}
+						}
+
+						node = node.ReplaceParameters(newParameters);
+					}
+
+					_stack.Pop();
+
+					return node;
+				}
+
+				protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
+				{
+					_stack.Push(Expression.Constant(node.BindingType));
+					_stack.Push(Expression.Constant(node.Member));
+
+					var newNode = base.VisitMemberAssignment(node);
+
+					_stack.Pop();
+					_stack.Pop();
+					return newNode;
+				}
+
+				protected override MemberBinding VisitMemberBinding(MemberBinding node)
+				{
+					_stack.Push(Expression.Constant(node.BindingType));
+					_stack.Push(Expression.Constant(node.Member));
+
+					var newNode = base.VisitMemberBinding(node);
+
+					_stack.Pop();
+					_stack.Pop();
+					return newNode;
+				}
+
+				protected override MemberListBinding VisitMemberListBinding(MemberListBinding node)
+				{
+					_stack.Push(Expression.Constant(node.BindingType));
+					_stack.Push(Expression.Constant(node.Member));
+
+					var newNode = base.VisitMemberListBinding(node);
+
+					_stack.Pop();
+					_stack.Pop();
+					return newNode;
+				}
+
+				protected override Expression VisitMemberInit(MemberInitExpression node)
+				{
+					_stack.Push(Expression.Constant("init"));
+
+					var newExpr = base.VisitMemberInit(node);
+
+					_stack.Pop();
+
+					return newExpr;
+				}
+
+				protected override ElementInit VisitElementInit(ElementInit node)
+				{
+					_stack.Push(Expression.Constant(node.AddMethod));
+
+					var arguments = new List<Expression>(node.Arguments.Count);
+
+					for (int i = 0; i < node.Arguments.Count; i++)
+					{
+						_stack.Push(Expression.Constant(i));
+
+						var nodeArgument = node.Arguments[i];
+
+						/*
+						if (_isDictionary && i == 0)
+						{
+							_stack.Push(nodeArgument);
+						}
+						*/
+
+						var arg = Visit(nodeArgument);
+
+						/*
+						if (_isDictionary && i == 0)
+						{
+							_stack.Pop();
+						}
+						*/
+
+						_stack.Pop();
+						arguments.Add(arg);
+					}
+
+					var newNode = node.Update(arguments);
+
+					_stack.Pop();
+
+					return newNode;
+				}
+
+				protected override Expression VisitListInit(ListInitExpression node)
+				{
+					_stack.Push(Expression.Constant("list init"));
+
+					var initializers = new List<ElementInit>(node.Initializers.Count);
+
+					var saveIDictionary = _isDictionary;
+					_isDictionary = typeof(IDictionary<,>).IsSameOrParentOf(node.Type);
+
+					for (int i = 0; i < node.Initializers.Count; i++)
+					{
+						_stack.Push(Expression.Constant(i));
+						initializers.Add(VisitElementInit(node.Initializers[i]));
+						_stack.Pop();
+					}
+
+					_isDictionary = saveIDictionary;
+
+					var newExpr = node.Update((NewExpression)Visit(node.NewExpression), initializers);
+
+					_stack.Pop();
+
+					return newExpr;
+				}
+
+				protected override Expression VisitMethodCall(MethodCallExpression node)
+				{
+					_stack.Push(Expression.Constant("call"));
+
+					var obj = Visit(node.Object);
+					if (obj != null)
+						_stack.Push(Expression.Constant(obj));
+
+					_stack.Push(Expression.Constant(node.Method));
+
+					var args = new List<Expression>(node.Arguments.Count);
+
+					for (var index = 0; index < node.Arguments.Count; index++)
+					{
+						var arg = node.Arguments[index];
+						_stack.Push(Expression.Constant(index));
+						args.Add(Visit(arg));
+						_stack.Pop();
+					}
+
+					_stack.Pop();
+
+					if (obj != null)
+						_stack.Pop();
+
+					_stack.Pop();
+
+					return node.Update(obj, args);
+				}
+
+				internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
+				{
+					var saveStack = _stack;
+					_stack = new();
+
+					var newEager  = node.Update(Visit(node.SequenceExpression), Visit(node.Predicate));
+
+					_stack = saveStack;
+
+					FoundEager.Add(newEager);
+
+					return newEager;
+				}
+			}
+
+			Expression BuildProjectionExpression(Expression path, IBuildContext context, 
+				out List<(SqlPlaceholderExpression placeholder, Expression[] path)> foundPlaceholders,
+				out List<SqlEagerLoadExpression> foundEager)
 			{
 				var correctedPath = SequenceHelper.ReplaceContext(path, this, context);
 
-				var projectionExpression = Builder.ConvertToSqlExpr(context.SubQuery, correctedPath, projectFlags);
+				var current = correctedPath;
+				do
+				{
+					var projected = Builder.BuildSqlExpression(context, current, ProjectFlags.Expression, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+				
+					var projectVisitor = new ProjectionVisitor(context);
+					projected = projectVisitor.Visit(projected);
 
-				projectionExpression = EnsureGenericConstructor(projectionExpression);
+					var lambdaResolver = new LambdaResolveVisitor(context);
+					projected = lambdaResolver.Visit(projected);
 
-				projectionExpression = Builder.BuildSqlExpression(context.SubQuery, projectionExpression, projectFlags);
 
-				var remapped = SequenceHelper.RemapToNewPath(this, projectionExpression, path, projectFlags);
+					var optimizer = new ExpressionOptimizerVisitor();
+					projected = optimizer.Visit(projected);
 
-				return remapped;
+					if (ExpressionEqualityComparer.Instance.Equals(projected, current))
+						break;
+
+					current = projected;
+				} while (true);
+
+
+				var pathBuilder = new ExpressionPathVisitor();
+				var withPath    = pathBuilder.Visit(current);
+
+				foundPlaceholders = pathBuilder.FoundPlaceholders;
+
+				foundEager = pathBuilder.FoundEager;
+
+				return withPath;
+			}
+
+			class LambdaResolveVisitor : ExpressionVisitorBase
+			{
+				readonly IBuildContext _context;
+
+				public ExpressionBuilder Builder => _context.Builder;
+
+				public LambdaResolveVisitor(IBuildContext context)
+				{
+					_context = context;
+				}
+
+				protected override Expression VisitLambda<T>(Expression<T> node)
+				{
+					var newBody = Builder.BuildSqlExpression(_context, node.Body, ProjectFlags.SQL);
+					return node.Update(newBody, node.Parameters);
+				}
 			}
 
 			// For Set we have to ensure hat columns are not optimized
 			protected override bool OptimizeColumns => false;
-
-			static bool IsEqualProjections(Expression left, Expression right)
-			{
-				if (left is SqlGenericConstructorExpression leftGeneric &&
-				    right is SqlGenericConstructorExpression rightGeneric)
-				{
-					if (leftGeneric.ConstructType  == SqlGenericConstructorExpression.CreateType.Full &&
-					    rightGeneric.ConstructType == SqlGenericConstructorExpression.CreateType.Full &&
-					    leftGeneric.ObjectType     == rightGeneric.ObjectType)
-					{
-						return true;
-					}
-				}
-
-				if (ExpressionEqualityComparer.Instance.Equals(left, right))
-					return true;
-
-				return false;
-			}
-
-			static IEnumerable<Expression> CollectDataPathes(Expression expression, Expression currentPath)
-			{
-				expression = expression.UnwrapConvert();
-
-				if (expression is SqlGenericConstructorExpression generic)
-				{
-					foreach (var assignment in generic.Assignments)
-					{
-						var newMemberInfo = currentPath.Type.GetMemberEx(assignment.MemberInfo);
-						if (newMemberInfo != null)
-						{
-							var newPath = Expression.MakeMemberAccess(currentPath, newMemberInfo);
-							foreach (var path in CollectDataPathes(assignment.Expression, newPath))
-								yield return path;
-						}
-					}
-
-					foreach (var parameter in generic.Parameters)
-					{
-						var parameterPath = new SqlGenericParamAccessExpression(currentPath, parameter.ParameterInfo);
-						foreach (var path in CollectDataPathes(parameter.Expression, parameterPath))
-							yield return path;
-					}
-				}
-				else if (expression is ConditionalExpression conditional)
-				{
-					foreach (var path in CollectDataPathes(conditional.IfTrue, currentPath))
-						yield return path;
-					foreach (var path in CollectDataPathes(conditional.IfFalse, currentPath))
-						yield return path;
-				}
-				else
-				{
-					//TODO: Something wrong here
-					if (expression.Find(1, (_, e) => e is SqlEagerLoadExpression) != null)
-						yield break;
-
-					if (expression.IsNullValue())
-						yield break;
-
-					yield return currentPath;
-				}
-			}
-
-			static bool ExpressionContains(Expression expr, Expression value)
-			{
-				return expr.Find(value, ExpressionEqualityComparer.Instance) != null;
-			}
-
-			static Expression? GenerateProjection(List<Expression> knownProjections, Expression currentPath)
-			{
-				static Expression TraverseBack(Expression currentExpression, Expression toPath)
-				{
-					var current = currentExpression;
-
-					if (ExpressionEqualityComparer.Instance.Equals(current, toPath))
-						return current;
-
-					while (true)
-					{
-						if (current is MemberExpression me)
-						{
-							if (ExpressionEqualityComparer.Instance.Equals(me.Expression, toPath))
-							{
-								return current;
-							}
-
-							current = me.Expression;
-						}
-						else if (current is SqlGenericParamAccessExpression paramAccessExpression)
-						{
-							if (ExpressionEqualityComparer.Instance.Equals(paramAccessExpression.Constructor, toPath))
-							{
-								return current;
-							}
-
-							current = paramAccessExpression.Constructor;
-						}
-						else
-							throw new InvalidOperationException();
-					}
-				}
-
-				var projections = knownProjections.Where(p => ExpressionContains(p, currentPath)).ToList();
-
-				if (projections.Count == 0)
-				{
-					return null;
-				}
-
-				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
-				List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
-
-				var grouped = projections
-					.GroupBy(p => TraverseBack(p, currentPath), ExpressionEqualityComparer.Instance)
-					.Select(g => new
-					{
-						LevelPath = g.Key, 
-						Items = g.Where(x => !ExpressionEqualityComparer.Instance.Equals(g.Key, x)).ToList()
-					})
-					.ToList();
-
-				foreach (var projection in grouped)
-				{
-					if (ExpressionEqualityComparer.Instance.Equals(projection.LevelPath, currentPath))
-						continue;
-
-					if (projection.LevelPath is MemberExpression me)
-					{
-						var memberInfo = me.Member;
-						var newPath    = Expression.MakeMemberAccess(currentPath, memberInfo);
-
-						var generated = GenerateProjection(projection.Items, newPath);
-						generated ??= newPath;
-
-						assignments ??= new();
-						assignments.Add(new SqlGenericConstructorExpression.Assignment(memberInfo, generated, false, false));
-					}
-					else if (projection.LevelPath is SqlGenericParamAccessExpression paramAccess)
-					{
-						var newPath   = new SqlGenericParamAccessExpression(currentPath, paramAccess.ParameterInfo);
-						var generated = GenerateProjection(projection.Items, newPath);
-						generated ??= newPath;
-
-						parameters ??= new();
-						parameters.Add(new SqlGenericConstructorExpression.Parameter(generated, paramAccess.ParameterInfo, null));
-					}
-				}
-
-				return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto,
-					currentPath.Type, parameters?.AsReadOnly(), assignments?.AsReadOnly());
-			}
-
-			public bool IsCompatibleForCommonProjection(SqlGenericConstructorExpression projection,
-				SqlGenericConstructorExpression                                         generated)
-			{
-				foreach (var generatedAssignment in generated.Assignments)
-				{
-					var found = projection.Assignments.FirstOrDefault(a =>
-						MemberInfoEqualityComparer.Default.Equals(a.MemberInfo, generatedAssignment.MemberInfo));
-
-					if (found == null)
-					{
-						if (generatedAssignment.Expression is SqlGenericConstructorExpression)
-							return false;
-					}
-					else
-					{
-						if (generatedAssignment.Expression is SqlGenericConstructorExpression subGenerated)
-						{
-							if (found.Expression is SqlGenericConstructorExpression subProjection)
-							{
-								if (!IsCompatibleForCommonProjection(subProjection, subGenerated))
-									return false;
-							}
-							else
-								return false;
-						}
-						else 
-							if (!IsEqualProjections(found.Expression, generatedAssignment.Expression))
-								return false;
-					}
-				}
-
-				return true;
-			}
-
-			Expression ProcessEagerExpressions(Expression expr, IBuildContext context, ProjectFlags projectFlags, HashSet<SqlPlaceholderExpression> placeholders)
-			{
-				var thisRef      = new ContextRefExpression(_type, this);
-
-				var transformed = expr.Transform(e =>
-				{
-					if (e is SqlEagerLoadExpression eager)
-					{
-						var newSequence = ResolveReferences(context, eager.SequenceExpression, projectFlags, placeholders);
-						return new SqlEagerLoadExpression(newSequence);
-					}
-
-					return e;
-				});
-
-				return transformed;
-			}
-
-			Expression? GetFieldExpressionBySql(ISqlExpression sql)
-			{
-				foreach (var pair in _createdSQL)
-				{
-					if (ReferenceEquals(pair.Value.Sql, sql))
-					{
-						return pair.Key;
-					}
-
-					if (pair.Value.Sql is SqlColumn column)
-					{
-						if (column.Parent?.HasSetOperators != true)
-							throw new InvalidOperationException();
-
-						var idx = column.Parent.Select.Columns.IndexOf(column);
-
-						if (ReferenceEquals(column.Parent.SetOperators[0].SelectQuery.Select.Columns[idx], sql))
-							return pair.Key;
-					}
-				}
-
-				return null;
-			}
-
-			record PlaceholderMatch(SqlPlaceholderExpression Placeholder, SqlColumn? Column, Expression? ReferenceExpression);
-
-			List<PlaceholderMatch> MatchEagerPlaceholdersWithCurrent(HashSet<SqlPlaceholderExpression> eagerPlaceholders, IBuildContext sequence)
-			{
-				var matchQuery =
-					from p in eagerPlaceholders
-					join c in sequence.SelectQuery.Select.Columns on p.Sql equals c.Expression into gj
-					from c in gj.DefaultIfEmpty()
-					select new PlaceholderMatch(p, c, c == null ? null : GetFieldExpressionBySql(c));
-
-				return matchQuery.ToList();
-			}
-
-			Expression CorrectEagerLoadingExpression(Expression expr,
-				IReadOnlyDictionary<Expression, Expression> replaceMap)
-			{
-				var transformed = expr.Transform(replaceMap, (map, e) =>
-				{
-					if (e is SqlEagerLoadExpression eager)
-					{
-						var newSequence = eager.SequenceExpression.Replace(map);
-						if (newSequence != eager.SequenceExpression)
-						{
-							return new SqlEagerLoadExpression(newSequence);
-						}
-					}
-
-					return e;
-				});
-
-				return transformed;
-			}
-
-			static List<SqlEagerLoadExpression> CollectEagerLoadingExpressions(Expression expression)
-			{
-				var result = new List<SqlEagerLoadExpression>();
-				expression.Visit(result, (r, e) =>
-				{
-					if (e is SqlEagerLoadExpression eager)
-					{
-						result.Add(eager);
-					}
-				});
-
-				return result;
-			}
-
-			Expression AddSetPredicateToEagerExpresson(Expression expression, List<SqlEagerLoadExpression> eagerExpressions, int setIndex)
-			{
-				if (eagerExpressions.Count == 0)
-					return expression;
-
-				EnsureSetIdFieldCreated();
-
-				var setValue = setIndex == 0 ? _leftSetId!.Value : _rightSetId!.Value;
-
-				var predicate = Expression.Equal(_setIdReference!, Expression.Constant(setValue));
-				var replacement = eagerExpressions.ToDictionary(eager => eager, eager => eager.AppendPredicate(predicate));
-
-				var nexExpr = expression.Transform(replacement, (r, e) =>
-				{
-					if (e is SqlEagerLoadExpression eager)
-					{
-						if (replacement.TryGetValue(eager, out var newExpr))
-						{
-							return new TransformInfo(newExpr, false, true);
-						}
-					}
-
-					return new TransformInfo(e);
-				});
-
-				return nexExpr;
-			}
-
-			void GenerateAllFields(Expression path, ref Expression expr1, ref Expression expr2, ProjectFlags flags, out bool additionalFieldsAdded)
-			{
-				var foundPathes = CollectDataPathes(expr1, path)
-					.Concat(CollectDataPathes(expr2, path))
-					.Distinct(ExpressionEqualityComparer.Instance)
-					.ToList();
-
-				var sqlFlag = flags.SqlFlag();
-				foreach (var dataPath in foundPathes)
-				{
-					var generated = MakeExpression(dataPath, sqlFlag);
-				}
-
-				var match1 = MatchEagerPlaceholdersWithCurrent(_eagerPlaceholders1, _sequence1);
-				var match2 = MatchEagerPlaceholdersWithCurrent(_eagerPlaceholders2, _sequence2);
-
-				var transformMap = match1.Concat(match2).ToDictionary(m => (Expression)m.Placeholder, m => m.ReferenceExpression!);
-
-				expr1 = CorrectEagerLoadingExpression(expr1, transformMap);
-				expr2 = CorrectEagerLoadingExpression(expr2, transformMap);
-
-				var eager1 = CollectEagerLoadingExpressions(expr1);
-				var eager2 = CollectEagerLoadingExpressions(expr2);
-
-				var toModify1 = eager1.Except(eager2, ExpressionEqualityComparer.Instance).Cast<SqlEagerLoadExpression>().ToList();
-				var toModify2 = eager2.Except(eager1, ExpressionEqualityComparer.Instance).Cast<SqlEagerLoadExpression>().ToList();
-
-				expr1 = AddSetPredicateToEagerExpresson(expr1, toModify1, 0);
-				expr2 = AddSetPredicateToEagerExpresson(expr2, toModify2, 1);
-
-				//TODO: fill missing references
-				additionalFieldsAdded = false;
-			}
-
-			Expression MatchConstructors(Expression path, Expression expr1, Expression expr2,  ProjectFlags flags)
-			{
-				Expression resultExpr;
-
-				var forcedEquality = _setOperation == SetOperation.Except || _setOperation == SetOperation.ExceptAll;
-
-				expr1 = ProcessEagerExpressions(expr1, _sequence1, flags, _eagerPlaceholders1);
-				expr2 = ProcessEagerExpressions(expr2, _sequence2, flags, _eagerPlaceholders2);
-
-				if (ExpressionEqualityComparer.Instance.Equals(expr1, expr2))
-					return expr1;
-
-				var hasEagerLoading = _eagerPlaceholders1.Count > 0 || _eagerPlaceholders2.Count > 0;
-				if (hasEagerLoading)
-				{
-					GenerateAllFields(path, ref expr1, ref expr2, flags, out var fieldsAdded);
-				}
-
-				var foundPathes = CollectDataPathes(expr1, path)
-					.Concat(CollectDataPathes(expr2, path))
-					.Distinct(ExpressionEqualityComparer.Instance)
-					.ToList();
-
-				resultExpr = GenerateProjection(foundPathes, path) ?? expr1;
-
-				if (flags.HasFlag(ProjectFlags.Expression))
-				{
-					if (forcedEquality)
-						return expr1;
-
-					if (IsEqualProjections(expr1, expr2))
-						return expr1;
-
-					//if (IsIncompatible(expr1) || IsIncompatible(expr2))
-					//{
-					//	return MakeConditionalExpression(path, expr1, expr2);
-					//}
-
-					var incompatible = hasEagerLoading;
-
-					incompatible = incompatible || expr1.GetType() != expr2.GetType();
-
-					if (resultExpr is SqlGenericConstructorExpression generic)
-					{
-						if (ExpressionEqualityComparer.Instance.Equals(expr1, expr2))
-						{
-							incompatible = false;
-							resultExpr = expr1;
-						}
-						else
-						{
-							if (!incompatible && expr1 is SqlGenericConstructorExpression contructor1 &&
-							    expr2 is SqlGenericConstructorExpression contructor2)
-							{
-								incompatible = !IsCompatibleForCommonProjection(contructor1, generic) ||
-								               !IsCompatibleForCommonProjection(contructor2, generic);
-							}
-						}
-
-						if (incompatible || Builder.TryConstruct(Builder.MappingSchema, generic, this, flags) == null)
-						{
-							// fallback to set
-							resultExpr = MakeConditionalExpression(path, expr1, expr2, flags);
-						}
-					}
-				}
-
-				if (flags.IsExpression())
-					_generatedExpressions[path] = resultExpr;
-
-				return resultExpr;
-			}
-
-			Expression MakeConditionalExpression(Expression path, Expression expr1, Expression expr2, ProjectFlags flags)
-			{
-				if (_setOperation != SetOperation.UnionAll)
-				{
-					throw new LinqToDBException(
-						$"Could not decide which construction type to use `query.Select(x => new {expr1.Type.Name} {{ ... }})` to specify projection.");
-				}
-
-				return MakeConditionalConstructExpression(path, expr1, expr2, flags);
-			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
@@ -911,32 +961,55 @@ namespace LinqToDB.Linq.Builder
 				cloned._leftSetId        = _leftSetId;
 				cloned._rightSetId       = _rightSetId;
 				
-				foreach(var generated in _createdSQL)
-				{
-					cloned._createdSQL[context.CloneExpression(generated.Key)] = context.CloneExpression(generated.Value);
-				}
-
-				foreach (var generated in _generatedExpressions)
-				{
-					cloned._generatedExpressions[context.CloneExpression(generated.Key)] = context.CloneExpression(generated.Value);
-				}
-
-				foreach (var generated in _eagerPlaceholders1)
-				{
-					cloned._eagerPlaceholders1.Add(context.CloneExpression(generated));
-				}
-
-				foreach (var generated in _eagerPlaceholders2)
-				{
-					cloned._eagerPlaceholders2.Add(context.CloneExpression(generated));
-				}
-
 				return cloned;
 			}
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				return this;
+			}
+
+			public IBuildContext Emulate()
+			{
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+				if (_projection1 == null)
+					InitializeProjections();
+
+				var sequence = _sequence1;
+				var query    = _sequence2;
+				var except   = query.SelectQuery;
+
+				var sql = sequence.SelectQuery;
+
+				if (_setOperation == SetOperation.Except || _setOperation == SetOperation.Intersect)
+					sql.Select.IsDistinct = true;
+
+				if (_setOperation == SetOperation.Except || _setOperation == SetOperation.ExceptAll)
+					sql.Where.Not.Exists(except);
+				else
+					sql.Where.Exists(except);
+
+				var sc = new SqlSearchCondition();
+
+				for (int i = 0; i < _sequence1.SelectQuery.Select.Columns.Count; i++)
+				{
+					var column1 = _sequence1.SelectQuery.Select.Columns[i];
+					var column2 = _sequence2.SelectQuery.Select.Columns[i];
+
+					sc.Conditions.Add(new SqlCondition(false,
+						new SqlPredicate.ExprExpr(column1.Expression, SqlPredicate.Operator.Equal, column2.Expression,
+							Builder.DataOptions.LinqOptions.CompareNullsAsValues)));
+				}
+
+				_sequence2.SelectQuery.Select.Columns.Clear();
+
+				except.Where.EnsureConjunction().ConcatSearchCondition(sc);
+
+				sequence.SelectQuery.SetOperators.Clear();
+
+				SubQuery.Parent = null;
+
+				return SubQuery;
 			}
 		}
 

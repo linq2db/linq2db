@@ -206,6 +206,9 @@ namespace LinqToDB.Linq.Builder
 				else
 					return path;
 
+				if (flags.IsExtractProjection())
+					return path;
+
 				var sql = GetField(member, false);
 
 				if (sql != null)

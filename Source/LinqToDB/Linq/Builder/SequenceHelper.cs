@@ -11,6 +11,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using static LinqToDB.Expressions.SqlGenericConstructorExpression;
 
 	internal static class SequenceHelper
 	{
@@ -61,14 +62,6 @@ namespace LinqToDB.Linq.Builder
 			if (expression != null)
 			{
 				return ReplaceContext(expression, current, underlying);
-				/*var root = current.Builder.GetRootObject(expression);
-				if (root is ContextRefExpression refExpression)
-				{
-					if (refExpression.BuildContext == current)
-					{
-						expression = expression.Replace(root, new ContextRefExpression(root.Type, underlying), EqualityComparer<Expression>.Default);
-					}
-				}*/
 			}
 
 			return expression;
@@ -92,6 +85,20 @@ namespace LinqToDB.Linq.Builder
 			return CorrectTrackingPath(expression, null, toPath);
 		}
 
+		public static Expression CorrectTrackingPath(Expression expression, IBuildContext from, IBuildContext to)
+		{
+			var result = expression.Transform((from, to), (ctx, e) =>
+			{
+				if (e is SqlPlaceholderExpression placeholder && placeholder.TrackingPath != null)
+				{
+					return placeholder.WithTrackingPath(ReplaceContext(placeholder.TrackingPath, ctx.from, ctx.to));
+				}
+
+				return e;
+			});
+
+			return result;
+		}
 
 		public static Expression EnsureType(Expression expr, Type type)
 		{
@@ -123,6 +130,7 @@ namespace LinqToDB.Linq.Builder
 			if (expression is SqlGenericConstructorExpression generic)
 			{
 				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
+				List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
 
 				var contextRef = toPath as ContextRefExpression;
 
@@ -147,8 +155,8 @@ namespace LinqToDB.Linq.Builder
 					}
 
 
-					var newExpression = CorrectTrackingPath(assignment.Expression,
-						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo));
+					var memberTrackingPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
+					var newExpression = CorrectTrackingPath(assignment.Expression, memberTrackingPath);
 
 					if (!ReferenceEquals(assignment.Expression, newExpression))
 					{
@@ -169,8 +177,44 @@ namespace LinqToDB.Linq.Builder
 
 				if (assignments != null)
 				{
-					return generic.ReplaceAssignments(assignments);
+					generic = generic.ReplaceAssignments(assignments);
 				}
+
+				for (var i = 0; i < generic.Parameters.Count; i++)
+				{
+					var parameter     = generic.Parameters[i];
+					var currentPath   = toPath;
+					var newExpression = parameter.Expression;
+
+					if (parameter.MemberInfo != null)
+					{
+						var memberTrackingPath = Expression.MakeMemberAccess(currentPath, parameter.MemberInfo);
+						newExpression = CorrectTrackingPath(parameter.Expression, memberTrackingPath);
+					}
+
+					if (!ReferenceEquals(parameter.Expression, newExpression))
+					{
+						if (parameters == null)
+						{
+							parameters = new();
+							for (int j = 0; j < i; j++)
+							{
+								parameters.Add(generic.Parameters[j]);
+							}
+						}
+
+						parameters.Add(parameter.WithExpression(newExpression));
+					}
+					else
+						parameters?.Add(parameter.WithExpression(newExpression));
+
+				}
+
+				if (parameters != null)
+				{
+					generic = generic.ReplaceParameters(parameters);
+				}
+
 
 				return generic;
 			}
@@ -261,9 +305,16 @@ namespace LinqToDB.Linq.Builder
 				return unary.Update(CorrectTrackingPath(unary.Operand, toPath));
 			}
 
+			/*
+			if (expression is MemberExpression eme && eme.Expression is ContextRefExpression && toPath is MemberExpression && expression.Type == toPath.Type)
+				return toPath;
+
+			if (expression is ContextRefExpression && toPath is ContextRefExpression && expression.Type == toPath.Type)
+				return toPath;
+				*/
+
 			return expression;
 		}
-
 
 		public static Expression ReplacePlaceholdersPathByTrackingPath(Expression expression)
 		{
@@ -281,7 +332,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		[return: NotNullIfNotNull(nameof(expression))]	
-		public static Expression? RemapToNewPath(IBuildContext buildContext, Expression? expression, Expression toPath, ProjectFlags flags)
+		public static Expression? RemapToNewPathSimple(Expression? expression, Expression toPath, ProjectFlags flags)
 		{
 			if (expression == null)
 				return null;
@@ -306,10 +357,7 @@ namespace LinqToDB.Linq.Builder
 						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
 					}
 
-					var newExpression = RemapToNewPath(buildContext,
-						assignment.Expression,
-						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo), flags
-					);
+					var newExpression = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
 
 					if (!ReferenceEquals(assignment.Expression, newExpression))
 					{
@@ -338,9 +386,18 @@ namespace LinqToDB.Linq.Builder
 						currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
 					}
 
-					var paramAccess = new SqlGenericParamAccessExpression(currentPath, parameter.ParameterInfo);
+					Expression newExpression;
 
-					var newExpression = RemapToNewPath(buildContext, parameter.Expression, paramAccess, flags);
+					if (parameter.MemberInfo != null)
+					{
+						newExpression = Expression.MakeMemberAccess(currentPath, parameter.MemberInfo);
+					}
+					else
+					{
+						var paramAccess = new SqlGenericParamAccessExpression(currentPath, parameter.ParameterInfo);
+
+						newExpression = paramAccess;
+					}
 
 					if (!ReferenceEquals(parameter.Expression, newExpression))
 					{
@@ -376,13 +433,130 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is NewExpression or MemberInitExpression)
 			{
-				return RemapToNewPath(buildContext, SqlGenericConstructorExpression.Parse(expression), toPath, flags);
+				return RemapToNewPathSimple(SqlGenericConstructorExpression.Parse(expression), toPath, flags);
 			}
 
 			if (expression is ContextConstructionExpression contextConstructionExpression)
 			{
-				return contextConstructionExpression.Update(buildContext,
-					RemapToNewPath(buildContext, contextConstructionExpression.InnerExpression, toPath, flags));
+				return contextConstructionExpression.Update(contextConstructionExpression.BuildContext,
+					RemapToNewPathSimple(contextConstructionExpression.InnerExpression, toPath, flags));
+			}
+
+			/*
+			if (expression is MemberExpression && toPath is MemberExpression && expression.Type == toPath.Type)
+				return toPath;
+
+			if (expression is ContextRefExpression && toPath is ContextRefExpression && expression.Type == toPath.Type)
+				return toPath;
+				*/
+
+			return expression;
+		}
+
+
+		[return: NotNullIfNotNull(nameof(expression))]	
+		public static Expression? RemapToNewPath(Expression? expression, Expression toPath, ProjectFlags flags)
+		{
+			if (expression == null)
+				return null;
+
+			if (toPath is not ContextRefExpression && toPath is not MemberExpression && toPath is not SqlGenericParamAccessExpression)
+				return expression;
+
+			if (expression is SqlGenericConstructorExpression generic)
+			{
+				List<SqlGenericConstructorExpression.Assignment>? assignments = null;
+				List<SqlGenericConstructorExpression.Parameter>?  parameters  = null;
+
+				var contextRef = toPath as ContextRefExpression;
+
+				for (int i = 0; i < generic.Assignments.Count; i++)
+				{
+					var assignment = generic.Assignments[i];
+
+					var currentPath = toPath;
+					if (contextRef != null && assignment.MemberInfo.DeclaringType != null && !assignment.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
+					{
+						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
+					}
+
+					var newExpression = RemapToNewPath(
+						assignment.Expression,
+						Expression.MakeMemberAccess(currentPath, assignment.MemberInfo), flags
+					);
+
+					if (!ReferenceEquals(assignment.Expression, newExpression))
+					{
+						if (assignments == null)
+						{
+							assignments = new();
+							for (int j = 0; j < i; j++)
+							{
+								assignments.Add(generic.Assignments[j]);
+							}
+						}
+
+						assignments.Add(assignment.WithExpression(newExpression));
+					}
+					else
+						assignments?.Add(assignment);
+				}
+
+				for (int i = 0; i < generic.Parameters.Count; i++)
+				{
+					var parameter = generic.Parameters[i];
+
+					var currentPath = toPath;
+					if (contextRef != null && parameter.MemberInfo?.DeclaringType != null && !parameter.MemberInfo.DeclaringType.IsAssignableFrom(contextRef.Type))
+					{
+						currentPath = contextRef.WithType(parameter.MemberInfo.DeclaringType);
+					}
+
+					var paramAccess = new SqlGenericParamAccessExpression(currentPath, parameter.ParameterInfo);
+
+					var newExpression = RemapToNewPath(parameter.Expression, paramAccess, flags);
+
+					if (!ReferenceEquals(parameter.Expression, newExpression))
+					{
+						if (parameters == null)
+						{
+							parameters = new();
+							for (int j = 0; j < i; j++)
+							{
+								parameters.Add(generic.Parameters[j]);
+							}
+						}
+
+						parameters.Add(parameter.WithExpression(newExpression));
+					}
+					else
+						parameters?.Add(parameter);
+				}
+
+				if (assignments != null)
+				{
+					generic = generic.ReplaceAssignments(assignments);
+				}
+
+				if (parameters != null)
+				{
+					generic = generic.ReplaceParameters(parameters);
+				}
+
+				generic = generic.WithConstructionRoot(toPath);
+
+				return generic;
+			}
+
+			if (expression is NewExpression or MemberInitExpression)
+			{
+				return RemapToNewPath(SqlGenericConstructorExpression.Parse(expression), toPath, flags);
+			}
+
+			if (expression is ContextConstructionExpression contextConstructionExpression)
+			{
+				return contextConstructionExpression.Update(contextConstructionExpression.BuildContext,
+					RemapToNewPath(contextConstructionExpression.InnerExpression, toPath, flags));
 			}
 
 			if (expression is SqlPlaceholderExpression placeholder)
@@ -417,7 +591,7 @@ namespace LinqToDB.Linq.Builder
 					return newExpr;
 				}
 
-				return toPath;
+				return RemapToNewPath(placeholder.TrackingPath, toPath, flags);
 			}
 
 			if (expression is BinaryExpression binary && toPath.Type != binary.Type)
@@ -427,12 +601,29 @@ namespace LinqToDB.Linq.Builder
 
 				if (left is SqlPlaceholderExpression)
 				{
-					left = RemapToNewPath(buildContext, left, toPath, flags);
+					left = RemapToNewPath(left, toPath, flags);
 				}
 
 				if (right is SqlPlaceholderExpression)
 				{
-					right = RemapToNewPath(buildContext, right, toPath, flags);
+					right = RemapToNewPath(right, toPath, flags);
+				}
+
+				if (left.Type != right.Type)
+				{
+					var newLeft  = left.UnwrapConvert();
+					var newRight = right.UnwrapConvert();
+
+					if (newLeft.Type != newRight.Type)
+					{
+						if (!ReferenceEquals(left, newLeft))
+							newLeft = Expression.Convert(newLeft, newRight.Type);
+						else
+							newRight = Expression.Convert(newRight, newLeft.Type);
+					}
+
+					left  = newLeft;
+					right = newRight;
 				}
 
 				return binary.Update(left, binary.Conversion, right);
@@ -440,9 +631,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is ConditionalExpression conditional)
 			{
-				var newTest  = RemapToNewPath(buildContext, conditional.Test,    toPath, flags);
-				var newTrue  = RemapToNewPath(buildContext, conditional.IfTrue,  toPath, flags);
-				var newFalse = RemapToNewPath(buildContext, conditional.IfFalse, toPath, flags);
+				var newTest  = RemapToNewPath(conditional.Test,    toPath, flags);
+				var newTrue  = RemapToNewPath(conditional.IfTrue,  toPath, flags);
+				var newFalse = RemapToNewPath(conditional.IfFalse, toPath, flags);
 
 				if (newTrue.Type != expression.Type)
 					newTrue = Expression.Convert(newTrue, expression.Type);
@@ -456,17 +647,17 @@ namespace LinqToDB.Linq.Builder
 			if (expression.NodeType == ExpressionType.Convert)
 			{
 				var unary = (UnaryExpression)expression;
-				return unary.Update(RemapToNewPath(buildContext, unary.Operand, toPath, flags));
+				return unary.Update(RemapToNewPath(unary.Operand, toPath, flags));
 			}
 
 			if (expression is MethodCallExpression mc)
 			{
-				return mc.Update(mc.Object, mc.Arguments.Select(a => RemapToNewPath(buildContext, a, toPath, flags)));
+				return mc.Update(mc.Object, mc.Arguments.Select(a => RemapToNewPath(a, toPath, flags)));
 			}
 
 			if (expression is SqlAdjustTypeExpression adjust)
 			{
-				return adjust.Update(RemapToNewPath(buildContext, adjust.Expression, toPath, flags));
+				return adjust.Update(RemapToNewPath(adjust.Expression, toPath, flags));
 			}
 
 			if (expression is SqlEagerLoadExpression eager)
@@ -507,19 +698,55 @@ namespace LinqToDB.Linq.Builder
 		{
 			var newExpression = expression.Transform((expression, current, onContext), (ctx, e) =>
 			{
+				if (e.NodeType == ExpressionType.Convert)
+				{
+					if (((UnaryExpression)e).Operand is ContextRefExpression contextOperand)
+					{
+						return new TransformInfo(contextOperand.WithType(e.Type), false, true);
+					}
+				}
+
 				if (e is ContextRefExpression contextRef)
 				{
 					if (contextRef.BuildContext == ctx.current)
-						return new ContextRefExpression(contextRef.Type, ctx.onContext, contextRef.Alias);
+						return new TransformInfo(new ContextRefExpression(contextRef.Type, ctx.onContext, contextRef.Alias));
 				}
+
 
 				if (e is SqlPlaceholderExpression { TrackingPath: { } } placeholder)
 				{
-					return placeholder.WithTrackingPath(ReplaceContext(placeholder.TrackingPath, ctx.current,
-						ctx.onContext));
+					return new TransformInfo(placeholder.WithTrackingPath(ReplaceContext(placeholder.TrackingPath, ctx.current,
+						ctx.onContext)));
 				}
 
-				return e;
+				return new TransformInfo(e);
+			});
+
+			return newExpression;
+		}
+
+		public static Expression ReplaceContext(Expression expression, IBuildContext current, Expression onPath)
+		{
+			var newExpression = expression.Transform((expression, current, onPath), (ctx, e) =>
+			{
+				if (e.NodeType == ExpressionType.Convert)
+				{
+					if (((UnaryExpression)e).Operand is ContextRefExpression contextOperand)
+					{
+						return new TransformInfo(contextOperand.WithType(e.Type), false, true);
+					}
+				}
+
+				if (e is ContextRefExpression contextRef && contextRef.BuildContext == ctx.current)
+				{
+					var replacement = ctx.onPath;
+					if (replacement.Type != e.Type)
+						replacement = Expression.Convert(replacement, e.Type);
+
+					return new TransformInfo(replacement);
+				}
+
+				return new TransformInfo(e);
 			});
 
 			return newExpression;
@@ -682,17 +909,6 @@ namespace LinqToDB.Linq.Builder
 		public static bool IsDefaultIfEmpty(IBuildContext context)
 		{
 			return UnwrapSubqueryContext(context) is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
-		}
-
-		public static Expression RequireSqlExpression(this IBuildContext context, Expression? path)
-		{
-			var sql = context.Builder.MakeExpression(context, path, ProjectFlags.SQL);
-			if (sql == null)
-			{
-				throw new LinqException("'{0}' cannot be converted to SQL.", path);
-			}
-
-			return sql;
 		}
 
 		public static LambdaExpression? GetArgumentLambda(MethodCallExpression methodCall, string argumentName)

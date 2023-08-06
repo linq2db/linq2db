@@ -6,6 +6,12 @@ namespace LinqToDB.Expressions
 {
 	public class ExpressionVisitorBase : ExpressionVisitor
 	{
+		[return: NotNullIfNotNull(nameof(node))]
+		public override Expression? Visit(Expression? node)
+		{
+			return base.Visit(node);
+		}
+
 		public virtual Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
 		{
 			return node;
@@ -43,7 +49,7 @@ namespace LinqToDB.Expressions
 
 		internal virtual Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
 		{
-			return node;
+			return node.Update(Visit(node.SequenceExpression), Visit(node.Predicate));
 		}
 
 		internal virtual Expression VisitSqlErrorExpression(SqlErrorExpression node)
@@ -74,7 +80,7 @@ namespace LinqToDB.Expressions
 
 		internal virtual Expression VisitSqlGenericParamAccessExpression(SqlGenericParamAccessExpression node)
 		{
-			return node.Update(Visit(node.Constructor)!);
+			return node;
 		}
 
 		internal virtual Expression VisitSqlReaderIsNullExpression(SqlReaderIsNullExpression node)
@@ -82,9 +88,9 @@ namespace LinqToDB.Expressions
 			return node.Update((SqlPlaceholderExpression)Visit(node.Placeholder)!);
 		}
 
-		internal virtual Expression VisitSqlKeyHolderExpression(SqlKeyHolderExpression node)
+		internal virtual Expression VisitSqlPathExpression(SqlPathExpression node)
 		{
-			return node.Update(Visit(node.Expression)!);
+			return node;
 		}
 
 		public virtual void Cleanup()

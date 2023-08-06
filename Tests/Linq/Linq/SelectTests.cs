@@ -471,14 +471,25 @@ namespace Tests.Linq
 		[Test]
 		public void ConstractClass([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				db.Parent.Select(f =>
-					new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
-					{
-						Checked    = true,
-						ImageIndex = 0,
-						Tag        = f.ParentID
-					}).ToList();
+			using var db = GetDataContext(context);
+
+			var query = db.Parent.Select(f =>
+				new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
+				{
+					Checked    = true,
+					ImageIndex = 0,
+					Tag        = f.ParentID
+				}).ToList();
+
+			var expected = Parent.Select(f =>
+				new ListViewItem(new[] { "", f.ParentID.ToString()!, f.Value1.ToString()! })
+				{
+					Checked    = true,
+					ImageIndex = 0,
+					Tag        = f.ParentID
+				}).ToList();
+
+			AreEqual(expected, query, ComparerBuilder.GetEqualityComparer(expected));
 		}
 
 		static string ConvertString(string s, int? i, bool b, int n)

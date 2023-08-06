@@ -343,30 +343,6 @@ namespace LinqToDB.Linq.Builder
 			expr = ConvertParameters (expr);
 			expr = OptimizeExpression(expr);
 
-			var paramType   = expr.Type;
-			var isQueryable = false;
-
-			if (expression.NodeType == ExpressionType.Call)
-			{
-				var call = (MethodCallExpression)expression;
-
-				if (call.IsQueryable() && call.Object == null && call.Arguments.Count > 0 && call.Type.IsGenericType)
-				{
-					var type = call.Type.GetGenericTypeDefinition();
-
-					if (type == typeof(IQueryable<>) || type == typeof(IEnumerable<>))
-					{
-						var arg = call.Type.GetGenericArguments();
-
-						if (arg.Length == 1)
-						{
-							paramType   = arg[0];
-							isQueryable = true;
-						}
-					}
-				}
-			}
-
 			return expr;
 		}
 

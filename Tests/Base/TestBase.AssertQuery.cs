@@ -121,7 +121,9 @@ namespace Tests
 
 					if (!mc.Method.IsStatic && mc.Object != null)
 					{
-						var checkedMethod = CheckForNull(mc.Object, Expression.Constant(DefaultValue.GetValue(mc.Method.ReturnType), mc.Method.ReturnType), mc);
+						var checkedMethod = CheckForNull(mc.Object,
+							Expression.Constant(DefaultValue.GetValue(mc.Method.ReturnType), mc.Method.ReturnType), mc);
+
 						return new TransformInfo(checkedMethod);
 					}
 

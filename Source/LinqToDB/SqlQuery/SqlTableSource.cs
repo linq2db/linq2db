@@ -165,7 +165,7 @@ namespace LinqToDB.SqlQuery
 		public int       SourceID => Source.SourceID;
 		public SqlField  All      => Source.All;
 
-		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty)
+		IList<ISqlExpression>? ISqlTableSource.GetKeys(bool allIfEmpty)
 		{
 			return Source.GetKeys(allIfEmpty);
 		}

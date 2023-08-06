@@ -329,27 +329,27 @@ namespace LinqToDB.Linq.Builder
 		{
 			bool IsEqualConstants(Expression left, Expression right)
 			{
-				object valueLeft;
-				object valueRight;
+				object? valueLeft;
+				object? valueRight;
 
 				if (left is ConstantExpression leftConst)
 					valueLeft = leftConst.Value;
-				else if (left is SqlPlaceholderExpression leftPlaceholder)
-					valueLeft = ((SqlValue)leftPlaceholder.Sql).Value;
+				else if (left is SqlPlaceholderExpression { Sql: SqlValue leftSqlValue })
+					valueLeft = leftSqlValue.Value;
 				else
 					valueLeft = MappingSchema.GetDefaultValue(left.Type);
 
 				if (right is ConstantExpression rightConst)
 					valueRight = rightConst.Value;
-				else if (right is SqlPlaceholderExpression rightPlaceholder)
-					valueRight = ((SqlValue)rightPlaceholder.Sql).Value;
+				else if (right is SqlPlaceholderExpression { Sql: SqlValue rightSqlValue })
+					valueRight = rightSqlValue.Value;
 				else
 					valueRight = MappingSchema.GetDefaultValue(right.Type);
 
 				return Equals(valueLeft, valueRight);
 			}
 
-			bool isComparable(Expression testExpr)
+			bool IsComparable(Expression testExpr)
 			{
 				return testExpr.NodeType == ExpressionType.Constant || testExpr.NodeType == ExpressionType.Default ||
 				       testExpr is DefaultValueExpression;
@@ -357,7 +357,7 @@ namespace LinqToDB.Linq.Builder
 
 			bool IsEqualValues(Expression left, Expression right)
 			{
-				if (isComparable(left) && isComparable(right))
+				if (IsComparable(left) && IsComparable(right))
 				{
 					return IsEqualConstants(left, right);
 				}
@@ -764,7 +764,7 @@ namespace LinqToDB.Linq.Builder
 					if (ex is SqlErrorExpression)
 						return true;
 					if (ex is SqlPlaceholderExpression)
-						return !context.InProjection; // placeholder will be converted to DataReader expression
+						return true;
 					if (ex is SqlGenericParamAccessExpression)
 						return true;
 					return !ex.CanReduce;

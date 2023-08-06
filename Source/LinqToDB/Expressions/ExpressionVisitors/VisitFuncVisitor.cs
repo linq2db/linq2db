@@ -314,9 +314,8 @@ namespace LinqToDB.Expressions
 			} else if (expr is SqlAdjustTypeExpression adjustType)
 			{
 				Visit(adjustType.Expression);
-			} else if (expr is SqlKeyHolderExpression keyHolder)
+			} else if (expr is SqlPathExpression keyHolder)
 			{
-				Visit(keyHolder.Expression);
 			}
 			else if (expr.CanReduce)
 				Visit(expr.Reduce());

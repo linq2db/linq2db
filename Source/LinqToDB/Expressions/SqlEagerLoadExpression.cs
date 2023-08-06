@@ -112,5 +112,16 @@ namespace LinqToDB.Expressions
 
 			return new SqlEagerLoadExpression(SequenceExpression, predicate);
 		}
+
+		public SqlEagerLoadExpression Update(Expression sequenceExpression, Expression? predicate = null)
+		{
+			if (ExpressionEqualityComparer.Instance.Equals(SequenceExpression, sequenceExpression) &&
+			    ExpressionEqualityComparer.Instance.Equals(Predicate, predicate))
+			{
+				return this;
+			}
+
+			return new SqlEagerLoadExpression(sequenceExpression, predicate);
+		}
 	}
 }

@@ -67,7 +67,6 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Lambda(param, param);
 			}
 
-			IBuildContext?    outputContext    = null;
 			LambdaExpression? outputExpression = null;
 
 			if (methodCall.Arguments.Count > 0)

@@ -40,6 +40,8 @@ namespace LinqToDB.Linq.Builder
 			// correcting query for Eager Loading
 			expr = SequenceHelper.MoveAllToScopedContext(expr, scopeContext);
 
+			expr = builder.UpdateNesting(scopeContext, expr);
+
 			// GroupJoin handling
 			expr = builder.MakeExpression(scopeContext, expr, ProjectFlags.Expand);
 
@@ -77,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var context = new SelectContext(buildInfo.Parent, resultExpression, sequence, buildInfo.IsSubQuery);
+			var context = new SelectContext(buildInfo.Parent, resultExpression, collection, sequence.SelectQuery, buildInfo.IsSubQuery);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
 			string? collectionAlias = null;

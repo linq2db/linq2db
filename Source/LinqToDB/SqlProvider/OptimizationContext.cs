@@ -104,6 +104,9 @@ namespace LinqToDB.SqlProvider
 		public T? ConvertAll<T>(T? element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
+			if (element == null)
+				return null;
+
 			var newElement = _optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, element);
 			var result = (T)_convertVisitor.Convert(this, nullabilityContext, _sqlProviderFlags, _dataOptions, _mappingSchema, newElement);
 
@@ -114,6 +117,9 @@ namespace LinqToDB.SqlProvider
 		public T? OptimizeAll<T>(T? element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
+			if (element == null)
+				return null;
+
 			var newElement = _optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, element);
 
 			return (T)newElement;

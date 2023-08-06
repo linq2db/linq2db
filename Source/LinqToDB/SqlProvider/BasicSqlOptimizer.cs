@@ -8,7 +8,6 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Expressions;
-	using Extensions;
 	using Linq;
 	using Mapping;
 	using SqlQuery;
@@ -240,19 +239,23 @@ namespace LinqToDB.SqlProvider
 			var tableKeys   = updateClause.Table!.GetKeys(true);
 
 			var found = false;
-			updateQuery.Where.EnsureConjunction();
-			for (var i = 0; i < tableKeys.Count; i++)
+
+			if (tableKeys != null && compareKeys != null)
 			{
-				var tableKey = tableKeys[i];
+				updateQuery.Where.EnsureConjunction();
+				for (var i = 0; i < tableKeys.Count; i++)
+				{
+					var tableKey = tableKeys[i];
 
-				var column = QueryHelper.NeedColumnForExpression(updateQuery, compareKeys[i], false);
-				if (column == null)
-					throw new LinqToDBException(
-						$"Can not create query column for expression '{compareKeys[i]}'.");
+					var column = QueryHelper.NeedColumnForExpression(updateQuery, compareKeys[i], false);
+					if (column == null)
+						throw new LinqToDBException(
+							$"Can not create query column for expression '{compareKeys[i]}'.");
 
-				found = true;
-				var compare       = QueryHelper.GenerateEquality(tableKey, column, dataOptions.LinqOptions.CompareNullsAsValues);
-				updateQuery.Where.SearchCondition.Conditions.Add(compare);
+					found = true;
+					var compare = QueryHelper.GenerateEquality(tableKey, column, dataOptions.LinqOptions.CompareNullsAsValues);
+					updateQuery.Where.SearchCondition.Conditions.Add(compare);
+				}
 			}
 
 			if (!found)
@@ -279,22 +282,22 @@ namespace LinqToDB.SqlProvider
 						// we have to create new Update table and join via Keys
 
 						var queries = queryPath.OfType<SelectQuery>().ToList();
-						var keys    = statement.Update.Table.GetKeys(true).ToArray();
+						var keys    = statement.Update.Table.GetKeys(true);
 
-						if (keys.Length == 0)
+						if (!(keys?.Count > 0))
 						{
 							keys = queries[0].Select.Columns
 								.Where(c => c.Expression is SqlField field && field.Table == statement.Update.Table)
-								.Select(c => (SqlField)c.Expression)
-								.ToArray();
+								.Select(c => c.Expression)
+								.ToList();
 						}
 
-						if (keys.Length == 0)
+						if (keys.Count == 0)
 						{
 							throw new LinqToDBException("Invalid update query.");
 						}
 
-						var keysColumns = new List<ISqlExpression>(keys.Length);
+						var keysColumns = new List<ISqlExpression>(keys.Count);
 						foreach(var key in keys)
 						{
 							var newColumn = PopulateNesting(queries, key, 1);
@@ -311,7 +314,7 @@ namespace LinqToDB.SqlProvider
 
 						var sc    = new SqlSearchCondition();
 
-						for (var index = 0; index < keys.Length; index++)
+						for (var index = 0; index < keys.Count; index++)
 						{
 							var originalField = keys[index];
 
@@ -836,15 +839,18 @@ namespace LinqToDB.SqlProvider
 					var sc1 = new SqlSearchCondition(deleteStatement.SelectQuery.Where.SearchCondition.Conditions);
 					var sc2 = new SqlSearchCondition();
 
-					for (var i = 0; i < tableKeys.Count; i++)
+					if (tableKeys != null && copyKeys != null)
 					{
-						sc2.Conditions.Add(new SqlCondition(
-							false,
-							new SqlPredicate.ExprExpr(
-								copyKeys[i],
-								SqlPredicate.Operator.Equal,
-								tableKeys[i],
-								dataOptions.LinqOptions.CompareNullsAsValues ? true : null)));
+						for (var i = 0; i < tableKeys.Count; i++)
+						{
+							sc2.Conditions.Add(new SqlCondition(
+								false,
+								new SqlPredicate.ExprExpr(
+									copyKeys[i],
+									SqlPredicate.Operator.Equal,
+									tableKeys[i],
+									dataOptions.LinqOptions.CompareNullsAsValues ? true : null)));
+						}
 					}
 
 					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();
@@ -1155,7 +1161,7 @@ namespace LinqToDB.SqlProvider
 				var clonedQuery = CloneQuery(updateStatement.SelectQuery, needsComparison ? null : updateStatement.Update.Table, out replaceTree);
 
 				SqlTable? tableToCompare = null;
-				if (replaceTree.TryGetValue(updateStatement.Update.Table, out var newTable))
+				if (replaceTree.TryGetValue(updateStatement.Update.Table!, out var newTable))
 				{
 					tableToCompare = (SqlTable)newTable;
 				}
@@ -1181,8 +1187,8 @@ namespace LinqToDB.SqlProvider
 					{
 						var usedSources = new HashSet<ISqlTableSource>();
 						QueryHelper.GetUsedSources(item.Expression!, usedSources);
-						usedSources.Remove(updateStatement.Update.Table);
-						if (replaceTree?.TryGetValue(updateStatement.Update.Table, out var replaced) == true)
+						usedSources.Remove(updateStatement.Update.Table!);
+						if (replaceTree?.TryGetValue(updateStatement.Update.Table!, out var replaced) == true)
 							usedSources.Remove((ISqlTableSource)replaced);
 
 						if (usedSources.Count > 0)
@@ -1230,7 +1236,7 @@ namespace LinqToDB.SqlProvider
 						var ex = item.Expression;
 
 						QueryHelper.GetUsedSources(ex, usedSources);
-						usedSources.Remove(updateStatement.Update.Table);
+						usedSources.Remove(updateStatement.Update.Table!);
 
 						if (usedSources.Count > 0)
 						{
