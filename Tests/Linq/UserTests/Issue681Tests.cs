@@ -126,7 +126,7 @@ namespace Tests.UserTests
 
 		[Test]
 		public async Task TestCreate(
-			[DataSources(TestProvName.AllSapHana)] string context,
+			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
@@ -144,12 +144,12 @@ namespace Tests.UserTests
 				}
 				return Task.CompletedTask;
 				// not allowed for remote server
-			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}");
+			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}", ddl: true);
 		}
 
 		[Test]
 		public async Task TestCreateAsync(
-			[DataSources(TestProvName.AllSapHana)] string context,
+			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
@@ -166,12 +166,12 @@ namespace Tests.UserTests
 					await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 				}
 				// not allowed for remote server
-			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}");
+			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}", ddl: true);
 		}
 
 		[Test]
 		public async Task TestDrop(
-			[DataSources(TestProvName.AllSapHana)] string context,
+			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
@@ -188,20 +188,21 @@ namespace Tests.UserTests
 					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
 				}
 				return Task.CompletedTask;
-			}, TestProvName.AllSqlServer);
+			}, TestProvName.AllSqlServer, ddl: true);
 		}
 
 		public async Task TestTableFQN<TTable>(
 			string context,
 			bool withServer, bool withDatabase, bool withSchema,
 			Func<IDataContext, ITable<TTable>, string?, string?, string?, Task> operation,
-			string? withServerThrows = null)
+			string? withServerThrows = null,
+			bool ddl = false)
 			where TTable: class
 		{
-			// for SAP HANA cross-server queries see comments how to configure SAP HANA in TestUtils.GetServerName() method
-			var throws             = false;
-			var throwsSqlException = false;
-			var throwsOraException = false;
+			var throws              = false;
+			var throwsSqlException  = false;
+			var throwsOraException  = false;
+			var throwsHanaException = false;
 
 			string? serverName;
 			string? schemaName;
@@ -215,6 +216,13 @@ namespace Tests.UserTests
 			{
 				// SQL Server FQN requires schema and db components for linked-server query
 				throws = true;
+			}
+
+			if (withServer && ddl && context.IsAnyOf(TestProvName.AllSapHana))
+			{
+				// SAP HANA doesn't support DDL queries for linked servers (CREATE/DROP TABLE)
+				throws              = true;
+				throwsHanaException = withSchema;
 			}
 
 			if (withServerThrows != null && withServer && context.IsAnyOf(withServerThrows))
@@ -279,6 +287,18 @@ namespace Tests.UserTests
 					Assert.ThrowsAsync(
 						((SqlServerDataProvider)((DataConnection)db).DataProvider).Adapter.SqlExceptionType,
 						() => operation(db, table, schemaName, dbName, serverName));
+				}
+				if (throwsHanaException)
+				{
+					try
+					{
+						await operation(db, table, schemaName, dbName, serverName);
+						Assert.Fail("OracleException expected");
+					}
+					catch (Exception ex)
+					{
+						Assert.That(ex.GetType().Name, Is.EqualTo(context.IsAnyOf(ProviderName.SapHanaOdbc) ? "OdbcException" : "HanaException"));
+					}
 				}
 				else if (throwsOraException)
 				{
