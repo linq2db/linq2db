@@ -87,13 +87,20 @@ namespace LinqToDB.DataProvider.SapHana
 
 			const string name = "CASE";
 
+			if (len == 2)
+			{
+				if (func != null && start == 0 && ReferenceEquals(parameters[start], cond))
+					return func;
+
+				return new (systemType, name, cond, parameters[start + 1]);
+			}
+
 			if (len == 3)
 			{
 				if (func != null && start == 0 && ReferenceEquals(parameters[start], cond))
-				{
 					return func;
-				}
-				return new SqlFunction(systemType, name, cond, parameters[start + 1], parameters[start + 2]);
+
+				return new (systemType, name, cond, parameters[start + 1], parameters[start + 2]);
 			}
 
 			return new SqlFunction(systemType, name,

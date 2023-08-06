@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -35,7 +36,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	public static partial class SqlServerTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificTable<TSource> AsSqlCe<TSource>(this ITable<TSource> table)
 			where TSource : notnull
@@ -50,7 +51,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return new SqlCeSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificQueryable<TSource> AsSqlCe<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull

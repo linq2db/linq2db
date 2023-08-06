@@ -18,22 +18,17 @@ namespace Cli.NoMetadata.Informix
 	{
 		public TestDataDB()
 		{
-			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
-			InitDataContext();
 		}
 
 		public TestDataDB(DataOptions<TestDataDB> options)
 			: base(options.Options)
 		{
-			InitDataContext();
 		}
-
-		partial void InitDataContext();
 
 		public ITable<Alltype>           Alltypes            => this.GetTable<Alltype>();
 		public ITable<Child>             Children            => this.GetTable<Child>();
