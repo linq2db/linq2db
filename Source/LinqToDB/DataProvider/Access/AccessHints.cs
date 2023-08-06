@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.Access
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.Access, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IAccessSpecificQueryable<TSource> SubQueryHint<TSource>(this IAccessSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)

@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -35,7 +36,7 @@ namespace LinqToDB.DataProvider.MySql
 
 	public static partial class MySqlTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificTable<TSource> AsMySql<TSource>(this ITable<TSource> table)
 			where TSource : notnull
@@ -49,7 +50,7 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> AsMySql<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
