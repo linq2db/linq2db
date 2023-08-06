@@ -3741,52 +3741,10 @@ namespace LinqToDB.SqlProvider
 					sb.Append("SET     ");
 					PrintParameterName(sb, p);
 					sb.Append(" = ");
-					if (p.Value is byte[] bytes                           &&
-					    Configuration.MaxBinaryParameterLengthLogging >= 0 &&
-					    bytes.Length > Configuration.MaxBinaryParameterLengthLogging &&
-					    MappingSchema.ValueToSqlConverter.CanConvert(typeof(byte[])))
-					{
-						var trimmed =
-							new byte[Configuration.MaxBinaryParameterLengthLogging];
-						Array.Copy(bytes, 0, trimmed, 0,
-							Configuration.MaxBinaryParameterLengthLogging);
-						MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
-						sb.AppendLine();
-						sb.Append(
-							$"-- value above truncated for logging, actual length is {bytes.Length}");
-					}
-					else if (p.Value is Binary binaryData &&
-					         Configuration.MaxBinaryParameterLengthLogging >= 0 &&
-					         binaryData.Length > Configuration.MaxBinaryParameterLengthLogging &&
-					         MappingSchema.ValueToSqlConverter.CanConvert(typeof(Binary)))
-					{
-						//We aren't going to create a new Binary here,
-						//since ValueToSql always just .ToArray() anyway
-						var trimmed =
-							new byte[Configuration.MaxBinaryParameterLengthLogging];
-						Array.Copy(binaryData.ToArray(), 0, trimmed, 0,
-							Configuration.MaxBinaryParameterLengthLogging);
-						MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
-						sb.AppendLine();
-						sb.Append(
-							$"-- value above truncated for logging, actual length is {binaryData.Length}");
-					}
-					else if (p.Value is string s &&
-					         Configuration.MaxStringParameterLengthLogging >= 0 &&
-					         s.Length > Configuration.MaxStringParameterLengthLogging &&
-					         MappingSchema.ValueToSqlConverter.CanConvert(typeof(string)))
-					{
-						var trimmed =
-							s.Substring(0,
-								Configuration.MaxStringParameterLengthLogging);
-						MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
-						sb.AppendLine();
-						sb.Append(
-							$"-- value above truncated for logging, actual length is {s.Length}");
-					}
-					else if (!MappingSchema.TryConvertToSql(sb, null, DataOptions, p.Value))
-						FormatParameterValue(sb, p.Value);
+					var trimmed = PrintParameterValue(sb, p.Value);
 					sb.AppendLine();
+					if (trimmed)
+						sb.AppendLine($"-- value above truncated for logging");
 				}
 
 				sb.AppendLine();
@@ -3795,9 +3753,49 @@ namespace LinqToDB.SqlProvider
 			return sb;
 		}
 
+		private bool PrintParameterValue(StringBuilder sb, object? value)
+		{
+			if (value is byte[] bytes &&
+				Configuration.MaxBinaryParameterLengthLogging >= 0 &&
+				bytes.Length > Configuration.MaxBinaryParameterLengthLogging &&
+				MappingSchema.ValueToSqlConverter.CanConvert(typeof(byte[])))
+			{
+				var trimmed = new byte[Configuration.MaxBinaryParameterLengthLogging];
+				Array.Copy(bytes, 0, trimmed, 0, Configuration.MaxBinaryParameterLengthLogging);
+				MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
+				return true;
+			}
+			else if (value is Binary binaryData &&
+					 Configuration.MaxBinaryParameterLengthLogging >= 0 &&
+					 binaryData.Length > Configuration.MaxBinaryParameterLengthLogging &&
+					 MappingSchema.ValueToSqlConverter.CanConvert(typeof(Binary)))
+			{
+				//We aren't going to create a new Binary here,
+				//since ValueToSql always just .ToArray() anyway
+				var trimmed = new byte[Configuration.MaxBinaryParameterLengthLogging];
+				Array.Copy(binaryData.ToArray(), 0, trimmed, 0, Configuration.MaxBinaryParameterLengthLogging);
+				MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
+				MappingSchema.ValueToSqlConverter.TryConvert(sb, MappingSchema, DataOptions, trimmed);
+				return true;
+			}
+			else if (value is string s &&
+					 Configuration.MaxStringParameterLengthLogging >= 0 &&
+					 s.Length > Configuration.MaxStringParameterLengthLogging &&
+					 MappingSchema.ValueToSqlConverter.CanConvert(typeof(string)))
+			{
+				var trimmed = s.Substring(0, Configuration.MaxStringParameterLengthLogging);
+				MappingSchema.TryConvertToSql(sb, null, DataOptions, trimmed);
+				return true;
+			}
+			else if (!MappingSchema.TryConvertToSql(sb, null, DataOptions, value))
+				return FormatParameterValue(sb, value);
+
+			return false;
+		}
+
 		// for values without literal support from provider we should generate debug string using fixed format
 		// to avoid deviations on different locales or locale settings
-		private static void FormatParameterValue(StringBuilder sb, object? value)
+		private bool FormatParameterValue(StringBuilder sb, object? value)
 		{
 			if (value is DateTime dt)
 			{
@@ -3815,8 +3813,35 @@ namespace LinqToDB.SqlProvider
 					.Append(dto.ToString("o"))
 					.Append('\'');
 			}
+			else if (value is IEnumerable collection)
+			{
+				var limit   = Configuration.MaxArrayParameterLengthLogging >= 0 ? Configuration.MaxArrayParameterLengthLogging : int.MaxValue;
+				var trimmed = false;
+				var pos     = 0;
+
+				sb.Append('{');
+				foreach (var item in collection)
+				{
+					pos++;
+					if (pos > limit)
+					{
+						trimmed = true;
+						break;
+					}
+
+					if (pos > 1)
+						sb.Append(',');
+
+					trimmed = PrintParameterValue(sb, item) || trimmed;
+				}
+				sb.Append('}');
+
+				return trimmed;
+			}
 			else
 				sb.Append(value);
+
+			return false;
 		}
 
 		public string ApplyQueryHints(string sqlText, IReadOnlyCollection<string> queryHints)

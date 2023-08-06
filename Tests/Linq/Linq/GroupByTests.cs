@@ -2423,6 +2423,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse, Details = "CH 23.7.1 regression")]
 		[Test]
 		public void Issue3668Test([DataSources] string context)
 		{
@@ -2735,5 +2736,52 @@ namespace Tests.Linq
 			Assert.AreEqual(700, retval[1].TOTALUNITS);
 		}
 		#endregion
+
+		[Test]
+		public void GroupSubqueryTest1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(
+				from pmp in
+				(
+					from pmp  in db.Child
+					group pmp by pmp.ParentID into g
+					select g.Key
+				)
+				from pmp1 in db.Child
+				select new { pmp1.ChildID });
+		}
+
+		[Test]
+		public void GroupSubqueryTest2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(
+				from pmp1 in db.Child
+				from pmp in
+				(
+					from pmp  in db.Child
+					group pmp by pmp.ParentID into g
+					select g.Key
+				)
+				select new { pmp1.ChildID });
+		}
+
+		[Test]
+		public void GroupSubqueryTest3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			AssertQuery(
+				from pmp in
+				(
+					from pmp  in db.Child
+					group pmp by pmp.ParentID into g
+					select g.Key
+				)
+				select new { pmp });
+		}
 	}
 }

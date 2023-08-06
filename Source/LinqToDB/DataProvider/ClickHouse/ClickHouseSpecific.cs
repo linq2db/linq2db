@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -35,7 +36,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 	public static partial class ClickHouseTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IClickHouseSpecificTable<TSource> AsClickHouse<TSource>(this ITable<TSource> table)
 			where TSource : notnull
@@ -49,7 +50,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return new ClickHouseSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IClickHouseSpecificQueryable<TSource> AsClickHouse<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull

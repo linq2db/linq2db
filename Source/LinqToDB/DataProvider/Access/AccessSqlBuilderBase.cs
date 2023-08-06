@@ -235,13 +235,18 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var len = parameters.Length - start;
 
-			if (len < 3)
+			if (len < 2)
 				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
 
-			if (len == 3)
-				return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], parameters[start + 2]);
-
-			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
+			return new SqlFunction(systemType, "Iif",
+				parameters[start],
+				parameters[start + 1],
+				len switch
+				{
+					2 => parameters[start                          + 1],
+					3 => parameters[start                          + 2],
+					_ => ConvertCase(systemType, parameters, start + 2)
+				});
 		}
 
 		protected override void BuildUpdateClause(NullabilityContext nullability, SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)

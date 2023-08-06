@@ -202,9 +202,10 @@ namespace LinqToDB.Expressions
 			return
 				type == typeof(Queryable) ||
 				enumerable && type == typeof(Enumerable) ||
-				type == typeof(LinqExtensions) ||
-				type == typeof(DataExtensions) ||
-				type == typeof(TableExtensions);
+				type == typeof(LinqExtensions)  ||
+				type == typeof(DataExtensions)  ||
+				type == typeof(TableExtensions) ||
+				MemberCache.GetMemberInfo(method.Method).IsQueryable;
 		}
 
 		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)

@@ -35,7 +35,7 @@ namespace LinqToDB.SqlQuery
 				_fields.Add(field);
 				field.Table = this;
 			}
-	
+
 			SourceID = Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 		}
 

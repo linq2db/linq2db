@@ -196,6 +196,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(WithForceSeekExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificTable<TSource> WithForceSeek<TSource>(
@@ -252,6 +253,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "OPTIMIZE FOR")]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> OptionOptimizeFor<TSource>(
@@ -269,6 +271,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					Expression.NewArrayInit(typeof(string), values.Select(Expression.Constant)))));
 		}
 
+		[LinqTunnel, Pure, IsQueryable]
 //		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(ParamsExtensionBuilder), "USE HINT")]
@@ -314,6 +317,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2008, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.QueryHint, typeof(TableParamsExtensionBuilder))]
@@ -350,7 +354,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificTable<TSource> TableHint<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
@@ -375,7 +379,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificTable<TSource> TableHint<TSource,TParam>(
@@ -403,7 +407,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificTable<TSource> TableHint<TSource,TParam>(
@@ -424,7 +428,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
@@ -445,7 +449,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
@@ -476,7 +480,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> TablesInScopeHint<TSource>(
@@ -502,7 +506,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> TablesInScopeHint<TSource,TParam>(
@@ -528,7 +532,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> TablesInScopeHint<TSource>(
@@ -555,7 +559,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
@@ -584,7 +588,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.TablesInScopeHint, typeof(HintExtensionBuilder))]
@@ -616,7 +620,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificTable<TSource> JoinHint<TSource>(this ISqlServerSpecificTable<TSource> table, [SqlQueryDependent] string hint)
@@ -639,7 +643,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> JoinHint<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -665,7 +669,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> QueryHint<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -689,7 +693,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> QueryHint<TSource,TParam>(
@@ -718,7 +722,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> QueryHint<TSource, TParam>(
@@ -745,7 +749,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2022, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                       Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
@@ -768,7 +772,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2008, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
@@ -796,7 +800,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2012, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2014, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
@@ -823,7 +827,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer2016, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2017, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(ProviderName.SqlServer2019, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
@@ -895,7 +899,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
 		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
@@ -913,7 +917,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
 		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(
@@ -932,7 +936,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SqlServer, Sql.QueryExtensionScope.TableNameHint, typeof(TemporalTableExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,          typeof(NoneExtensionBuilder))]
 		internal static ISqlServerSpecificTable<TSource> TemporalTableHint<TSource>(

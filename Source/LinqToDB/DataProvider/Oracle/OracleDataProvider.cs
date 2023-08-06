@@ -169,9 +169,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override IQueryParametersNormalizer GetQueryParameterNormalizer()
 		{
-			return Version == OracleVersion.v11
-				? new Oracle11ParametersNormalizer()
-				: new Oracle12ParametersNormalizer();
+			// TODO: versioning support
+			// currently we cannot enable Oracle122ParametersNormalizer
+			// as we don't have Version for Oracle 12.2 or higher
+			// also see https://github.com/linq2db/linq2db/issues/4219
+			return new Oracle11ParametersNormalizer();
 		}
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)

@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.TableHint, typeof(TableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		internal static IClickHouseSpecificTable<TSource> TableHint<TSource>(this IClickHouseSpecificTable<TSource> table, [SqlQueryDependent] string hint)
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		internal static IClickHouseSpecificQueryable<TSource> TablesInScopeHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
 		internal static IClickHouseSpecificTable<TSource> JoinHint<TSource>(this IClickHouseSpecificTable<TSource> table, [SqlQueryDependent] string hint)
@@ -144,7 +144,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.JoinHint, typeof(NoneExtensionBuilder))]
 		[Sql.QueryExtension(null,                   Sql.QueryExtensionScope.None,     typeof(NoneExtensionBuilder))]
 		internal static IClickHouseSpecificQueryable<TSource> JoinHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -170,7 +170,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		internal static IClickHouseSpecificQueryable<TSource> SubQueryHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -197,7 +197,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.ClickHouse, Sql.QueryExtensionScope.QueryHint, typeof(HintWithFormatParametersExtensionBuilder), " ")]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		internal static IClickHouseSpecificQueryable<TSource> QueryHint<TSource>(
