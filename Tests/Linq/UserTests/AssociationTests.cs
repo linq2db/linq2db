@@ -44,16 +44,17 @@ namespace Tests.UserTests
 		public void Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<DisTable>();
+			using var t2 = db.CreateLocalTable<JurTable>();
+			using var t3 = db.CreateLocalTable<DisTypeTable>();
 
-			var sql =
-			(
-				from d in db.GetTable<DisTable>()
-				join j in db.GetTable<JurTable>() on d.DisType.JurCode equals j.JurCode
-				select d
-			)
-			.ToString();
-
-			TestContext.WriteLine(sql);
+			var q =
+				(
+					from d in t1
+					join j in t2 on d.DisType.JurCode equals j.JurCode
+					select d
+				)
+				.ToList();
 		}
 	}
 }
