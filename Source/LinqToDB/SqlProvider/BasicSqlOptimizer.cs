@@ -2138,7 +2138,7 @@ namespace LinqToDB.SqlProvider
 				return newElement!;
 
 			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, dataOptions, !withConversion,
-				(visitor, e) =>
+				static (visitor, e) =>
 				{
 					var ne = e;
 
@@ -2152,11 +2152,11 @@ namespace LinqToDB.SqlProvider
 							break;
 
 						case SqlCondition(true, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: false}]}) insq, var isOr1) cond]), var isOr)
-							when SqlProviderFlags.DoesNotSupportCorrelatedSubquery:
+							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery:
 							return new SqlCondition(false, new SqlSearchCondition().Expr(insq.Expr1).IsNull.Or.Add(new (true, insq, isOr1)), isOr);
 
 						case SqlCondition(false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: true} col]} subQuery) insq, _) cond]), var isOr)
-							when SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
 						{
 							var newQuery = subQuery.Convert((subQuery,col.Expression), static (v, e) =>
 							{
@@ -2183,15 +2183,15 @@ namespace LinqToDB.SqlProvider
 						}
 
 						case SqlCondition(false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, true, {Select.Columns : [{CanBeNull: false}]}) insq, _) cond]), var isOr)
-							when SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
 							return new SqlCondition(false, new SqlSearchCondition().Expr(insq.Expr1).IsNull.Or.Add(cond), isOr);
 
 						case SqlCondition(false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, false, {Select.Columns : [{CanBeNull: true} col]} subQuery), var isOr)
-							when !SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							when !visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
 							return ConvertInSubquery(ex1, false, col, subQuery, isOr);
 
 						case SqlCondition(false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, true, {Select.Columns : [{CanBeNull: false} col]} subQuery), var isOr)
-							when !SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							when !visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
 							return ConvertInSubquery(ex1, true, col, subQuery, isOr);
 					}
 

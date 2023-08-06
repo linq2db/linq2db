@@ -218,7 +218,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Depending on this options linq2db generates different SQL for <c>sequence.Contains(value)</c>.<br/>
+		/// Depending on this option linq2db generates different SQL for <c>sequence.Contains(value)</c>.<br/>
 		/// <c>true</c> - <c>EXISTS (SELECT * FROM sequence WHERE sequence.key = value)</c>.<br/>
 		/// <c>false</c> - <c>value IN (SELECT sequence.key FROM sequence)</c>.<br/>
 		/// Default value: <c>false</c>.
@@ -425,7 +425,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// Depending on this options linq2db generates different SQL for <c>sequence.Contains(value)</c>.<br/>
+		/// Depending on this option linq2db generates different SQL for <c>sequence.Contains(value)</c>.<br/>
 		/// <c>true</c> - <c>EXISTS (SELECT * FROM sequence WHERE sequence.key = value)</c>.<br/>
 		/// <c>false</c> - <c>value IN (SELECT sequence.key FROM sequence)</c>.<br/>
 		/// Default value: <c>false</c>.
