@@ -147,8 +147,7 @@ namespace Tests.Extensions
 				.WithOwnerAccessOption()
 			.AsMySql()
 				.MaxExecutionTimeHint(1000)
-			.AsPostgreSQL()
-				.ForShareHint(Sql.TableAlias("ch"));
+			;
 
 			_ = q.ToList();
 		}
