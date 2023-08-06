@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -2921,5 +2925,87 @@ namespace Tests.Linq
 			}
 		}
 
+		class t_ws_submissions
+		{
+			public int submission_id;
+		}
+
+		class t_ws_policies
+		{
+			public int    submission_id;
+			public string policy_nbr = null!;
+		}
+
+		class DoNotExecuteCommandInterceptor : CommandInterceptor
+		{
+			public static readonly IInterceptor Instance = new DoNotExecuteCommandInterceptor();
+
+			class DoNotExecuteDataReader : DbDataReader
+			{
+				public override bool     GetBoolean (int ordinal) => default;
+				public override byte     GetByte    (int ordinal) => default;
+				public override char     GetChar    (int ordinal) => default;
+				public override DateTime GetDateTime(int ordinal) => default;
+				public override decimal  GetDecimal (int ordinal) => default;
+				public override double   GetDouble  (int ordinal) => default;
+				public override float    GetFloat   (int ordinal) => default;
+				public override Guid     GetGuid    (int ordinal) => default;
+				public override short    GetInt16   (int ordinal) => default;
+				public override int      GetInt32   (int ordinal) => default;
+				public override long     GetInt64   (int ordinal) => default;
+				public override string   GetString  (int ordinal) => default!;
+				public override object   GetValue   (int ordinal) => default!;
+
+
+				public override long GetBytes(int ordinal, long dataOffset, byte[]? buffer, int bufferOffset, int length) => default;
+				public override long GetChars(int ordinal, long dataOffset, char[]? buffer, int bufferOffset, int length) => default;
+
+				public override Type   GetFieldType   (int      ordinal) => throw new NotImplementedException();
+				public override string GetDataTypeName(int      ordinal) => throw new NotImplementedException();
+				public override string GetName        (int      ordinal) => throw new NotImplementedException();
+				public override int    GetOrdinal     (string   name)    => throw new NotImplementedException();
+				public override int    GetValues      (object[] values)  => throw new NotImplementedException();
+				public override bool   IsDBNull       (int      ordinal) => throw new NotImplementedException();
+
+				public override object this[int    ordinal] => default!;
+				public override object this[string name]    => default!;
+
+				public override int  FieldCount      { get; }
+				public override int  RecordsAffected { get; }
+				public override bool HasRows         { get; }
+				public override bool IsClosed        { get; }
+				public override int  Depth           { get; }
+
+				public override bool NextResult() => false;
+				public override bool Read      () => false;
+
+				public override IEnumerator GetEnumerator()
+				{
+					return Array.Empty<int>().GetEnumerator();
+				}
+			}
+
+			public override Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
+			{
+				return new DoNotExecuteDataReader();
+			}
+		}
+
+		[Test]
+		public void JoinTest([DataSources(false, TestProvName.AllSqlServerSequentialAccess)] string context)
+		{
+			using var db = GetDataContext(context, interceptor: DoNotExecuteCommandInterceptor.Instance);
+
+			var policyNumber = "111";
+
+			var q =
+				from s in db.GetTable<t_ws_submissions>()
+				from p in db.GetTable<t_ws_policies>().Where(_ => _.submission_id == s.submission_id && _.policy_nbr == policyNumber)
+				select s;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Is.Not.Contains("IS NULL AND"));
+		}
 	}
 }

@@ -151,7 +151,15 @@ namespace LinqToDB.Tools.Activity
 				null!
 			};
 
-			All[^1] = Total = new ("Total", All.OfType<StatActivity>().ToArray());
+			All[^1] = Total = new ("Total",
+				new []
+				{
+					QueryProviderExecuteT,
+					QueryProviderExecute,
+					QueryProviderGetEnumeratorT,
+					QueryProviderGetEnumerator
+				}
+				.Concat(ExecuteTotal.Metrics).ToArray());
 		}
 
 		internal static StatActivity GetStat(ActivityID metric)

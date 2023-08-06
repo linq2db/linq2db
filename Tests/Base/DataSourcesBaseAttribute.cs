@@ -17,29 +17,55 @@ namespace Tests
 
 		protected DataSourcesBaseAttribute(bool includeLinqService, string[] providers)
 		{
-			IncludeLinqService = includeLinqService;
-			Providers = CustomizationSupport.Interceptor.InterceptDataSources(this, Split(providers)).ToArray();
+			try
+			{
+				IncludeLinqService = includeLinqService;
+				Providers          = CustomizationSupport.Interceptor.InterceptDataSources(this, Split(providers)).ToArray();
+			}
+			catch (Exception e)
+			{
+				TestBase.Log(e);
+				throw;
+			}
 		}
 
 		public IEnumerable GetData(IParameterInfo parameter)
 		{
-			var skipAttrs = new HashSet<string>(
-				from a in parameter.Method.GetCustomAttributes<SkipCategoryAttribute>(true)
-				where a.ProviderName != null && TestBase.SkipCategories.Contains(a.Category)
-				select a.ProviderName);
+			try
+			{
+				var skipAttrs = new HashSet<string>(
+					from a in parameter.Method.GetCustomAttributes<SkipCategoryAttribute>(true)
+					where a.ProviderName != null && TestBase.SkipCategories.Contains(a.Category)
+					select a.ProviderName);
 
-			var providers = skipAttrs.Count == 0 ?
-				GetProviders().ToList() :
-				GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
+				var providers = skipAttrs.Count == 0 ?
+					GetProviders().ToList() :
+					GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
 
-			if (!NoLinqService && IncludeLinqService)
-				providers.AddRange(providers.Select(p => p + ".LinqService").ToList());
+				if (!NoLinqService && IncludeLinqService)
+					providers.AddRange(providers.Select(p => p + ".LinqService").ToList());
 
-			return CustomizationSupport.Interceptor.InterceptTestDataSources(this, parameter.Method, providers);
+				return CustomizationSupport.Interceptor.InterceptTestDataSources(this, parameter.Method, providers);
+			}
+			catch (Exception e)
+			{
+				TestBase.Log(e);
+				throw;
+			}
 		}
 
 		protected static IEnumerable<string> Split(IEnumerable<string> providers)
-			=> providers.SelectMany(x => x.Split(',')).Select(x => x.Trim());
+		{
+			try
+			{
+				return providers.SelectMany(x => x.Split(',')).Select(x => x.Trim());
+			}
+			catch (Exception e)
+			{
+				TestBase.Log(e);
+				throw;
+			}
+		}
 
 		protected abstract IEnumerable<string> GetProviders();
 	}

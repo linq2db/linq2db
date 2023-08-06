@@ -8,15 +8,15 @@ namespace LinqToDB.Tools.Activity
 		public StatActivitySum(string name, params StatActivity[] metrics)
 		{
 			Name     = name;
-			_metrics = metrics;
+			Metrics = metrics;
 		}
 
-		readonly StatActivity[] _metrics;
+		public readonly StatActivity[] Metrics;
 
 		public string Name { get; }
 
-		public TimeSpan Elapsed => new (_metrics.Sum(m => m.Elapsed.Ticks));
+		public TimeSpan Elapsed => new (Metrics.Sum(m => m.Elapsed.Ticks));
 
-		public long CallCount => _metrics.Sum(m => m.CallCount);
+		public long CallCount => Metrics.Sum(m => m.CallCount);
 	}
 }
