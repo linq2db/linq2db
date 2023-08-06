@@ -24,6 +24,7 @@
 		"--safe-schema-only false",
 		"--load-sproc-schema true",
 		"--add-association-extensions true",
+		"--add-init-context false", // use for option testing
 		"--find-methods none",
 		"--objects table,view,foreign-key,stored-procedure,scalar-function,table-function,aggregate-function"
 	};
