@@ -2197,11 +2197,11 @@ namespace LinqToDB.SqlProvider
 
 					static IQueryElement ConvertInSubquery(ISqlExpression ex1, bool isNot, SqlColumn col, SelectQuery subQuery, bool isOr)
 					{
-						var newQuery = subQuery.Convert((subQuery,col,ex1), static (v,e) =>
+						subQuery.Where = subQuery.Where.Convert((subQuery.Where,col,ex1), static (v,e) =>
 						{
-							if (e is SqlWhereClause w && w == v.Context.subQuery.Where)
+							if (ReferenceEquals(e, v.Context.Where))
 							{
-								var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
+								var wc = new SqlWhereClause(new SqlSearchCondition(v.Context.Where.SearchCondition.Conditions));
 								wc.SearchCondition.Conditions.Add(new(
 									false,
 									new SqlPredicate.ExprExpr(v.Context.col.Expression, SqlPredicate.Operator.Equal, v.Context.ex1, true)));
@@ -2211,7 +2211,7 @@ namespace LinqToDB.SqlProvider
 							return e;
 						});
 
-						return new SqlCondition(isNot, new SqlPredicate.FuncLike(SqlFunction.CreateExists(newQuery)), isOr);
+						return new SqlCondition(isNot, new SqlPredicate.FuncLike(SqlFunction.CreateExists(subQuery)), isOr);
 					}
 
 					if (!ReferenceEquals(ne, e))
