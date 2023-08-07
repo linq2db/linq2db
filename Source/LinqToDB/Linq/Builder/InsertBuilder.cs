@@ -191,7 +191,7 @@ namespace LinqToDB.Linq.Builder
 						var outputTable = methodCall.GetArgumentByName("outputTable")!;
 						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
-						var destinationRef = new ContextRefExpression(outputExpression.Parameters[0].Type, destination);
+						var destinationRef = new ContextRefExpression(outputExpression.Body.Type, destination);
 						var outputExpr     = SequenceHelper.PrepareBody(outputExpression, insertContext.OutputContext);
 
 						insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;

@@ -953,32 +953,6 @@ namespace LinqToDB.Linq.Builder
 						return result;
 					}
 
-					/*if (expression is SqlGenericConstructorExpression genericConstructor)
-					{
-						var newConstructor = genericConstructor.ReplaceAssignments(genericConstructor.Assignments.Select(a =>
-							a.WithExpression(ConvertToSqlExpr(context, a.Expression, flags, unwrap, columnDescriptor,
-								isPureExpression, a.MemberInfo.Name))).ToList());
-
-						newConstructor = newConstructor.ReplaceParameters(genericConstructor.Parameters.Select(p =>
-							p.WithExpression(ConvertToSqlExpr(context, p.Expression, flags, unwrap, columnDescriptor,
-								isPureExpression, p.MemberInfo?.Name ?? alias))).ToList());
-
-						return newConstructor;
-					}*/
-
-					/*
-					if (expression is SqlReaderIsNullExpression readerIsNullExpression && flags.HasFlag(ProjectFlags.SQL))
-					{
-						var sc = new SqlSearchCondition();
-
-						var notNullPlaceholder = readerIsNullExpression.Placeholder;
-						if (!flags.IsTest())
-							notNullPlaceholder = (SqlPlaceholderExpression)UpdateNesting(context, notNullPlaceholder);
-						sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(notNullPlaceholder.Sql, readerIsNullExpression.IsNot)));
-						return CreatePlaceholder(context, sc, expression, alias: readerIsNullExpression.IsNot ? "not_null" : "null");
-					}
-					*/
-
 					break;
 				}
 

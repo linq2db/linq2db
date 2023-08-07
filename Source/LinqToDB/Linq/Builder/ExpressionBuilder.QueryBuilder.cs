@@ -622,7 +622,7 @@ namespace LinqToDB.Linq.Builder
 
 				var attr = memberInfo.GetExpressionAttribute(MappingSchema);
 
-				if (attr != null && (flags.HasFlag(ProjectFlags.Expression) || attr.ServerSideOnly))
+				if (attr != null && (!flags.HasFlag(ProjectFlags.Expression) || attr.ServerSideOnly || attr.Expression == "{0}"))
 				{
 					var converted = attr.GetExpression((builder: this, context, flags),
 						DataContext,

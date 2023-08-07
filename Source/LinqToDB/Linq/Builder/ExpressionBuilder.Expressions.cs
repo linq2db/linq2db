@@ -169,11 +169,6 @@ namespace LinqToDB.Linq.Builder
 				if (node is SqlPlaceholderExpression)
 					return node;
 
-				/*
-				if (node is BinaryExpression binary && HandleBinary(binary, out var newBinary))
-					return newBinary;
-					*/
-
 				if (HandleParametrized(node, out var parametrized))
 					return parametrized;
 
@@ -429,13 +424,7 @@ namespace LinqToDB.Linq.Builder
 				if (!ReferenceEquals(method, node))
 					return Visit(method);
 
-				var attr = node.Method.GetExpressionAttribute(MappingSchema);
-				if (attr != null)
-				{
-					return CreatePlaceholder(_context, Builder.ConvertExtensionToSql(_context, localFlags, attr, node), node, alias: _alias);
-				}
-
-				var newNode = Builder.HandleExtension(_context, node, _flags);
+				var newNode = Builder.HandleExtension(_context, node, localFlags);
 				if (!ReferenceEquals(newNode, node))
 					return Visit(newNode);
 
@@ -538,14 +527,6 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSqlExpression(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null, BuildFlags buildFlags = BuildFlags.None)
 		{
-			/*
-			if (flags.IsExtractProjection())
-			{
-				var projectVisitor = new ProjectionVisitor(context);
-				return projectVisitor.Visit(expression);
-			}
-			*/
-
 			var visitor =  new BuildVisitor();
 
 			var result = visitor.Build(context, expression, flags, buildFlags);

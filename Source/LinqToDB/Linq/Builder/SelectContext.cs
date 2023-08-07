@@ -61,11 +61,6 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.IsExtractProjection() && ContextId == 22)
-			{
-
-			}
-
 			Expression result;
 
 			if (flags.IsAggregationRoot() && InnerContext != null)
