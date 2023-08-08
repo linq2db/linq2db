@@ -1294,6 +1294,12 @@ namespace LinqToDB.SqlQuery
 				subQuery.SetOperators.Clear();
 			}
 
+			if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+			{
+				if (!selectQuery.IsSimple)
+					return false;
+			}
+
 			// Actual modification starts from this point
 			//
 

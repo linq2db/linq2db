@@ -1411,13 +1411,8 @@ namespace LinqToDB.SqlQuery
 		{
 			if (expr is SqlColumn)
 				return false;
-			if (expr is SqlSearchCondition || expr is SelectQuery)
-				return ContainsAggregationOrWindowFunctionDeep(expr);
 
-			if (IsAggregationFunction(expr) || IsWindowFunction(expr))
-				return true;
-
-			return false;
+			return ContainsAggregationOrWindowFunctionDeep(expr);
 		}
 
 		public static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
