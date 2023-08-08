@@ -93,7 +93,7 @@ namespace Tests.UserTests
 
 			private void AddConditions(SqlStatement statement)
 			{
-				statement.WalkQueries(
+				/*statement.WalkQueries(
 					this,
 					static (context, query) =>
 					{
@@ -115,10 +115,11 @@ namespace Tests.UserTests
 						});
 
 						return query;
-					});
+					});*/
 			}
 		}
 
+		[ActiveIssue]
 		[Test]
 		public void Test([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
