@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 			expr = builder.UpdateNesting(scopeContext, expr);
 
 			// GroupJoin handling
-			expr = builder.MakeExpression(scopeContext, expr, ProjectFlags.Expand);
+			expr = builder.MakeExpression(scopeContext, expr, ProjectFlags.ExtractProjection);
 
 
 			var collectionSelectQuery    = new SelectQuery();

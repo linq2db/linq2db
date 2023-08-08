@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 
 			// finalizing context
 			_ = builder.MakeExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence),
-				ProjectFlags.Expand);
+				ProjectFlags.ExtractProjection);
 
 			sequence.SetAlias(selector.Parameters[0].Name);
 

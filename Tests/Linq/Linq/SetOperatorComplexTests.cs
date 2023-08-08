@@ -414,7 +414,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void UnionDictionary([DataSources] string context)
+		public void UsingDictionary([DataSources] string context, [Values] SetOperation operation)
 		{
 			using var db       = GetDataContext(context);
 			using var disposal = InitTestData(db);
@@ -439,11 +439,9 @@ namespace Tests.Linq
 						{b.BookName, b.BookName}
 					};
 
-			var query = query1.Union(query2);
+			var query = Combine(query1, query2, operation);
 
-			// TODO: Assert query fails.
-			FluentActions.Enumerating(() => query).Should().NotThrow();
-
+			AssertQuery(query, new DictionaryEqualityComparer<string, string>());
 		}
 
 

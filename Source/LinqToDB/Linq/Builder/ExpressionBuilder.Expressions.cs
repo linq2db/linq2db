@@ -66,6 +66,24 @@ namespace LinqToDB.Linq.Builder
 		}
 	}
 
+	class LambdaResolveVisitor : ExpressionVisitorBase
+	{
+		readonly IBuildContext _context;
+
+		public ExpressionBuilder Builder => _context.Builder;
+
+		public LambdaResolveVisitor(IBuildContext context)
+		{
+			_context = context;
+		}
+
+		protected override Expression VisitLambda<T>(Expression<T> node)
+		{
+			var newBody = Builder.BuildSqlExpression(_context, node.Body, ProjectFlags.SQL);
+			return node.Update(newBody, node.Parameters);
+		}
+	}
+
 	partial class ExpressionBuilder
 	{
 		class BuildVisitor : ExpressionVisitorBase
@@ -335,7 +353,7 @@ namespace LinqToDB.Linq.Builder
 								return node;
 						}
 					}
-					else
+					else if (node.NodeType != ExpressionType.ArrayIndex)
 					{
 						var left  = Visit(node.Left)!;
 						var right = Visit(node.Right)!;
@@ -458,8 +476,18 @@ namespace LinqToDB.Linq.Builder
 				    expr.NodeType != ExpressionType.Default  &&
 				    expr is not DefaultValueExpression       &&
 					expr != ExpressionConstants.DataContextParam &&
-				    Builder.CanBeCompiled(expr, false))
+				    Builder.CanBeCompiled(expr, _flags.IsExpression()))
 				{
+					if (expr.NodeType == ExpressionType.MemberAccess || expr.NodeType == ExpressionType.Call)
+					{
+						transformed = Builder.MakeExpression(_context, expr, _flags);
+						if (!ExpressionEqualityComparer.Instance.Equals(transformed, expr))
+						{
+							transformed = Visit(transformed);
+							return true;
+						}
+					}
+
 					// correct expression based on accessors
 
 					var valueAccessor = Builder.ParametersContext.ReplaceParameter(

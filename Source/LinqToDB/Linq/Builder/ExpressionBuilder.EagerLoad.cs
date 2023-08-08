@@ -145,23 +145,15 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		Expression ExpandContexts(IBuildContext currentContext, Expression expression)
+		Expression ExpandContexts(IBuildContext context, Expression expression)
 		{
-			var result = expression.Transform((builder: this, currentContext), static (ctx, e) =>
-			{
-				if (e.NodeType == ExpressionType.Extension || e.NodeType == ExpressionType.MemberAccess ||
-				    e.NodeType == ExpressionType.Call)
-				{
-					var newExpr = ctx.builder.MakeExpression(ctx.currentContext, e, ProjectFlags.Expand);
+			var projectVisitor = new ProjectionVisitor(context);
+			var projected = projectVisitor.Visit(expression);
 
-					if (!ExpressionEqualityComparer.Instance.Equals(e, newExpr))
-						return new TransformInfo(newExpr, false);
-				}
+			var lambdaResolver = new LambdaResolveVisitor(context);
+			projected = lambdaResolver.Visit(projected);
 
-				return new TransformInfo(e);
-			});
-
-			return result;
+			return projected;
 		}
 
 		bool CanBeCompiledQueryableArguments(MethodCallExpression mc)
@@ -270,15 +262,12 @@ namespace LinqToDB.Linq.Builder
 			Expression[]           previousKeys)
 		{
 			var cloningContext       = new CloningContext();
-			var clonedParentContext  = cloningContext.CloneContext(buildContext);
 
 			var itemType = eagerLoad.Type.GetItemType();
 
 			if (itemType == null)
 				throw new InvalidOperationException("Could not retrieve itemType for EagerLoading.");
 
-			clonedParentContext = new EagerContext(clonedParentContext, buildContext.ElementType);
-			
 			var dependencies = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
 
 			var sequenceExpression = UnwrapDefaultIfEmpty(eagerLoad.SequenceExpression);
@@ -286,10 +275,13 @@ namespace LinqToDB.Linq.Builder
 			sequenceExpression = ExpandContexts(buildContext, sequenceExpression);
 			sequenceExpression = UnwrapDefaultIfEmpty(sequenceExpression);
 
+			CollectDependencies(buildContext, sequenceExpression, dependencies);
+
+			var clonedParentContext = cloningContext.CloneContext(buildContext);
+			clonedParentContext = new EagerContext(clonedParentContext, buildContext.ElementType);
+
 			var correctedSequence  = cloningContext.CloneExpression(sequenceExpression);
 			var correctedPredicate = cloningContext.CloneExpression(eagerLoad.Predicate);
-
-			CollectDependencies(buildContext, sequenceExpression, dependencies);
 
 			dependencies.AddRange(previousKeys);
 

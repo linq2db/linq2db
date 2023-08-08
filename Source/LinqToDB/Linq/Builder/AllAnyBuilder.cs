@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 
 			// finalizing context
 			_ = builder.MakeExpression(sequence, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence),
-				ProjectFlags.Expand);
+				ProjectFlags.ExtractProjection);
 
 			return new AllAnyContext(buildInfo.Parent, buildInfo.SelectQuery, methodCall, sequence);
 		}

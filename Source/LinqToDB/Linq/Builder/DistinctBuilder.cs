@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 					return corrected;
 
 				Expression result;
-				if (flags.IsExpand())
+				if (flags.IsExtractProjection())
 				{
 					result = Builder.MakeExpression(Context, corrected, flags);
 				}

@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (flags.IsRoot() || flags.IsExpand() || flags.IsTraverse())
+				if (flags.IsRoot() || flags.IsTraverse())
 					return path;
 
 
@@ -924,24 +924,6 @@ namespace LinqToDB.Linq.Builder
 				foundEager = pathBuilder.FoundEager;
 
 				return withPath;
-			}
-
-			class LambdaResolveVisitor : ExpressionVisitorBase
-			{
-				readonly IBuildContext _context;
-
-				public ExpressionBuilder Builder => _context.Builder;
-
-				public LambdaResolveVisitor(IBuildContext context)
-				{
-					_context = context;
-				}
-
-				protected override Expression VisitLambda<T>(Expression<T> node)
-				{
-					var newBody = Builder.BuildSqlExpression(_context, node.Body, ProjectFlags.SQL);
-					return node.Update(newBody, node.Parameters);
-				}
 			}
 
 			// For Set we have to ensure hat columns are not optimized

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB.Common;
 using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq
@@ -12,7 +14,7 @@ namespace LinqToDB.Linq
 
 	class CloningContext
 	{
-		Dictionary<IQueryElement, IQueryElement> _queryElements    = new ();
+		Dictionary<IQueryElement, IQueryElement> _queryElements    = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 		Dictionary<IBuildContext, IBuildContext> _buildContexts    = new ();
 		HashSet<IBuildContext>                   _currentlyCloning = new ();
 

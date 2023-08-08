@@ -5,8 +5,8 @@ namespace LinqToDB.Linq.Builder
 {
 	static class ProjectFlagExtensions
 	{
-		const ProjectFlags FlagsToPreserve = ProjectFlags.Test   | ProjectFlags.ForceOuterAssociation |
-		                                     ProjectFlags.Expand | ProjectFlags.Traverse | ProjectFlags.Subquery |
+		const ProjectFlags FlagsToPreserve = ProjectFlags.Test     | ProjectFlags.ForceOuterAssociation |
+		                                     ProjectFlags.Traverse | ProjectFlags.Subquery              |
 		                                     ProjectFlags.ExtractProjection;
 
 		[DebuggerStepThrough]
@@ -21,13 +21,6 @@ namespace LinqToDB.Linq.Builder
 		public static ProjectFlags ExpressionFlag(this ProjectFlags flags)
 		{
 			return (flags & FlagsToPreserve) | ProjectFlags.Expression;
-		}
-
-		[DebuggerStepThrough]
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static ProjectFlags ExpandFlag(this ProjectFlags flags)
-		{
-			return (flags & FlagsToPreserve) | ProjectFlags.Expand;
 		}
 
 		[DebuggerStepThrough]
@@ -127,13 +120,6 @@ namespace LinqToDB.Linq.Builder
 		public static bool IsTable(this ProjectFlags flags)
 		{
 			return (flags & ProjectFlags.Table) != 0;
-		}
-
-		[DebuggerStepThrough]
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsExpand(this ProjectFlags flags)
-		{
-			return (flags & ProjectFlags.Expand) != 0;
 		}
 
 		[DebuggerStepThrough]

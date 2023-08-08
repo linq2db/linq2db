@@ -11,7 +11,8 @@ namespace LinqToDB.Linq.Builder
 		/// <summary>
 		/// Forces expanding associations and GroupJoin into query expression
 		/// </summary>
-		Expand          = 0x08,
+		ExtractProjection = 0x08,	
+
 		AggregationRoot = 0x10,		
 		/// <summary>
 		/// Specify that from whole context we need just key fields.
@@ -36,7 +37,6 @@ namespace LinqToDB.Linq.Builder
 		Traverse = 0x800,	
 
 		Subquery = 0x1000,	
-		
-		ExtractProjection = 0x2000,	
+	
 	}
 }

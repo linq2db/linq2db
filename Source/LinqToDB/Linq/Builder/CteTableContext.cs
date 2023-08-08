@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 			if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Table))
 				return path;
 
-			if (flags.IsExpand())
+			if (flags.IsExtractProjection())
 			{
 				CteContext.InitQuery();
 				return path;

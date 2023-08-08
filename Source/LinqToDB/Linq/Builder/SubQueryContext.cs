@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
-			if (flags.IsExtractProjection() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTable() || flags.IsExpand() || flags.IsAssociationRoot() || flags.IsRoot())
+			if (flags.IsExtractProjection() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot())
 			{
 				var processed = Builder.MakeExpression(SubQuery, corrected, flags);
 				return processed;

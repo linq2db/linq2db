@@ -101,10 +101,16 @@ namespace LinqToDB.Linq.Builder
 			var info = new BuildInfo(context, inScopeExpr, new SelectQuery())
 			{
 				CreateSubQuery = true,
-				IsTest         = flags.IsTest()
+				IsTest         = true
 			};
 
 			var ctx = TryBuildSequence(info);
+
+			if (ctx != null && !flags.IsTest())
+			{
+				info.IsTest = false;
+				ctx = TryBuildSequence(info);
+			}
 
 			return ctx;
 		}
@@ -624,6 +630,8 @@ namespace LinqToDB.Linq.Builder
 			var isFirst = true;
 
 			var newExpr = expression;
+
+			newExpr = MakeExpression(context, newExpr, flags);
 
 			while (true)
 			{
@@ -1597,8 +1605,8 @@ namespace LinqToDB.Linq.Builder
 					var predicateExpr = ConvertCompareExpression(context, nodeType, leftAssignment.Expression, rightExpression, flags);
 					if (predicateExpr is not SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
 					{
-						/*if (strict)
-							return predicateExpr;*/
+						if (strict)
+							return GetOriginalExpression();
 						continue;
 					}
 
@@ -1801,6 +1809,9 @@ namespace LinqToDB.Linq.Builder
 				if (p != null)
 					return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, p)), GetOriginalExpression());
 			}
+
+			if (l == null || r == null && flags.IsTest())
+				return GetOriginalExpression();
 
 			l ??= ConvertToSql(context, left,  flags, unwrap: false, columnDescriptor: columnDescriptor);
 			r ??= ConvertToSql(context, right, flags, unwrap: true,  columnDescriptor: columnDescriptor);
@@ -3990,7 +4001,7 @@ namespace LinqToDB.Linq.Builder
 				return path;
 			}
 
-			if ((flags & (ProjectFlags.Root | ProjectFlags.AggregationRoot | ProjectFlags.AssociationRoot | ProjectFlags.Expand | ProjectFlags.Table)) == 0)
+			if ((flags & (ProjectFlags.Root | ProjectFlags.AggregationRoot | ProjectFlags.AssociationRoot | ProjectFlags.ExtractProjection | ProjectFlags.Table)) == 0)
 			{
 				// try to find already converted to SQL
 				var sqlKey = new SqlCacheKey(path, null, null, null, flags.SqlFlag());
@@ -4162,7 +4173,7 @@ namespace LinqToDB.Linq.Builder
 						rootContext = expression as ContextRefExpression;
 					}
 				}
-				else if (mc.IsQueryable() && flags.IsExpand())
+				else if (mc.IsQueryable() && flags.IsExtractProjection())
 				{
 					var args      = mc.Arguments.ToArray();
 					args[0] = MakeExpression(currentContext, args[0], flags);
@@ -4289,7 +4300,7 @@ namespace LinqToDB.Linq.Builder
 							}*/
 						}
 
-						if (applyConvert && (flags.IsSql() || flags.IsExpression() || flags.IsExpand() || flags.IsTraverse()))
+						if (applyConvert && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsTraverse()))
 						{
 							var converted = ConvertSingleExpression(path, flags.IsExpression());
 							if (!ReferenceEquals(converted, path))
@@ -4305,12 +4316,6 @@ namespace LinqToDB.Linq.Builder
 								}
 							}
 						}
-					}
-
-					if (!handled && flags.HasFlag(ProjectFlags.Expression) && CanBeCompiled(path, true))
-					{
-						expression = path;
-						handled    = true;
 					}
 
 					if (flags.IsExpression() && path.NodeType == ExpressionType.NewArrayInit)
@@ -4335,9 +4340,18 @@ namespace LinqToDB.Linq.Builder
 								{
 									expression = new SqlAdjustTypeExpression(expression, path.Type, MappingSchema);
 								}
+
+								handled = true;
 							}
 						}
 					}
+
+					if (!handled && flags.HasFlag(ProjectFlags.Expression) && CanBeCompiled(path, true))
+					{
+						expression = path;
+						handled    = true;
+					}
+
 				}
 			}
 

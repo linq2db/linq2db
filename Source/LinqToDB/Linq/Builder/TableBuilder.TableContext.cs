@@ -174,12 +174,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExpand() || flags.IsAggregationRoot())
+				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExtractProjection() || flags.IsAggregationRoot())
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if (flags.HasFlag(ProjectFlags.Table))
+					if (flags.IsTable())
 						return path;
 
 					// Eager load case
@@ -204,9 +204,6 @@ namespace LinqToDB.Linq.Builder
 					member = memberAccess;
 				}
 				else
-					return path;
-
-				if (flags.IsExtractProjection())
 					return path;
 
 				var sql = GetField(member, false);

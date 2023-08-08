@@ -8,6 +8,5 @@ namespace LinqToDB.Linq.Builder
 		bool                 CanBuild     (ExpressionBuilder builder, BuildInfo buildInfo);
 		IBuildContext?       BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo);
 		bool                 IsSequence   (ExpressionBuilder builder, BuildInfo buildInfo);
-		Expression           Expand(ExpressionBuilder        builder, BuildInfo buildInfo);
 	}
 }

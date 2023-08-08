@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -6,6 +7,7 @@ namespace LinqToDB.Expressions
 {
 	public class ExpressionVisitorBase : ExpressionVisitor
 	{
+		[DebuggerStepThrough]
 		[return: NotNullIfNotNull(nameof(node))]
 		public override Expression? Visit(Expression? node)
 		{

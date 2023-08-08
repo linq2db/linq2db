@@ -11,7 +11,6 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
-	using static LinqToDB.Expressions.SqlGenericConstructorExpression;
 
 	internal static class SequenceHelper
 	{
@@ -357,7 +356,12 @@ namespace LinqToDB.Linq.Builder
 						currentPath = contextRef.WithType(assignment.MemberInfo.DeclaringType);
 					}
 
-					var newExpression = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
+					var memberPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
+					var parsed     = SqlGenericConstructorExpression.Parse(assignment.Expression);
+
+					var newExpression = ReferenceEquals(parsed, assignment.Expression)
+						? memberPath
+						: RemapToNewPathSimple(assignment.Expression, memberPath, flags);
 
 					if (!ReferenceEquals(assignment.Expression, newExpression))
 					{

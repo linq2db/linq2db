@@ -18,40 +18,6 @@ namespace Tests
 {
 	partial class TestBase
 	{
-		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? CheckForNull(Expression? expression)
-		{
-			if (expression != null && expression.NodeType.NotIn(ExpressionType.Lambda, ExpressionType.Quote) &&
-			    (expression.Type.IsClass || expression.Type.IsInterface) &&
-			    !typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
-			{
-				var test = Expression.ReferenceEqual(expression,
-					Expression.Constant(null, expression.Type));
-				return Expression.Condition(test,
-					Expression.Constant(DefaultValue.GetValue(expression.Type), expression.Type), expression);
-			}
-
-			return expression;
-		}
-
-		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? CheckForNull(Expression? expression, Expression trueExpression, Expression falseExpression)
-		{
-			if (expression is MemberExpression me)
-				expression = CheckForNull(me);
-
-			if (expression != null && expression.NodeType.NotIn(ExpressionType.Lambda, ExpressionType.Quote) &&
-			    (expression.Type.IsClass || expression.Type.IsInterface) &&
-			    !typeof(IQueryable<>).IsSameOrParentOf(expression.Type))
-			{
-				var test = Expression.ReferenceEqual(expression,
-					Expression.Constant(null, expression.Type));
-				return Expression.Condition(test, trueExpression, falseExpression);
-			}
-
-			return expression;
-		}
-
 		public static List<Expression> GetMemberPath(Expression? expression)
 		{
 			var result = new List<Expression>();
@@ -81,80 +47,75 @@ namespace Tests
 			return result;
 		}
 
-
-		public static Expression CheckForNull(MemberExpression expr)
+		class ApplyNullPropagationVisitor : ExpressionVisitorBase
 		{
-			Expression? test = null;
-
-			var path = GetMemberPath(expr);
-
-			for (int i = 0; i < path.Count - 1; i++)
+			protected bool CanBeNull(Expression expression)
 			{
-				var objExpr = path[i];
-				if (objExpr != null && (objExpr.Type.IsClass || objExpr.Type.IsInterface))
+				if (expression.Type.IsValueType)
+					return false;
+
+				if (expression.NodeType == ExpressionType.Default)
+					return true;
+
+				if (expression.NodeType == ExpressionType.Constant)
 				{
-					var currentTest = Expression.ReferenceEqual(objExpr,
-						Expression.Constant(null, objExpr.Type));
-					if (test == null)
-						test = currentTest;
-					else
-					{
-						test = Expression.OrElse(test, currentTest);
-					}
+					return ((ConstantExpression)expression).Value == null;
 				}
+
+				if (expression is MethodCallExpression mc)
+				{
+					if (mc.Method.IsStatic && (mc.Method.DeclaringType == typeof(Enumerable) ||
+					                           mc.Method.DeclaringType == typeof(Queryable)))
+						return false;
+				}
+
+				return true;
 			}
 
-			if (test == null)
-				return expr;
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				var newNode = node.Update(node.Object, VisitAndConvert<Expression>(node.Arguments, "VisitMethodCall"));
 
-			return Expression.Condition(test,
-				Expression.Constant(DefaultValue.GetValue(expr.Type), expr.Type), expr);
+				if (newNode.Object != null)
+				{
+					if (CanBeNull(newNode.Object))
+					{
+						var checkedObs = Visit(newNode.Object);
+						return Expression.Condition(Expression.Equal(checkedObs, Expression.Default(newNode.Object.Type)),
+							Expression.Default(newNode.Type), newNode);
+					}
+				}
+				else if (newNode.Method.IsStatic && (newNode.Method.DeclaringType == typeof(Enumerable) || newNode.Method.DeclaringType == typeof(Queryable)))
+				{
+					if (CanBeNull(node.Arguments[0]))
+					{
+						var checkedFirst = Visit(node.Arguments[0]);
+						return Expression.Condition(Expression.Equal(checkedFirst, Expression.Default(newNode.Arguments[0].Type)),
+							Expression.Default(newNode.Type), newNode.Update(node.Object, new[] {node.Arguments[0]}.Concat(newNode.Arguments.Skip(1))));					
+					}
+				}
+
+				return newNode;
+			}
+
+			protected override Expression VisitMember(MemberExpression node)
+			{
+				if (node.Expression != null && CanBeNull(node.Expression))
+				{
+					var checkedExoression = Visit(node.Expression);
+					return Expression.Condition(Expression.Equal(checkedExoression, Expression.Default(node.Expression.Type)),
+						Expression.Default(node.Type), node);
+				}
+
+				return base.VisitMember(node);
+			}
 		}
 
 		static Expression ApplyNullCheck(Expression expr)
 		{
-			var newExpr = expr.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.Call)
-				{
-					var mc = (MethodCallExpression)e;
+			var visitor = new ApplyNullPropagationVisitor();
 
-					if (!mc.Method.IsStatic && mc.Object != null)
-					{
-						var checkedMethod = CheckForNull(mc.Object,
-							Expression.Constant(DefaultValue.GetValue(mc.Method.ReturnType), mc.Method.ReturnType), mc);
-
-						return new TransformInfo(checkedMethod);
-					}
-
-					if (mc.Method.IsStatic && mc.Method.DeclaringType == typeof(Enumerable))
-					{
-						var arguments = mc.Arguments.Select(a => ApplyNullCheck(a)).ToList();
-						mc = mc.Update(mc.Object, arguments);
-						var firstArg = mc.Arguments[0];
-
-						if (firstArg.Type.IsClass || firstArg.Type.IsInterface)
-						{
-							var checkedExpr = Expression.Condition(
-								Expression.NotEqual(firstArg, Expression.Default(firstArg.Type)),
-									mc,
-									Expression.Default(mc.Type));
-
-							return new TransformInfo(checkedExpr);
-						}
-
-						return new TransformInfo(mc);
-					}
-				}
-				else if (e.NodeType == ExpressionType.MemberAccess)
-				{
-					var ma = (MemberExpression)e;
-
-					return new TransformInfo(CheckForNull(ma));
-				}
-
-				return new TransformInfo(e);
-			})!;
+			var newExpr = visitor.Visit(expr);
 
 			return newExpr;
 		}
@@ -278,7 +239,7 @@ namespace Tests
 			return mc;
 		}
 
-		public T[] AssertQuery<T>(IQueryable<T> query)
+		public T[] AssertQuery<T>(IQueryable<T> query, IEqualityComparer<T>? comparer = null)
 		{
 			var expr   = query.Expression;
 			var actual = query.ToArray();
@@ -367,7 +328,10 @@ namespace Tests
 			expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
 
 			if (actual.Length > 0 || expected.Length > 0)
-				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
+			{
+				comparer ??= ComparerBuilder.GetEqualityComparer<T>();
+				AreEqual(expected, actual, comparer);
+			}
 
 			return actual;
 		}

@@ -763,7 +763,7 @@ namespace LinqToDB.Linq.Builder
 			context = inContext;
 			var testExpression = CorrectRoot(context, expr);
 
-			var shouldCache = flags.IsSql() || flags.IsExpression() || flags.IsExpand() || flags.IsRoot();
+			var shouldCache = flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsRoot();
 			
 			if (shouldCache && _buildContextCache?.TryGetValue(testExpression, out var item) == true)
 				return item;
@@ -831,7 +831,7 @@ namespace LinqToDB.Linq.Builder
 			if (info.Context == null)
 				return null;
 
-			if (!IsSingleElementContext(info.Context) && expr.Type.IsEnumerableType(info.Context.ElementType) && !flags.IsExpand())
+			if (!IsSingleElementContext(info.Context) && expr.Type.IsEnumerableType(info.Context.ElementType) && !flags.IsExtractProjection())
 			{
 				var eager = (Expression)new SqlEagerLoadExpression(unwrapped);
 				if (expr.Type != eager.Type)

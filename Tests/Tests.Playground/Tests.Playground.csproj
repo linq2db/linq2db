@@ -16,6 +16,7 @@
 		<Compile Include="..\Linq\Linq\DistinctTests.cs" Link="DistinctTests.cs" />
 		<Compile Include="..\Linq\Linq\EagerLoadingTests.cs" Link="EagerLoadingTests.cs" />
 		<Compile Include="..\Linq\Linq\MathFunctionTests.cs" Link="MathFunctionTests.cs" />
+		<Compile Include="..\Linq\Linq\MultipleQueryTests.cs" Link="MultipleQueryTests.cs" />
 		<Compile Include="..\Linq\Linq\QueryableAssociationTests.cs" Link="QueryableAssociationTests.cs" />
 		<Compile Include="..\Linq\Linq\SelectScalarTests.cs" Link="SelectScalarTests.cs" />
 		<Compile Include="..\Linq\Linq\SetOperatorComplexTests.cs" Link="SetOperatorComplexTests.cs" />
@@ -71,6 +72,7 @@
 		<Compile Include="..\Linq\Update\UpdateTests.cs" Link="UpdateTests.cs" />
 		<Compile Include="..\Linq\Update\UpdateWithOutputTests.cs" Link="UpdateWithOutputTests.cs" />
 		<Compile Include="..\Linq\UserTests\IndexOutOfRangeInUnions.cs" Link="IndexOutOfRangeInUnions.cs" />
+		<Compile Include="..\Linq\UserTests\Issue873Tests.cs" Link="Issue873Tests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

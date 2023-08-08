@@ -204,7 +204,7 @@ namespace LinqToDB.Linq.Builder
 
 			associationExpression = association;
 
-			if (!associationDescriptor.IsList && !flags.IsExpand() && !flags.IsSubquery() && !flags.IsExtractProjection())
+			if (!associationDescriptor.IsList && !flags.IsSubquery() && !flags.IsExtractProjection())
 			{
 				// IsAssociation will force to create OuterApply instead of subquery. Handled in FirstSingleContext
 				//
@@ -234,7 +234,7 @@ namespace LinqToDB.Linq.Builder
 						new SqlAdjustTypeExpression(associationExpression, expression.Type, MappingSchema);
 			}
 
-			if (!flags.IsExpand())
+			if (!flags.IsExtractProjection())
 				_associations[key] = associationExpression;
 
 			return associationExpression;

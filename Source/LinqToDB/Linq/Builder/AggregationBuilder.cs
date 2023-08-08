@@ -133,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 
 				// finalizing context
 				_ = builder.MakeExpression(sequence, new ContextRefExpression(buildInfo.Expression.Type, sequence),
-					ProjectFlags.Expand);
+					ProjectFlags.ExtractProjection);
 
 				if (aggregationType == AggregationType.Count)
 				{
@@ -280,7 +280,9 @@ namespace LinqToDB.Linq.Builder
 									$"Expected SearchCondition, but found: '{sqlPlaceholder.Sql}'");
 
 							sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
-							placeholderSequence.SelectQuery.Where.ConcatSearchCondition(sc);
+
+							if (!buildInfo.IsTest)
+								placeholderSequence.SelectQuery.Where.ConcatSearchCondition(sc);
 						}
 					}
 					else
