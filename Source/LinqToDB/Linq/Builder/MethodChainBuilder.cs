@@ -86,30 +86,37 @@ namespace LinqToDB.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				var builtExpr = BuildExpression();
-				var mapper    = Builder.BuildMapper<object>(SelectQuery, builtExpr);
+				var mapper = Builder.BuildMapper<object>(SelectQuery, expr);
 
-				CompleteColumns();
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			Expression BuildExpression()
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				Expression expr;
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+					return path;
 
-				if (_returnType.IsNullableType())
+				if (flags.IsAggregationRoot() || flags.IsAssociationRoot())
 				{
-					expr = Placeholder;
+					var corrected = SequenceHelper.CorrectExpression(path, this, Sequence);
+					return corrected;
 				}
-				else
+
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+				if (Placeholder == null)
+					return path;
+
+				Expression result = Placeholder;
+
+				if (!_returnType.IsNullableType() && flags.IsExpression())
 				{
-					expr = Expression.Block(
+					result = Expression.Block(
 						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
 							new SqlReaderIsNullExpression(Placeholder, false), Expression.Constant(_methodName)),
 						Placeholder);
 				}
 
-				return expr;
+				return result;
 			}
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)

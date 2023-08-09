@@ -1167,7 +1167,7 @@ namespace LinqToDB.SqlQuery
 
 				foreach (var parentColumn in selectQuery.Select.Columns)
 				{
-					if (parentColumn.Expression is not SqlColumn column || column.Parent != subQuery || QueryHelper.IsAggregationOrWindowFunction(parentColumn.Expression))
+					if (parentColumn.Expression is not SqlColumn column || column.Parent != subQuery || QueryHelper.ContainsAggregationOrWindowFunction(parentColumn.Expression))
 					{
 						return false;
 					}
@@ -1210,7 +1210,7 @@ namespace LinqToDB.SqlQuery
 				if (!selectQuery.Select.Where.IsEmpty)
 					return false;
 
-				if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+				if (selectQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 				{
 					return false;
 				}
@@ -1230,7 +1230,7 @@ namespace LinqToDB.SqlQuery
 
 			if (!selectQuery.GroupBy.IsEmpty)
 			{
-				if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
+				if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
 					return false;
 			}
 
@@ -1296,7 +1296,7 @@ namespace LinqToDB.SqlQuery
 
 			if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 			{
-				if (!selectQuery.IsSimple)
+				if (!selectQuery.IsSimpleOrSet)
 					return false;
 			}
 

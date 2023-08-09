@@ -416,50 +416,20 @@ namespace LinqToDB.Linq.Builder
 
 			if (unwrapped is LambdaExpression lambda)
 			{
-				throw new NotImplementedException();
+				var contextRefExpression = new ContextRefExpression(lambda.Parameters[0].Type, context);
 
-				IBuildContext valueSequence = context;
+				var aggregationRoot = GetRootContext(context, contextRefExpression, true);
 
-				/*
-				if (context is SelectContext sc && sc.Sequence is GroupByBuilder.GroupByContext)
-					valueSequence = sc.Sequence;
-					*/
-
-				if (valueSequence is GroupByBuilder.GroupByContext groupByContext)
+				if (aggregationRoot is null)
 				{
-					valueSequence = groupByContext.Element;
+					throw new LinqException("Could not retrieve aggregation context.");
 				}
 
-				var contextRefExpression = new ContextRefExpression(lambda.Parameters[0].Type, valueSequence);
-
-				var body = lambda.GetBody(contextRefExpression);
+				var body = lambda.GetBody(aggregationRoot);
 
 				var result = ConvertToSql(context, body, unwrap: false, columnDescriptor: columnDescriptor);
 
-				if (!(result is SqlField field) || field.Table!.All != field)
-					return result;
-				/*result = context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
-				return result;*/
-			}
-
-			/*if (context is SelectContext selectContext)
-			{
-				var result = ConvertToSql(context, expression, false, columnDescriptor);
-
-				if (!(result is SqlField field) || field.Table!.All != field)
-					return result;
-
-				if (null != expression.Find(selectContext.Body))
-					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
-			}*/
-
-			if (context is MethodChainBuilder.ChainContext chainContext)
-			{
-				throw new NotImplementedException();
-				/*
-				if (expression is MethodCallExpression mc && IsSubQuery(context, mc))
-					return context.ConvertToSql(null, 0, ConvertFlags.Field).Select(static _ => _.Sql).First();
-			*/
+				return result;
 			}
 
 			return ConvertToSql(context, expression, flags: flags.SqlFlag(), unwrap: false, columnDescriptor: columnDescriptor);
