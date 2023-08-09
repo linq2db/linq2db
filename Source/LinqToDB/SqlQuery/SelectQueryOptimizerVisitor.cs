@@ -825,6 +825,13 @@ namespace LinqToDB.SqlQuery
 				var skipValue = sql.Select.SkipValue;
 				var takeValue = sql.Select.TakeValue;
 
+				if (sql.Select.TakeHints != null)
+				{
+					if (isApplySupported)
+						return optimized;
+					throw new LinqToDBException("SQL query requires TakeHints in CROSS/OUTER query, which are not supported by provider");
+				}
+
 				ISqlExpression?       rnExpression = null;
 				List<ISqlExpression>? partitionBy  = null;
 

@@ -354,6 +354,15 @@ namespace LinqToDB.SqlQuery
 					.Append("TAKE ")
 					.AppendElement(TakeValue)
 					.Append(' ');
+
+				if (TakeHints != null)
+				{
+					if (TakeHints.Value.HasFlag(LinqToDB.TakeHints.Percent))
+						writer.Append("PERCENT ");
+
+					if (TakeHints.Value.HasFlag(LinqToDB.TakeHints.WithTies))
+						writer.Append("WITH TIES ");
+				}
 			}
 
 			writer.AppendLine();
