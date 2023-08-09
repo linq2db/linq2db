@@ -238,11 +238,6 @@ namespace LinqToDB.SqlQuery.Visitors
 			{
 				foreach (var pair in _replacements)
 				{
-					if (pair.Key is SqlColumn column && column.Number == 10)
-					{
-
-					}
-
 					if (!ReferenceEquals(pair.Key, pair.Value))
 						objectTree[pair.Key] = pair.Value;
 				}

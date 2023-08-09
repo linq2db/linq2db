@@ -406,22 +406,22 @@ namespace LinqToDB.Linq.Builder
 						throw new ArgumentOutOfRangeException();
 				}
 
-				foreach (var p in placeholders1)
+				foreach (var (placeholder, path) in placeholders1)
 				{
-					var placeholderPath = new SqlPathExpression(p.path, p.placeholder.Type);
+					var placeholderPath = new SqlPathExpression(path, placeholder.Type);
 					var alias           = GenerateColumnAlias(placeholderPath);
 
-					var placeholder1 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence1, p.placeholder);
+					var placeholder1 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence1, placeholder);
 					placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
 					placeholder1 = placeholder1.WithPath(placeholderPath).WithAlias(alias);
 
 					var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
 
-					var (placeholder2, _) = placeholders2.FirstOrDefault(p2 => PathComparer.Instance.Equals(p2.path, p.path));
+					var (placeholder2, _) = placeholders2.FirstOrDefault(p2 => PathComparer.Instance.Equals(p2.path, path));
 					if (placeholder2 == null)
 					{
 						placeholder2 = ExpressionBuilder.CreatePlaceholder(_sequence2,
-							new SqlValue(QueryHelper.GetDbDataType(p.placeholder.Sql), null), placeholderPath);
+							new SqlValue(QueryHelper.GetDbDataType(placeholder.Sql), null), placeholderPath);
 					}
 					else
 					{
@@ -432,20 +432,20 @@ namespace LinqToDB.Linq.Builder
 					placeholder2 = placeholder2.WithPath(placeholderPath).WithAlias(alias);
 					var column2 = Builder.MakeColumn(SelectQuery, placeholder2.WithAlias(alias), true);
 
-					pathMapping.Add(p.path, (column1, column2));
+					pathMapping.Add(path, (column1, column2));
 				}
 
 				if (_setOperation != SetOperation.Except || _setOperation != SetOperation.ExceptAll)
 				{
-					foreach (var p2 in placeholders2)
+					foreach (var (placeholder, path) in placeholders2)
 					{
-						if (pathMapping.ContainsKey(p2.path))
+						if (pathMapping.ContainsKey(path))
 							continue;
 
-						var placeholder2 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence2, p2.placeholder);
+						var placeholder2 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence2, placeholder);
 						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
 
-						var placeholderPath = new SqlPathExpression(p2.path, placeholder2.Type);
+						var placeholderPath = new SqlPathExpression(path, placeholder2.Type);
 						var alias           = GenerateColumnAlias(placeholderPath);
 
 						placeholder2 = placeholder2.WithAlias(alias);
@@ -455,7 +455,7 @@ namespace LinqToDB.Linq.Builder
 
 						var column2 = Builder.MakeColumn(SelectQuery, placeholder2, true);
 
-						pathMapping.Add(p2.path, (column1, column2));
+						pathMapping.Add(path, (column1, column2));
 					}
 				}
 

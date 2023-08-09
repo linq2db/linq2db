@@ -34,7 +34,9 @@ namespace LinqToDB.Expressions
 			Sql          = sql;
 			TrackingPath = trackingPath;
 
+#if DEBUG
 			Id = Interlocked.Increment(ref _placeholderCounter);
+#endif
 		}
 
 		public SelectQuery?   SelectQuery  { get; }
