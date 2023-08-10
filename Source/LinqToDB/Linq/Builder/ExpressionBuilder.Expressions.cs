@@ -10,7 +10,6 @@ using LinqToDB.SqlQuery;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using static LinqToDB.Linq.Builder.ContextParser;
 
 	class ProjectionVisitor : ExpressionVisitorBase
 	{
@@ -385,6 +384,16 @@ namespace LinqToDB.Linq.Builder
 				return Visit(newNode);
 			}
 
+			protected override Expression VisitMember(MemberExpression node)
+			{
+				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, IsForcedToConvert(node)))
+				{
+					return TranslateExpression(node, useSql : true);
+				}
+
+				return base.VisitMember(node);
+			}
+
 			protected override Expression VisitNew(NewExpression node)
 			{
 				if (!_disableParseNew)
@@ -432,6 +441,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				var localFlags = _flags;
 				if (IsForcedToConvert(node))
+					localFlags = _flags.SqlFlag();
+
+				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, _flags.IsExpression()) || node.Method.IsSqlPropertyMethodEx())
 					localFlags = _flags.SqlFlag();
 
 				var method = Builder.MakeExpression(_context, node, localFlags);
@@ -561,5 +573,76 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		bool _handlingAlias;
+
+		Expression CheckForAlias(IBuildContext context, MemberExpression memberExpression, EntityDescriptor entityDescriptor, string alias, ProjectFlags flags)
+		{
+			if (_handlingAlias)
+				return memberExpression;
+
+			var otherProp = entityDescriptor.TypeAccessor.GetMemberByName(alias);
+
+			if (otherProp == null)
+				return memberExpression;
+
+			var newPath     = Expression.MakeMemberAccess(memberExpression.Expression, otherProp.MemberInfo);
+
+			_handlingAlias = true;
+			var aliasResult = MakeExpression(context, newPath, flags);
+			_handlingAlias = false;
+
+			if (aliasResult is not SqlErrorExpression && aliasResult is not DefaultValueExpression)
+			{
+				return aliasResult;
+			}
+
+			return memberExpression;
+		}
+
+		public bool HandleAlias(IBuildContext context, Expression expression, ProjectFlags flags, [NotNullWhen(true)] out Expression? result)
+		{
+			result = null;
+
+			if (expression is not MemberExpression memberExpression)
+				return false;
+
+			var ed = MappingSchema.GetEntityDescriptor(memberExpression.Expression.Type);
+
+			if (ed.Aliases == null)
+				return false;
+
+			var testedColumn = ed.Columns.FirstOrDefault(c =>
+				MemberInfoComparer.Instance.Equals(c.MemberInfo, memberExpression.Member));
+
+			if (testedColumn != null)
+			{
+				var otherColumns = ed.Aliases.Where(a =>
+					a.Value == testedColumn.MemberName);
+
+				foreach (var other in otherColumns)
+				{
+					var newResult = CheckForAlias(context, memberExpression, ed, other.Key, flags);
+					if (!ReferenceEquals(newResult, memberExpression))
+					{
+						result = newResult;
+						return true;
+					}
+				}
+			}
+			else
+			{
+				if (ed.Aliases.TryGetValue(memberExpression.Member.Name, out var alias))
+				{
+					var newResult = CheckForAlias(context, memberExpression, ed, alias, flags);
+					if (!ReferenceEquals(newResult, memberExpression))
+					{
+						result = newResult;
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
 	}
 }

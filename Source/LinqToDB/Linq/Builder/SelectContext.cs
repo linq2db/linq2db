@@ -134,7 +134,19 @@ namespace LinqToDB.Linq.Builder
 			{
 				// We can omit strict for expression building. It will help to do not crash when user uses Automapper and it tries to map non accessible fields
 				//
-				result = Builder.Project(this, path, null, 0, flags, Body, strict: !flags.IsExpression());
+				result = Builder.Project(this, path, null, 0, flags, Body, strict: true);
+
+				if (result is SqlErrorExpression)
+				{
+					// Handling dumb case With column aliases
+					//
+
+					if (Builder.HandleAlias(this, path, flags, out var newResult))
+						return newResult;
+
+					if (flags.IsExpression())
+						result = Builder.Project(this, path, null, 0, flags, Body, strict: false);
+				}
 
 				result = SequenceHelper.RemapToNewPathSimple(result, path, flags);
 

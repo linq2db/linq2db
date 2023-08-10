@@ -605,7 +605,6 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression HandleExtension(IBuildContext context, Expression expr, ProjectFlags flags)
 		{
-
 			// Handling ExpressionAttribute
 			//
 			if (expr.NodeType == ExpressionType.Call || expr.NodeType == ExpressionType.MemberAccess)

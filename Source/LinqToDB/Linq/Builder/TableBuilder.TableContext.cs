@@ -429,47 +429,54 @@ namespace LinqToDB.Linq.Builder
 								}
 
 								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
+								{
 									foreach (var mapping in InheritanceMapping)
+									{
 										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
+										{
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
+										}
+									}
+								}
 
-								if (memberExpression.Member.IsDynamicColumnPropertyEx())
+							}
+
+							if (memberExpression.Member.IsDynamicColumnPropertyEx())
+							{
+								var fieldName = memberExpression.Member.Name;
+
+								// do not add association columns
+								var flag = true;
+
+								foreach (var assoc in EntityDescriptor.Associations)
 								{
-									var fieldName = memberExpression.Member.Name;
-
-									// do not add association columns
-									var flag = true;
-
-									foreach (var assoc in EntityDescriptor.Associations)
+									if (assoc.MemberInfo == memberExpression.Member)
 									{
-										if (assoc.MemberInfo == memberExpression.Member)
-										{
-											flag = false;
-											break;
-										}
+										flag = false;
+										break;
+									}
+								}
+
+								if (flag)
+								{
+									var newField = SqlTable.FindFieldByMemberName(fieldName);
+									if (newField == null)
+									{
+										newField = new SqlField(
+											new ColumnDescriptor(
+												Builder.MappingSchema,
+												EntityDescriptor,
+												new ColumnAttribute(fieldName),
+												new MemberAccessor(EntityDescriptor.TypeAccessor,
+													memberExpression.Member, EntityDescriptor),
+												InheritanceMapping.Count > 0)
+										) { IsDynamic = true, };
+
+										SqlTable.Add(newField);
 									}
 
-									if (flag)
-									{
-										var newField = SqlTable.FindFieldByMemberName(fieldName);
-										if (newField == null)
-										{
-											newField = new SqlField(
-												new ColumnDescriptor(
-													Builder.MappingSchema,
-													EntityDescriptor,
-													new ColumnAttribute(fieldName),
-													new MemberAccessor(EntityDescriptor.TypeAccessor,
-														memberExpression.Member, EntityDescriptor),
-													InheritanceMapping.Count > 0)
-											) { IsDynamic = true, };
-
-											SqlTable.Add(newField);
-										}
-
-										return newField;
-									}
+									return newField;
 								}
 							}
 

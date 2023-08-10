@@ -189,7 +189,7 @@ namespace LinqToDB.Linq.Builder
 						if (expr.Arguments[1].Type != typeof(string))
 							throw new ArgumentException("Only strings are allowed for member name in Sql.Property expressions.");
 
-						var entity           = ConvertExpression(expr.Arguments[0]);
+						var entity           = ConvertExpression(expr.Arguments[0].UnwrapConvertToObject());
 						var memberName       = (string)expr.Arguments[1].EvaluateExpression()!;
 						var entityDescriptor = MappingSchema.GetEntityDescriptor(entity.Type, DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
@@ -4108,7 +4108,16 @@ namespace LinqToDB.Linq.Builder
 					{
 						expression = null;
 					}
-				} 
+				}
+				else if (mc.Method.Name == nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
+				{
+					var translated = MakeExpression(currentContext, mc.Arguments[0], flags);
+					if (translated is SqlPlaceholderExpression { Sql: SqlColumn column })
+					{
+						column.RawAlias = mc.Arguments[1].EvaluateExpression() as string;
+					}
+					return translated;
+				}
 				else if (IsAssociation(mc, out _))
 				{
 					var arguments = mc.Arguments;

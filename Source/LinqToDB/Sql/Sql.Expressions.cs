@@ -431,25 +431,15 @@ namespace LinqToDB
 			}
 		}
 
-		private sealed class TableFieldBuilder : IExtensionCallBuilder
-		{
-			public void Build(ISqExtensionBuilder builder)
-			{
-				var tableExpr = builder.GetExpression(0);
-				var fieldName = builder.GetValue<string>(1);
-				var sqlField = tableExpr as SqlField;
-
-				if (sqlField == null)
-					throw new LinqToDBException("Can not find Table associated with expression");
-
-				builder.ResultExpression = new SqlField(sqlField.Table!, fieldName);
-			}
-		}
-
-		[Extension("", BuilderType = typeof(TableFieldBuilder))]
+		[ExpressionMethod(nameof(TableFieldIml))]
 		public static TColumn TableField<TEntity, TColumn>([NoEnumeration] TEntity entity, string fieldName)
 		{
 			throw new LinqToDBException("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
+		}
+
+		static Expression<Func<TEntity, string, TColumn>> TableFieldIml<TEntity, TColumn>()
+		{
+			return (entity, fieldName) => Sql.Property<TColumn>(entity, fieldName);
 		}
 
 		[Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
