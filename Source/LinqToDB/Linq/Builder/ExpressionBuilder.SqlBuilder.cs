@@ -1016,7 +1016,7 @@ namespace LinqToDB.Linq.Builder
 					var t = ConvertToSql(context, e.IfTrue);
 					var f = ConvertToSql(context, e.IfFalse);
 
-					if (QueryHelper.UnwrapExpression(f, checkNullability: true) is SqlFunction c && c.Name == "CASE")
+					if (QueryHelper.UnwrapExpression(f, checkNullability: true) is SqlFunction("CASE") c)
 					{
 						var parms = new ISqlExpression[c.Parameters.Length + 2];
 
@@ -1024,10 +1024,42 @@ namespace LinqToDB.Linq.Builder
 						parms[1] = t;
 						c.Parameters.CopyTo(parms, 2);
 
-						return new SqlFunction(e.Type, "CASE", parms) { CanBeNull = false };
+						return new SqlFunction(e.Type, "CASE", parms) { CanBeNull = t.CanBeNull || f.CanBeNull };
 					}
 
-					return new SqlFunction(e.Type, "CASE", s, t, f) { CanBeNull = false };
+					return new SqlFunction(e.Type, "CASE", s, t, f) { CanBeNull = t.CanBeNull || f.CanBeNull };
+				}
+
+				case ExpressionType.Switch:
+				{
+					var e  = (SwitchExpression)expression;
+					var d  = e.DefaultBody == null ||
+					         e.DefaultBody is not UnaryExpression { NodeType : ExpressionType.Convert, Operand : MethodCallExpression { Method : var m } } || m != ConvertBuilder.DefaultConverter;
+					var ps = new ISqlExpression[e.Cases.Count * 2 + (d? 1 : 0)];
+					var sv = ConvertToSql(context, e.SwitchValue);
+
+					for (var i = 0; i < e.Cases.Count; i++)
+					{
+						SqlSearchCondition.Next? expr = null;
+
+						foreach (var testValue in e.Cases[i].TestValues)
+						{
+							if (testValue == null)
+								continue;
+
+							var sc = expr == null ? new() : expr.Or;
+
+							expr = sc.Expr(sv).Equal.Expr(ConvertToSql(context, testValue));
+						}
+
+						ps[i * 2]     = expr!.ToExpr();
+						ps[i * 2 + 1] = ConvertToSql(context, e.Cases[i].Body);
+					}
+
+					if (d)
+						ps[^1] = ConvertToSql(context, e.DefaultBody!);
+
+					return new SqlFunction(e.Type, "CASE", ps) { CanBeNull = ps.Any(p => p.CanBeNull) };
 				}
 
 				case ExpressionType.MemberAccess:

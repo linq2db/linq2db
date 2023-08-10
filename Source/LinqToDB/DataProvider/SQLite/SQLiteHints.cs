@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return table => table.TableHint(Hint.NotIndexed);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.SQLite, Sql.QueryExtensionScope.TableHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,                Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static ISQLiteSpecificTable<TSource> TableHint<TSource>(this ISQLiteSpecificTable<TSource> table, [SqlQueryDependent] string hint)
