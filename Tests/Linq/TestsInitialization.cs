@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Data.Common;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 
+using LinqToDB.Common;
 using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Activity;
@@ -19,12 +19,11 @@ using Tests;
 [SetUpFixture]
 public class TestsInitialization
 {
+	static bool _doMetrics;
+
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
-		LinqToDB.Common.Configuration.TraceMaterializationActivity = true;
-		ActivityService.AddFactory(ActivityStatistics.Factory);
-
 #if DEBUG
 		ActivityService.AddFactory(ActivityHierarchyFactory);
 
@@ -36,7 +35,17 @@ public class TestsInitialization
 				return new ActivityHierarchy(activityID, s => Debug.WriteLine(s));
 			return null;
 		}
+
+		_doMetrics = true;
+#else
+		_doMetrics = TestBase.StoreMetrics == true;
 #endif
+
+		if (_doMetrics)
+		{
+			Configuration.TraceMaterializationActivity = true;
+			ActivityService.AddFactory(ActivityStatistics.Factory);
+		}
 
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
@@ -88,15 +97,15 @@ public class TestsInitialization
 	{
 #if NET472
 		const string runtimeFile = "e_sqlite3.dll";
-		var destPath             = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, runtimeFile);
-		var sourcePath           = Path.Combine(
+		var destPath             = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, runtimeFile);
+		var sourcePath           = System.IO.Path.Combine(
 			AppDomain.CurrentDomain.BaseDirectory,
 			"runtimes",
 			IntPtr.Size == 4 ? "win-x86" : "win-x64",
 			"native",
 			runtimeFile);
 
-		File.Copy(sourcePath, destPath, true);
+		System.IO.File.Copy(sourcePath, destPath, true);
 #endif
 	}
 
@@ -119,12 +128,15 @@ public class TestsInitialization
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
-		var str = ActivityStatistics.GetReport();
+		if (_doMetrics)
+		{
+			var str = ActivityStatistics.GetReport();
 
-		Debug.WriteLine(str);
-		TestContext.Progress.WriteLine(str);
+			Debug.WriteLine(str);
+			TestContext.Progress.WriteLine(str);
 
-		if (TestBase.StoreMetrics == true)
-			BaselinesWriter.WriteMetrics(TestBase.BaselinesPath!, str);
+			if (TestBase.StoreMetrics == true)
+				BaselinesWriter.WriteMetrics(TestBase.BaselinesPath!, str);
+		}
 	}
 }

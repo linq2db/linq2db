@@ -1,15 +1,15 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Tools
 {
 	public static class ActivityService
 	{
-		public static IActivity? Start(ActivityID activityID)
-		{
-			var factory = _factory;
+		public static Func<ActivityID, IActivity?> Start { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; private set; } = static _ => null;
 
-			if (factory == null)
-				return null;
+		public static IActivity? StartImpl(ActivityID activityID)
+		{
+			var factory = _factory!;
 
 			var list = factory.GetInvocationList();
 
@@ -26,9 +26,18 @@ namespace LinqToDB.Tools
 
 		static Func<ActivityID,IActivity?>? _factory;
 
-		public static void AddFactory(Func<ActivityID,IActivity?>? factory)
+		public static void AddFactory(Func<ActivityID,IActivity?> factory)
 		{
-			_factory += factory;
+			if (_factory == null)
+			{
+				_factory += factory;
+				Start    = static id => _factory(id);
+			}
+			else
+			{
+				_factory += factory;
+				Start    = StartImpl;
+			}
 		}
 
 		class MultiActivity : IActivity
