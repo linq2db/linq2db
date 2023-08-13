@@ -148,12 +148,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (Builder.HandleAlias(this, path, flags, out var newResult))
 							return newResult;
+						projection1 = Builder.Project(this, path, null, 0, flags, _projection1, false);
 					}
 
 					if (projection2 is SqlErrorExpression)
 					{
 						if (Builder.HandleAlias(this, path, flags, out var newResult))
 							return newResult;
+						projection2 = Builder.Project(this, path, null, 0, flags, _projection2, false);
 					}
 					
 					// for Expression we can allow non translatable errors
@@ -163,6 +165,15 @@ namespace LinqToDB.Linq.Builder
 							projection1 = Expression.Default(path.Type);
 						if (projection2 is SqlErrorExpression)
 							projection2 = Expression.Default(path.Type);
+					}
+
+					if (projection1 is SqlPathExpression && projection2 is SqlErrorExpression)
+					{
+						projection2 = projection1;
+					}
+					else if (projection2 is SqlPathExpression && projection1 is SqlErrorExpression)
+					{
+						projection1 = projection2;
 					}
 
 					if (projection1 is SqlErrorExpression || projection2 is SqlErrorExpression)
