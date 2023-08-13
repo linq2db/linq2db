@@ -22,6 +22,7 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?    _parentSelect;
 		SqlSetOperator? _currentSetOperator;
 		SelectQuery?    _applySelect;
+		SelectQuery?    _inSubquery;
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -47,6 +48,7 @@ namespace LinqToDB.SqlQuery
 			_dependencies      = dependencies;
 			_parentSelect      = default!;
 			_applySelect       = default!;
+			_inSubquery        = default!;
 
 			return ProcessElement(root);
 		}
@@ -162,6 +164,17 @@ namespace LinqToDB.SqlQuery
 			_currentSetOperator = saveCurrent;
 
 			return newElement;
+		}
+
+		public override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			var saveInsubquery = _inSubquery;
+
+			_inSubquery = predicate.SubQuery;
+			var newNode = base.VisitInSubQueryPredicate(predicate);
+			_inSubquery = saveInsubquery;
+
+			return newNode;
 		}
 
 		void OptimizeUnions(SelectQuery selectQuery)
@@ -986,7 +999,7 @@ namespace LinqToDB.SqlQuery
 							{
 								if (e is not SqlColumn clm || clm.Parent != visitor.Context.sql)
 								{
-									var newExpr = visitor.Context.sql.Select.AddNewColumn((ISqlExpression)e);
+									var newExpr = visitor.Context.sql.Select.AddColumn((ISqlExpression)e);
 
 									if (visitor.Context.isAgg)
 									{
@@ -1307,6 +1320,11 @@ namespace LinqToDB.SqlQuery
 					return false;
 			}
 
+			if (selectQuery == _inSubquery && subQuery.Select.HasModifier)
+			{
+				return false;
+			}
+
 			// Actual modification starts from this point
 			//
 
@@ -1400,8 +1418,16 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty)
 				return false;
 
-			if (joinTable.JoinType != JoinType.Inner && joinTable.JoinType != JoinType.Left)
-				return false;
+			if (joinTable.JoinType != JoinType.Inner)
+			{
+				if (joinTable.JoinType == JoinType.Left)
+				{
+					if (!subQuery.IsSimpleButWhere)
+						return false;
+				}
+				else 
+					return false;
+			}
 
 			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
 				return false;

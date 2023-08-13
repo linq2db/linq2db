@@ -2287,7 +2287,7 @@ namespace LinqToDB.SqlQuery
 			return predicate;			
 		}
 
-		IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		public virtual IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			switch (GetVisitMode(predicate))
 			{

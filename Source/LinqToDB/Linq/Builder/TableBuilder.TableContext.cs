@@ -407,9 +407,9 @@ namespace LinqToDB.Linq.Builder
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;
 
-										if (me.Expression is MemberExpression)
+										if (me.Expression.UnwrapConvert() is MemberExpression)
 										{
-											while (me.Expression is MemberExpression me1)
+											while (me.Expression.UnwrapConvert() is MemberExpression me1)
 											{
 												me   = me1;
 												name = me.Member.Name + '.' + name;

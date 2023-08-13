@@ -226,8 +226,6 @@ namespace LinqToDB.Linq.Builder
 				return base.Visit(newNode);
 			}
 
-
-
 			protected override Expression VisitParameter(ParameterExpression node)
 			{
 				if (node == ExpressionConstants.DataContextParam)
@@ -271,8 +269,12 @@ namespace LinqToDB.Linq.Builder
 					if (_flags.IsExpression())
 					{
 						var operand = Visit(node.Operand);
-						return node.Update(operand);
+						var newNode = node.Update(operand);
+						if (!ExpressionEqualityComparer.Instance.Equals(newNode, node))
+							return Visit(newNode);
 					}
+
+					return TranslateExpression(node);
 				}
 
 				return base.VisitUnary(node);
