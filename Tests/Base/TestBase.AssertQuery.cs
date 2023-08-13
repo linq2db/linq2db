@@ -64,12 +64,15 @@ namespace Tests
 
 				if (expression is MethodCallExpression mc)
 				{
-					if (mc.Method.IsStatic && (mc.Method.DeclaringType == typeof(Enumerable) ||
-					                           mc.Method.DeclaringType == typeof(Queryable)))
-						return false;
+					return true;
 				}
 
 				return true;
+			}
+
+			protected bool IsLINQMethod(MethodInfo method)
+			{
+				return method.IsStatic && method.DeclaringType == typeof(Enumerable) || method.DeclaringType == typeof(Queryable);
 			}
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -81,17 +84,22 @@ namespace Tests
 					if (CanBeNull(newNode.Object))
 					{
 						var checkedObs = Visit(newNode.Object);
-						return Expression.Condition(Expression.Equal(checkedObs, Expression.Default(newNode.Object.Type)),
+						var resultNode = Expression.Condition(Expression.Equal(checkedObs, Expression.Default(newNode.Object.Type)),
 							Expression.Default(newNode.Type), newNode);
+
+						return resultNode;
 					}
 				}
-				else if (newNode.Method.IsStatic && (newNode.Method.DeclaringType == typeof(Enumerable) || newNode.Method.DeclaringType == typeof(Queryable)))
+				else if (newNode.Method.IsStatic && IsLINQMethod(newNode.Method))
 				{
 					if (CanBeNull(node.Arguments[0]))
 					{
 						var checkedFirst = Visit(node.Arguments[0]);
-						return Expression.Condition(Expression.Equal(checkedFirst, Expression.Default(newNode.Arguments[0].Type)),
-							Expression.Default(newNode.Type), newNode.Update(node.Object, new[] {node.Arguments[0]}.Concat(newNode.Arguments.Skip(1))));					
+						var resultNode = Expression.Condition(
+							Expression.Equal(checkedFirst, Expression.Default(newNode.Arguments[0].Type)),
+							Expression.Default(newNode.Type), newNode);
+
+						return resultNode;
 					}
 				}
 
