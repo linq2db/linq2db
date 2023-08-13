@@ -30,20 +30,36 @@ namespace LinqToDB.Linq.Builder
 			return function != null && (function.IsAggregate || function.IsWindowFunction) ? function : null;
 		}
 
-		static AggregationType GetAggregationType(MethodCallExpression methodCallExpression, out int parameterCount)
+		static Type ExtractTaskType(Type taskType)
+		{
+			return taskType.GetGenericArguments()[0];
+		}
+
+		static AggregationType GetAggregationType(MethodCallExpression methodCallExpression, out int argumentsCount, out Type returnType)
 		{
 			AggregationType aggregationType;
-			parameterCount = methodCallExpression.Arguments.Count;
+			argumentsCount = methodCallExpression.Arguments.Count;
+			returnType     = methodCallExpression.Method.ReturnType;
+
 			switch (methodCallExpression.Method.Name)
 			{
 				case "Count":
+				case "LongCount":
 				{
 					aggregationType = AggregationType.Count;
 					break;
-				}	
+				}
+				case "LongCountAsync":
+				{
+					--argumentsCount;
+					returnType      = typeof(long);
+					aggregationType = AggregationType.Count;
+					break;
+				}
 				case "CountAsync":
 				{
-					--parameterCount;
+					--argumentsCount;
+					returnType      = typeof(int);
 					aggregationType = AggregationType.Count;
 					break;
 				}	
@@ -54,7 +70,8 @@ namespace LinqToDB.Linq.Builder
 				}	
 				case "MinAsync":
 				{
-					--parameterCount;
+					--argumentsCount;
+					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Min;
 					break;
 				}
@@ -65,7 +82,8 @@ namespace LinqToDB.Linq.Builder
 				}
 				case "MaxAsync":
 				{
-					--parameterCount;
+					--argumentsCount;
+					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Max;
 					break;
 				}
@@ -76,7 +94,8 @@ namespace LinqToDB.Linq.Builder
 				}
 				case "SumAsync":
 				{
-					--parameterCount;
+					--argumentsCount;
+					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Sum;
 					break;
 				}
@@ -87,7 +106,8 @@ namespace LinqToDB.Linq.Builder
 				}
 				case "AverageAsync":
 				{
-					--parameterCount;
+					--argumentsCount;
+					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Average;
 					break;
 				}
@@ -113,13 +133,12 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var methodName = methodCall.Method.Name.Replace("Async", "");
-			var returnType = methodCall.Method.ReturnType;
-
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
 
-			var aggregationType = GetAggregationType(methodCall, out var parameterCount);
+			var aggregationType = GetAggregationType(methodCall, out var argumentsCount, out var returnType);
+
+			var methodName = methodCall.Method.Name.Replace("Async", "");
 
 			var sequenceArgument = builder.CorrectRoot(null, methodCall.Arguments[0]);
 
@@ -137,7 +156,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (aggregationType == AggregationType.Count)
 				{
-					if (parameterCount == 2)
+					if (argumentsCount == 2)
 					{
 						var lambda = methodCall.Arguments[1].UnwrapLambda();
 						sequence = builder.BuildWhere(null, sequence, lambda, false, false, buildInfo.IsTest,
@@ -148,12 +167,12 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
-					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodName, returnType);
 				}
 				else
 				{
 					Expression valueExpression;
-					if (parameterCount == 2)
+					if (argumentsCount == 2)
 					{
 						var lambda = methodCall.Arguments[1].UnwrapLambda();
 						valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
@@ -165,12 +184,12 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, valueExpression, ProjectFlags.SQL);
-					context = new AggregationContext(buildInfo.Parent, sequence, methodCall.Method.Name, methodCall.Method.ReturnType);
+					context = new AggregationContext(buildInfo.Parent, sequence, methodName, returnType);
 
 					var sql = sqlPlaceholder.Sql;
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, 
-						new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+						new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
 				}
 			}
 			else
@@ -246,32 +265,31 @@ namespace LinqToDB.Linq.Builder
 				placeholderSequence ??= sequence;
 
 				Expression valueExpression;
-				if (parameterCount == 2)
+				if (argumentsCount == 2)
 				{
 					var lambda = methodCall.Arguments[1].UnwrapLambda();
 					valueExpression = SequenceHelper.PrepareBody(lambda, sequence);
 				}
 				else
 				{
-					valueExpression = new ContextRefExpression(methodCall.Type, sequence);
+					valueExpression = new ContextRefExpression(returnType, sequence);
 				}
 
-				context = new AggregationContext(buildInfo.Parent, placeholderSequence, methodCall.Method.Name,
-					methodCall.Method.ReturnType);
+				context = new AggregationContext(buildInfo.Parent, placeholderSequence, methodName, returnType);
 
 				ISqlExpression sql;
 
 				if (aggregationType == AggregationType.Count)
 				{
-					if (parameterCount == 2)
+					if (argumentsCount == 2)
 					{
 						var sqlPlaceholder = builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression,
 							buildInfo.GetFlags());
 
 						if (isSimple)
 						{
-							sql = new SqlFunction(methodCall.Type, "CASE", sqlPlaceholder.Sql, new SqlValue(1),
-								new SqlValue(methodCall.Type, null));
+							sql = new SqlFunction(returnType, "CASE", sqlPlaceholder.Sql, new SqlValue(1),
+								new SqlValue(returnType, null));
 						}
 						else
 						{
@@ -299,7 +317,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/
-					new SqlFunction(methodCall.Type, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+					new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
 
 				if (!isSimple)
 				{
