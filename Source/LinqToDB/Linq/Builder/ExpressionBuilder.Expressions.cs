@@ -198,6 +198,7 @@ namespace LinqToDB.Linq.Builder
 				    node.NodeType == ExpressionType.Convert     ||
 				    node.NodeType == ExpressionType.Constant    ||
 				    node.NodeType == ExpressionType.Parameter   ||
+				    node.NodeType == ExpressionType.Not         ||
 				    node is SqlGenericConstructorExpression     ||
 				    node is BinaryExpression)
 				{
@@ -275,6 +276,20 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					return TranslateExpression(node);
+				}
+				else if (node.NodeType == ExpressionType.Not)
+				{
+					if (node.Operand.NodeType == ExpressionType.Equal)
+					{
+						var binary = (BinaryExpression)node.Operand;
+						return Visit(Expression.NotEqual(binary.Left, binary.Right));
+					}
+
+					if (node.Operand.NodeType == ExpressionType.NotEqual)
+					{
+						var binary = (BinaryExpression)node.Operand;
+						return Visit(Expression.Equal(binary.Left, binary.Right));
+					}
 				}
 
 				return base.VisitUnary(node);
@@ -445,7 +460,7 @@ namespace LinqToDB.Linq.Builder
 				if (IsForcedToConvert(node))
 					localFlags = _flags.SqlFlag();
 
-				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, _flags.IsExpression()) || node.Method.IsSqlPropertyMethodEx())
+				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || node.Method.IsSqlPropertyMethodEx())
 					localFlags = _flags.SqlFlag();
 
 				var method = Builder.MakeExpression(_context, node, localFlags);

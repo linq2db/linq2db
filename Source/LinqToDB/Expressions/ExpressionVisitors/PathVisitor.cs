@@ -241,12 +241,7 @@ namespace LinqToDB.Expressions
 					{
 						path = _path;
 
-						if (expr is ContextConstructionExpression construction)
-						{
-							path = ConvertPathTo(typeof(ContextConstructionExpression));
-							Path(construction.InnerExpression, ReflectionHelper.ContextConstruction.InnerExpression);
-						}
-						else if (expr is SqlGenericConstructorExpression generic)
+						if (expr is SqlGenericConstructorExpression generic)
 						{
 							path = ConvertPathTo(typeof(SqlGenericConstructorExpression));
 							Path(generic.Assignments, ReflectionHelper.SqlGenericConstructor.Assignments, AssignmentsPath);

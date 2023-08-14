@@ -597,59 +597,47 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression? sql = null;
 			Expression?     result = null;
 
-			var isFirst = true;
-
 			var newExpr = expression;
 
 			newExpr = MakeExpression(context, newExpr, flags);
 
-			while (true)
+			if (typeof(IToSqlConverter).IsSameOrParentOf(newExpr.Type))
 			{
-				if (typeof(IToSqlConverter).IsSameOrParentOf(newExpr.Type))
-				{
-					sql = ConvertToSqlConvertible(newExpr);
-				}
+				sql = ConvertToSqlConvertible(newExpr);
+			}
 
-				if (sql == null && !flags.IsExpression())
+			if (sql == null && !flags.IsExpression())
+			{
+				if (!PreferServerSide(newExpr, false))
 				{
-					if (!PreferServerSide(newExpr, false))
+					if (columnDescriptor?.ValueConverter == null && CanBeConstant(newExpr))
 					{
-						if (columnDescriptor?.ValueConverter == null && CanBeConstant(newExpr))
+						sql = BuildConstant(newExpr, columnDescriptor);
+					}
+					else if (CanBeCompiled(newExpr, flags.IsExpression()))
+					{
+						if ((newExpr.NodeType == ExpressionType.MemberInit ||
+						     newExpr.NodeType == ExpressionType.New)
+						    && !MappingSchema.IsScalarType(newExpr.Type))
 						{
-							sql = BuildConstant(newExpr, columnDescriptor);
+							// expression will be needed for comparison
+							newExpr = SqlGenericConstructorExpression.Parse(newExpr);
 						}
-						else if (CanBeCompiled(newExpr, flags.IsExpression()))
+						else
 						{
-							if ((newExpr.NodeType == ExpressionType.MemberInit ||
-							     newExpr.NodeType == ExpressionType.New) 
-							    && !MappingSchema.IsScalarType(newExpr.Type))
-							{
-								// expression will be needed for comparison
-								newExpr = SqlGenericConstructorExpression.Parse(newExpr);
-							}
-							else
-								if (!isFirst)
-									sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias: alias).SqlParameter;
+							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias)
+								.SqlParameter;
 						}
 					}
 				}
+			}
 
-				if (!isFirst)
-					break;
-
-				if (sql == null)
+			if (sql == null)
+			{
+				if (newExpr is SqlPlaceholderExpression)
 				{
-					newExpr = MakeExpression(context, newExpr, flags);
-					if (newExpr is SqlPlaceholderExpression)
-					{
-						result = newExpr;
-						break;
-					}
+					result = newExpr;
 				}
-				else
-					break;
-
-				isFirst = false;
 			}
 
 			if (result == null)
@@ -4284,7 +4272,7 @@ namespace LinqToDB.Linq.Builder
 							var converted = ConvertSingleExpression(path, flags.IsExpression());
 							if (!ReferenceEquals(converted, path))
 							{
-								if (currentContext != null && flags.IsExpression() && path is MethodCallExpression mc && mc.Arguments.All(a => IsSimpleForCompilation(currentContext, a)))
+								if (currentContext != null && !flags.IsSql() && path is MethodCallExpression mc && mc.Arguments.All(a => IsSimpleForCompilation(currentContext, a)))
 								{
 									
 								}

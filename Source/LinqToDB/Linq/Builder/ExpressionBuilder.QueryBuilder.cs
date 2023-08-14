@@ -11,110 +11,97 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using Mapping;
-	using Reflection;
 	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Common;
 
 	partial class ExpressionBuilder
 	{
 		#region BuildExpression
 
-		readonly Dictionary<Expression,UnaryExpression> _convertedExpressions = new ();
-
-		public void UpdateConvertedExpression(Expression oldExpression, Expression newExpression)
+		class DeduplicateVisitor : ExpressionVisitorBase
 		{
-			if (_convertedExpressions.TryGetValue(oldExpression, out var conversion)
-				&& !_convertedExpressions.ContainsKey(newExpression))
+			List<(ParameterExpression variable, Expression assingment)> _variables = default!;
+			(Expression? node, ParameterExpression? variable)           _replacement;
+			HashSet<Expression>                                         _visited    = default!;
+			List<Expression>                                            _duplicates = default!;
+
+			public Expression Deduplicate(Expression expression, List<(ParameterExpression variable, Expression assingment)> variables)
 			{
-				UnaryExpression newConversion;
-				if (conversion.NodeType == ExpressionType.Convert)
+				_variables = variables;
+
+				_duplicates ??= new();
+				_duplicates.Clear();
+
+				var result = expression;
+				do
 				{
-					newConversion = Expression.Convert(newExpression, conversion.Type);
+					_replacement = default;
+					_visited     = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
+
+					result = Visit(result);
+
+					if (_replacement.node == null)
+						break;
+
+					// perform full replacement
+					result = Visit(result);
+				} while (true);
+
+				return result;
+			}
+
+			[return: NotNullIfNotNull(nameof(node))]
+			public override Expression? Visit(Expression? node)
+			{
+				if (node == null) 
+					return null;
+
+				if (node.NodeType == ExpressionType.Parameter || node.NodeType == ExpressionType.Call || node.NodeType == ExpressionType.MemberAccess ||
+				    node.NodeType == ExpressionType.Assign)
+				{
+					return node;
+				}
+
+				if (_replacement.node == null)
+				{
+					if (!_visited.Add(node))
+					{
+						var variable = Expression.Variable(node.Type, "v" + _variables.Count);
+
+						_replacement = (node, variable);
+
+						_variables.Add((variable, node));
+						return variable;
+					}
 				}
 				else
 				{
-					newConversion = Expression.ConvertChecked(newExpression, conversion.Type);
+					if ( ExpressionEqualityComparer.Instance.Equals(node, _replacement.node))
+						return _replacement.variable!;
 				}
 
-				_convertedExpressions.Add(newExpression, newConversion);
+				return base.Visit(node);
 			}
-		}
 
-		public void RemoveConvertedExpression(Expression ex)
-		{
-			_convertedExpressions.Remove(ex);
-		}
-
-		static Expression PerformReplacement(Expression expression, Dictionary<Expression, Expression> replacements)
-		{
-			if (replacements.Count == 0)
-				return expression;
-
-			var corrected = expression.Transform(
-				replacements,
-				static (ctx, e) =>
-				{
-					if ((e.NodeType == ExpressionType.Extension || e.NodeType == ExpressionType.MemberAccess) && ctx.TryGetValue(e, out var replacement))
-					{
-						return replacement;
-					}
-
-					return e;
-				});
-
-			return corrected;
-		}
-
-		Expression Deduplicate(List<(ParameterExpression variable, Expression assingment)> variables, Expression expression, bool onlyConstructRef)
-		{
-			var visited    = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
-			var duplicates = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
-
-			expression.Visit(
-				(builder: this, root: expression, duplicates, visited, onlyConstructRef),
-				static (ctx, e) =>
-				{
-
-					bool checkForDuplicate;
-
-					if (ctx.onlyConstructRef)
-					{
-						checkForDuplicate = e is ContextConstructionExpression;
-					}
-					else
-					{
-						checkForDuplicate = e is SqlGenericConstructorExpression || e is SqlAdjustTypeExpression ||
-						                    e is SqlReaderIsNullExpression       || e is ContextConstructionExpression;
-					}
-
-					if (checkForDuplicate && !ReferenceEquals(e, ctx.root))
-					{
-						if (!ctx.visited.Add(e))
-						{
-							ctx.duplicates.Add(e);;
-							return false;
-						}
-					}
-
-					return true;
-				});
-
-			if (duplicates.Count == 0)
-				return expression;
-
-			var replacements = new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
-
-			foreach (var d in duplicates)
+			internal override Expression VisitSqlReaderIsNullExpression(SqlReaderIsNullExpression node)
 			{
-				var variable   = Expression.Variable(d.Type, "v" + variables.Count);
-				variables.Add((variable, d));
-
-				replacements[d] = variable;
+				return node;
 			}
 
-			var corrected = PerformReplacement(expression, replacements);
+			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
+			{
+				return node;
+			}
+		}
 
-			return corrected;
+		Expression Deduplicate(List<(ParameterExpression variable, Expression assingment)> variables,
+			Expression expression)
+		{
+			var visitor = new DeduplicateVisitor();
+
+			var deduplicated = visitor.Deduplicate(expression, variables);
+			return deduplicated;
 		}
 
 		Expression FinalizeProjection<T>(
@@ -133,14 +120,14 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			// convert all missed references
-			var postProcessed = FinalizeConstructors(context, expression);
+			var postProcessed = FinalizeConstructors(context, expression, true);
 
 			// process eager loading queries
 			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
 			if (!ExpressionEqualityComparer.Instance.Equals((correctedEager, postProcessed)))
 			{
 				// convert all missed references
-				postProcessed = FinalizeConstructors(context, correctedEager);
+				postProcessed = FinalizeConstructors(context, correctedEager, false);
 			}
 
 			var withColumns = ToColumns(context, postProcessed);
@@ -346,256 +333,6 @@ namespace LinqToDB.Linq.Builder
 			var result = BuildSqlExpression(context, expression, flags, alias);
 
 			return result;
-
-			result = result.Transform(
-				(builder: this, context, flags, alias),
-				static (context, expr) =>
-				{
-					// Shortcut: if expression can be compiled we can live it as is but inject accessors 
-					//
-					if (context.flags.IsExpression()             &&
-					    expr.NodeType != ExpressionType.New      &&
-					    expr.NodeType != ExpressionType.Constant &&
-					    expr.NodeType != ExpressionType.Default  &&
-					    expr is not DefaultValueExpression       &&
-					    context.builder.CanBeCompiled(expr, false))
-					{
-						// correct expression based on accessors
-
-						var valueAccessor = context.builder.ParametersContext.ReplaceParameter(
-							context.builder.ParametersContext._expressionAccessors, expr, false, s => { });
-
-						var valueExpr = valueAccessor.ValueExpression;
-
-						if (valueExpr.Type != expr.Type)
-						{
-							valueExpr = Expression.Convert(valueExpr.UnwrapConvert(), expr.Type);
-						}
-
-						return new TransformInfo(valueExpr, true);
-					}
-
-					switch (expr.NodeType)
-					{
-						case ExpressionType.Convert:
-						case ExpressionType.ConvertChecked:
-						{
-							if (expr.Type == typeof(object))
-								break;
-
-							var cex = (UnaryExpression)expr;
-
-							//if (context.builder._convertedExpressions.TryGetValue(cex.Operand, out var converted))
-							//	return new TransformInfo(converted, true);
-
-							// context.builder._convertedExpressions.Add(cex.Operand, cex);
-
-							var newOperand = context.builder.BuildSqlExpression(context.context,
-								cex.Operand, context.flags);
-
-							if (newOperand.Type != cex.Type)
-							{
-								if (cex.Type.IsNullable() && newOperand is SqlPlaceholderExpression sqlPlaceholder)
-								{
-									newOperand = sqlPlaceholder.MakeNullable();
-								}
-
-								newOperand = cex.Update(newOperand);
-							}
-
-							var ret = new TransformInfo(newOperand, true);
-
-							context.builder.RemoveConvertedExpression(cex.Operand);
-
-							return ret;
-						}
-
-						case ExpressionType.MemberAccess:
-						{
-							var ma = (MemberExpression)expr;
-
-							var newExpr = context.builder.ExposeExpression(ma);
-
-							if (!ReferenceEquals(newExpr, ma))
-								return new TransformInfo(newExpr, false, true);
-
-							if (ma.Member.IsNullableValueMember())
-								break;
-
-							newExpr = context.builder.MakeExpression(context.context, ma, context.flags);
-
-							if (!ReferenceEquals(expr, newExpr))
-							{
-								if (!context.flags.IsTest())
-									newExpr = context.builder.UpdateNesting(context.context, newExpr);
-							}
-
-							if (ExpressionEqualityComparer.Instance.Equals(newExpr, expr))
-								return new TransformInfo(expr);
-
-							return new TransformInfo(newExpr, false, true);
-						}
-
-						case ExpressionType.Call:
-						{
-							var newExpr = context.builder.MakeExpression(context.context, expr, context.flags);
-
-							if (!ReferenceEquals(newExpr, expr))
-							{
-								if (!context.flags.IsTest())
-									newExpr = context.builder.UpdateNesting(context.context, newExpr);
-
-								return new TransformInfo(newExpr, false, true);
-							}
-
-							var ce = (MethodCallExpression)expr;
-
-							if (ce.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
-							{
-								var withAlias = context.builder.BuildSqlExpression(context.context,
-									ce.Arguments[0],
-									context.flags, context.alias ?? ce.Arguments[1].EvaluateExpression<string>());
-								return new TransformInfo(withAlias);
-							}
-
-							break;
-						}
-
-						case ExpressionType.Extension:
-						{
-							if (expr is ContextRefExpression contextRef)
-							{
-								var buildExpr = context.builder.MakeExpression(contextRef.BuildContext, contextRef,
-									context.flags);
-
-								return new TransformInfo(buildExpr, false, true);
-							}
-
-							if (expr is SqlGenericParamAccessExpression paramAccessExpression)
-							{
-								return new TransformInfo(
-									context.builder.MakeExpression(context.context, paramAccessExpression,
-										context.flags), false, true);
-							}
-
-							/*if (expr is SqlGenericConstructorExpression genericConstructor)
-							{
-								// trying to convert all properties to the SQL
-								if (context.flags.IsExpression())
-								{
-									if (genericConstructor.Assignments.Count > 0)
-									{
-										var ed = context.builder.MappingSchema.GetEntityDescriptor(genericConstructor.Type);
-										
-										List<SqlGenericConstructorExpression.Assignment>? newAssignments = null;
-
-										for (var index = 0; index < genericConstructor.Assignments.Count; index++)
-										{
-											var assignment = genericConstructor.Assignments[index];
-
-											if (assignment.Expression is not SqlPlaceholderExpression 
-											    && context.builder.MappingSchema.IsScalarType(assignment.MemberInfo.GetMemberType()))
-											{
-												var columnDescriptor = ed.Columns.FirstOrDefault(c =>
-													MemberInfoComparer.Instance.Equals(c.MemberInfo,
-														assignment.MemberInfo));
-												if (columnDescriptor != null)
-												{
-													var translated =
-														context.builder.ConvertToSqlExpr(context.context,
-															assignment.Expression,
-															context.flags, columnDescriptor: columnDescriptor,
-															alias: assignment.MemberInfo.Name);
-
-													if (translated is SqlPlaceholderExpression)
-													{
-														if (newAssignments == null)
-														{
-															newAssignments = new List<SqlGenericConstructorExpression.Assignment>(genericConstructor.Assignments.Take(index));
-														}
-
-														newAssignments.Add(assignment.WithExpression(translated));
-														continue;
-													}
-												}
-											}
-
-											newAssignments?.Add(assignment);
-										}
-
-										if (newAssignments != null)
-										{
-											var newConstructor = genericConstructor.ReplaceAssignments(newAssignments);
-											return new TransformInfo(newConstructor, false, true);
-										}
-									}
-									/*
-									var newParameters = new List<SqlGenericConstructorExpression.Assignment>();
-
-									newConstructor = newConstructor.ReplaceParameters(genericConstructor.Parameters.Select(p =>
-										p.WithExpression(ConvertToSqlExpr(context, p.Expression, flags, unwrap, columnDescriptor,
-											isPureExpression, p.MemberInfo?.Name ?? alias))).ToList());
-											#1#
-								}
-
-							}*/
-
-							return new TransformInfo(expr);
-						}
-
-						case ExpressionType.TypeIs:
-						{
-							if (context.flags.IsExpression())
-							{
-								var test = context.builder.MakeExpression(context.context, expr,
-									context.flags);
-
-								if (!HasError(test))
-								{
-									return new TransformInfo(test, false, true);
-								}
-							}
-
-							break;
-						}
-
-						case ExpressionType.Conditional:
-						{
-							break;
-						}
-
-
-						/*
-						case ExpressionType.Conditional:
-						{
-							if (context.flags.IsExpression())
-							{
-								// Try to convert condition to the SQL
-								var asSQL = context.builder.ConvertToSqlExpr(context.context, expr,
-									context.flags);
-
-								if (asSQL is SqlPlaceholderExpression)
-								{
-									return new TransformInfo(asSQL);
-								}
-							}
-
-							break;
-						}
-						*/
-
-						case ExpressionType.Parameter:
-						{
-							return new TransformInfo(expr);
-						}
-
-					}
-
-					expr = context.builder.HandleExtension(context.context, expr, context.flags);
-					return new TransformInfo(expr);
-				});
-
-			return result;
 		}
 
 		public static bool HasError(Expression expression)
@@ -640,13 +377,16 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		public Expression FinalizeConstructors(IBuildContext context, Expression inputExpression)
+		public Expression FinalizeConstructors(IBuildContext context, Expression inputExpression, bool deduplicate)
 		{
-			List<(ParameterExpression variable, Expression assignment)> variables = new();
+			List<(ParameterExpression variable, Expression assignment)>? variables = null;
+
+			if (deduplicate)
+				variables = new();
 
 			var expression = FinalizeConstructorInternal(context, inputExpression, variables);
 
-			if (variables.Count > 0)
+			if (variables?.Count > 0)
 			{
 				var expressionGenerator = new ExpressionGenerator();
 
@@ -654,33 +394,25 @@ namespace LinqToDB.Linq.Builder
 				{
 					var (variable, assignment) = variables[index];
 					expressionGenerator.AddVariable(variable);
-					var finalizedAssignment = FinalizeConstructorInternal(context, assignment, variables);
-					expressionGenerator.Assign(variable, finalizedAssignment);
+					expressionGenerator.Assign(variable, assignment);
 				}
 
 				expressionGenerator.AddExpression(expression);
-				expression = expressionGenerator.Build();
+				var built = expressionGenerator.Build();
+				expression = built;
 			}
 
 			return expression;
 		}
 
-		Expression FinalizeConstructorInternal(IBuildContext context, Expression expression, List<(ParameterExpression variable, Expression assignment)> variables)
+		Expression FinalizeConstructorInternal(IBuildContext context, Expression expression, List<(ParameterExpression variable, Expression assignment)>? variables)
 		{
-			do
-			{
-				expression = BuildFinalProjection(context, expression, ProjectFlags.Expression);
+			expression = BuildFinalProjection(context, expression, ProjectFlags.Expression);
 
-				expression = OptimizationContext.OptimizeExpressionTree(expression, true);
+			expression = OptimizationContext.OptimizeExpressionTree(expression, true);
 
-				var deduplicated = Deduplicate(variables, expression, true);
-				deduplicated = Deduplicate(variables, deduplicated, false);
-
-				if (ExpressionEqualityComparer.Instance.Equals(expression, deduplicated))
-					break;
-
-				expression = deduplicated;
-			} while (true);
+			if (variables != null)
+				expression = Deduplicate(variables, expression);
 
 			var reconstructed = expression.Transform((builder : this, context), (ctx, e) =>
 			{
@@ -815,7 +547,7 @@ namespace LinqToDB.Linq.Builder
 			if (expr is BinaryExpression or ConditionalExpression or DefaultExpression or DefaultValueExpression)
 				return null;
 
-			if (expr is ContextConstructionExpression or SqlGenericConstructorExpression or ConstantExpression or SqlEagerLoadExpression)
+			if (expr is SqlGenericConstructorExpression or ConstantExpression or SqlEagerLoadExpression)
 				return null;
 
 			if (expr is ContextRefExpression contextRef && contextRef.BuildContext.ElementType == expr.Type)

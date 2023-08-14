@@ -446,13 +446,6 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformXE(Expression expr)
 		{
-			if (expr is ContextConstructionExpression construct)
-			{
-				var inner       = Transform(construct.InnerExpression);
-
-				return construct.Update(construct.BuildContext, inner);
-			}
-
 			if (expr is SqlGenericConstructorExpression generic)
 			{
 				var assignments = Transform(generic.Assignments, TransformAssignments);

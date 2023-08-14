@@ -289,11 +289,6 @@ namespace LinqToDB.Linq.Builder
 					CorrectTrackingPath(conditional.IfFalse, toPath));
 			}
 
-			if (expression is ContextConstructionExpression construct)
-			{
-				return construct.Update(construct.BuildContext, CorrectTrackingPath(construct.InnerExpression, toPath));
-			}
-
 			if (expression is BinaryExpression binary)
 			{
 				return binary.Update(CorrectTrackingPath(binary.Left, toPath), binary.Conversion, CorrectTrackingPath(binary.Right, toPath));
@@ -440,12 +435,6 @@ namespace LinqToDB.Linq.Builder
 				return RemapToNewPathSimple(SqlGenericConstructorExpression.Parse(expression), toPath, flags);
 			}
 
-			if (expression is ContextConstructionExpression contextConstructionExpression)
-			{
-				return contextConstructionExpression.Update(contextConstructionExpression.BuildContext,
-					RemapToNewPathSimple(contextConstructionExpression.InnerExpression, toPath, flags));
-			}
-
 			/*
 			if (expression is MemberExpression && toPath is MemberExpression && expression.Type == toPath.Type)
 				return toPath;
@@ -555,12 +544,6 @@ namespace LinqToDB.Linq.Builder
 			if (expression is NewExpression or MemberInitExpression)
 			{
 				return RemapToNewPath(SqlGenericConstructorExpression.Parse(expression), toPath, flags);
-			}
-
-			if (expression is ContextConstructionExpression contextConstructionExpression)
-			{
-				return contextConstructionExpression.Update(contextConstructionExpression.BuildContext,
-					RemapToNewPath(contextConstructionExpression.InnerExpression, toPath, flags));
 			}
 
 			if (expression is SqlPlaceholderExpression placeholder)

@@ -125,9 +125,6 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						expr = Expression.Condition(notNullExpression, expr, defaultValue);
-
-						/*if (flags.IsExpression())
-							expr = new ContextConstructionExpression(this, expr);*/
 					}
 				}
 

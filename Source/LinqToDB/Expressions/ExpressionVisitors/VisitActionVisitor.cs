@@ -301,11 +301,7 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void VisitXE(Expression expr)
 		{
-			if (expr is ContextConstructionExpression construct)
-			{
-				Visit(construct.InnerExpression);
-			}
-			else if (expr is SqlGenericConstructorExpression generic)
+			if (expr is SqlGenericConstructorExpression generic)
 			{
 				Visit(generic.Assignments.Select(a => a.Expression));
 				Visit(generic.Parameters.Select(p => p.Expression));

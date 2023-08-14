@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -22,11 +23,6 @@ namespace LinqToDB.Expressions
 		public virtual Expression VisitChangeTypeExpression(ChangeTypeExpression node)
 		{
 			return node.Update(Visit(node.Expression)!);
-		}
-
-		internal virtual Expression VisitContextConstructionExpression(ContextConstructionExpression node)
-		{
-			return node.Update(node.BuildContext, Visit(node.InnerExpression)!);
 		}
 
 		internal virtual Expression VisitContextRefExpression(ContextRefExpression node)
