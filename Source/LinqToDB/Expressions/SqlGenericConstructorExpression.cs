@@ -473,6 +473,10 @@ namespace LinqToDB.Expressions
 		{
 			if (createExpression.Type.IsNullable())
 				return createExpression;
+
+			if (createExpression.Type.IsValueType)
+				return createExpression;
+
 #if !NET45
 			if (typeof(FormattableString).IsSameOrParentOf(createExpression.Type))
 				return createExpression;

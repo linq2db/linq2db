@@ -579,6 +579,27 @@ namespace LinqToDB.Linq.Builder
 			return TryConstructObject(MappingSchema, constructorExpression, constructType);
 		}
 
+		ConstructorInfo? SelectParameterizedConstructor(Type objectType)
+		{
+			var constructors = objectType.GetConstructors();
+
+			if (constructors.Length == 0)
+			{
+				constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
+			}
+
+			if (constructors.Length > 1)
+			{
+				var noParams = constructors.FirstOrDefault(c => c.GetParameters().Length == 0);
+				if (noParams != null)
+					return noParams;
+
+				throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
+			}
+
+			return constructors.Length > 0 ? constructors[0] : null;
+		}
+
 		public Expression? TryConstructObject(MappingSchema mappingSchema,
 			SqlGenericConstructorExpression constructorExpression, Type constructType)
 		{
@@ -594,41 +615,21 @@ namespace LinqToDB.Linq.Builder
 					return instantiation;
 			}
 
-			var constructors = constructType
-				.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-				.OrderByDescending(c => c.GetParameters().Length == 0)
-				.ThenByDescending(c => c.GetParameters().Length);
-
-			var foundConstructor = false;
-
-			foreach (var constructor in constructors)
+			var constructor = SelectParameterizedConstructor(constructType);
+			if (constructor != null)
 			{
-				foundConstructor = true;
-				var instantiation = TryWithConstructor(mappingSchema, typeAccessor, constructor, constructorExpression, null);
+				var instantiation = TryWithConstructor(mappingSchema, typeAccessor, constructor,
+					constructorExpression, null);
 				if (instantiation != null)
 					return instantiation;
 			}
 
-			if (!foundConstructor && constructType.IsValueType)
+			if (constructType.IsValueType)
 			{
 				return TryWithConstructor(mappingSchema, typeAccessor, null, constructorExpression, null);
 			}
 
 			return null;
-			//throw new NotImplementedException("ConstructObject all code paths");
-
-			/*
-			for (int i = 0; i < constructors.Length; i++)
-			{
-				var constructor = constructors[i];
-
-				var missed = new List<SqlGenericConstructorExpression.Assignment>();
-
-				var instantiation = TryWithConstructor(typeAccessor, constructor, constructorExpression, missed);
-				if (instantiation != null)
-					return instantiation;
-			}
-		*/
 		}
 
 		public Expression Construct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression,
