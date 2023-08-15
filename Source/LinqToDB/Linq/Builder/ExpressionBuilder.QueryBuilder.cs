@@ -58,13 +58,16 @@ namespace LinqToDB.Linq.Builder
 					return null;
 
 				if (node.NodeType == ExpressionType.Parameter || node.NodeType == ExpressionType.Call || node.NodeType == ExpressionType.MemberAccess ||
-				    node.NodeType == ExpressionType.Assign)
+				    node.NodeType == ExpressionType.Assign || node.NodeType == ExpressionType.Constant || node.NodeType == ExpressionType.Default)
 				{
 					return node;
 				}
 
 				if (_replacement.node == null)
 				{
+					if (null == node.Find(1, (_, e) => e is SqlPlaceholderExpression))
+						return node;
+
 					if (!_visited.Add(node))
 					{
 						var variable = Expression.Variable(node.Type, "v" + _variables.Count);

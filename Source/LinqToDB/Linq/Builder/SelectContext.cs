@@ -67,6 +67,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (SequenceHelper.IsSameContext(path, this))
 				{
+					if (Builder.IsSequence(this, Body))
+						return Body;
 					result = new ContextRefExpression(InnerContext.ElementType, InnerContext);
 				}
 				else
@@ -208,7 +210,13 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
-			return InnerContext?.GetContext(expression, buildInfo);
+			if (!buildInfo.CreateSubQuery || buildInfo.IsTest)
+				return this;
+
+			var expr    = Body;
+			var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+
+			return context;
 		}
 	}
 }

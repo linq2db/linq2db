@@ -270,7 +270,7 @@ namespace LinqToDB.Linq.Builder
 
 					_reorder = _reorder || n < builder.BuildCounter;
 
-					if (sequence != null)
+					if (sequence != null && !_sequenceExpressions.ContainsKey(sequence))
 					{
 						_sequenceExpressions[sequence] = originalExpression;
 					}
@@ -303,6 +303,12 @@ namespace LinqToDB.Linq.Builder
 			if (throwIfNotFound)
 				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", SqlErrorExpression.PrepareExpression(buildInfo.Expression));
 			return null;
+		}
+
+		public bool IsSequence(IBuildContext? parent, Expression expression)
+		{
+			using var query = QueryPool.Allocate();
+			return IsSequence(new BuildInfo(parent, expression, query.Value));
 		}
 
 		public bool IsSequence(BuildInfo buildInfo)

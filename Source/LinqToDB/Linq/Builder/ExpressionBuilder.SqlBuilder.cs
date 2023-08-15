@@ -4032,6 +4032,7 @@ namespace LinqToDB.Linq.Builder
 					var corrected = ExecuteMake(rootContext.BuildContext, path, flags);
 
 					if (!ExpressionEqualityComparer.Instance.Equals(corrected, path) &&
+					    corrected is not DefaultExpression &&
 						corrected is not DefaultValueExpression && corrected is not SqlErrorExpression)
 					{
 						var newCorrected = MakeExpression(rootContext.BuildContext, corrected, flags);

@@ -220,7 +220,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is NewExpression or MemberInitExpression)
 			{
-				return CorrectTrackingPath(SqlGenericConstructorExpression.Parse(expression), toPath);
+				var parsed = SqlGenericConstructorExpression.Parse(expression);
+				if (!ReferenceEquals(parsed, expression))
+					return CorrectTrackingPath(parsed, toPath);
 			}
 
 			if (expression is SqlPlaceholderExpression placeholder)
@@ -432,7 +434,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is NewExpression or MemberInitExpression)
 			{
-				return RemapToNewPathSimple(SqlGenericConstructorExpression.Parse(expression), toPath, flags);
+				var parsed = SqlGenericConstructorExpression.Parse(expression);
+				if (!ReferenceEquals(parsed, expression))
+					return RemapToNewPathSimple(parsed, toPath, flags);
 			}
 
 			/*
@@ -829,6 +833,26 @@ namespace LinqToDB.Linq.Builder
 			return translated;
 		}
 
+		public static ISqlExpression UnwrapNullability(ISqlExpression expression)
+		{
+			while (expression is SqlNullabilityExpression nullability)
+			{
+				expression = nullability.SqlExpression;
+			}
+
+			return expression;
+		}
+
+		public static ISqlTableSource? GetExpressionSource(ISqlExpression expression)
+		{
+			if (expression is SqlColumn column)
+				return column.Parent;
+
+			if (expression is SqlField field)
+				return field.Table;
+
+			return null;
+		}
 
 		public static Expression MoveToScopedContext(Expression expression, IBuildContext upTo)
 		{

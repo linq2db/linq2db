@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using LinqToDB.Common;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+	using Linq.Builder;
+	using SqlProvider;
+	using Visitors;
+
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
 		SqlProviderFlags  _flags             = default!;
@@ -854,7 +856,31 @@ namespace LinqToDB.SqlQuery
 
 					var sources = QueryHelper.EnumerateAccessibleSources(sql).ToArray();
 					var found   = new HashSet<ISqlExpression>();
-					QueryHelper.CollectDependencies(sql.Where, sources, found, singleColumnLevel: true);
+
+					sql.Where.VisitAll(1, (ctx, e) =>
+					{
+						if (e is SqlPredicate.ExprExpr exprExpr)
+						{
+							var expr1 = SequenceHelper.UnwrapNullability(exprExpr.Expr1);
+							var expr2 = SequenceHelper.UnwrapNullability(exprExpr.Expr2);
+
+							var source1 = SequenceHelper.GetExpressionSource(expr1);
+							var source2 = SequenceHelper.GetExpressionSource(expr2);
+
+							if (source1 != null && source2 != null)
+							{
+								if (sources.Contains(source2) && parentTableSources.Contains(source1))
+								{
+									found.Add(expr2);
+								}
+								else if (sources.Contains(source1) && parentTableSources.Contains(source2))
+								{
+									found.Add(expr1);
+								}
+							}
+						}
+					});
+
 					if (found.Count > 0)
 					{
 						partitionBy = found.ToList();
