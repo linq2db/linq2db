@@ -72,21 +72,21 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			switch (func)
 			{
-				case SqlFunction(var type, "Convert"):
+				case SqlFunction(var type, PseudoFunctions.CONVERT):
 				{
 					var ftype = type.ToUnderlying();
 
 					if (ftype == typeof(bool))
 					{
-						var ex = AlternativeConvertToBoolean(func, 1);
+						var ex = AlternativeConvertToBoolean(func, 2);
 						if (ex != null)
 							return ex;
 					}
 
 					if ((ftype == typeof(double) || ftype == typeof(float)) && func.Parameters[1].SystemType!.ToUnderlying() == typeof(decimal))
-						return func.Parameters[1];
+						return func.Parameters[2];
 
-					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func), func.Parameters[0]);
+					return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, FloorBeforeConvert(func, func.Parameters[2]), func.Parameters[0]);
 				}
 
 			}

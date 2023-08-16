@@ -270,14 +270,14 @@ namespace LinqToDB
 		#region Convert Functions
 
 		[CLSCompliant(false)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsThirdParameter)]
+		[Function(PseudoFunctions.CONVERT, 0, 2, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsThirdParameter)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
-		[Function(PseudoFunctions.CONVERT, 0, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
+		[Function(PseudoFunctions.CONVERT_FORMAT, 0, 3, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -1173,7 +1173,6 @@ namespace LinqToDB
 		}
 #endif
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static DateTime? MakeDateTime(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null ?
@@ -1181,7 +1180,6 @@ namespace LinqToDB
 				new DateTime(year.Value, month.Value, day.Value);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static DateTime? MakeDateTime(int? year, int? month, int? day, int? hour, int? minute, int? second)
 		{
 			return year == null || month == null || day == null || hour == null || minute == null || second == null ?

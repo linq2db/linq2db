@@ -15,7 +15,9 @@
 		<Compile Include="..\Linq\Linq\ComplexTests.cs" Link="ComplexTests.cs" />
 		<Compile Include="..\Linq\Linq\ContainsTests.cs" Link="ContainsTests.cs" />
 		<Compile Include="..\Linq\Linq\ConvertExpressionTests.cs" Link="ConvertExpressionTests.cs" />
+		<Compile Include="..\Linq\Linq\ConvertTests.cs" Link="ConvertTests.cs" />
 		<Compile Include="..\Linq\Linq\CteTests.cs" Link="CteTests.cs" />
+		<Compile Include="..\Linq\Linq\DateTimeFunctionsTests.cs" Link="DateTimeFunctionsTests.cs" />
 		<Compile Include="..\Linq\Linq\DistinctTests.cs" Link="DistinctTests.cs" />
 		<Compile Include="..\Linq\Linq\EagerLoadingTests.cs" Link="EagerLoadingTests.cs" />
 		<Compile Include="..\Linq\Linq\MathFunctionTests.cs" Link="MathFunctionTests.cs" />

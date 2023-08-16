@@ -25,6 +25,11 @@ namespace LinqToDB.DataProvider.Firebird
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
 		{
+			var newElement = base.ConvertSqlBinaryExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
 			switch (element.Operation)
 			{
 				case "%": return new SqlFunction(element.SystemType, "Mod", element.Expr1, element.Expr2);
@@ -34,7 +39,7 @@ namespace LinqToDB.DataProvider.Firebird
 				case "+": return element.SystemType == typeof(string) ? new SqlBinaryExpression(element.SystemType, element.Expr1, "||", element.Expr2, element.Precedence) : element;
 			}
 
-			return base.ConvertSqlBinaryExpression(element);
+			return element;
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
@@ -60,10 +65,7 @@ namespace LinqToDB.DataProvider.Firebird
 							CanBeNull = func.CanBeNull
 						};
 
-					var convert = new SqlExpression(func.SystemType, CASTEXPR, Precedence.Primary,
-						FloorBeforeConvert(func, func.Parameters[2]), func.Parameters[0]);
-
-					return convert;
+					return base.ConvertSqlFunction(func);
 				}
 
 			}

@@ -38,6 +38,11 @@ namespace LinqToDB.SqlQuery
 		}
 
 		/// <summary>
+		/// Function to convert value from one type to another: <c>CONVERT(to_type, from_type, value) { CanBeNull = value.CanBeNull }</c>
+		/// </summary>
+		public const string CONVERT_FORMAT = "$Convert_Format$";
+
+		/// <summary>
 		/// Function to convert value from one type to another: <c>CONVERT(to_type, from_type, value) { CanBeNull = value.CanBeNull, DoNotOptimize = true }</c>
 		/// </summary>
 		public static SqlFunction MakeMandatoryConvert(SqlDataType toType, SqlDataType fromType, ISqlExpression value)

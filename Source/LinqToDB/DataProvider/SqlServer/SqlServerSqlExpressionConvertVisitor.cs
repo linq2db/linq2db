@@ -112,6 +112,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override ISqlExpression ConvertConversion(SqlFunction func)
 		{
 			var toType   = func.Parameters[0];
+			var fromType = func.Parameters[1];
 			var argument = func.Parameters[2];
 
 			if (func.SystemType.ToUnderlying() == typeof(ulong) &&
@@ -123,6 +124,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					false,
 					func.Precedence,
 					toType,
+					fromType,
 					new SqlFunction(func.SystemType, "Floor", argument));
 			}
 

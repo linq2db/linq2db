@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using Extensions;
 	using SqlQuery;
 
 	sealed class JoinBuilder : MethodCallBuilder
@@ -81,7 +82,8 @@ namespace LinqToDB.Linq.Builder
 			var compareSearchCondition = builder.GenerateComparison(outerContext, outerKeySelector, innerKeySelector, buildInfo.GetFlags());
 
 			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression    ||
-			                           innerKeySelector is SqlGenericConstructorExpression;
+			                           innerKeySelector is SqlGenericConstructorExpression ||
+			                           outerKeySelector.Type.IsNullable();
 
 			if (!allowNullComparison)
 				compareSearchCondition = QueryHelper.CorrectComparisonForJoin(compareSearchCondition);

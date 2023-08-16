@@ -690,6 +690,9 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ConvertToSqlInternal(IBuildContext? context, Expression expression, ProjectFlags flags, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, string? alias = null)
 		{
+			if (unwrap)
+				expression = expression.Unwrap();
+
 			switch (expression.NodeType)
 			{
 				case ExpressionType.AndAlso:
@@ -730,18 +733,29 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (BinaryExpression)expression;
 
-					columnDescriptor = SuggestColumnDescriptor(context, e.Left, e.Right, flags);
+					var left  = e.Left;
+					var right = e.Right;
 
-					var leftExpr  = ConvertToSqlExpr(context, e.Left,  flags.TestFlag(), columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
-					var rightExpr = ConvertToSqlExpr(context, e.Right, flags.TestFlag(), columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
+					var unwrapSides = e.Left.Type.IsValueType;
+
+					if (unwrapSides)
+					{
+						left  = left.Unwrap();
+						right = right.Unwrap();
+					}
+
+					columnDescriptor = SuggestColumnDescriptor(context, left, right, flags);
+
+					var leftExpr  = ConvertToSqlExpr(context, left,  flags.TestFlag(), columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
+					var rightExpr = ConvertToSqlExpr(context, right, flags.TestFlag(), columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 
 					if (leftExpr is not SqlPlaceholderExpression || rightExpr is not SqlPlaceholderExpression)
 						return e;
 
-					var leftPlaceholder  = ConvertToSqlExpr(context, e.Left,  flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression) as SqlPlaceholderExpression;
+					var leftPlaceholder  = ConvertToSqlExpr(context, left,  flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression) as SqlPlaceholderExpression;
 					if (leftPlaceholder == null)
 						return e;
-					var rightPlaceholder = ConvertToSqlExpr(context, e.Right, flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression) as SqlPlaceholderExpression;
+					var rightPlaceholder = ConvertToSqlExpr(context, right, flags, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression) as SqlPlaceholderExpression;
 					if (rightPlaceholder == null)
 						return e;
 
@@ -3952,8 +3966,6 @@ namespace LinqToDB.Linq.Builder
 			// nothing to project here
 			if (path.NodeType   == ExpressionType.Parameter 
 				|| path.NodeType == ExpressionType.Lambda
-				|| path.NodeType == ExpressionType.New
-				|| path.NodeType == ExpressionType.MemberInit
 			    || path.NodeType == ExpressionType.Extension && path is SqlPlaceholderExpression or SqlGenericConstructorExpression)
 			{
 				return path;
@@ -4354,7 +4366,7 @@ namespace LinqToDB.Linq.Builder
 			if (CanBeConstant(expr))
 				return true;
 			var    sqlExpr = ConvertToSqlExpr(context, expr, ProjectFlags.SQL | ProjectFlags.Test);
-			return sqlExpr is SqlPlaceholderExpression;
+			return sqlExpr is SqlPlaceholderExpression || ExpressionEqualityComparer.Instance.Equals(sqlExpr, expr);
 		}
 
 		public SqlPlaceholderExpression MakeColumn(SelectQuery? parentQuery, SqlPlaceholderExpression sqlPlaceholder, bool asNew = false)
