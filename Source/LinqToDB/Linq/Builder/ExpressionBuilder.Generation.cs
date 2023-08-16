@@ -27,6 +27,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		SqlGenericConstructorExpression BuildGenericFromMembers(IBuildContext? context,
+			MappingSchema mappingSchema,
 			IReadOnlyCollection<ColumnDescriptor> columns, ProjectFlags flags, Expression currentPath, int level,
 			FullEntityPurpose purpose)
 		{
@@ -97,7 +98,7 @@ namespace LinqToDB.Linq.Builder
 						continue;
 
 					var currentMemberName = names[level];
-					MemberInfo memberInfo;
+					MemberInfo? memberInfo;
 					Expression assignExpression;
 
 					if (names.Length - 1 > level)
@@ -106,12 +107,30 @@ namespace LinqToDB.Linq.Builder
 						if (!processed.Add(propPath))
 							continue;
 
-						memberInfo = currentPath.Type.GetMember(currentMemberName).Single();
+						memberInfo = currentPath.Type.GetMember(currentMemberName).FirstOrDefault();
+
+						if (memberInfo == null)
+						{
+							var ed = mappingSchema.GetEntityDescriptor(currentPath.Type);
+
+							foreach (var inheritance in ed.InheritanceMapping)
+							{
+								memberInfo = inheritance.Type.GetMember(currentMemberName).FirstOrDefault();
+								if (memberInfo != null)
+								{
+									currentPath = Expression.Convert(currentPath, inheritance.Type);
+									break;
+								}
+							}
+
+							if (memberInfo == null)
+								throw new InvalidOperationException($"No suitable member '[currentMemberName]' found for type '{currentPath.Type}'");
+						}
 
 						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath)).ToList();
 						var newPath    = Expression.MakeMemberAccess(currentPath, memberInfo);
 
-						assignExpression = BuildGenericFromMembers(null, newColumns, flags, newPath, level + 1, purpose);
+						assignExpression = BuildGenericFromMembers(null, mappingSchema, newColumns, flags, newPath, level + 1, purpose);
 					}
 					else
 					{
@@ -207,7 +226,7 @@ namespace LinqToDB.Linq.Builder
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 
-			var generic = BuildGenericFromMembers(context, entityDescriptor.Columns, flags, refExpression, 0, FullEntityPurpose.Default);
+			var generic = BuildGenericFromMembers(context, MappingSchema, entityDescriptor.Columns, flags, refExpression, 0, FullEntityPurpose.Default);
 
 			return generic;
 		}
@@ -218,7 +237,7 @@ namespace LinqToDB.Linq.Builder
 
 			var entityDescriptor = MappingSchema.GetEntityDescriptor(entityType);
 
-			var generic = BuildGenericFromMembers(null, entityDescriptor.Columns, flags, root, 0, purpose);
+			var generic = BuildGenericFromMembers(null, MappingSchema, entityDescriptor.Columns, flags, root, 0, purpose);
 
 			return generic;
 		}
