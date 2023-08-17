@@ -81,9 +81,8 @@ namespace LinqToDB.Linq.Builder
 
 			var compareSearchCondition = builder.GenerateComparison(outerContext, outerKeySelector, innerKeySelector, buildInfo.GetFlags());
 
-			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression    ||
-			                           innerKeySelector is SqlGenericConstructorExpression ||
-			                           outerKeySelector.Type.IsNullable();
+			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression ||
+			                           innerKeySelector is SqlGenericConstructorExpression;
 
 			if (!allowNullComparison)
 				compareSearchCondition = QueryHelper.CorrectComparisonForJoin(compareSearchCondition);
