@@ -1318,26 +1318,6 @@ namespace LinqToDB.SqlQuery
 
 				if (selectQuery.HasSetOperators && !selectQuery.SetOperators.All(so => so.Operation == operation))
 					return false;
-
-				var newIndexes =
-					new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>
-						.Default);
-
-				for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
-				{
-					var scol = selectQuery.Select.Columns[i];
-
-					if (!newIndexes.ContainsKey(scol.Expression))
-						newIndexes[scol.Expression] = i;
-				}
-
-				if (!CheckSetColumns(newIndexes, subQuery, operation))
-					return false;
-
-				UpdateSetIndexes(newIndexes, subQuery, operation);
-
-				selectQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
-				subQuery.SetOperators.Clear();
 			}
 
 			if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
@@ -1355,6 +1335,31 @@ namespace LinqToDB.SqlQuery
 			//
 
 			selectQuery.QueryName ??= subQuery.QueryName;
+
+			if (subQuery.HasSetOperators)
+			{
+				var newIndexes =
+					new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>
+						.Default);
+
+				for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+				{
+					var scol = selectQuery.Select.Columns[i];
+
+					if (!newIndexes.ContainsKey(scol.Expression))
+						newIndexes[scol.Expression] = i;
+				}
+
+				var operation = subQuery.SetOperators[0].Operation;
+
+				if (!CheckSetColumns(newIndexes, subQuery, operation))
+					return false;
+
+				UpdateSetIndexes(newIndexes, subQuery, operation);
+
+				selectQuery.SetOperators.InsertRange(0, subQuery.SetOperators);
+				subQuery.SetOperators.Clear();
+			}
 
 			if (!subQuery.Where.IsEmpty)
 			{
@@ -1634,7 +1639,7 @@ namespace LinqToDB.SqlQuery
 
 		void OptimizeDistinctOrderBy(SelectQuery selectQuery)
 		{
-			// algorythm works with whole Query, so skipping sub optimizations
+			// algorithm works with whole Query, so skipping sub optimizations
 
 			if (_level > 0)
 				return;
@@ -1731,6 +1736,25 @@ namespace LinqToDB.SqlQuery
 			return counter <= 1;
 		}
 
+		static bool IsInsideAggregate(IQueryElement testedElement, SqlColumn column)
+		{
+			bool result = false;
+
+			testedElement.VisitParentFirstAll(e =>
+			{
+				// do not search in the same query
+				if (QueryHelper.IsAggregationFunction(e))
+				{
+					result = result || null != e.Find(1, (_, te) => ReferenceEquals(te, column));
+					return false;
+				}
+
+				return !result;
+			});
+
+			return result;
+		}
+
 		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
 		{
 			if (!_flags.IsSubQueryColumnSupported)
@@ -1764,7 +1788,7 @@ namespace LinqToDB.SqlQuery
 								// where we can start analyzing that we can move join to subquery
 								var testedColumn = tsQuery.Select.Columns[0];
 
-								if (!IsUniqueUsage(sq, testedColumn))
+								if (_flags.IsApplyJoinSupported && !IsUniqueUsage(sq, testedColumn))
 								{
 									QueryHelper.MoveDuplicateUsageToSubQuery(sq);
 									// will be processed in the next step
@@ -1776,6 +1800,9 @@ namespace LinqToDB.SqlQuery
 								{
 									if (function.IsAggregate)
 									{
+										if (!_flags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
+											continue;
+
 										if (!_flags.IsCountSubQuerySupported)
 											continue;
 									}
