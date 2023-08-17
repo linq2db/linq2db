@@ -97,6 +97,57 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder Builder => _context.Builder;
 			MappingSchema MappingSchema => Builder.MappingSchema;
 
+			[return:NotNullIfNotNull(nameof(node))]
+			public override Expression? Visit(Expression? node)
+			{
+				if (node == null)
+					return null;
+
+				if (node is SqlPlaceholderExpression)
+					return node;
+
+				if (HandleParametrized(node, out var parametrized))
+					return parametrized;
+
+				if (node.NodeType == ExpressionType.Conditional  || 
+				    node.NodeType == ExpressionType.Call         || 
+				    node.NodeType == ExpressionType.New          || 
+				    node.NodeType == ExpressionType.MemberInit   || 
+				    node.NodeType == ExpressionType.MemberAccess || 
+				    node.NodeType == ExpressionType.ListInit     || 
+				    node.NodeType == ExpressionType.Default      || 
+				    node.NodeType == ExpressionType.Convert      ||
+				    node.NodeType == ExpressionType.Constant     ||
+				    node.NodeType == ExpressionType.Parameter    ||
+				    node.NodeType == ExpressionType.Not          ||
+				    node is SqlGenericConstructorExpression      ||
+				    node is BinaryExpression)
+				{
+					return base.Visit(node);
+				}
+
+				var newNode = TranslateExpression(node);
+
+				if (newNode is SqlErrorExpression)
+					return base.Visit(node);
+
+				if (newNode is SqlPlaceholderExpression)
+					return newNode;
+
+				if (!ExpressionEqualityComparer.Instance.Equals(newNode, node))
+					return Visit(newNode);
+
+				if ((node.NodeType == ExpressionType.MemberAccess || node.NodeType == ExpressionType.Conditional) && _flags.IsExtractProjection())
+					return newNode;
+
+				if (_flags.IsExtractProjection())
+				{
+
+				}
+
+				return base.Visit(newNode);
+			}
+
 			readonly struct NeedForceScope : IDisposable
 			{
 				readonly BuildVisitor _visitor;
@@ -175,56 +226,6 @@ namespace LinqToDB.Linq.Builder
 					return Visit(translated);
 
 				return translated;
-			}
-
-			[return:NotNullIfNotNull(nameof(node))]
-			public override Expression? Visit(Expression? node)
-			{
-				if (node == null)
-					return null;
-
-				if (node is SqlPlaceholderExpression)
-					return node;
-
-				if (HandleParametrized(node, out var parametrized))
-					return parametrized;
-
-				if (node.NodeType == ExpressionType.Conditional || 
-				    node.NodeType == ExpressionType.Call        || 
-				    node.NodeType == ExpressionType.New         || 
-				    node.NodeType == ExpressionType.MemberInit  || 
-				    node.NodeType == ExpressionType.ListInit    || 
-				    node.NodeType == ExpressionType.Default     || 
-				    node.NodeType == ExpressionType.Convert     ||
-				    node.NodeType == ExpressionType.Constant    ||
-				    node.NodeType == ExpressionType.Parameter   ||
-				    node.NodeType == ExpressionType.Not         ||
-				    node is SqlGenericConstructorExpression     ||
-				    node is BinaryExpression)
-				{
-					return base.Visit(node);
-				}
-
-				var newNode = TranslateExpression(node);
-
-				if (newNode is SqlErrorExpression)
-					return base.Visit(node);
-
-				if (newNode is SqlPlaceholderExpression)
-					return newNode;
-
-				if (!ExpressionEqualityComparer.Instance.Equals(newNode, node))
-					return Visit(newNode);
-
-				if ((node.NodeType == ExpressionType.MemberAccess || node.NodeType == ExpressionType.Conditional) && _flags.IsExtractProjection())
-					return newNode;
-
-				if (_flags.IsExtractProjection())
-				{
-
-				}
-
-				return base.Visit(newNode);
 			}
 
 			protected override Expression VisitParameter(ParameterExpression node)
@@ -403,10 +404,32 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
-				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, IsForcedToConvert(node)))
+				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
 				{
 					return TranslateExpression(node, useSql : true);
 				}
+
+				var handled = Builder.HandleExtension(_context, node, _flags);
+
+				if (!ExpressionEqualityComparer.Instance.Equals(handled, node))
+					return Visit(handled);
+
+				var useSql = IsForcedToConvert(node);
+
+				if (!useSql)
+				{
+					var expanded = Builder.ExposeExpression(node);
+
+					if (!ReferenceEquals(expanded, node))
+					{
+						useSql = true;
+					}
+				}
+
+				var translated = TranslateExpression(node, useSql : useSql);
+
+				if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
+					return translated;
 
 				return base.VisitMember(node);
 			}

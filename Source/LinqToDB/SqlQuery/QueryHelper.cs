@@ -395,6 +395,18 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
+		public static bool IsTransitivePredicate(SqlExpression sqlExpression)
+		{
+			if (sqlExpression.Parameters.Length == 1 && sqlExpression.Expr.Trim() == "{0}")
+			{
+				if (sqlExpression.Parameters[0] is SqlExpression argExpression)
+					return IsTransitivePredicate(argExpression);
+				return sqlExpression.Parameters[0] is ISqlPredicate;
+			}
+
+			return false;
+		}
+
 		public static ISqlExpression UnwrapExpression(ISqlExpression expr, bool checkNullability)
 		{
 			if (expr.ElementType == QueryElementType.SqlExpression)
