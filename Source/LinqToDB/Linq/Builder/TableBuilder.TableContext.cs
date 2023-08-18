@@ -194,15 +194,7 @@ namespace LinqToDB.Linq.Builder
 				Expression member;
 
 				if (path is MemberExpression me)
-				{
 					member = me;
-				}
-				else if (path is MethodCallExpression mc && mc.Method.IsSqlPropertyMethodEx())
-				{
-					var memberInfo = MemberHelper.GetMemberInfo(mc);
-					var memberAccess = Expression.MakeMemberAccess(mc.Arguments[0], memberInfo);
-					member = memberAccess;
-				}
 				else
 					return path;
 

@@ -130,5 +130,9 @@ namespace LinqToDB.Mapping
 
 		private void DummySetter<T>(T value)
 			=> throw new InvalidOperationException("Dynamic column setter is not to be called.");
+
+		public override int MetadataToken => -1;
+
+		public override Module Module => typeof(object).Module;
 	}
 }

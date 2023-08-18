@@ -36,9 +36,12 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			if (sequence == null)
+				return null;
 
 			var wrapped = false;
 
@@ -61,11 +64,12 @@ namespace LinqToDB.Linq.Builder
 				placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
 
 				// Do not create subquery for ThenByExtensions
+				//
 				if (wrapped || isContinuousOrder)
 					break;
 
 				// handle situation when order by uses complex field
-
+				//
 				var isComplex = false;
 
 				foreach (var placeholder in placeholders)

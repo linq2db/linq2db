@@ -55,18 +55,28 @@ namespace LinqToDB.Expressions
 			return node;
 		}
 
+		internal virtual SqlGenericConstructorExpression.Assignment VisitSqlGenericAssignment(
+			SqlGenericConstructorExpression.Assignment assignment)
+		{
+			return assignment.WithExpression(Visit(assignment.Expression));
+		}
+
+		internal virtual SqlGenericConstructorExpression.Parameter VisitSqlGenericParameter(
+			SqlGenericConstructorExpression.Parameter parameter)
+		{
+			return parameter.WithExpression(Visit(parameter.Expression));
+		}
+
 		internal virtual Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 		{
-			var assignments = Visit(node.Assignments,
-				a => a.WithExpression(Visit(a.Expression)!));
+			var assignments = Visit(node.Assignments, VisitSqlGenericAssignment);
 
 			if (!ReferenceEquals(assignments, node.Assignments))
 			{
 				node = node.ReplaceAssignments(assignments.ToList());
 			}
 
-			var parameters = Visit(node.Parameters,
-				p => p.WithExpression(Visit(p.Expression)!));
+			var parameters = Visit(node.Parameters, VisitSqlGenericParameter);
 
 			if (!ReferenceEquals(parameters, node.Parameters))
 			{

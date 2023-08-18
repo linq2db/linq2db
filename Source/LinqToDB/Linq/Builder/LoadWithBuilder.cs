@@ -231,12 +231,11 @@ namespace LinqToDB.Linq.Builder
 
 							if (cexpr.Method.IsSqlPropertyMethodEx())
 							{
-								throw new NotImplementedException();
-								
-								/*foreach (var assoc in GetAssociations(builder, builder.ConvertExpression(expression), stopExpression))
-									yield return assoc;
+								var memberInfo   = MemberHelper.GetMemberInfo(cexpr);
+								var memberAccess = Expression.MakeMemberAccess(cexpr.Arguments[0], memberInfo);
+								expression = memberAccess;
 
-								yield break;*/
+								continue;
 							}
 
 							if (lastMember == null)

@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
@@ -26,11 +28,12 @@ namespace LinqToDB.Linq.Builder
 #endif
 		}
 
-		public         ExpressionBuilder Builder     { get; }
-		public virtual Expression?       Expression  => null;
-		public         SelectQuery       SelectQuery { get; protected set; }
-		public virtual SqlStatement?     Statement   { get; set; }
-		public         IBuildContext?    Parent      { get; set; }
+		public         ExpressionBuilder Builder       { get; }
+		public virtual MappingSchema     MappingSchema => Builder.MappingSchema;
+		public virtual Expression?       Expression    => null;
+		public         SelectQuery       SelectQuery   { get; protected set; }
+		public virtual SqlStatement?     Statement     { get; set; }
+		public         IBuildContext?    Parent        { get; set; }
 
 		public virtual  Type       ElementType { get; }
 		public abstract Expression MakeExpression(Expression path, ProjectFlags flags);

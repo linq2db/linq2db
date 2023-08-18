@@ -82,6 +82,31 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
+		public static bool IsDependsOnOuterSources(
+			IQueryElement           testedRoot,
+			HashSet<IQueryElement>? elementsToIgnore = null)
+		{
+			var dependedOnSources = new HashSet<ISqlTableSource>();
+			var foundSources = new HashSet<ISqlTableSource>();
+
+			testedRoot.VisitParentFirst((elementsToIgnore, dependedOnSources, foundSources), static (context, e) =>
+			{
+				if (e is SqlTableSource ts)
+					context.foundSources.Add(ts.Source);
+
+				if (e is SqlField field && field.Table != null)
+					context.dependedOnSources.Add(field.Table);
+				else if (e is SqlColumn column && column.Parent != null)
+					context.dependedOnSources.Add(column.Parent);
+
+				return true;
+			});
+
+			var result = dependedOnSources.Except(foundSources).Any();
+			return result;
+		}
+
+
 		public static bool HasTableInQuery(SelectQuery query, SqlTable table)
 		{
 			return EnumerateAccessibleTables(query).Any(t => t == table);

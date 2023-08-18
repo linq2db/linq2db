@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
+	using Mapping;
 
 	internal interface IBuildContext
 	{
@@ -13,11 +14,12 @@ namespace LinqToDB.Linq.Builder
 		int     ContextId     { get; }
 #endif
 
-		ExpressionBuilder  Builder     { get; }
-		Expression?        Expression  { get; }
-		SelectQuery        SelectQuery { get; }
-		SqlStatement?      Statement   { get; set; } // TODO: remove
-		IBuildContext?     Parent      { get; set; } // TODO: probably not needed
+		ExpressionBuilder Builder       { get; }
+		MappingSchema     MappingSchema { get; }
+		Expression?       Expression    { get; }
+		SelectQuery       SelectQuery   { get; }
+		SqlStatement?     Statement     { get; set; } // TODO: remove
+		IBuildContext?    Parent        { get; set; } // TODO: probably not needed
 
 		Type ElementType { get; }
 

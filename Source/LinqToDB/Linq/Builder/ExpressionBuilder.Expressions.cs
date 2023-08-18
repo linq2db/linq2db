@@ -87,15 +87,16 @@ namespace LinqToDB.Linq.Builder
 	{
 		class BuildVisitor : ExpressionVisitorBase
 		{
-			ProjectFlags  _flags;
-			IBuildContext _context = default!;
-			BuildFlags    _buildFlags;
-			bool          _forceSql;
-			bool          _disableParseNew;
-			string?       _alias;
+			ProjectFlags      _flags;
+			IBuildContext     _context = default!;
+			BuildFlags        _buildFlags;
+			bool              _forceSql;
+			bool              _disableParseNew;
+			string?           _alias;
+			ColumnDescriptor? _columnDescriptor;
 			
-			ExpressionBuilder Builder => _context.Builder;
-			MappingSchema MappingSchema => Builder.MappingSchema;
+			ExpressionBuilder Builder       => _context.Builder;
+			MappingSchema     MappingSchema => _context.MappingSchema;
 
 			[return:NotNullIfNotNull(nameof(node))]
 			public override Expression? Visit(Expression? node)
@@ -200,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 					localFlags = localFlags.SqlFlag();
 
 				var translated = asSql
-					? Builder.ConvertToSqlExpr(_context, expression, localFlags, alias : alias)
+					? Builder.ConvertToSqlExpr(_context, expression, localFlags, columnDescriptor: _columnDescriptor, alias : alias)
 					: Builder.MakeExpression(_context, expression, localFlags);
 
 				if (translated is SqlErrorExpression)
@@ -228,17 +229,62 @@ namespace LinqToDB.Linq.Builder
 				return translated;
 			}
 
+			protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
+			{
+				var save = _columnDescriptor;
+
+				if (node.Member.DeclaringType != null)
+				{
+					_columnDescriptor = MappingSchema.GetEntityDescriptor(node.Member.DeclaringType).FindColumnDescriptor(node.Member);
+				}
+
+				var newNode = base.VisitMemberAssignment(node);
+
+				_columnDescriptor = save;
+
+				return newNode;
+			}
+
+			internal override SqlGenericConstructorExpression.Assignment VisitSqlGenericAssignment(SqlGenericConstructorExpression.Assignment assignment)
+			{
+				var save = _columnDescriptor;
+
+				if (assignment.MemberInfo.DeclaringType != null)
+				{
+					_columnDescriptor = MappingSchema.GetEntityDescriptor(assignment.MemberInfo.DeclaringType).FindColumnDescriptor(assignment.MemberInfo);
+				}
+
+				var newNode = base.VisitSqlGenericAssignment(assignment);
+
+				_columnDescriptor = save;
+
+				return newNode;
+
+			}
+
+			internal override SqlGenericConstructorExpression.Parameter VisitSqlGenericParameter(SqlGenericConstructorExpression.Parameter parameter)
+			{
+				var save = _columnDescriptor;
+
+				if (parameter.MemberInfo?.DeclaringType != null)
+				{
+					_columnDescriptor = MappingSchema.GetEntityDescriptor(parameter.MemberInfo.DeclaringType).FindColumnDescriptor(parameter.MemberInfo);
+				}
+
+				var newNode = base.VisitSqlGenericParameter(parameter);
+
+				_columnDescriptor = save;
+
+				return newNode;
+
+			}
+
 			protected override Expression VisitParameter(ParameterExpression node)
 			{
 				if (node == ExpressionConstants.DataContextParam)
 					return node;
 
 				return TranslateExpression(node);
-			}
-
-			protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
-			{
-				return base.VisitMemberAssignment(node);
 			}
 
 			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)

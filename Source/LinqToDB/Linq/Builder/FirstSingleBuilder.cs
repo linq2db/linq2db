@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 			};
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var argument = methodCall.Arguments[0];
 
@@ -78,7 +78,9 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, argument));
+			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, argument));
+			if (sequence == null)
+				return null;
 
 			sequence = new SubQueryContext(sequence);
 
@@ -235,6 +237,54 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			bool IsSupportedByProvider(Expression expression)
+			{
+				if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
+					return true;
+
+				var sqlProjected = Builder.ConvertToSqlExpr(this, expression, ProjectFlags.SQL | ProjectFlags.Test);
+
+				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlProjected);
+
+				if (!Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported && placeholders.Count > 1)
+				{
+					if (!Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
+						return false;
+				}
+
+				if (!Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
+					return false;
+
+				var parentQuery = Parent?.SelectQuery;
+				if (parentQuery != null)
+				{
+					var cloningContext = new CloningContext();
+
+					var clonedQuery = cloningContext.CloneElement(SelectQuery);
+
+					var parentSources = new HashSet<ISqlTableSource>();
+
+					foreach (var source in QueryHelper.EnumerateAccessibleSources(parentQuery))
+					{
+						if (source != SelectQuery)
+						{
+							var corrected = cloningContext.CorrectElement(source);
+							parentSources.Add(corrected);
+						}
+					}
+					
+					QueryHelper.OptimizeSelectQuery(clonedQuery, clonedQuery, Builder.DataContext.SqlProviderFlags, Builder.DataOptions);
+
+					var toIgnore = new HashSet<IQueryElement>() { clonedQuery.Where };
+
+					if (QueryHelper.IsDependsOnSources(clonedQuery, parentSources, toIgnore))
+						return false;
+				}
+
+
+				return true;
+			}
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if ((flags.IsAssociationRoot() || flags.IsRoot()) && SequenceHelper.IsSameContext(path, this))
@@ -249,37 +299,32 @@ namespace LinqToDB.Linq.Builder
 					if (IsSubQuery)
 					{
 						// Bad thing here. We expect that SelectQueryOptimizer will transfer OUTER APPLY to ROW_NUMBER query. We have to predict it here
-						if (!IsAssociation && !Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported && !Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
+						if (!IsSupportedByProvider(path))
 						{
-							var sqlProjected = Builder.ConvertToSqlExpr(this, projected, ProjectFlags.Test);
-
-							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlProjected);
-
-							if (placeholders.Count > 1 || !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported)
+							if (flags.HasFlag(ProjectFlags.Expression))
 							{
-								if (flags.HasFlag(ProjectFlags.Expression))
+								// Do not generate Take. Provider do not support Outer queries. Result will be filtered on the client side.
+								//
+								var sequenceExpression = GetEagerLoadingExpression(false);
+
+								var resultType = typeof(IEnumerable<>).MakeGenericType(path.Type);
+								var result     = (Expression)new SqlEagerLoadExpression(sequenceExpression);
+
+								var methodInfo = _methodKind switch
 								{
-									// Do not generate Take. Provider do not support Outer queries. Result will be filtered on the client side.
-									//
-									var sequenceExpression = GetEagerLoadingExpression(false);
+									MethodKind.First => Methods.Enumerable.First,
+									MethodKind.FirstOrDefault => Methods.Enumerable.FirstOrDefault,
+									MethodKind.Single => Methods.Enumerable.Single,
+									MethodKind.SingleOrDefault => Methods.Enumerable.SingleOrDefault,
+									_ => throw new ArgumentOutOfRangeException(nameof(_methodKind), _methodKind,
+										"Invalid method kind.")
+								};
 
-									var resultType = typeof(IEnumerable<>).MakeGenericType(path.Type);
-									var result     = (Expression)new SqlEagerLoadExpression(sequenceExpression);
+								methodInfo = methodInfo.MakeGenericMethod(path.Type);
 
-									var methodInfo = _methodKind switch
-									{
-										MethodKind.First           => Methods.Enumerable.First,
-										MethodKind.FirstOrDefault  => Methods.Enumerable.FirstOrDefault,
-										MethodKind.Single          => Methods.Enumerable.Single,
-										MethodKind.SingleOrDefault => Methods.Enumerable.SingleOrDefault,
-										_ => throw new ArgumentOutOfRangeException(nameof(_methodKind), _methodKind,
-											"Invalid method kind.")
-									};
+								result = Expression.Call(methodInfo, result);
 
-									result = Expression.Call(methodInfo, result);
-
-									return result;
-								}
+								return result;
 							}
 						}
 

@@ -906,6 +906,15 @@ namespace LinqToDB.Linq.Builder
 			return tableContext;
 		}
 
+		public static bool IsSupportedSubquery(IBuildContext context)
+		{
+			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
+			    QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
+			{
+				return false;
+			}
+			return true;
+		}
 
 		public static IBuildContext UnwrapSubqueryContext(IBuildContext context)
 		{

@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using System.Linq.Expressions;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Reflection;
@@ -15,9 +17,15 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsSameGenericMethod(_supportedMethods);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			if (buildInfo.IsSubQuery)
+			{
+				if (!SequenceHelper.IsSupportedSubquery(sequence))
+					return null;
+			}
 
 			var sql      = sequence.SelectQuery;
 			if (sql.Select.TakeValue != null || sql.Select.SkipValue != null)

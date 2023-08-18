@@ -1274,7 +1274,7 @@ namespace LinqToDB.Linq.Builder
 					left  = newExpr.Left;
 					right = newExpr.Right;
 
-					return CheckExpression(ConvertCompareExpression(context, newExpr.NodeType, left, right, flags), ref error);
+					return CheckExpression(ConvertCompareExpression(context, newExpr.NodeType, left, right, flags, newExpr), ref error);
 				}
 
 				case ExpressionType.Call:
@@ -1455,10 +1455,13 @@ namespace LinqToDB.Linq.Builder
 			throw CreateSqlError(context, Expression.Equal(left, right)).CreateError();
 		}
 
-		Expression ConvertCompareExpression(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right, ProjectFlags flags)
+		Expression ConvertCompareExpression(IBuildContext? context, ExpressionType nodeType, Expression left, Expression right, ProjectFlags flags, Expression? originalExpression = null)
 		{
 			Expression GetOriginalExpression()
 			{
+				if (originalExpression != null)
+					return originalExpression;
+
 				var rightExpr = right;
 				var leftExpr  = left;
 				if (rightExpr.Type != leftExpr.Type)
@@ -4098,19 +4101,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (mc.Method.IsSqlPropertyMethodEx())
 				{
-					var arguments = mc.Arguments.ToArray();
-					var rootArg = MakeExpression(currentContext, arguments[0], flags.RootFlag());
-					if (rootArg is ContextRefExpression contextRef)
-						rootContext = contextRef;
-
-					arguments[0] = rootArg;
-					expression   = mc.Update(null, arguments);
-					if (ExpressionEqualityComparer.Instance.Equals(expression, path))
-					{
-						expression = null;
-					}
+					var memberInfo   = MemberHelper.GetMemberInfo(mc);
+					var memberAccess = Expression.MakeMemberAccess(mc.Arguments[0], memberInfo);
+					return MakeExpression(currentContext, memberAccess, flags);
 				}
-				else if (mc.Method.Name == nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
+
+				if (mc.Method.Name == nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
 				{
 					var translated = MakeExpression(currentContext, mc.Arguments[0], flags);
 					if (translated is SqlPlaceholderExpression { Sql: SqlColumn column })
@@ -4119,7 +4115,8 @@ namespace LinqToDB.Linq.Builder
 					}
 					return translated;
 				}
-				else if (IsAssociation(mc, out _))
+				
+				if (IsAssociation(mc, out _))
 				{
 					var arguments = mc.Arguments;
 					if (arguments.Count == 0)
