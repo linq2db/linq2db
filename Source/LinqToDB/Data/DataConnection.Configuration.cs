@@ -176,7 +176,7 @@ namespace LinqToDB.Data
 		[SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
 		static IDataProvider? FindProvider(
 			string                                          configuration,
-			IEnumerable<KeyValuePair<string,IDataProvider>> providers,
+			ICollection<KeyValuePair<string,IDataProvider>> providers,
 			IDataProvider?                                  defp)
 		{
 			foreach (var p in providers.OrderByDescending(kv => kv.Key.Length))

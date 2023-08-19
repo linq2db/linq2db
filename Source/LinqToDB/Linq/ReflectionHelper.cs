@@ -11,7 +11,9 @@ namespace LinqToDB.Linq
 
 	sealed class ReflectionHelper
 	{
-		public static class Expressor<T>
+#pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
+		public class Expressor<T>
+#pragma warning restore CA1052 // Static holder types should be Static or NotInheritable
 		{
 			public static FieldInfo FieldOf(Expression<Func<T,object?>> func)
 			{
