@@ -631,12 +631,14 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
+		private static readonly char[] _nameSeparators = new [] {' ', '\t'};
+
 		// TODO: use proper C# identifier validation procedure
 		public static string ToValidName(string name)
 		{
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
-				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
+				var ss = name.Split(_nameSeparators, StringSplitOptions.RemoveEmptyEntries)
 					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
 
 				name = string.Concat(ss);

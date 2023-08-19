@@ -39,6 +39,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	sealed class SqlCeSchemaProvider : SchemaProviderBase
 	{
+		private static readonly IReadOnlyList<string> _tableTypes = new[] { "TABLE", "VIEW" };
+
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var tables = dataConnection.Connection.GetSchema("Tables");
@@ -46,7 +48,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			return
 			(
 				from t in tables.AsEnumerable()
-				where new[] {"TABLE", "VIEW"}.Contains(t.Field<string>("TABLE_TYPE"))
+				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"))
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
