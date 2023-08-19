@@ -13,7 +13,7 @@ namespace LinqToDB.Expressions
 	public static class MemberHelper
 	{
 		[DebuggerDisplay("{Type.Name}.{MemberInfo.Name}")]
-		public struct MemberInfoWithType
+		public struct MemberInfoWithType : IEquatable<MemberInfoWithType>
 		{
 			public MemberInfoWithType(Type? type, MemberInfo memberInfo)
 			{
