@@ -387,7 +387,7 @@ namespace LinqToDB.Data
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 #if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
+				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
@@ -410,7 +410,7 @@ namespace LinqToDB.Data
 			{
 				int ret;
 #if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
+				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
@@ -469,7 +469,7 @@ namespace LinqToDB.Data
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 #if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
+				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
@@ -492,7 +492,7 @@ namespace LinqToDB.Data
 			{
 				object? ret;
 #if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
+				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
@@ -562,7 +562,7 @@ namespace LinqToDB.Data
 		{
 			if (TraceSwitchConnection.Level == TraceLevel.Off)
 #if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
+				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
@@ -587,7 +587,7 @@ namespace LinqToDB.Data
 				DataReaderWrapper ret;
 
 #if NATIVE_ASYNC
-				await using (DataProvider.ExecuteScope(this))
+				await using ((DataProvider.ExecuteScope(this) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif

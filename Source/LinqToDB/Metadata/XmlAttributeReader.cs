@@ -223,7 +223,8 @@ namespace LinqToDB.Metadata
 
 		static Dictionary<string,MetaTypeInfo> LoadStream(Stream xmlDocStream, string? fileName)
 		{
-			var doc = XDocument.Load(new StreamReader(xmlDocStream));
+			using var sr = new StreamReader(xmlDocStream);
+			var doc      = XDocument.Load(sr);
 
 			if (doc.Root == null)
 				throw new MetadataException($"'{fileName}': Root element missing.");

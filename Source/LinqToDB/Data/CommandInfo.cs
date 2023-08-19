@@ -242,7 +242,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 #else
-			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
 			{
 #if NETSTANDARD2_1PLUS
@@ -427,7 +427,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 #else
-			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
 			{
 #if NETSTANDARD2_1PLUS
@@ -587,7 +587,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 #else
-			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
 			{
 #if NETSTANDARD2_1PLUS
@@ -650,17 +650,23 @@ namespace LinqToDB.Data
 
 		T[] ReadAsArray<T>(DbDataReader rd)
 		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			return ReadEnumerator<T>(new DataReaderWrapper(rd), null, false).ToArray();
+#pragma warning restore CA2000 // Dispose objects before losing scope
 		}
 
 		List<T> ReadAsList<T>(DbDataReader rd)
 		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			return ReadEnumerator<T>(new DataReaderWrapper(rd), null, false).ToList();
+#pragma warning restore CA2000 // Dispose objects before losing scope
 		}
 
 		T? ReadSingle<T>(DbDataReader rd)
 		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			return ReadEnumerator<T>(new DataReaderWrapper(rd), null, false).FirstOrDefault();
+#pragma warning restore CA2000 // Dispose objects before losing scope
 		}
 
 		T ReadMultipleResultSets<T>(DbDataReader rd)
@@ -1096,7 +1102,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 #else
-			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
 			{
 #if NETSTANDARD2_1PLUS

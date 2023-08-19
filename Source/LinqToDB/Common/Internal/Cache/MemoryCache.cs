@@ -242,6 +242,7 @@ namespace LinqToDB.Common.Internal.Cache
 			CheckDisposed();
 			if (_entries.TryRemove(key, out var entry))
 			{
+				using var _ = entry;
 				if (_options.SizeLimit.HasValue)
 				{
 					Interlocked.Add(ref _cacheSize, -entry.Size!.Value);
