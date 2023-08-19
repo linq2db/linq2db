@@ -11,7 +11,9 @@ namespace LinqToDB.DataProvider.DB2
 
 	sealed class DB2MappingSchema : LockedMappingSchema
 	{
+#if NET6_0_OR_GREATER
 		private const string DATE_FORMAT       = "{0:yyyy-MM-dd}";
+#endif
 		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
 
 		private const string TIMESTAMP0_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss}";

@@ -12,10 +12,10 @@ namespace LinqToDB.DataProvider.Access
 
 	sealed class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
-		private const OleDbProviderAdapter.ColumnFlags COUNTER_OR_BIT = OleDbProviderAdapter.ColumnFlags.MayBeNull
-			| OleDbProviderAdapter.ColumnFlags.IsFixedLength
-			| OleDbProviderAdapter.ColumnFlags.WriteUnknown
-			| OleDbProviderAdapter.ColumnFlags.MayDefer;
+		//private const OleDbProviderAdapter.ColumnFlags COUNTER_OR_BIT = OleDbProviderAdapter.ColumnFlags.MayBeNull
+		//	| OleDbProviderAdapter.ColumnFlags.IsFixedLength
+		//	| OleDbProviderAdapter.ColumnFlags.WriteUnknown
+		//	| OleDbProviderAdapter.ColumnFlags.MayDefer;
 
 		private readonly AccessOleDbDataProvider _provider;
 
