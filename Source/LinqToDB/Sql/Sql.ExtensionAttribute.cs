@@ -921,7 +921,7 @@ namespace LinqToDB
 				foreach (var c in replacementMap)
 				{
 					var first = c.UnderName[0];
-					if (c.Name == "" || first.Extension == null)
+					if (c.Name.Length == 0 || first.Extension == null)
 					{
 						for (var i = 0; i < c.UnderName.Length; i++)
 						{

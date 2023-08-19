@@ -1663,11 +1663,11 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (value1)
 						{
-							case short   h when h == 0  :
-							case int     i when i == 0  :
-							case long    l when l == 0  :
-							case decimal d when d == 0  :
-							case string  s when s == "" : return be.Expr2;
+							case short   h when h == 0        :
+							case int     i when i == 0        :
+							case long    l when l == 0        :
+							case decimal d when d == 0        :
+							case string  s when s.Length == 0 : return be.Expr2;
 						}
 					}
 
@@ -1716,7 +1716,7 @@ namespace LinqToDB.SqlProvider
 								break;
 							}
 
-							case string vs when vs == "" : return be.Expr1;
+							case string vs when vs.Length == 0: return be.Expr1;
 							case string vs when
 								be.Expr1    is SqlBinaryExpression be1 &&
 								//be1.Operation == "+"                   &&
