@@ -51,7 +51,7 @@ namespace System
 
 	internal struct HashCode
 	{
-		private static readonly uint s_seed = 397;
+		private const uint s_seed = 397;
 
 		private const uint Prime1 = 2654435761U;
 		private const uint Prime2 = 2246822519U;

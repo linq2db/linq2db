@@ -176,6 +176,7 @@ dotnet_diagnostic.CA1305.severity = none # CA1305: Specify IFormatProvider
 dotnet_diagnostic.CA1309.severity = none # CA1309: Use ordinal StringComparison
 dotnet_diagnostic.CA1310.severity = none # CA1310: Specify StringComparison for correctness
 dotnet_diagnostic.CA1510.severity = none # CA1510: use throw helpers
+dotnet_diagnostic.CA1700.severity = none # CA1700: Do not name enum values 'Reserved'
 dotnet_diagnostic.CA1707.severity = none # CA1707: Identifiers should not contain underscores
 dotnet_diagnostic.CA1708.severity = none # CA1708: Identifiers should differ by more than case
 dotnet_diagnostic.CA1711.severity = none # CA1711: Identifiers should not have incorrect suffix
