@@ -107,17 +107,27 @@ namespace LinqToDB.SchemaProvider
 			foreach (var dt in GetDataTypes(dataConnection))
 				if (dt.ProviderSpecific)
 				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					ProviderSpecificDataTypesDic.TryAdd(dt.TypeName, dt);
+					ProviderSpecificDataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
 					if (!ProviderSpecificDataTypesDic.ContainsKey(dt.TypeName))
 						ProviderSpecificDataTypesDic.Add(dt.TypeName, dt);
 					if (!ProviderSpecificDataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
 						ProviderSpecificDataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
 				}
 				else
 				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					DataTypesDic.TryAdd(dt.TypeName, dt);
+					DataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
 					if (!DataTypesDic.ContainsKey(dt.TypeName))
 						DataTypesDic.Add(dt.TypeName, dt);
 					if (!DataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
 						DataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
 				}
 
 			List<TableSchema>     tables;
