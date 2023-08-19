@@ -171,6 +171,7 @@ dotnet_diagnostic.CA1032.severity = none # CA1032: Implement standard exception 
 dotnet_diagnostic.CA1036.severity = none # CA1036: Override methods on comparable types
 dotnet_diagnostic.CA1043.severity = none # CA1043: Use integral or string argument for indexers
 dotnet_diagnostic.CA1051.severity = none # CA1051: Do not declare visible instance fields
+dotnet_diagnostic.CA1062.severity = none # CA1062: Validate arguments of public methods
 dotnet_diagnostic.CA1067.severity = none # CA1067: Override Equals when implementing IEquatable
 dotnet_diagnostic.CA1068.severity = none # CA1068: CancellationToken parameters must come last
 dotnet_diagnostic.CA1069.severity = none # CA1069: Enums should not have duplicate values

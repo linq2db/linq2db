@@ -113,7 +113,9 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				if (_mysqlConnectorInstance == null)
 					lock (_mysqlConnectorSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_mysqlConnectorInstance ??= new MySqlConnector.MySqlConnectorProviderAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _mysqlConnectorInstance;
 			}
@@ -121,7 +123,9 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				if (_mysqlDataInstance == null)
 					lock (_mysqlDataSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_mysqlDataInstance ??= new MySqlData.MySqlDataProviderAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _mysqlDataInstance;
 			}

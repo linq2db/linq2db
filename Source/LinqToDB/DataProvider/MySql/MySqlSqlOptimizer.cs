@@ -123,10 +123,10 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context);
 
-			if (caseSensitive == null || caseSensitive == false)
+			if (caseSensitive != true)
 			{
 				var searchExpr = predicate.Expr2;
-				var dataExpr = predicate.Expr1;
+				var dataExpr   = predicate.Expr1;
 
 				if (caseSensitive == false)
 				{

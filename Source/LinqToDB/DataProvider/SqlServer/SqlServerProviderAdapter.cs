@@ -119,7 +119,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				if (_systemAdapter == null)
 					lock (_sysSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_systemAdapter ??= CreateAdapter(SystemAssemblyName, SystemClientNamespace, SystemProviderFactoryName);
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _systemAdapter;
 			}
@@ -127,7 +129,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				if (_microsoftAdapter == null)
 					lock (_msSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_microsoftAdapter ??= CreateAdapter(MicrosoftAssemblyName, MicrosoftClientNamespace, MicrosoftProviderFactoryName);
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _microsoftAdapter;
 			}

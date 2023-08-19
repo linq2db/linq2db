@@ -45,7 +45,9 @@ namespace LinqToDB.DataProvider
 		{
 			if (_instance == null)
 				lock (_syncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
+#pragma warning restore CA1508 // Avoid dead conditional code
 					{
 #if NETFRAMEWORK
 						var assembly = typeof(System.Data.Odbc.OdbcConnection).Assembly;

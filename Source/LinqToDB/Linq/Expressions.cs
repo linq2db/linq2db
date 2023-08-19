@@ -487,7 +487,9 @@ namespace LinqToDB.Linq
 			{
 				if (_members == null)
 					lock (_memberSync)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_members ??= LoadMembers();
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _members;
 			}

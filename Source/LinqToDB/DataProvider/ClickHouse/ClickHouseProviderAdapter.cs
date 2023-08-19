@@ -147,7 +147,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (_octonicaAdapter == null)
 					lock (_octonicaSyncRoot)
+						// https://github.com/dotnet/roslyn-analyzers/issues/1649
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_octonicaAdapter ??= CreateOctonicaAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _octonicaAdapter;
 			}
@@ -155,7 +158,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (_mysqlAdapter == null)
 					lock (_mysqlSyncRoot)
+						// https://github.com/dotnet/roslyn-analyzers/issues/1649
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_mysqlAdapter ??= new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector));
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _mysqlAdapter;
 			}
@@ -163,7 +169,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (_clientAdapter == null)
 					lock (_clientSyncRoot)
+						// https://github.com/dotnet/roslyn-analyzers/issues/1649
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_clientAdapter ??= CreateClientAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _clientAdapter;
 			}

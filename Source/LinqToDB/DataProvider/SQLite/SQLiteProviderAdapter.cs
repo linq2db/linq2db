@@ -131,7 +131,9 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				if (_systemDataSQLite == null)
 					lock (_systemSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_systemDataSQLite ??= CreateAdapter(SystemDataSQLiteAssemblyName, SystemDataSQLiteClientNamespace, "SQLite");
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _systemDataSQLite;
 			}
@@ -139,7 +141,9 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				if (_microsoftDataSQLite == null)
 					lock (_msSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_microsoftDataSQLite ??= CreateAdapter(MicrosoftDataSQLiteAssemblyName, MicrosoftDataSQLiteClientNamespace, "Sqlite");
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _microsoftDataSQLite;
 			}

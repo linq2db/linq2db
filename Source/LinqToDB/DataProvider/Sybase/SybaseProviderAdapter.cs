@@ -75,7 +75,9 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				if (_nativeInstance == null)
 					lock (_nativeSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_nativeInstance ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeProviderFactoryName, true);
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _nativeInstance;
 			}
@@ -83,7 +85,9 @@ namespace LinqToDB.DataProvider.Sybase
 			{
 				if (_managedInstance == null)
 					lock (_managedSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_managedInstance ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, null, false);
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 				return _managedInstance;
 			}

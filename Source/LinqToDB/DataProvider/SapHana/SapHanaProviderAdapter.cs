@@ -62,7 +62,9 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (_instance == null)
 				lock (_syncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
+#pragma warning restore CA1508 // Avoid dead conditional code
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
