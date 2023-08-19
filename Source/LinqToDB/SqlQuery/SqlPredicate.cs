@@ -62,7 +62,7 @@ namespace LinqToDB.SqlQuery
 
 		public abstract class BaseNotExpr : Expr, IInvertibleElement
 		{
-			public BaseNotExpr(ISqlExpression exp1, bool isNot, int precedence)
+			protected BaseNotExpr(ISqlExpression exp1, bool isNot, int precedence)
 				: base(exp1, precedence)
 			{
 				IsNot = isNot;

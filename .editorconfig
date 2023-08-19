@@ -193,6 +193,7 @@ dotnet_diagnostic.CA1822.severity = none # CA1822: Mark members as static
 dotnet_diagnostic.CA1845.severity = none # CA1845: Use span-based string.Concat and AsSpan instead of Substring
 dotnet_diagnostic.CA1846.severity = none # CA1846: Prefer AsSpan over Substring
 dotnet_diagnostic.CA2100.severity = none # CA2100: Review SQL queries for security vulnerabilities
+dotnet_diagnostic.CA2100.severity = none # CA2119: Seal methods that satisfy private interfaces
 dotnet_diagnostic.CA2211.severity = none # CA2211: Non-constant fields should not be visible
 dotnet_diagnostic.CA5390.severity = none # CA5390: DoNotHardCodeEncryptionKey
 dotnet_diagnostic.CA5403.severity = none # CA5403: DoNotHardCodeCertificate

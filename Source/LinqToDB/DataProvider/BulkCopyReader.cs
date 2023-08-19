@@ -114,7 +114,7 @@ namespace LinqToDB.DataProvider
 #endif
 		protected abstract object Current { get; }
 
-		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns)
+		protected BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns)
 		{
 			_dataConnection = dataConnection;
 			_columns        = columns;
