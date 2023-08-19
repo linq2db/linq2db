@@ -272,7 +272,10 @@ namespace LinqToDB.Data
 			if (dataProvider == null) throw new ArgumentNullException(nameof(dataProvider));
 
 			if (string.IsNullOrEmpty(dataProvider.Name))
+				// temporary (?) suppression due to https://github.com/dotnet/roslyn-analyzers/issues/6863
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
 				throw new ArgumentException("dataProvider.Name cannot be empty.", nameof(dataProvider));
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 
 			_dataProviders[providerName] = dataProvider;
 		}
