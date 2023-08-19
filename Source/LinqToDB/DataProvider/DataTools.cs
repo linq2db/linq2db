@@ -11,7 +11,10 @@ namespace LinqToDB.DataProvider
 {
 	using Common.Internal;
 
-	public static class DataTools
+	// TODO: v6: make static
+#pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
+	public class DataTools
+#pragma warning restore CA1052 // Static holder types should be Static or NotInheritable
 	{
 		/// <summary>
 		/// Improved version of <c>Replace("[", "[[]")</c> code, used before.

@@ -13,7 +13,10 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// <summary>
 	///     Detects the exceptions caused by SQL Server transient failures.
 	/// </summary>
-	public static class SqlServerTransientExceptionDetector
+	// TODO: v6: make static
+#pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
+	public class SqlServerTransientExceptionDetector
+#pragma warning restore CA1052 // Static holder types should be Static or NotInheritable
 	{
 		private static readonly ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>> _exceptionTypes = new ();
 
