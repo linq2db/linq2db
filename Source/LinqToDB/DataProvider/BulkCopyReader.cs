@@ -68,9 +68,13 @@ namespace LinqToDB.DataProvider
 		protected override void Dispose(bool disposing)
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
 		{
-			if (disposing && _asyncEnumerator != null)
+			if (disposing)
 			{
-				SafeAwaiter.Run(_asyncEnumerator.DisposeAsync);
+				_enumerator?.Dispose();
+				if (_asyncEnumerator != null)
+				{
+					SafeAwaiter.Run(_asyncEnumerator.DisposeAsync);
+				}
 			}
 		}
 #endif
@@ -84,6 +88,7 @@ namespace LinqToDB.DataProvider
 		public ValueTask DisposeAsync()
 #endif
 		{
+			_enumerator?.Dispose();
 			return _asyncEnumerator?.DisposeAsync() ?? default;
 		}
 #else

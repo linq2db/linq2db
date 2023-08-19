@@ -734,7 +734,9 @@ namespace LinqToDB.Data
 
 		#region Command
 
+#pragma warning disable CA2213 // Disposable fields should be disposed
 		private DbCommand? _command;
+#pragma warning restore CA2213 // Disposable fields should be disposed
 
 		/// <summary>
 		/// Gets current command instance if it exists or <c>null</c> otherwise.

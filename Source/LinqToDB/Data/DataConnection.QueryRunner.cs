@@ -41,7 +41,9 @@ namespace LinqToDB.Data
 
 			bool        _isAsync;
 			Expression? _mapperExpression;
+#pragma warning disable CA2213 // Disposable fields should be disposed
 			DataReaderWrapper? _dataReader;
+#pragma warning restore CA2213 // Disposable fields should be disposed
 
 			public override Expression? MapperExpression
 			{
