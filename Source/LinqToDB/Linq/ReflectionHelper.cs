@@ -11,7 +11,7 @@ namespace LinqToDB.Linq
 
 	sealed class ReflectionHelper
 	{
-		public class Expressor<T>
+		public static class Expressor<T>
 		{
 			public static FieldInfo FieldOf(Expression<Func<T,object?>> func)
 			{

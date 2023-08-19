@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	/// <summary>
 	///     Detects the exceptions caused by SQL Server transient failures.
 	/// </summary>
-	public class SqlServerTransientExceptionDetector
+	public static class SqlServerTransientExceptionDetector
 	{
 		private static readonly ConcurrentDictionary<Type, Func<Exception, IEnumerable<int>>> _exceptionTypes = new ();
 
