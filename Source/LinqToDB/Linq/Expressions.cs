@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CA1862 // Prefer using StringComparer to perform a case-insensitive comparison
+using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Data.SqlTypes;
