@@ -484,7 +484,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						disposeConnection    = true;
 
 						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpening(new(null), connection);
-						connection.Open();
+						await connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpened(new(null), connection);
 					}
 				}
