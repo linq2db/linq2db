@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Configuration;
 	using Data;
+	using Extensions;
 
 	[PublicAPI]
 	public static class FirebirdTools
@@ -17,7 +18,7 @@ namespace LinqToDB.DataProvider.Firebird
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
 			if (options.ProviderName is ProviderName.Firebird or FirebirdProviderAdapter.ClientNamespace ||
-				options.ConfigurationString?.Contains("Firebird") == true)
+				options.ConfigurationString?.ContainsEx("Firebird") == true)
 				return _firebirdDataProvider.Value;
 
 			return null;

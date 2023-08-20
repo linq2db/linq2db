@@ -73,7 +73,7 @@ namespace LinqToDB.Data
 
 			var variable = Expression.Variable(
 				expr.Type,
-				name.IndexOf('<') >= 0 ? null : name);
+				name.IndexOfEx('<') >= 0 ? null : name);
 
 			BlockVariables.  Add(variable);
 			BlockExpressions.Add(Expression.Assign(variable, expr));
@@ -233,7 +233,7 @@ namespace LinqToDB.Data
 						foreach (var col in cols)
 						{
 							col.Name = col.Name.Substring(name.Length);
-							col.IsComplex = col.Name.Contains(".");
+							col.IsComplex = col.Name.ContainsEx(".");
 						}
 
 						var typeAcc          = TypeAccessor.GetAccessor(member.Type);

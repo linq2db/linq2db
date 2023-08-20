@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using Data;
 	using Common;
 	using Configuration;
+	using Extensions;
 
 	public static class SybaseTools
 	{
@@ -29,14 +30,14 @@ namespace LinqToDB.DataProvider.Sybase
 #endif
 				case ""                                          :
 				case null                                        :
-					if (options.ConfigurationString?.Contains("Sybase") == true)
+					if (options.ConfigurationString?.ContainsEx("Sybase") == true)
 						goto case ProviderName.Sybase;
 					break;
 				case ProviderName.Sybase                         :
-					if (options.ConfigurationString?.Contains("Managed") == true)
+					if (options.ConfigurationString?.ContainsEx("Managed") == true)
 						return _sybaseManagedDataProvider.Value;
 #if NETFRAMEWORK
-					if (options.ConfigurationString?.Contains("Native") == true)
+					if (options.ConfigurationString?.ContainsEx("Native") == true)
 						return _sybaseNativeDataProvider.Value;
 #endif
 					return GetDataProvider();

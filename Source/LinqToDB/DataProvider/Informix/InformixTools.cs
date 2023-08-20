@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Configuration;
 	using Data;
 	using DB2;
+	using Extensions;
 
 	public static class InformixTools
 	{
@@ -35,11 +36,11 @@ namespace LinqToDB.DataProvider.Informix
 				case DB2ProviderAdapter.CoreClientNamespace :
 
 					// this check used by both Informix and DB2 providers to avoid conflicts
-					if (options.ConfigurationString?.Contains("Informix") == true)
+					if (options.ConfigurationString?.ContainsEx("Informix") == true)
 						goto case ProviderName.Informix;
 					break;
 				case ProviderName.Informix   :
-					if (options.ConfigurationString?.Contains("DB2") == true)
+					if (options.ConfigurationString?.ContainsEx("DB2") == true)
 						return _informixDB2DataProvider.Value;
 
 #if NETFRAMEWORK

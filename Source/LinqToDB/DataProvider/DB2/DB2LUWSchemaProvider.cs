@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using SchemaProvider;
 
 	// Known Issues:
@@ -283,7 +284,7 @@ WHERE
 					{
 						if (type.TypeName.IndexOf("()") >= 0)
 						{
-							type.CreateFormat = type.TypeName.Replace("()", "({0})");
+							type.CreateFormat = type.TypeName.ReplaceEx("()", "({0})");
 						}
 						else
 						{
@@ -500,8 +501,8 @@ ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT";
 						ParameterName = pName,
 						DataType      = dataType,
 						Ordinal       = ordinal,
-						IsIn          = mode.Contains("IN"),
-						IsOut         = mode.Contains("OUT"),
+						IsIn          = mode.ContainsEx("IN"),
+						IsOut         = mode.ContainsEx("OUT"),
 						IsResult      = mode == "RET",
 						IsNullable    = isNullable
 					};

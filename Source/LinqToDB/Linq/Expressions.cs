@@ -429,7 +429,7 @@ namespace LinqToDB.Linq
 			if (typeNamespace == null)
 				return true;
 
-			var dotIndex = typeNamespace.IndexOf('.');
+			var dotIndex = typeNamespace.IndexOfEx('.');
 			var root     = dotIndex != -1 ? typeNamespace.Substring(0, dotIndex) : typeNamespace;
 
 			// Startup optimization.

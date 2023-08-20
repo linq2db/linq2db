@@ -8,6 +8,7 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using DataProvider;
+	using Extensions;
 	using SqlQuery;
 
 	[DataContract]
@@ -374,7 +375,7 @@ namespace LinqToDB.SqlProvider
 				^ DoesNotSupportCorrelatedSubquery             .GetHashCode()
 				^ IsExistsPreferableForContains                .GetHashCode()
 				^ IsProjectionBoolSupported                    .GetHashCode()
-				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
+				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCodeEx() ^ hash);
 	}
 
 		public override bool Equals(object? obj)

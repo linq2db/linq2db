@@ -7,6 +7,7 @@ using System.Security;
 namespace LinqToDB.DataProvider.Access
 {
 	using Data;
+	using Extensions;
 
 	/// <summary>
 	/// Contains Access provider management tools.
@@ -18,21 +19,21 @@ namespace LinqToDB.DataProvider.Access
 
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (options.ConnectionString?.Contains("Microsoft.ACE.OLEDB") == true || options.ConnectionString?.Contains("Microsoft.Jet.OLEDB") == true)
+			if (options.ConnectionString?.ContainsEx("Microsoft.ACE.OLEDB") == true || options.ConnectionString?.ContainsEx("Microsoft.Jet.OLEDB") == true)
 			{
 				return _accessOleDbDataProvider.Value;
 			}
 
 			if (options.ProviderName == ProviderName.AccessOdbc
-				|| options.ConfigurationString?.Contains("Access.Odbc") == true)
+				|| options.ConfigurationString?.ContainsEx("Access.Odbc") == true)
 			{
 				return _accessODBCDataProvider.Value;
 			}
 
-			if (options.ProviderName == ProviderName.Access || (options.ConfigurationString?.Contains("Access") == true && !options.ConfigurationString.Contains("DataAccess")))
+			if (options.ProviderName == ProviderName.Access || (options.ConfigurationString?.ContainsEx("Access") == true && !options.ConfigurationString.ContainsEx("DataAccess")))
 			{
-				if (options.ConnectionString?.Contains("*.mdb") == true
-					|| options.ConnectionString?.Contains("*.accdb") == true)
+				if (options.ConnectionString?.ContainsEx("*.mdb") == true
+					|| options.ConnectionString?.ContainsEx("*.accdb") == true)
 					return _accessODBCDataProvider.Value;
 
 				return _accessOleDbDataProvider.Value;

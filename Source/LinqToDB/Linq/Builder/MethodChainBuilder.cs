@@ -69,7 +69,7 @@ namespace LinqToDB.Linq.Builder
 				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
 					_returnType = _returnType.GetGenericArguments()[0];
-					_methodName = _methodName.Replace("Async", "");
+					_methodName = _methodName.ReplaceEx("Async", "");
 				}
 			}
 

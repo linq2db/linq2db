@@ -2,13 +2,13 @@
 using System.Data;
 using System.Linq;
 
-
-
 namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using SchemaProvider;
+
 	// https://docs.microsoft.com/en-us/dotnet/framework/data/adonet/odbc-schema-collections
 	// unused tables:
 	// DataSourceInformation - database settings
@@ -88,9 +88,9 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable  = c.Field<short> ("NULLABLE") == 1,
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName ?? typeName,
-					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("length") && size != 0 ? size  : null,
-					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")           ? size  : null,
-					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")               ? scale : null,
+					Length      = dt?.CreateParameters != null && dt.CreateParameters.ContainsEx("length") && size != 0 ? size  : null,
+					Precision   = dt?.CreateParameters != null && dt.CreateParameters.ContainsEx("precision")           ? size  : null,
+					Scale       = dt?.CreateParameters != null && dt.CreateParameters.ContainsEx("scale")               ? scale : null,
 					IsIdentity  = typeName == "COUNTER",
 					Description = c.Field<string>("REMARKS")
 				}
@@ -136,9 +136,9 @@ namespace LinqToDB.DataProvider.Access
 					ParameterName = p.Field<string>("COLUMN_NAME")!.TrimStart('[').TrimEnd(']'),
 					IsIn          = true,
 					IsOut         = false,
-					Length        = dt.CreateParameters != null && dt.CreateParameters.Contains("length")    ? size : null,
-					Precision     = dt.CreateParameters != null && dt.CreateParameters.Contains("precision") ? size : null,
-					Scale         = dt.CreateParameters != null && dt.CreateParameters.Contains("scale")     ? p.Field<short?>("DECIMAL_DIGITS") : null,
+					Length        = dt.CreateParameters != null && dt.CreateParameters.ContainsEx("length")    ? size : null,
+					Precision     = dt.CreateParameters != null && dt.CreateParameters.ContainsEx("precision") ? size : null,
+					Scale         = dt.CreateParameters != null && dt.CreateParameters.ContainsEx("scale")     ? p.Field<short?>("DECIMAL_DIGITS") : null,
 					Ordinal       = p.Field<int>("ORDINAL_POSITION"),
 					IsResult      = false,
 					DataType      = typeName,

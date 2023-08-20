@@ -297,7 +297,7 @@ namespace LinqToDB.Mapping
 			if (attr.MemberName == null)
 				throw new LinqToDBException($"The Column attribute of the '{TypeAccessor.Type}' type must have MemberName.");
 
-			if (attr.MemberName.IndexOf('.') < 0)
+			if (attr.MemberName.IndexOfEx('.') < 0)
 			{
 				var ex = TypeAccessor[attr.MemberName];
 				var cd = new ColumnDescriptor(MappingSchema, this, attr, ex, hasInheritanceMapping);

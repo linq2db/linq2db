@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Common;
 	using Configuration;
 	using Data;
+	using Extensions;
 
 	public static partial class SQLiteTools
 	{
@@ -32,22 +33,22 @@ namespace LinqToDB.DataProvider.SQLite
 				case ProviderName.SQLiteMS                                   : return _SQLiteMSDataProvider.Value;
 				case ""                                                      :
 				case null                                                    :
-					if (options.ConfigurationString?.Contains("SQLite") == true || options.ConfigurationString?.Contains("Sqlite") == true)
+					if (options.ConfigurationString?.ContainsEx("SQLite") == true || options.ConfigurationString?.ContainsEx("Sqlite") == true)
 						goto case ProviderName.SQLite;
 					break;
 				case ProviderName.SQLite                                     :
-					if (options.ConfigurationString?.Contains("MS") == true || options.ConfigurationString?.Contains("Microsoft") == true)
+					if (options.ConfigurationString?.ContainsEx("MS") == true || options.ConfigurationString?.ContainsEx("Microsoft") == true)
 						return _SQLiteMSDataProvider.Value;
 
-					if (options.ConfigurationString?.Contains("Classic") == true)
+					if (options.ConfigurationString?.ContainsEx("Classic") == true)
 						return _SQLiteClassicDataProvider.Value;
 
 					return GetDataProvider();
-				case var providerName when providerName.Contains("SQLite") || providerName.Contains("Sqlite"):
-					if (options.ProviderName.Contains("MS") || options.ProviderName.Contains("Microsoft"))
+				case var providerName when providerName.ContainsEx("SQLite") || providerName.ContainsEx("Sqlite"):
+					if (options.ProviderName.ContainsEx("MS") || options.ProviderName.ContainsEx("Microsoft"))
 						return _SQLiteMSDataProvider.Value;
 
-					if (options.ProviderName.Contains("Classic"))
+					if (options.ProviderName.ContainsEx("Classic"))
 						return _SQLiteClassicDataProvider.Value;
 
 					return GetDataProvider();

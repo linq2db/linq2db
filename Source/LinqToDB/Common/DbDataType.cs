@@ -7,6 +7,7 @@ namespace LinqToDB.Common
 {
 	using Mapping;
 	using Expressions;
+	using Extensions;
 
 	/// <summary>
 	/// Stores database type attributes.
@@ -107,7 +108,7 @@ namespace LinqToDB.Common
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale
-				&& string.Equals(DbType, other.DbType);
+				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
 		public readonly bool EqualsDbOnly(DbDataType other)
@@ -116,7 +117,7 @@ namespace LinqToDB.Common
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale
-				&& string.Equals(DbType, other.DbType);
+				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
 		public override bool Equals(object? obj)
@@ -137,7 +138,7 @@ namespace LinqToDB.Common
 			{
 				var hashCode = (SystemType != null ? SystemType.GetHashCode() : 0);
 				hashCode     = (hashCode * 397) ^ (int) DataType;
-				hashCode     = (hashCode * 397) ^ (DbType    != null ? DbType.GetHashCode()          : 0);
+				hashCode     = (hashCode * 397) ^ (DbType    != null ? DbType.GetHashCodeEx()        : 0);
 				hashCode     = (hashCode * 397) ^ (Length    != null ? Length.Value.GetHashCode()    : 0);
 				hashCode     = (hashCode * 397) ^ (Precision != null ? Precision.Value.GetHashCode() : 0);
 				hashCode     = (hashCode * 397) ^ (Scale     != null ? Scale.Value.GetHashCode()     : 0);
@@ -147,7 +148,7 @@ namespace LinqToDB.Common
 			return _hashCode.Value;
 		}
 
-		#endregion
+#endregion
 
 		#region Operators
 

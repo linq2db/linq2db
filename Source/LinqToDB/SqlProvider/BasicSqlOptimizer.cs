@@ -2251,13 +2251,13 @@ namespace LinqToDB.SqlProvider
 		{
 			var newStr = str;
 
-			newStr = newStr.Replace(escape, escape + escape);
+			newStr = newStr.ReplaceEx(escape, escape + escape);
 
 
 			var toEscape = LikeCharactersToEscape;
 			foreach (var s in toEscape)
 			{
-				newStr = newStr.Replace(s, escape + s);
+				newStr = newStr.ReplaceEx(s, escape + s);
 			}
 
 			return newStr;
@@ -2289,7 +2289,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual string EscapeLikePattern(string str)
 		{
 			foreach (var s in LikeCharactersToEscape)
-				str = str.Replace(s, LikeEscapeCharacter + s);
+				str = str.ReplaceEx(s, LikeEscapeCharacter + s);
 
 			return str;
 		}
@@ -3306,7 +3306,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 			if (replace)
-				alias = new string(cs).Replace(" ", "");
+				alias = new string(cs).ReplaceEx(" ", "");
 
 			return alias.Length == 0 || alias.Length > maxLen ? null : alias;
 		}

@@ -132,7 +132,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns array with names of association key column members.</returns>
 		public static string[] ParseKeys(string? keys)
 		{
-			return keys?.Replace(" ", "").Split(',') ?? Array<string>.Empty;
+			return keys?.ReplaceEx(" ", "").Split(',') ?? Array<string>.Empty;
 		}
 
 		/// <summary>

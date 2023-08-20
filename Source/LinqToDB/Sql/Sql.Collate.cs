@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
-using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
+	using Expressions;
+	using Extensions;
+	using SqlQuery;
+
 	public static partial class Sql
 	{
 		/// <summary>
@@ -56,7 +58,7 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr");
-				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
+				var collation = builder.GetValue<string>("collation").ReplaceEx("\"", "\"\"");
 
 				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr)
 				{

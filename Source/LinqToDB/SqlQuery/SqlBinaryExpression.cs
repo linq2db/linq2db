@@ -5,6 +5,8 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Extensions;
+
 	[Serializable, DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
 	public class SqlBinaryExpression : ISqlExpression
 	{
@@ -95,7 +97,7 @@ namespace LinqToDB.SqlQuery
 			if (_hashCode.HasValue)
 				return _hashCode.Value;
 
-			var hashCode = Operation.GetHashCode();
+			var hashCode = Operation.GetHashCodeEx();
 
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expr1.GetHashCode());

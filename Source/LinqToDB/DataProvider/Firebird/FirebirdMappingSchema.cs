@@ -7,6 +7,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
+	using Extensions;
 	using Mapping;
 	using SqlQuery;
 
@@ -137,7 +138,7 @@ namespace LinqToDB.DataProvider.Firebird
 				else
 					stringBuilder
 						.Append('\'')
-						.Append(value.Replace("'", "''"))
+						.Append(value.ReplaceEx("'", "''"))
 						.Append('\'');
 			}
 		}

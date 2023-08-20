@@ -5,6 +5,7 @@ using System.Linq;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Configuration;
+	using Extensions;
 
 	[UsedImplicitly]
 	sealed class OracleFactory : IDataProviderFactory
@@ -23,7 +24,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			var dialect = OracleVersion.v12;
-			if (version?.Contains("11") == true)
+			if (version?.ContainsEx("11") == true)
 				dialect = OracleVersion.v11;
 
 			var provider = OracleProvider.Managed;

@@ -3,6 +3,7 @@
 namespace LinqToDB.DataProvider.Access
 {
 	using Linq;
+	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -36,10 +37,10 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var newStr = DataTools.EscapeUnterminatedBracket(str);
 			if (newStr == str)
-				newStr = newStr.Replace("[", "[[]");
+				newStr = newStr.ReplaceEx("[", "[[]");
 
 			foreach (var s in LikeCharactersToEscape)
-				newStr = newStr.Replace(s, "[" + s + "]");
+				newStr = newStr.ReplaceEx(s, "[" + s + "]");
 
 			return newStr;
 		}

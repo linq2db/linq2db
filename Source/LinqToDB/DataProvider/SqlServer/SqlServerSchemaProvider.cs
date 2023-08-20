@@ -7,6 +7,7 @@ using System.Linq;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Data;
+	using Extensions;
 	using SchemaProvider;
 
 	sealed class SqlServerSchemaProvider : SchemaProviderBase
@@ -451,7 +452,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			// TODO: refactor method to use query as parameter instead of manual escaping...
 			// https://github.com/linq2db/linq2db/issues/1921
 			if (CompatibilityLevel >= 140)
-				sql = $"EXEC('{sql.Replace("'", "''")}')";
+				sql = $"EXEC('{sql.ReplaceEx("'", "''")}')";
 
 			return sql;
 		}
@@ -506,7 +507,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					row["DataTypeName"]     = item.system_type_name.Split('(')[0];
 					row["ColumnName"]       = item.name ?? "";
 					row["AllowDBNull"]      = item.is_nullable;
-					row["ColumnSize"]       = item.system_type_name.Contains("nchar") || item.system_type_name.Contains("nvarchar") ? item.max_length / 2 : item.max_length;
+					row["ColumnSize"]       = item.system_type_name.ContainsEx("nchar") || item.system_type_name.ContainsEx("nvarchar") ? item.max_length / 2 : item.max_length;
 					row["NumericPrecision"] = item.precision;
 					row["NumericScale"]     = item.scale;
 					row["IsIdentity"]       = item.is_identity_column;

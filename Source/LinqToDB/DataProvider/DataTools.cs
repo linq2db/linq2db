@@ -10,6 +10,7 @@ using System.Text;
 namespace LinqToDB.DataProvider
 {
 	using Common.Internal;
+	using Extensions;
 
 	// TODO: v6: make static
 #pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
@@ -25,7 +26,7 @@ namespace LinqToDB.DataProvider
 			if (str == null)
 				return str;
 
-			var nextIndex = str.IndexOf('[');
+			var nextIndex = str.IndexOfEx('[');
 			if (nextIndex < 0)
 				return str;
 

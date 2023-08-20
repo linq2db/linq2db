@@ -457,7 +457,7 @@ namespace LinqToDB.Linq.Builder
 								foreach (var col in cols)
 								{
 									col.Name      = col.Name.Substring(name.Length);
-									col.IsComplex = col.Name.Contains(".");
+									col.IsComplex = col.Name.ContainsEx(".");
 								}
 
 								var typeAcc  = TypeAccessor.GetAccessor(member.Type);
@@ -1318,7 +1318,7 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null || SqlTable == null)
 					return;
 
-				if (!alias.Contains('<'))
+				if (!alias.ContainsEx('<'))
 					SqlTable.Alias ??= alias;
 			}
 
@@ -1415,7 +1415,7 @@ namespace LinqToDB.Linq.Builder
 									foreach (var field in SqlTable.Fields)
 									{
 										var name = levelMember.Member.Name;
-										if (field.Name.IndexOf('.') >= 0)
+										if (field.Name.IndexOfEx('.') >= 0)
 										{
 											if (pathName == null)
 											{

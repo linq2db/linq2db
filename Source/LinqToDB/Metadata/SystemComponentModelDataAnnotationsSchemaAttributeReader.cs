@@ -28,7 +28,7 @@ namespace LinqToDB.Metadata
 
 				if (name != null)
 				{
-					var names = name.Replace("[", "").Replace("]", "").Split('.');
+					var names = name.ReplaceEx("[", "").ReplaceEx("]", "").Split('.');
 
 					switch (names.Length)
 					{

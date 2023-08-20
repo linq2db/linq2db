@@ -6,6 +6,8 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
+	using Extensions;
+
 	public class SqlExpression : ISqlExpression
 	{
 		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
@@ -117,7 +119,7 @@ namespace LinqToDB.SqlQuery
 			if (_hashCode != null)
 				return _hashCode.Value;
 
-			var hashCode = Expr.GetHashCode();
+			var hashCode = Expr.GetHashCodeEx();
 
 			if (SystemType != null)
 				hashCode = unchecked(hashCode + (hashCode * 397) ^ SystemType.GetHashCode());
@@ -165,7 +167,7 @@ namespace LinqToDB.SqlQuery
 			if (Parameters.Length == 0)
 				return sb.Append(Expr);
 
-			if (Expr.Contains("{"))
+			if (Expr.ContainsEx("{"))
 				sb.AppendFormat(Expr, ss.ToArray());
 			else
 				sb.Append(Expr)

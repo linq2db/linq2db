@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Data.Common;
 	using Configuration;
 	using Data;
+	using Extensions;
 
 	[PublicAPI]
 	public static class DB2Tools
@@ -22,7 +23,7 @@ namespace LinqToDB.DataProvider.DB2
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
 			// DB2 ODS provider could be used by informix
-			if (options.ConfigurationString?.Contains("Informix") == true)
+			if (options.ConfigurationString?.ContainsEx("Informix") == true)
 				return null;
 
 			switch (options.ProviderName)
@@ -41,9 +42,9 @@ namespace LinqToDB.DataProvider.DB2
 				case DB2ProviderAdapter.NetFxClientNamespace:
 				case DB2ProviderAdapter.CoreClientNamespace :
 
-					if (options.ConfigurationString?.Contains("LUW") == true)
+					if (options.ConfigurationString?.ContainsEx("LUW") == true)
 						return _db2DataProviderLUW.Value;
-					if (options.ConfigurationString?.Contains("z/OS") == true || options.ConfigurationString?.Contains("zOS") == true)
+					if (options.ConfigurationString?.ContainsEx("z/OS") == true || options.ConfigurationString?.ContainsEx("zOS") == true)
 						return _db2DataProviderzOS.Value;
 
 					if (AutoDetectProvider && options.ConnectionString != null)

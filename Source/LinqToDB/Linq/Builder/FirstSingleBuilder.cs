@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
-				_orDefault  = _methodCall.Method.Name.Contains("OrDefault");
+				_orDefault  = _methodCall.Method.Name.ContainsEx("OrDefault");
 			}
 
 			readonly MethodCallExpression _methodCall;
@@ -151,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Sequence.BuildQuery(query, queryParameter);
 
-				switch (_methodCall.Method.Name.Replace("Async", ""))
+				switch (_methodCall.Method.Name.ReplaceEx("Async", ""))
 				{
 					case "First"           : GetFirstElement          (query); break;
 					case "FirstOrDefault"  : GetFirstOrDefaultElement (query); break;

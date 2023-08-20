@@ -14,6 +14,7 @@ namespace LinqToDB.Remote
 	using DataProvider;
 	using SqlProvider;
 	using SqlQuery;
+	using Extensions;
 #if !NATIVE_ASYNC
 	using Tools;
 #endif
@@ -115,7 +116,7 @@ namespace LinqToDB.Remote
 
 							if(value != null)
 								if (value is string || value is char)
-									value = "'" + value!.ToString()!.Replace("'", "''") + "'";
+									value = "'" + value!.ToString()!.ReplaceEx("'", "''") + "'";
 
 							sb.Value
 								.Append("-- SET ")

@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using SchemaProvider;
 
 	class SapHanaSchemaProvider : SchemaProviderBase
@@ -60,13 +61,13 @@ namespace LinqToDB.DataProvider.SapHana
 					ProviderDbType   = Converter.ChangeTypeTo<int>(t["ProviderDbType"]),
 				}).ToList();
 
-			var otherTypes = dt.Where(x => x.TypeName.Contains("VAR")).Select(x => new DataTypeInfo
+			var otherTypes = dt.Where(x => x.TypeName.ContainsEx("VAR")).Select(x => new DataTypeInfo
 			{
 				DataType         = x.DataType,
-				CreateFormat     = x.CreateFormat?.Replace("VAR", ""),
+				CreateFormat     = x.CreateFormat?.ReplaceEx("VAR", ""),
 				CreateParameters = x.CreateParameters,
 				ProviderDbType   = x.ProviderDbType,
-				TypeName         = x.TypeName.Replace("VAR", "")
+				TypeName         = x.TypeName.ReplaceEx("VAR", "")
 			}).ToList();
 
 			dt.AddRange(otherTypes);
@@ -346,8 +347,8 @@ namespace LinqToDB.DataProvider.SapHana
 				{
 					ProcedureID   = string.Concat(schema, '.', procedure),
 					DataType      = dataType,
-					IsIn          = paramType.Contains("IN"),
-					IsOut         = paramType.Contains("OUT"),
+					IsIn          = paramType.ContainsEx("IN"),
+					IsOut         = paramType.ContainsEx("OUT"),
 					IsResult      = isResult,
 					Length        = length,
 					Ordinal       = position,

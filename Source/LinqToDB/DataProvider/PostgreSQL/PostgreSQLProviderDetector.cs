@@ -4,6 +4,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Configuration;
 	using Data;
+	using Extensions;
 
 	sealed class PostgreSQLProviderDetector : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion,NpgsqlProviderAdapter.NpgsqlConnection>
 	{
@@ -32,26 +33,26 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						goto case NpgsqlProviderAdapter.ClientNamespace;
 					break;
 				case NpgsqlProviderAdapter.ClientNamespace :
-				case var providerName when providerName.Contains("PostgreSQL") || providerName.Contains(NpgsqlProviderAdapter.AssemblyName):
+				case var providerName when providerName.ContainsEx("PostgreSQL") || providerName.ContainsEx(NpgsqlProviderAdapter.AssemblyName):
 					if (options.ConfigurationString != null)
 					{
-						if (options.ConfigurationString.Contains("15"))
+						if (options.ConfigurationString.ContainsEx("15"))
 							return _postgreSQLDataProvider15.Value;
 
-						if (options.ConfigurationString.Contains("92") || options.ConfigurationString.Contains("9.2"))
+						if (options.ConfigurationString.ContainsEx("92") || options.ConfigurationString.ContainsEx("9.2"))
 							return _postgreSQLDataProvider92.Value;
 
-						if (options.ConfigurationString.Contains("93") || options.ConfigurationString.Contains("9.3") ||
-							options.ConfigurationString.Contains("94") || options.ConfigurationString.Contains("9.4"))
+						if (options.ConfigurationString.ContainsEx("93") || options.ConfigurationString.ContainsEx("9.3") ||
+							options.ConfigurationString.ContainsEx("94") || options.ConfigurationString.ContainsEx("9.4"))
 							return _postgreSQLDataProvider93.Value;
 
-						if (options.ConfigurationString.Contains("95") || options.ConfigurationString.Contains("9.5") ||
-							options.ConfigurationString.Contains("96") || options.ConfigurationString.Contains("9.6") ||
-							options.ConfigurationString.Contains("10") ||
-							options.ConfigurationString.Contains("11") ||
-							options.ConfigurationString.Contains("12") ||
-							options.ConfigurationString.Contains("13") ||
-							options.ConfigurationString.Contains("14"))
+						if (options.ConfigurationString.ContainsEx("95") || options.ConfigurationString.ContainsEx("9.5") ||
+							options.ConfigurationString.ContainsEx("96") || options.ConfigurationString.ContainsEx("9.6") ||
+							options.ConfigurationString.ContainsEx("10") ||
+							options.ConfigurationString.ContainsEx("11") ||
+							options.ConfigurationString.ContainsEx("12") ||
+							options.ConfigurationString.ContainsEx("13") ||
+							options.ConfigurationString.ContainsEx("14"))
 							return _postgreSQLDataProvider95.Value;
 					}
 

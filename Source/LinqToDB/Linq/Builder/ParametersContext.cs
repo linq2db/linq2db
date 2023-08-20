@@ -270,7 +270,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (name == null)
 						{
-							if (columnDescriptor.MemberName.Contains("."))
+							if (columnDescriptor.MemberName.ContainsEx("."))
 								name = columnDescriptor.ColumnName;
 							else
 								name = columnDescriptor.MemberName;

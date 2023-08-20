@@ -125,7 +125,7 @@ namespace LinqToDB.Expressions
 						// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 						if (parameterExpression.Name != null)
 						{
-							hashCode ^= parameterExpression.Name.GetHashCode();
+							hashCode ^= parameterExpression.Name.GetHashCodeEx();
 						}
 
 						break;

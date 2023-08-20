@@ -17,6 +17,7 @@ namespace LinqToDB
 	using Linq;
 	using SqlQuery;
 	using LinqToDB.Common;
+	using Extensions;
 
 	[PublicAPI]
 	public static partial class Sql
@@ -488,7 +489,7 @@ namespace LinqToDB
 		{
 			if (value == null || str == null) return null;
 
-			return str.IndexOf(value.Value) + 1;
+			return str.IndexOfEx(value.Value) + 1;
 		}
 
 		[Function(                                                          IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -600,7 +601,7 @@ namespace LinqToDB
 			if (str.Length == 0)                                     return str;
 			if (oldValue.Length == 0)                                return str; // Replace raises exception here.
 
-			return str.Replace(oldValue, newValue);
+			return str.ReplaceEx(oldValue, newValue);
 		}
 
 		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]

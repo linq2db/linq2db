@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using SqlQuery;
 
 	class SubQueryContext : PassThroughContext
@@ -96,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 			if (alias == null)
 				return;
 
-			if (alias.Contains('<'))
+			if (alias.ContainsEx('<'))
 				return;
 
 			if (SelectQuery.From.Tables[0].Alias == null)

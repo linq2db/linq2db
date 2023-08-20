@@ -6,6 +6,7 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using Configuration;
 	using Data;
+	using Extensions;
 
 	public static class SqlCeTools
 	{
@@ -13,10 +14,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if (options.ProviderName?.Contains("SqlCe") == true
-				|| options.ProviderName?.Contains("SqlServerCe") == true
-				|| options.ConfigurationString?.Contains("SqlCe") == true
-				|| options.ConfigurationString?.Contains("SqlServerCe") == true)
+			if (options.ProviderName?.ContainsEx("SqlCe") == true
+				|| options.ProviderName?.ContainsEx("SqlServerCe") == true
+				|| options.ConfigurationString?.ContainsEx("SqlCe") == true
+				|| options.ConfigurationString?.ContainsEx("SqlServerCe") == true)
 				return _sqlCeDataProvider.Value;
 
 			return null;

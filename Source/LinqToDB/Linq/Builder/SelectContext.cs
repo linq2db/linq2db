@@ -993,7 +993,7 @@ namespace LinqToDB.Linq.Builder
 
 		public virtual void SetAlias(string? alias)
 		{
-			if (!string.IsNullOrEmpty(alias) && !alias!.Contains('<') && SelectQuery.Select.From.Tables.Count == 1)
+			if (!string.IsNullOrEmpty(alias) && !alias!.ContainsEx('<') && SelectQuery.Select.From.Tables.Count == 1)
 			{
 				SelectQuery.Select.From.Tables[0].Alias = alias;
 			}

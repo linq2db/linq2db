@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Mapping
 {
+	using Common;
+	using Extensions;
+
 	/// <inheritdoc />
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
@@ -65,7 +67,7 @@ namespace LinqToDB.Mapping
 		}
 
 		public override int GetHashCode()
-			=> unchecked ((Name.GetHashCode() * 397) ^ DeclaringType.GetHashCode());
+			=> unchecked ((Name.GetHashCodeEx() * 397) ^ DeclaringType.GetHashCode());
 
 		/// <summary>
 		/// Implements the operator ==.

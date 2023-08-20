@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.SQLite
 					if (value.Length > 0 && value[0] == '[')
 						return sb.Append(value);
 
-					if (value.IndexOf('.') > 0)
+					if (value.IndexOfEx('.') > 0)
 						value = string.Join("].[", value.Split('.'));
 
 					return sb.Append('[').Append(value).Append(']');

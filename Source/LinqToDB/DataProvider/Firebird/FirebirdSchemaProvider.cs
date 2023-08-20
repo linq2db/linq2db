@@ -10,6 +10,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using SchemaProvider;
 
 	sealed class FirebirdSchemaProvider : SchemaProviderBase
@@ -388,9 +389,9 @@ FROM RDB$FUNCTION_ARGUMENTS p
 			catch (Exception ex)
 			{
 				// procedure XXX does not return any values
-				if (ex.Message.Contains("SQL error code = -84")
+				if (ex.Message.ContainsEx("SQL error code = -84")
 					// SchemaOnly doesn't work for non-selectable procedures in FB
-					|| ex.Message.Contains("is not selectable"))
+					|| ex.Message.ContainsEx("is not selectable"))
 					return null;
 				throw;
 			}

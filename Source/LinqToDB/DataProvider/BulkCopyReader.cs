@@ -20,8 +20,12 @@ namespace LinqToDB.DataProvider
 
 	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
+#if !NATIVE_ASYNC
+#pragma warning disable CA2213 // Disposable fields should be disposed
 		readonly IEnumerator<T>?      _enumerator;
-#if NATIVE_ASYNC
+#pragma warning restore CA2213 // Disposable fields should be disposed
+#else
+		readonly IEnumerator<T>?      _enumerator;
 		readonly IAsyncEnumerator<T>? _asyncEnumerator;
 #endif
 

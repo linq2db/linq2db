@@ -1048,7 +1048,7 @@ namespace Tests.UserTests
 }}
 ",
 				_typeBuilder,
-				_nameDic.Aggregate(expr.ToString(), (current,item) => current.Replace(item.Key.Substring(1), item.Value)),
+				_nameDic.Aggregate(expr.ToString(), (current,item) => current.ReplaceEx(item.Key.Substring(1), item.Value)),
 				_exprBuilder);
 
 			return result;

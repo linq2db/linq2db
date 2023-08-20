@@ -9,6 +9,7 @@ namespace LinqToDB.SchemaProvider
 	using Common;
 	using Common.Internal;
 	using Data;
+	using Extensions;
 	using SqlProvider;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
@@ -646,7 +647,7 @@ namespace LinqToDB.SchemaProvider
 		// TODO: use proper C# identifier validation procedure
 		public static string ToValidName(string name)
 		{
-			if (name.Contains(" ") || name.Contains("\t"))
+			if (name.ContainsEx(" ") || name.ContainsEx("\t"))
 			{
 				var ss = name.Split(_nameSeparators, StringSplitOptions.RemoveEmptyEntries)
 					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
