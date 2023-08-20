@@ -115,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 							notNullField = notNull.MakeNullable();
 						}
 
-						var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
+						var defaultValue = DefaultValue ?? new DefaultValueExpression(MappingSchema, expr.Type);
 
 						var notNullExpression = Expression.NotEqual(notNullField, Expression.Constant(null, notNullField.Type));
 

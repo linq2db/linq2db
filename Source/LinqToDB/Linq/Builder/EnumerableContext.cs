@@ -26,7 +26,8 @@ namespace LinqToDB.Linq.Builder
 			: base(builder, elementType, query)
 		{
 			Parent            = buildInfo.Parent;
-            _entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			_entityDescriptor = MappingSchema.GetEntityDescriptor(elementType,
+				Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			Table             = BuildValuesTable(buildInfo.Expression);
 			Expression        = buildInfo.Expression;
 
@@ -49,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 
 		SqlValuesTable BuildValuesTableFromArray(NewArrayExpression arrayExpression)
 		{
-			if (Builder.MappingSchema.IsScalarType(ElementType))
+			if (MappingSchema.IsScalarType(ElementType))
 			{
 				var rows  = arrayExpression.Expressions.Select(e => new[] {Builder.ConvertToSql(Parent, e)}).ToList();
 				var field = new SqlField(Table, "item");
@@ -66,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 				knownMembers.AddRange(members.Keys);
 			}
 
-			var ed = Builder.MappingSchema.GetEntityDescriptor(ElementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			var ed = MappingSchema.GetEntityDescriptor(ElementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 			var builtRows = new List<ISqlExpression[]>(arrayExpression.Expressions.Count);
 
@@ -90,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var nullValue = Expression.Constant(Builder.MappingSchema.GetDefaultValue(ElementType), ElementType);
+						var nullValue = Expression.Constant(MappingSchema.GetDefaultValue(ElementType), ElementType);
 						sql = Builder.ConvertToSql(Parent, nullValue, columnDescriptor: column);
 					}
 
@@ -156,7 +157,7 @@ namespace LinqToDB.Linq.Builder
 					getter = Expression.Lambda(thisParam, thisParam);
 				}
 
-				var dbDataType = column?.GetDbDataType(true) ?? ColumnDescriptor.CalculateDbDataType(Builder.MappingSchema, me.Type);
+				var dbDataType = column?.GetDbDataType(true) ?? ColumnDescriptor.CalculateDbDataType(MappingSchema, me.Type);
 
 				var generator = new ExpressionGenerator();
 				if (typeof(DataParameter).IsSameOrParentOf(getter.Body.Type))

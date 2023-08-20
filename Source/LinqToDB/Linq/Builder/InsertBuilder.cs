@@ -170,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 					insertContext.OutputExpression = outputExpression;
 
 					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable 
-                        ? SqlTable.Inserted(builder.MappingSchema.GetEntityDescriptor(outputExpression.Parameters[0].Type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
+                        ? SqlTable.Inserted(sequence.MappingSchema.GetEntityDescriptor(outputExpression.Parameters[0].Type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
                         : null;
 
 					if (insertedTable == null && insertContext.Into != null)

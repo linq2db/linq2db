@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 			    builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery      ||
 			    builder.DataContext.SqlProviderFlags.IsExistsPreferableForContains == false &&
 			    builder.DataOptions.LinqOptions.PreferExistsForScalar == false              &&
-			    builder.MappingSchema.IsScalarType(methodCall.Arguments[1].Type))
+			    sequence.MappingSchema.IsScalarType(methodCall.Arguments[1].Type))
 			{
 				buildInStatement = true;
 			}
@@ -125,7 +125,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var condition = Expression.Lambda(ExpressionBuilder.Equal(Builder.MappingSchema, param, expr), param);
+					var condition = Expression.Lambda(ExpressionBuilder.Equal(MappingSchema, param, expr), param);
 					var sequence = Builder.BuildWhere(Parent, InnerSequence,
 						condition: condition, checkForSubQuery: true, enforceHaving: false, isTest: flags.IsTest(), false);
 

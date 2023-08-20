@@ -179,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var elementType = EagerLoading.GetEnumerableElementType(sequenceArgument.Type, builder.MappingSchema);
+						var elementType = EagerLoading.GetEnumerableElementType(sequenceArgument.Type, sequence.MappingSchema);
 						valueExpression = new ContextRefExpression(elementType, sequence);
 					}
 

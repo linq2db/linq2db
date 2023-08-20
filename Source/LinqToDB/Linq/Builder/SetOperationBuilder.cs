@@ -288,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (generic2.ConstructType != SqlGenericConstructorExpression.CreateType.Full)
 						{
-							var constructed = Builder.TryConstruct(Builder.MappingSchema, generic1, this, flags);
+							var constructed = Builder.TryConstruct(MappingSchema, generic1, this, flags);
 							if (constructed == null)
 								return false;
 							if (TryMergeProjections(SqlGenericConstructorExpression.Parse(constructed), generic2, flags, out merged))
@@ -301,7 +301,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (generic1.ConstructType != SqlGenericConstructorExpression.CreateType.Full)
 						{
-							var constructed = Builder.TryConstruct(Builder.MappingSchema, generic2, this, flags);
+							var constructed = Builder.TryConstruct(MappingSchema, generic2, this, flags);
 							if (constructed == null)
 								return false;
 							if (TryMergeProjections(generic1, SqlGenericConstructorExpression.Parse(constructed), flags, out merged))
@@ -341,7 +341,7 @@ namespace LinqToDB.Linq.Builder
 
 					var resultGeneric = generic1.ReplaceAssignments(resultAssignments);
 
-					if (Builder.TryConstruct(Builder.MappingSchema, resultGeneric, this, flags) == null)
+					if (Builder.TryConstruct(MappingSchema, resultGeneric, this, flags) == null)
 						return false;
 
 					merged = resultGeneric;
@@ -597,37 +597,6 @@ namespace LinqToDB.Linq.Builder
 				rightIdPlaceholder = Builder.MakeColumn(SelectQuery, rightIdPlaceholder, asNew : true);
 
 				_setIdPlaceholder = leftIdPlaceholder.WithPath(setIdReference).WithTrackingPath(setIdReference);
-			}
-
-			Expression ResolveReferences(IBuildContext context, Expression expression, ProjectFlags flags, HashSet<SqlPlaceholderExpression> placeholders)
-			{
-				var transformed = expression.Transform(e =>
-				{
-					if (e.NodeType == ExpressionType.MemberAccess)
-					{
-						var newExpr = Builder.ConvertToSqlExpr(context, e, flags.SqlFlag());
-						if (newExpr is SqlPlaceholderExpression placeholder)
-							placeholders.Add(placeholder);
-						if (newExpr.UnwrapConvert() is SqlEagerLoadExpression eager)
-						{
-							newExpr = eager.SequenceExpression;
-							if (e.Type != newExpr.Type)
-							{
-								newExpr = new SqlAdjustTypeExpression(newExpr, e.Type, Builder.MappingSchema);
-							}
-
-							return new TransformInfo(newExpr, false, true);
-						}
-
-						if (newExpr is SqlErrorExpression)
-							return new TransformInfo(e);
-						return new TransformInfo(newExpr);;
-					}
-
-					return new TransformInfo(e);
-				});
-
-				return transformed;
 			}
 
 			class ExpressionOptimizerVisitor : ExpressionVisitorBase

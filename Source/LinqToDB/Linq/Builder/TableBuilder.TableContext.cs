@@ -47,7 +47,7 @@ namespace LinqToDB.Linq.Builder
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				SqlTable         = new SqlTable(EntityDescriptor);
 
 				if (!buildInfo.IsTest)
@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
@@ -83,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
@@ -98,19 +98,19 @@ namespace LinqToDB.Linq.Builder
 				IsSubQuery = buildInfo.IsSubQuery;
 
 				var mc   = (MethodCallExpression)buildInfo.Expression;
-				var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema)!;
+				var attr = mc.Method.GetTableFunctionAttribute(MappingSchema)!;
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
 					throw new LinqException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				SqlTable         = new SqlTable(EntityDescriptor);
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), Builder.MappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSql(context.context, a));
+				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), MappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSql(context.context, a));
 
 				Init(true);
 			}
@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				for (var type = OriginalType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 				{
-					var mapping = Builder.MappingSchema.GetEntityDescriptor(type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping;
+					var mapping = MappingSchema.GetEntityDescriptor(type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping;
 
 					if (mapping.Count > 0)
 						return type;
@@ -229,7 +229,7 @@ namespace LinqToDB.Linq.Builder
 						// It will help to do not crash when user uses Automapper and it tries to map non accessible fields
 						//
 						if (flags.IsExpression())
-							return new DefaultValueExpression(Builder.MappingSchema, path.Type);
+							return new DefaultValueExpression(MappingSchema, path.Type);
 					}
 
 					return path;
@@ -424,7 +424,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									foreach (var mapping in InheritanceMapping)
 									{
-										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
+										foreach (var mm in MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
 										{
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
 												return field;
@@ -457,7 +457,7 @@ namespace LinqToDB.Linq.Builder
 									{
 										newField = new SqlField(
 											new ColumnDescriptor(
-												Builder.MappingSchema,
+												MappingSchema,
 												EntityDescriptor,
 												new ColumnAttribute(fieldName),
 												new MemberAccessor(EntityDescriptor.TypeAccessor,

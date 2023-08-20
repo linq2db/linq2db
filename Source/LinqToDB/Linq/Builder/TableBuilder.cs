@@ -128,7 +128,7 @@ namespace LinqToDB.Linq.Builder
 			if (builder.IsFilterDisabled(entityType))
 				return tableContext;
 
-			var ed = builder.MappingSchema.GetEntityDescriptor(entityType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			var ed = tableContext.MappingSchema.GetEntityDescriptor(entityType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var filterFunc = ed.QueryFilterFunc;
 			if (filterFunc == null)
 				return tableContext;

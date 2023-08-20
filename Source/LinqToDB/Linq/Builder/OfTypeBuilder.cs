@@ -15,9 +15,12 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("OfType");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			if (sequence == null)
+				return null;
 
 			if (sequence is TableBuilder.TableContext table
 				&& table.InheritanceMapping.Count > 0)
@@ -48,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					for (var type = toType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 					{
-						var mapping = builder.MappingSchema.GetEntityDescriptor(type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping;
+						var mapping = sequence.MappingSchema.GetEntityDescriptor(type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping;
 
 						if (mapping.Count > 0)
 						{
@@ -70,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 
 		static ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
 		{
-			var mapper         = builder.MappingSchema.GetEntityDescriptor(fromType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			var mapper         = context.MappingSchema.GetEntityDescriptor(fromType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var table          = new SqlTable(mapper);
 			var discriminators = mapper.InheritanceMapping;
 

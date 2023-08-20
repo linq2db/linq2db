@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 						var lastElement = associations[associations.Length - 1];
 						lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
 						if (lastElement.MemberInfo != null)
-							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
+							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, sequence.MappingSchema);
 					}
 				}
 				else if (methodCall.Method.Name == "LoadWith" || methodCall.Method.Name == "LoadWithAsTable")
@@ -150,7 +150,7 @@ namespace LinqToDB.Linq.Builder
 						var lastElement = associations[associations.Length - 1];
 						lastElement.FilterFunc = (Expression?)methodCall.Arguments[2];
 						if (lastElement.MemberInfo != null)
-							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, builder.MappingSchema);
+							CheckFilterFunc(lastElement.MemberInfo.GetMemberType(), lastElement.FilterFunc!.Type, sequence.MappingSchema);
 					}
 
 					lastLoadWith = MergeLoadWith(lastPath, associations);

@@ -65,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 					var targetLambdaType = mergeContext.SourceContext.TargetContextRef.Type;
 					var pTarget          = Expression.Parameter(targetLambdaType, "t");
 					var pSource          = Expression.Parameter(targetLambdaType, "s");
-					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+					var targetDescriptor = mergeContext.MappingSchema.GetEntityDescriptor(targetType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 					Expression? ex = null;
 

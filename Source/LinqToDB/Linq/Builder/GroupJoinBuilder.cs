@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 				// innerExpression.Where(o => o.Key == innerKey)
 
 				var filterLambda = Expression.Lambda(ExpressionBuilder.Equal(
-						Builder.MappingSchema,
+						MappingSchema,
 						OuterKey,
 						InnerKeyLambda.Body),
 					InnerKeyLambda.Parameters[0]);

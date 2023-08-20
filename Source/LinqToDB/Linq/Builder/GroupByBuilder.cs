@@ -544,7 +544,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression MakeSubQueryExpression(Expression buildExpression)
 			{
 				var expr = MakeSubQueryExpression(
-					Builder.MappingSchema,
+					MappingSchema,
 					_sequenceExpr,
 					_key.Lambda.Parameters[0],
 					ExpressionHelper.PropertyOrField(buildExpression, "Key"),
