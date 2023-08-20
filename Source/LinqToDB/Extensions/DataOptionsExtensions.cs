@@ -207,7 +207,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If <c>true</c>, user could add new mappings to context mapping schema (<see cref="IDataContext.MappingSchema"/>).
+		/// If <c>true</c>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
 		/// Otherwise <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
 		/// It is not recommended to enable this option as it has performance implications.
 		/// Proper approach is to create single <see cref="MappingSchema"/> instance once, configure mappings for it and use this <see cref="MappingSchema"/> instance for all context instances.
@@ -215,22 +215,6 @@ namespace LinqToDB
 		public static LinqOptions WithEnableContextSchemaEdit(this LinqOptions options, bool enableContextSchemaEdit)
 		{
 			return options with { EnableContextSchemaEdit = enableContextSchemaEdit };
-		}
-
-		/// <summary>
-		/// If <c>true</c>, EXISTS operator will be generated instead of IN operator for scalar values.
-		/// <code>
-		/// SELECT Value FROM MyEntity e WHERE EXISTS(SELECT * FROM MyEntity2 e2 WHERE e2.Value = e.Value)
-		/// </code>
-		/// vs
-		/// <code>
-		/// SELECT Value FROM MyEntity e WHERE Value IN (SELECT Value FROM MyEntity2 e2)
-		/// </code>
-		/// Default value: <c>false</c>.
-		/// </summary>
-		public static LinqOptions WithPreferExistsForScalar(this LinqOptions options, bool preferExistsForScalar)
-		{
-			return options with { PreferExistsForScalar = preferExistsForScalar };
 		}
 
 		#endregion
@@ -427,22 +411,6 @@ namespace LinqToDB
 		public static DataOptions UseEnableContextSchemaEdit(this DataOptions options, bool enableContextSchemaEdit)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { EnableContextSchemaEdit = enableContextSchemaEdit });
-		}
-
-		/// <summary>
-		/// If <c>true</c>, EXISTS operator will be generated instead of IN operator for scalar values.
-		/// <code>
-		/// SELECT Value FROM MyEntity e WHERE EXISTS(SELECT * FROM MyEntity2 e2 WHERE e2.Value = e.Value)
-		/// </code>
-		/// vs
-		/// <code>
-		/// SELECT Value FROM MyEntity e WHERE Value IN (SELECT Value FROM MyEntity2 e2)
-		/// </code>
-		/// Default value: <c>false</c>.
-		/// </summary>
-		public static DataOptions UsePreferExistsForScalar(this DataOptions options, bool preferExistsForScalar)
-		{
-			return options.WithOptions<LinqOptions>(o => o with { PreferExistsForScalar = preferExistsForScalar });
 		}
 
 		#endregion
@@ -1505,104 +1473,6 @@ namespace LinqToDB
 		public static DataOptions UseBulkCopyWithoutSession(this DataOptions options, bool withoutSession)
 		{
 			return options.WithOptions<BulkCopyOptions>(o => o with { WithoutSession = withoutSession });
-		}
-
-		#endregion
-
-		#region SqlOptions
-
-		/// <summary>
-		/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-		/// Default value: <c>false</c>.
-		/// </summary>
-		public static SqlOptions WithIgnoreConstantExpressionInOrderBy(this SqlOptions options, bool ignoreConstantExpressionInOrderBy)
-		{
-			return options with { IgnoreConstantExpressionInOrderBy = ignoreConstantExpressionInOrderBy };
-		}
-
-		/// <summary>
-		/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-		/// Default value: <c>false</c>.
-		/// </summary>
-		public static SqlOptions WithGenerateFinalAliases(this SqlOptions options, bool generateFinalAliases)
-		{
-			return options with { GenerateFinalAliases = generateFinalAliases };
-		}
-
-		#endregion
-
-		#region DataOptions.SqlOptions
-
-		/// <summary>
-		/// Indicates whether SQL Builder should generate aliases for final projection.
-		/// It is not required for correct query processing but simplifies SQL analysis.
-		/// <para>
-		/// Default value: <c>false</c>.
-		/// </para>
-		/// <example>
-		/// For the query
-		/// <code>
-		/// var query = from child in db.Child
-		///	   select new
-		///	   {
-		///       TrackId = child.ChildID,
-		///	   };
-		/// </code>
-		/// When property is <c>true</c>
-		/// <code>
-		/// SELECT
-		///	   [child].[ChildID] as [TrackId]
-		/// FROM
-		///	   [Child] [child]
-		/// </code>
-		/// Otherwise alias will be removed
-		/// <code>
-		/// SELECT
-		///	   [child].[ChildID]
-		/// FROM
-		///	   [Child] [child]
-		/// </code>
-		/// </example>
-		/// </summary>
-		public static DataOptions UseIgnoreConstantExpressionInOrderBy(this DataOptions options, bool ignoreConstantExpressionInOrderBy)
-		{
-			return options.WithOptions<SqlOptions>(o => o with { IgnoreConstantExpressionInOrderBy = ignoreConstantExpressionInOrderBy });
-		}
-
-		/// <summary>
-		/// Indicates whether SQL Builder should generate aliases for final projection.
-		/// It is not required for correct query processing but simplifies SQL analysis.
-		/// <para>
-		/// Default value: <c>false</c>.
-		/// </para>
-		/// <example>
-		/// For the query
-		/// <code>
-		/// var query = from child in db.Child
-		///	   select new
-		///	   {
-		///       TrackId = child.ChildID,
-		///	   };
-		/// </code>
-		/// When property is <c>true</c>
-		/// <code>
-		/// SELECT
-		///	   [child].[ChildID] as [TrackId]
-		/// FROM
-		///	   [Child] [child]
-		/// </code>
-		/// Otherwise alias will be removed
-		/// <code>
-		/// SELECT
-		///	   [child].[ChildID]
-		/// FROM
-		///	   [Child] [child]
-		/// </code>
-		/// </example>
-		/// </summary>
-		public static DataOptions UseGenerateFinalAliases(this DataOptions options, bool generateFinalAliases)
-		{
-			return options.WithOptions<SqlOptions>(o => o with { GenerateFinalAliases = generateFinalAliases });
 		}
 
 		#endregion

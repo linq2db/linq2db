@@ -587,22 +587,6 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Sql
 		{
-			static volatile SqlOptions _options = new();
-
-			/// <summary>
-			/// Default <see cref="SqlOptions"/> options. Automatically synchronized with other settings in <see cref="Sql"/> class.
-			/// </summary>
-			public static SqlOptions Options
-			{
-				get => _options;
-				set
-				{
-					_options = value;
-					DataConnection.ResetDefaultOptions();
-					DataConnection.ConnectionOptionsByConfigurationString.Clear();
-				}
-			}
-
 			/// <summary>
 			/// Format for association alias.
 			/// <para>
@@ -665,11 +649,7 @@ namespace LinqToDB.Common
 			/// </code>
 			/// </example>
 			/// </summary>
-			public static bool GenerateFinalAliases
-			{
-				get => Options.GenerateFinalAliases;
-				set => Options = Options with { GenerateFinalAliases = value };
-			}
+			public static bool GenerateFinalAliases { get; set; }
 		}
 	}
 }
