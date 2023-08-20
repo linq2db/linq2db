@@ -239,6 +239,9 @@ namespace LinqToDB.Linq.Builder
 
 			bool IsSupportedByProvider(Expression expression)
 			{
+				if (_methodKind == MethodKind.Single || _methodKind == MethodKind.SingleOrDefault)
+					return true;
+
 				if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
 					return true;
 
@@ -254,33 +257,6 @@ namespace LinqToDB.Linq.Builder
 
 				if (!Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 					return false;
-
-				var parentQuery = Parent?.SelectQuery;
-				if (parentQuery != null)
-				{
-					var cloningContext = new CloningContext();
-
-					var clonedQuery = cloningContext.CloneElement(SelectQuery);
-
-					var parentSources = new HashSet<ISqlTableSource>();
-
-					foreach (var source in QueryHelper.EnumerateAccessibleSources(parentQuery))
-					{
-						if (source != SelectQuery)
-						{
-							var corrected = cloningContext.CorrectElement(source);
-							parentSources.Add(corrected);
-						}
-					}
-					
-					QueryHelper.OptimizeSelectQuery(clonedQuery, clonedQuery, Builder.DataContext.SqlProviderFlags, Builder.DataOptions);
-
-					var toIgnore = new HashSet<IQueryElement>() { clonedQuery.Where };
-
-					if (QueryHelper.IsDependsOnSources(clonedQuery, parentSources, toIgnore))
-						return false;
-				}
-
 
 				return true;
 			}
@@ -307,7 +283,14 @@ namespace LinqToDB.Linq.Builder
 								//
 								var sequenceExpression = GetEagerLoadingExpression(false);
 
-								var resultType = typeof(IEnumerable<>).MakeGenericType(path.Type);
+								if (!SequenceHelper.IsSameContext(path, this))
+								{
+									var param = Expression.Parameter(ElementType, "e");
+									var selectBody = SequenceHelper.ReplaceContext(path, this, param);
+									sequenceExpression = Expression.Call(Methods.Enumerable.Select.MakeGenericMethod(ElementType, path.Type), sequenceExpression,
+										Expression.Lambda(selectBody, param));
+								}
+
 								var result     = (Expression)new SqlEagerLoadExpression(sequenceExpression);
 
 								var methodInfo = _methodKind switch
