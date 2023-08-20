@@ -43,11 +43,7 @@ using Tests.Model;
 using IBM.Data.Informix;
 #endif
 
-#if NETFRAMEWORK
-using MySqlConnectorDateTime   = MySqlConnector::MySql.Data.Types.MySqlDateTime;
-#else
 using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
-#endif
 using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
