@@ -140,7 +140,7 @@ namespace LinqToDB.SqlProvider
 
 		public void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int startIndent = 0)
 		{
-			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !Configuration.Sql.GenerateFinalAliases && CanSkipRootAliases(statement));
+			BuildSql(commandNumber, statement, sb, optimizationContext, startIndent, !DataOptions.SqlOptions.GenerateFinalAliases && CanSkipRootAliases(statement));
 		}
 
 		protected virtual void BuildSetOperation(SetOperation operation, StringBuilder sb)
