@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 using LinqToDB.Scaffold;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlQuery;
@@ -56,12 +57,12 @@ namespace LinqToDB.Schema
 			var schemaProvider = connection.DataProvider.GetSchemaProvider();
 			_providerName      = connection.DataProvider.Name;
 
-			_isPostgreSql       = _providerName.Contains(ProviderName.PostgreSQL);
+			_isPostgreSql       = _providerName.ContainsEx(ProviderName.PostgreSQL);
 			_isMySqlOrMariaDB   = _providerName == "MySql.Official" || _providerName == "MySqlConnector";
 			_isSystemDataSqlite = _providerName == "SQLite.Classic";
 			_isAccessOleDb      = _providerName == "Access";
 			_isAccessOdbc       = _providerName == "Access.Odbc";
-			_isSqlServer        = _providerName.Contains(ProviderName.SqlServer);
+			_isSqlServer        = _providerName.ContainsEx(ProviderName.SqlServer);
 
 			// load schema from legacy API and convrt it into new model
 			ParseSchema(
@@ -396,9 +397,9 @@ namespace LinqToDB.Schema
 
 			if (hasPrimaryKey)
 			{
-				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey);
+				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToArray();
 
-				if (pkColumns.Count() != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Count())
+				if (pkColumns.Length != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Count())
 					throw new InvalidOperationException($"Primary key columns have duplicate ordinals on table {tableName}");
 
 				primaryKey = new PrimaryKey(null, table.Columns.Where(c => c.IsPrimaryKey).OrderBy(c => c.PrimaryKeyOrder).Select(c => c.ColumnName).ToList());

@@ -214,6 +214,7 @@ dotnet_diagnostic.CA1859.severity = none # CA1859: Use concrete types when possi
 dotnet_diagnostic.CA2100.severity = none # CA2100: Review SQL queries for security vulnerabilities
 dotnet_diagnostic.CA2119.severity = none # CA2119: Seal methods that satisfy private interfaces
 dotnet_diagnostic.CA2211.severity = none # CA2211: Non-constant fields should not be visible
+dotnet_diagnostic.CA2217.severity = none # CA2217: Do not mark enums with FlagsAttribute
 dotnet_diagnostic.CA2225.severity = none # CA2225: Operator overloads have named alternates
 dotnet_diagnostic.CA2227.severity = none # CA2227: Collection properties should be read only
 dotnet_diagnostic.CA5390.severity = none # CA5390: DoNotHardCodeEncryptionKey

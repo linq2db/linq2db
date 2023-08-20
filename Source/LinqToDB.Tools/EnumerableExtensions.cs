@@ -18,6 +18,8 @@ namespace LinqToDB.Tools
 			[UsedImplicitly] public T Value = default!;
 		}
 
+		private static readonly string[] _nullItem = new[] { "<NULL>" };
+
 		/// <summary>
 		/// Returns well formatted text.
 		/// </summary>
@@ -68,7 +70,7 @@ namespace LinqToDB.Tools
 				}
 				else
 				{
-					itemValues.Add(item == null ? new[] { "<NULL>" } : new[] { item.ToString() ?? string.Empty });
+					itemValues.Add(item == null ? _nullItem : new[] { item.ToString() ?? string.Empty });
 				}
 			}
 

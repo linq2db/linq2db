@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
+using LinqToDB.Extensions;
+
 namespace LinqToDB.CodeModel
 {
 	internal sealed class TypeParser : ITypeParser
@@ -554,7 +556,7 @@ namespace LinqToDB.CodeModel
 			if (type.Namespace != null)
 				ns = ((ITypeParser)this).ParseNamespaceOrRegularTypeName(type.Namespace, false);
 
-			var name  = new CodeIdentifier(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOf('`')) : type.Name, true);
+			var name  = new CodeIdentifier(type.IsGenericType ? type.Name.Substring(0, type.Name.IndexOfEx('`')) : type.Name, true);
 
 			// generic/open generic type
 			if (type.IsGenericType)
