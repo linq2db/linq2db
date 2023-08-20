@@ -183,18 +183,24 @@ dotnet_diagnostic.CA1032.severity = none # CA1032: Implement standard exception 
 dotnet_diagnostic.CA1036.severity = none # CA1036: Override methods on comparable types
 dotnet_diagnostic.CA1043.severity = none # CA1043: Use integral or string argument for indexers
 dotnet_diagnostic.CA1051.severity = none # CA1051: Do not declare visible instance fields
+dotnet_diagnostic.CA1054.severity = none # CA1054: URI parameters should not be strings
 dotnet_diagnostic.CA1062.severity = none # CA1062: Validate arguments of public methods
 dotnet_diagnostic.CA1063.severity = none # CA1063: Implement IDisposable correctly
 dotnet_diagnostic.CA1065.severity = none # CA1065: Do not raise exceptions in unexpected locations
 dotnet_diagnostic.CA1067.severity = none # CA1067: Override Equals when implementing IEquatable
 dotnet_diagnostic.CA1068.severity = none # CA1068: CancellationToken parameters must come last
 dotnet_diagnostic.CA1069.severity = none # CA1069: Enums should not have duplicate values
+dotnet_diagnostic.CA1303.severity = none # CA1303: Do not pass literals as localized parametersdotnet_diagnostic.CA1307.severity = none # CA1307: Specify StringComparison for clarity
 dotnet_diagnostic.CA1304.severity = none # CA1304: Specify CultureInfo
 dotnet_diagnostic.CA1305.severity = none # CA1305: Specify IFormatProvider
 dotnet_diagnostic.CA1308.severity = none # CA1308: Normalize strings to uppercase
 dotnet_diagnostic.CA1309.severity = none # CA1309: Use ordinal StringComparison
 dotnet_diagnostic.CA1310.severity = none # CA1310: Specify StringComparison for correctness
+dotnet_diagnostic.CA1416.severity = none # CA1416: Validate platform compatibility
+dotnet_diagnostic.CA1422.severity = none # CA1422: Validate platform compatibility - obsoleted APIs
 dotnet_diagnostic.CA1510.severity = none # CA1510: use throw helpers
+dotnet_diagnostic.CA1511.severity = none # CA1511: use throw helpers
+dotnet_diagnostic.CA1512.severity = none # CA1512: use throw helpers
 dotnet_diagnostic.CA1513.severity = none # CA1513: use throw helpers
 dotnet_diagnostic.CA1700.severity = none # CA1700: Do not name enum values 'Reserved'
 dotnet_diagnostic.CA1707.severity = none # CA1707: Identifiers should not contain underscores
@@ -220,9 +226,44 @@ dotnet_diagnostic.CA2211.severity = none # CA2211: Non-constant fields should no
 dotnet_diagnostic.CA2217.severity = none # CA2217: Do not mark enums with FlagsAttribute
 dotnet_diagnostic.CA2225.severity = none # CA2225: Operator overloads have named alternates
 dotnet_diagnostic.CA2227.severity = none # CA2227: Collection properties should be read only
+dotnet_diagnostic.CA2234.severity = none # CA2234: Pass System.Uri objects instead of strings
+dotnet_diagnostic.CA2241.severity = none # CA2241: Provide correct arguments to formatting methods
+dotnet_diagnostic.CA2252.severity = none # CA2252: Opt in to preview features before using them
+dotnet_diagnostic.CA2301.severity = none # CA2301: Do not call BinaryFormatter.Deserialize without first setting BinaryFormatter.Binder
+dotnet_diagnostic.CA2302.severity = none # CA2302: Ensure BinaryFormatter.Binder is set before calling BinaryFormatter.Deserialize
+dotnet_diagnostic.CA3001.severity = none # CA3001: Review code for SQL injection vulnerabilities
+dotnet_diagnostic.CA3003.severity = none # CA3003: Review code for file path injection vulnerabilities
+dotnet_diagnostic.CA3005.severity = none # CA3005: Review code for LDAP injection vulnerabilities
+dotnet_diagnostic.CA3006.severity = none # CA3006: Review code for process command injection vulnerabilities
+dotnet_diagnostic.CA3007.severity = none # CA3007: Review code for open redirect vulnerabilities
+dotnet_diagnostic.CA3008.severity = none # CA3008: Review code for XPath injection vulnerabilities
+dotnet_diagnostic.CA3009.severity = none # CA3009: Review code for XML injection vulnerabilities
+dotnet_diagnostic.CA3010.severity = none # CA3010: Review code for XAML injection vulnerabilities
+dotnet_diagnostic.CA3011.severity = none # CA3011: Review code for DLL injection vulnerabilities
+dotnet_diagnostic.CA3012.severity = none # CA3012: Review code for regex injection vulnerabilities
+dotnet_diagnostic.CA3076.severity = none # CA3076: Insecure XSLT Script Execution
+dotnet_diagnostic.CA3077.severity = none # CA3077: Insecure Processing in API Design, XML Document and XML Text Reader
+dotnet_diagnostic.CA5350.severity = none # CA5350: Do Not Use Weak Cryptographic Algorithms
+dotnet_diagnostic.CA5351.severity = none # CA5351 Do Not Use Broken Cryptographic Algorithms
+dotnet_diagnostic.CA5360.severity = none # CA5360: Do not call dangerous methods in deserialization
+dotnet_diagnostic.CA5382.severity = none # CA5382: Use secure cookies in ASP.NET Core
+dotnet_diagnostic.CA5383.severity = none # CA5383: Ensure use secure cookies in ASP.NET Core
+dotnet_diagnostic.CA5384.severity = none # CA5384: Do not use digital signature algorithm (DSA)
+dotnet_diagnostic.CA5387.severity = none # CA5387: Do not use weak key derivation function with insufficient iteration count
+dotnet_diagnostic.CA5388.severity = none # CA5388: Ensure sufficient iteration count when using weak key derivation function
+dotnet_diagnostic.CA5389.severity = none # CA5389: Do not add archive item's path to the target file system path
 dotnet_diagnostic.CA5390.severity = none # CA5390: DoNotHardCodeEncryptionKey
 dotnet_diagnostic.CA5394.severity = none # CA5394: Do not use insecure randomness
+dotnet_diagnostic.CA5397.severity = none # CA5397: Do not use deprecated SslProtocols values
+dotnet_diagnostic.CA5398.severity = none # CA5398: Avoid hardcoded SslProtocols values
+dotnet_diagnostic.CA5399.severity = none # CA5399: Enable HttpClient certificate revocation list check
+dotnet_diagnostic.CA5400.severity = none # CA5400: Ensure HttpClient certificate revocation list check is not disabled
+dotnet_diagnostic.CA5401.severity = none # CA5401: Do not use CreateEncryptor with non-default IV
+dotnet_diagnostic.CA5402.severity = none # CA5402: Use CreateEncryptor with the default IV
 dotnet_diagnostic.CA5403.severity = none # CA5403: DoNotHardCodeCertificate
+
+
+
 
 ###################################################################################
 # VS analyzers                                                                    #
