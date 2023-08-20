@@ -65,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			_stack?          .Clear();
 		}
 
-		void CorrectQueryHierarchy(SelectQuery? parentQuery)
+		static void CorrectQueryHierarchy(SelectQuery? parentQuery)
 		{
 			if (parentQuery == null)
 				return;

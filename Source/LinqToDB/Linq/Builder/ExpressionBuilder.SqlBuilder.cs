@@ -106,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (expres.Result)
 						{
-							if (expres.Expression != null && context.Builder.IsGrouping(expres.Expression, context.Builder.MappingSchema))
+							if (expres.Expression != null && IsGrouping(expres.Expression, context.Builder.MappingSchema))
 							{
 								context.IsHaving = true;
 								return false;
@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							if (context.Builder.IsGrouping(expr, context.Builder.MappingSchema))
+							if (IsGrouping(expr, context.Builder.MappingSchema))
 							{
 								context.IsHaving = true;
 								return false;
@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 						if (Expressions.ConvertMember(context.Builder.MappingSchema, e.Object?.Type, e.Method) != null)
 							return true;
 
-						if (context.Builder.IsGrouping(e, context.Builder.MappingSchema))
+						if (IsGrouping(e, context.Builder.MappingSchema))
 						{
 							context.IsHaving = true;
 							return false;
@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 			return ctx.MakeSubQuery || ctx.IsHaving && ctx.IsWhere;
 		}
 
-		bool IsGrouping(Expression expression, MappingSchema mappingSchema)
+		static bool IsGrouping(Expression expression, MappingSchema mappingSchema)
 		{
 			switch (expression.NodeType)
 			{
@@ -2807,7 +2807,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		bool IsNullConstant(Expression expr)
+		static bool IsNullConstant(Expression expr)
 		{
 			// TODO: is it correct to return true for DefaultValueExpression for non-reference type or when default value
 			// set to non-null value?

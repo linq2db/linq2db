@@ -47,7 +47,7 @@ namespace LinqToDB
 			/// </summary>
 			/// <param name="collation">Collation name to check.</param>
 			/// <returns>False if invalid characters found, else true.</returns>
-			private bool ValidateCollation(string collation)
+			private static bool ValidateCollation(string collation)
 			{
 				return !string.IsNullOrWhiteSpace(collation) && _collationValidator.IsMatch(collation);
 			}

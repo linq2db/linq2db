@@ -97,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 			return loadWithSequence;
 		}
 
-		TableBuilder.TableContext GetTableContext(IBuildContext ctx, Expression path, out Expression? stopExpression)
+		static TableBuilder.TableContext GetTableContext(IBuildContext ctx, Expression path, out Expression? stopExpression)
 		{
 			stopExpression = null;
 

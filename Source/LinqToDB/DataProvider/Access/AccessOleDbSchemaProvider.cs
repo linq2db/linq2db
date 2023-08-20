@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.Access
 		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
 		// we create separate connection for GetSchema calls to workaround provider bug
 		// logic not applied if active transaction present - user must remove transaction if he has issues
-		private TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
+		private static TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
 		{
 			if (dataConnection.Transaction != null)
 				return action(dataConnection);
@@ -138,7 +138,7 @@ namespace LinqToDB.DataProvider.Access
 			).ToList();
 		}
 
-		private int CorrectDataTypeFromFlags(int providerDbType, OleDbProviderAdapter.ColumnFlags flags)
+		private static int CorrectDataTypeFromFlags(int providerDbType, OleDbProviderAdapter.ColumnFlags flags)
 		{
 			switch (providerDbType)
 			{

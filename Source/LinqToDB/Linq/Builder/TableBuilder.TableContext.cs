@@ -492,7 +492,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			ConstructorInfo SelectParameterizedConstructor(Type objectType)
+			static ConstructorInfo SelectParameterizedConstructor(Type objectType)
 			{
 				var constructors = objectType.GetConstructors();
 

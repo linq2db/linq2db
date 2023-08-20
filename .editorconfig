@@ -216,7 +216,7 @@ dotnet_diagnostic.CA1810.severity = none # CA1810: Initialize reference type sta
 dotnet_diagnostic.CA1813.severity = none # CA1813: Avoid unsealed attributes
 dotnet_diagnostic.CA1815.severity = none # CA1815: Override equals and operator equals on value types
 dotnet_diagnostic.CA1819.severity = none # CA1819: Properties should not return arrays
-dotnet_diagnostic.CA1822.severity = none # CA1822: Mark members as static
+dotnet_diagnostic.CA1822.severity = none # CA1822: Mark members as static TODO: V6 - fix remaining errors
 dotnet_diagnostic.CA1845.severity = none # CA1845: Use span-based string.Concat and AsSpan instead of Substring
 dotnet_diagnostic.CA1846.severity = none # CA1846: Prefer AsSpan over Substring
 dotnet_diagnostic.CA1859.severity = none # CA1859: Use concrete types when possible for improved performance
@@ -241,7 +241,6 @@ dotnet_diagnostic.CA3009.severity = none # CA3009: Review code for XML injection
 dotnet_diagnostic.CA3010.severity = none # CA3010: Review code for XAML injection vulnerabilities
 dotnet_diagnostic.CA3011.severity = none # CA3011: Review code for DLL injection vulnerabilities
 dotnet_diagnostic.CA3012.severity = none # CA3012: Review code for regex injection vulnerabilities
-dotnet_diagnostic.CA3076.severity = none # CA3076: Insecure XSLT Script Execution
 dotnet_diagnostic.CA3077.severity = none # CA3077: Insecure Processing in API Design, XML Document and XML Text Reader
 dotnet_diagnostic.CA5350.severity = none # CA5350: Do Not Use Weak Cryptographic Algorithms
 dotnet_diagnostic.CA5351.severity = none # CA5351 Do Not Use Broken Cryptographic Algorithms
@@ -261,8 +260,6 @@ dotnet_diagnostic.CA5400.severity = none # CA5400: Ensure HttpClient certificate
 dotnet_diagnostic.CA5401.severity = none # CA5401: Do not use CreateEncryptor with non-default IV
 dotnet_diagnostic.CA5402.severity = none # CA5402: Use CreateEncryptor with the default IV
 dotnet_diagnostic.CA5403.severity = none # CA5403: DoNotHardCodeCertificate
-
-
 
 
 ###################################################################################
@@ -359,5 +356,3 @@ dotnet_diagnostic.CS4014.severity = error # CS4014: Because this call is not awa
 
 dotnet_diagnostic.SYSLIB1045.severity = none # Use GeneratedRegexAttribute
 dotnet_diagnostic.SYSLIB1054.severity = none # Use LibraryImportAttribute
-
-#

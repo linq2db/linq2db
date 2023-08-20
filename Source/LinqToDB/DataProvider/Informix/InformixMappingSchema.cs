@@ -37,7 +37,7 @@ namespace LinqToDB.DataProvider.Informix
 #endif
 		}
 
-		private void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
+		private static void BuildIntervalLiteral(StringBuilder sb, TimeSpan interval)
 		{
 			// for now just generate DAYS TO FRACTION(5) interval, hardly anyone needs YEAR TO MONTH one
 			// and if he needs, it is easy to workaround by adding another one converter to mapping schema

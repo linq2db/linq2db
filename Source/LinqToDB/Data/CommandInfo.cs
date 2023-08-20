@@ -606,7 +606,7 @@ namespace LinqToDB.Data
 			return result;
 		}
 
-		Dictionary<int, MemberAccessor> GetMultipleQueryIndexMap<T>(TypeAccessor<T> typeAccessor)
+		static Dictionary<int, MemberAccessor> GetMultipleQueryIndexMap<T>(TypeAccessor<T> typeAccessor)
 		{
 			var indexMap = new Dictionary<int, MemberAccessor>();
 
@@ -1330,7 +1330,7 @@ namespace LinqToDB.Data
 
 		#region SetParameters
 
-		void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
+		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
 			foreach (var parameter in parameters)
 			{

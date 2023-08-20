@@ -139,7 +139,7 @@ namespace LinqToDB.Linq.Builder
 			return FindBuildContext(builder, buildInfo, out var _) != BuildContextType.None;
 		}
 
-		IBuildContext ApplyQueryFilters(ExpressionBuilder builder, BuildInfo buildInfo, MemberInfo? memberInfo, TableContext tableContext)
+		static IBuildContext ApplyQueryFilters(ExpressionBuilder builder, BuildInfo buildInfo, MemberInfo? memberInfo, TableContext tableContext)
 		{
 			var entityType = tableContext.ObjectType;
 			if (builder.IsFilterDisabled(entityType))

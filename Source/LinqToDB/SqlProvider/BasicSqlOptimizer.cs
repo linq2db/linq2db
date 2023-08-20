@@ -212,7 +212,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		bool FixRootSelect(SqlStatement statement)
+		static bool FixRootSelect(SqlStatement statement)
 		{
 			if (statement.SelectQuery is {} query         &&
 				query.Select.HasModifier == false         &&
@@ -1087,7 +1087,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
+		static ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
 		{
 			//TODO: refactor CASE optimization
 
@@ -1109,7 +1109,7 @@ namespace LinqToDB.SqlProvider
 			return isTrue;
 		}
 
-		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
+		static ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
 		{
 			SqlFunction? func;
 			var valueFirst = expr.Expr1.TryEvaluateExpression(context, out var value);
@@ -3024,7 +3024,7 @@ namespace LinqToDB.SqlProvider
 			return updateStatement;
 		}
 
-		void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
+		static void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
 		{
 			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
 			{

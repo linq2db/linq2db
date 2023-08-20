@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.MySql
 			};
 		}
 
-		SqlStatement PrepareDelete(SqlDeleteStatement statement)
+		static SqlStatement PrepareDelete(SqlDeleteStatement statement)
 		{
 			var tables = statement.SelectQuery.From.Tables;
 

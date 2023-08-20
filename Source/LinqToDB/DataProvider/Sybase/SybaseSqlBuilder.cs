@@ -237,7 +237,7 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 
-		private string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
+		private static string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
 		{
 			if (physicalName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
 				return physicalName;
