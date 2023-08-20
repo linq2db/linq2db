@@ -11,6 +11,8 @@ namespace LinqToDB.Benchmarks
 {
 	sealed class Program
 	{
+		internal static readonly string[] _defaultArguments = new[] { "--filter", "*.Queries.*", "*.QueryGeneration.*" };
+
 		static void Main(string[] args)
 		{
 			//if (args.Length == 0)
@@ -100,7 +102,7 @@ namespace LinqToDB.Benchmarks
 				.Run(
 					//args.Length > 0 ? args : new[] { "--filter=*" },
 					// don't run TypeMapper benchmarks by default as they hardly will change, but add a lot of running time
-					args.Length > 0 ? args : new[] { "--filter", "*.Queries.*", "*.QueryGeneration.*" },
+					args.Length > 0 ? args : _defaultArguments,
 					Config.Instance);
 		}
 

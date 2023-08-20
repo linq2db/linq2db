@@ -37,9 +37,10 @@ namespace Tests.UserTests
 				  .HasColumn(x => x.Value)
 				  .Build();
 
-			using (var db = new  DataConnection(context).AddMappingSchema(schema))
+			using (var db = new DataConnection(context))
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			{
+				db.AddMappingSchema(schema);
 				try
 				{
 					var temptable = db.CreateTable<Entity>();

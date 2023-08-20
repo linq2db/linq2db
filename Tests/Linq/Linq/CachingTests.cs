@@ -82,7 +82,7 @@ namespace Tests.Linq
 			var count = 0;
 			var n     = 0;
 
-			if (subString != "")
+			if (subString.Length != 0)
 			{
 				while ((n = source.IndexOf(subString, n, StringComparison.Ordinal)) != -1)
 				{

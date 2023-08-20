@@ -6,7 +6,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// shows small performance degradation due to indirect call
 	public class WrapActionBenchmark
 	{
-		private static readonly string      Parameter            = "TestString";
+		private const           string      Parameter            = "TestString";
 		private static readonly IDataReader IDataReaderParameter = null!;
 
 		private Original.TestClass2 _originalInstance = null!;

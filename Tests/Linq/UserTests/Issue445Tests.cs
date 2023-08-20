@@ -48,7 +48,9 @@ namespace Tests.UserTests
 		{
 			for (var i = 0; i < 1000; i++)
 			{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				var dc = new DataContext(context);
+#pragma warning restore CA2000 // Dispose objects before losing scope
 				AreEqual(Person.Where(_ => _.ID == 1), dc.GetTable<Person>().Where(_ => _.ID == 1));
 			}
 		}
@@ -69,7 +71,9 @@ namespace Tests.UserTests
 		{
 			for (var i = 0; i < 1000; i++)
 			{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				var dc = new DataContext(context);
+#pragma warning restore CA2000 // Dispose objects before losing scope
 				AreEqual(Person.Where(_ => _.ID == 1), dc.GetTable<Person>().Where(_ => _.ID == 1).ToArrayAsync().Result);
 			}
 		}

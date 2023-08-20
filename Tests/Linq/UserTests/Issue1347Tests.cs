@@ -154,12 +154,12 @@
 		[DataContract(Name = "WMS_BasicDTO")]
 		public abstract class WmsBasicDTO<T> : WmsBasicWithoutCustomFieldsDTO<T>, Common.ServiceInterfaces.DTO.Base.IMccEntityState, Common.ServiceInterfaces.DTO.Base.IInterlinqDTO, Common.ServiceInterfaces.DTO.Base.IDTOWithId, Common.ServiceInterfaces.Interfaces.IExtensionData, Common.ServiceInterfaces.DTO.IModifiedTimeStamp, Common.ServiceInterfaces.DTO.Base.ICreatedTimeStamp
 		{
-			public WmsBasicDTO()
+			protected WmsBasicDTO()
 			{
 				throw new NotImplementedException();
 			}
 
-			public WmsBasicDTO(T dto)
+			protected WmsBasicDTO(T dto)
 			{
 				throw new NotImplementedException();
 			}
@@ -171,12 +171,12 @@
 		[DataContract(Name = "WMS_BasicDTO")]
 		public abstract class WmsBasicWithoutCustomFieldsDTO<T> : Common.ServiceInterfaces.DTO.Base.BasicDTOwithExtensionData, Common.ServiceInterfaces.DTO.Base.IMccEntityState, Common.ServiceInterfaces.DTO.Base.IInterlinqDTO, Common.ServiceInterfaces.DTO.Base.IDTOWithId, Common.ServiceInterfaces.Interfaces.IExtensionData, Common.ServiceInterfaces.DTO.IModifiedTimeStamp, Common.ServiceInterfaces.DTO.Base.ICreatedTimeStamp
 		{
-			public WmsBasicWithoutCustomFieldsDTO()
+			protected WmsBasicWithoutCustomFieldsDTO()
 			{
 				throw new NotImplementedException();
 			}
 
-			public WmsBasicWithoutCustomFieldsDTO(T dto)
+			protected WmsBasicWithoutCustomFieldsDTO(T dto)
 			{
 				throw new NotImplementedException();
 			}
