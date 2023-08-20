@@ -26,6 +26,7 @@ namespace LinqToDB.Metadata
 		readonly MappingAttributesCache                   _cache;
 		readonly string                                   _objectId;
 		readonly ConcurrentDictionary<Type, MemberInfo[]> _dynamicColumns = new();
+		readonly object                                   _syncRoot = new();
 
 		readonly IMetadataReader[]             _readers;
 		public   IReadOnlyList<IMetadataReader> Readers => _readers;
@@ -124,7 +125,7 @@ namespace LinqToDB.Metadata
 		{
 			if (_registeredTypes == null)
 			{
-				lock (this)
+				lock (_syncRoot)
 				{
 					_registeredTypes ??= Readers.OfType<FluentMetadataReader>().SelectMany(fr => fr.GetRegisteredTypes())
 						.Concat(Readers.OfType<MetadataReader>().SelectMany(mr => mr.GetRegisteredTypes()))
