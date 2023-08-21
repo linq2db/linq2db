@@ -649,10 +649,45 @@ namespace Tests.Linq
 			)
 			.ToList();
 
-			if (ignoreConstantExpressionInOrderBy)
-				Assert.That(q[0].ID,  Is.EqualTo(3));
-			else
-				Assert.That(q[0].ID,  Is.EqualTo(1));
+			Assert.That(q[0].ID, Is.EqualTo(ignoreConstantExpressionInOrderBy ? 3 : 1));
+		}
+
+		[Test]
+		public void IgnoreConstantExpressionInOrderByTest2([DataSources(ProviderName.SqlCe)] string context, [Values] bool ignoreConstantExpressionInOrderBy)
+		{
+			using var db  = GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(ignoreConstantExpressionInOrderBy));
+
+			var q =
+			(
+				from p in db.Person
+				where p.ID.In(1, 3)
+				orderby 1 descending , p.LastName descending
+				select new
+				{
+					p.ID,
+					p.LastName
+				}
+			)
+			.ToList();
+
+			Assert.That(q[0].ID, Is.EqualTo(ignoreConstantExpressionInOrderBy ? 1 : 3));
+		}
+
+		[Test]
+		public void IgnoreConstantExpressionInOrderByTest3([DataSources(ProviderName.SqlCe)] string context, [Values] bool ignoreConstantExpressionInOrderBy)
+		{
+			using var db  = GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(ignoreConstantExpressionInOrderBy));
+
+			var q =
+			(
+				from p in db.Person
+				where p.ID.In(1, 3)
+				orderby 1, p.LastName
+				select p
+			)
+			.ToList();
+
+			Assert.That(q[0].ID, Is.EqualTo(ignoreConstantExpressionInOrderBy ? 3 : 1));
 		}
 	}
 }

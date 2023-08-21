@@ -26,7 +26,7 @@ namespace Tests.Model
 		//[SequenceName(ProviderName.Firebird, "PersonID")]
 		[Column("PersonID", Configuration = ProviderName.ClickHouse)]
 		[Column("PersonID", IsIdentity = true), PrimaryKey]
-													   public int     ID;
+		                                               public int     ID        { get; set; }
 		[NotNull]                                      public string  FirstName { get; set; } = null!;
 		[NotNull]                                      public string  LastName = null!;
 		[Nullable]                                     public string? MiddleName;
