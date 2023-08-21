@@ -1521,19 +1521,6 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-		/// Default value: <c>false</c>.
-		/// </summary>
-		public static SqlOptions WithGenerateFinalAliases(this SqlOptions options, bool generateFinalAliases)
-		{
-			return options with { GenerateFinalAliases = generateFinalAliases };
-		}
-
-		#endregion
-
-		#region DataOptions.SqlOptions
-
-		/// <summary>
 		/// Indicates whether SQL Builder should generate aliases for final projection.
 		/// It is not required for correct query processing but simplifies SQL analysis.
 		/// <para>
@@ -1563,6 +1550,19 @@ namespace LinqToDB
 		///	   [Child] [child]
 		/// </code>
 		/// </example>
+		/// </summary>
+		public static SqlOptions WithGenerateFinalAliases(this SqlOptions options, bool generateFinalAliases)
+		{
+			return options with { GenerateFinalAliases = generateFinalAliases };
+		}
+
+		#endregion
+
+		#region DataOptions.SqlOptions
+
+		/// <summary>
+		/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
+		/// Default value: <c>false</c>.
 		/// </summary>
 		public static DataOptions UseIgnoreConstantExpressionInOrderBy(this DataOptions options, bool ignoreConstantExpressionInOrderBy)
 		{
