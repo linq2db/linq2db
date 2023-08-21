@@ -3,6 +3,8 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
@@ -387,7 +389,7 @@ namespace Tests.Linq
 
 				var secondOrder =
 					from p in firstOrder
-					join pp in db.Parent on p.Value1 equals pp.Value1 
+					join pp in db.Parent on p.Value1 equals pp.Value1
 					orderby pp.ParentID
 					select p;
 
@@ -412,7 +414,7 @@ namespace Tests.Linq
 				var secondOrder =
 					from p in firstOrder
 					join pp in db.Parent on p.ParentID equals pp.ParentID
-					orderby p.ParentID descending 
+					orderby p.ParentID descending
 					select p;
 
 				var selectQuery = secondOrder.GetSelectQuery();
@@ -629,5 +631,28 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void IgnoreConstantExpressionInOrderByTest([DataSources(ProviderName.SqlCe)] string context, [Values] bool ignoreConstantExpressionInOrderBy)
+		{
+			using var db  = GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(ignoreConstantExpressionInOrderBy));
+
+			var q =
+			(
+				from p in db.Person
+				where p.ID.In(1, 3)
+				orderby 1, p.LastName
+				select new
+				{
+					p.ID,
+					p.LastName
+				}
+			)
+			.ToList();
+
+			if (ignoreConstantExpressionInOrderBy)
+				Assert.That(q[0].ID,  Is.EqualTo(3));
+			else
+				Assert.That(q[0].ID,  Is.EqualTo(1));
+		}
 	}
 }

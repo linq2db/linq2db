@@ -2177,7 +2177,7 @@ namespace LinqToDB.SqlProvider
 
 				var item = selectQuery.OrderBy.Items[i];
 
-				BuildExpression(WrapBooleanExpression(item.Expression));
+				BuildExpressionForOrderBy(item.Expression);
 
 				if (item.IsDescending)
 					StringBuilder.Append(" DESC");
@@ -2189,6 +2189,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			Indent--;
+		}
+
+		protected virtual void BuildExpressionForOrderBy(ISqlExpression expr)
+		{
+			BuildExpression(WrapBooleanExpression(expr));
 		}
 
 		#endregion
@@ -3091,7 +3096,7 @@ namespace LinqToDB.SqlProvider
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);
 			else
-			MappingSchema.ConvertToSqlValue(StringBuilder, dataType, DataOptions, value);
+				MappingSchema.ConvertToSqlValue(StringBuilder, dataType, DataOptions, value);
 		}
 
 		#endregion

@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 			SetOperation setOperation;
 			switch (methodCall.Method.Name)
 			{
-				case "Concat"       : 
+				case "Concat"       :
 				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
 				case "Union"        : setOperation = SetOperation.Union;        break;
 				case "Except"       : setOperation = SetOperation.Except;       break;
@@ -239,16 +239,16 @@ namespace LinqToDB.Linq.Builder
 
 						if (em == null)
 						{
-								foreach (var m in _unionMembers!)
+							foreach (var m in _unionMembers!)
+							{
+								if (m.Member.SequenceInfo != null &&
+									m.Infos.Count < Sequences.Count &&
+									m.Member.SequenceInfo.CompareLastMember(info))
 								{
-									if (m.Member.SequenceInfo != null &&
-										m.Infos.Count < Sequences.Count &&
-										m.Member.SequenceInfo.CompareLastMember(info))
-									{
-										em = m;
-										break;
-									}
+									em = m;
+									break;
 								}
+							}
 						}
 
 						if (em == null)
