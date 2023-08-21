@@ -190,7 +190,7 @@ dotnet_diagnostic.CA1065.severity = none # CA1065: Do not raise exceptions in un
 dotnet_diagnostic.CA1067.severity = none # CA1067: Override Equals when implementing IEquatable
 dotnet_diagnostic.CA1068.severity = none # CA1068: CancellationToken parameters must come last
 dotnet_diagnostic.CA1069.severity = none # CA1069: Enums should not have duplicate values
-dotnet_diagnostic.CA1303.severity = none # CA1303: Do not pass literals as localized parametersdotnet_diagnostic.CA1307.severity = none # CA1307: Specify StringComparison for clarity
+dotnet_diagnostic.CA1303.severity = none # CA1303: Do not pass literals as localized parameters
 dotnet_diagnostic.CA1304.severity = none # CA1304: Specify CultureInfo
 dotnet_diagnostic.CA1305.severity = none # CA1305: Specify IFormatProvider
 dotnet_diagnostic.CA1308.severity = none # CA1308: Normalize strings to uppercase

@@ -19,7 +19,7 @@
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="7.0.0"         />
 		<PackageVersion Include="System.ComponentModel.Annotations"                     Version="5.0.0"         />
 		<!--Source of NullabilityInfoContext for runtimes before .net 6-->
-		<PackageVersion Include="Nullability.Source"                                    Version="2.1.0"         />
+		<PackageVersion Include="Nullability.Source"                                    Version="2.2.0"         />
 		<PackageVersion Include="PolySharp"                                             Version="1.13.2"        />
 		<!--build support-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.11.0-beta1.23364.2" />
