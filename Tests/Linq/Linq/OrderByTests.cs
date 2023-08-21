@@ -659,13 +659,13 @@ namespace Tests.Linq
 
 			var q =
 			(
-				from p in db.Person
+				from p in db.ComplexPerson
 				where p.ID.In(1, 3)
-				orderby 1 descending , p.LastName descending
+				orderby 1 descending , p.Name.LastName descending
 				select new
 				{
 					p.ID,
-					p.LastName
+					p.Name.LastName
 				}
 			)
 			.ToList();
@@ -680,9 +680,9 @@ namespace Tests.Linq
 
 			var q =
 			(
-				from p in db.Person
+				from p in db.ComplexPerson
 				where p.ID.In(1, 3)
-				orderby 1, p.LastName
+				orderby 1, p.Name.LastName
 				select p
 			)
 			.ToList();
