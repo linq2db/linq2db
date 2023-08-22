@@ -18,6 +18,7 @@ namespace LinqToDB.Linq.Builder
 	sealed class EnumerableContext : BuildContextBase
 	{
 		readonly EntityDescriptor _entityDescriptor;
+		readonly bool _filedsDefined;
 
 		public override Expression?    Expression { get; }
 		public          SqlValuesTable Table      { get; }
@@ -28,23 +29,31 @@ namespace LinqToDB.Linq.Builder
 			Parent            = buildInfo.Parent;
 			_entityDescriptor = MappingSchema.GetEntityDescriptor(elementType,
 				Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
-			Table             = BuildValuesTable(buildInfo.Expression);
-			Expression        = buildInfo.Expression;
-
-			foreach (var field in Table.Fields)
-			{
-				SelectQuery.Select.AddNew(field);
-			}
+			Table      = BuildValuesTable(buildInfo.Expression, out _filedsDefined);
+			Expression = buildInfo.Expression;
 
 			if (!buildInfo.IsTest)
 				SelectQuery.From.Table(Table);
 		}
 
-		SqlValuesTable BuildValuesTable(Expression expr)
+		EnumerableContext(ExpressionBuilder builder, MappingSchema mappingSchema, Expression expression, SelectQuery query, SqlValuesTable table, Type elementType)
+			: base(builder, elementType, query)
+		{
+			Parent = null;
+			_entityDescriptor = mappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			Table      = table;
+			Expression = expression;
+		}
+
+		SqlValuesTable BuildValuesTable(Expression expr, out bool fieldsDefined)
 		{
 			if (expr.NodeType == ExpressionType.NewArrayInit)
+			{
+				fieldsDefined = true;
 				return BuildValuesTableFromArray((NewArrayExpression)expr);
+			}
 
+			fieldsDefined = false;
 			return new SqlValuesTable(Builder.ConvertToSql(this, expr));
 		}
 
@@ -53,8 +62,10 @@ namespace LinqToDB.Linq.Builder
 			if (MappingSchema.IsScalarType(ElementType))
 			{
 				var rows  = arrayExpression.Expressions.Select(e => new[] {Builder.ConvertToSql(Parent, e)}).ToList();
+				var contextRef = new ContextRefExpression(ElementType, this);
+				var specialProp = SequenceHelper.CreateSpecialProperty(contextRef, ElementType, "item");
 				var field = new SqlField(Table, "item");
-				return new SqlValuesTable(new[] { field }, null, rows);
+				return new SqlValuesTable(new[] { field }, new[] { specialProp.Member }, rows);
 			}
 
 			var knownMembers = new HashSet<MemberInfo>();
@@ -126,7 +137,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (SequenceHelper.IsSpecialProperty(path, ElementType, "item"))
 			{
-				var newField = BuildField(null, path);
+				var newField    = BuildField(null, path);
 				return newField;
 			}
 
@@ -199,25 +210,37 @@ namespace LinqToDB.Linq.Builder
 				if (flags.HasFlag(ProjectFlags.Root))
 					return path;
 
-				if (path.Type == ElementType)
+				if (MappingSchema.IsScalarType(ElementType))
 				{
+					if (path.Type != ElementType)
+					{
+						path = ((ContextRefExpression)path).WithType(ElementType);
+					}
+
 					var specialProp = SequenceHelper.CreateSpecialProperty(path, ElementType, "item");
 					return Builder.MakeExpression(this, specialProp, flags);
 				}
 
-				/*
-				// trying to access Queryable variant
-				if (path.Type != ElementType && flags.HasFlag(ProjectFlags.Expression))
-					return new SqlEagerLoadExpression((ContextRefExpression)path, path, Builder.GetSequenceExpression(this));
-					*/
+				if (Table.FieldsLookup == null)
+					throw new InvalidOperationException("Enumerable fields are not defined.");
 
-				if (flags.HasFlag(ProjectFlags.Expression))
-					return Expression!; // do nothing
+				Expression result;
+				if (_filedsDefined)
+				{
+					var membersOrdered =
+						from f in Table.Fields
+						join fm in Table.FieldsLookup on f equals fm.Value
+						select fm.Key;
 
-				var result = Builder.BuildSqlExpression(this, Expression!, flags.SqlFlag());
+					result = Builder.BuildEntityExpression(this, path, ElementType, membersOrdered.ToList());
+
+				}
+				else
+				{
+					result = Builder.BuildFullEntityExpression(this, path, ElementType, flags);
+				}
 
 				return result;
-				//return Builder.BuildEntityExpression(this, _elementType, flags);
 			}
 
 			if (path is not MemberExpression member)
@@ -234,8 +257,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			//TODO: Clone
-			throw new NotImplementedException();
+			return new EnumerableContext(Builder, MappingSchema, Expression!, context.CloneElement(SelectQuery),
+				context.CloneElement(Table), ElementType);
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

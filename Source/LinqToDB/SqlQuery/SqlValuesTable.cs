@@ -101,7 +101,7 @@ namespace LinqToDB.SqlQuery
 			ValueBuilders.Add(valueBuilder);
 		}
 
-		internal IReadOnlyList<ISqlExpression[]>? Rows { get; set;}
+		internal IReadOnlyList<ISqlExpression[]>? Rows { get; private set; }
 
 		public void Modify(IReadOnlyList<ISqlExpression[]>? rows)
 		{

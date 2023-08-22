@@ -13,21 +13,26 @@ namespace LinqToDB.SqlQuery
 			return new SqlField(table, "*", "*");
 		}
 
-		public SqlField(ISqlTableSource table, string name)
+		protected SqlField()
+		{
+
+		}
+
+		public SqlField(ISqlTableSource table, string name) : this()
 		{
 			Table     = table;
 			Name      = name;
 			CanBeNull = true;
 		}
 
-		public SqlField(DbDataType dbDataType, string? name, bool canBeNull)
+		public SqlField(DbDataType dbDataType, string? name, bool canBeNull) : this()
 		{
 			Type      = dbDataType;
 			Name      = name!;
 			CanBeNull = canBeNull;
 		}
 
-		SqlField(ISqlTableSource table, string name, string physicalName)
+		SqlField(ISqlTableSource table, string name, string physicalName) : this()
 		{
 			Table        = table;
 			Name         = name;
@@ -35,14 +40,14 @@ namespace LinqToDB.SqlQuery
 			CanBeNull    = true;
 		}
 
-		public SqlField(string name, string physicalName)
+		public SqlField(string name, string physicalName) : this()
 		{
 			Name         = name;
 			PhysicalName = physicalName;
 			CanBeNull    = true;
 		}
 
-		public SqlField(SqlField field)
+		public SqlField(SqlField field) : this()
 		{
 			Type             = field.Type;
 			Alias            = field.Alias;
@@ -60,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			IsDynamic        = field.IsDynamic;
 		}
 
-		public SqlField(ColumnDescriptor column)
+		public SqlField(ColumnDescriptor column) : this()
 		{
 			Type              = column.GetDbDataType(true);
 			Name              = column.MemberName;

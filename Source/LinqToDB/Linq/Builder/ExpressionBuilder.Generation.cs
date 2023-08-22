@@ -231,6 +231,24 @@ namespace LinqToDB.Linq.Builder
 			return generic;
 		}
 
+		public SqlGenericConstructorExpression BuildEntityExpression(IBuildContext context, Expression refExpression, Type entityType, IReadOnlyCollection<MemberInfo> members)
+		{
+			entityType = GetTypeForInstantiation(entityType);
+
+			refExpression = SequenceHelper.EnsureType(refExpression, entityType);
+
+			var assignments = new List<SqlGenericConstructorExpression.Assignment>(members.Count);
+
+			foreach (var member in members)
+			{
+				assignments.Add(new SqlGenericConstructorExpression.Assignment(member, Expression.MakeMemberAccess(refExpression, member), false, false));
+			}
+
+			var generic = new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto, entityType, null, assignments.AsReadOnly());
+
+			return generic;
+		}
+
 		public SqlGenericConstructorExpression BuildFullEntityExpression(Expression root, Type entityType, ProjectFlags flags, FullEntityPurpose purpose)
 		{
 			entityType = GetTypeForInstantiation(entityType);

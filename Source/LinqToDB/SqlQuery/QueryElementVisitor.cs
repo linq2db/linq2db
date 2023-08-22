@@ -1167,34 +1167,33 @@ namespace LinqToDB.SqlQuery
 					if (element.Rows != null)
 					{
 						var rows = VisitListOfArrays(element.Rows, VisitMode.Modify);
-						element.Modify(rows);
+						if (rows != null)
+							element.Modify(element.Rows);
 					}
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					if (element.Rows != null)
+					var newRows = element.Rows != null ? VisitListOfArrays(element.Rows, VisitMode.Transform) : null;
+
+					if (ShouldReplace(element) || newRows != null)
 					{
-						var newRows = VisitListOfArrays(element.Rows, VisitMode.Transform);
-						if (ShouldReplace(element) || newRows != null)
+						var prevFields = element.Fields;
+						var newFields  = new SqlField[prevFields.Count];
+
+						for (var i = 0; i < prevFields.Count; i++)
 						{
-							var prevFields = element.Fields;
-							var newFields  = new SqlField[prevFields.Count];
+							var field = prevFields[i];
 
-							for (var i = 0; i < prevFields.Count; i++)
-							{
-								var field = prevFields[i];
+							var newField = new SqlField(field);
+							newFields[i] = newField;
 
-								var newField = new SqlField(field);
-								newFields[i] = newField;
-
-								NotifyReplaced(newField, field);
-							}
-
-							return NotifyReplaced(new SqlValuesTable(element.Source!, element.ValueBuilders!,
-								newFields, newRows ?? element.Rows), element);
+							NotifyReplaced(newField, field);
 						}
+
+						return NotifyReplaced(new SqlValuesTable(element.Source!, element.ValueBuilders!,
+							newFields, newRows ?? element.Rows), element);
 					}
 
 					break;

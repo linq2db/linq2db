@@ -562,7 +562,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (IsSpecialProperty(expression, out var propType, out var propName))
 				{
-					var newExpr = CreateSpecialProperty(toPath, propType, propName);
+					Expression newExpr = CreateSpecialProperty(toPath, propType, propName);
 					if (placeholder.Type != newExpr.Type)
 					{
 						newExpr = Expression.Convert(newExpr, placeholder.Type);
@@ -941,7 +941,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Special fields helpers
 
-		public static Expression CreateSpecialProperty(Expression obj, Type type, string name)
+		public static MemberExpression CreateSpecialProperty(Expression obj, Type type, string name)
 		{
 			return Expression.MakeMemberAccess(obj, new SpecialPropertyInfo(obj.Type, type, name));
 		}

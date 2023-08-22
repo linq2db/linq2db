@@ -546,19 +546,30 @@ namespace LinqToDB.Linq.Builder
 			if (flags.IsTraverse())
 				return null;
 
-			if (expr is BinaryExpression or ConditionalExpression or DefaultExpression or DefaultValueExpression)
-				return null;
-
-			if (expr is SqlGenericConstructorExpression or ConstantExpression or SqlEagerLoadExpression)
-				return null;
-
-			if (expr is ContextRefExpression contextRef && contextRef.BuildContext.ElementType == expr.Type)
-				return null;
-
-			if (SequenceHelper.IsSpecialProperty(expr, out _, out _))
-				return null;
-
 			var unwrapped = expr.Unwrap();
+
+			if (unwrapped is BinaryExpression or ConditionalExpression or DefaultExpression or DefaultValueExpression)
+				return null;
+
+			if (unwrapped is SqlGenericConstructorExpression or ConstantExpression or SqlEagerLoadExpression)
+				return null;
+
+			if (unwrapped is ContextRefExpression contextRef && contextRef.BuildContext.ElementType == expr.Type)
+				return null;
+
+			if (SequenceHelper.IsSpecialProperty(unwrapped, out _, out _))
+				return null;
+
+			if (unwrapped is MemberExpression me)
+			{
+				if (!flags.IsSubquery() && CanBeCompiled(expr, true))
+					return null;
+
+				var attr = me.Member.GetExpressionAttribute(MappingSchema);
+				if (attr != null)
+					return null;
+			}
+
 			var info = GetSubQueryContext(context, ref context, unwrapped, flags);
 
 			if (info.Context == null)

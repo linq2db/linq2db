@@ -18,9 +18,6 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			if (buildInfo.IsSubQuery)
-				return false;
-
 			var expr = buildInfo.Expression;
 
 			if (expr.NodeType == ExpressionType.NewArrayInit)
@@ -40,9 +37,6 @@ namespace LinqToDB.Linq.Builder
 
 			var collectionType = typeof(IEnumerable<>).GetGenericType(expr.Type);
 			if (collectionType == null)
-				return false;
-
-			if (!builder.CanBeCompiled(expr, buildInfo.CreateSubQuery))
 				return false;
 
 			switch (expr.NodeType)
