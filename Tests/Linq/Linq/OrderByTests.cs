@@ -519,7 +519,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context))
+			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(true)))
 			{
 				var param = 2;
 				var query =
@@ -536,7 +536,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderByConstant2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context))
+			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(true)))
 			{
 				var param = 2;
 				var query =
@@ -553,7 +553,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderByImmutableSubquery([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context))
+			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(true)))
 			{
 				var param = 2;
 
