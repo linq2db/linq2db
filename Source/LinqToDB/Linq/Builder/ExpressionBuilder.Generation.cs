@@ -10,6 +10,8 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Mapping;
 	using Reflection;
+	using Interceptors;
+	using SqlQuery;
 	using LinqToDB.Expressions;
 
 	internal partial class ExpressionBuilder
@@ -613,8 +615,52 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return TryConstructObject(MappingSchema, constructorExpression, constructType);
+			var constructed = TryConstructObject(MappingSchema, constructorExpression, constructType);
+
+			if (constructed == null)
+				return null;
+
+			if (constructorExpression.BuildContext != null)
+			{
+				var tableContext = SequenceHelper.GetTableContext(constructorExpression.BuildContext);
+				if (tableContext != null)
+					constructed = NotifyEntityCreated(constructed, tableContext.SqlTable);
+			}
+
+			return constructed;
 		}
+
+		static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
+		{
+			return context is IInterceptable<IEntityServiceInterceptor> entityService ?
+				entityService.Interceptor?.EntityCreated(new(context, tableOptions, tableName, schemaName, databaseName, serverName), entity) ?? entity :
+				entity;
+		}
+
+		static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>
+			OnEntityCreated(null!, null!, TableOptions.NotSet, null, null, null, null));
+
+		Expression NotifyEntityCreated(Expression expr, SqlTable sqlTable)
+		{
+			if (DataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} })
+			{
+				expr = Expression.Convert(
+					Expression.Call(
+						_onEntityCreatedMethodInfo,
+						ExpressionConstants.DataContextParam,
+						expr,
+						Expression.Constant(sqlTable.TableOptions),
+						Expression.Constant(sqlTable.TableName.Name,     typeof(string)),
+						Expression.Constant(sqlTable.TableName.Schema,   typeof(string)),
+						Expression.Constant(sqlTable.TableName.Database, typeof(string)),
+						Expression.Constant(sqlTable.TableName.Server,   typeof(string))
+					),
+					expr.Type);
+			}
+
+			return expr;
+		}
+
 
 		ConstructorInfo? SelectParameterizedConstructor(Type objectType)
 		{
