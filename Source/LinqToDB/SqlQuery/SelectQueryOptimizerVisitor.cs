@@ -794,6 +794,20 @@ namespace LinqToDB.SqlQuery
 				(mainQuery.SqlQueryExtensions ??= new()).AddRange(subQuery.SqlQueryExtensions);
 		}
 
+		static JoinType ConvertApplyJoinType(JoinType joinType)
+		{
+			var newJoinType = joinType switch
+			{
+				JoinType.CrossApply => JoinType.Inner,
+				JoinType.OuterApply => JoinType.Left,
+				JoinType.FullApply  => JoinType.Full,
+				JoinType.RightApply => JoinType.Right,
+				_ => throw new InvalidOperationException($"Invalid APPLY Join: {joinType}"),
+			};
+
+			return newJoinType;
+		}
+
 		bool OptimizeApply(SelectQuery parentQuery, HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported)
 		{
 			var joinSource = joinTable.Table;
@@ -1043,14 +1057,7 @@ namespace LinqToDB.SqlQuery
 					searchCondition[i] = newCond;
 				}
 
-				var newJoinType = joinTable.JoinType switch
-				{
-					JoinType.CrossApply => JoinType.Inner,
-					JoinType.OuterApply => JoinType.Left,
-					JoinType.FullApply  => JoinType.Full,
-					JoinType.RightApply => JoinType.Right,
-					_ => throw new InvalidOperationException($"Invalid APPLY Join: {joinTable.JoinType}"),
-				};
+				var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
 
 				joinTable.JoinType = newJoinType;
 				joinTable.Condition.Conditions.AddRange(searchCondition);
@@ -1062,6 +1069,13 @@ namespace LinqToDB.SqlQuery
 					joinTable.Condition = QueryHelper.CorrectComparisonForJoin(joinTable.Condition);
 				}
 				*/
+			}
+			else if (joinSource.Source.ElementType == QueryElementType.SqlTable)
+			{
+				var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
+
+				joinTable.JoinType = newJoinType;
+				optimized          = true;
 			}
 
 			return optimized;
@@ -1331,6 +1345,12 @@ namespace LinqToDB.SqlQuery
 				return false;
 			}
 
+			if (subQuery.From.Tables.Count == 0)
+			{
+				if (selectQuery.From.Tables.Any(t => t.Joins.Count > 0))
+					return false;
+			}
+
 			// Actual modification starts from this point
 			//
 
@@ -1456,8 +1476,16 @@ namespace LinqToDB.SqlQuery
 					if (!subQuery.IsSimpleButWhere)
 						return false;
 				}
-				else 
-					return false;
+				else
+				{
+					if (!(!selectQuery.Select.HasModifier && selectQuery.Where.IsEmpty && selectQuery.GroupBy.IsEmpty &&
+					      selectQuery.Having.IsEmpty     &&
+					      selectQuery.OrderBy.IsEmpty    && selectQuery.From.Tables.Count == 1 &&
+					      selectQuery.From.Tables[0].Joins.Count                          <= 1))
+					{
+						return false;
+					}
+				};
 			}
 
 			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))

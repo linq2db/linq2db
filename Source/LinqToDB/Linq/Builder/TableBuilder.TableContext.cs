@@ -188,6 +188,13 @@ namespace LinqToDB.Linq.Builder
 						return path;
 					}
 
+					if (MappingSchema.IsScalarType(ElementType))
+					{
+						var tablePlaceholder =
+							ExpressionBuilder.CreatePlaceholder(this, SqlTable, path, trackingPath : path);
+						return tablePlaceholder;
+					}
+
 					return Builder.BuildFullEntityExpression(this, path, path.Type, flags);
 				}
 
