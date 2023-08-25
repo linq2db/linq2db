@@ -9,10 +9,10 @@ using System.Reflection;
 namespace LinqToDB.Data
 {
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Linq.Builder;
 	using Common;
-	using Extensions;
 	using Mapping;
 	using Reflection;
 
@@ -71,7 +71,7 @@ namespace LinqToDB.Data
 
 			var variable = Expression.Variable(
 				expr.Type,
-				name.IndexOfEx('<') >= 0 ? null : name);
+				name.IndexOf('<') >= 0 ? null : name);
 
 			BlockVariables.  Add(variable);
 			BlockExpressions.Add(Expression.Assign(variable, expr));
@@ -231,7 +231,7 @@ namespace LinqToDB.Data
 						foreach (var col in cols)
 						{
 							col.Name = col.Name.Substring(name.Length);
-							col.IsComplex = col.Name.ContainsEx(".");
+							col.IsComplex = col.Name.Contains(".");
 						}
 
 						var typeAcc          = TypeAccessor.GetAccessor(member.Type);

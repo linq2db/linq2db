@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.SapHana
 	using Common;
 	using Data;
 	using Configuration;
-	using Extensions;
 
 	[PublicAPI]
 	public static class SapHanaTools
@@ -97,7 +96,7 @@ namespace LinqToDB.DataProvider.SapHana
 				case ProviderName.SapHanaOdbc              : return _hanaOdbcDataProvider.Value;
 				case ""                                    :
 				case null                                  :
-					if (options.ConfigurationString?.ContainsEx("Hana") == true)
+					if (options.ConfigurationString?.Contains("Hana") == true)
 						goto case ProviderName.SapHana;
 					break;
 				case ProviderName.SapHana                  :

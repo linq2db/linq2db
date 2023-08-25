@@ -130,7 +130,7 @@ namespace LinqToDB.SqlProvider
 		{
 			stringBuilder
 				.Append('\'')
-				.Append(value.ReplaceEx("'", "''"))
+				.Append(value.Replace("'", "''"))
 				.Append('\'');
 		}
 

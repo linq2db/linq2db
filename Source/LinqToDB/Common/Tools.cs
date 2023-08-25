@@ -11,7 +11,6 @@ namespace LinqToDB.Common
 {
 	using Data;
 	using Linq;
-	using Extensions;
 	using Mapping;
 	using Reflection;
 
@@ -58,7 +57,7 @@ namespace LinqToDB.Common
 				var toSearch = pattern + pattern;
 				do
 				{
-					var s = input.ReplaceEx(toSearch, pattern);
+					var s = input.Replace(toSearch, pattern);
 					if (s == input)
 						break;
 					input = s;
@@ -71,9 +70,9 @@ namespace LinqToDB.Common
 			str = RemoveDuplicates("\r\n", str);
 			str = RemoveDuplicates("\n",   str);
 
-			str = str.ReplaceEx("\t",   " ");
-			str = str.ReplaceEx("\r\n", " ");
-			str = str.ReplaceEx("\n",   " ");
+			str = str.Replace("\t",   " ");
+			str = str.Replace("\r\n", " ");
+			str = str.Replace("\n",   " ");
 
 			return str.Trim();
 		}

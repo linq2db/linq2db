@@ -1,9 +1,6 @@
 ﻿namespace LinqToDB.SqlQuery
 {
-	// TODO: v6: make static
-#pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
-	public class Precedence
-#pragma warning restore CA1052 // Static holder types should be Static or NotInheritable
+	public sealed class Precedence
 	{
 		public const int Primary            = 100; // (x) x.y f(x) a[x] x++ x-- new typeof sizeof checked unchecked
 		public const int Unary              =  90; // + - ! ++x --x (T)x

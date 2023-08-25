@@ -6,7 +6,6 @@ using System.Reflection;
 namespace LinqToDB.Mapping
 {
 	using Common;
-	using Extensions;
 
 	/// <inheritdoc />
 	/// <summary>
@@ -67,7 +66,7 @@ namespace LinqToDB.Mapping
 		}
 
 		public override int GetHashCode()
-			=> unchecked ((Name.GetHashCodeEx() * 397) ^ DeclaringType.GetHashCode());
+			=> unchecked ((Name.GetHashCode() * 397) ^ DeclaringType.GetHashCode());
 
 		/// <summary>
 		/// Implements the operator ==.

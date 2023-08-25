@@ -8,7 +8,6 @@ namespace LinqToDB.DataProvider.Sybase
 	using SqlQuery;
 	using SqlProvider;
 	using Mapping;
-	using Extensions;
 
 	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
@@ -158,7 +157,7 @@ namespace LinqToDB.DataProvider.Sybase
 					if (_skipBrackets || value.Length > 28 || value.Length > 0 && (value[0] == '[' || value[0] == '#'))
 						return sb.Append(value);
 
-					if (value.IndexOfEx('.') > 0)
+					if (value.IndexOf('.') > 0)
 						value = string.Join("].[", value.Split('.'));
 
 					return sb.Append('[').Append(value).Append(']');

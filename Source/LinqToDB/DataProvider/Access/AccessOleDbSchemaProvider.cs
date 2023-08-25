@@ -8,16 +8,10 @@ namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Data;
-	using Extensions;
 	using SchemaProvider;
 
 	sealed class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
-		//private const OleDbProviderAdapter.ColumnFlags COUNTER_OR_BIT = OleDbProviderAdapter.ColumnFlags.MayBeNull
-		//	| OleDbProviderAdapter.ColumnFlags.IsFixedLength
-		//	| OleDbProviderAdapter.ColumnFlags.WriteUnknown
-		//	| OleDbProviderAdapter.ColumnFlags.MayDefer;
-
 		private readonly AccessOleDbDataProvider _provider;
 
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
@@ -126,12 +120,11 @@ namespace LinqToDB.DataProvider.Access
 					IsNullable  = c.Field<bool>  ("IS_NULLABLE"),
 					Ordinal     = Converter.ChangeTypeTo<int>(c["ORDINAL_POSITION"]),
 					DataType    = dt?.TypeName,
-					Length      = dt?.CreateParameters != null && dt.CreateParameters.ContainsEx("max length") ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
-					Precision   = dt?.CreateParameters != null && dt.CreateParameters.ContainsEx("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
-					Scale       = dt?.CreateParameters != null && dt.CreateParameters.ContainsEx("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
+					Length      = dt?.CreateParameters != null && dt.CreateParameters.Contains("max length") ? Converter.ChangeTypeTo<int?>(c["CHARACTER_MAXIMUM_LENGTH"]) : null,
+					Precision   = dt?.CreateParameters != null && dt.CreateParameters.Contains("precision")  ? Converter.ChangeTypeTo<int?>(c["NUMERIC_PRECISION"])        : null,
+					Scale       = dt?.CreateParameters != null && dt.CreateParameters.Contains("scale")      ? Converter.ChangeTypeTo<int?>(c["NUMERIC_SCALE"])            : null,
 					// ole db provider returns incorrect flags (reports INT NOT NULL columns as identity)
 					// https://github.com/linq2db/linq2db/issues/3149
-					//IsIdentity  = dt?.ProviderDbType == 3 && flags == COUNTER_OR_BIT,
 					IsIdentity  = false,
 					Description = c.Field<string>("DESCRIPTION")
 				}

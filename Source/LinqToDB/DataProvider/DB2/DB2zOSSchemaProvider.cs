@@ -5,7 +5,6 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using Common;
 	using Data;
-	using Extensions;
 	using SchemaProvider;
 
 	sealed class DB2zOSSchemaProvider : DB2LUWSchemaProvider
@@ -258,8 +257,8 @@ namespace LinqToDB.DataProvider.DB2
 						ParameterName = pName,
 						DataType      = dataType,
 						Ordinal       = ConvertTo<int>.From(ordinal),
-						IsIn          = mode.ContainsEx("IN"),
-						IsOut         = mode.ContainsEx("OUT"),
+						IsIn          = mode.Contains("IN"),
+						IsOut         = mode.Contains("OUT"),
 						IsResult      = false,
 						IsNullable    = true
 					};

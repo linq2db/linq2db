@@ -4,7 +4,6 @@ using System.Data.Common;
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Data;
-	using Extensions;
 
 	public static partial class ClickHouseTools
 	{
@@ -14,15 +13,15 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
-			if ((options.ProviderName?.ContainsEx("Octonica") == true && options.ProviderName?.ContainsEx("ClickHouse") == true)
-				|| (options.ConfigurationString?.ContainsEx("Octonica") == true && options.ConfigurationString?.ContainsEx("ClickHouse") == true))
+			if ((options.ProviderName?.Contains("Octonica") == true && options.ProviderName?.Contains("ClickHouse") == true)
+				|| (options.ConfigurationString?.Contains("Octonica") == true && options.ConfigurationString?.Contains("ClickHouse") == true))
 				return _octonicaDataProvider.Value;
 
-			if ((options.ProviderName?.ContainsEx("ClickHouse") == true && options.ProviderName?.ContainsEx("MySql") == true)
-				|| (options.ConfigurationString?.ContainsEx("ClickHouse") == true && options.ConfigurationString?.ContainsEx("MySql") == true))
+			if ((options.ProviderName?.Contains("ClickHouse") == true && options.ProviderName?.Contains("MySql") == true)
+				|| (options.ConfigurationString?.Contains("ClickHouse") == true && options.ConfigurationString?.Contains("MySql") == true))
 				return _mysqlDataProvider.Value;
 
-			if (options.ProviderName?.ContainsEx("ClickHouse.Client") == true || options.ConfigurationString?.ContainsEx("ClickHouse.Client") == true)
+			if (options.ProviderName?.Contains("ClickHouse.Client") == true || options.ConfigurationString?.Contains("ClickHouse.Client") == true)
 				return _clientDataProvider.Value;
 
 			return null;

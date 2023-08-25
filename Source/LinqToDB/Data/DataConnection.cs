@@ -734,7 +734,7 @@ namespace LinqToDB.Data
 
 		#region Command
 
-#pragma warning disable CA2213 // Disposable fields should be disposed
+#pragma warning disable CA2213 // Disposable fields should be disposed : disposed using Close[Async] call from Dispose[Async]
 		private DbCommand? _command;
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
@@ -788,6 +788,8 @@ namespace LinqToDB.Data
 				{
 					// to reset to default timeout we dispose command because as command has no reset timeout API
 					_commandTimeout = null;
+					// TODO: that's not good - user is not aware that he can trigger blocking operation
+					// we should postpone disposal till command used (or redesign CommandTimeout to methods)
 					DisposeCommand();
 				}
 				else

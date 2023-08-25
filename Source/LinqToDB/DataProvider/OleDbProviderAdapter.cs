@@ -49,6 +49,7 @@ namespace LinqToDB.DataProvider
 		public static OleDbProviderAdapter GetInstance()
 		{
 			if (_instance == null)
+			{
 				lock (_syncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
@@ -91,6 +92,7 @@ namespace LinqToDB.DataProvider
 							typeGetter,
 							oleDbSchemaTableGetter);
 					}
+			}
 
 			return _instance;
 		}

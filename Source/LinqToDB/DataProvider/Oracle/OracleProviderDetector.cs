@@ -5,7 +5,6 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Configuration;
 	using Data;
-	using Extensions;
 
 	sealed class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion,DbConnection>
 	{
@@ -49,25 +48,25 @@ namespace LinqToDB.DataProvider.Oracle
 				case ""                                          :
 				case null                                        :
 
-					if (options.ConfigurationString?.ContainsEx("Oracle") == true)
+					if (options.ConfigurationString?.Contains("Oracle") == true)
 						goto case ProviderName.Oracle;
 					break;
 				case ProviderName.Oracle                         :
 					if (provider == null)
 					{
-						if (options.ConfigurationString?.ContainsEx("Native") == true || options.ProviderName?.ContainsEx("Native") == true)
+						if (options.ConfigurationString?.Contains("Native") == true || options.ProviderName?.Contains("Native") == true)
 							provider = OracleProvider.Native;
-						else if (options.ConfigurationString?.ContainsEx("Devart") == true || options.ProviderName?.ContainsEx("Devart") == true)
+						else if (options.ConfigurationString?.Contains("Devart") == true || options.ProviderName?.Contains("Devart") == true)
 							provider = OracleProvider.Devart;
 						else
 							provider = OracleProvider.Managed;
 					}
 
-					if (options.ConfigurationString?.ContainsEx("11") == true || options.ProviderName?.ContainsEx("11") == true) return GetDataProvider(options, provider.Value, OracleVersion.v11);
-					if (options.ConfigurationString?.ContainsEx("12") == true || options.ProviderName?.ContainsEx("12") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
-					if (options.ConfigurationString?.ContainsEx("18") == true || options.ProviderName?.ContainsEx("18") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
-					if (options.ConfigurationString?.ContainsEx("19") == true || options.ProviderName?.ContainsEx("19") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
-					if (options.ConfigurationString?.ContainsEx("21") == true || options.ProviderName?.ContainsEx("21") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("11") == true || options.ProviderName?.Contains("11") == true) return GetDataProvider(options, provider.Value, OracleVersion.v11);
+					if (options.ConfigurationString?.Contains("12") == true || options.ProviderName?.Contains("12") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("18") == true || options.ProviderName?.Contains("18") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("19") == true || options.ProviderName?.Contains("19") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("21") == true || options.ProviderName?.Contains("21") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
 
 					if (AutoDetectProvider)
 					{

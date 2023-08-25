@@ -4,8 +4,6 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Extensions;
-
 	public class SqlFunction : ISqlExpression//ISqlTableSource
 	{
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
@@ -119,7 +117,7 @@ namespace LinqToDB.SqlQuery
 
 			var hashCode = SystemType.GetHashCode();
 
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCodeEx());
+			hashCode = unchecked(hashCode + (hashCode * 397) ^ Name.GetHashCode());
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ CanBeNull.GetHashCode());
 			hashCode = unchecked(hashCode + (hashCode * 397) ^ DoNotOptimize.GetHashCode());
 			for (var i = 0; i < Parameters.Length; i++)

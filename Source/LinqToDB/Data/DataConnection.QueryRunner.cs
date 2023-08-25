@@ -41,9 +41,6 @@ namespace LinqToDB.Data
 
 			bool        _isAsync;
 			Expression? _mapperExpression;
-#pragma warning disable CA2213 // Disposable fields should be disposed
-			DataReaderWrapper? _dataReader;
-#pragma warning restore CA2213 // Disposable fields should be disposed
 
 			public override Expression? MapperExpression
 			{
@@ -130,15 +127,13 @@ namespace LinqToDB.Data
 					_dataConnection.OnTraceConnection(new TraceInfo(_dataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, _isAsync)
 					{
 						TraceLevel       = TraceLevel.Info,
-						Command          = _dataReader?.Command ?? _dataConnection.CurrentCommand,
+						Command          = _dataConnection.CurrentCommand,
 						MapperExpression = MapperExpression,
 						StartTime        = _startedOn,
 						ExecutionTime    = _stopwatch.Elapsed,
 						RecordsAffected  = RowsCount
 					});
 				}
-
-				_dataReader = null;
 
 				base.Dispose();
 			}
@@ -625,7 +620,7 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				return _dataReader = _dataConnection.ExecuteReader();
+				return _dataConnection.ExecuteReader();
 			}
 
 			#endregion
@@ -681,9 +676,9 @@ namespace LinqToDB.Data
 
 				InitFirstCommand(_dataConnection, _executionQuery!);
 
-				_dataReader = await _dataConnection.ExecuteDataReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var dataReader = await _dataConnection.ExecuteDataReaderAsync(_dataConnection.GetCommandBehavior(CommandBehavior.Default), cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return new DataReaderAsync(_dataReader);
+				return new DataReaderAsync(dataReader);
 			}
 
 			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)

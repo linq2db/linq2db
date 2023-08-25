@@ -1,13 +1,11 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Reflection;
 
 namespace LinqToDB.Linq
 {
-	using System;
-	using System.Collections.Concurrent;
-	using System.Linq;
-	using System.Runtime.CompilerServices;
-	using LinqToDB.Extensions;
-	using LinqToDB.Mapping;
+	using Extensions;
 
 	[Flags]
 	internal enum RecordType

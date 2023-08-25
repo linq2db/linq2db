@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -17,7 +18,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Threading.Tasks;
 	using Model;
 
 	[TestFixture]

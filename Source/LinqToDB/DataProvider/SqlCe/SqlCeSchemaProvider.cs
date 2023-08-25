@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlTypes;
 using System.IO;
 using System.Linq;
 
@@ -32,7 +33,6 @@ FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS
 */
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using System.Data.SqlTypes;
 	using Common;
 	using Data;
 	using SchemaProvider;

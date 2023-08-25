@@ -8,7 +8,6 @@ namespace LinqToDB.DataProvider.MySql
 	using Common;
 	using Configuration;
 	using Data;
-	using Extensions;
 
 	public static partial class MySqlTools
 	{
@@ -18,7 +17,7 @@ namespace LinqToDB.DataProvider.MySql
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
 			// ensure ClickHouse configuration over mysql protocol is not detected as mysql
-			if (options.ProviderName?.ContainsEx("ClickHouse") == true || options.ConfigurationString?.ContainsEx("ClickHouse") == true)
+			if (options.ProviderName?.Contains("ClickHouse") == true || options.ConfigurationString?.Contains("ClickHouse") == true)
 				return null;
 
 			switch (options.ProviderName)
@@ -30,23 +29,23 @@ namespace LinqToDB.DataProvider.MySql
 
 				case ""                         :
 				case null                       :
-					if (options.ConfigurationString?.ContainsEx("MySql") == true)
+					if (options.ConfigurationString?.Contains("MySql") == true)
 						goto case ProviderName.MySql;
 					break;
 				case MySqlProviderAdapter.MySqlDataClientNamespace:
 				case ProviderName.MySql                           :
-					if (options.ConfigurationString?.ContainsEx(MySqlProviderAdapter.MySqlConnectorAssemblyName) == true)
+					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName) == true)
 						return _mySqlConnectorDataProvider.Value;
 
-					if (options.ConfigurationString?.ContainsEx(MySqlProviderAdapter.MySqlDataAssemblyName) == true)
+					if (options.ConfigurationString?.Contains(MySqlProviderAdapter.MySqlDataAssemblyName) == true)
 						return _mySqlDataProvider.Value;
 
 					return GetDataProvider();
-				case var providerName when providerName.ContainsEx("MySql"):
-					if (providerName.ContainsEx(MySqlProviderAdapter.MySqlConnectorAssemblyName))
+				case var providerName when providerName.Contains("MySql"):
+					if (providerName.Contains(MySqlProviderAdapter.MySqlConnectorAssemblyName))
 						return _mySqlConnectorDataProvider.Value;
 
-					if (providerName.ContainsEx(MySqlProviderAdapter.MySqlDataAssemblyName))
+					if (providerName.Contains(MySqlProviderAdapter.MySqlDataAssemblyName))
 						return _mySqlDataProvider.Value;
 
 					goto case ProviderName.MySql;

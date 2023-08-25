@@ -7,7 +7,6 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
-	using Extensions;
 	using Mapping;
 	using SqlQuery;
 
@@ -38,7 +37,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			stringBuilder
 				.Append('\'')
-				.Append(value.ReplaceEx("\\", "\\\\").ReplaceEx("'",  "''"))
+				.Append(value.Replace("\\", "\\\\").Replace("'",  "''"))
 				.Append('\'');
 		}
 

@@ -7,7 +7,6 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
-	using Extensions;
 	using SchemaProvider;
 
 	sealed class MySqlSchemaProvider : SchemaProviderBase
@@ -137,12 +136,12 @@ SELECT
 						Precision    = (int?)precision,
 						Scale        = (int?)scale,
 						ColumnType   = columnType,
-						IsIdentity   = extra.ContainsEx("auto_increment"),
+						IsIdentity   = extra.Contains("auto_increment"),
 						Description  = rd.GetString(11),
 						// also starting from 5.1 we can utilise provileges column for skip properties
 						// but it sounds like a bad idea
-						SkipOnInsert = extra.ContainsEx("VIRTUAL STORED") || extra.ContainsEx("VIRTUAL GENERATED"),
-						SkipOnUpdate = extra.ContainsEx("VIRTUAL STORED") || extra.ContainsEx("VIRTUAL GENERATED")
+						SkipOnInsert = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED"),
+						SkipOnUpdate = extra.Contains("VIRTUAL STORED") || extra.Contains("VIRTUAL GENERATED")
 					};
 				}, @"
 SELECT
@@ -235,12 +234,12 @@ SELECT
 				"longtext"          => DataType.Text,
 				"double"            => DataType.Double,
 				"float"             => DataType.Single,
-				"tinyint"           => columnType != null && columnType.ContainsEx("unsigned") ? DataType.Byte   : DataType.SByte,
-				"smallint"          => columnType != null && columnType.ContainsEx("unsigned") ? DataType.UInt16 : DataType.Int16,
-				"int"               => columnType != null && columnType.ContainsEx("unsigned") ? DataType.UInt32 : DataType.Int32,
+				"tinyint"           => columnType != null && columnType.Contains("unsigned") ? DataType.Byte   : DataType.SByte,
+				"smallint"          => columnType != null && columnType.Contains("unsigned") ? DataType.UInt16 : DataType.Int16,
+				"int"               => columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32,
 				"year"              => DataType.Int32,
-				"mediumint"         => columnType != null && columnType.ContainsEx("unsigned") ? DataType.UInt32 : DataType.Int32,
-				"bigint"            => columnType != null && columnType.ContainsEx("unsigned") ? DataType.UInt64 : DataType.Int64,
+				"mediumint"         => columnType != null && columnType.Contains("unsigned") ? DataType.UInt32 : DataType.Int32,
+				"bigint"            => columnType != null && columnType.Contains("unsigned") ? DataType.UInt64 : DataType.Int64,
 				"decimal"           => DataType.Decimal,
 				"json"              => DataType.Json,
 				_                   => DataType.Undefined,
@@ -414,13 +413,13 @@ SELECT
 					var size = precision > 0 ? precision : length;
 					if (columnType == "tinyint(1)" || size == 1)
 						return typeof(bool);
-					return columnType?.ContainsEx("unsigned") == true ? typeof(byte) : typeof(sbyte);
+					return columnType?.Contains("unsigned") == true ? typeof(byte) : typeof(sbyte);
 				}
-				//case "tinyint"           : return columnType?.ContainsEx("unsigned") == true ? typeof(byte)   : typeof(sbyte);
-				case "smallint"          : return columnType?.ContainsEx("unsigned") == true ? typeof(ushort) : typeof(short);
+				//case "tinyint"           : return columnType?.Contains("unsigned") == true ? typeof(byte)   : typeof(sbyte);
+				case "smallint"          : return columnType?.Contains("unsigned") == true ? typeof(ushort) : typeof(short);
 				case "mediumint"         :
-				case "int"               : return columnType?.ContainsEx("unsigned") == true ? typeof(uint)   : typeof(int);
-				case "bigint"            : return columnType?.ContainsEx("unsigned") == true ? typeof(ulong)  : typeof(long);
+				case "int"               : return columnType?.Contains("unsigned") == true ? typeof(uint)   : typeof(int);
+				case "bigint"            : return columnType?.Contains("unsigned") == true ? typeof(ulong)  : typeof(long);
 				case "json"              :
 				case "longtext"          : return typeof(string);
 				case "timestamp"         : return typeof(DateTime);

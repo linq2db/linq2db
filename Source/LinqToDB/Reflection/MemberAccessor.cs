@@ -21,7 +21,7 @@ namespace LinqToDB.Reflection
 		{
 			TypeAccessor = typeAccessor;
 
-			if (memberName.IndexOfEx('.') < 0)
+			if (memberName.IndexOf('.') < 0)
 			{
 				SetSimple(ExpressionHelper.PropertyOrField(Expression.Constant(null, typeAccessor.Type), memberName).Member, ed);
 			}

@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Data;
 	using Common.Internal;
-	using Extensions;
 
 	[PublicAPI]
 	public static partial class SqlServerTools
@@ -29,8 +28,8 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			sb.Append('[');
 
-			if (identifier.ContainsEx("]"))
-				sb.Append(identifier.ReplaceEx("]", "]]"));
+			if (identifier.Contains("]"))
+				sb.Append(identifier.Replace("]", "]]"));
 			else
 				sb.Append(identifier);
 

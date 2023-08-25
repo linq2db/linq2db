@@ -5,9 +5,9 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using LinqToDB.Expressions;
 	using Reflection;
-	using Extensions;
 
 	sealed partial class TableBuilder : ISequenceBuilder
 	{

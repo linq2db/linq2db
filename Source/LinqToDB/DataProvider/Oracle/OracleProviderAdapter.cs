@@ -394,30 +394,36 @@ namespace LinqToDB.DataProvider.Oracle
 			if (provider == OracleProvider.Native)
 			{
 				if (_nativeAdapter == null)
+				{
 					lock (_nativeSyncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
 						_nativeAdapter ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName, new OracleNativeClientAdapterMappingSchema());
 #pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _nativeAdapter;
 			}
 			else if (provider == OracleProvider.Devart)
 			{
 				if (_devartAdapter == null)
+				{
 					lock (_devartSyncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
 						_devartAdapter ??= CreateDevartAdapter();
 #pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _devartAdapter;
 			}
 			else
 			{
 				if (_managedAdapter == null)
+				{
 					lock (_managedSyncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
 						_managedAdapter ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null, new OracleManagedClientAdapterMappingSchema());
 #pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _managedAdapter;
 			}

@@ -7,8 +7,8 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
@@ -270,7 +270,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (name == null)
 						{
-							if (columnDescriptor.MemberName.ContainsEx("."))
+							if (columnDescriptor.MemberName.Contains("."))
 								name = columnDescriptor.ColumnName;
 							else
 								name = columnDescriptor.MemberName;

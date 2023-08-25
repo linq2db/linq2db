@@ -6,7 +6,6 @@ using System.Text;
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using Extensions;
 
 	public class SqlValue : ISqlExpression
 	{
@@ -134,7 +133,7 @@ namespace LinqToDB.SqlQuery
 				Value is string strVal ?
 					sb
 						.Append('\'')
-						.Append(strVal.ReplaceEx("\'", "''"))
+						.Append(strVal.Replace("\'", "''"))
 						.Append('\'')
 				:
 					sb.Append(Value);

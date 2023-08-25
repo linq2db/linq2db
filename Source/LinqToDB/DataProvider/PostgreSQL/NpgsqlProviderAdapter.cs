@@ -180,6 +180,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static NpgsqlProviderAdapter GetInstance()
 		{
 			if (_instance == null)
+			{
 				lock (_syncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
@@ -412,6 +413,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							}
 						}
 					}
+			}
 
 			return _instance;
 		}

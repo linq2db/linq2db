@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+#if NET472
+using System.ServiceModel;
+#endif
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -11,9 +14,6 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
-#if NET472
-	using System.ServiceModel;
-#endif
 
 	[TestFixture]
 	public class MappingTests : TestBase

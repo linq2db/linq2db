@@ -49,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 
 			var context = new AggregationContext(buildInfo.Parent, sequence, methodCall);
 
-			var methodName = methodCall.Method.Name.ReplaceEx("Async", "");
+			var methodName = methodCall.Method.Name.Replace("Async", "");
 
 			var sql = sequence.ConvertToSql(null, 0, ConvertFlags.Field).Select(_ => _.Sql).ToArray();
 
@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
 				{
 					_returnType = _returnType.GetGenericArguments()[0];
-					_methodName = _methodName.ReplaceEx("Async", "");
+					_methodName = _methodName.Replace("Async", "");
 				}
 			}
 

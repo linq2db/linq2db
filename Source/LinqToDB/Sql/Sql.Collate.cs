@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 namespace LinqToDB
 {
 	using Expressions;
-	using Extensions;
 	using SqlQuery;
 
 	public static partial class Sql
@@ -58,7 +57,7 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var expr      = builder.GetExpression("expr");
-				var collation = builder.GetValue<string>("collation").ReplaceEx("\"", "\"\"");
+				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
 				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr)
 				{

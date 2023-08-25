@@ -8,14 +8,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
 
 // ReSharper disable SwitchStatementMissingSomeCases
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable LoopCanBeConvertedToQuery
 namespace LinqToDB.Expressions
 {
+	using Extensions;
+	using Linq;
+
 	/// <summary>
 	///     This API supports the linq2db infrastructure and is not intended to be used
 	///     directly from your code. This API may change or be removed in future releases.
@@ -125,7 +126,7 @@ namespace LinqToDB.Expressions
 						// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 						if (parameterExpression.Name != null)
 						{
-							hashCode ^= parameterExpression.Name.GetHashCodeEx();
+							hashCode ^= parameterExpression.Name.GetHashCode();
 						}
 
 						break;

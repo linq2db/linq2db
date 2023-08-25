@@ -1,12 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 
 namespace LinqToDB.Metadata
 {
-	using System.Collections.Concurrent;
 	using Common;
 	using Extensions;
 	using Mapping;

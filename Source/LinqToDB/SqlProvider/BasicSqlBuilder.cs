@@ -1678,7 +1678,7 @@ namespace LinqToDB.SqlProvider
 					var rawSqlTable = (SqlRawSqlTable)table;
 
 					var appendParentheses = _selectDetector.IsMatch(rawSqlTable.SQL);
-					var multiLine         = appendParentheses || rawSqlTable.SQL.ContainsEx('\n');
+					var multiLine         = appendParentheses || rawSqlTable.SQL.Contains('\n');
 
 					if (appendParentheses)
 						StringBuilder.AppendLine(OpenParens);
@@ -3009,7 +3009,7 @@ namespace LinqToDB.SqlProvider
 			if (string.IsNullOrEmpty(text))
 				return text;
 
-			text = text.ReplaceEx("\r", "");
+			text = text.Replace("\r", "");
 
 			var strArray = text.Split('\n');
 			using var sb = Pools.StringBuilder.Allocate();
@@ -3297,7 +3297,7 @@ namespace LinqToDB.SqlProvider
 
 			for (var i = 0; i < comment.Lines.Count; i++)
 			{
-				sb.Append(comment.Lines[i].ReplaceEx("/*", "").ReplaceEx("*/", ""));
+				sb.Append(comment.Lines[i].Replace("/*", "").Replace("*/", ""));
 				if (i < comment.Lines.Count - 1)
 					sb.AppendLine();
 			}
@@ -3595,7 +3595,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (parameter.Size > 0)
 				{
-					if (t1.IndexOfEx('(') < 0)
+					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Size).Append(')');
 				}
 #if NET45
@@ -3609,7 +3609,7 @@ namespace LinqToDB.SqlProvider
 #else
 				else if (parameter.Precision > 0)
 				{
-					if (t1.IndexOfEx('(') < 0)
+					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Precision).Append(InlineComma).Append(parameter.Scale).Append(')');
 				}
 #endif
@@ -3809,7 +3809,7 @@ namespace LinqToDB.SqlProvider
 
 		private string? _name;
 
-		public virtual string Name => _name ??= GetType().Name.ReplaceEx("SqlBuilder", "");
+		public virtual string Name => _name ??= GetType().Name.Replace("SqlBuilder", "");
 
 		#endregion
 

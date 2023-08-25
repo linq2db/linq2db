@@ -344,8 +344,8 @@ namespace LinqToDB.DataProvider.MySql
 				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToProcedure      :
 					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
-					if (value.ContainsEx('`'))
-						value = value.ReplaceEx("`", "``");
+					if (value.Contains('`'))
+						value = value.Replace("`", "``");
 
 					return sb.Append('`').Append(value).Append('`');
 			}

@@ -17,7 +17,6 @@ namespace LinqToDB
 	using Linq;
 	using SqlQuery;
 	using LinqToDB.Common;
-	using Extensions;
 
 	[PublicAPI]
 	public static partial class Sql
@@ -489,7 +488,7 @@ namespace LinqToDB
 		{
 			if (value == null || str == null) return null;
 
-			return str.IndexOfEx(value.Value) + 1;
+			return str.IndexOf(value.Value) + 1;
 		}
 
 		[Function(                                                          IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -601,7 +600,7 @@ namespace LinqToDB
 			if (str.Length == 0)                                     return str;
 			if (oldValue.Length == 0)                                return str; // Replace raises exception here.
 
-			return str.ReplaceEx(oldValue, newValue);
+			return str.Replace(oldValue, newValue);
 		}
 
 		[Function(                              IsNullable = IsNullableType.IfAnyParameterNullable)]
@@ -963,17 +962,13 @@ namespace LinqToDB
 		[Function(PseudoFunctions.TO_LOWER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Lower(string? str)
 		{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			return str?.ToLower();
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 		}
 
 		[Function(PseudoFunctions.TO_UPPER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Upper(string? str)
 		{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			return str?.ToUpper();
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 		}
 
 		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]

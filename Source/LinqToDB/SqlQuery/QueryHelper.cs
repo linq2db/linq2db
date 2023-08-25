@@ -10,7 +10,6 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using Common.Internal;
 	using Mapping;
-	using Extensions;
 
 	public static partial class QueryHelper
 	{
@@ -1376,8 +1375,8 @@ namespace LinqToDB.SqlQuery
 
 			string StripDoubleQuotes(string str)
 			{
-				str = str.ReplaceEx("{{", "{");
-				str = str.ReplaceEx("}}", "}");
+				str = str.Replace("{{", "{");
+				str = str.Replace("}}", "}");
 				return str;
 			}
 

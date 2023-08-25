@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 

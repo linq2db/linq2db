@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 
 	readonly struct TransformInfoVisitor<TContext>
 	{

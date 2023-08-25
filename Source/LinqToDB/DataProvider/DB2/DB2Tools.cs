@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using Configuration;
 	using Data;
-	using Extensions;
 
 	[PublicAPI]
 	public static class DB2Tools
@@ -23,7 +22,7 @@ namespace LinqToDB.DataProvider.DB2
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
 			// DB2 ODS provider could be used by informix
-			if (options.ConfigurationString?.ContainsEx("Informix") == true)
+			if (options.ConfigurationString?.Contains("Informix") == true)
 				return null;
 
 			switch (options.ProviderName)
@@ -42,9 +41,9 @@ namespace LinqToDB.DataProvider.DB2
 				case DB2ProviderAdapter.NetFxClientNamespace:
 				case DB2ProviderAdapter.CoreClientNamespace :
 
-					if (options.ConfigurationString?.ContainsEx("LUW") == true)
+					if (options.ConfigurationString?.Contains("LUW") == true)
 						return _db2DataProviderLUW.Value;
-					if (options.ConfigurationString?.ContainsEx("z/OS") == true || options.ConfigurationString?.ContainsEx("zOS") == true)
+					if (options.ConfigurationString?.Contains("z/OS") == true || options.ConfigurationString?.Contains("zOS") == true)
 						return _db2DataProviderzOS.Value;
 
 					if (AutoDetectProvider && options.ConnectionString != null)

@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
-	using System.Data;
-	using System.Data.Common;
 	using Expressions;
+	using Extensions;
 	using Linq;
-	using LinqToDB.Common;
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlQuery;
+	using Common;
+	using SqlQuery;
 
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.

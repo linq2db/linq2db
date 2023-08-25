@@ -268,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 							foreach (var col in cols)
 							{
 								col.Name      = col.Name.Substring(name.Length);
-								col.IsComplex = col.Name.ContainsEx(".");
+								col.IsComplex = col.Name.Contains(".");
 							}
 
 							var typeAcc          = TypeAccessor.GetAccessor(member.Type);

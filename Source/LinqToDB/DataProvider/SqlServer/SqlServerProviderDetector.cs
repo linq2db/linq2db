@@ -9,7 +9,6 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using Configuration;
 	using Data;
-	using Extensions;
 
 	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>
 	{
@@ -100,16 +99,16 @@ namespace LinqToDB.DataProvider.SqlServer
 						goto case ProviderName.SqlServer;
 					break;
 					// SqlClient use dot prefix, as SqlClient itself used by some other providers
-				case var providerName when providerName.ContainsEx("SqlServer") || providerName.ContainsEx(".SqlClient"):
+				case var providerName when providerName.Contains("SqlServer") || providerName.Contains(".SqlClient"):
 				case ProviderName.SqlServer:
-					if (options.ConfigurationString?.ContainsEx("2005") == true || options.ProviderName?.ContainsEx("2005") == true) return GetDataProvider(options, provider, SqlServerVersion.v2005);
-					if (options.ConfigurationString?.ContainsEx("2008") == true || options.ProviderName?.ContainsEx("2008") == true) return GetDataProvider(options, provider, SqlServerVersion.v2008);
-					if (options.ConfigurationString?.ContainsEx("2012") == true || options.ProviderName?.ContainsEx("2012") == true) return GetDataProvider(options, provider, SqlServerVersion.v2012);
-					if (options.ConfigurationString?.ContainsEx("2014") == true || options.ProviderName?.ContainsEx("2014") == true) return GetDataProvider(options, provider, SqlServerVersion.v2014);
-					if (options.ConfigurationString?.ContainsEx("2016") == true || options.ProviderName?.ContainsEx("2016") == true) return GetDataProvider(options, provider, SqlServerVersion.v2016);
-					if (options.ConfigurationString?.ContainsEx("2017") == true || options.ProviderName?.ContainsEx("2017") == true) return GetDataProvider(options, provider, SqlServerVersion.v2017);
-					if (options.ConfigurationString?.ContainsEx("2019") == true || options.ProviderName?.ContainsEx("2019") == true) return GetDataProvider(options, provider, SqlServerVersion.v2019);
-					if (options.ConfigurationString?.ContainsEx("2022") == true || options.ProviderName?.ContainsEx("2022") == true) return GetDataProvider(options, provider, SqlServerVersion.v2022);
+					if (options.ConfigurationString?.Contains("2005") == true || options.ProviderName?.Contains("2005") == true) return GetDataProvider(options, provider, SqlServerVersion.v2005);
+					if (options.ConfigurationString?.Contains("2008") == true || options.ProviderName?.Contains("2008") == true) return GetDataProvider(options, provider, SqlServerVersion.v2008);
+					if (options.ConfigurationString?.Contains("2012") == true || options.ProviderName?.Contains("2012") == true) return GetDataProvider(options, provider, SqlServerVersion.v2012);
+					if (options.ConfigurationString?.Contains("2014") == true || options.ProviderName?.Contains("2014") == true) return GetDataProvider(options, provider, SqlServerVersion.v2014);
+					if (options.ConfigurationString?.Contains("2016") == true || options.ProviderName?.Contains("2016") == true) return GetDataProvider(options, provider, SqlServerVersion.v2016);
+					if (options.ConfigurationString?.Contains("2017") == true || options.ProviderName?.Contains("2017") == true) return GetDataProvider(options, provider, SqlServerVersion.v2017);
+					if (options.ConfigurationString?.Contains("2019") == true || options.ProviderName?.Contains("2019") == true) return GetDataProvider(options, provider, SqlServerVersion.v2019);
+					if (options.ConfigurationString?.Contains("2022") == true || options.ProviderName?.Contains("2022") == true) return GetDataProvider(options, provider, SqlServerVersion.v2022);
 
 					if (AutoDetectProvider)
 					{

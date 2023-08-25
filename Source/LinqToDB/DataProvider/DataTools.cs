@@ -10,12 +10,8 @@ using System.Text;
 namespace LinqToDB.DataProvider
 {
 	using Common.Internal;
-	using Extensions;
 
-	// TODO: v6: make static
-#pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
-	public class DataTools
-#pragma warning restore CA1052 // Static holder types should be Static or NotInheritable
+	public static class DataTools
 	{
 		/// <summary>
 		/// Improved version of <c>Replace("[", "[[]")</c> code, used before.
@@ -26,7 +22,7 @@ namespace LinqToDB.DataProvider
 			if (str == null)
 				return str;
 
-			var nextIndex = str.IndexOfEx('[');
+			var nextIndex = str.IndexOf('[');
 			if (nextIndex < 0)
 				return str;
 

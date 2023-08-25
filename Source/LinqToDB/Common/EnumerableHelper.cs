@@ -6,10 +6,7 @@ using LinqToDB.Async;
 
 namespace LinqToDB.Common
 {
-	// TODO: v6: make static
-#pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
-	public class EnumerableHelper
-#pragma warning restore CA1052 // Static holder types should be Static or NotInheritable
+	public static class EnumerableHelper
 	{
 #if NATIVE_ASYNC
 		internal static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)

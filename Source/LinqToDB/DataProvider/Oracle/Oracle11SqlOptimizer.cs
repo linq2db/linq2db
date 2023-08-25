@@ -254,7 +254,7 @@ namespace LinqToDB.DataProvider.Oracle
 			else if (expression is SqlExpression e)
 			{
 				if (e.Expr.StartsWith("To_Number(To_Char(") && e.Expr.EndsWith(", 'FF'))"))
-					return Div(new SqlExpression(e.SystemType, e.Expr.ReplaceEx("To_Number(To_Char(", "to_Number(To_Char("), e.Parameters), 1000);
+					return Div(new SqlExpression(e.SystemType, e.Expr.Replace("To_Number(To_Char(", "to_Number(To_Char("), e.Parameters), 1000);
 			}
 
 			return expression;

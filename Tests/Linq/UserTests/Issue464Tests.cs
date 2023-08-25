@@ -1,17 +1,15 @@
 ﻿using System.Globalization;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using System.Linq;
-
-	using LinqToDB.DataProvider.Firebird;
-
 	[TestFixture]
 	public class Issue464Tests : TestBase
 	{

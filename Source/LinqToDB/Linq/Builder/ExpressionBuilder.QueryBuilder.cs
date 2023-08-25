@@ -5,18 +5,18 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Extensions;
-	using Mapping;
 	using Common;
+	using Extensions;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
+	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Common.Internal;
 
 	partial class ExpressionBuilder
 	{
@@ -821,7 +821,7 @@ namespace LinqToDB.Linq.Builder
 
 			var variable = Expression.Variable(
 				expr.Type,
-				name.IndexOfEx('<') >= 0 ? null : name);
+				name.IndexOf('<') >= 0 ? null : name);
 
 			BlockVariables.  Add(variable);
 			BlockExpressions.Add(Expression.Assign(variable, expr));

@@ -12,7 +12,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
 	using Data;
-	using Extensions;
 	using Mapping;
 	using SqlProvider;
 
@@ -526,10 +525,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				dbType = "interval";
 
 			if (dbType.StartsWith("timestamp"))
-				dbType = dbType.ContainsEx("with time zone") ? "timestamp with time zone" : "timestamp";
+				dbType = dbType.Contains("with time zone") ? "timestamp with time zone" : "timestamp";
 
 			if (dbType.StartsWith("time(") || dbType.StartsWith("time "))
-				dbType = dbType.ContainsEx("with time zone") ? "time with time zone" : "time";
+				dbType = dbType.Contains("with time zone") ? "time with time zone" : "time";
 
 			if (dbType.StartsWith("bit("))
 				dbType = "bit";

@@ -10,7 +10,6 @@ namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
 	using Data;
-	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -171,7 +170,7 @@ namespace LinqToDB.DataProvider.SQLite
 			if (typeName == null)
 				return null;
 
-			var idx = typeName.IndexOfEx('(');
+			var idx = typeName.IndexOf('(');
 			if (idx != -1)
 				return typeName.Substring(0, idx);
 

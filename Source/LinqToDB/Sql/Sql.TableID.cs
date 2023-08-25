@@ -5,7 +5,6 @@ namespace LinqToDB
 {
 	using Expressions;
 	using Linq.Builder;
-	using Extensions;
 	using SqlQuery;
 
 	public partial class Sql
@@ -39,7 +38,7 @@ namespace LinqToDB
 
 			public override int GetHashCode()
 			{
-				return (int)Type | (ID.GetHashCodeEx() >> 3);
+				return (int)Type | (ID.GetHashCode() >> 3);
 			}
 
 			public ISqlExpression ToSql(Expression expression)
@@ -50,7 +49,7 @@ namespace LinqToDB
 
 			public static SqlID Parse(string value)
 			{
-				var idx = value.IndexOfEx(':');
+				var idx = value.IndexOf(':');
 
 				if (idx == -1)
 					throw new InvalidOperationException($"Cannot parse '{value}' to SqlID.");

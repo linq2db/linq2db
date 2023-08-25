@@ -6,7 +6,6 @@ using System.Text;
 namespace LinqToDB.SqlQuery
 {
 	using Common.Internal;
-	using Extensions;
 
 	public class SqlSelectClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
 	{
@@ -407,10 +406,10 @@ namespace LinqToDB.SqlQuery
 					c.Expression.ToString(csb.Value, dic);
 
 					var expressionText = csb.Value.ToString();
-					if (expressionText.ContainsEx("\n"))
+					if (expressionText.Contains("\n"))
 					{
 						var ident = "\t" + new string(' ', maxLength + 2);
-						expressionText = expressionText.ReplaceEx("\n", "\n" + ident);
+						expressionText = expressionText.Replace("\n", "\n" + ident);
 					}
 
 					sb

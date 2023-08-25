@@ -1,31 +1,29 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq
 {
-	using System.Data.Common;
 	using LinqToDB.Expressions;
 
 	sealed class ReflectionHelper
 	{
-#pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
-		public class Expressor<T>
-#pragma warning restore CA1052 // Static holder types should be Static or NotInheritable
+		public abstract class Expressor<T>
 		{
-			public static FieldInfo FieldOf(Expression<Func<T,object?>> func)
+			protected static FieldInfo FieldOf(Expression<Func<T,object?>> func)
 			{
 				return MemberHelper.FieldOf(func);
 			}
 
-			public static MethodInfo MethodOf(Expression<Func<T,object?>> func)
+			protected static MethodInfo MethodOf(Expression<Func<T,object?>> func)
 			{
 				return MemberHelper.MethodOf(func);
 			}
 
-			public static PropertyInfo PropertyOf(Expression<Func<T, object?>> func)
+			protected static PropertyInfo PropertyOf(Expression<Func<T, object?>> func)
 			{
 				return MemberHelper.PropertyOf(func);
 			}

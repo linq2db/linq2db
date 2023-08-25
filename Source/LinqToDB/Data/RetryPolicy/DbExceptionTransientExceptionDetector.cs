@@ -9,10 +9,7 @@ namespace LinqToDB.Data.RetryPolicy
 	/// <summary>
 	/// Detects the exceptions caused by transient failures. Provider must implement <see cref="DbException"/> IsTransient property.
 	/// </summary>
-	// TODO: v6: make static
-#pragma warning disable CA1052 // Static holder types should be Static or NotInheritable
-	public class DbExceptionTransientExceptionDetector
-#pragma warning restore CA1052 // Static holder types should be Static or NotInheritable
+	public static class DbExceptionTransientExceptionDetector
 	{
 		public static bool ShouldRetryOn(Exception ex)
 		{

@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 	using Common;
 	using Reflection;
@@ -142,7 +142,7 @@ namespace LinqToDB.Linq.Builder
 				: base(parent, sequence, null)
 			{
 				_methodCall = methodCall;
-				_orDefault  = _methodCall.Method.Name.ContainsEx("OrDefault");
+				_orDefault  = _methodCall.Method.Name.Contains("OrDefault");
 			}
 
 			readonly MethodCallExpression _methodCall;
@@ -151,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				Sequence.BuildQuery(query, queryParameter);
 
-				switch (_methodCall.Method.Name.ReplaceEx("Async", ""))
+				switch (_methodCall.Method.Name.Replace("Async", ""))
 				{
 					case "First"           : GetFirstElement          (query); break;
 					case "FirstOrDefault"  : GetFirstOrDefaultElement (query); break;
