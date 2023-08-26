@@ -137,7 +137,7 @@ namespace LinqToDB.Common
 			{
 				var hashCode = (SystemType != null ? SystemType.GetHashCode() : 0);
 				hashCode     = (hashCode * 397) ^ (int) DataType;
-				hashCode     = (hashCode * 397) ^ (DbType    != null ? DbType.GetHashCode()        : 0);
+				hashCode     = (hashCode * 397) ^ (DbType    != null ? DbType.GetHashCode()          : 0);
 				hashCode     = (hashCode * 397) ^ (Length    != null ? Length.Value.GetHashCode()    : 0);
 				hashCode     = (hashCode * 397) ^ (Precision != null ? Precision.Value.GetHashCode() : 0);
 				hashCode     = (hashCode * 397) ^ (Scale     != null ? Scale.Value.GetHashCode()     : 0);

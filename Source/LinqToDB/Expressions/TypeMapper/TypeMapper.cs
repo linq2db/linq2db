@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Expressions
 {
 	using Common;
-		using Extensions;
+	using Extensions;
 
 	/// <summary>
 	/// Implements typed mappings support for dynamically loaded types.

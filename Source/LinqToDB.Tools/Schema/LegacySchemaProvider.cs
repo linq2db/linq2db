@@ -397,7 +397,7 @@ namespace LinqToDB.Schema
 
 			if (hasPrimaryKey)
 			{
-				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToArray();
+				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToList();
 
 				if (pkColumns.Length != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Count())
 					throw new InvalidOperationException($"Primary key columns have duplicate ordinals on table {tableName}");
