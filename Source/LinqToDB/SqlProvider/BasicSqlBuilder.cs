@@ -3030,13 +3030,80 @@ namespace LinqToDB.SqlProvider
 			switch (anchor.AnchorKind)
 			{
 				case SqlAnchor.AnchorKindEnum.Deleted:
+				{
 					StringBuilder.Append(DeletedOutputTable)
 						.Append('.');
 					break;
+				}
 				case SqlAnchor.AnchorKindEnum.Inserted:
+				{
 					StringBuilder.Append(InsertedOutputTable)
 						.Append('.');
 					break;
+				}
+				case SqlAnchor.AnchorKindEnum.TableSource:
+				{
+					var sqlField = anchor.SqlExpression as SqlField;
+					if (sqlField == null || sqlField.Table == null)
+						throw new LinqToDBException("Can not find Table or Column associated with expression");
+
+					var ts = Statement.GetTableSource(sqlField.Table);
+					if (ts == null)
+						throw new LinqToDBException("Can not find Table Source for table.");
+
+					var table = GetTableAlias(ts);
+
+					if (table == null)
+						StringBuilder.Append(GetPhysicalTableName(nullability, sqlField.Table, null, true));
+					else
+						Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
+
+					return;
+				}
+				case SqlAnchor.AnchorKindEnum.TableName:
+				{
+					var sqlField = anchor.SqlExpression as SqlField;
+					if (sqlField == null || sqlField.Table == null)
+						throw new LinqToDBException("Can not find Table or Column associated with expression");
+
+					BuildPhysicalTable(nullability, sqlField.Table, null);
+					return;
+				}
+				case SqlAnchor.AnchorKindEnum.TableAsSelfColumn:
+				{
+					var sqlField = anchor.SqlExpression as SqlField;
+					if (sqlField == null || sqlField.Table == null)
+						throw new LinqToDBException("Can not find Table or Column associated with expression");
+
+					var table = sqlField.Table as SqlTable;
+					if (table == null)
+						throw new LinqToDBException("Can not find table.");
+
+					BuildExpression(nullability, new SqlField(table, table.TableName.Name));
+
+					return;
+				}
+				case SqlAnchor.AnchorKindEnum.TableAsSelfColumnOrField:
+				{
+					var sqlField = anchor.SqlExpression as SqlField;
+					if (sqlField == null || sqlField.Table == null)
+						throw new LinqToDBException("Can not find Table or Column associated with expression");
+
+					var table = sqlField.Table as SqlTable;
+					if (table == null)
+						throw new LinqToDBException("Can not find table.");
+
+					if (sqlField == table.All)
+					{
+						BuildExpression(nullability, new SqlField(table, table.TableName.Name));
+					}
+					else
+					{
+						BuildExpression(nullability, anchor.SqlExpression);
+					}
+
+					return;
+				}
 				default:
 					throw new ArgumentOutOfRangeException(anchor.AnchorKind.ToString());
 			}

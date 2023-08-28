@@ -201,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 					localFlags = localFlags.SqlFlag();
 
 				var translated = asSql
-					? Builder.ConvertToSqlExpr(_context, expression, localFlags, columnDescriptor: _columnDescriptor, alias : alias)
+					? Builder.ConvertToSqlExpr(_context, expression, localFlags, columnDescriptor : _columnDescriptor, alias : alias)
 					: Builder.MakeExpression(_context, expression, localFlags);
 
 				if (translated is SqlErrorExpression)

@@ -7,7 +7,11 @@ namespace LinqToDB.SqlQuery
 		public enum AnchorKindEnum
 		{
 			Deleted,
-			Inserted
+			Inserted,
+			TableSource,
+			TableName,
+			TableAsSelfColumn,
+			TableAsSelfColumnOrField,
 		}
 
 		public AnchorKindEnum AnchorKind { get; }

@@ -1774,7 +1774,7 @@ namespace Tests.Linq
 				Assert.AreEqual(6, results[0].CategoryID);
 				Assert.AreEqual(6, results[1].CategoryID);
 
-				Assert.That(db.LastQuery!.Contains("FREETEXT(([c_1].*), N'bread')"));
+				Assert.That(db.LastQuery!.Contains("FREETEXT(([c2].*), N'bread')"));
 				Assert.That(db.LastQuery!.Contains("FREETEXT(([c1].*), N'meat')"));
 			}
 		}
@@ -2008,7 +2008,7 @@ namespace Tests.Linq
 
 				Assert.AreEqual(0, results.Count);
 
-				Assert.That(db.LastQuery!.Contains("CONTAINS(([c_1].*), N'bread')"));
+				Assert.That(db.LastQuery!.Contains("CONTAINS(([c2].*), N'bread')"));
 				Assert.That(db.LastQuery!.Contains("CONTAINS(([c1].*), N'meat')"));
 			}
 		}

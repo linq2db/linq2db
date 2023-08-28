@@ -37,6 +37,10 @@ namespace LinqToDB.Linq.Builder
 		Traverse = 0x800,	
 
 		Subquery = 0x1000,	
-	
+
+		/// <summary>
+		/// Indicates that generated SQL is for extension method.
+		/// </summary>
+		ForExtension = 0x2000,	
 	}
 }

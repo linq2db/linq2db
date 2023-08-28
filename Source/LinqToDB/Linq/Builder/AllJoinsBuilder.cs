@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 				default:
 					conditionIndex = 2;
 
-					joinType = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression()! switch
+					joinType = (SqlJoinType) methodCall.Arguments[1].EvaluateExpression(builder.DataContext)! switch
 					{
 						SqlJoinType.Inner => JoinType.Inner,
 						SqlJoinType.Left  => JoinType.Left,

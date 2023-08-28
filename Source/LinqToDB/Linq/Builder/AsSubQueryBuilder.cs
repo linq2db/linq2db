@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 			sequence.SelectQuery.DoNotRemove = true;
 
 			if (methodCall.Arguments.Count > 1)
-				sequence.SelectQuery.QueryName = (string?)methodCall.Arguments[1].EvaluateExpression();
+				sequence.SelectQuery.QueryName = (string?)methodCall.Arguments[1].EvaluateExpression(builder.DataContext);
 
 			sequence = new SubQueryContext(sequence);
 			

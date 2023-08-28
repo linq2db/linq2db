@@ -430,8 +430,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (valueExpression != null)
 				{
-					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression,
-						columnDescriptor: columnDescriptor, unwrap: false);
+					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor);
 
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					{

@@ -287,7 +287,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableExpr    = builder.Arguments[0].EvaluateExpression();
+				var tableExpr    = builder.Arguments[0].EvaluateExpression(builder.DataContext);
 				var tableType    = ((MethodInfo)builder.Member).GetGenericArguments()[0];
 				var helperType   = typeof(TableHelper<>).MakeGenericType(tableType);
 				var tableHelper  = (TableHelper)Activator.CreateInstance(helperType, tableExpr)!;
@@ -398,20 +398,10 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var tableOrColumnExpr = builder.GetExpression(0);
-				var sqlField = tableOrColumnExpr as SqlField;
 
-				if (sqlField == null)
-					throw new LinqToDBException("Can not find Table or Column associated with expression");
+				var anchor = new SqlAnchor(tableOrColumnExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumnOrField);
 
-				if (sqlField.Name != "*")
-				{
-					builder.ResultExpression = sqlField;
-					return;
-				}
-
-				var sqlTable = (SqlTable)sqlField.Table!;
-
-				builder.ResultExpression = new SqlField(sqlTable, sqlTable.TableName.Name);
+				builder.ResultExpression = anchor;
 			}
 		}
 
@@ -420,14 +410,10 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var tableExpr = builder.GetExpression(0);
-				var sqlField = tableExpr as SqlField;
 
-				if (sqlField == null)
-					throw new LinqToDBException("Can not find Table associated with expression");
+				var anchor = new SqlAnchor(tableExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumn);
 
-				var sqlTable = (SqlTable)sqlField.Table!;
-
-				builder.ResultExpression = new SqlField(sqlTable, sqlTable.TableName.Name);
+				builder.ResultExpression = anchor;
 			}
 		}
 

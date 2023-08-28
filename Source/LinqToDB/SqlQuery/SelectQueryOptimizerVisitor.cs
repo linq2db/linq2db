@@ -1422,11 +1422,11 @@ namespace LinqToDB.SqlQuery
 				NotifyReplaced(column.Expression, column);
 			}
 
-			NotifyReplaced(selectQuery.All, subQuery.All);
-
 			if (subQuery.From.Tables.Count == 1)
 			{
 				var subQueryTableSource = subQuery.From.Tables[0];
+
+				NotifyReplaced(subQueryTableSource.All, subQuery.All);
 
 				if (subQueryTableSource.Joins.Count > 0)
 					tableSource.Joins.InsertRange(0, subQueryTableSource.Joins);

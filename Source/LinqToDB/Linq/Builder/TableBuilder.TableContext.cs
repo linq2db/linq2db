@@ -147,31 +147,6 @@ namespace LinqToDB.Linq.Builder
 
 			#endregion
 
-			#region BuildQuery
-
-			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				throw new NotImplementedException();
-
-				/*var expr = Builder.FinalizeProjection(this,
-					Builder.MakeExpression(new ContextRefExpression(typeof(T), this), ProjectFlags.Expression));
-
-				var mapper = Builder.BuildMapper<T>(expr);
-
-				QueryRunner.SetRunQuery(query, mapper);*/
-			}
-
-			#endregion
-
-			#region BuildExpression
-
-			public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			#endregion
-
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExtractProjection() || flags.IsAggregationRoot())

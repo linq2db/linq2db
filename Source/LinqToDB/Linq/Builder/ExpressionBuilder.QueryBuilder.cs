@@ -277,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 			sqlExpression = null;
 
 			//Just test that we can convert
-			var actual = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test, columnDescriptor: columnDescriptor);
+			var actual = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test, columnDescriptor : columnDescriptor);
 			if (actual is not SqlPlaceholderExpression placeholderTest)
 			{
 				error = SqlErrorExpression.EnsureError(context, expression);
@@ -290,7 +290,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				sqlExpression = null;
 				//Test conversion success, do it again
-				var newActual = ConvertToSqlExpr(context, expression, flags, columnDescriptor: columnDescriptor);
+				var newActual = ConvertToSqlExpr(context, expression, flags, columnDescriptor : columnDescriptor);
 				if (newActual is not SqlPlaceholderExpression placeholder)
 				{
 					error = SqlErrorExpression.EnsureError(context, expression);
@@ -310,14 +310,14 @@ namespace LinqToDB.Linq.Builder
 			flags &= ~ProjectFlags.Expression;
 
 			//Just test that we can convert
-			var converted = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test, columnDescriptor: columnDescriptor);
+			var converted = ConvertToSqlExpr(context, expression, flags | ProjectFlags.Test, columnDescriptor : columnDescriptor);
 			if (converted is not SqlPlaceholderExpression)
 				return null;
 
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
 				//Test conversion success, do it again
-				converted = ConvertToSqlExpr(context, expression, flags, columnDescriptor: columnDescriptor);
+				converted = ConvertToSqlExpr(context, expression, flags, columnDescriptor : columnDescriptor);
 				if (converted is not SqlPlaceholderExpression)
 					return null;
 			}
