@@ -90,9 +90,12 @@ namespace LinqToDB.Linq.Builder
 				foreach (var column in columns)
 				{
 					if (!column.MemberName.Contains('.'))
-					{
 						continue;
-					}
+
+					// explicit interface implementation
+					//
+					if (column.MemberInfo.Name.Contains("."))
+						continue;
 
 					var names = column.MemberName.Split('.');
 

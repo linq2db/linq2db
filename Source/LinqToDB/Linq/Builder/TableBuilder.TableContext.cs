@@ -397,7 +397,7 @@ namespace LinqToDB.Linq.Builder
 									}
 									else
 									{
-										if (SequenceHelper.IsSameContext(memberExpression.Expression, this))
+										if (SequenceHelper.IsSameContext(memberExpression.Expression.UnwrapConvert(), this))
 											return field;
 									}
 								}
