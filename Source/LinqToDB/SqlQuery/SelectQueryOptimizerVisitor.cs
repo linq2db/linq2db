@@ -1478,6 +1478,8 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty)
 				return false;
 
+			var moveConditionToQuery = true;
+
 			if (joinTable.JoinType != JoinType.Inner)
 			{
 				if (joinTable.JoinType == JoinType.Left)
@@ -1494,6 +1496,22 @@ namespace LinqToDB.SqlQuery
 					{
 						return false;
 					}
+
+					if (!subQuery.Where.IsEmpty)
+					{
+						if (joinTable.JoinType == JoinType.OuterApply)
+						{
+							if (_flags.IsApplyJoinSupportsCondition)
+								moveConditionToQuery = false;
+							else
+								return false;
+						}
+						else if (joinTable.JoinType == JoinType.CrossApply)
+						{
+							if (_flags.IsApplyJoinSupportsCondition)
+								moveConditionToQuery = false;
+						}
+					}
 				};
 			}
 
@@ -1505,7 +1523,14 @@ namespace LinqToDB.SqlQuery
 
 			if (!subQuery.Where.IsEmpty)
 			{
-				joinTable.Condition.EnsureConjunction().Conditions.AddRange(subQuery.Where.SearchCondition.Conditions);
+				if (moveConditionToQuery)
+				{
+					selectQuery.Where.EnsureConjunction().SearchCondition.Conditions.AddRange(subQuery.Where.SearchCondition.Conditions);
+				}
+				else
+				{
+					joinTable.Condition.EnsureConjunction().Conditions.AddRange(subQuery.Where.SearchCondition.Conditions);
+				}
 			}
 
 			if (selectQuery.Select.Columns.Count == 0)

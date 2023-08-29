@@ -382,6 +382,44 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OuterApplyJoinClassArray(
+			[IncludeDataSources(
+				TestProvName.AllSqlServer2008Plus,
+				TestProvName.AllPostgreSQL93Plus,
+				TestProvName.AllOracle12Plus)]
+			string context, [Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			var cacheMiss = Query<Person>.CacheMissCount;
+
+			var q =
+				from p in db.Person
+				from n in new Person[]
+				{
+					new() { ID = 1, LastName = "Janet", FirstName = p.FirstName },
+					new() { ID = 2, LastName = "Doe", },
+				}.Where(n => p.LastName == n.LastName).DefaultIfEmpty()
+				select p;
+
+			var result = q.ToList();
+
+			if (iteration > 1)
+				Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+
+			var expected =
+				from p in Person
+				from n in new Person[]
+				{
+					new() { ID = 1, LastName = "Janet", FirstName = p.FirstName },
+					new() { ID = 2, LastName = "Doe", },
+				}.Where(n => p.LastName == n.LastName).DefaultIfEmpty()
+				select p;
+
+			AreEqual(expected, result);
+		}
+
+		[Test]
 		public void InnerJoinClassArray(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
