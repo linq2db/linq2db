@@ -105,50 +105,7 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequenceExpr    = methodCall.Arguments[0];
-			LambdaExpression?   groupingKey = null;
 			var groupingKind    = GroupingType.Default;
-			if (sequenceExpr.NodeType == ExpressionType.Call)
-			{
-				var call = (MethodCallExpression)methodCall.Arguments[0];
-
-				if (call.IsQueryable("Select"))
-				{
-					var selectParam = (LambdaExpression)call.Arguments[1].Unwrap();
-					var type = selectParam.Body.Type;
-
-					if (type.IsGenericType /*&& type.GetGenericTypeDefinition() == typeof(ExpressionBuilder.GroupSubQuery<,>)*/)
-					{
-						var selectParamBody = selectParam.Body.Unwrap();
-						MethodCallExpression? groupingMethod = null;
-						if (selectParamBody is MemberInitExpression mi)
-						{
-							var assignment = mi.Bindings.OfType<MemberAssignment>().FirstOrDefault(m => m.Member.Name == "Key");
-							if (assignment?.Expression.NodeType == ExpressionType.Call)
-							{
-								var mc = (MethodCallExpression)assignment.Expression;
-								if (mc.IsSameGenericMethod(GroupingSetMethods))
-								{
-									groupingMethod = mc;
-									groupingKey    = (LambdaExpression)mc.Arguments[0].Unwrap();
-									if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.Rollup))
-										groupingKind = GroupingType.Rollup;
-									else if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.Cube))
-										groupingKind = GroupingType.Cube;
-									else if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.GroupingSets))
-										groupingKind = GroupingType.GroupBySets;
-									else throw new InvalidOperationException();
-								}
-							}
-						}
-
-						if (groupingMethod != null && groupingKey != null)
-						{
-							sequenceExpr = sequenceExpr.Replace(groupingMethod, groupingKey.Body.Unwrap());
-						}
-
-					}
-				}
-			}
 
 			var dataSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceExpr));
 
@@ -159,6 +116,28 @@ namespace LinqToDB.Linq.Builder
 
 			var groupingType = methodCall.Type.GetGenericArguments()[0];
 			var keySelector  = methodCall.Arguments[1].UnwrapLambda();
+
+			// Detecting Grouping Sets
+			//
+			var keySelectorBody = keySelector.Body.Unwrap();
+
+			if (keySelectorBody.NodeType == ExpressionType.Call)
+			{
+				var mc = (MethodCallExpression)keySelectorBody;
+				if (mc.IsSameGenericMethod(GroupingSetMethods))
+				{
+					var groupingKey = mc.Arguments[0].Unwrap();
+					if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.Rollup))
+						groupingKind = GroupingType.Rollup;
+					else if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.Cube))
+						groupingKind = GroupingType.Cube;
+					else if (mc.IsSameGenericMethod(Methods.LinqToDB.GroupBy.GroupingSets))
+						groupingKind = GroupingType.GroupBySets;
+					else throw new InvalidOperationException();
+
+					keySelector = Expression.Lambda(groupingKey, keySelector.Parameters);
+				}
+			}
 
 			var resultSelector  = SequenceHelper.GetArgumentLambda(methodCall, "resultSelector");
 			var elementSelector = SequenceHelper.GetArgumentLambda(methodCall, "elementSelector");
@@ -172,26 +151,8 @@ namespace LinqToDB.Linq.Builder
 			var key                 = new KeyContext(groupingSubquery, keySelector, keySequence, buildInfo.IsSubQuery);
 			var keyRef              = new ContextRefExpression(keySelector.Parameters[0].Type, key);
 			var currentPlaceholders = new List<SqlPlaceholderExpression>();
-			if (groupingKind != GroupingType.GroupBySets)
-			{
-				AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, key.Body, buildInfo.GetFlags());
-			}
-			else
-			{
-				var groupingSetBody = groupingKey!.Body;
 
-				var hasSets = false;
-				foreach (var groupingSet in EnumGroupingSets(groupingSetBody))
-				{
-					throw new NotImplementedException();
-					/*var groupSql = builder.ConvertExpressions(keySequence, groupingSet, ConvertFlags.Key, null);
-					groupingSubquery.SelectQuery.GroupBy.Items.Add(
-						new SqlGroupingSet(groupSql.Select(s => keySequence.SelectQuery.Select.AddColumn(s.Sql))));*/
-				}
-
-				if (!hasSets)
-					throw new LinqException($"Invalid grouping sets expression '{groupingSetBody}'.");
-			}
+			AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, key.Body, groupingKind, buildInfo.GetFlags());
 
 			groupingSubquery.SelectQuery.GroupBy.GroupingType = groupingKind;
 
@@ -233,11 +194,36 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="builder"></param>
 		/// <param name="onSequence">Context from which level we want to get groping SQL.</param>
 		/// <param name="path">Actual expression which should be translated to grouping keys.</param>
-		static void AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders, ExpressionBuilder builder, IBuildContext onSequence, Expression path, ProjectFlags flags)
+		/// <param name="groupingKind"></param>
+		/// <param name="flags"></param>
+		static void AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders,
+			ExpressionBuilder builder, IBuildContext onSequence, Expression path, GroupingType groupingKind,
+			ProjectFlags flags)
 		{
-			var groupSqlExpr = builder.BuildSqlExpression(onSequence, path, flags.SqlFlag() | ProjectFlags.Keys, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+			if (groupingKind == GroupingType.GroupBySets)
+			{
+				var hasSets = false;
+				foreach (var groupingSet in EnumGroupingSets(path))
+				{
+					hasSets = true;
+					var setExpr = builder.BuildSqlExpression(onSequence, groupingSet,
+						ProjectFlags.SQL | ProjectFlags.Keys,
+						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
 
-			AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
+					var placeholders = ExpressionBuilder.CollectPlaceholders(setExpr);
+
+					sequence.SelectQuery.GroupBy.Items.Add(new SqlGroupingSet(placeholders.Select(p => p.Sql)));
+				}
+
+				if (!hasSets)
+					throw new LinqException($"Invalid grouping sets expression '{path}'.");
+			}
+			else
+			{
+				var groupSqlExpr = builder.BuildSqlExpression(onSequence, path, flags.SqlFlag() | ProjectFlags.Keys, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+
+				AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
+			}
 		}
 
 		static void AppendGroupBy(ExpressionBuilder builder, List<SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression result)
@@ -351,9 +337,12 @@ namespace LinqToDB.Linq.Builder
 
 					if (!newFlags.IsTest())
 					{
-						// appending missing keys
-						AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery,
-							result);
+						if (GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType != GroupingType.GroupBySets)
+						{
+							// appending missing keys
+							AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery,
+								result);
+						}
 
 						// we return SQL nested as GroupByContext
 						result = Builder.UpdateNesting(GroupByContext, result);

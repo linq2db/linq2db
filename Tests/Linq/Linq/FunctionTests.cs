@@ -646,12 +646,9 @@ namespace Tests.Linq
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				if (!(builder.GetExpression("src") is SqlField field))
-					throw new InvalidOperationException("Can not get table");
+				var srcExpr = builder.GetExpression("src");
 
-				var sqlTable = (SqlTable)field.Table!;
-
-				var newField = new SqlField(sqlTable, sqlTable.TableName.Name);
+				var newField = new SqlAnchor(srcExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumn);
 
 				builder.AddParameter("table_field", newField);
 			}

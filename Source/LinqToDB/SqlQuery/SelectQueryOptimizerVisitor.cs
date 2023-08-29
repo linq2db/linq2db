@@ -1398,6 +1398,7 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty)
 			{
 				selectQuery.GroupBy.Items.AddRange(subQuery.GroupBy.Items);
+				selectQuery.GroupBy.GroupingType = subQuery.GroupBy.GroupingType;
 			}
 
 			if (!subQuery.Having.IsEmpty)
