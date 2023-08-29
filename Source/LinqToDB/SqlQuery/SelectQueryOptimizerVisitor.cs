@@ -834,6 +834,15 @@ namespace LinqToDB.SqlQuery
 			if (!joinTable.CanConvertApply)
 				return optimized;
 
+			if (!QueryHelper.IsDependsOnOuterSources(joinSource.Source))
+			{
+				var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
+
+				joinTable.JoinType = newJoinType;
+				optimized          = true;
+				return optimized;
+			}
+
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;

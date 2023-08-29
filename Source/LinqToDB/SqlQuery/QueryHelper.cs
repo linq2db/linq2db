@@ -94,6 +94,9 @@ namespace LinqToDB.SqlQuery
 				if (e is SqlTableSource ts)
 					context.foundSources.Add(ts.Source);
 
+				if (e is SelectQuery sc)
+					context.foundSources.Add(sc);
+
 				if (e is SqlField field && field.Table != null)
 					context.dependedOnSources.Add(field.Table);
 				else if (e is SqlColumn column && column.Parent != null)
