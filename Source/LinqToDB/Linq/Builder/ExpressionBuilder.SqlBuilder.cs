@@ -605,7 +605,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (typeof(IToSqlConverter).IsSameOrParentOf(newExpr.Type))
 			{
-				sql = ConvertToSqlConvertible(newExpr);
+				sql = ConvertToSqlConvertible(newExpr, DataContext);
 			}
 
 			if (sql == null && !flags.IsExpression())
@@ -1141,13 +1141,12 @@ namespace LinqToDB.Linq.Builder
 			return sqlExpression;
 		}
 
-		public static ISqlExpression ConvertToSqlConvertible(Expression expression)
+		public static ISqlExpression ConvertToSqlConvertible(Expression expression, IDataContext context)
 		{
-			var l = Expression.Lambda<Func<IToSqlConverter>>(Expression.Convert(expression, typeof(IToSqlConverter)));
-			var f = l.CompileExpression();
-			var c = f();
+			if (Expression.Convert(expression, typeof(IToSqlConverter)).EvaluateExpression(context) is not IToSqlConverter converter)
+				throw new LinqToDBException($"Expression '{expression}' cannot be converted to `IToSqlConverter`");
 
-			return c.ToSql(expression);
+			return converter.ToSql(expression);
 		}
 
 		readonly HashSet<Expression> _convertedPredicates = new ();

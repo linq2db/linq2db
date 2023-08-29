@@ -500,7 +500,7 @@ namespace LinqToDB.Linq
 			var linqOptions = optimizationContext.DataContext.Options.LinqOptions;
 			if (linqOptions.GenerateExpressionTest)
 			{
-				var testFile = new ExpressionTestGenerator().GenerateSource(expr);
+				var testFile = new ExpressionTestGenerator(dataContext).GenerateSource(expr);
 
 				if (dataContext.GetTraceSwitch().TraceInfo)
 					dataContext.WriteTraceLine(
