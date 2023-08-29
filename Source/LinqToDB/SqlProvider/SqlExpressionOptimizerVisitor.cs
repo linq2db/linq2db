@@ -574,17 +574,26 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			var newPredicate = !predicate.IsNot
+			if (_sqlProviderFlags?.RowConstructorSupport.HasFlag(RowFeature.Between) != true && predicate.Expr1 is SqlRow)
+			{
+				return ConvertBetweenPredicate(predicate);
+			}
+
+			return newElement;
+		}
+
+		public virtual ISqlPredicate ConvertBetweenPredicate(SqlPredicate.Between between)
+		{
+			var newPredicate = !between.IsNot
 				? new SqlSearchCondition(
-					new SqlCondition(false, new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.GreaterOrEqual, predicate.Expr2, withNull: false)),
-					new SqlCondition(false, new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.LessOrEqual,    predicate.Expr3, withNull: false)))
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.GreaterOrEqual, between.Expr2, withNull: false)),
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.LessOrEqual,    between.Expr3, withNull: false)))
 				: new SqlSearchCondition(
-					new SqlCondition(false, new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.Less,    predicate.Expr2, withNull: false), isOr: true),
-					new SqlCondition(false, new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.Greater, predicate.Expr3, withNull: false)));
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Less,    between.Expr2, withNull: false), isOr: true),
+					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Greater, between.Expr3, withNull: false)));
 
 			return newPredicate;
 		}
-
 		public override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var newElement = base.VisitExprExprPredicate(predicate);
