@@ -5,18 +5,18 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Extensions;
-	using Mapping;
 	using Common;
+	using Extensions;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
+	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Common.Internal;
 
 	partial class ExpressionBuilder
 	{
@@ -215,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 								{
 									if (!context.builder.IsEnumerableSource(ce) && context.builder.IsSubQuery(context.context, ce))
 									{
-										if (!context.context.Builder.IsMultipleQuery(ce, context.context.Builder.MappingSchema))
+										if (!IsMultipleQuery(ce, context.context.Builder.MappingSchema))
 										{
 											var info = context.builder.GetSubQueryContext(context.context, ce);
 											if (context.alias != null)
@@ -329,7 +329,7 @@ namespace LinqToDB.Linq.Builder
 
 								if ((context.builder._buildMultipleQueryExpressions == null || !context.builder._buildMultipleQueryExpressions.Contains(ce)) && context.builder.IsSubQuery(context.context, ce))
 								{
-									if (context.builder.IsMultipleQuery(ce, context.builder.MappingSchema))
+									if (IsMultipleQuery(ce, context.builder.MappingSchema))
 										return new TransformInfo(context.builder.BuildMultipleQuery(context.context, ce, context.enforceServerSide));
 
 									return new TransformInfo(context.builder.GetSubQueryExpression(context.context, ce, context.enforceServerSide, context.alias));
@@ -545,7 +545,7 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
+		static bool IsMultipleQuery(MethodCallExpression ce, MappingSchema mappingSchema)
 		{
 			//TODO: Multiply query check should be smarter, possibly not needed if we create fallback mechanism
 			var result = !ce.IsQueryable(FirstSingleBuilder.MethodNames)

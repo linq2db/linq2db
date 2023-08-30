@@ -11,8 +11,8 @@ namespace LinqToDB.Linq.Builder
 	using Async;
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;

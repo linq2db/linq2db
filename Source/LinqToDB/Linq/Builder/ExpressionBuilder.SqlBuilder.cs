@@ -106,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (expres.Result)
 						{
-							if (expres.Expression != null && context.Builder.IsGrouping(expres.Expression, context.Builder.MappingSchema))
+							if (expres.Expression != null && IsGrouping(expres.Expression, context.Builder.MappingSchema))
 							{
 								context.IsHaving = true;
 								return false;
@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							if (context.Builder.IsGrouping(expr, context.Builder.MappingSchema))
+							if (IsGrouping(expr, context.Builder.MappingSchema))
 							{
 								context.IsHaving = true;
 								return false;
@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 						if (Expressions.ConvertMember(context.Builder.MappingSchema, e.Object?.Type, e.Method) != null)
 							return true;
 
-						if (context.Builder.IsGrouping(e, context.Builder.MappingSchema))
+						if (IsGrouping(e, context.Builder.MappingSchema))
 						{
 							context.IsHaving = true;
 							return false;
@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 			return ctx.MakeSubQuery || ctx.IsHaving && ctx.IsWhere;
 		}
 
-		bool IsGrouping(Expression expression, MappingSchema mappingSchema)
+		static bool IsGrouping(Expression expression, MappingSchema mappingSchema)
 		{
 			switch (expression.NodeType)
 			{
@@ -1028,6 +1028,38 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					return new SqlFunction(e.Type, "CASE", s, t, f) { CanBeNull = t.CanBeNull || f.CanBeNull };
+				}
+
+				case ExpressionType.Switch:
+				{
+					var e  = (SwitchExpression)expression;
+					var d  = e.DefaultBody == null ||
+					         e.DefaultBody is not UnaryExpression { NodeType : ExpressionType.Convert, Operand : MethodCallExpression { Method : var m } } || m != ConvertBuilder.DefaultConverter;
+					var ps = new ISqlExpression[e.Cases.Count * 2 + (d? 1 : 0)];
+					var sv = ConvertToSql(context, e.SwitchValue);
+
+					for (var i = 0; i < e.Cases.Count; i++)
+					{
+						SqlSearchCondition.Next? expr = null;
+
+						foreach (var testValue in e.Cases[i].TestValues)
+						{
+							if (testValue == null)
+								continue;
+
+							var sc = expr == null ? new() : expr.Or;
+
+							expr = sc.Expr(sv).Equal.Expr(ConvertToSql(context, testValue));
+						}
+
+						ps[i * 2]     = expr!.ToExpr();
+						ps[i * 2 + 1] = ConvertToSql(context, e.Cases[i].Body);
+					}
+
+					if (d)
+						ps[^1] = ConvertToSql(context, e.DefaultBody!);
+
+					return new SqlFunction(e.Type, "CASE", ps) { CanBeNull = ps.Any(p => p.CanBeNull) };
 				}
 
 				case ExpressionType.MemberAccess:
@@ -2774,7 +2806,7 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		bool IsNullConstant(Expression expr)
+		static bool IsNullConstant(Expression expr)
 		{
 			// TODO: is it correct to return true for DefaultValueExpression for non-reference type or when default value
 			// set to non-null value?

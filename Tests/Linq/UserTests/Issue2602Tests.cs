@@ -82,7 +82,7 @@ namespace Tests.UserTests
 				var reader1 = new EmailReader(35);
 				reader1.GetEmail(context);
 				reader1.Dispose();
-				var reader2 = new EmailReader(36);
+				using var reader2 = new EmailReader(36);
 
 				Assert.DoesNotThrow(() => reader2.GetEmail(context));
 			}

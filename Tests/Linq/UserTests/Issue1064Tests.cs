@@ -1,12 +1,13 @@
-﻿using LinqToDB.Data;
+﻿using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-	using System.Linq;
-
 	public class Issue1064Tests : TestBase
 	{
 		[Table]

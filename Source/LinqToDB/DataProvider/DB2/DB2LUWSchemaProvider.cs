@@ -14,6 +14,8 @@ namespace LinqToDB.DataProvider.DB2
 	// - CommandBehavior.SchemaOnly doesn't return schema for stored procedures
 	class DB2LUWSchemaProvider : SchemaProviderBase
 	{
+		private static readonly IReadOnlyList<string> _tableTypes = new[] { "TABLE", "VIEW" };
+
 		private readonly DB2DataProvider _provider;
 
 		public DB2LUWSchemaProvider(DB2DataProvider provider)
@@ -56,8 +58,7 @@ namespace LinqToDB.DataProvider.DB2
 			return
 			(
 				from t in tables.AsEnumerable()
-				where
-					new[] { "TABLE", "VIEW" }.Contains(t.Field<string>("TABLE_TYPE"))
+				where _tableTypes.Contains(t.Field<string>("TABLE_TYPE"))
 				let catalog = dataConnection.Connection.Database
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")

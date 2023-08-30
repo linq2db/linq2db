@@ -559,11 +559,9 @@ namespace Tests.Linq
 		{
 			var guid = "febe3eca-cb5f-40b2-ad39-2979d312afca";
 			using (var db = GetDataContext(context))
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				AreEqual(
 					from t in    Types where Sql.ConvertTo<string>.From(t.GuidValue).ToLower() == guid select t.GuidValue,
 					from t in db.Types where Sql.ConvertTo<string>.From(t.GuidValue).ToLower() == guid select t.GuidValue);
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 		}
 
 		#endregion

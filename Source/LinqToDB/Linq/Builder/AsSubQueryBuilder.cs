@@ -3,8 +3,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 
 	sealed class AsSubQueryBuilder : MethodCallBuilder
 	{

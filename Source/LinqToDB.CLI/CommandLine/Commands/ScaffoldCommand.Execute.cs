@@ -387,7 +387,7 @@ Provider could be downloaded from:
 			// we must use dll path as exe executed from other folder
 			var exePath = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, exeName);
 
-			var childProcess = new Process();
+			using var childProcess = new Process();
 
 			childProcess.StartInfo.FileName               = exePath;
 			childProcess.StartInfo.UseShellExecute        = false;

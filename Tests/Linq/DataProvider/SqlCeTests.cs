@@ -2,8 +2,10 @@
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics;
-using System.Linq;
+using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -11,15 +13,13 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlCe;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Globalization;
-	using System.Threading.Tasks;
-	using LinqToDB.Linq;
 	using Model;
 
 	[TestFixture]

@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Remote
 {
-	using Extensions;
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Mapping;
 	using SqlQuery;

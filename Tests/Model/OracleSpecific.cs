@@ -2,7 +2,7 @@
 
 namespace Tests.Model
 {
-	public class OracleSpecific
+	public static class OracleSpecific
 	{
 		[Table("SEQUENCETEST")]
 		public class SequenceTest

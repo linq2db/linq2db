@@ -6,14 +6,14 @@ using System.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 
 	public static class MemberHelper
 	{
 		[DebuggerDisplay("{Type.Name}.{MemberInfo.Name}")]
-		public struct MemberInfoWithType
+		public struct MemberInfoWithType : IEquatable<MemberInfoWithType>
 		{
 			public MemberInfoWithType(Type? type, MemberInfo memberInfo)
 			{

@@ -1495,7 +1495,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)
+		static MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)
 		{
 			if (method.Method.DeclaringType == typeof(Enumerable))
 			{
@@ -1519,7 +1519,7 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
-		MethodInfo GetMethodInfo(MethodCallExpression method, string name)
+		static MethodInfo GetMethodInfo(MethodCallExpression method, string name)
 		{
 			if (method.Method.DeclaringType == typeof(Enumerable))
 			{
