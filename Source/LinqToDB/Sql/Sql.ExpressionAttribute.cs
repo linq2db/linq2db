@@ -319,7 +319,7 @@ namespace LinqToDB
 
 						if (mc.Method.DeclaringType!.IsGenericType)
 						{
-							genericTypes ??= new List<SqlDataType>();
+							genericTypes = new List<SqlDataType>();
 							foreach (var t in mc.Method.DeclaringType.GetGenericArguments())
 							{
 								var type = mappingSchema.GetDataType(t);

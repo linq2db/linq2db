@@ -191,7 +191,7 @@ namespace LinqToDB.Metadata
 					{
 						var n = nameGetter(c) ?? key.memberInfo.GetMemberType().Name;
 
-						if (n.ToLowerInvariant().StartsWith("sql"))
+						if (n.StartsWith("sql", StringComparison.OrdinalIgnoreCase))
 							n = n.Substring(3);
 
 						var attr = new DataTypeAttribute(DataType.Udt, n);

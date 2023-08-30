@@ -7,7 +7,7 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// creation in one benchmark
 	public class WrapBenchmark
 	{
-		private static readonly string Parameter = "TestString";
+		private const string Parameter = "TestString";
 
 		private Original.TestClass2 _originalInstance = null!;
 		private Wrapped.TestClass2  _wrapperInstance = null!;

@@ -5,7 +5,7 @@
 	/// </summary>
 	public abstract class CodeThrowBase
 	{
-		public CodeThrowBase(ICodeExpression exception)
+		protected CodeThrowBase(ICodeExpression exception)
 		{
 			Exception = exception;
 		}

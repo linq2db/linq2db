@@ -1,9 +1,10 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Collections.Generic;
-	using System.Linq;
 	using Configuration;
 
 	[UsedImplicitly]

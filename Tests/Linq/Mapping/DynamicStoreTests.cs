@@ -79,10 +79,10 @@ namespace Tests.Mapping
 
 			public static object GetProperty(StaticGetterSetterMethods instance, string name, object defaultValue)
 			{
-				if (!InstanceValues.ContainsKey(instance.Id))
+				if (!InstanceValues.TryGetValue(instance.Id, out var values))
 					return defaultValue;
 
-				if (!InstanceValues[instance.Id].TryGetValue(name, out var value))
+				if (!values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -90,12 +90,12 @@ namespace Tests.Mapping
 
 			private static void SetProperty(StaticGetterSetterMethods instance, string name, object value)
 			{
-				if (!InstanceValues.ContainsKey(instance.Id))
+				if (!InstanceValues.TryGetValue(instance.Id, out var values))
 				{
-					InstanceValues.Add(instance.Id, new Dictionary<string, object>());
+					InstanceValues.Add(instance.Id, values = new Dictionary<string, object>());
 				}
 
-				InstanceValues[instance.Id][name] = value;
+				values[name] = value;
 			}
 		}
 
@@ -149,10 +149,10 @@ namespace Tests.Mapping
 
 			public static object GetProperty(StaticGetterSetterExpressionMethods instance, string name, object defaultValue)
 			{
-				if (!InstanceValues.ContainsKey(instance.Id))
+				if (!InstanceValues.TryGetValue(instance.Id, out var values))
 					return defaultValue;
 
-				if (!InstanceValues[instance.Id].TryGetValue(name, out var value))
+				if (!values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -160,12 +160,12 @@ namespace Tests.Mapping
 
 			public static void SetProperty(StaticGetterSetterExpressionMethods instance, string name, object value)
 			{
-				if (!InstanceValues.ContainsKey(instance.Id))
+				if (!InstanceValues.TryGetValue(instance.Id, out var values))
 				{
-					InstanceValues.Add(instance.Id, new Dictionary<string, object>());
+					InstanceValues.Add(instance.Id, values = new Dictionary<string, object>());
 				}
 
-				InstanceValues[instance.Id][name] = value;
+				values[name] = value;
 			}
 		}
 
@@ -753,10 +753,10 @@ namespace Tests.Mapping
 
 		static object? Getter(IDictionary<int, Dictionary<string, object?>> storage, CustomSetterGetterBase instance, string property, object? defaultValue)
 		{
-			if (!storage.ContainsKey(instance.Id))
+			if (!storage.TryGetValue(instance.Id, out var values))
 				return defaultValue;
 
-			if (!storage[instance.Id].TryGetValue(property, out var value))
+			if (!values.TryGetValue(property, out var value))
 				value = defaultValue;
 
 			return value;
@@ -764,10 +764,10 @@ namespace Tests.Mapping
 
 		static void Setter(IDictionary<int, Dictionary<string, object?>> storage, CustomSetterGetterBase instance, string property, object? value)
 		{
-			if (!storage.ContainsKey(instance.Id))
-				storage.Add(instance.Id, new Dictionary<string, object?>());
+			if (!storage.TryGetValue(instance.Id, out var values))
+				storage.Add(instance.Id, values = new Dictionary<string, object?>());
 
-			storage[instance.Id][property] = value;
+			values[property] = value;
 		}
 
 		[Test]

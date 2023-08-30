@@ -61,7 +61,7 @@ namespace Tests.UserTests
 
 				db1 = GetDataContext(context, ms1);
 				db1.DropTable<InventoryResourceDTO>(throwExceptionIfNotExists: false);
-				db1.CreateLocalTable<InventoryResourceDTO>();
+				using var t = db1.CreateLocalTable<InventoryResourceDTO>();
 
 				using (var db2 = GetDataContext(context, ms2))
 				{

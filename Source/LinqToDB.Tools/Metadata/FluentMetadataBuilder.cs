@@ -50,7 +50,7 @@ namespace LinqToDB.Metadata
 
 			if (metadata.Name != null)
 			{
-				if (metadata.Name.Value.Schema   != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Schema  , context.AST.Constant(metadata.Name.Value.Schema  , true)));
+				if (metadata.Name.Value.Schema   != null) (initializers   = new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Schema  , context.AST.Constant(metadata.Name.Value.Schema  , true)));
 				if (metadata.Name.Value.Database != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Database, context.AST.Constant(metadata.Name.Value.Database, true)));
 				if (metadata.Name.Value.Server   != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.TableAttribute_Server  , context.AST.Constant(metadata.Name.Value.Server  , true)));
 			}
@@ -102,7 +102,7 @@ namespace LinqToDB.Metadata
 			// - for nullable value type it is true
 			if ((!propertyBuilder.Property.Type.Type.IsValueType && !metadata.CanBeNull)
 				|| (propertyBuilder.Property.Type.Type.IsValueType && metadata.CanBeNull != propertyBuilder.Property.Type.Type.IsNullable))
-				(initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_CanBeNull, context.AST.Constant(metadata.CanBeNull, true)));
+				(initializers = new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_CanBeNull, context.AST.Constant(metadata.CanBeNull, true)));
 
 			if (metadata.Configuration != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.MappingAttribute_Configuration, context.AST.Constant(metadata.Configuration , true)));
 			if (metadata.DataType      != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_DataType      , context.AST.Constant(metadata.DataType.Value, true)));
@@ -181,7 +181,7 @@ namespace LinqToDB.Metadata
 
 			List<CodeAssignmentStatement>? initializers = null;
 
-			if (metadata.Configuration    != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.MappingAttribute_Configuration  , context.AST.Constant(metadata.Configuration         , true)));
+			if (metadata.Configuration    != null) (initializers   = new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.MappingAttribute_Configuration  , context.AST.Constant(metadata.Configuration         , true)));
 			if (metadata.ServerSideOnly   != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Sql_ExpressionAttribute_ServerSideOnly  , context.AST.Constant(metadata.ServerSideOnly.Value  , true)));
 			if (metadata.PreferServerSide != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Sql_ExpressionAttribute_PreferServerSide, context.AST.Constant(metadata.PreferServerSide.Value, true)));
 			if (metadata.InlineParameters != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Sql_ExpressionAttribute_InlineParameters, context.AST.Constant(metadata.InlineParameters.Value, true)));
@@ -242,7 +242,7 @@ namespace LinqToDB.Metadata
 			if (metadata.Name != null)
 			{
 				// compared to Sql.FunctionAttribute, Sql.TableFunctionAttribute provides proper FQN mapping attributes
-				if (metadata.Name.Value.Package  != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Package , context.AST.Constant(metadata.Name.Value.Package , true)));
+				if (metadata.Name.Value.Package  != null) (initializers   = new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Package , context.AST.Constant(metadata.Name.Value.Package , true)));
 				if (metadata.Name.Value.Schema   != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Schema  , context.AST.Constant(metadata.Name.Value.Schema  , true)));
 				if (metadata.Name.Value.Database != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Database, context.AST.Constant(metadata.Name.Value.Database, true)));
 				if (metadata.Name.Value.Server   != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_Server  , context.AST.Constant(metadata.Name.Value.Server  , true)));
@@ -374,7 +374,7 @@ namespace LinqToDB.Metadata
 			List<CodeAssignmentStatement>? initializers = null;
 
 			if (!metadata.CanBeNull)
-				(initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_CanBeNull, context.AST.Constant(false, true)));
+				(initializers = new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_CanBeNull, context.AST.Constant(false, true)));
 
 			// track association is configured to avoid generation of multiple conflicting configurations
 			// as assocation could be configured in several ways

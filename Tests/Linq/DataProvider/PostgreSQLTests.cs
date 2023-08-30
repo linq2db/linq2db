@@ -38,7 +38,7 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
 	{
-		private static readonly string _nextValSearchPattern = "nextval";
+		private const string _nextValSearchPattern = "nextval";
 
 		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{

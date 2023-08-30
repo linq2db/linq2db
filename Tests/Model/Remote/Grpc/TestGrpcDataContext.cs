@@ -19,10 +19,12 @@ namespace Tests.Model.Remote.Grpc
 				new GrpcChannelOptions
 				{
 					HttpClient = new HttpClient(
-						new HttpClientHandler
+#pragma warning disable CA2000 // Dispose objects before losing scope
+						new HttpClientHandler()
 						{
 							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
 						})
+#pragma warning restore CA2000 // Dispose objects before losing scope
 				},
 				optionBuilder)
 		{
