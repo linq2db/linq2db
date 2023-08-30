@@ -107,7 +107,7 @@ namespace LinqToDB.Common
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale
-				&& string.Equals(DbType, other.DbType);
+				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
 		public readonly bool EqualsDbOnly(DbDataType other)
@@ -116,7 +116,7 @@ namespace LinqToDB.Common
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale
-				&& string.Equals(DbType, other.DbType);
+				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
 		public override bool Equals(object? obj)
@@ -147,7 +147,7 @@ namespace LinqToDB.Common
 			return _hashCode.Value;
 		}
 
-		#endregion
+#endregion
 
 		#region Operators
 

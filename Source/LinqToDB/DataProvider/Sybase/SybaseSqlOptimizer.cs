@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.Sybase
 			return base.ConvertFunction(func);
 		}
 
-		SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
+		static SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
 		{
 			var tableToUpdate = statement.Update.Table;
 

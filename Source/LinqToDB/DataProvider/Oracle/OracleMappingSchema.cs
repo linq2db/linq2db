@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Linq;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
@@ -9,7 +10,6 @@ namespace LinqToDB.DataProvider.Oracle
 	using Expressions;
 	using Mapping;
 	using SqlQuery;
-	using System.Data.Linq;
 
 	public sealed class OracleMappingSchema : LockedMappingSchema
 	{

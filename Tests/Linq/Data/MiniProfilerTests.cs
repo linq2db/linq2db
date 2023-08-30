@@ -67,7 +67,9 @@ namespace Tests.Data
 		public class MiniProfilerDataContext : DataConnection
 		{
 			public MiniProfilerDataContext(string configurationString)
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				: base(GetDataProvider(), GetConnection(configurationString)) { }
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
 			private static IDataProvider GetDataProvider()
 			{
@@ -76,7 +78,9 @@ namespace Tests.Data
 
 			private static DbConnection GetConnection(string configurationString)
 			{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				var dbConnection = new SqlConnection(GetConnectionString(configurationString));
+#pragma warning restore CA2000 // Dispose objects before losing scope
 				return new ProfiledDbConnection(dbConnection, MiniProfiler.Current);
 			}
 		}
@@ -127,7 +131,7 @@ namespace Tests.Data
 #if NET472
 				// assert custom schema table access
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Any()));
+				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Count > 0));
 #endif
 			}
 		}

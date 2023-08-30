@@ -94,7 +94,7 @@ namespace LinqToDB.Concurrency
 				LambdaExpression? valueExpression;
 				if (concurrencyAttribute != null)
 				{
-					valueExpression = concurrencyAttribute?.GetNextValue(cd, param);
+					valueExpression = concurrencyAttribute.GetNextValue(cd, param);
 
 					if (valueExpression == null)
 						continue;

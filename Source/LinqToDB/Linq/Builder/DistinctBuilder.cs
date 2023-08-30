@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Reflection;
 	using LinqToDB.Expressions;
-	using System.Reflection;
 
 	sealed class DistinctBuilder : MethodCallBuilder
 	{

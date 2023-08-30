@@ -50,7 +50,7 @@ namespace LinqToDB.Expressions
 			_staticFunc = func;
 		}
 
-		private Expression? Find<T>(IEnumerable<T> source, Func<T, Expression?> func)
+		private static Expression? Find<T>(IEnumerable<T> source, Func<T, Expression?> func)
 		{
 			foreach (var item in source)
 			{

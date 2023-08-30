@@ -8,13 +8,13 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Reflection;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
-	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
+	using Common;
+	using Common.Internal;
 
 	/// <summary>
 	/// Internal API.

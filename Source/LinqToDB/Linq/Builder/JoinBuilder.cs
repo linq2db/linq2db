@@ -143,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 				;
 		}
 
-		IBuildContext GetSubQueryContext(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
+		static IBuildContext GetSubQueryContext(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo,
 			SelectQuery sql,
 			LambdaExpression innerKeyLambda,
 			Expression outerKeySelector,
