@@ -124,9 +124,6 @@ namespace Tests.Tools
 			public int     Field1;
 			public int?    Field2;
 			public string? Prop2 { get; set; }
-
-			static int _n;
-			       int _field = ++_n;
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]

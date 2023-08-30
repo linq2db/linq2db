@@ -80,7 +80,7 @@ namespace LinqToDB.CommandLine
 
 			Console.Out.WriteLine();
 			Console.Out.WriteLine("Usage:");
-			Console.Out.WriteLine("        dotnet linq2db {0}{1}", command.Name, command.Template != string.Empty ? " " + command.Template : command.Template);
+			Console.Out.WriteLine("        dotnet linq2db {0}{1}", command.Name, command.Template.Length != 0 ? " " + command.Template : command.Template);
 
 			Console.Out.WriteLine();
 			Console.Out.WriteLine("Options:");
@@ -427,7 +427,7 @@ namespace LinqToDB.CommandLine
 				foreach (var command in controller.Commands)
 				{
 					if (command != this)
-						Console.Out.WriteLine("        dotnet linq2db {0}{1} : {2}", command.Name, command.Template != string.Empty ? " " + command.Template : command.Template, command.Help);
+						Console.Out.WriteLine("        dotnet linq2db {0}{1} : {2}", command.Name, command.Template.Length != 0 ? " " + command.Template : command.Template, command.Help);
 				}
 			}
 

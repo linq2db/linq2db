@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// - be consistent with nullable JSON column type
 		}
 
-		private void BuildTypeName(StringBuilder sb, DbDataType type, bool nullable)
+		private static void BuildTypeName(StringBuilder sb, DbDataType type, bool nullable)
 		{
 			// nullable JSON type has "special" syntax
 			if (nullable && type.DataType != DataType.Json)

@@ -2134,11 +2134,11 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateSourceWithProjectionOutputIntoTempTableByTableName([IncludeDataSources(FeatureUpdateOutputInto)] string context)
 		{
-			var sourceData         = GetSourceData();
-			var db          = GetDataContext(context);
-			var source      = db.CreateLocalTable("TableWithData_source", sourceData);
-			var destination = db.CreateTempTable<DestinationTable>("DestinationTable_destination");
-			var destRef = db.GetTable<DestinationTable>()
+			var sourceData        = GetSourceData();
+			var db                = GetDataContext(context);
+			using var source      = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var destination = db.CreateTempTable<DestinationTable>("DestinationTable_destination");
+			var destRef           = db.GetTable<DestinationTable>()
 				.TableOptions(TableOptions.IsTemporary)
 				.TableName(destination.TableName);
 
@@ -2164,10 +2164,10 @@ namespace Tests.xUpdate
 		public async Task UpdateSourceWithProjectionOutputIntoTempTableByTableNameAsync([IncludeDataSources(FeatureUpdateOutputInto)] string context)
 		{
 			var sourceData         = GetSourceData();
-			var db          = GetDataContext(context);
-			var source      = db.CreateLocalTable("TableWithData_source", sourceData);
-			var destination = db.CreateTempTable<DestinationTable>("DestinationTable_destination");
-			var destRef = db.GetTable<DestinationTable>()
+			var db                 = GetDataContext(context);
+			using var source       = db.CreateLocalTable("TableWithData_source", sourceData);
+			using var destination  = db.CreateTempTable<DestinationTable>("DestinationTable_destination");
+			var destRef            = db.GetTable<DestinationTable>()
 				.TableOptions(TableOptions.IsTemporary)
 				.TableName(destination.TableName);
 

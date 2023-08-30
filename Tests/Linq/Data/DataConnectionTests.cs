@@ -1192,11 +1192,11 @@ namespace Tests.Data
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
 			if (withScope && (
-				context == ProviderName.DB2            ||
-				context == ProviderName.InformixDB2    ||
-				context == ProviderName.SapHanaNative  ||
-				context == ProviderName.SqlCe          ||
-				context == ProviderName.Sybase         ||
+				context == ProviderName.DB2                     ||
+				context == ProviderName.InformixDB2             ||
+				context == ProviderName.SapHanaNative           ||
+				context == ProviderName.SqlCe                   ||
+				context == ProviderName.Sybase                  ||
 				context.IsAnyOf(TestProvName.AllMySqlConnector) ||
 				context.IsAnyOf(TestProvName.AllClickHouse)     ||
 				context.IsAnyOf(TestProvName.AllFirebird)       ||
@@ -1220,22 +1220,12 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope or doesn't support DDL in distributed transactions");
 			}
 
-			TransactionScope? scope = withScope ? new TransactionScope() : null;
-			try
+			using var scope = withScope ? new TransactionScope() : null;
+			using var db = GetDataContext(context);
+			using (db.CreateLocalTable(Category.Data))
+			using (db.CreateLocalTable(Product.Data))
 			{
-				using (var db = GetDataContext(context))
-				using (db.CreateLocalTable(Category.Data))
-				using (db.CreateLocalTable(Product.Data))
-				{
-					var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
-
-					scope?.Dispose();
-					scope = null;
-				}
-			}
-			finally
-			{
-				scope?.Dispose();
+				var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
 			}
 		}
 

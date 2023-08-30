@@ -1,14 +1,13 @@
-﻿
+﻿#if NET472
+using System.ServiceModel;
+#endif
+
 using LinqToDB;
 
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-#if NET472
-	using System.ServiceModel;
-#endif
-
 	public partial class MergeTests
 	{
 		[Test]

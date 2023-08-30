@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Reflection;
 using System.Text;
 
 namespace LinqToDB.Extensions
 {
-	using System.Reflection;
 	using Common;
 	using Mapping;
 	using SqlQuery;
