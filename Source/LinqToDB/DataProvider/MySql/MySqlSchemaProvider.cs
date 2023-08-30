@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
-	using LinqToDB.SchemaProvider;
+	using SchemaProvider;
 
 	sealed class MySqlSchemaProvider : SchemaProviderBase
 	{

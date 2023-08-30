@@ -230,7 +230,7 @@ namespace LinqToDB.Mapping
 						return a;
 					},
 					setColumn,
-					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName, StringComparison.Ordinal)));
 
 				return this;
 			}
@@ -246,7 +246,7 @@ namespace LinqToDB.Mapping
 					 },
 					(_,a) => setColumn(a),
 					a     => new ColumnAttribute(a),
-					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName)));
+					attrs => attrs.FirstOrDefault(_ => memberName == null || memberName.Equals(_.MemberName, StringComparison.Ordinal)));
 
 			return this;
 		}

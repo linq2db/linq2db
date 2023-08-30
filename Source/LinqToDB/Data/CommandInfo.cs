@@ -242,7 +242,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 #else
-			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
 			{
 #if NETSTANDARD2_1PLUS
@@ -427,7 +427,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 #else
-			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
 			{
 #if NETSTANDARD2_1PLUS
@@ -558,7 +558,7 @@ namespace LinqToDB.Data
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 			using (var rd = DataConnection.ExecuteDataReader(GetCommandBehavior()))
 			{
-				result = ReadMultipleResultSets<T>(rd.DataReader!);
+				result = ReadMultipleResultSets<T>(rd);
 
 				SetRebindParameters(rd);
 			}
@@ -587,7 +587,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 #else
-			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
 			{
 #if NETSTANDARD2_1PLUS
@@ -606,7 +606,7 @@ namespace LinqToDB.Data
 			return result;
 		}
 
-		Dictionary<int, MemberAccessor> GetMultipleQueryIndexMap<T>(TypeAccessor<T> typeAccessor)
+		static Dictionary<int, MemberAccessor> GetMultipleQueryIndexMap<T>(TypeAccessor<T> typeAccessor)
 		{
 			var indexMap = new Dictionary<int, MemberAccessor>();
 
@@ -648,22 +648,22 @@ namespace LinqToDB.Data
 		static readonly MethodInfo _readSingletMethodInfo =
 			MemberHelper.MethodOf<CommandInfo>(ci => ci.ReadSingle<int>(null!)).GetGenericMethodDefinition();
 
-		T[] ReadAsArray<T>(DbDataReader rd)
+		T[] ReadAsArray<T>(DataReaderWrapper rd)
 		{
-			return ReadEnumerator<T>(new DataReaderWrapper(rd), null, false).ToArray();
+			return ReadEnumerator<T>(rd, null, false).ToArray();
 		}
 
-		List<T> ReadAsList<T>(DbDataReader rd)
+		List<T> ReadAsList<T>(DataReaderWrapper rd)
 		{
-			return ReadEnumerator<T>(new DataReaderWrapper(rd), null, false).ToList();
+			return ReadEnumerator<T>(rd, null, false).ToList();
 		}
 
-		T? ReadSingle<T>(DbDataReader rd)
+		T? ReadSingle<T>(DataReaderWrapper rd)
 		{
-			return ReadEnumerator<T>(new DataReaderWrapper(rd), null, false).FirstOrDefault();
+			return ReadEnumerator<T>(rd, null, false).FirstOrDefault();
 		}
 
-		T ReadMultipleResultSets<T>(DbDataReader rd)
+		T ReadMultipleResultSets<T>(DataReaderWrapper rd)
 			where T : class
 		{
 			var typeAccessor = TypeAccessor.GetAccessor<T>();
@@ -701,7 +701,7 @@ namespace LinqToDB.Data
 				}
 
 				resultIndex++;
-			} while (rd.NextResult());
+			} while (rd.DataReader!.NextResult());
 
 			return result;
 		}
@@ -1096,7 +1096,7 @@ namespace LinqToDB.Data
 #if !NATIVE_ASYNC
 			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 #else
-			await using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
 			{
 #if NETSTANDARD2_1PLUS
@@ -1324,7 +1324,7 @@ namespace LinqToDB.Data
 
 		#region SetParameters
 
-		void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
+		static void SetParameters(DataConnection dataConnection, DataParameter[] parameters)
 		{
 			foreach (var parameter in parameters)
 			{

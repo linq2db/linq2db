@@ -12,7 +12,7 @@ namespace LinqToDB.Concurrency
 	[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
 	public abstract class OptimisticLockPropertyBaseAttribute : MappingAttribute
 	{
-		public OptimisticLockPropertyBaseAttribute()
+		protected OptimisticLockPropertyBaseAttribute()
 		{
 		}
 

@@ -106,7 +106,9 @@ public class a_CreateData : TestBase
 						{
 							TestContext.WriteLine("\nFAILED\n");
 
+#pragma warning disable CA1508 // Avoid dead conditional code
 							exception ??= ex;
+#pragma warning restore CA1508 // Avoid dead conditional code
 						}
 					}
 				}

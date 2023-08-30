@@ -3054,7 +3054,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		string IdentText(string text, int ident)
+		static string IdentText(string text, int ident)
 		{
 			if (string.IsNullOrEmpty(text))
 				return text;

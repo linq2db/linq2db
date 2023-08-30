@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 			return buildInfo.Expression is ChangeTypeExpression;
 		}
 
-		ISequenceBuilder GetBuilder(ExpressionBuilder builder, BuildInfo buildInfo)
+		static ISequenceBuilder GetBuilder(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			return builder.GetBuilder(buildInfo)!;
 		}

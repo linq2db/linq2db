@@ -153,7 +153,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 		}
 
-		private string GetTablePhysicalName(string tableName, TableOptions tableOptions)
+		private static string GetTablePhysicalName(string tableName, TableOptions tableOptions)
 		{
 			if (tableName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
 				return tableName;

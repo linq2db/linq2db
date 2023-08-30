@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Mapping
 {
+	using Common;
+
 	/// <inheritdoc />
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.

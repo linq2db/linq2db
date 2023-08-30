@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+#if NET472
+using System.ServiceModel;
+#endif
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -11,9 +14,6 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
-#if NET472
-	using System.ServiceModel;
-#endif
 
 	[TestFixture]
 	public class MappingTests : TestBase
@@ -257,8 +257,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType1()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				var _ = db.GetTable<MyParent>().ToList();
 			}
 		}
@@ -266,8 +267,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType2()
 		{
-			using (var db = new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				var _ = db.GetTable<MyParent>()
 					.Select(t => new MyParent { ParentID = t.ParentID, Value1 = t.Value1 })
 					.ToList();
@@ -277,8 +279,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType3()
 		{
-			using (var db = (TestDataConnection) new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = (TestDataConnection) new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				try
 				{
 					db.Insert(new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
@@ -293,8 +296,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType4()
 		{
-			using (var db = (TestDataConnection)new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = (TestDataConnection)new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				try
 				{
 					var id = new MyInt { MyValue = 1001 };
@@ -310,8 +314,9 @@ namespace Tests.Linq
 		[Test]
 		public void MyType5()
 		{
-			using (var db = (TestDataConnection)new TestDataConnection().AddMappingSchema(_myMappingSchema))
+			using (var db = (TestDataConnection)new TestDataConnection())
 			{
+				db.AddMappingSchema(_myMappingSchema);
 				try
 				{
 					db.GetTable<MyParent>().Insert(() => new MyParent { ParentID = new MyInt { MyValue = 1001 }, Value1 = 1001 });
@@ -495,7 +500,7 @@ namespace Tests.Linq
 
 		public abstract class RecordLikeBase
 		{
-			public RecordLikeBase(int Id, string BaseValue)
+			protected RecordLikeBase(int Id, string BaseValue)
 			{
 				this.Id = Id;
 				this.BaseValue = BaseValue;

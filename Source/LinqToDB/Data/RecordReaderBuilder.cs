@@ -9,10 +9,10 @@ using System.Reflection;
 namespace LinqToDB.Data
 {
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Linq.Builder;
 	using Common;
-	using Extensions;
 	using Mapping;
 	using Reflection;
 
@@ -58,8 +58,6 @@ namespace LinqToDB.Data
 			var expr = recordType == RecordType.NotRecord
 				? BuildDefaultConstructor(entityDescriptor, objectType)
 				: BuildRecordConstructor (entityDescriptor, objectType, recordType);
-
-			expr = ProcessExpression(expr);
 
 			if (!buildBlock)
 				return expr;
@@ -310,11 +308,6 @@ namespace LinqToDB.Data
 			var expr = Expression.New(ctor, parms);
 
 			return expr;
-		}
-
-		private Expression ProcessExpression(Expression expression)
-		{
-			return expression;
 		}
 
 		sealed class ReadColumnInfo
