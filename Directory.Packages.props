@@ -23,7 +23,7 @@
 		<PackageVersion Include="PolySharp"                                             Version="1.13.2"        />
 		<!--build support-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.3.5-beta1.23320.2" />
-		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="7.0.3"         />
+		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="7.0.4"         />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="1.1.1"         />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.3.1"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.6.0"         />

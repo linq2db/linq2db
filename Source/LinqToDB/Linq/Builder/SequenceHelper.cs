@@ -908,7 +908,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static bool IsSupportedSubquery(IBuildContext context)
 		{
-			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
+			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported && !context.Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported &&
 			    QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
 			{
 				return false;
@@ -916,14 +916,24 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		public static IBuildContext UnwrapSubqueryContext(IBuildContext context)
+		static IBuildContext UnwrapSubqueryContext(IBuildContext context)
 		{
-			while (context is SubQueryContext sc)
+			var current = context;
+			while (true)
 			{
-				context = sc.SubQuery;
+				if (current is SubQueryContext sc)
+				{
+					current = sc.SubQuery;
+				}
+				else if (current is PassThroughContext pass)
+				{
+					current = pass.Context;
+				}
+				else 
+					break;
 			}
 
-			return context;
+			return current;
 		}
 
 		public static bool IsDefaultIfEmpty(IBuildContext context)

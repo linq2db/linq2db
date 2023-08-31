@@ -344,8 +344,8 @@ namespace LinqToDB.Linq.Builder
 								result);
 						}
 
-						// we return SQL nested as GroupByContext
-						result = Builder.UpdateNesting(GroupByContext, result);
+						// we return SQL nested as GroupByContext.SubQuery
+						result = Builder.UpdateNesting(GroupByContext.SubQuery, result);
 					}
 				}
 
@@ -471,18 +471,40 @@ namespace LinqToDB.Linq.Builder
 						groupingType, null, assignments.AsReadOnly());
 				}
 
-				if (path is MemberExpression me && me.Expression is ContextRefExpression && me.Member.Name == "Key")
+				if (path is MemberExpression me)
 				{
-					var keyPath = new ContextRefExpression(me.Type, _key);
-
-					if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
+					var currentMemberExpr = me;
+					var found             = false;
+					while (true)
 					{
-						return new ContextRefExpression(path.Type, new ScopeContext(_key, this));
+						if (currentMemberExpr.Expression is ContextRefExpression && currentMemberExpr.Member.Name == "Key")
+						{
+							found = true;
+							break;
+						}
+
+						if (currentMemberExpr.Expression is MemberExpression memberExpr)
+						{
+							currentMemberExpr = memberExpr;
+						}
+						else
+							break;
 					}
 
-					var result = Builder.MakeExpression(this, keyPath, flags);
+					if (found)
+					{
+						var keyRef  = new ContextRefExpression(currentMemberExpr.Type, _key);
+						var keyPath = me.Replace(currentMemberExpr, keyRef);
 
-					return result;
+						if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
+						{
+							return new ContextRefExpression(path.Type, new ScopeContext(_key, this));
+						}
+
+						var result = Builder.MakeExpression(_key, keyPath, flags);
+
+						return result;
+					}
 				}
 
 				if (!SequenceHelper.IsSameContext(path, this) || !flags.HasFlag(ProjectFlags.SQL))

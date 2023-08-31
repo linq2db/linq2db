@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -24,10 +25,7 @@ namespace Tests.Linq
 					from c in cg.DefaultIfEmpty().Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -44,10 +42,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).DefaultIfEmpty().Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -104,10 +99,7 @@ namespace Tests.Linq
 					from c in cg.Take(1).DefaultIfEmpty()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -126,10 +118,7 @@ namespace Tests.Linq
 					from c in cg.DefaultIfEmpty().Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -146,10 +135,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).DefaultIfEmpty().Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -204,10 +190,7 @@ namespace Tests.Linq
 					from c in cg.Distinct().DefaultIfEmpty()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -226,10 +209,7 @@ namespace Tests.Linq
 					from c in cg.Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -246,10 +226,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -304,10 +281,7 @@ namespace Tests.Linq
 					from c in cg.Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -326,10 +300,7 @@ namespace Tests.Linq
 					from c in cg.Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -346,10 +317,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -408,10 +376,7 @@ namespace Tests.Linq
 					from c in cg.Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 	}

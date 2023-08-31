@@ -578,8 +578,7 @@ namespace LinqToDB.Linq.Builder
 			if (!IsSingleElementContext(info.Context) && expr.Type.IsEnumerableType(info.Context.ElementType) && !flags.IsExtractProjection())
 			{
 				var eager = (Expression)new SqlEagerLoadExpression(unwrapped);
-				if (expr.Type != eager.Type)
-					eager = new SqlAdjustTypeExpression(eager, expr.Type, MappingSchema);
+				eager = SqlAdjustTypeExpression.AdjustType(eager, expr.Type, MappingSchema);
 
 				return eager;
 			}

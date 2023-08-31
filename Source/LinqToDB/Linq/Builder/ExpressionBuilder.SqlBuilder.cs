@@ -970,7 +970,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (attr != null)
 					{
-						return CreatePlaceholder(context, ConvertExtensionToSql(context!, flags, attr, e), expression, alias: alias);
+						return ConvertExtensionToSql(context!, flags, attr, e);
 					}
 
 					if (e.Method.IsSqlPropertyMethodEx())
@@ -1119,17 +1119,33 @@ namespace LinqToDB.Linq.Builder
 			return QueryHelper.ConvertFormatToConcatenation(format, sqlArguments);
 		}
 
-		public ISqlExpression ConvertExtensionToSql(IBuildContext context, ProjectFlags flags, Sql.ExpressionAttribute attr, MethodCallExpression mc)
+		public SqlPlaceholderExpression ConvertExtensionToSql(IBuildContext context, ProjectFlags flags, Sql.ExpressionAttribute attr, MethodCallExpression mc)
 		{
 			var inlineParameters = DataContext.InlineParameters;
 
 			if (attr.InlineParameters)
 				DataContext.InlineParameters = true;
 
+			var currentContext = context;
+			
+			if (attr.IsAggregate)
+			{
+				var sequenceRef = new ContextRefExpression(context.ElementType, context);
+
+				var rootContext = GetRootContext(context, sequenceRef, true);
+
+				currentContext = rootContext?.BuildContext ?? currentContext;
+
+				if (currentContext is GroupByBuilder.GroupByContext groupCtx)
+				{
+					currentContext = groupCtx.SubQuery;
+				}
+			}
+
 			var sqlExpression = attr.GetExpression(
-				(this_: this, context, flags),
+				(this_: this, context: currentContext, flags),
 				DataContext,
-				context!.SelectQuery,
+				currentContext.SelectQuery,
 				mc,
 				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
 
@@ -1138,7 +1154,7 @@ namespace LinqToDB.Linq.Builder
 
 			DataContext.InlineParameters = inlineParameters;
 
-			return sqlExpression;
+			return CreatePlaceholder(currentContext, sqlExpression, mc);
 		}
 
 		public static ISqlExpression ConvertToSqlConvertible(Expression expression, IDataContext context)
@@ -2501,14 +2517,20 @@ namespace LinqToDB.Linq.Builder
 
 		#region LIKE predicate
 
-		ISqlPredicate CreateStringPredicate(IBuildContext? context, MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind, ISqlExpression caseSensitive, ProjectFlags flags)
+		ISqlPredicate? CreateStringPredicate(IBuildContext context, MethodCallExpression expression, SqlPredicate.SearchString.SearchKind kind, ISqlExpression caseSensitive, ProjectFlags flags)
 		{
 			var e = expression;
 
+			if (e.Object == null)
+				return null;
+
 			var descriptor = SuggestColumnDescriptor(context, e.Object, e.Arguments[0], flags);
 
-			var o = ConvertToSql(context, e.Object,       unwrap: false, columnDescriptor: descriptor);
-			var a = ConvertToSql(context, e.Arguments[0], unwrap: false, columnDescriptor: descriptor);
+			if (!TryConvertToSql(context, flags, e.Object, columnDescriptor : descriptor, out var o, out _))
+				return null;
+
+			if (!TryConvertToSql(context, flags, e.Arguments[0], columnDescriptor : descriptor, out var a, out _))
+				return null;
 
 			return new SqlPredicate.SearchString(o, false, a, kind, caseSensitive);
 		}
@@ -4094,7 +4116,7 @@ namespace LinqToDB.Linq.Builder
 						root = subqueryExpression;
 						if (subqueryExpression.Type != root.Type)
 						{
-							root = new SqlAdjustTypeExpression(root, root.Type, MappingSchema);
+							root = SqlAdjustTypeExpression.AdjustType(root, root.Type, MappingSchema);
 						}
 					}
 				}
@@ -4335,7 +4357,7 @@ namespace LinqToDB.Linq.Builder
 								expression = MakeExpression(ctx, subqueryExpression, flags);
 								if (expression.Type != path.Type)
 								{
-									expression = new SqlAdjustTypeExpression(expression, path.Type, MappingSchema);
+									expression = SqlAdjustTypeExpression.AdjustType(expression, path.Type, MappingSchema);
 								}
 
 								handled = true;

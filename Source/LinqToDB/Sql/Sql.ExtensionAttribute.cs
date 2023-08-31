@@ -190,24 +190,29 @@ namespace LinqToDB
 				Expr             = expr;
 				Precedence       = precedence;
 				ChainPrecedence  = chainPrecedence;
-				IsAggregate      = isAggregate;
-				IsWindowFunction = isWindowFunction;
-				IsPure           = isPure;
 				IsPredicate      = isPredicate;
 				IsNullable       = isNullable;
 				CanBeNull        = canBeNull;
 				NamedParameters  = parameters.ToLookup(static p => p.Name ?? string.Empty).ToDictionary(static p => p.Key, static p => p.ToList());
+
+				if (isAggregate)      Flags |= SqlFlags.IsAggregate;
+				if (isWindowFunction) Flags |= SqlFlags.IsWindowFunction;
+				if (isPure)           Flags |= SqlFlags.IsPure;
 			}
 
 			public Type?          SystemType       { get; set; }
 			public string         Expr             { get; set; }
 			public int            Precedence       { get; set; }
-			public bool           IsAggregate      { get; set; }
-			public bool           IsWindowFunction { get; set; }
-			public bool           IsPure           { get; set; }
 			public bool           IsPredicate      { get; set; }
 			public IsNullableType IsNullable       { get; set; }
 			public bool?          CanBeNull        { get; set; }
+
+			public SqlFlags Flags            { get; set; }
+
+			public bool     IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
+			public bool     IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
+			public bool     IsPure           => (Flags & SqlFlags.IsPure)           != 0;
+
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
 			{

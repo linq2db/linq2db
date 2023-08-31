@@ -814,23 +814,6 @@ namespace LinqToDB.SqlQuery
 
 			var optimized = false;
 
-			if (joinSource.Joins.Count > 0)
-			{
-				var joinSources = new HashSet<ISqlTableSource>(parentTableSources);
-				joinSources.Add(joinTable.Table);
-
-				foreach (var join in joinSource.Joins)
-				{
-					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply || join.JoinType == JoinType.RightApply)
-					{
-						if (OptimizeApply(parentQuery, joinSources, joinSource, join, isApplySupported))
-							optimized = true;
-					}
-
-					joinSources.AddRange(QueryHelper.EnumerateAccessibleSources(join.Table));
-				}
-			}
-
 			if (!joinTable.CanConvertApply)
 				return optimized;
 
@@ -873,12 +856,17 @@ namespace LinqToDB.SqlQuery
 				ISqlExpression?       rnExpression = null;
 				List<ISqlExpression>? partitionBy  = null;
 
-				if (skipValue != null || takeValue != null)
+				if (skipValue != null || takeValue != null || sql.Select.IsDistinct)
 				{
 					var parameters = new List<ISqlExpression>();
 
 					var sources = QueryHelper.EnumerateAccessibleSources(sql).ToArray();
 					var found   = new HashSet<ISqlExpression>();
+
+					if (sql.Select.IsDistinct)
+					{
+						found.AddRange(sql.Select.Columns.Select(c => c.Expression));
+					}
 
 					sql.Where.VisitAll(1, (ctx, e) =>
 					{
@@ -1031,6 +1019,12 @@ namespace LinqToDB.SqlQuery
 							new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null)));
 
 					}
+					else if (sql.Select.IsDistinct)
+					{
+						sql.Select.IsDistinct = false;
+						searchCondition.Add(new SqlCondition(false,
+							new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
+					}
 				}
 
 				var toCheck = new HashSet<ISqlTableSource>();
@@ -1072,19 +1066,6 @@ namespace LinqToDB.SqlQuery
 				joinTable.Condition.Conditions.AddRange(searchCondition);
 
 				optimized = true;
-				/*
-				if (newJoinType == JoinType.Full)
-				{
-					joinTable.Condition = QueryHelper.CorrectComparisonForJoin(joinTable.Condition);
-				}
-				*/
-			}
-			else if (joinSource.Source.ElementType == QueryElementType.SqlTable)
-			{
-				var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
-
-				joinTable.JoinType = newJoinType;
-				optimized          = true;
 			}
 
 			return optimized;
@@ -1483,37 +1464,41 @@ namespace LinqToDB.SqlQuery
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
-				if (joinTable.JoinType == JoinType.Left)
-				{
-					if (!subQuery.IsSimpleButWhere)
-						return false;
-				}
-				else
-				{
-					if (!(!selectQuery.Select.HasModifier && selectQuery.Where.IsEmpty && selectQuery.GroupBy.IsEmpty &&
-					      selectQuery.Having.IsEmpty     &&
-					      selectQuery.OrderBy.IsEmpty    && selectQuery.From.Tables.Count == 1 &&
-					      selectQuery.From.Tables[0].Joins.Count                          <= 1))
-					{
-						return false;
-					}
+				moveConditionToQuery = false;
 
-					if (!subQuery.Where.IsEmpty)
+				if (!subQuery.IsSimpleButWhere)
+					return false;
+
+				if (!(!selectQuery.Select.HasModifier && selectQuery.Where.IsEmpty && selectQuery.GroupBy.IsEmpty &&
+				      selectQuery.Having.IsEmpty      &&
+				      selectQuery.OrderBy.IsEmpty     && selectQuery.From.Tables.Count == 1))
+				{
+					return false;
+				}
+
+				if (!subQuery.Where.IsEmpty)
+				{
+					if (joinTable.JoinType == JoinType.OuterApply)
 					{
-						if (joinTable.JoinType == JoinType.OuterApply)
-						{
-							if (_flags.IsApplyJoinSupportsCondition)
-								moveConditionToQuery = false;
-							else
-								return false;
-						}
-						else if (joinTable.JoinType == JoinType.CrossApply)
-						{
-							if (_flags.IsApplyJoinSupportsCondition)
-								moveConditionToQuery = false;
-						}
+						if (_flags.IsApplyJoinSupportsCondition)
+							moveConditionToQuery = false;
+						else
+							return false;
 					}
-				};
+					else if (joinTable.JoinType == JoinType.CrossApply)
+					{
+						if (_flags.IsApplyJoinSupportsCondition)
+							moveConditionToQuery = false;
+					}
+					else if (joinTable.JoinType == JoinType.Left)
+					{
+						moveConditionToQuery = false;
+					}
+					else
+					{
+						return false;
+					}
+				}
 			}
 
 			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
@@ -1596,6 +1581,12 @@ namespace LinqToDB.SqlQuery
 					EnsureReferencesCorrected(element.SelectQuery);
 				}
 
+				if (OptimizeJoinSubQueries(element.SelectQuery))
+				{
+					isModified = true;
+					EnsureReferencesCorrected(element.SelectQuery);
+				}
+
 				if (!isModified)
 					break;
 
@@ -1621,9 +1612,19 @@ namespace LinqToDB.SqlQuery
 					}
 
 					--i; // repeat again
-
-					continue;
 				}
+			}
+
+			return replaced;
+		}
+
+		bool OptimizeJoinSubQueries(SelectQuery selectQuery)
+		{
+			var replaced = false;
+
+			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
+			{
+				var tableSource = selectQuery.From.Tables[i];
 
 				if (tableSource.Joins.Count > 0)
 				{
@@ -1637,6 +1638,7 @@ namespace LinqToDB.SqlQuery
 
 			return replaced;
 		}
+
 
 		bool OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)
 		{

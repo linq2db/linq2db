@@ -415,10 +415,8 @@ namespace LinqToDB.Linq.Builder
 				_associations    = saveAssociationsCache;
 			}
 
-			if (resultExpression.Type != eagerLoad.Type)
-			{
-				resultExpression = new SqlAdjustTypeExpression(resultExpression, eagerLoad.Type, MappingSchema);
-			}
+
+			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
 
 			return resultExpression;
 		}

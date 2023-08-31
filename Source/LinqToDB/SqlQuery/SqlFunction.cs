@@ -40,16 +40,17 @@ namespace LinqToDB.SqlQuery
 			Precedence      = precedence;
 			NullabilityType = nullabilityType;
 			_canBeNull      = canBeNull;
-			IsAggregate     = isAggregate;
-			IsPure          = isPure;
+			FunctionFlags = (isAggregate ? SqlFlags.IsAggregate : SqlFlags.None) |
+			                (isPure ? SqlFlags.IsPure : SqlFlags.None);
 			Parameters      = parameters;
 		}
 
 		public Type                      SystemType        { get; }
 		public string                    Name              { get; }
 		public int                       Precedence        { get; }
-		public bool                      IsAggregate       { get; }
-		public bool                      IsPure            { get; }
+		public SqlFlags                  FunctionFlags     { get; }
+		public bool                      IsAggregate       => (FunctionFlags & SqlFlags.IsAggregate) != 0;
+		public bool                      IsPure            => (FunctionFlags & SqlFlags.IsPure)      != 0;
 		public ISqlExpression[]          Parameters        { get; }
 		public bool?                     CanBeNullNullable => _canBeNull;
 		public ParametersNullabilityType NullabilityType   { get; }

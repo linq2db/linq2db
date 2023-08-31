@@ -229,9 +229,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				if (associationExpression.Type != expression.Type)
-					associationExpression =
-						new SqlAdjustTypeExpression(associationExpression, expression.Type, MappingSchema);
+				associationExpression = SqlAdjustTypeExpression.AdjustType(associationExpression, expression.Type, MappingSchema);
 			}
 
 			if (!flags.IsExtractProjection())

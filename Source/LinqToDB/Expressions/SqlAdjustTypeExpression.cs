@@ -19,6 +19,24 @@ namespace LinqToDB.Expressions
 			MappingSchema = mappingSchema;
 		}
 
+		public static Expression AdjustType(Expression expression, Type type, MappingSchema mappingSchema)
+		{
+			if (expression.Type == type)
+				return expression;
+
+			if (expression is SqlAdjustTypeExpression adjust)
+			{
+				return AdjustType(adjust.Expression, type, mappingSchema);
+			}
+
+			if (expression.NodeType == ExpressionType.Convert)
+			{
+				return AdjustType(((UnaryExpression)expression).Operand, type, mappingSchema);
+			}
+
+			return new SqlAdjustTypeExpression(expression, type, mappingSchema);
+		}
+
 		public override bool CanReduce => true;
 
 		public override Expression Reduce()
@@ -39,7 +57,7 @@ namespace LinqToDB.Expressions
 			if (ReferenceEquals(Expression, expression))
 				return this;
 
-			return new SqlAdjustTypeExpression(expression, Type, MappingSchema);
+			return AdjustType(expression, Type, MappingSchema);
 		}
 
 		public bool Equals(SqlAdjustTypeExpression? other)
