@@ -54,7 +54,7 @@ namespace Tests.Linq
 			// maximum Provider pool count
 			const int poolCount = 10;
 
-			var semaphore = new Semaphore(0, poolCount);
+			using var semaphore = new Semaphore(0, poolCount);
 
 			var threads = new Thread[threadCount];
 			var results = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];

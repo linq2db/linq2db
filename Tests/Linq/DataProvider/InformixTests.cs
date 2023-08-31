@@ -1,7 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Data.Linq;
+using System.Diagnostics;
+using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Informix;
+using LinqToDB.Mapping;
 
 #if NET472
 using IBM.Data.Informix;
@@ -10,11 +16,6 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using System.Data.Linq;
-	using System.Diagnostics;
-	using System.Threading.Tasks;
-	using LinqToDB.DataProvider.Informix;
-	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]

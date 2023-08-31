@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Data.Common;
 	using Configuration;
 	using Data;
 
@@ -81,10 +81,9 @@ namespace LinqToDB.DataProvider.DB2
 		public static void ResolveDB2(string path)
 		{
 			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyName);
-			if (DB2ProviderAdapter.AssemblyNameOld != null)
-#pragma warning disable CS0162 // Unreachable code detected
-				new AssemblyResolver(path, DB2ProviderAdapter.AssemblyNameOld);
-#pragma warning restore CS0162 // Unreachable code detected
+#if !NETFRAMEWORK
+			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyNameOld);
+#endif
 		}
 
 		public static void ResolveDB2(Assembly assembly)

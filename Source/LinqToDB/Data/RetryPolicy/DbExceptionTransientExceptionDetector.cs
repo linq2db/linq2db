@@ -9,7 +9,7 @@ namespace LinqToDB.Data.RetryPolicy
 	/// <summary>
 	/// Detects the exceptions caused by transient failures. Provider must implement <see cref="DbException"/> IsTransient property.
 	/// </summary>
-	public class DbExceptionTransientExceptionDetector
+	public static class DbExceptionTransientExceptionDetector
 	{
 		public static bool ShouldRetryOn(Exception ex)
 		{

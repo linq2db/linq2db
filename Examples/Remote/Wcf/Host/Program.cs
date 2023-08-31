@@ -11,7 +11,7 @@ namespace Host
 	{
 		static void Main(string[] args)
 		{
-			var host = new ServiceHost(
+			using var host = new ServiceHost(
 				new WcfLinqService(new LinqService() { AllowUpdates = true }, true),
 				new Uri("net.tcp://localhost:30304"));
 

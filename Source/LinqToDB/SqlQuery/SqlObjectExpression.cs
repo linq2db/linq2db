@@ -5,8 +5,8 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
 	using Linq.Builder;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 

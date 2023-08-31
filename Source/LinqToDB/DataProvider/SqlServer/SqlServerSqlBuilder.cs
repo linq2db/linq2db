@@ -153,7 +153,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Convert(StringBuilder, GetTableAlias(table)!, ConvertType.NameToQueryTableAlias);
 		}
 
-		private string GetTablePhysicalName(string tableName, TableOptions tableOptions)
+		private static string GetTablePhysicalName(string tableName, TableOptions tableOptions)
 		{
 			if (tableName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
 				return tableName;
@@ -480,7 +480,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")");
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")", Sql.QueryExtensionScope.QueryHint);
 		}
 	}
 }

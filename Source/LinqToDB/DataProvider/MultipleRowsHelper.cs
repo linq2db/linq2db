@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Extensions;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
 		where T : notnull

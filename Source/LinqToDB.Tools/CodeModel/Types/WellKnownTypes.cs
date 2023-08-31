@@ -112,19 +112,19 @@ namespace LinqToDB.CodeModel
 			/// <summary>
 			/// <see cref="object.GetHashCode()"/> method reference.
 			/// </summary>
-			public static CodeIdentifier Object_GetHashCode { get; } = new CodeIdentifier(nameof(global::System.Object.GetHashCode), true);
+			public static CodeIdentifier Object_GetHashCode { get; } = new CodeIdentifier(nameof(GetHashCode), true);
 
 			/// <summary>
 			/// <see cref="object.Equals(object)"/> method reference.
 			/// </summary>
-			public static CodeIdentifier Object_Equals      { get; } = new CodeIdentifier(nameof(global::System.Object.Equals), true);
+			public static CodeIdentifier Object_Equals      { get; } = new CodeIdentifier(nameof(Equals), true);
 
 			/// <summary>
 			/// <see cref="object.Equals(object)"/> parameter name.
 			/// </summary>
 			public static CodeIdentifier Object_Equals_Parameter { get; } = new CodeIdentifier("obj", true);
 
-			public class Reflection
+			public static class Reflection
 			{
 				/// <summary>
 				/// <see cref="MethodInfo"/> type descriptor.

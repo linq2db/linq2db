@@ -1,15 +1,14 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
-	using Mapping;
 	using Common.Internal.Cache;
-	using System.Linq;
+	using Mapping;
+	using SqlQuery;
 
 	static partial class QueryRunner
 	{

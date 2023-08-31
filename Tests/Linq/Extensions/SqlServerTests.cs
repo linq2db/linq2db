@@ -858,6 +858,31 @@ namespace Tests.Extensions
 		}
 
 		[Test]
+		public void SqlServerUnionTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent
+					select p
+				)
+				.Union
+				(
+					from p in db.Child
+					select p.Parent
+				)
+				.AsSqlServer()
+				.OptionRecompile()
+			;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Should.Contain(
+				"UNION",
+				"OPTION (RECOMPILE)"));
+		}
+
 		public void SubQueryTest1([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);

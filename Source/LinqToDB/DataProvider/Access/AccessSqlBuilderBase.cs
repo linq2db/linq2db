@@ -259,13 +259,18 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var len = parameters.Length - start;
 
-			if (len < 3)
+			if (len < 2)
 				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
 
-			if (len == 3)
-				return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], parameters[start + 2]);
-
-			return new SqlFunction(systemType, "Iif", parameters[start], parameters[start + 1], ConvertCase(systemType, parameters, start + 2));
+			return new SqlFunction(systemType, "Iif",
+				parameters[start],
+				parameters[start + 1],
+				len switch
+				{
+					2 => parameters[start                          + 1],
+					3 => parameters[start                          + 2],
+					_ => ConvertCase(systemType, parameters, start + 2)
+				});
 		}
 
 		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
@@ -354,11 +359,8 @@ namespace LinqToDB.DataProvider.Access
 			return sb;
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
-			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null);
-
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
 				var len = StringBuilder.Length;
@@ -376,8 +378,14 @@ namespace LinqToDB.DataProvider.Access
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 		}
 
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)

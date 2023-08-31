@@ -31,7 +31,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return statement;
 		}
 
-		private SqlStatement DisableParameters(SqlStatement statement)
+		private static SqlStatement DisableParameters(SqlStatement statement)
 		{
 			// We disable parameters completely as parameters support is very poor across providers:
 			// - big difference in behavior of parameters between providers
@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return statement;
 		}
 
-		private SqlStatement FixCteAliases(SqlStatement statement)
+		private static SqlStatement FixCteAliases(SqlStatement statement)
 		{
 			// CTE clause in ClickHouse currently doesn't support field list, so we should ensure
 			// that CTE query use same field names as we generate for CTE table

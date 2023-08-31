@@ -7,8 +7,8 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
 
@@ -29,9 +29,10 @@ namespace LinqToDB.Linq.Builder
 			var sequence2 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
 
 			SetOperation setOperation;
+
 			switch (methodCall.Method.Name)
 			{
-				case "Concat"       : 
+				case "Concat"       :
 				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
 				case "Union"        : setOperation = SetOperation.Union;        break;
 				case "Except"       : setOperation = SetOperation.Except;       break;
@@ -85,7 +86,6 @@ namespace LinqToDB.Linq.Builder
 				return sequence;
 			}
 
-
 			var set1  = sequence1 as SetOperationContext;
 			var set2  = sequence2 as SetOperationContext;
 
@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Context
 
-		sealed class SetOperationContext : SubQueryContext
+		public sealed class SetOperationContext : SubQueryContext
 		{
 			public SetOperationContext(SubQueryContext sequence1, SubQueryContext sequence2, MethodCallExpression methodCall, SqlSetOperator setOperator)
 				: base(sequence1)

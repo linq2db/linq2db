@@ -242,6 +242,7 @@ namespace LinqToDB.Common.Internal.Cache
 			CheckDisposed();
 			if (_entries.TryRemove(key, out var entry))
 			{
+				using var _ = entry;
 				if (_options.SizeLimit.HasValue)
 				{
 					Interlocked.Add(ref _cacheSize, -entry.Size!.Value);
@@ -421,7 +422,7 @@ namespace LinqToDB.Common.Internal.Cache
 		/// ?. Items with the soonest absolute expiration.
 		/// ?. Items with the soonest sliding expiration.
 		/// ?. Larger objects - estimated by object graph size, inaccurate.
-		private void ExpirePriorityBucket(
+		private static void ExpirePriorityBucket(
 			ref long                           removedSize,
 			long                               removalSizeTarget,
 			Func<CacheEntry<TKey,TEntry>,long> computeEntrySize,
