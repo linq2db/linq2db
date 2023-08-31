@@ -757,9 +757,13 @@ namespace LinqToDB.Linq.Builder
 					var left  = e.Left;
 					var right = e.Right;
 
-					var unwrapSides = e.Left.Type.IsValueType;
+					var shouldCheckColumn = e.Left.Type.ToNullableUnderlying() == e.Right.Type.ToNullableUnderlying();
 
-					if (unwrapSides)
+					if (shouldCheckColumn)
+					{
+						right = right.Unwrap();
+					}
+					else
 					{
 						left  = left.Unwrap();
 						right = right.Unwrap();
