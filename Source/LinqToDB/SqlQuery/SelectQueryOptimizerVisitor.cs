@@ -1460,12 +1460,10 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty)
 				return false;
 
-			var moveConditionToQuery = true;
+			var moveConditionToQuery = joinTable.JoinType != JoinType.Inner || joinTable.JoinType != JoinType.CrossApply;
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
-				moveConditionToQuery = false;
-
 				if (!subQuery.IsSimpleButWhere)
 					return false;
 
