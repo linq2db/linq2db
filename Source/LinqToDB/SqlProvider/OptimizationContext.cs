@@ -75,7 +75,8 @@ namespace LinqToDB.SqlProvider
 				{
 					parameter = new SqlParameter(parameter.Type, newName, parameter.Value)
 					{
-						AccessorId = parameter.AccessorId
+						AccessorId     = parameter.AccessorId,
+						ValueConverter = parameter.ValueConverter
 					};
 				}
 
