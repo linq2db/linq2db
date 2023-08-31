@@ -206,14 +206,6 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (member is MemberExpression meCheck && SequenceHelper.IsSameContext(meCheck.Expression, this))
-					{
-						// It will help to do not crash when user uses Automapper and it tries to map non accessible fields
-						//
-						if (flags.IsExpression())
-							return new DefaultValueExpression(MappingSchema, path.Type);
-					}
-
 					return path;
 				}
 
