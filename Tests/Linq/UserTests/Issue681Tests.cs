@@ -212,10 +212,12 @@ namespace Tests.UserTests
 			using var db = GetDataContext(context, testLinqService : false);
 			using var t  = db.CreateLocalTable<TTable>();
 
-			if (withServer && (!withDatabase || !withSchema) && context.IsAnyOf(TestProvName.AllSqlServer))
+			if (withServer && (!withDatabase || !withSchema || ddl) && context.IsAnyOf(TestProvName.AllSqlServer))
 			{
-				// SQL Server FQN requires schema and db components for linked-server query
-				throws = true;
+				// 1. SQL Server FQN requires schema and db components for linked-server query
+				// 2. DDL queries cannto be run against linked server
+				throws             = true;
+				throwsSqlException = ddl && withDatabase && withSchema;
 			}
 
 			if (withServer && ddl && context.IsAnyOf(TestProvName.AllSapHana))
@@ -288,7 +290,7 @@ namespace Tests.UserTests
 						((SqlServerDataProvider)((DataConnection)db).DataProvider).Adapter.SqlExceptionType,
 						() => operation(db, table, schemaName, dbName, serverName));
 				}
-				if (throwsHanaException)
+				else if (throwsHanaException)
 				{
 					try
 					{
