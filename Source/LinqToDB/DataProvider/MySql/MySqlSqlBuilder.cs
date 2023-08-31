@@ -288,15 +288,15 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause;      BuildWithClause     (statement.GetWithClause());
-				BuildStep = Step.SelectClause;    BuildSelectClause   (statement.SelectQuery);
-				BuildStep = Step.FromClause;      BuildFromClause     (statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause;     BuildWhereClause    (statement.SelectQuery);
-				BuildStep = Step.GroupByClause;   BuildGroupByClause  (statement.SelectQuery);
-				BuildStep = Step.HavingClause;    BuildHavingClause   (statement.SelectQuery);
-				BuildStep = Step.OrderByClause;   BuildOrderByClause  (statement.SelectQuery);
-				BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.WithClause;      BuildWithClause        (statement.GetWithClause());
+				BuildStep = Step.SelectClause;    BuildSelectClause      (statement.SelectQuery);
+				BuildStep = Step.FromClause;      BuildFromClause        (statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;     BuildWhereClause       (statement.SelectQuery);
+				BuildStep = Step.GroupByClause;   BuildGroupByClause     (statement.SelectQuery);
+				BuildStep = Step.HavingClause;    BuildHavingClause      (statement.SelectQuery);
+				BuildStep = Step.OrderByClause;   BuildOrderByClause     (statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;     BuildOffsetLimit       (statement.SelectQuery);
+				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 			}
 
 			if (insertClause.WithIdentity)
@@ -597,9 +597,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (statement.SqlQueryExtensions is not null && _hintBuilder is not null)
 			{
-				if (_hintBuilder.Length > 0 && _hintBuilder[_hintBuilder.Length - 1] != ' ')
+				if (_hintBuilder.Length > 0 && _hintBuilder[^1] != ' ')
 					_hintBuilder.Append(' ');
-				BuildQueryExtensions(_hintBuilder, statement.SqlQueryExtensions, null, " ", null);
+				BuildQueryExtensions(_hintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 			}
 
 			if (_isTopLevelBuilder && _hintBuilder!.Length > 0)
@@ -625,7 +625,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
@@ -644,8 +644,13 @@ namespace LinqToDB.DataProvider.MySql
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
+		}
+
+		protected override void BuildSql()
+		{
+			BuildSqlForUnion();
 		}
 	}
 }

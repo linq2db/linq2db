@@ -789,5 +789,40 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ OPT_PARAM('star_transformation_enabled' 'true') */"));
 		}
+
+		[Test]
+		public void OracleUnionTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent.TableID("cc")
+					select p
+				)
+				.AsOracle()
+				.Union
+				(
+					from p in db.Child
+					select p.Parent
+				)
+				.Union
+				(
+					from p in db.Parent
+					from c in db.Child.TableID("pp")
+						.AsSubQuery()
+						.AsOracle()
+					select p
+				)
+				.AsOracle()
+				.ContainersHint(OracleHints.Hint.NoParallel);
+
+			_ = q.ToList();
+
+
+			Assert.That(LastQuery, Should.Contain(
+				"ELECT /*+ CONTAINERS(DEFAULT_PDB_HINT='NO_PARALLEL')",
+				"UNION"));
+		}
 	}
 }
