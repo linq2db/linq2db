@@ -40,8 +40,8 @@ namespace Tests.UserTests
 				{
 					using var db = GetDataConnection(context);
 
-					var now = DateTime.Now;
-					var userId = Guid.NewGuid();
+					var now = TestData.DateTime;
+					var userId = TestData.Guid1;
 
 					var result = GetQuery(db, userId, now)
 						.Select(MediaItemSearchSharedResultProjection(now))
@@ -52,8 +52,8 @@ namespace Tests.UserTests
 				{
 					using var db = GetDataConnection(context);
 
-					var now = DateTime.Now;
-					var userId = Guid.NewGuid();
+					var now = TestData.DateTime3;
+					var userId = TestData.Guid2;
 
 					var result = GetQuery(db, userId, now)
 						.Select(MediaItemSearchSharedResultProjection(now))

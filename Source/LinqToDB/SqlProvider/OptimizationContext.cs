@@ -11,6 +11,7 @@ namespace LinqToDB.SqlProvider
 	public class OptimizationContext
 	{
 		private IQueryParametersNormalizer?                      _parametersNormalizer;
+		private Dictionary<SqlParameter, SqlParameter>?          _parametersMap;
 		private List<SqlParameter>?                              _actualParameters;
 		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
 
@@ -66,24 +67,32 @@ namespace LinqToDB.SqlProvider
 
 		public SqlParameter AddParameter(SqlParameter parameter)
 		{
-			var existingIndex = _actualParameters?.IndexOf(parameter) ?? -1;
-			if (IsParameterOrderDependent || existingIndex == -1)
+			var returnValue = parameter;
+
+			if (!IsParameterOrderDependent && _parametersMap?.TryGetValue(parameter, out var newParameter) == true)
+			{
+				returnValue = newParameter;
+			}
+			else
 			{
 				var newName = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
 
 				if (IsParameterOrderDependent || newName != parameter.Name)
 				{
-					parameter = new SqlParameter(parameter.Type, newName, parameter.Value)
+					returnValue = new SqlParameter(parameter.Type, newName, parameter.Value)
 					{
 						AccessorId     = parameter.AccessorId,
 						ValueConverter = parameter.ValueConverter
 					};
 				}
 
-				(_actualParameters ??= new()).Add(parameter);
+				if (!IsParameterOrderDependent)
+					(_parametersMap ??= new()).Add(parameter, returnValue);
+
+				(_actualParameters ??= new()).Add(returnValue);
 			}
 
-			return parameter;
+			return returnValue;
 		}
 
 		public SqlParameter SuggestDynamicParameter(DbDataType dbDataType, object? value)
