@@ -245,9 +245,9 @@ namespace Tests.DataProvider
 			using var db = GetDataConnection(context);
 			db.DataProvider = new WrapperProvider(db.DataProvider, (normalizerBase) => new ValidateOriginalNameNormalizer(normalizerBase));
 
-			await using var dbTable1 = await db.CreateTempTableAsync<Table1>("table1");
-			await using var dbTable2 = await db.CreateTempTableAsync<Table2>("table2");
-			await using var dbTable3 = await db.CreateTempTableAsync<Table3>("table3");
+			await using var dbTable1 = db.CreateLocalTable<Table1>("table1");
+			await using var dbTable2 = db.CreateLocalTable<Table2>("table2");
+			await using var dbTable3 = db.CreateLocalTable<Table3>("table3");
 
 			var query1 = GenerateQuery("test");
 			_ = await query1.ToListAsync();
@@ -285,9 +285,9 @@ namespace Tests.DataProvider
 				defaultTrace(info);
 			};
 
-			await using var dbTable1 = await db.CreateTempTableAsync<Table1>("table1");
-			await using var dbTable2 = await db.CreateTempTableAsync<Table2>("table2");
-			await using var dbTable3 = await db.CreateTempTableAsync<Table3>("table3");
+			await using var dbTable1 = db.CreateLocalTable<Table1>("table1");
+			await using var dbTable2 = db.CreateLocalTable<Table2>("table2");
+			await using var dbTable3 = db.CreateLocalTable<Table3>("table3");
 
 			var query1 = GenerateQuery("test");
 			_ = await query1.ToListAsync();
