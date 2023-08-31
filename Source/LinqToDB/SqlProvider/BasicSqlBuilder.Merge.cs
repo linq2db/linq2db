@@ -59,8 +59,9 @@ namespace LinqToDB.SqlProvider
 
 			BuildOutputSubclause(merge.Output);
 
-			BuildQueryExtensions(merge);
-			BuildMergeTerminator(merge);
+			BuildSubQueryExtensions(merge);
+			BuildQueryExtensions   (merge);
+			BuildMergeTerminator   (merge);
 		}
 
 		/// <summary>

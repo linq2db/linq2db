@@ -362,11 +362,8 @@ namespace LinqToDB.DataProvider.Access
 			return sb;
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
-			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null);
-
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
 				var len = StringBuilder.Length;
@@ -384,8 +381,14 @@ namespace LinqToDB.DataProvider.Access
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 		}
 
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
