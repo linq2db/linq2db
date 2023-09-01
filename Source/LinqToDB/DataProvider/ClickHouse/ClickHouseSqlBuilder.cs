@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#region Identifiers
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			// FQN: [db].name (actually FQN schema is more complex, but we don't support such scenarios)
 			if (name.Database != null && !tableOptions.IsTemporaryOptionSet())
@@ -428,15 +428,15 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause     ; BuildWithClause     (statement.GetWithClause());
-				BuildStep = Step.SelectClause   ; BuildSelectClause   (statement.SelectQuery);
-				BuildStep = Step.FromClause     ; BuildFromClause     (statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause    ; BuildWhereClause    (statement.SelectQuery);
-				BuildStep = Step.GroupByClause  ; BuildGroupByClause  (statement.SelectQuery);
-				BuildStep = Step.HavingClause   ; BuildHavingClause   (statement.SelectQuery);
-				BuildStep = Step.OrderByClause  ; BuildOrderByClause  (statement.SelectQuery);
-				BuildStep = Step.OffsetLimit    ; BuildOffsetLimit    (statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.WithClause     ; BuildWithClause        (statement.GetWithClause());
+				BuildStep = Step.SelectClause   ; BuildSelectClause      (statement.SelectQuery);
+				BuildStep = Step.FromClause     ; BuildFromClause        (statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause    ; BuildWhereClause       (statement.SelectQuery);
+				BuildStep = Step.GroupByClause  ; BuildGroupByClause     (statement.SelectQuery);
+				BuildStep = Step.HavingClause   ; BuildHavingClause      (statement.SelectQuery);
+				BuildStep = Step.OrderByClause  ; BuildOrderByClause     (statement.SelectQuery);
+				BuildStep = Step.OffsetLimit    ; BuildOffsetLimit       (statement.SelectQuery);
+				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 			}
 
 			if (insertClause.WithIdentity)
@@ -536,8 +536,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null);
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null, Sql.QueryExtensionScope.QueryHint);
 		}
+
+		HashSet<SqlQueryExtension>? _finalHints;
 
 		protected override void BuildFromExtensions(SelectQuery selectQuery)
 		{
@@ -551,11 +553,23 @@ namespace LinqToDB.DataProvider.ClickHouse
 					_ => false
 				});
 
-			static bool HasFinal(SqlQueryExtension ext)
+			bool HasFinal(SqlQueryExtension ext)
 			{
-				return
+				var has =
 					ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint or Sql.QueryExtensionScope.SubQueryHint &&
 					ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final);
+
+				if (!has)
+					return false;
+
+				if (_finalHints == null)
+					_finalHints = new();
+				else if (_finalHints.Contains(ext))
+					return false;
+
+				_finalHints.Add(ext);
+
+				return true;
 			}
 
 			if (hasFinal)
@@ -565,6 +579,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 					.Append(ClickHouseHints.Table.Final)
 					;
 			}
+		}
+
+		protected override void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
+		{
+			if (sqlBuilder is ClickHouseSqlBuilder { _finalHints: {} fh } )
+				(_finalHints ??= new()).AddRange(fh);
 		}
 	}
 }

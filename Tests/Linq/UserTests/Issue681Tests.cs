@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 #if NETFRAMEWORK
 using System.ServiceModel;
@@ -19,95 +20,308 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue681Tests : TestBase
 	{
-		[Table("LinqDataTypes")]
+		[Table("Issue681Table")]
 		sealed class TestTable
 		{
-			[Column("ID")]
-			public int ID { get; set; }
+			[PrimaryKey]
+			public int ID    { get; set; }
+
+			[Column]
+			public int Value { get; set; }
 		}
 
-		// for SAP HANA cross-server queries see comments how to configure SAP HANA in TestUtils.GetServerName() method
+		[Table("Issue681Table4")]
+		sealed class TestTableWithIdentity
+		{
+			[PrimaryKey, Identity]
+			public int ID { get; set; }
+
+			[Column]
+			public int Value { get; set; }
+		}
+
 		[Test]
-		public void TestTableFQN(
+		public async Task TestITable(
 			[DataSources] string context,
 			[Values] bool withServer,
 			[Values] bool withDatabase,
 			[Values] bool withSchema)
 		{
-			var throws             = false;
-			var throwsSqlException = false;
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) => { t.ToList(); return Task.CompletedTask; });
+		}
+
+		[Test]
+		public async Task TestInsert(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				db.Insert(new TestTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestUpdate(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				db.Update(new TestTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestDelete(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				db.Delete(new TestTable() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestInsertOrReplace(
+			[DataSources(TestProvName.AllClickHouse)] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				var record = new TestTable() { ID = 5, Value = 10 };
+				// insert
+				db.InsertOrReplace(record, databaseName: d, serverName: s, schemaName: u);
+				// replace
+				db.InsertOrReplace(record, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestInsertWithIdentity(
+			[DataSources(TestProvName.AllClickHouse)] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTableWithIdentity>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				db.InsertWithIdentity(new TestTableWithIdentity() { ID = 5, Value = 10 }, databaseName: d, serverName: s, schemaName: u);
+				return Task.CompletedTask;
+			});
+		}
+
+		[Test]
+		public async Task TestCreate(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				try
+				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+					db.CreateTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+				}
+				finally
+				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+				}
+				return Task.CompletedTask;
+				// not allowed for remote server
+			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}", ddl: true);
+		}
+
+		[Test]
+		public async Task TestCreateAsync(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, async (db, t, u, d, s) =>
+			{
+				try
+				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+					await db.CreateTableAsync<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+				}
+				finally
+				{
+					await db.DropTableAsync<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+				}
+				// not allowed for remote server
+			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}", ddl: true);
+		}
+
+		[Test]
+		public async Task TestDrop(
+			[DataSources] string context,
+			[Values] bool withServer,
+			[Values] bool withDatabase,
+			[Values] bool withSchema)
+		{
+			await TestTableFQN<TestTable>(context, withServer, withDatabase, withSchema, (db, t, u, d, s) =>
+			{
+				try
+				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
+					db.CreateTable<TestTable>(tableName: "Issue681Table2");
+				}
+				finally
+				{
+					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
+				}
+				return Task.CompletedTask;
+			}, TestProvName.AllSqlServer, ddl: true);
+		}
+
+		public async Task TestTableFQN<TTable>(
+			string context,
+			bool withServer, bool withDatabase, bool withSchema,
+			Func<IDataContext, ITable<TTable>, string?, string?, string?, Task> operation,
+			string? withServerThrows = null,
+			bool ddl = false)
+			where TTable: class
+		{
+			var throws              = false;
+			var throwsSqlException  = false;
+			var throwsOraException  = false;
+			var throwsHanaException = false;
 
 			string? serverName;
 			string? schemaName;
 			string? dbName;
 
-			using (new DisableBaseline("Use instance name is SQL", context.IsAnyOf(TestProvName.AllSqlServer) && !context.IsAnyOf(TestProvName.AllSqlAzure) && withServer))
-			using (var db = GetDataContext(context, testLinqService : false))
+			using var _  = new DisableBaseline("Use instance name is SQL", context.IsAnyOf(TestProvName.AllSqlServer) && !context.IsAnyOf(TestProvName.AllSqlAzure) && withServer);
+			using var db = GetDataContext(context, testLinqService : false);
+			using var t  = db.CreateLocalTable<TTable>();
+
+			if (withServer && (!withDatabase || !withSchema || ddl) && context.IsAnyOf(TestProvName.AllSqlServer))
 			{
-				if (withServer && (!withDatabase || !withSchema) && context.IsAnyOf(TestProvName.AllSqlServer))
-				{
-					// SQL Server FQN requires schema and db components for linked-server query
-					throws = true;
-				}
+				// 1. SQL Server FQN requires schema and db components for linked-server query
+				// 2. DDL queries cannto be run against linked server
+				throws             = true;
+				throwsSqlException = ddl && withDatabase && withSchema;
+			}
 
-				if (withServer && withDatabase && withSchema && context.IsAnyOf(TestProvName.AllSqlAzure))
-				{
-					// linked servers not supported by Azure
-					// "Reference to database and/or server name in '...' is not supported in this version of SQL Server."
-					throws             = true;
+			if (withServer && ddl && context.IsAnyOf(TestProvName.AllSapHana))
+			{
+				// SAP HANA doesn't support DDL queries for linked servers (CREATE/DROP TABLE)
+				throws              = true;
+				throwsHanaException = withSchema;
+			}
+
+			if (withServerThrows != null && withServer && context.IsAnyOf(withServerThrows))
+			{
+				throws = true;
+				if (context.IsAnyOf(TestProvName.AllSqlServer) && withDatabase && withSchema)
 					throwsSqlException = true;
-				}
+				if (context.IsAnyOf(TestProvName.AllOracle))
+					throwsOraException = true;
+			}
 
-				if (withServer && !withDatabase && context.IsAnyOf(TestProvName.AllInformix))
-				{
-					// Informix requires db name for linked server queries
-					throws = true;
-				}
+			if (withServer && withDatabase && withSchema && context.IsAnyOf(TestProvName.AllSqlAzure))
+			{
+				// linked servers not supported by Azure
+				// "Reference to database and/or server name in '...' is not supported in this version of SQL Server."
+				throws = true;
+				throwsSqlException = true;
+			}
 
-				if (withServer && !withSchema && context.IsAnyOf(TestProvName.AllSapHana))
-				{
-					// SAP HANA requires schema name for linked server queries
-					throws = true;
-				}
+			if (withServer && !withDatabase && context.IsAnyOf(TestProvName.AllInformix))
+			{
+				// Informix requires db name for linked server queries
+				throws = true;
+			}
 
-				if (withDatabase && !withSchema && context.IsAnyOf(ProviderName.DB2))
-				{
-					throws = true;
-				}
+			if (withServer && !withSchema && context.IsAnyOf(TestProvName.AllSapHana))
+			{
+				// SAP HANA requires schema name for linked server queries
+				throws = true;
+			}
 
-				using (new DisableLogging())
-				{
-					serverName = withServer   ? TestUtils.GetServerName(db, context)   : null;
-					dbName     = withDatabase ? TestUtils.GetDatabaseName(db, context) : null;
-					schemaName = withSchema   ? TestUtils.GetSchemaName(db, context)   : null;
-				}
+			if (withDatabase && !withSchema && context.IsAnyOf(ProviderName.DB2))
+			{
+				throws = true;
+			}
 
-				var table = db.GetTable<TestTable>();
+			using (new DisableLogging())
+			{
+				serverName = withServer   ? TestUtils.GetServerName  (db, context) : null;
+				dbName     = withDatabase ? TestUtils.GetDatabaseName(db, context) : null;
+				schemaName = withSchema   ? TestUtils.GetSchemaName  (db, context) : null;
+			}
 
-				if (withServer)   table = table.ServerName  (serverName!);
-				if (withDatabase) table = table.DatabaseName(dbName!);
-				if (withSchema)   table = table.SchemaName  (schemaName!);
+			var table = db.GetTable<TTable>();
 
-				if (throws && context.Contains(".LinqService"))
-				{
+			if (withServer  ) table = table.ServerName  (serverName);
+			if (withDatabase) table = table.DatabaseName(dbName);
+			if (withSchema  ) table = table.SchemaName  (schemaName);
+
+			if (throws && context.Contains(".LinqService"))
+			{
 #if NETFRAMEWORK
-					Assert.Throws<FaultException>(() => table.ToList());
+				Assert.ThrowsAsync<FaultException>(() => operation(db, table, schemaName, dbName, serverName));
 #else
-					Assert.Throws<RpcException>(() => table.ToList());
+				Assert.ThrowsAsync<RpcException>(() => operation(db, table, schemaName, dbName, serverName));
 #endif
-				}
-				else if (throws)
+			}
+			else if (throws)
+			{
+				if (throwsSqlException)
 				{
-					if (throwsSqlException)
-						// https://www.youtube.com/watch?v=Qji5x8gBVX4
-						Assert.Throws(
-							((SqlServerDataProvider)((DataConnection)db).DataProvider).Adapter.SqlExceptionType,
-							() => table.ToList());
-					else
-						Assert.Throws<LinqToDBException>(() => table.ToList());
+					Assert.ThrowsAsync(
+						((SqlServerDataProvider)((DataConnection)db).DataProvider).Adapter.SqlExceptionType,
+						() => operation(db, table, schemaName, dbName, serverName));
+				}
+				else if (throwsHanaException)
+				{
+					try
+					{
+						await operation(db, table, schemaName, dbName, serverName);
+						Assert.Fail("OracleException expected");
+					}
+					catch (Exception ex)
+					{
+						Assert.That(ex.GetType().Name, Is.EqualTo(context.IsAnyOf(ProviderName.SapHanaOdbc) ? "OdbcException" : "HanaException"));
+					}
+				}
+				else if (throwsOraException)
+				{
+					try
+					{
+						await operation(db, table, schemaName, dbName, serverName);
+						Assert.Fail("OracleException expected");
+					}
+					catch (Exception ex)
+					{
+						Assert.That(ex.GetType().Name, Is.EqualTo("OracleException"));
+					}
 				}
 				else
-					table.ToList();
+				{
+					Assert.ThrowsAsync<LinqToDBException>(() => operation(db, table, schemaName, dbName, serverName));
+				}
+			}
+			else
+			{
+				await operation(db, table, schemaName, dbName, serverName);
 			}
 		}
 	}

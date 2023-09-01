@@ -2926,67 +2926,67 @@ namespace LinqToDB.SqlProvider
 
 				if (processUniversalUpdate)
 				{
-				foreach (var item in updateStatement.Update.Items)
-				{
-					var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
-						v.Context.TryGetValue(expr, out var newValue)
-							? newValue
-							: expr);
-
-					var usedSources = new HashSet<ISqlTableSource>();
-					QueryHelper.GetUsedSources(ex, usedSources);
-					usedSources.Remove(tableToUpdate);
-					if (objectTree.TryGetValue(tableToUpdate, out var replaced))
-						usedSources.Remove((ISqlTableSource)replaced);
-
-					if (usedSources.Count > 0)
+					foreach (var item in updateStatement.Update.Items)
 					{
-						// it means that update value column depends on other tables and we have to generate more complicated query
+						var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
+							v.Context.TryGetValue(expr, out var newValue)
+								? newValue
+								: expr);
 
-						var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
+						var usedSources = new HashSet<ISqlTableSource>();
+						QueryHelper.GetUsedSources(ex, usedSources);
+						usedSources.Remove(tableToUpdate);
+						if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+							usedSources.Remove((ISqlTableSource)replaced);
 
-						innerQuery.ParentSelect = sql;
+						if (usedSources.Count > 0)
+						{
+							// it means that update value column depends on other tables and we have to generate more complicated query
 
-						innerQuery.Select.Columns.Clear();
+							var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
 
-						var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
-							static (v, e) =>
-							{
-								if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
+							innerQuery.ParentSelect = sql;
+
+							innerQuery.Select.Columns.Clear();
+
+							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
+								static (v, e) =>
 								{
-									e = n;
-									v.Context.objectTree.Remove(e);
-									v.Context.objectTree.Add(e, n);
-								}
-
-								if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
-								{
-										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
-											(ISqlExpression)e, false);
-									if (column != null)
+									if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
 									{
+										e = n;
 										v.Context.objectTree.Remove(e);
-										v.Context.objectTree.Add(e, column);
-										return column;
+										v.Context.objectTree.Add(e, n);
 									}
-								}
 
-								return e;
+									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
+									{
+											var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
+												(ISqlExpression)e, false);
+										if (column != null)
+										{
+											v.Context.objectTree.Remove(e);
+											v.Context.objectTree.Add(e, column);
+											return column;
+										}
+									}
 
-							});
+									return e;
 
-						innerQuery.Select.AddNew(remapped);
-							innerQuery.RemoveNotUnusedColumns();
-						ex = innerQuery;
+								});
+
+							innerQuery.Select.AddNew(remapped);
+								innerQuery.RemoveNotUnusedColumns();
+							ex = innerQuery;
+						}
+
+							item.Column = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
+										  ?? throw new LinqException(
+											  $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
+							item.Expression = ex;
+							newUpdateStatement.Update.Items.Add(item);
+						}
 					}
-
-						item.Column = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
-						              ?? throw new LinqException(
-							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
-						item.Expression = ex;
-						newUpdateStatement.Update.Items.Add(item);
-					}
-				}
 
 					if (updateStatement.Output != null)
 					{

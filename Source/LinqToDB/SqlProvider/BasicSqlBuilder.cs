@@ -169,7 +169,7 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildSql();
 
-				if (Statement.SelectQuery != null && Statement.SelectQuery.HasSetOperators)
+				if (Statement.SelectQuery is { HasSetOperators: true })
 				{
 					foreach (var union in Statement.SelectQuery.SetOperators)
 					{
@@ -182,7 +182,19 @@ namespace LinqToDB.SqlProvider
 							new SqlSelectStatement(union.SelectQuery) { ParentStatement = statement }, sb,
 							optimizationContext, indent,
 							skipAlias);
+						MergeSqlBuilderData(sqlBuilder);
 					}
+				}
+
+				switch (statement.QueryType)
+				{
+					case QueryType.Select :
+					case QueryType.Delete :
+					case QueryType.Update :
+					case QueryType.Insert :
+						BuildStep = Step.QueryExtensions;
+						BuildQueryExtensions(statement);
+						break;
 				}
 
 				FinalizeBuildQuery(statement);
@@ -191,6 +203,10 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildCommand(statement, commandNumber);
 			}
+		}
+
+		protected virtual void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
+		{
 		}
 
 		protected virtual void BuildCommand(SqlStatement statement, int commandNumber)
@@ -224,6 +240,7 @@ namespace LinqToDB.SqlProvider
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
 				new SqlSelectStatement(selectQuery) { ParentStatement = Statement }, StringBuilder, OptimizationContext, indent, skipAlias);
+			MergeSqlBuilderData(sqlBuilder);
 		}
 
 		protected abstract ISqlBuilder CreateSqlBuilder();
@@ -288,6 +305,11 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildSql()
 		{
+			BuildSqlImpl();
+		}
+
+		void BuildSqlImpl()
+		{
 			switch (Statement.QueryType)
 			{
 				case QueryType.Select        : BuildSelectQuery((SqlSelectStatement)Statement);                                             break;
@@ -304,20 +326,43 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		protected void BuildSqlForUnion()
+		{
+			if (Statement.SelectQuery?.SqlQueryExtensions is not null)
+			{
+				var isUnion =
+					Statement.SelectQuery is {HasSetOperators: true} ||
+					Statement.ParentStatement?.SelectQuery is {HasSetOperators: true} sq && sq.SetOperators.Any(s => s.SelectQuery == Statement.SelectQuery);
+
+				if (isUnion)
+				{
+					AppendIndent().AppendLine("(");
+					Indent++;
+					BuildSqlImpl();
+					Indent--;
+					AppendIndent().AppendLine(")");
+
+					return;
+				}
+			}
+
+			BuildSqlImpl();
+		}
+
 		protected virtual void BuildDeleteQuery(SqlDeleteStatement deleteStatement)
 		{
-			BuildStep = Step.Tag;               BuildTag              (deleteStatement);
-			BuildStep = Step.WithClause;        BuildWithClause       (deleteStatement.With);
-			BuildStep = Step.DeleteClause;      BuildDeleteClause     (deleteStatement);
-			BuildStep = Step.FromClause;        BuildDeleteFromClause (deleteStatement);
-			BuildStep = Step.AlterDeleteClause; BuildAlterDeleteClause(deleteStatement);
-			BuildStep = Step.WhereClause;       BuildWhereClause      (deleteStatement.SelectQuery);
-			BuildStep = Step.GroupByClause;     BuildGroupByClause    (deleteStatement.SelectQuery);
-			BuildStep = Step.HavingClause;      BuildHavingClause     (deleteStatement.SelectQuery);
-			BuildStep = Step.OrderByClause;     BuildOrderByClause    (deleteStatement.SelectQuery);
-			BuildStep = Step.OffsetLimit;       BuildOffsetLimit      (deleteStatement.SelectQuery);
-			BuildStep = Step.Output;            BuildOutputSubclause  (deleteStatement.GetOutputClause());
-			BuildStep = Step.QueryExtensions;   BuildQueryExtensions  (deleteStatement);
+			BuildStep = Step.Tag;               BuildTag               (deleteStatement);
+			BuildStep = Step.WithClause;        BuildWithClause        (deleteStatement.With);
+			BuildStep = Step.DeleteClause;      BuildDeleteClause      (deleteStatement);
+			BuildStep = Step.FromClause;        BuildDeleteFromClause  (deleteStatement);
+			BuildStep = Step.AlterDeleteClause; BuildAlterDeleteClause (deleteStatement);
+			BuildStep = Step.WhereClause;       BuildWhereClause       (deleteStatement.SelectQuery);
+			BuildStep = Step.GroupByClause;     BuildGroupByClause     (deleteStatement.SelectQuery);
+			BuildStep = Step.HavingClause;      BuildHavingClause      (deleteStatement.SelectQuery);
+			BuildStep = Step.OrderByClause;     BuildOrderByClause     (deleteStatement.SelectQuery);
+			BuildStep = Step.OffsetLimit;       BuildOffsetLimit       (deleteStatement.SelectQuery);
+			BuildStep = Step.Output;            BuildOutputSubclause   (deleteStatement.GetOutputClause());
+			BuildStep = Step.QueryExtensions;   BuildSubQueryExtensions(deleteStatement);
 		}
 
 		protected void BuildDeleteQuery2(SqlDeleteStatement deleteStatement)
@@ -338,6 +383,7 @@ namespace LinqToDB.SqlProvider
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0, selectStatement, StringBuilder, OptimizationContext, Indent);
+			MergeSqlBuilderData(sqlBuilder);
 
 			--Indent;
 
@@ -355,13 +401,13 @@ namespace LinqToDB.SqlProvider
 				BuildStep = Step.FromClause; BuildFromClause(Statement, selectQuery);
 			}
 
-			BuildStep = Step.WhereClause;     BuildUpdateWhereClause(selectQuery);
-			BuildStep = Step.GroupByClause;   BuildGroupByClause    (selectQuery);
-			BuildStep = Step.HavingClause;    BuildHavingClause     (selectQuery);
-			BuildStep = Step.OrderByClause;   BuildOrderByClause    (selectQuery);
-			BuildStep = Step.OffsetLimit;     BuildOffsetLimit      (selectQuery);
-			BuildStep = Step.Output;          BuildOutputSubclause  (statement.GetOutputClause());
-			BuildStep = Step.QueryExtensions; BuildQueryExtensions  (statement);
+			BuildStep = Step.WhereClause;     BuildUpdateWhereClause (selectQuery);
+			BuildStep = Step.GroupByClause;   BuildGroupByClause     (selectQuery);
+			BuildStep = Step.HavingClause;    BuildHavingClause      (selectQuery);
+			BuildStep = Step.OrderByClause;   BuildOrderByClause     (selectQuery);
+			BuildStep = Step.OffsetLimit;     BuildOffsetLimit       (selectQuery);
+			BuildStep = Step.Output;          BuildOutputSubclause   (statement.GetOutputClause());
+			BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 		}
 
 		protected virtual void BuildSelectQuery(SqlSelectStatement selectStatement)
@@ -375,16 +421,16 @@ namespace LinqToDB.SqlProvider
 				TablePath = null;
 			}
 
-			BuildStep = Step.Tag;             BuildTag            (selectStatement);
-			BuildStep = Step.WithClause;      BuildWithClause     (selectStatement.With);
-			BuildStep = Step.SelectClause;    BuildSelectClause   (selectStatement.SelectQuery);
-			BuildStep = Step.FromClause;      BuildFromClause     (selectStatement, selectStatement.SelectQuery);
-			BuildStep = Step.WhereClause;     BuildWhereClause    (selectStatement.SelectQuery);
-			BuildStep = Step.GroupByClause;   BuildGroupByClause  (selectStatement.SelectQuery);
-			BuildStep = Step.HavingClause;    BuildHavingClause   (selectStatement.SelectQuery);
-			BuildStep = Step.OrderByClause;   BuildOrderByClause  (selectStatement.SelectQuery);
-			BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (selectStatement.SelectQuery);
-			BuildStep = Step.QueryExtensions; BuildQueryExtensions(selectStatement);
+			BuildStep = Step.Tag;             BuildTag               (selectStatement);
+			BuildStep = Step.WithClause;      BuildWithClause        (selectStatement.With);
+			BuildStep = Step.SelectClause;    BuildSelectClause      (selectStatement.SelectQuery);
+			BuildStep = Step.FromClause;      BuildFromClause        (selectStatement, selectStatement.SelectQuery);
+			BuildStep = Step.WhereClause;     BuildWhereClause       (selectStatement.SelectQuery);
+			BuildStep = Step.GroupByClause;   BuildGroupByClause     (selectStatement.SelectQuery);
+			BuildStep = Step.HavingClause;    BuildHavingClause      (selectStatement.SelectQuery);
+			BuildStep = Step.OrderByClause;   BuildOrderByClause     (selectStatement.SelectQuery);
+			BuildStep = Step.OffsetLimit;     BuildOffsetLimit       (selectStatement.SelectQuery);
+			BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(selectStatement);
 
 			TablePath = tablePath;
 			QueryName = queryName;
@@ -394,6 +440,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0, new SqlSelectStatement(selectQuery), StringBuilder, OptimizationContext, Indent, SkipAlias);
+			MergeSqlBuilderData(sqlBuilder);
 		}
 
 		protected virtual void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
@@ -410,14 +457,14 @@ namespace LinqToDB.SqlProvider
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.SelectClause;    BuildSelectClause   (statement.SelectQuery);
-				BuildStep = Step.FromClause;      BuildFromClause     (statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause;     BuildWhereClause    (statement.SelectQuery);
-				BuildStep = Step.GroupByClause;   BuildGroupByClause  (statement.SelectQuery);
-				BuildStep = Step.HavingClause;    BuildHavingClause   (statement.SelectQuery);
-				BuildStep = Step.OrderByClause;   BuildOrderByClause  (statement.SelectQuery);
-				BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.SelectClause;    BuildSelectClause      (statement.SelectQuery);
+				BuildStep = Step.FromClause;      BuildFromClause        (statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;     BuildWhereClause       (statement.SelectQuery);
+				BuildStep = Step.GroupByClause;   BuildGroupByClause     (statement.SelectQuery);
+				BuildStep = Step.HavingClause;    BuildHavingClause      (statement.SelectQuery);
+				BuildStep = Step.OrderByClause;   BuildOrderByClause     (statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;     BuildOffsetLimit       (statement.SelectQuery);
+				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 			}
 
 			if (insertClause.WithIdentity)
@@ -438,14 +485,14 @@ namespace LinqToDB.SqlProvider
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.SelectClause;    BuildSelectClause   (statement.SelectQuery);
-				BuildStep = Step.FromClause;      BuildFromClause     (statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause;     BuildWhereClause    (statement.SelectQuery);
-				BuildStep = Step.GroupByClause;   BuildGroupByClause  (statement.SelectQuery);
-				BuildStep = Step.HavingClause;    BuildHavingClause   (statement.SelectQuery);
-				BuildStep = Step.OrderByClause;   BuildOrderByClause  (statement.SelectQuery);
-				BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(statement);
+				BuildStep = Step.SelectClause;    BuildSelectClause      (statement.SelectQuery);
+				BuildStep = Step.FromClause;      BuildFromClause        (statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause;     BuildWhereClause       (statement.SelectQuery);
+				BuildStep = Step.GroupByClause;   BuildGroupByClause     (statement.SelectQuery);
+				BuildStep = Step.HavingClause;    BuildHavingClause      (statement.SelectQuery);
+				BuildStep = Step.OrderByClause;   BuildOrderByClause     (statement.SelectQuery);
+				BuildStep = Step.OffsetLimit;     BuildOffsetLimit       (statement.SelectQuery);
+				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 			}
 
 			if (insertClause.WithIdentity)
@@ -463,7 +510,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		// Default implementation. Doesn't generate linked server and package name components.
-		public virtual StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public virtual StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Database != null)
 			{
@@ -480,6 +527,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
+		}
+
+		protected virtual StringBuilder BuildObjectNameSuffix(StringBuilder sb, SqlObjectName name, bool escape)
+		{
+			return sb;
 		}
 
 		public string ConvertInline(string value, ConvertType convertType)
@@ -1932,11 +1984,14 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected void BuildQueryExtensions(
-			StringBuilder sb,
+			StringBuilder           sb,
 			List<SqlQueryExtension> sqlQueryExtensions,
-			string? prefix, string delimiter, string? suffix)
+			string?                 prefix,
+			string                  delimiter,
+			string?                 suffix,
+			Sql.QueryExtensionScope scope)
 		{
-			if (sqlQueryExtensions.Any(ext => ext.Scope is Sql.QueryExtensionScope.QueryHint or Sql.QueryExtensionScope.SubQueryHint))
+			if (sqlQueryExtensions.Any(ext => ext.Scope == scope))
 			{
 				if (prefix != null)
 					sb.Append(prefix);
@@ -2757,6 +2812,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlField:
 					{
 						var field = (SqlField)expr;
+					SqlObjectName? suffixName = null;
 
 						if (BuildFieldTableAlias(field) && buildTableName && field.Table != null)
 						{
@@ -2796,7 +2852,11 @@ namespace LinqToDB.SqlProvider
 								var len   = StringBuilder.Length;
 
 								if (table == null)
-									StringBuilder.Append(GetPhysicalTableName(field.Table, null, true));
+								{
+									if (field.Table is SqlTable tbl)
+										suffixName = tbl.TableName;
+									StringBuilder.Append(GetPhysicalTableName(field.Table, null, true, withoutSuffix: suffixName != null));
+								}
 								else
 									Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
 
@@ -2814,7 +2874,10 @@ namespace LinqToDB.SqlProvider
 							StringBuilder.Append('*');
 						else
 							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-					}
+
+						if (suffixName != null)
+							BuildObjectNameSuffix(StringBuilder, suffixName.Value, true);
+				}
 
 					break;
 
@@ -3446,7 +3509,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
+		protected virtual string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
 			switch (table.ElementType)
 			{
@@ -3460,7 +3523,7 @@ namespace LinqToDB.SqlProvider
 
 						using var sb = Pools.StringBuilder.Allocate();
 
-						BuildObjectName(sb.Value, tableName, tbl.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable, true, tbl.TableOptions);
+						BuildObjectName(sb.Value, tableName, tbl.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable, true, tbl.TableOptions, withoutSuffix: withoutSuffix);
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
@@ -3509,11 +3572,11 @@ namespace LinqToDB.SqlProvider
 					}
 
 				case QueryElementType.TableSource:
-					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
+					return GetPhysicalTableName(((SqlTableSource)table).Source, alias, withoutSuffix: withoutSuffix);
 
 				case QueryElementType.SqlCteTable   :
 				case QueryElementType.SqlRawSqlTable:
-					return BuildObjectName(new (), ((SqlTable)table).TableName, ConvertType.NameToQueryTable, true, TableOptions.NotSet).ToString();
+					return BuildObjectName(new (), ((SqlTable)table).TableName, ConvertType.NameToQueryTable, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
 
 				case QueryElementType.SqlTableLikeSource:
 					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);
@@ -3863,7 +3926,11 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		#region BuildQueryExtensions
+		#region BuildSub/QueryExtensions
+
+		protected virtual void BuildSubQueryExtensions(SqlStatement statement)
+		{
+		}
 
 		protected virtual void BuildQueryExtensions(SqlStatement statement)
 		{

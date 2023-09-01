@@ -176,7 +176,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			var databaseName = name.Database;
 
@@ -480,7 +480,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")");
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")", Sql.QueryExtensionScope.QueryHint);
 		}
 	}
 }
