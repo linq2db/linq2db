@@ -313,9 +313,6 @@ namespace LinqToDB.DataProvider.Access
 					if (value.Length > 0 && value[0] == '[')
 							return sb.Append(value);
 
-					if (value.IndexOf('.') > 0)
-						value = string.Join("].[", value.Split('.'));
-
 					return sb.Append('[').Append(value).Append(']');
 
 				case ConvertType.SprocParameterToName:
@@ -340,7 +337,7 @@ namespace LinqToDB.DataProvider.Access
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Database != null)
 			{

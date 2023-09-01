@@ -29,7 +29,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#region Identifiers
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			// FQN: [db].name (actually FQN schema is more complex, but we don't support such scenarios)
 			if (name.Database != null && !tableOptions.IsTemporaryOptionSet())

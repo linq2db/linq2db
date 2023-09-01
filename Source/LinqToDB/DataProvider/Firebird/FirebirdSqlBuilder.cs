@@ -306,7 +306,7 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			if (name.Package != null)
 			{
@@ -536,7 +536,7 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
+		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
 			// for parameter-less table function skip argument list generation
 			if (table is SqlTable tbl
@@ -549,12 +549,12 @@ namespace LinqToDB.DataProvider.Firebird
 
 				using var sb = Pools.StringBuilder.Allocate();
 
-				BuildObjectName(sb.Value, tableName, ConvertType.NameToProcedure, true, tbl.TableOptions);
+				BuildObjectName(sb.Value, tableName, ConvertType.NameToProcedure, true, tbl.TableOptions, withoutSuffix: withoutSuffix);
 
 				return sb.Value.ToString();
 			}
 
-			return base.GetPhysicalTableName(table, alias, ignoreTableExpression, defaultDatabaseName);
+			return base.GetPhysicalTableName(table, alias, ignoreTableExpression, defaultDatabaseName, withoutSuffix: withoutSuffix);
 		}
 	}
 }

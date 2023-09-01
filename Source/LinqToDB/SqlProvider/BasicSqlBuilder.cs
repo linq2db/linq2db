@@ -510,7 +510,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		// Default implementation. Doesn't generate linked server and package name components.
-		public virtual StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public virtual StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Database != null)
 			{
@@ -527,6 +527,11 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
+		}
+
+		protected virtual StringBuilder BuildObjectNameSuffix(StringBuilder sb, SqlObjectName name, bool escape)
+		{
+			return sb;
 		}
 
 		public string ConvertInline(string value, ConvertType convertType)
@@ -2807,6 +2812,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlField:
 					{
 						var field = (SqlField)expr;
+					SqlObjectName? suffixName = null;
 
 						if (BuildFieldTableAlias(field) && buildTableName && field.Table != null)
 						{
@@ -2846,7 +2852,11 @@ namespace LinqToDB.SqlProvider
 								var len   = StringBuilder.Length;
 
 								if (table == null)
-									StringBuilder.Append(GetPhysicalTableName(field.Table, null, true));
+								{
+									if (field.Table is SqlTable tbl)
+										suffixName = tbl.TableName;
+									StringBuilder.Append(GetPhysicalTableName(field.Table, null, true, withoutSuffix: suffixName != null));
+								}
 								else
 									Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
 
@@ -2864,7 +2874,10 @@ namespace LinqToDB.SqlProvider
 							StringBuilder.Append('*');
 						else
 							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
-					}
+
+						if (suffixName != null)
+							BuildObjectNameSuffix(StringBuilder, suffixName.Value, true);
+				}
 
 					break;
 
@@ -3496,7 +3509,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
+		protected virtual string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
 			switch (table.ElementType)
 			{
@@ -3510,7 +3523,7 @@ namespace LinqToDB.SqlProvider
 
 						using var sb = Pools.StringBuilder.Allocate();
 
-						BuildObjectName(sb.Value, tableName, tbl.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable, true, tbl.TableOptions);
+						BuildObjectName(sb.Value, tableName, tbl.SqlTableType == SqlTableType.Function ? ConvertType.NameToProcedure : ConvertType.NameToQueryTable, true, tbl.TableOptions, withoutSuffix: withoutSuffix);
 
 						if (!ignoreTableExpression && tbl.SqlTableType == SqlTableType.Expression)
 						{
@@ -3559,11 +3572,11 @@ namespace LinqToDB.SqlProvider
 					}
 
 				case QueryElementType.TableSource:
-					return GetPhysicalTableName(((SqlTableSource)table).Source, alias);
+					return GetPhysicalTableName(((SqlTableSource)table).Source, alias, withoutSuffix: withoutSuffix);
 
 				case QueryElementType.SqlCteTable   :
 				case QueryElementType.SqlRawSqlTable:
-					return BuildObjectName(new (), ((SqlTable)table).TableName, ConvertType.NameToQueryTable, true, TableOptions.NotSet).ToString();
+					return BuildObjectName(new (), ((SqlTable)table).TableName, ConvertType.NameToQueryTable, true, TableOptions.NotSet, withoutSuffix: withoutSuffix).ToString();
 
 				case QueryElementType.SqlTableLikeSource:
 					return ConvertInline(((SqlTableLikeSource)table).Name, ConvertType.NameToQueryTable);
