@@ -814,7 +814,10 @@ namespace LinqToDB.Linq.Builder
 
 								case ExpressionType.Parameter    :
 									{
-										var sequence  = levelExpression == ExpressionConstants.DataContextParam ? null : GetSequence(expression, level);
+										if (levelExpression == ExpressionConstants.DataContextParam && requestFlag == RequestFor.Field)
+											return IsExpressionResult.False;
+
+										var sequence  = GetSequence(expression, level);
 
 										if (sequence == null)
 										{
