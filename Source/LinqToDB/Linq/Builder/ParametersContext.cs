@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 		static ParameterExpression[] AccessorParameters =
 		{
 			ExpressionBuilder.ExpressionParam,
-			ExpressionBuilder.DataContextParam,
+			ExpressionConstants.DataContextParam,
 			ExpressionBuilder.ParametersParam
 		};
 
@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
 			{
 				//TODO: Check this
-				var sql = ExpressionBuilder.ConvertToSqlConvertible(expression);
+				var sql = ExpressionBuilder.ConvertToSqlConvertible(expression, DataContext);
 				if (sql != null)
 					return null;
 			}
@@ -229,7 +229,8 @@ namespace LinqToDB.Linq.Builder
 
 			var evaluatedExpr = Expression.Call(null,
 				Methods.LinqToDB.EvaluateExpression,
-				valueAccessorExpr);
+				valueAccessorExpr,
+				Expression.Constant(null, typeof(IDataContext)));
 
 			var valueAccessor = (Expression)evaluatedExpr;
 			valueAccessor = Expression.Convert(valueAccessor, expectedType);
@@ -403,14 +404,14 @@ namespace LinqToDB.Linq.Builder
 			//
 			if (name == null && expression.Type == typeof(DataParameter))
 			{
-				var dp = expression.EvaluateExpression<DataParameter>();
+				var dp = expression.EvaluateExpression<DataParameter>(dataContext);
 				if (dp != null && !string.IsNullOrEmpty(dp.Name))
 					name = dp.Name;
 			}
 
 			// see #820
-			accessorExpression         = CorrectAccessorExpression(accessorExpression,         dataContext, ExpressionBuilder.DataContextParam);
-			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, ExpressionBuilder.DataContextParam);
+			accessorExpression         = CorrectAccessorExpression(accessorExpression,         dataContext, ExpressionConstants.DataContextParam);
+			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, ExpressionConstants.DataContextParam);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),

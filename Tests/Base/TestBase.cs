@@ -6,21 +6,24 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
 using NUnit.Framework.Internal;
+
 using Tests.Remote.ServerContainer;
 
 namespace Tests
@@ -1287,9 +1290,10 @@ namespace Tests
 
 		public T[] AssertQuery<T>(IQueryable<T> query)
 		{
-			var expr    = query.Expression;
+			var expr    = query.Expression.Replace(ExpressionConstants.DataContextParam, Expression.Constant(Internals.GetDataContext(query), typeof(IDataContext)));
 			var loaded  = new Dictionary<Type, Expression>();
 			var actual  = query.ToArray();
+
 			var newExpr = expr.Transform(loaded, static (loaded, e) =>
 			{
 				if (e.NodeType == ExpressionType.Call)

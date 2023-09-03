@@ -599,7 +599,7 @@ namespace LinqToDB
 							{
 								if (typeof(IQueryableContainer).IsSameOrParentOf(current.Type))
 								{
-									next = ((IQueryableContainer)current.EvaluateExpression()!).Query.Expression;
+									next = current.EvaluateExpression<IQueryableContainer>(dataContext)!.Query.Expression;
 								}
 								break;
 							}

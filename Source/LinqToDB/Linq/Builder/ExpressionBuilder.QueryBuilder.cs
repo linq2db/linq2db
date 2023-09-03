@@ -337,9 +337,8 @@ namespace LinqToDB.Linq.Builder
 
 								if (ce.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
 								{
-									return new TransformInfo(context.builder.BuildSql(context.context, ce.Arguments[0], context.alias ?? ce.Arguments[1].EvaluateExpression<string>()));
+									return new TransformInfo(context.builder.BuildSql(context.context, ce.Arguments[0], context.alias ?? ce.Arguments[1].EvaluateExpression<string>(context.builder.DataContext)));
 								}
-
 
 								if (context.builder.IsServerSideOnly(expr) || context.builder.PreferServerSide(expr, context.enforceServerSide) || ce.Method.IsSqlPropertyMethodEx())
 									return new TransformInfo(context.builder.BuildSql(context.context, expr, context.alias));
@@ -840,7 +839,7 @@ namespace LinqToDB.Linq.Builder
 				BuildBlock(expr), new[]
 				{
 					QueryRunnerParam,
-					DataContextParam,
+					ExpressionConstants.DataContextParam,
 					DataReaderParam,
 					ExpressionParam,
 					ParametersParam,
@@ -880,7 +879,7 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Call(
 					null,
 					MemberHelper.MethodOf(() => ExecuteSubQuery(null!, null!, null!)),
-						DataContextParam,
+						ExpressionConstants.DataContextParam,
 						Expression.NewArrayInit(typeof(object), parameters),
 						Expression.Constant(queryReader)
 					);

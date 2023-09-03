@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 			// evaluating IQueryableContainer
 			while (root.NodeType == ExpressionType.Constant && typeof(Sql.IQueryableContainer).IsSameOrParentOf(root.Type))
 			{
-				root = ((Sql.IQueryableContainer)root.EvaluateExpression()!).Query.Expression;
+				root = root.EvaluateExpression<Sql.IQueryableContainer>(builder.DataContext)!.Query.Expression;
 				root = root.SkipMethodChain(builder.MappingSchema);
 			}
 
