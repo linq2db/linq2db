@@ -34,8 +34,10 @@ namespace LinqToDB.Tools.Activity
 
 		void Stop(TimeSpan time)
 		{
+#pragma warning disable CA2002 // Do not lock on objects with weak identity
 			lock (this)
 				_elapsed += time;
+#pragma warning restore CA2002 // Do not lock on objects with weak identity
 		}
 
 		sealed class Watcher : IActivity

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.Tools.Activity
 {
-	public class ActivityStatistics
+	public static class ActivityStatistics
 	{
 		static ActivityStatistics()
 		{
