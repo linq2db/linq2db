@@ -5,8 +5,8 @@ using System.Reflection;
 namespace LinqToDB.Metadata
 {
 	using Common;
-	using Mapping;
 	using Extensions;
+	using Mapping;
 
 	public class AttributeReader : IMetadataReader
 	{

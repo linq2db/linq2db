@@ -25,7 +25,7 @@ namespace LinqToDB.Linq
 			{
 				var sqlTable = new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
 
-				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				if (tableName != null || schemaName != null || databaseName != null || serverName != null)
 				{
 					sqlTable.TableName = new(
 						          tableName    ?? sqlTable.TableName.Name,

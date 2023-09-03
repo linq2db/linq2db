@@ -236,7 +236,7 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 
-		private string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
+		private static string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
 		{
 			if (physicalName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
 				return physicalName;
@@ -259,14 +259,14 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Database != null && IsTemporary(name.Name, tableOptions))
 				name = name with { Database = null };
 
 			name = name with { Name = GetTablePhysicalName(name.Name, tableOptions) };
 
-			return base.BuildObjectName(sb, name, objectType, escape, tableOptions);
+			return base.BuildObjectName(sb, name, objectType, escape, tableOptions, withoutSuffix: withoutSuffix);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)

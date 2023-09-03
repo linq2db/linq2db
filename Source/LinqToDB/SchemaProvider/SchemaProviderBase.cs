@@ -107,17 +107,27 @@ namespace LinqToDB.SchemaProvider
 			foreach (var dt in GetDataTypes(dataConnection))
 				if (dt.ProviderSpecific)
 				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					ProviderSpecificDataTypesDic.TryAdd(dt.TypeName, dt);
+					ProviderSpecificDataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
 					if (!ProviderSpecificDataTypesDic.ContainsKey(dt.TypeName))
 						ProviderSpecificDataTypesDic.Add(dt.TypeName, dt);
 					if (!ProviderSpecificDataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
 						ProviderSpecificDataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
 				}
 				else
 				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+					DataTypesDic.TryAdd(dt.TypeName, dt);
+					DataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
+#else
 					if (!DataTypesDic.ContainsKey(dt.TypeName))
 						DataTypesDic.Add(dt.TypeName, dt);
 					if (!DataTypesByProviderDbTypeDic.ContainsKey(dt.ProviderDbType))
 						DataTypesByProviderDbTypeDic.Add(dt.ProviderDbType, dt);
+#endif
 				}
 
 			List<TableSchema>     tables;
@@ -631,12 +641,14 @@ namespace LinqToDB.SchemaProvider
 			return dbType;
 		}
 
+		private static readonly char[] _nameSeparators = new [] {' ', '\t'};
+
 		// TODO: use proper C# identifier validation procedure
 		public static string ToValidName(string name)
 		{
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
-				var ss = name.Split(new [] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries)
+				var ss = name.Split(_nameSeparators, StringSplitOptions.RemoveEmptyEntries)
 					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
 
 				name = string.Concat(ss);

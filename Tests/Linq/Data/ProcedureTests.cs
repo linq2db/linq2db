@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.Data;
+using System.Data;
+using System.Threading.Tasks;
 
 using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using System.Data;
-	using System.Threading.Tasks;
 	using LinqToDB;
+	using LinqToDB.Data;
 	using LinqToDB.DataProvider.SqlServer;
 	using LinqToDB.Mapping;
 	using Model;

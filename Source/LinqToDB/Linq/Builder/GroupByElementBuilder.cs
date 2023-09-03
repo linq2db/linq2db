@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		public int BuildCounter { get; set; }
 
-		GroupByBuilder.GroupByContext? GetGroupByContext(ExpressionBuilder builder, BuildInfo buildInfo)
+		static GroupByBuilder.GroupByContext? GetGroupByContext(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			if (buildInfo.Expression.NodeType == ExpressionType.Parameter)
 			{

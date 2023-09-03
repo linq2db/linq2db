@@ -1567,12 +1567,10 @@ namespace Tests.Linq
 				ID = 1,
 			};
 
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			var query1 = (from c in db.Person
 						  where c.ID == data.ID
 						  && (c.MiddleName != null ? c.MiddleName.Trim().ToLower() : string.Empty) == (data.MiddleName != null ? data.MiddleName.Trim().ToLower() : string.Empty)
 						  select c).ToList();
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 		}
 	}
 }

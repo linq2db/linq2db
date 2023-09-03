@@ -270,7 +270,7 @@ namespace LinqToDB.Linq.Builder
 					expr = Expression.Convert(
 							Expression.Call(
 								_onEntityCreatedMethodInfo,
-								ExpressionBuilder.DataContextParam,
+								ExpressionConstants.DataContextParam,
 								expr,
 								Expression.Constant(SqlTable.TableOptions),
 								Expression.Constant(SqlTable.TableName.Name,     typeof(string)),
@@ -492,7 +492,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			ConstructorInfo SelectParameterizedConstructor(Type objectType)
+			static ConstructorInfo SelectParameterizedConstructor(Type objectType)
 			{
 				var constructors = objectType.GetConstructors();
 

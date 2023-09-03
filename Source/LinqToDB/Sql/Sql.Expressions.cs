@@ -11,11 +11,11 @@ namespace LinqToDB
 	using Common;
 	using Common.Internal;
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Extensions;
 
 	public partial class Sql
 	{
@@ -287,7 +287,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableExpr    = builder.Arguments[0].EvaluateExpression();
+				var tableExpr    = builder.Arguments[0].EvaluateExpression(builder.DataContext);
 				var tableType    = ((MethodInfo)builder.Member).GetGenericArguments()[0];
 				var helperType   = typeof(TableHelper<>).MakeGenericType(tableType);
 				var tableHelper  = (TableHelper)Activator.CreateInstance(helperType, tableExpr)!;

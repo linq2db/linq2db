@@ -12,6 +12,8 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -199,5 +201,23 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void TestContextLeak([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var ctxRef = ExecuteQuery(context);
+
+			GC.Collect();
+			Assert.That(ctxRef.TryGetTarget(out _), Is.False);
+
+			WeakReference<IDataContext> ExecuteQuery(string context)
+			{
+				Query<Person>.ClearCache();
+				using var db = GetDataContext(context);
+
+				db.Person.FirstOrDefault();
+
+				return new WeakReference<IDataContext>(db);
+			}
+		}
 	}
 }

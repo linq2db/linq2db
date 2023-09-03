@@ -212,7 +212,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		bool FixRootSelect(SqlStatement statement)
+		static bool FixRootSelect(SqlStatement statement)
 		{
 			if (statement.SelectQuery is {} query         &&
 				query.Select.HasModifier == false         &&
@@ -1087,7 +1087,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
+		static ISqlPredicate OptimizeCase(SqlPredicate.IsTrue isTrue, EvaluationContext context)
 		{
 			//TODO: refactor CASE optimization
 
@@ -1109,7 +1109,7 @@ namespace LinqToDB.SqlProvider
 			return isTrue;
 		}
 
-		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
+		static ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr, EvaluationContext context)
 		{
 			SqlFunction? func;
 			var valueFirst = expr.Expr1.TryEvaluateExpression(context, out var value);
@@ -1663,11 +1663,11 @@ namespace LinqToDB.SqlProvider
 					{
 						switch (value1)
 						{
-							case short   h when h == 0  :
-							case int     i when i == 0  :
-							case long    l when l == 0  :
-							case decimal d when d == 0  :
-							case string  s when s == "" : return be.Expr2;
+							case short   h when h == 0        :
+							case int     i when i == 0        :
+							case long    l when l == 0        :
+							case decimal d when d == 0        :
+							case string  s when s.Length == 0 : return be.Expr2;
 						}
 					}
 
@@ -1716,7 +1716,7 @@ namespace LinqToDB.SqlProvider
 								break;
 							}
 
-							case string vs when vs == "" : return be.Expr1;
+							case string vs when vs.Length == 0: return be.Expr1;
 							case string vs when
 								be.Expr1    is SqlBinaryExpression be1 &&
 								//be1.Operation == "+"                   &&
@@ -2926,67 +2926,67 @@ namespace LinqToDB.SqlProvider
 
 				if (processUniversalUpdate)
 				{
-				foreach (var item in updateStatement.Update.Items)
-				{
-					var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
-						v.Context.TryGetValue(expr, out var newValue)
-							? newValue
-							: expr);
-
-					var usedSources = new HashSet<ISqlTableSource>();
-					QueryHelper.GetUsedSources(ex, usedSources);
-					usedSources.Remove(tableToUpdate);
-					if (objectTree.TryGetValue(tableToUpdate, out var replaced))
-						usedSources.Remove((ISqlTableSource)replaced);
-
-					if (usedSources.Count > 0)
+					foreach (var item in updateStatement.Update.Items)
 					{
-						// it means that update value column depends on other tables and we have to generate more complicated query
+						var ex = item.Expression!.Convert(objectTree, static (v, expr) =>
+							v.Context.TryGetValue(expr, out var newValue)
+								? newValue
+								: expr);
 
-						var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
+						var usedSources = new HashSet<ISqlTableSource>();
+						QueryHelper.GetUsedSources(ex, usedSources);
+						usedSources.Remove(tableToUpdate);
+						if (objectTree.TryGetValue(tableToUpdate, out var replaced))
+							usedSources.Remove((ISqlTableSource)replaced);
 
-						innerQuery.ParentSelect = sql;
+						if (usedSources.Count > 0)
+						{
+							// it means that update value column depends on other tables and we have to generate more complicated query
 
-						innerQuery.Select.Columns.Clear();
+							var innerQuery = clonedQuery.Clone(static e => e is not SqlTable);
 
-						var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
-							static (v, e) =>
-							{
-								if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
+							innerQuery.ParentSelect = sql;
+
+							innerQuery.Select.Columns.Clear();
+
+							var remapped = ex.Convert((tableToUpdateMapping, innerQuery, objectTree),
+								static (v, e) =>
 								{
-									e = n;
-									v.Context.objectTree.Remove(e);
-									v.Context.objectTree.Add(e, n);
-								}
-
-								if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
-								{
-										var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
-											(ISqlExpression)e, false);
-									if (column != null)
+									if (v.Context.tableToUpdateMapping.TryGetValue(e, out var n))
 									{
+										e = n;
 										v.Context.objectTree.Remove(e);
-										v.Context.objectTree.Add(e, column);
-										return column;
+										v.Context.objectTree.Add(e, n);
 									}
-								}
 
-								return e;
+									if (e is SqlColumn clmn && clmn.Parent != v.Context.innerQuery || e is SqlField)
+									{
+											var column = QueryHelper.NeedColumnForExpression(v.Context.innerQuery,
+												(ISqlExpression)e, false);
+										if (column != null)
+										{
+											v.Context.objectTree.Remove(e);
+											v.Context.objectTree.Add(e, column);
+											return column;
+										}
+									}
 
-							});
+									return e;
 
-						innerQuery.Select.AddNew(remapped);
-							innerQuery.RemoveNotUnusedColumns();
-						ex = innerQuery;
+								});
+
+							innerQuery.Select.AddNew(remapped);
+								innerQuery.RemoveNotUnusedColumns();
+							ex = innerQuery;
+						}
+
+							item.Column = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
+										  ?? throw new LinqException(
+											  $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
+							item.Expression = ex;
+							newUpdateStatement.Update.Items.Add(item);
+						}
 					}
-
-						item.Column = tableToUpdate.FindFieldByMemberName(QueryHelper.GetUnderlyingField(item.Column)!.Name)
-						              ?? throw new LinqException(
-							              $"Field {QueryHelper.GetUnderlyingField(item.Column)!.Name} not found in table {tableToUpdate}");
-						item.Expression = ex;
-						newUpdateStatement.Update.Items.Add(item);
-					}
-				}
 
 					if (updateStatement.Output != null)
 					{
@@ -3024,7 +3024,7 @@ namespace LinqToDB.SqlProvider
 			return updateStatement;
 		}
 
-		void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
+		static void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
 		{
 			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
 			{

@@ -111,7 +111,7 @@ namespace Tests.OData.Microsoft
 
 				var uri = new Uri("http://localhost:15580" + testCase.Query);
 #if NETFRAMEWORK
-				var request = new HttpRequestMessage()
+				using var request = new HttpRequestMessage()
 				{
 					Method = HttpMethod.Get,
 					RequestUri = uri

@@ -27,7 +27,7 @@ namespace LinqToDB.Linq
 				var sqlTable  = SqlTable.Create<T>(dataContext);
 				var dropTable = new SqlDropTableStatement(sqlTable);
 
-				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				if (tableName != null || schemaName != null || databaseName != null || serverName != null)
 				{
 					sqlTable.TableName = new(
 						          tableName    ?? sqlTable.TableName.Name,
@@ -65,7 +65,7 @@ namespace LinqToDB.Linq
 				var sqlTable  = SqlTable.Create<T>(dataContext);
 				var dropTable = new SqlDropTableStatement(sqlTable);
 
-				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				if (tableName != null || schemaName != null || databaseName != null || serverName != null)
 				{
 					sqlTable.TableName = new(
 						          tableName    ?? sqlTable.TableName.Name,

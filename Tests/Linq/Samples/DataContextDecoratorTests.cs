@@ -114,7 +114,7 @@ namespace Tests.Samples
 			{
 				var ms = new MappingSchema();
 				var b  = new FluentMappingBuilder(ms);
-				var dc = new DataContextDecorator(db, ms);
+				using var dc = new DataContextDecorator(db, ms);
 
 				b.Entity<Entity>()
 					.Property(_ => _.Id  ).HasColumnName("EntityId")

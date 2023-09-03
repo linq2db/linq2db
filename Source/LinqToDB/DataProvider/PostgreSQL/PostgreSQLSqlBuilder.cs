@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join, condition);
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			var schemaName = tableOptions.HasIsTemporary() ? null : name.Schema;
 
@@ -422,7 +422,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
 		}
 
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
@@ -441,8 +441,36 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.QueryHint);
+			}
+		}
+
+		protected override void BuildSql()
+		{
+			BuildSqlForUnion();
 		}
 	}
 }
