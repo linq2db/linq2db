@@ -4,26 +4,7 @@ parameters:
 steps:
 - checkout: none
 
-- task: UseDotNet@2
-  displayName: 'Install .net core 3.1'
-  inputs:
-    packageType: sdk
-    version: 3.1.x
-  condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
-
-- task: UseDotNet@2
-  displayName: 'Install .NET 6'
-  inputs:
-    packageType: sdk
-    version: 6.x
-  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
-
-- task: UseDotNet@2
-  displayName: 'Install .NET 7'
-  inputs:
-    packageType: sdk
-    version: 7.x
-  condition: and(variables.title, succeeded())
+# .NET 6&7 SDK already installed https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#net-tools
 
 - task: CmdLine@2
   inputs:

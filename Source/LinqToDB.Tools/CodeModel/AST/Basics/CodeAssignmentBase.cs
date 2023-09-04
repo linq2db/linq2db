@@ -5,7 +5,7 @@
 	/// </summary>
 	public abstract class CodeAssignmentBase
 	{
-		public CodeAssignmentBase(ILValue lvalue, ICodeExpression rvalue)
+		protected CodeAssignmentBase(ILValue lvalue, ICodeExpression rvalue)
 		{
 			LValue = lvalue;
 			RValue = rvalue;

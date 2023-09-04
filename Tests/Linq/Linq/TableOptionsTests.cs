@@ -9,6 +9,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Org.BouncyCastle.Asn1.X509;
+
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -158,7 +160,9 @@ namespace Tests.Linq
 			table.Insert(() => new CreateIfNotExistsTable { Id = 1, Value = 2 });
 
 			_ = table.ToArray();
-			_ = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.NotSet);
+			using (db.CreateTempTable<CreateIfNotExistsTable>(tableOptions: TableOptions.NotSet))
+			{
+			}
 		}
 
 		[Test]
@@ -185,7 +189,9 @@ namespace Tests.Linq
 			using var table = db.CreateTempTable<CreateIfNotExistsTable>();
 
 			_ = table.ToArray();
-			_ = db.CreateTempTable<CreateIfNotExistsTable>(tableOptions:TableOptions.NotSet);
+			using (db.CreateTempTable<CreateIfNotExistsTable>(tableOptions: TableOptions.NotSet))
+			{
+			}
 		}
 
 		[UsedImplicitly]

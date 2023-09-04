@@ -14,9 +14,6 @@ using NUnit.Framework;
 
 namespace Tests.Extensions
 {
-	using Linq;
-	using Model;
-
 	[TestFixture]
 	public class DocExampleTests : TestBase
 	{

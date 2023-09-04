@@ -11,8 +11,8 @@ namespace LinqToDB.Linq.Builder
 	using Async;
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
@@ -1003,7 +1003,7 @@ namespace LinqToDB.Linq.Builder
 							}
 					}
 				}
-				else if (e.NodeType == ExpressionType.Parameter)
+				else if (e.NodeType == ExpressionType.Parameter && e != ExpressionConstants.DataContextParam)
 				{
 					context.dependencies.Add(e);
 					context.dependencyParameters.Add((ParameterExpression)e);

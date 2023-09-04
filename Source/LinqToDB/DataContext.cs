@@ -262,7 +262,9 @@ namespace LinqToDB
 		/// <summary>
 		/// Underlying active database connection.
 		/// </summary>
+#pragma warning disable CA2213 // Disposable fields should be disposed : disposed using DisposeCommand[Async] call from Dispose[Async]
 		DataConnection? _dataConnection;
+#pragma warning restore CA2213 // Disposable fields should be disposed
 
 		/// <summary>
 		/// Creates instance of <see cref="DataConnection"/> class, used by context internally.

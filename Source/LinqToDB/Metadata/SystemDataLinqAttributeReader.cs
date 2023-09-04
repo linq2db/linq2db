@@ -79,7 +79,7 @@ namespace LinqToDB.Metadata
 					IsDiscriminator = c.IsDiscriminator,
 				};
 
-				(results ??= new()).Add(attr);
+				(results = new()).Add(attr);
 			}
 
 			if (memberInfo.DeclaringType.HasAttribute<System.Data.Linq.Mapping.TableAttribute>())

@@ -8,13 +8,13 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Reflection;
 	using Linq;
 	using Linq.Builder;
 	using Mapping;
-	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
+	using Common;
+	using Common.Internal;
 
 	/// <summary>
 	/// Internal API.
@@ -22,13 +22,13 @@ namespace LinqToDB.Expressions
 	public static class ExpressionEvaluator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? EvaluateExpression<T>(this Expression? expr)
+		public static T? EvaluateExpression<T>(this Expression? expr, IDataContext? dataContext = null)
 			where T : class
 		{
-			return expr.EvaluateExpression() as T;
+			return expr.EvaluateExpression(dataContext) as T;
 		}
 
-		public static object? EvaluateExpression(this Expression? expr)
+		public static object? EvaluateExpression(this Expression? expr, IDataContext? dataContext = null)
 		{
 			if (expr == null)
 				return null;
@@ -41,11 +41,16 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;
 
+				case ExpressionType.Parameter:
+					if (expr == ExpressionConstants.DataContextParam && dataContext != null)
+						return dataContext;
+					break;
+
 				case ExpressionType.Convert:
 				case ExpressionType.ConvertChecked:
 				{
 					var unary = (UnaryExpression)expr;
-					var operand = unary.Operand.EvaluateExpression();
+					var operand = unary.Operand.EvaluateExpression(dataContext);
 					if (operand == null)
 						return null;
 					break;
@@ -56,11 +61,11 @@ namespace LinqToDB.Expressions
 					var member = (MemberExpression) expr;
 
 					if (member.Member.IsFieldEx())
-						return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
+						return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression(dataContext));
 
 					if (member.Member is PropertyInfo propertyInfo)
 					{
-						var obj = member.Expression.EvaluateExpression();
+						var obj = member.Expression.EvaluateExpression(dataContext);
 						if (obj == null)
 						{
 							if (propertyInfo.IsNullableValueMember())
@@ -77,8 +82,8 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Call:
 				{
 					var mc = (MethodCallExpression)expr;
-					var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
-					var instance  = mc.Object.EvaluateExpression();
+					var arguments = mc.Arguments.Select(a => a.EvaluateExpression(dataContext)).ToArray();
+					var instance  = mc.Object.EvaluateExpression(dataContext);
 
 					if (instance == null && mc.Method.IsNullableGetValueOrDefault())
 						return null;
@@ -87,6 +92,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 
+			expr      = dataContext == null ? expr : expr.Replace(ExpressionConstants.DataContextParam, Expression.Constant(dataContext, typeof(IDataContext)));
 			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
 			return value;
 		}

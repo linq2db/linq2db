@@ -66,9 +66,11 @@ namespace LinqToDB.DataModel
 			{
 				// if procedure resultset schema load failed, generate error pragma
 				if (context.Options.GenerateProceduresSchemaError)
-					(region ??= context.AddStoredProcedureRegion(storedProcedure.Method.Name))
+				{
+					(region = context.AddStoredProcedureRegion(storedProcedure.Method.Name))
 						.Pragmas()
 							.Add(context.AST.Error(storedProcedure.Error));
+				}
 
 				// even with this error procedure generation could continue, as we still
 				// can invoke procedure, we just cannot get resultset from it

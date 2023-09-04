@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,7 +13,6 @@ using static System.Linq.Expressions.Expression;
 
 namespace LinqToDB.Tools.Mapper
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Expressions;
 	using Extensions;
 	using Reflection;

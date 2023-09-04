@@ -32,7 +32,11 @@ namespace LinqToDB.Linq.Builder
 			List<LoadWithInfo[]>? loadWith,
 			out bool isLeft)
 		{
-			var dataContextConstant = Expression.Constant(builder.DataContext, builder.DataContext.GetType());
+			Expression dataContextExpr = ExpressionConstants.DataContextParam;
+			if (dataContextExpr.Type != builder.DataContext.GetType())
+			{
+				dataContextExpr = Expression.Convert(dataContextExpr, builder.DataContext.GetType());
+			}
 
 			// We are trying to keep fast cache hit behaviour, so cache check should be added only if needed
 			//
@@ -60,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 				if (onMember.Arguments == null)
 				{
 					if (definedQueryMethod.Parameters.Count > 1 && typeof(IDataContext).IsSameOrParentOf(definedQueryMethod.Parameters[1].Type))
-						parameterMatch.Add(definedQueryMethod.Parameters[1], dataContextConstant);
+						parameterMatch.Add(definedQueryMethod.Parameters[1], dataContextExpr);
 				}
 				else
 				{
@@ -146,7 +150,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var queryParam = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(objectType), dataContextConstant);
+				var queryParam = Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(objectType), dataContextExpr);
 
 				var filterLambda = Expression.Lambda(predicate, childParam);
 				Expression body  = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(objectType), queryParam,
@@ -213,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>() ??
+							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>(builder.DataContext) ??
 							                     throw new LinqException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
 							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
@@ -454,13 +458,13 @@ namespace LinqToDB.Linq.Builder
 			return currentObj;
 		}
 
-		public static Delegate? GetLoadWithFunc(List<LoadWithInfo[]>? loadWith, MemberInfo memberInfo)
+		public static Delegate? GetLoadWithFunc(List<LoadWithInfo[]>? loadWith, MemberInfo memberInfo, IDataContext dataContext)
 		{
 			Delegate? loadWithFunc = null;
 			if (loadWith != null)
 			{
 				loadWithFunc = GetLoadWith(loadWith)?
-					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, memberInfo))?.Info.FilterFunc?.EvaluateExpression() as Delegate;
+					.FirstOrDefault(li => MemberInfoEqualityComparer.Default.Equals(li.Info.MemberInfo, memberInfo))?.Info.FilterFunc?.EvaluateExpression<Delegate>(dataContext);
 			}
 
 			return loadWithFunc;

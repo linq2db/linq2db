@@ -126,7 +126,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, DataOptions options, string value)
 		{
-			if (value == string.Empty)
+			if (value.Length == 0)
 				stringBuilder.Append("''");
 			else
 			{

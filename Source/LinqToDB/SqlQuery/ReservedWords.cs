@@ -6,8 +6,6 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-
 	public static class ReservedWords
 	{
 		static ReservedWords()
