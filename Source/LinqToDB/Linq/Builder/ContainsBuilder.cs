@@ -13,9 +13,18 @@ namespace LinqToDB.Linq.Builder
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return
+			var result =
 				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 2 ||
 				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 3;
+
+			if (result)
+			{
+				// Contains over constant works through ConvertPredicate
+				if (builder.CanBeCompiled(methodCall.Arguments[0], false))
+					result = false;
+			}
+
+			return result;
 		}
 
 		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -117,6 +126,11 @@ namespace LinqToDB.Linq.Builder
 
 				SqlCondition cond;
 
+				var placeholderQuery = OuterQuery;
+
+				if (Parent != null)
+					placeholderQuery = Parent.SelectQuery;
+
 				if (_buildInStatement && testPlaceholder != null && sequencePlaceholder != null)
 				{
 					if (!flags.IsTest())
@@ -137,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 
 				var subQuerySql = new SqlSearchCondition(cond);
 
-				return ExpressionBuilder.CreatePlaceholder(OuterQuery, subQuerySql, _methodCall);
+				return ExpressionBuilder.CreatePlaceholder(placeholderQuery, subQuerySql, _methodCall);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

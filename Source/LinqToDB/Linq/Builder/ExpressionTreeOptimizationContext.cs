@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,6 +15,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
+	using LinqToDB.Common.Internal;
 
 	public class ExpressionTreeOptimizationContext
 	{
@@ -531,9 +533,83 @@ namespace LinqToDB.Linq.Builder
 
 		#region IsServerSideOnly
 
+		class IsServerSideOnlyCheckVisitor : ExpressionVisitorBase
+		{
+			bool          _isServerSideOnly;
+			MappingSchema _mappingSchema = default!;
+
+			public bool IsServerSideOnly(Expression expression, MappingSchema mappingSchema)
+			{
+				Cleanup();
+
+				_mappingSchema = mappingSchema;
+
+				_ = Visit(expression);
+
+				return _isServerSideOnly;
+			}
+
+			public override void Cleanup()
+			{
+				_isServerSideOnly = false;
+				_mappingSchema    = default!;
+
+				base.Cleanup();
+			}
+
+			public override Expression? Visit(Expression? node)
+			{
+				if (_isServerSideOnly)
+					return node;
+
+				return base.Visit(node);
+			}
+
+			protected override Expression VisitMember(MemberExpression node)
+			{
+				var l = Expressions.ConvertMember(_mappingSchema, node.Expression?.Type, node.Member);
+
+				if (l != null)
+				{
+					Visit(l.Body);
+					return node;
+				}
+
+				var attr = node.Member.GetExpressionAttribute(_mappingSchema);
+				if (attr != null && attr.ServerSideOnly)
+				{
+					_isServerSideOnly = true;
+					return node;
+				}
+
+				return base.VisitMember(node);
+			}
+
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				var l = Expressions.ConvertMember(_mappingSchema, node.Object?.Type, node.Method);
+
+				if (l != null)
+				{
+					Visit(l.Body);
+					return node;
+				}
+
+				var attr = node.Method.GetExpressionAttribute(_mappingSchema);
+				if (attr?.ServerSideOnly == true)
+					_isServerSideOnly = true;
+
+				return base.VisitMethodCall(node);
+			}
+		}
+
+		static ObjectPool<IsServerSideOnlyCheckVisitor> _serverSideOnlyVisitorPool  = new(() => new IsServerSideOnlyCheckVisitor(), v => v.Cleanup(), 100);
+		static ObjectPool<CanBeCompiledCheckVisitor> _canBeCompiledCheckVisitorPool = new(() => new CanBeCompiledCheckVisitor(), v => v.Cleanup(), 100);
+
 		Dictionary<Expression, bool>? _isServerSideOnlyCache;
 
 		private FindVisitor<ExpressionTreeOptimizationContext>? _isServerSideOnlyVisitor;
+
 		public bool IsServerSideOnly(Expression expr, bool inProjection)
 		{
 			if (_isServerSideOnlyCache != null && _isServerSideOnlyCache.TryGetValue(expr, out var result))
@@ -545,233 +621,214 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				result = false;
-
-				switch (expr.NodeType)
-				{
-					case ExpressionType.MemberAccess:
-					{
-						var ex = (MemberExpression)expr;
-						var l  = Expressions.ConvertMember(MappingSchema, ex.Expression?.Type, ex.Member);
-
-						if (l != null)
-						{
-							result = IsServerSideOnly(l.Body.Unwrap(), inProjection);
-						}
-						else
-						{
-							var attr = ex.Member.GetExpressionAttribute(MappingSchema);
-							result = attr != null && attr.ServerSideOnly;
-						}
-
-						break;
-					}
-
-					case ExpressionType.Call:
-					{
-						var e = (MethodCallExpression)expr;
-
-						var l = Expressions.ConvertMember(MappingSchema, e.Object?.Type, e.Method);
-
-						if (l != null)
-						{
-							result = (_isServerSideOnlyVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, (ctx, e) => ctx.IsServerSideOnly(e, inProjection))).Find(l.Body.Unwrap()) != null;
-						}
-						else
-						{
-							var attr = e.Method.GetExpressionAttribute(MappingSchema);
-							result = attr?.ServerSideOnly == true;
-						}
-
-						break;
-					}
-
-					case ExpressionType.Extension:
-					{
-						if (!inProjection)
-						{
-							if (expr is ContextRefExpression || expr is SqlGenericConstructorExpression ||
-							    expr is SqlGenericParamAccessExpression)
-							{
-								result = true;
-							}
-						}
-						break;
-					}
-				}
-
+				using var visitor = _serverSideOnlyVisitorPool.Allocate();
+				result = visitor.Value.IsServerSideOnly(expr, MappingSchema);
 			}
 
 			(_isServerSideOnlyCache ??= new()).Add(expr, result);
+
 			return result;
-		}
-
-		static bool IsQueryMember(Expression? expr)
-		{
-			expr = expr.Unwrap();
-			if (expr != null) 
-			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.Parameter   : return true;
-					case ExpressionType.MemberAccess: return IsQueryMember(((MemberExpression)expr).Expression!);
-					case ExpressionType.Call:
-					{
-						var call = (MethodCallExpression)expr;
-
-						if (call.Method.DeclaringType == typeof(Queryable))
-							return true;
-
-						if (call.Method.DeclaringType == typeof(Enumerable) && call.Arguments.Count > 0)
-							return IsQueryMember(call.Arguments[0]);
-
-						return IsQueryMember(call.Object!);
-					}
-					case ExpressionType.Extension    : return expr is ContextRefExpression;
-				}
-			}
-
-			return false;
 		}
 
 		#endregion
 
 		#region CanBeCompiled
 
-		Expression? _lastExpr2;
-		bool        _lastInProjection2;
-		bool        _lastResult2;
-
-		static HashSet<Expression> DefaultAllowedParams = new ()
+		class CanBeCompiledCheckVisitor : ExpressionVisitorBase
 		{
-			ExpressionBuilder.ParametersParam,
-			ExpressionConstants.DataContextParam
-		};
+			bool _canBeCompiled;
+
+			bool _inProjection;
+			bool _inMethod;
+
+			Stack<ReadOnlyCollection<ParameterExpression>>? _allowedParameters;
+
+			ExpressionTreeOptimizationContext _optimizationContext = default!;
+
+			public override void Cleanup()
+			{
+				_canBeCompiled       = true;
+				_inMethod            = false;
+				_optimizationContext = default!;
+				_inProjection        = false;
+
+				_allowedParameters?.Clear();
+
+				base.Cleanup();
+			}
+
+			public override Expression? Visit(Expression? node)
+			{
+				if (!_canBeCompiled)
+					return node;
+
+				return base.Visit(node);
+			}
+
+			protected override Expression VisitLambda<T>(Expression<T> node)
+			{
+				if (!_inMethod)
+				{
+					_canBeCompiled = false;
+					return node;
+				}
+
+				_allowedParameters ??= new();
+
+				_allowedParameters.Push(node.Parameters);
+
+				_ = base.VisitLambda(node);
+
+				_allowedParameters.Pop();
+
+				return node;
+			}
+
+			protected override Expression VisitParameter(ParameterExpression node)
+			{
+				if (node == ExpressionBuilder.ParametersParam)
+					return node;
+
+				if (node == ExpressionConstants.DataContextParam)
+				{
+					if (_inMethod)
+						_canBeCompiled = false;
+				}
+				else
+				{
+					_canBeCompiled = _allowedParameters != null && _allowedParameters.Any(ps => ps.Contains(node));
+				}
+
+				return node;
+			}
+
+			protected override Expression VisitMember(MemberExpression node)
+			{
+				if (typeof(IDataContext).IsSameOrParentOf(node.Type))
+				{
+					_canBeCompiled = false;
+					return node;
+				}
+
+				if (node.Expression != null && typeof(IDataContext).IsSameOrParentOf(node.Expression.Type) && typeof(IQueryable<>).IsSameOrParentOf(node.Type))
+				{
+					_canBeCompiled = false;
+					return node;
+				}
+
+				_ = base.VisitMember(node);
+
+				if (!_canBeCompiled)
+				{
+					return node;
+				}
+
+				if (_optimizationContext.IsServerSideOnly(node, false))
+					_canBeCompiled = false;
+
+				return node;
+			}
+
+			internal override Expression VisitContextRefExpression(ContextRefExpression node)
+			{
+				_canBeCompiled = false;
+				return node;
+			}
+
+			internal override Expression VisitSqlErrorExpression(SqlErrorExpression node)
+			{
+				_canBeCompiled = false;
+				return node;
+			}
+
+			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
+			{
+				if (!_inProjection)
+					_canBeCompiled = false;
+				return node;
+			}
+
+			internal override Expression VisitSqlGenericParamAccessExpression(SqlGenericParamAccessExpression node)
+			{
+				_canBeCompiled = false;
+				return node;
+			}
+
+			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
+			{
+				_canBeCompiled = false;
+				return node;
+			}
+
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				if (typeof(IQueryable<>).IsSameOrParentOf(node.Type))
+				{
+					if (node.Arguments.Any(a => typeof(IDataContext).IsSameOrParentOf(a.Type)) || 
+					    node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type))
+					{
+						_canBeCompiled = false;
+						return node;
+					}
+				}
+
+				if (!_canBeCompiled)
+				{
+					return node;
+				}
+
+				if (_optimizationContext.IsServerSideOnly(node, false))
+					_canBeCompiled = false;
+
+				var save = _inMethod;
+				_inMethod = true;
+
+				base.VisitMethodCall(node);
+
+				_inMethod = save;
+
+				return node;
+			}
+
+			internal override SqlGenericConstructorExpression.Assignment VisitSqlGenericAssignment(SqlGenericConstructorExpression.Assignment assignment)
+			{
+				_canBeCompiled = false;
+				return assignment;
+			}
+
+			internal override SqlGenericConstructorExpression.Parameter VisitSqlGenericParameter(SqlGenericConstructorExpression.Parameter parameter)
+			{
+				_canBeCompiled = false;
+				return parameter;
+			}
+
+			internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+			{
+				_canBeCompiled = false;
+				return node;
+			}
+
+			public bool CanBeCompiled(Expression  expression,
+				ExpressionTreeOptimizationContext optimizationContext, bool inProjection)
+			{
+				Cleanup();
+
+				_optimizationContext = optimizationContext;
+				_inProjection        = inProjection;
+
+				_ = Visit(expression);
+
+				return _canBeCompiled;
+			}
+		}
 
 		public bool CanBeCompiled(Expression expr, bool inProjection)
 		{
-			if (_lastExpr2 == expr && _lastInProjection2 == inProjection)
-				return _lastResult2;
+			var visitor = _canBeCompiledCheckVisitorPool.Allocate();
 
-			// context allocation is cheaper than HashSet allocation
-			// and HashSet allocation is rare
-
-			var result = null == GetCanBeCompiledVisitor(inProjection).Find(expr);
-
-			_lastExpr2         = expr;
-			_lastResult2       = result;
-			_lastInProjection2 = inProjection;
+			var result = visitor.Value.CanBeCompiled(expr, this, inProjection);
+			
 			return result;
-		}
-
-		internal sealed class CanBeCompiledContext
-		{
-			public bool InProjection { get; }
-
-			public CanBeCompiledContext(ExpressionTreeOptimizationContext optimizationContext, bool inProjection)
-			{
-				InProjection        = inProjection;
-				OptimizationContext = optimizationContext;
-				AllowedParams       = DefaultAllowedParams;
-			}
-
-			public readonly ExpressionTreeOptimizationContext OptimizationContext;
-
-			public HashSet<Expression> AllowedParams;
-
-			public void Reset()
-			{
-				AllowedParams = DefaultAllowedParams;
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private FindVisitor<CanBeCompiledContext> GetCanBeCompiledVisitor(bool inProjection)
-		{
-			if (_canBeCompiledFindVisitors == null)
-				_canBeCompiledFindVisitors = new FindVisitor<CanBeCompiledContext>?[2];
-
-			var idx = inProjection ? 1 : 0;
-
-			if (_canBeCompiledFindVisitors[idx] == null)
-			{
-				_canBeCompiledFindVisitors[idx] = FindVisitor<CanBeCompiledContext>.Create(
-					new CanBeCompiledContext(this, inProjection),
-					static (ctx, e) => ctx.OptimizationContext.CanBeCompiledFind(ctx, e));
-			}	
-			else
-			{
-				_canBeCompiledFindVisitors[idx]!.Value.Context!.Reset();
-			}
-
-			return _canBeCompiledFindVisitors[idx]!.Value;
-		}
-
-		FindVisitor<CanBeCompiledContext>?[]? _canBeCompiledFindVisitors;
-
-		private bool CanBeCompiledFind(CanBeCompiledContext context, Expression ex)
-		{
-			if (IsServerSideOnly(ex, context.InProjection))
-				return true;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.Parameter:
-					return !context.AllowedParams.Contains(ex);
-
-				case ExpressionType.Call:
-				{
-					var mc = (MethodCallExpression)ex;
-					foreach (var arg in mc.Arguments)
-					{
-						if (arg.NodeType == ExpressionType.Lambda)
-						{
-							var lambda = (LambdaExpression)arg;
-							foreach (var prm in lambda.Parameters)
-							{
-								// clone static instance
-								if (context.AllowedParams == DefaultAllowedParams)
-									context.AllowedParams = new HashSet<Expression>(DefaultAllowedParams);
-
-								context.AllowedParams.Add(prm);
-							}
-						}
-					}
-					break;
-				}
-
-				case ExpressionType.MemberAccess:
-				{
-					if (typeof(IDataContext).IsSameOrParentOf(ex.Type) || typeof(IExpressionQuery<>).IsSameOrParentOf(ex.Type))
-						return true;
-					break;
-				}
-
-				case ExpressionType.Constant:
-				{
-					var cnt = (ConstantExpression)ex;
-					if (cnt.Value is ISqlExpression)
-						return true;
-					if (typeof(IDataContext).IsSameOrParentOf(cnt.Type))
-						return true;
-					break;
-				}
-
-				case ExpressionType.Extension:
-				{
-					if (ex is ContextRefExpression)
-						return true;
-					if (ex is SqlErrorExpression)
-						return true;
-					if (ex is SqlPlaceholderExpression)
-						return true;
-					if (ex is SqlGenericParamAccessExpression)
-						return true;
-					return !ex.CanReduce;
-				}
-			}
-
-			return false;
 		}
 
 		#endregion
@@ -894,8 +951,10 @@ namespace LinqToDB.Linq.Builder
 					//	return new TransformInfo(Expression.Convert(me.Expression!, me.Type), false, true);
 					//}
 
+					/*
 					if (CanBeCompiled(expr, true))
 						break;
+						*/
 
 					var l  = ConvertMethodExpression(me.Expression?.Type ?? me.Member.ReflectedType!, me.Member, out var alias);
 
@@ -906,14 +965,14 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(AliasCall(ex, alias!), false, true);
 					}
 
-					l = Expressions.ConvertMember(MappingSchema, me.Member.ReflectedType!, me.Member);
+					/*l = Expressions.ConvertMember(MappingSchema, me.Member.ReflectedType!, me.Member);
 
 					if (l != null)
 					{
 						var ex = ConvertMemberExpression(expr, me.Expression!, l);
 
 						return new TransformInfo(ex, false, true);
-					}
+					}*/
 
 					break;
 				}

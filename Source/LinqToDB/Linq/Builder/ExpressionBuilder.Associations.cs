@@ -312,10 +312,15 @@ namespace LinqToDB.Linq.Builder
 			if (result == null)
 			{
 				result = expression;
+				if (result.Type == typeof(object))
+				{
+					result = Expression.Convert(result, typeof(IEnumerable<>).MakeGenericType(elementType));
+				}
+
 				if (!typeof(IQueryable<>).IsSameOrParentOf(result.Type))
 				{
 					result = Expression.Call(Methods.Queryable.AsQueryable.MakeGenericMethod(elementType),
-						expression);
+						result);
 				}
 
 				if (typeof(ITable<>).IsSameOrParentOf(desiredType))
@@ -324,6 +329,10 @@ namespace LinqToDB.Linq.Builder
 					result = Expression.New(tableType.GetConstructor(new[] { result.Type })!,
 						result);
 				}
+
+				if (result.Type != desiredType)
+					result = Expression.Convert(result, desiredType);
+
 			}
 
 			return result;

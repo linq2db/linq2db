@@ -270,7 +270,7 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		public bool TryConvertToSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, [NotNullWhen(false)] out SqlErrorExpression? error)
+		public bool TryConvertToSql(IBuildContext? context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, [NotNullWhen(false)] out SqlErrorExpression? error)
 		{
 			flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
 
@@ -362,15 +362,15 @@ namespace LinqToDB.Linq.Builder
 
 				if (attr != null && (!flags.HasFlag(ProjectFlags.Expression) || attr.ServerSideOnly || attr.Expression == "{0}"))
 				{
-					var converted = attr.GetExpression((builder: this, context, flags),
+					var transformed = attr.GetExpression((builder: this, context, flags),
 						DataContext,
 						context.SelectQuery, expr,
 						static (context, e, descriptor) =>
 							context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
 
-					if (converted != null)
+					if (transformed != null)
 					{
-						var newExpr = CreatePlaceholder(context.SelectQuery, converted, expr);
+						var newExpr = CreatePlaceholder(context.SelectQuery, transformed, expr);
 						return newExpr;
 					}
 				}
@@ -560,11 +560,11 @@ namespace LinqToDB.Linq.Builder
 			if (SequenceHelper.IsSpecialProperty(unwrapped, out _, out _))
 				return null;
 
+			if (!flags.IsSubquery() && CanBeCompiled(expr, flags.IsExpression()))
+				return null;
+
 			if (unwrapped is MemberExpression me)
 			{
-				if (!flags.IsSubquery() && CanBeCompiled(expr, true))
-					return null;
-
 				var attr = me.Member.GetExpressionAttribute(MappingSchema);
 				if (attr != null)
 					return null;

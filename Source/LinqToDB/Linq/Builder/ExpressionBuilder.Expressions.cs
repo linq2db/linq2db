@@ -79,6 +79,8 @@ namespace LinqToDB.Linq.Builder
 		protected override Expression VisitLambda<T>(Expression<T> node)
 		{
 			var newBody = Builder.BuildSqlExpression(_context, node.Body, ProjectFlags.SQL);
+			if (null != newBody.Find(1, (_, e) => e is SqlEagerLoadExpression))
+				return node;
 			return node.Update(newBody, node.Parameters);
 		}
 	}
@@ -94,6 +96,7 @@ namespace LinqToDB.Linq.Builder
 			bool              _disableParseNew;
 			string?           _alias;
 			ColumnDescriptor? _columnDescriptor;
+			bool              _disableClosureHandling;
 			
 			ExpressionBuilder Builder       => _context.Builder;
 			MappingSchema     MappingSchema => _context.MappingSchema;
@@ -290,7 +293,13 @@ namespace LinqToDB.Linq.Builder
 			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
 			{
 				// Do nothing with SequenceExpression
-				return node.Update(node.SequenceExpression, Visit(node.Predicate));
+				var save = _disableClosureHandling;
+
+				_disableClosureHandling = true;
+				var newNode = node.Update(node.SequenceExpression, Visit(node.Predicate));
+				_disableClosureHandling = save;
+
+				return newNode;
 			}
 
 			bool IsForcedToConvert(Expression expression)
@@ -416,7 +425,7 @@ namespace LinqToDB.Linq.Builder
 								return node;
 						}
 					}
-					else if (node.NodeType != ExpressionType.ArrayIndex)
+					else if (node.NodeType != ExpressionType.ArrayIndex && node.NodeType != ExpressionType.Assign)
 					{
 						var left  = Visit(node.Left)!;
 						var right = Visit(node.Right)!;
@@ -476,6 +485,16 @@ namespace LinqToDB.Linq.Builder
 
 				if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
 					return translated;
+
+				if (_flags.IsExpression())
+				{
+					var expr = Visit(node.Expression);
+					if (!ExpressionEqualityComparer.Instance.Equals(expr, node))
+					{
+						return Expression.Condition(Expression.NotEqual(expr, Expression.Default(expr.Type)),
+							node.Update(expr), Expression.Default(node.Type));
+					}
+				}
 
 				return base.VisitMember(node);
 			}
@@ -544,6 +563,12 @@ namespace LinqToDB.Linq.Builder
 				if (!ReferenceEquals(newNode, node))
 					return Visit(newNode);
 
+				var converted = Builder.ConvertSingleExpression(node, _flags.IsExpression());
+				if (!ReferenceEquals(converted, node))
+				{
+					return TranslateExpression(converted, useSql : true);
+				}
+
 				if ((_buildFlags & BuildFlags.ForceAssignments) != 0)
 				{
 					var parsed = SqlGenericConstructorExpression.Parse(node);
@@ -564,17 +589,28 @@ namespace LinqToDB.Linq.Builder
 
 			bool HandleParametrized(Expression expr, [NotNullWhen(true)] out Expression? transformed)
 			{
+				if (expr is ClosurePlaceholderExpression)
+				{
+					transformed = expr;
+					return true;
+				}
+
 				transformed = null;
+
+				if (_disableClosureHandling)
+				{
+					return false;
+				}
 
 				// Shortcut: if expression can be compiled we can live it as is but inject accessors 
 				//
-				if (_flags.IsExpression()             &&
-				    expr.NodeType != ExpressionType.New      &&
-				    //expr.NodeType != ExpressionType.Constant &&
-				    expr.NodeType != ExpressionType.Default  &&
-				    expr is not DefaultValueExpression       &&
-					expr != ExpressionConstants.DataContextParam &&
-				    Builder.CanBeCompiled(expr, _flags.IsExpression()))
+				if (_flags.IsExpression()                         &&
+				    expr.NodeType != ExpressionType.New           &&
+				    expr.NodeType != ExpressionType.Default       &&
+				    expr is not DefaultValueExpression            &&
+					!(expr is ConstantExpression { Value: null }) &&
+					expr != ExpressionConstants.DataContextParam  &&
+				    Builder.CanBeCompiled(expr, false))
 				{
 					if (expr.NodeType == ExpressionType.MemberAccess || expr.NodeType == ExpressionType.Call)
 					{
@@ -598,11 +634,16 @@ namespace LinqToDB.Linq.Builder
 						valueExpr = Expression.Convert(valueExpr.UnwrapConvert(), expr.Type);
 					}
 
-					transformed = valueExpr;
+					transformed = new ClosurePlaceholderExpression(valueExpr);
 					return true;
 				}
 
 				return false;
+			}
+
+			public override Expression VisitClosurePlaceholderExpression(ClosurePlaceholderExpression node)
+			{
+				return node;
 			}
 
 			protected override Expression VisitConditional(ConditionalExpression node)

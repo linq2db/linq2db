@@ -63,12 +63,6 @@ namespace LinqToDB.Linq.Builder
 					{
 						var type = array[i]?.GetType() ?? typeof(object);
 
-						if (typeof(ISqlExpression).IsAssignableFrom(type))
-						{
-							args[i] = Expression.Constant(array[i]);
-							continue;
-						}
-
 						Expression expr = Expression.Call(formatArg, ReflectionHelper.Functions.FormattableString.GetArguments, ExpressionInstances.Int32Array(i));
 
 						if (type != typeof(object))

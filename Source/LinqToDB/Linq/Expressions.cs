@@ -21,6 +21,7 @@ namespace LinqToDB.Linq
 {
 	using Common;
 	using Extensions;
+	using LinqToDB.SqlQuery;
 	using LinqToDB.Common.Internal;
 	using DataProvider.Firebird;
 	using LinqToDB.Expressions;
@@ -1674,7 +1675,7 @@ namespace LinqToDB.Linq
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
 		// Firebird/MySQL - chars parameter treated as string, not as set of characters
 		[CLSCompliant(false)]
-		[Sql.Expression(ProviderName.Firebird    , "TRIM(TRAILING FROM {0})"    , ServerSideOnly = false, PreferServerSide = false)]
+		[Sql.Extension(ProviderName.Firebird    , "TRIM(TRAILING {1} FROM {0})" , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(FirebirdRTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.ClickHouse   , "trim(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SqlServer2022, "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2          , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
@@ -1683,7 +1684,6 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.PostgreSQL   , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SQLite       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Function("RTrim", 0,                                         IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? TrimRight(string? str, params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
@@ -1731,6 +1731,38 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		sealed class FirebirdRTrimCharactersBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var stringExpression = builder.GetExpression("str");
+				var chars            = builder.GetValue<char[]>("trimChars");
+				if (chars == null || chars.Length == 0)
+				{
+					builder.ResultExpression = new SqlQuery.SqlFunction(
+						typeof(string),
+						"TRIM(TRAILING FROM {0})",
+						stringExpression);
+					return;
+				}
+
+				ISqlExpression result = stringExpression;
+
+				//TODO: Not accurate, we have to find way
+				foreach (var c in chars)
+				{
+					result = new SqlExpression(
+						typeof(string),
+						builder.Expression,
+						Precedence.Primary,
+						result,
+						new SqlValue(c.ToString()));
+				}
+
+				builder.ResultExpression = result;
+			}
+		}
+
 		sealed class RTrimCharactersBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
@@ -1751,7 +1783,7 @@ namespace LinqToDB.Linq
 					builder.Expression,
 					SqlQuery.Precedence.Primary,
 					stringExpression,
-					new SqlQuery.SqlExpression(typeof(string), "{0}", new SqlQuery.SqlValue(new string(chars))));
+					new SqlQuery.SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlQuery.SqlValue(new string(chars))));
 			}
 		}
 

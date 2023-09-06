@@ -480,6 +480,11 @@ namespace LinqToDB.Expressions
 				return adjustType.Update(Transform(adjustType.Expression));
 			}
 
+			if (expr is ClosurePlaceholderExpression)
+			{
+				return expr;
+			}
+
 			return expr;
 		}
 

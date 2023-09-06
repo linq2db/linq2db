@@ -582,7 +582,7 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 
 			// remove keys flag. We can cache SQL
-			var cacheFlags = flags & ~ProjectFlags.Keys;
+			var cacheFlags = flags & ~(ProjectFlags.Keys | ProjectFlags.ForExtension);
 
 			var cacheKey = new SqlCacheKey(expression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
 
@@ -627,8 +627,15 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias)
-								.SqlParameter;
+							if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.Type))
+							{
+								sql = newExpr.EvaluateExpression<ISqlExpression>(DataContext);
+							}
+							else 
+							{
+								sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias)
+									.SqlParameter;
+							}
 						}
 					}
 				}
@@ -848,7 +855,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (UnaryExpression)expression;
 
-					if (!flags.IsTest())
+					if (!flags.IsTest() && context != null)
 					{
 						e = e.Update(UpdateNesting(context, e.Operand));
 					}
@@ -857,13 +864,13 @@ namespace LinqToDB.Linq.Builder
 						return e;
 
 					if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
-						return CreatePlaceholder(context, o, expression, alias: alias);
+						return CreatePlaceholder(context, o, expression, alias : alias);
 
 					if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
-						return CreatePlaceholder(context, o, expression, alias: alias);
+						return CreatePlaceholder(context, o, expression, alias : alias);
 
 					if (e.Type == typeof(Enum) && e.Operand.Type.IsEnum)
-						return CreatePlaceholder(context, o, expression, alias: alias);
+						return CreatePlaceholder(context, o, expression, alias : alias);
 
 					var t = e.Operand.Type;
 					var s = MappingSchema.GetDataType(t);
@@ -874,14 +881,18 @@ namespace LinqToDB.Linq.Builder
 						s = MappingSchema.GetDataType(t);
 					}
 
-					if (e.Type == t ||
-						t.IsEnum && Enum.GetUnderlyingType(t) == e.Type ||
-						e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
+					if (e.Type == t                                               ||
+					    t.IsEnum      && Enum.GetUnderlyingType(t)      == e.Type ||
+					    e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 					{
-						return CreatePlaceholder(context, o, expression, alias: alias);
+						return CreatePlaceholder(context, o, expression, alias : alias);
 					}
 
-					return CreatePlaceholder(context, PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, o), expression, alias: alias);
+					return CreatePlaceholder(context,
+						PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, o), expression,
+						alias : alias);
+
+					return e;
 				}
 
 				case ExpressionType.Conditional:
@@ -2403,6 +2414,28 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertInPredicate
 
+		void BuildObjectGetters(SqlGenericConstructorExpression generic, ParameterExpression rootParam, Expression root, List<SqlGetValue> getters)
+		{
+			for (int i = 0; i < generic.Assignments.Count; i++)
+			{
+				var assignment = generic.Assignments[i];
+
+				if (assignment.Expression is SqlGenericConstructorExpression subGeneric)
+				{
+					BuildObjectGetters(subGeneric, rootParam, Expression.MakeMemberAccess(root, assignment.MemberInfo), getters);
+				}
+				else if (assignment.Expression is SqlPlaceholderExpression placeholder)
+				{
+					var access = Expression.MakeMemberAccess(root, assignment.MemberInfo);
+					var body   = Expression.Convert(access, typeof(object));
+
+					var lambda = Expression.Lambda<Func<object, object>>(body, rootParam);
+
+					getters.Add(new SqlGetValue(placeholder.Sql, placeholder.Type, null, lambda.Compile()));
+				}
+			}
+		}
+
 		private ISqlPredicate ConvertInPredicate(IBuildContext context, MethodCallExpression expression)
 		{
 			var e        = expression;
@@ -2414,39 +2447,20 @@ namespace LinqToDB.Linq.Builder
 
 			if (expr == null)
 			{
-				var sql = BuildSqlExpression(context, arg, ProjectFlags.SQL | ProjectFlags.Keys, null);
+				var builtExpr = BuildSqlExpression(context, arg, ProjectFlags.SQL | ProjectFlags.Keys, null);
 
-				var placeholders = CollectDistinctPlaceholders(sql);
-
-				if (placeholders.Count == 1)
-					expr = placeholders[0].Sql;
-				else
+				if (builtExpr is SqlPlaceholderExpression p)
+				{
+					expr = p.Sql;
+				}
+				else if (builtExpr is SqlGenericConstructorExpression constructor)
 				{
 					var objParam = Expression.Parameter(typeof(object));
 
-					var getters = new SqlGetValue[placeholders.Count];
-					for (int i = 0; i < getters.Length; i++)
-					{
-						var placeholder = placeholders[i];
+					var getters = new List<SqlGetValue>();
+					BuildObjectGetters(constructor, objParam, Expression.Convert(objParam, constructor.ObjectType), getters);
 
-						var cd = QueryHelper.GetColumnDescriptor(placeholder.Sql);
-
-						if (cd != null)
-						{
-							getters[i] = new SqlGetValue(placeholder.Sql, placeholder.Type, cd, null);
-						}
-						else
-						{
-							var body = placeholder.Path.Replace(arg, Expression.Convert(objParam, arg.Type));
-							body = Expression.Convert(body, typeof(object));
-
-							var lambda = Expression.Lambda<Func<object, object>>(body, objParam);
-
-							getters[i] = new SqlGetValue(placeholder.Sql, placeholder.Type, null, lambda.Compile());
-						}
-					}
-
-					expr = new SqlObjectExpression(MappingSchema, getters);
+					expr = new SqlObjectExpression(MappingSchema, getters.ToArray());
 				}
 			}
 

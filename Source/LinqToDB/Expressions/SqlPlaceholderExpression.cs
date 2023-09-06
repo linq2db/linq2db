@@ -120,7 +120,7 @@ namespace LinqToDB.Expressions
 
 			var startStr = "SQL";
 #if DEBUG
-			startStr += "[" + Id + "]";
+			startStr += $"[Id:{Id}]";
 #endif
 			string result;
 			if (SelectQuery == null)
@@ -128,13 +128,13 @@ namespace LinqToDB.Expressions
 				if (Sql is SqlColumn column)
 				{
 					var sourceId = column.Parent!.SourceID;
-					result = $"{startStr}[{Index}]({sourceId})";
+					result = $"{startStr}[S:{Index}]({sourceId})";
 				}
 				else
 					result = $"{startStr}";
 			}
 			else
-				result = $"{startStr}({SelectQuery.SourceID})";
+				result = $"{startStr}(S:{SelectQuery.SourceID})";
 
 			var sqlStr = $"{{{Sql}}}";
 			if (Sql.CanBeNullable(NullabilityContext.NonQuery) && Sql is not SqlColumn)

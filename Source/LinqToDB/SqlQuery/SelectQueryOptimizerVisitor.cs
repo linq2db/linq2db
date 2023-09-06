@@ -1467,13 +1467,6 @@ namespace LinqToDB.SqlQuery
 				if (!subQuery.IsSimpleButWhere)
 					return false;
 
-				if (!(!selectQuery.Select.HasModifier && selectQuery.Where.IsEmpty && selectQuery.GroupBy.IsEmpty &&
-				      selectQuery.Having.IsEmpty      &&
-				      selectQuery.OrderBy.IsEmpty     && selectQuery.From.Tables.Count == 1))
-				{
-					return false;
-				}
-
 				if (!subQuery.Where.IsEmpty)
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)

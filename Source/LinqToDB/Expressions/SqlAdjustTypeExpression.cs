@@ -29,11 +29,6 @@ namespace LinqToDB.Expressions
 				return AdjustType(adjust.Expression, type, mappingSchema);
 			}
 
-			if (expression.NodeType == ExpressionType.Convert)
-			{
-				return AdjustType(((UnaryExpression)expression).Operand, type, mappingSchema);
-			}
-
 			return new SqlAdjustTypeExpression(expression, type, mappingSchema);
 		}
 

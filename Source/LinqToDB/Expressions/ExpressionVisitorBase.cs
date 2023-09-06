@@ -104,5 +104,10 @@ namespace LinqToDB.Expressions
 		public virtual void Cleanup()
 		{
 		}
+
+		public virtual Expression VisitClosurePlaceholderExpression(ClosurePlaceholderExpression node)
+		{
+			return node.Update(Visit(node.ClosureExpression));
+		}
 	}
 }

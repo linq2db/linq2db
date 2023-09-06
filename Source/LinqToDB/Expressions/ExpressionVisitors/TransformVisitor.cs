@@ -227,9 +227,14 @@ namespace LinqToDB.Expressions
 				return adjustType.Update(Transform(adjustType.Expression));
 			}
 
-			if (expr is SqlPathExpression keyHolder)
+			if (expr is SqlPathExpression)
 			{
-				//return keyHolder.Update(Transform(keyHolder.Expression));
+				return expr;
+			}
+
+			if (expr is ClosurePlaceholderExpression)
+			{
+				return expr;
 			}
 
 			return expr;
