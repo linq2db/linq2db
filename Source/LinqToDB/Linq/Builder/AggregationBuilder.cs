@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -8,6 +7,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
+	using LinqToDB.Common.Internal;
 
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
-					context = new AggregationContext(buildInfo.Parent, sequence, methodName, returnType);
+					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, methodName, returnType);
 				}
 				else
 				{
@@ -184,7 +184,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, valueExpression, ProjectFlags.SQL);
-					context = new AggregationContext(buildInfo.Parent, sequence, methodName, returnType);
+					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, methodName, returnType);
 
 					var sql = sqlPlaceholder.Sql;
 
@@ -275,7 +275,7 @@ namespace LinqToDB.Linq.Builder
 					valueExpression = new ContextRefExpression(returnType, sequence);
 				}
 
-				context = new AggregationContext(buildInfo.Parent, placeholderSequence, methodName, returnType);
+				context = new AggregationContext(buildInfo.Parent, placeholderSequence, aggregationType, methodName, returnType);
 
 				ISqlExpression sql;
 
@@ -334,21 +334,22 @@ namespace LinqToDB.Linq.Builder
 
 		sealed class AggregationContext : SequenceContextBase
 		{
-			public AggregationContext(IBuildContext? parent, IBuildContext sequence, string methodName, Type returnType)
+			public AggregationContext(
+				IBuildContext?  parent, 
+				IBuildContext   sequence, 
+				AggregationType aggregationType,
+				string          methodName, 
+				Type            returnType)
 				: base(parent, sequence, null)
 			{
-				_returnType = returnType;
-				_methodName = methodName;
-
-				if (_returnType.IsGenericType && _returnType.GetGenericTypeDefinition() == typeof(Task<>))
-				{
-					_returnType = _returnType.GetGenericArguments()[0];
-					_methodName = _methodName.Replace("Async", "");
-				}
+				_returnType      = returnType;
+				_aggregationType = aggregationType;
+				_methodName      = methodName;
 			}
 
-			readonly string     _methodName;
-			readonly Type       _returnType;
+			readonly AggregationType _aggregationType;
+			readonly string          _methodName;
+			readonly Type            _returnType;
 
 			public SqlPlaceholderExpression Placeholder = null!;
 			public SelectQuery?             OuterJoinParentQuery { get; set; }
@@ -365,6 +366,15 @@ namespace LinqToDB.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
+				if ((_aggregationType != AggregationType.Sum && _aggregationType != AggregationType.Count) && !expr.Type.IsNullableType())
+				{
+					expr = Expression.Block(
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
+							Expression.Equal(expr, Expression.Default(expr.Type)), 
+							Expression.Constant(_methodName)),
+						expr);
+				}
+
 				var mapper = Builder.BuildMapper<object>(SelectQuery, expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
@@ -403,7 +413,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				var newContext = new AggregationContext(null, context.CloneContext(Sequence), _methodName, _returnType);
+				var newContext = new AggregationContext(null, context.CloneContext(Sequence), _aggregationType, _methodName, _returnType);
 
 				newContext.Placeholder          = context.CloneExpression(Placeholder);
 				newContext.OuterJoinParentQuery = context.CloneElement(OuterJoinParentQuery);

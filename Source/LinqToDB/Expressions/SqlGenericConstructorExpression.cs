@@ -469,12 +469,12 @@ namespace LinqToDB.Expressions
 			return result;
 		}
 
-		public static Expression Parse(Expression createExpression)
+		public static Expression Parse(Expression createExpression, bool force = false)
 		{
 			if (createExpression.Type.IsNullable())
 				return createExpression;
 
-			if (createExpression.Type.IsValueType)
+			if (!force && createExpression.Type.IsValueType)
 				return createExpression;
 
 #if !NET45

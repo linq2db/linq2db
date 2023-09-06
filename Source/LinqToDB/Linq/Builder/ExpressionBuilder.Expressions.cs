@@ -69,6 +69,7 @@ namespace LinqToDB.Linq.Builder
 	class LambdaResolveVisitor : ExpressionVisitorBase
 	{
 		readonly IBuildContext _context;
+		bool _inLambda;
 
 		public ExpressionBuilder Builder => _context.Builder;
 
@@ -77,12 +78,35 @@ namespace LinqToDB.Linq.Builder
 			_context = context;
 		}
 
+		protected override Expression VisitMember(MemberExpression node)
+		{
+			if (_inLambda)
+			{
+				if (null != node.Find(1, (_, e) => e is ContextRefExpression))
+				{
+					var expr = Builder.BuildSqlExpression(_context, node, ProjectFlags.SQL,
+						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+
+					if (expr is SqlPlaceholderExpression)
+						return expr;
+				}
+
+				return node;
+			}
+
+			return base.VisitMember(node);
+		}
+
 		protected override Expression VisitLambda<T>(Expression<T> node)
 		{
-			var newBody = Builder.BuildSqlExpression(_context, node.Body, ProjectFlags.SQL);
-			if (null != newBody.Find(1, (_, e) => e is SqlEagerLoadExpression))
-				return node;
-			return node.Update(newBody, node.Parameters);
+			var save = _inLambda;
+			_inLambda = true;
+
+			var newNode = base.VisitLambda(node);
+
+			_inLambda = save;
+
+			return newNode;
 		}
 	}
 

@@ -179,6 +179,20 @@ namespace LinqToDB.SqlQuery
 			return newNode;
 		}
 
+		public override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
+		{
+			var newElement = (SqlOrderByClause)base.VisitSqlOrderByClause(element);
+
+			for (int i = newElement.Items.Count - 1; i >= 0; i--)
+			{
+				var item = newElement.Items[i];
+				if (QueryHelper.IsConstantFast(item.Expression))
+					newElement.Items.RemoveAt(i);
+			}
+
+			return newElement;
+		}
+
 		void OptimizeUnions(SelectQuery selectQuery)
 		{
 			if (!selectQuery.HasSetOperators)
@@ -1309,7 +1323,7 @@ namespace LinqToDB.SqlQuery
 						return false;
 				}
 
-				if (!selectQuery.Select.Where.IsEmpty || !selectQuery.Select.Having.IsEmpty || selectQuery.Select.HasModifier)
+				if (!selectQuery.Select.Where.IsEmpty || !selectQuery.Select.Having.IsEmpty || selectQuery.Select.HasModifier || !selectQuery.OrderBy.IsEmpty)
 					return false;
 
 				var operation = subQuery.SetOperators[0].Operation;

@@ -860,38 +860,44 @@ namespace LinqToDB.Linq.Builder
 						e = e.Update(UpdateNesting(context, e.Operand));
 					}
 
-					if (!TryConvertToSql(context, flags, e.Operand, columnDescriptor, out var o, out _))
-						return e;
+					var operandExpr = ConvertToSqlExpr(context, e.Operand, flags, columnDescriptor: columnDescriptor);
 
-					if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
-						return CreatePlaceholder(context, o, expression, alias : alias);
+					var placeholders = CollectDistinctPlaceholders(operandExpr);
 
-					if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
-						return CreatePlaceholder(context, o, expression, alias : alias);
-
-					if (e.Type == typeof(Enum) && e.Operand.Type.IsEnum)
-						return CreatePlaceholder(context, o, expression, alias : alias);
-
-					var t = e.Operand.Type;
-					var s = MappingSchema.GetDataType(t);
-
-					if (o.SystemType != null && s.Type.SystemType == typeof(object))
+					if (placeholders.Count == 1)
 					{
-						t = o.SystemType;
-						s = MappingSchema.GetDataType(t);
+						var o = placeholders[0].Sql;
+
+						if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
+							return CreatePlaceholder(context, o, expression, alias : alias);
+
+						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
+							return CreatePlaceholder(context, o, expression, alias : alias);
+
+						if (e.Type == typeof(Enum) && e.Operand.Type.IsEnum)
+							return CreatePlaceholder(context, o, expression, alias : alias);
+
+						var t = e.Operand.Type;
+						var s = MappingSchema.GetDataType(t);
+
+						if (o.SystemType != null && s.Type.SystemType == typeof(object))
+						{
+							t = o.SystemType;
+							s = MappingSchema.GetDataType(t);
+						}
+
+						if (e.Type == t                                               ||
+						    t.IsEnum      && Enum.GetUnderlyingType(t)      == e.Type ||
+						    e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
+						{
+							return CreatePlaceholder(context, o, expression, alias : alias);
+						}
+
+						return CreatePlaceholder(context,
+							PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, o), expression,
+							alias : alias);
 					}
-
-					if (e.Type == t                                               ||
-					    t.IsEnum      && Enum.GetUnderlyingType(t)      == e.Type ||
-					    e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
-					{
-						return CreatePlaceholder(context, o, expression, alias : alias);
-					}
-
-					return CreatePlaceholder(context,
-						PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, o), expression,
-						alias : alias);
-
+					
 					return e;
 				}
 
@@ -1082,7 +1088,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.New:
 				case ExpressionType.MemberInit:
 				{
-					if (!flags.IsExpression() && SqlGenericConstructorExpression.Parse(expression) is SqlGenericConstructorExpression transformed)
+					if (!flags.IsExpression() && SqlGenericConstructorExpression.Parse(expression, true) is SqlGenericConstructorExpression transformed)
 					{
 						return ConvertToSqlExpr(context, transformed, flags, unwrap, columnDescriptor, isPureExpression, alias);
 					}
@@ -1521,6 +1527,20 @@ namespace LinqToDB.Linq.Builder
 					else if (left.Type.CanConvertTo(leftExpr.Type))
 						leftExpr = Expression.Convert(leftExpr, right.Type);
 				}
+				else
+				{
+					if (nodeType == ExpressionType.Equal || nodeType == ExpressionType.NotEqual)
+					{
+						// Fore generating Path for SqlPlaceholderExpression
+						if (!rightExpr.Type.IsPrimitive)
+						{
+							return new SqlPathExpression(
+								new[] { leftExpr, Expression.Constant(nodeType), rightExpr, rightExpr },
+								typeof(bool));
+						}
+					}
+				}
+
 				return Expression.MakeBinary(nodeType, leftExpr, rightExpr);
 			}
 
@@ -2436,7 +2456,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		private ISqlPredicate ConvertInPredicate(IBuildContext context, MethodCallExpression expression)
+		private ISqlPredicate? ConvertInPredicate(IBuildContext context, MethodCallExpression expression)
 		{
 			var e        = expression;
 			var argIndex = e.Object != null ? 0 : 1;
@@ -2463,6 +2483,9 @@ namespace LinqToDB.Linq.Builder
 					expr = new SqlObjectExpression(MappingSchema, getters.ToArray());
 				}
 			}
+
+			if (expr == null)
+				return null;
 
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(expr);
 
