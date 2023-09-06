@@ -170,7 +170,12 @@ namespace LinqToDB.Linq.Builder
 						return tablePlaceholder;
 					}
 
-					return Builder.BuildFullEntityExpression(this, path, path.Type, flags);
+					Expression fullEntity = Builder.BuildFullEntityExpression(this, path, ElementType, flags);
+
+					if (fullEntity.Type != path.Type)
+						fullEntity = Expression.Convert(fullEntity, path.Type);
+
+					return fullEntity;
 				}
 
 				Expression member;
