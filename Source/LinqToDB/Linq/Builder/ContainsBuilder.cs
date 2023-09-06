@@ -33,19 +33,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery));
             sequence = new SubQueryContext(sequence);
 
-			var buildInStatement = false;
-
-			if (sequence.SelectQuery.Select.TakeValue != null                              ||
-			    sequence.SelectQuery.Select.SkipValue != null                              ||
-			    builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery      ||
-			    builder.DataContext.SqlProviderFlags.IsExistsPreferableForContains == false &&
-			    builder.DataOptions.LinqOptions.PreferExistsForScalar == false              &&
-			    sequence.MappingSchema.IsScalarType(methodCall.Arguments[1].Type))
-			{
-				buildInStatement = true;
-			}
-
-			return new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence, buildInStatement);
+			return new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence);
 		}
 
 		public static bool IsConstant(MethodCallExpression methodCall)
@@ -64,16 +52,14 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext InnerSequence { get; }
 
 			readonly MethodCallExpression _methodCall;
-			readonly bool                 _buildInStatement;
 
-			public ContainsContext(IBuildContext? parent, MethodCallExpression methodCall, SelectQuery outerQuery, IBuildContext innerSequence, bool buildInStatement)
+			public ContainsContext(IBuildContext? parent, MethodCallExpression methodCall, SelectQuery outerQuery, IBuildContext innerSequence)
 				:base(innerSequence.Builder, typeof(bool), outerQuery)
 			{
 				Parent            = parent;
 				OuterQuery        = outerQuery;
 				Expression        = methodCall;
 				_methodCall       = methodCall;
-				_buildInStatement = buildInStatement;
 				InnerSequence     = innerSequence;
 			}
 
@@ -107,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				var result = new ContainsContext(null, _methodCall, context.CloneElement(OuterQuery), context.CloneContext(InnerSequence), _buildInStatement);
+				var result = new ContainsContext(null, _methodCall, context.CloneElement(OuterQuery), context.CloneContext(InnerSequence));
 				if (_cachedPlaceholder != null)
 					result._cachedPlaceholder = context.CloneExpression(_cachedPlaceholder);
 				return result;
@@ -119,10 +105,13 @@ namespace LinqToDB.Linq.Builder
 				var param = Expression.Parameter(args[0], "param");
 				var expr  = _methodCall.Arguments[1];
 
-				var testPlaceholder = Builder.TryConvertToSqlPlaceholder(InnerSequence, expr, flags);
+				var testExpr = Builder.ConvertToSqlExpr(InnerSequence, expr, flags.SqlFlag() | ProjectFlags.Keys);
 
-				var contextRef          = new ContextRefExpression(args[0], InnerSequence);
-				var sequencePlaceholder = Builder.TryConvertToSqlPlaceholder(InnerSequence, contextRef, flags);
+				var contextRef   = new ContextRefExpression(args[0], InnerSequence);
+				var sequenceExpr = Builder.ConvertToSqlExpr(InnerSequence, contextRef, flags.SqlFlag());
+
+				var testPlaceholders     = ExpressionBuilder.CollectDistinctPlaceholders(testExpr);
+				var sequencePlaceholders = ExpressionBuilder.CollectDistinctPlaceholders(sequenceExpr);
 
 				SqlCondition cond;
 
@@ -131,11 +120,11 @@ namespace LinqToDB.Linq.Builder
 				if (Parent != null)
 					placeholderQuery = Parent.SelectQuery;
 
-				if (_buildInStatement && testPlaceholder != null && sequencePlaceholder != null)
+				if (testPlaceholders.Count == 1 && sequencePlaceholders.Count == 1)
 				{
 					if (!flags.IsTest())
-						_ = Builder.ToColumns(InnerSequence, sequencePlaceholder);
-					cond = new SqlCondition(false, new SqlPredicate.InSubQuery(testPlaceholder.Sql, false, InnerSequence.SelectQuery));
+						_ = Builder.ToColumns(InnerSequence, sequenceExpr);
+					cond = new SqlCondition(false, new SqlPredicate.InSubQuery(testPlaceholders[0].Sql, false, InnerSequence.SelectQuery));
 				}
 				else
 				{
