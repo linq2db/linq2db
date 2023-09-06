@@ -915,19 +915,24 @@ namespace LinqToDB.Linq.Builder
 		/// <returns></returns>
 		public static BinaryExpression Equal(MappingSchema mappingSchema, Expression left, Expression right)
 		{
-			if (left.Type != right.Type)
+			var leftType  = left.Type;
+			leftType = leftType.ToNullableUnderlying();
+			var rightType = right.Type;
+			rightType = rightType.ToNullableUnderlying();
+
+			if (leftType != rightType)
 			{
-				if (right.Type.CanConvertTo(left.Type))
-					right = Expression.Convert(right, left.Type);
-				else if (left.Type.CanConvertTo(right.Type))
-					left = Expression.Convert(left, right.Type);
+				if (rightType.CanConvertTo(leftType))
+					right = Expression.Convert(right, leftType);
+				else if (leftType.CanConvertTo(rightType))
+					left = Expression.Convert(left, rightType);
 				else
 				{
-					var rightConvert = ConvertBuilder.GetConverter(mappingSchema, right.Type, left. Type);
-					var leftConvert  = ConvertBuilder.GetConverter(mappingSchema, left. Type, right.Type);
+					var rightConvert = ConvertBuilder.GetConverter(mappingSchema, rightType, leftType);
+					var leftConvert  = ConvertBuilder.GetConverter(mappingSchema, leftType, rightType);
 
-					var leftIsPrimitive  = left. Type.IsPrimitive;
-					var rightIsPrimitive = right.Type.IsPrimitive;
+					var leftIsPrimitive  = leftType.IsPrimitive;
+					var rightIsPrimitive = rightType.IsPrimitive;
 
 					if (leftIsPrimitive && !rightIsPrimitive && rightConvert.Item2 != null)
 						right = rightConvert.Item2.GetBody(right);
@@ -938,6 +943,14 @@ namespace LinqToDB.Linq.Builder
 					else if (leftConvert.Item2 != null)
 						left = leftConvert.Item2.GetBody(left);
 				}
+			}
+
+			if (left.Type != right.Type)
+			{
+				if (left.Type.IsNullable())
+					right = Expression.Convert(right, left.Type);
+				else
+					left = Expression.Convert(left, right.Type);
 			}
 
 			return Expression.Equal(left, right);
