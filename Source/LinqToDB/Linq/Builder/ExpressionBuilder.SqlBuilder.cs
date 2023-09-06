@@ -3726,6 +3726,12 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var memberInType = body.Type.GetMemberEx(member);
+					if (memberInType == null)
+					{
+						if (member.DeclaringType?.IsSameOrParentOf(body.Type) == true)
+							memberInType = member;
+					}
+
 					if (memberInType != null)
 					{
 						for (int index = 0; index < mi.Bindings.Count; index++)
