@@ -516,7 +516,7 @@ namespace LinqToDB.Linq.Builder
 				if (_flags.IsExpression())
 				{
 					var expr = Visit(node.Expression);
-					if (!ExpressionEqualityComparer.Instance.Equals(expr, node))
+					if (!ExpressionEqualityComparer.Instance.Equals(expr, node.Expression))
 					{
 						return Expression.Condition(Expression.NotEqual(expr, Expression.Default(expr.Type)),
 							node.Update(expr), Expression.Default(node.Type));

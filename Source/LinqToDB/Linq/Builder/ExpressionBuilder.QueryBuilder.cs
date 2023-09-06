@@ -407,9 +407,9 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
-		Expression FinalizeConstructorInternal(IBuildContext context, Expression expression, List<(ParameterExpression variable, Expression assignment)>? variables)
+		Expression FinalizeConstructorInternal(IBuildContext context, Expression inputExpression, List<(ParameterExpression variable, Expression assignment)>? variables)
 		{
-			expression = BuildFinalProjection(context, expression, ProjectFlags.Expression);
+			var expression = BuildFinalProjection(context, inputExpression, ProjectFlags.Expression);
 
 			expression = OptimizationContext.OptimizeExpressionTree(expression, true);
 

@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var column in columns)
 				{
 					Expression me;
-					if (column.MemberName.Contains('.'))
+					if (column.MemberName.Contains('.') && !column.MemberInfo.Name.Contains("."))
 					{
 						hasNested = true;
 					}
