@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -87,6 +88,8 @@ namespace LinqToDB.Linq.Builder
 
 	partial class ExpressionBuilder
 	{
+		static ObjectPool<BuildVisitor> _buildVisitorPool = new(() => new BuildVisitor(), v => v.Cleanup(), 100);
+
 		class BuildVisitor : ExpressionVisitorBase
 		{
 			ProjectFlags      _flags;
@@ -694,9 +697,9 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSqlExpression(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null, BuildFlags buildFlags = BuildFlags.None)
 		{
-			var visitor =  new BuildVisitor();
+			using var visitor =  _buildVisitorPool.Allocate();
 
-			var result = visitor.Build(context, expression, flags, buildFlags);
+			var result = visitor.Value.Build(context, expression, flags, buildFlags);
 			return result;
 		}
 
