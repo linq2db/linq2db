@@ -17,15 +17,17 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
+			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			if (sequence == null)
+				return null;
+
 			if (buildInfo.IsSubQuery)
 			{
-				// check that provider can handle limitation inside subquery
-				//
-				if (builder.DataContext.SqlProviderFlags is { IsApplyJoinSupported: false, IsWindowFunctionsSupported: false })
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
 					return null;
 			}
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var arg      = methodCall.Arguments[1].Unwrap();
 
 			ISqlExpression expr;

@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (buildInfo.IsSubQuery)
 			{
-				if (!SequenceHelper.IsSupportedSubquery(sequence))
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
 					return null;
 			}
 

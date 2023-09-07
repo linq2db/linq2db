@@ -147,7 +147,7 @@ namespace LinqToDB.SqlQuery
 
 			if (!selectQuery.OrderBy.IsEmpty)
 			{
-				if (selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+				if (selectQuery.Select.Columns.Count > 0 && selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 				{
 					selectQuery.OrderBy.Items.Clear();
 					isModified = true;
@@ -856,7 +856,7 @@ namespace LinqToDB.SqlQuery
 
 				if (isAgg)
 					return optimized;
-				
+
 				var skipValue = sql.Select.SkipValue;
 				var takeValue = sql.Select.TakeValue;
 
@@ -1355,6 +1355,7 @@ namespace LinqToDB.SqlQuery
 					return false;
 			}
 
+			// -------------------------------------------
 			// Actual modification starts from this point
 			//
 

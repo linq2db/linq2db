@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
+	using Mapping;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -30,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 				body = body.Transform(e =>
 				{
 					if (e.NodeType == ExpressionType.Convert &&
-					    ((UnaryExpression)e).Operand is ContextRefExpression contextRef)
+					    ((UnaryExpression)e).Operand is ContextRefExpression contextRef && !e.Type.ToUnderlying().IsValueType)
 					{
 						return contextRef.WithType(e.Type);
 					}
@@ -906,14 +905,40 @@ namespace LinqToDB.Linq.Builder
 			return tableContext;
 		}
 
-		public static bool IsSupportedSubquery(IBuildContext context)
+		/// <summary>
+		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/> 
+		/// </summary>
+		/// <param name="context"></param>
+		/// <returns></returns>
+		public static bool IsSupportedSubqueryForModifier(IBuildContext context)
 		{
-			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported && !context.Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported &&
-			    QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
+			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
 			{
-				return false;
+				if (!QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
+					return true;
+
+				if (!context.Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
+					return false;
+
+				if (HasModifierWithOuter(context.SelectQuery))
+					return false;
 			}
+
 			return true;
+		}
+
+		public static bool HasModifierWithOuter(SelectQuery selectQuery)
+		{
+			if (selectQuery.Select.HasModifier && QueryHelper.IsDependsOnOuterSources(selectQuery))
+				return true;
+
+			foreach (var source in QueryHelper.EnumerateAccessibleSources(selectQuery))
+			{
+				if (source is SelectQuery sc && (sc.Select.HasModifier || !sc.GroupBy.IsEmpty) && QueryHelper.IsDependsOnOuterSources(sc))
+					return true;
+			}
+
+			return false;
 		}
 
 		static IBuildContext UnwrapSubqueryContext(IBuildContext context)

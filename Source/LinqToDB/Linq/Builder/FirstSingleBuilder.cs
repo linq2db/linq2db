@@ -82,12 +82,18 @@ namespace LinqToDB.Linq.Builder
 			if (sequence == null)
 				return null;
 
-			sequence = new SubQueryContext(sequence);
-
 			if (fakeJoin != null)
 			{
 				buildInfo.Parent!.SelectQuery.From.Tables[0].Joins.Remove(fakeJoin);
 			}
+
+			if (buildInfo.IsSubQuery)
+			{
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
+					return null;
+			}
+
+			sequence = new SubQueryContext(sequence);
 
 			var take = 0;
 

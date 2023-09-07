@@ -204,8 +204,11 @@ namespace LinqToDB.Linq.Builder
 				var placeholderSelect   = parentContext.SelectQuery;
 
 				using var testQuery = ExpressionBuilder.QueryPool.Allocate();
-				var testSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, testQuery.Value)
+				var testSequence = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, testQuery.Value)
 					{ AggregationTest = true, IsAggregation = true, IsTest = true });
+
+				if (testSequence == null)
+					return null;
 
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;
@@ -231,9 +234,12 @@ namespace LinqToDB.Linq.Builder
 
 					if (valid)
 					{
-						sequence = builder.BuildSequence(
+						sequence = builder.TryBuildSequence(
 							new BuildInfo(buildInfo, sequenceArgument)
 								{ CreateSubQuery = false, IsAggregation = true });
+
+						if (sequence == null) 
+							return null;
 
 						var sequenceRef = new ContextRefExpression(sequence.ElementType, sequence);
 
@@ -252,7 +258,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (sequence is null)
 				{
-					sequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
+					sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
+
+					if (sequence == null) 
+						return null;
+
+					sequence = new SubQueryContext(sequence);
 
 					placeholderSequence ??= sequence;
 
@@ -261,6 +272,9 @@ namespace LinqToDB.Linq.Builder
 						placeholderSequence = groupByContext.SubQuery;
 					}
 				}
+
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
+					return null;
 
 				placeholderSequence ??= sequence;
 

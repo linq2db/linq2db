@@ -45,6 +45,12 @@ namespace LinqToDB.Linq.Builder
 
 			var wrapped = false;
 
+			if (buildInfo.IsSubQuery)
+			{
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
+					return null;
+			}
+
 			if (sequence.SelectQuery.Select.HasModifier)
 			{
 				sequence = new SubQueryContext(sequence);

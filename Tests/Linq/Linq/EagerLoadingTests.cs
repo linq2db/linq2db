@@ -1140,6 +1140,59 @@ FROM
 			}
 		}
 
+		[Test]
+		public void TestAggregate([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					select new
+					{
+						Sum = m.Details.Select(x => x.DetailId)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(5)
+							.Sum(),
+
+						Count = m.Details.Select(x => x.DetailValue)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(2)
+							.Count()
+					};
+
+				AssertQuery(query);
+			}
+		}
+
+		[Test]
+		public void TestAggregateAverage([DataSources] string context)
+		{
+			var (masterRecords, detailRecords) = GenerateData();
+
+			using (var db = GetDataContext(context))
+			using (var master = db.CreateLocalTable(masterRecords))
+			using (var detail = db.CreateLocalTable(detailRecords))
+			{
+				var query = from m in master.LoadWith(m => m.Details)
+					where m.Details.Count() > 1
+					select new
+					{
+						Average = m.Details.Select(x => x.DetailId)
+							.Distinct()
+							.OrderBy(x => x)
+							.Skip(1).Take(5)
+							.Average(x => (double)x),
+					};
+
+				AssertQuery(query);
+			}
+		}
+
 		#region issue 1862
 		[Table]
 		public partial class Blog
