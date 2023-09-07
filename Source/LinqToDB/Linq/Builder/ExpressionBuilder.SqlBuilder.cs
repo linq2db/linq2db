@@ -399,7 +399,7 @@ namespace LinqToDB.Linq.Builder
 			return ConvertToSql(context, expr, unwrap: false, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 		}
 
-		public ISqlExpression ConvertToExtensionSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor)
+		public ISqlExpression? ConvertToExtensionSql(IBuildContext context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor)
 		{
 			expression = expression.UnwrapConvertToObject();
 			var unwrapped = expression.Unwrap();
@@ -432,8 +432,10 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			return ConvertToSql(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension,
-				unwrap : false, columnDescriptor : columnDescriptor, forExtension : true);
+			if (!TryConvertToSql(context, flags : flags.SqlFlag() | ProjectFlags.ForExtension, expression, columnDescriptor, out var sql, out _))
+				return null;
+
+			return sql;
 		}
 
 		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}")]
@@ -1143,7 +1145,7 @@ namespace LinqToDB.Linq.Builder
 			return QueryHelper.ConvertFormatToConcatenation(format, sqlArguments);
 		}
 
-		public SqlPlaceholderExpression ConvertExtensionToSql(IBuildContext context, ProjectFlags flags, Sql.ExpressionAttribute attr, MethodCallExpression mc)
+		public Expression ConvertExtensionToSql(IBuildContext context, ProjectFlags flags, Sql.ExpressionAttribute attr, MethodCallExpression mc)
 		{
 			var inlineParameters = DataContext.InlineParameters;
 
@@ -1174,7 +1176,7 @@ namespace LinqToDB.Linq.Builder
 				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
 
 			if (sqlExpression == null)
-				throw new LinqToDBException($"Cannot convert to SQL method '{mc}'.");
+				return CreateSqlError(currentContext, mc);
 
 			DataContext.InlineParameters = inlineParameters;
 

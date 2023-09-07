@@ -335,7 +335,7 @@ namespace LinqToDB
 				}
 			}
 
-			public static ISqlExpression[] PrepareArguments<TContext>(
+			public static ISqlExpression?[] PrepareArguments<TContext>(
 				TContext                                                    context,
 				string                                                      expressionStr,
 				int[]?                                                      argIndices,
@@ -344,15 +344,16 @@ namespace LinqToDB
 				List<SqlDataType>?                                          genericTypes,
 				Func<TContext,Expression,ColumnDescriptor?,ISqlExpression?> converter)
 			{
+				var hasErrors = false;
 				var parms = new List<ISqlExpression?>();
-				var ctx   = WritableContext.Create(false, (context, expressionStr, argIndices, knownExpressions, genericTypes, converter, parms));
+				var ctx   = WritableContext.Create((found: false, hasErrors: false), (context, expressionStr, argIndices, knownExpressions, genericTypes, converter, parms));
 
 				ResolveExpressionValues(
 					ctx,
 					expressionStr!,
 					static (ctx, v, d) =>
 					{
-						ctx.WriteableValue = true;
+						ctx.WriteableValue = (true, ctx.WriteableValue.hasErrors);
 
 						var argIdx = int.Parse(v);
 						var idx    = argIdx;
@@ -390,7 +391,13 @@ namespace LinqToDB
 							{
 								var expr = ctx.StaticValue.knownExpressions[argIdx];
 								if (expr != null)
+								{
 									paramExpr = ctx.StaticValue.converter(ctx.StaticValue.context, expr, null);
+									if (paramExpr == null)
+									{
+										ctx.WriteableValue = (true, true);
+									}
+								}
 							}
 
 							ctx.StaticValue.parms[idx] = paramExpr;
@@ -399,7 +406,7 @@ namespace LinqToDB
 						return v;
 					});
 
-				if (!ctx.WriteableValue)
+				if (!ctx.WriteableValue.found)
 				{
 					// It means that we have to prepare parameters for function
 					if (argIndices != null)
@@ -442,18 +449,32 @@ namespace LinqToDB
 						if (addDefault)
 						{
 							foreach (var e in knownExpressions)
-								parms.Add(e == null ? null : converter(context, e, null));
+							{
+								if (e == null)
+									parms.Add(null);
+								else
+								{
+									var converted = converter(context, e, null);
+									parms.Add(converted);
+									if (converted == null)
+										hasErrors = true;
+								}
+							}
+
 							if (genericTypes != null)
 								parms.AddRange(genericTypes);
 						}
 					}
 				}
 
+				if (hasErrors || ctx.WriteableValue.hasErrors)
+					return parms.Select(static p => p).ToArray();
+
 				return parms.Select(static p => p ?? UnknownExpression).ToArray();
 			}
 
 			public virtual ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query,
-				Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+				Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression?> converter)
 			{
 				var expressionStr = Expression;
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);
@@ -462,6 +483,9 @@ namespace LinqToDB
 					throw new LinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
 
 				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter);
+
+				if (parameters.Any(p => p == null))
+					return null;
 
 				var sqlExpression = new SqlExpression(expression.Type, expressionStr!, Precedence,
 					(IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -97,8 +98,11 @@ namespace LinqToDB
 
 				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
 
+				if (parameters.Any(p => p == null))
+					return null;
+
 				return new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, Precedence,
-					ToParametersNullabilityType(IsNullable), _canBeNull, parameters);
+					ToParametersNullabilityType(IsNullable), _canBeNull, parameters!);
 			}
 
 			public override string GetObjectID()
