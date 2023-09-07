@@ -3847,6 +3847,13 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 
+					if (trueExpr.Type != falseExpr.Type)
+					{
+						if (trueExpr.IsNullValue())
+							trueExpr = Expression.Default(falseExpr.Type);
+						else if (falseExpr.IsNullValue())
+							falseExpr = Expression.Default(trueExpr.Type);					}
+
 					var newExpr = (Expression)Expression.Condition(cond.Test, trueExpr, falseExpr);
 
 					return newExpr;
