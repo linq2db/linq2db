@@ -582,7 +582,10 @@ namespace LinqToDB.Linq.Builder
 				return expression;
 
 			// remove keys flag. We can cache SQL
-			var cacheFlags = flags & ~(ProjectFlags.Keys | ProjectFlags.ForExtension);
+			var cacheFlags = flags & ~ProjectFlags.Keys;
+
+			var forExtension = flags.IsForExtension();
+			flags &= ~ProjectFlags.ForExtension;
 
 			var cacheKey = new SqlCacheKey(expression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
 
@@ -649,7 +652,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (context != null && flags.IsForExtension() && newExpr is SqlGenericConstructorExpression)
+			if (context != null && forExtension && newExpr is SqlGenericConstructorExpression)
 			{
 				var fullyTranslated = BuildSqlExpression(context, expression, flags, buildFlags : BuildFlags.ForceAssignments);
 				fullyTranslated = UpdateNesting(context, fullyTranslated);
