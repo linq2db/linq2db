@@ -449,6 +449,11 @@ namespace LinqToDB.SqlProvider
 
 			switch (expr1.ElementType)
 			{
+				case QueryElementType.SqlNullabilityExpression:
+				{
+					return CompareExpressions(QueryHelper.UnwrapNullablity(expr1), QueryHelper.UnwrapNullablity(expr2));
+				}
+
 				case QueryElementType.Column:
 				{
 					return CompareExpressions(((SqlColumn) expr1).Expression, ((SqlColumn) expr2).Expression);
@@ -459,7 +464,10 @@ namespace LinqToDB.SqlProvider
 					var field1 = GetNewField(new VirtualField((SqlField) expr1));
 					var field2 = GetNewField(new VirtualField((SqlField) expr2));
 
-					return field1.Equals(field2);
+					if (field1.Equals(field2))
+						return true;
+
+					break;
 				}
 			}
 
@@ -760,12 +768,23 @@ namespace LinqToDB.SqlProvider
 			_selectQuery  = selectQuery;
 			_nullablility = new NullabilityContext(selectQuery);
 			_statement    = statement;
+			var evaluationContext = new EvaluationContext();
+
 
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var fromTable = selectQuery.From.Tables[i];
 
 				FlattenJoins(fromTable);
+
+				for (var ji = 0; ji < fromTable.Joins.Count; ji++)
+				{
+					var jo = fromTable.Joins[ji];
+					if (jo.Condition.Conditions.Count > 0)
+					{
+						jo.Condition = SelectQueryOptimizerVisitor.OptimizeSearchCondition(jo.Condition, evaluationContext);
+					}
+				}
 
 				for (var i1 = 0; i1 < fromTable.Joins.Count; i1++)
 				{
@@ -968,6 +987,18 @@ namespace LinqToDB.SqlProvider
 			return found;
 		}
 
+		static bool IsSimilarFields(VirtualField field1, VirtualField field2)
+		{
+			if (field1.Element is SqlField sqlField1)
+			{
+				if (field2.Element is SqlField sqlField2)
+					return sqlField1.PhysicalName == sqlField2.PhysicalName;
+				return false;
+			}
+
+			return ReferenceEquals(field1.Element, field2.Element);
+		}
+
 		bool TryMergeWithTable(SqlTableSource fromTable, SqlJoinedTable join, List<VirtualField[]> uniqueKeys)
 		{
 			if (join.Table.Joins.Count != 0)
@@ -987,7 +1018,7 @@ namespace LinqToDB.SqlProvider
 				return false;
 
 			// for removing join with same table fields should be equal
-			found = found.Where(f => f.OneField.Name == f.ManyField.Name).ToList();
+			found = found.Where(f => IsSimilarFields(f.OneField, f.ManyField)).ToList();
 
 			if (found.Count == 0)
 				return false;
@@ -1100,7 +1131,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var f2 = found2[i2];
 
-					if (f1.ManyField.Name == f2.ManyField.Name && f1.OneField.Name == f2.OneField.Name)
+					if (IsSimilarFields(f1.ManyField, f2.ManyField) && IsSimilarFields(f1.OneField, f2.OneField))
 					{
 						found ??= new List<FoundEquality>();
 
@@ -1292,46 +1323,44 @@ namespace LinqToDB.SqlProvider
 			{
 				if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-				if (expression is SqlField field)
-					Field = field;
-				else if (expression is SqlColumn column)
-					Column = column;
-				else
+				if (expression is not SqlField && expression is not SqlColumn)
+				{
 					throw new ArgumentException($"Expression '{expression}' is not a Field or Column.",
 						nameof(expression));
+				}
+
+				_expression = expression;
 			}
 
-			public VirtualField(SqlField field)
+			public VirtualField(SqlField field) : this((ISqlExpression)field)
 			{
-				Field = field ?? throw new ArgumentNullException(nameof(field));
 			}
 
-			public VirtualField(SqlColumn column)
+			public VirtualField(SqlColumn column) : this((ISqlExpression)column)
 			{
-				Column = column ?? throw new ArgumentNullException(nameof(column));
 			}
 
-			public SqlField?  Field  { get; }
-			public SqlColumn? Column { get; }
-
-			public string Name      => Field == null    ?  Column!.Alias! : Field.Name!;
-			public int    SourceID  => Field == null    ?  Column!.Parent!.SourceID : Field.Table?.SourceID ?? -1;
-			public bool   CanBeNullable(NullabilityContext nullability) => Element.CanBeNullable(nullability);
-
-			private ISqlExpression? _expression;
-			private ISqlExpression Expression =>
-				_expression ??= Field ?? QueryHelper.GetUnderlyingField(Column!) as ISqlExpression ?? Column!;
-
-			public ISqlExpression Element
+			public int  SourceID
 			{
 				get
 				{
-					if (Field != null)
-						return Field;
+					var sourceId = _expression switch
+					{
+						SqlField sqlField   => sqlField.Table?.SourceID,
+						SqlColumn sqlColumn => sqlColumn.Parent?.SourceID,
+						_                   => null
+					};
 
-					return Column!;
+					return sourceId ?? -1;
 				}
 			}
+
+			public bool CanBeNullable(NullabilityContext nullability) => Element.CanBeNullable(nullability);
+
+			private ISqlExpression _expression;
+			private ISqlExpression Expression => _expression;
+
+			public ISqlExpression Element => _expression;
 
 			bool Equals(VirtualField other)
 			{
@@ -1349,8 +1378,11 @@ namespace LinqToDB.SqlProvider
 				return Equals((VirtualField) obj);
 			}
 
-			string GetSourceString(ISqlTableSource source)
+			string GetSourceString(ISqlTableSource? source)
 			{
+				if (source == null)
+					return "(unknown)";
+
 				if (source is SqlTable table)
 				{
 					var res = $"({source.SourceID}).{table.NameForLogging}";
@@ -1368,10 +1400,13 @@ namespace LinqToDB.SqlProvider
 
 			public string DisplayString()
 			{
-				if (Field != null)
-					return $"F: '{GetSourceString(Field.Table!)}.{Name}'";
+				if (_expression is SqlField sqlField)
+					return $"F: '{GetSourceString(sqlField.Table!)}.{sqlField.Name}'";
 
-				return $"C: '{GetSourceString(Column!.Parent!)}.{Name}'";
+				if (_expression is SqlColumn sqlColumn)
+					return $"C: '{GetSourceString(sqlColumn.Parent)}.{sqlColumn.Alias}'";
+
+				return _expression.ToDebugString();
 			}
 
 			public override int GetHashCode()
