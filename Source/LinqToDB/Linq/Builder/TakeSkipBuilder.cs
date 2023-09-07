@@ -24,8 +24,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (buildInfo.IsSubQuery)
 			{
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
-					return null;
+				if (sequence is not TakeSkipContext)
+				{
+					if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
+						return null;
+				}
 			}
 
 			var arg      = methodCall.Arguments[1].Unwrap();
@@ -68,7 +71,19 @@ namespace LinqToDB.Linq.Builder
 				BuildSkip(builder, sequence, expr);
 			}
 
-			return sequence;
+			return new TakeSkipContext(sequence);
+		}
+
+		class TakeSkipContext : PassThroughContext
+		{
+			public TakeSkipContext(IBuildContext context) : base(context)
+			{
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new TakeSkipContext(context.CloneContext(Context));
+			}
 		}
 
 		static void BuildTake(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr, TakeHints? hints)
