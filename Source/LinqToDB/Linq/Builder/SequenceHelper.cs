@@ -929,9 +929,6 @@ namespace LinqToDB.Linq.Builder
 
 		public static bool HasModifierWithOuter(SelectQuery selectQuery)
 		{
-			if (selectQuery.Select.HasModifier && QueryHelper.IsDependsOnOuterSources(selectQuery))
-				return true;
-
 			foreach (var source in QueryHelper.EnumerateAccessibleSources(selectQuery))
 			{
 				if (source is SelectQuery sc && (sc.Select.HasModifier || !sc.GroupBy.IsEmpty) && QueryHelper.IsDependsOnOuterSources(sc))

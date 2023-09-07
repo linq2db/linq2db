@@ -234,6 +234,11 @@ namespace LinqToDB.Linq.Builder
 					? Builder.ConvertToSqlExpr(_context, expression, localFlags, columnDescriptor : _columnDescriptor, alias : alias)
 					: Builder.MakeExpression(_context, expression, localFlags);
 
+				// Handling GroupBy by group case. Maybe wrong decision, we can do such correction during Group building.
+				//
+				if (!expression.Type.IsValueType && !expression.Type.IsSameOrParentOf(translated.Type) && !translated.Type.IsSameOrParentOf(expression.Type))
+					return expression;
+
 				if (translated is SqlErrorExpression)
 				{
 					return expression;

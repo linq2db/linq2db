@@ -50,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				SqlTable         = new SqlTable(EntityDescriptor);
 
-				if (!buildInfo.IsTest)
+				if (!buildInfo.IsTest || buildInfo.IsSubQuery)
 					SelectQuery.From.Table(SqlTable);
 
 				Init(true);
