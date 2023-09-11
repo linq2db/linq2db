@@ -20,7 +20,9 @@ namespace LinqToDB.DataProvider.DB2
 #if NETFRAMEWORK
 		public const string AssemblyName         = "IBM.Data.DB2";
 		public const string ClientNamespace      = "IBM.Data.DB2";
+		[Obsolete("Unused. Will be removed in v6")]
 		public const string? AssemblyNameOld     = null;
+		[Obsolete("Unused. Will be removed in v6")]
 		public const string? ClientNamespaceOld  = null;
 #else
 		// note that we try new assembly name (IBM.Data.Db2) which available since net5.0 even for older
@@ -36,17 +38,19 @@ namespace LinqToDB.DataProvider.DB2
 			var clientNamespace = ClientNamespace;
 			var assembly        = Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 
-			if (assembly == null && AssemblyNameOld != null)
+#if !NETFRAMEWORK
+			if (assembly == null)
 			{
 				assembly = Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
 				if (assembly != null)
-					clientNamespace = ClientNamespaceOld!;
+					clientNamespace = ClientNamespaceOld;
 			}
-			else if (AssemblyNameOld != null && assembly.GetName().Name == AssemblyNameOld)
+			else if (assembly.GetName().Name == AssemblyNameOld)
 			{
 				// cover case when provider factory loaded old assembly
-				clientNamespace = ClientNamespaceOld!;
+				clientNamespace = ClientNamespaceOld;
 			}
+#endif
 
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");

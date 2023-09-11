@@ -1352,7 +1352,6 @@ namespace Tests.xUpdate
 			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
 			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
 			{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				gt_s_one
 					.GroupJoin(
 						access_mode,
@@ -1381,7 +1380,6 @@ namespace Tests.xUpdate
 							col5 = s.gt.col3 == "empty" ? "1" : "0",
 							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
 						});
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 

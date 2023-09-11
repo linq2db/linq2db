@@ -52,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[1].EvaluateExpression()!}")
+						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[1].EvaluateExpression(builder.DataContext)!}")
 					};
 					break;
 			}

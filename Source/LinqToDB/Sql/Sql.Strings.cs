@@ -165,7 +165,7 @@ namespace LinqToDB
 
 		sealed class CommonConcatWsArgumentsBuilder : IExtensionCallBuilder
 		{
-			SqlExpression IsNullExpression(string isNullFormat, ISqlExpression value)
+			static SqlExpression IsNullExpression(string isNullFormat, ISqlExpression value)
 			{
 				return new SqlExpression(typeof(string), isNullFormat, value);
 			}

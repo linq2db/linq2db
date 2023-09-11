@@ -128,7 +128,7 @@ namespace LinqToDB.DataProvider.SQLite
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			// either "temp", "main" or attached db name supported
 			if (tableOptions.IsTemporaryOptionSet())

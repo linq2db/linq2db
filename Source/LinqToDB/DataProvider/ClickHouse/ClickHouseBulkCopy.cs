@@ -268,7 +268,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var sql = cmd.Value.ToString();
 
 			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#if NATIVE_ASYNC
+			await using (bc.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			await using (bc)
+#endif
 			{
 				for (var i = 0; i < columnTypes.Length; i++)
 				{
@@ -448,7 +452,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 #endif
 
-		#endregion
+#endregion
 
 		#region Client
 
@@ -483,7 +487,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						disposeConnection    = true;
 
 						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpening(new(null), connection);
-						connection.Open();
+						await connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpened(new(null), connection);
 					}
 				}

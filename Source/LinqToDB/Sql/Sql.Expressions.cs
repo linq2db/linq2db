@@ -11,11 +11,11 @@ namespace LinqToDB
 	using Common;
 	using Common.Internal;
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Extensions;
 
 	public partial class Sql
 	{

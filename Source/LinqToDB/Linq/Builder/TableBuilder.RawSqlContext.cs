@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (mc.Arguments[1].NodeType != ExpressionType.NewArrayInit)
 				{
-					format    = (string)mc.Arguments[0].EvaluateExpression()!;
+					format    = mc.Arguments[0].EvaluateExpression<string>()!;
 					var args  = new Expression[mc.Arguments.Count - 1];
 
 					for (var i = 0; i < args.Length; i++)
@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					format    = (string)mc.Arguments[0].EvaluateExpression()!;
+					format    = mc.Arguments[0].EvaluateExpression<string>()!;
 					arguments = ((NewArrayExpression)mc.Arguments[1]).Expressions;
 				}
 			}
@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var array = (object[])arrayExpr.EvaluateExpression()!;
+						var array = arrayExpr.EvaluateExpression<object[]>()!;
 						var args  = new Expression[array.Length];
 						for (var i = 0; i < array.Length; i++)
 						{

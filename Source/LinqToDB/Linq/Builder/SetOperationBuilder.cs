@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Context
 
-		sealed class SetOperationContext : SubQueryContext
+		internal sealed class SetOperationContext : SubQueryContext
 		{
 			public SetOperationContext(SetOperation setOperation, SelectQuery selectQuery, SubQueryContext sequence1, SubQueryContext sequence2,
 				MethodCallExpression                methodCall)

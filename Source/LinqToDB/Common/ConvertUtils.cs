@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Common
 {
-	using Internal;
 	using Extensions;
+	using Internal;
 
 	internal static class ConvertUtils
 	{

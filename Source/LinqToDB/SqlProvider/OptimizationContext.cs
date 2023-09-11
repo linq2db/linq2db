@@ -12,9 +12,10 @@ namespace LinqToDB.SqlProvider
 
 	public class OptimizationContext
 	{
-		IQueryParametersNormalizer?                      _parametersNormalizer;
-		List<SqlParameter>?                              _actualParameters;
-		Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
+		private IQueryParametersNormalizer?                      _parametersNormalizer;
+		private Dictionary<SqlParameter, SqlParameter>?          _parametersMap;
+		private List<SqlParameter>?                              _actualParameters;
+		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
 
 		readonly DataOptions                   _dataOptions;
 		readonly SqlProviderFlags?             _sqlProviderFlags;
@@ -42,14 +43,14 @@ namespace LinqToDB.SqlProvider
 			Aliases                      = aliases ?? throw new ArgumentNullException(nameof(aliases));
 			_optimizerVisitor            = optimizerVisitor;
 			_convertVisitor              = convertVisitor;
-			IsParameterOrderDepended     = isParameterOrderDepended;
+			IsParameterOrderDependent    = isParameterOrderDepended;
 			_optimizerVisitor            = optimizerVisitor;
 			_parametersNormalizerFactory = parametersNormalizerFactory;
 		}
 
-		public EvaluationContext Context                  { get; }
-		public bool              IsParameterOrderDepended { get; }
-		public AliasesContext    Aliases                  { get; }
+		public EvaluationContext Context                   { get; }
+		public bool              IsParameterOrderDependent { get; }
+		public AliasesContext    Aliases                   { get; }
 
 		public bool HasParameters() => _actualParameters?.Count > 0;
 
@@ -57,23 +58,32 @@ namespace LinqToDB.SqlProvider
 
 		public SqlParameter AddParameter(SqlParameter parameter)
 		{
-			var alreadyRegistered = _actualParameters?.Contains(parameter) == true;
-			if (IsParameterOrderDepended || !alreadyRegistered)
+			var returnValue = parameter;
+
+			if (!IsParameterOrderDependent && _parametersMap?.TryGetValue(parameter, out var newParameter) == true)
 			{
-				if (alreadyRegistered)
+				returnValue = newParameter;
+			}
+			else
+			{
+				var newName = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
+
+				if (IsParameterOrderDependent || newName != parameter.Name)
 				{
-					parameter = new SqlParameter(parameter.Type, parameter.Name, parameter.Value)
+					returnValue = new SqlParameter(parameter.Type, newName, parameter.Value)
 					{
-						AccessorId = parameter.AccessorId
+						AccessorId     = parameter.AccessorId,
+						ValueConverter = parameter.ValueConverter
 					};
 				}
 
-				parameter.Name = (_parametersNormalizer ??= _parametersNormalizerFactory()).Normalize(parameter.Name);
+				if (!IsParameterOrderDependent)
+					(_parametersMap ??= new()).Add(parameter, returnValue);
 
-				(_actualParameters ??= new()).Add(parameter);
+				(_actualParameters ??= new()).Add(returnValue);
 			}
 
-			return parameter;
+			return returnValue;
 		}
 
 		public SqlParameter SuggestDynamicParameter(DbDataType dbDataType, object? value)

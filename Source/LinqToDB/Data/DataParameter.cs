@@ -2,13 +2,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.Linq;
 using System.Xml;
 using System.Xml.Linq;
 
 namespace LinqToDB.Data
 {
-	using System.Data.Common;
 	using LinqToDB.Common;
 	using Mapping;
 

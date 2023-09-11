@@ -54,7 +54,8 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark(Baseline = true)]
 		public object? RawAdoNet()
 		{
-			return MaterializeSet(new MockDbCommand(CommandText, _result));
+			using var cmd = new MockDbCommand(CommandText, _result);
+			return MaterializeSet(cmd);
 		}
 
 		private IEnumerable<SalesOrderHeader> MaterializeSet(MockDbCommand toExecute)

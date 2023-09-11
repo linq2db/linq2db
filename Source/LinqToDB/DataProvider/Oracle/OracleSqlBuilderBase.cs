@@ -494,7 +494,7 @@ END;",
 			StringBuilder.Append("TRUNCATE TABLE ");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			if (name.Schema != null)
 			{
@@ -513,6 +513,14 @@ END;",
 			else
 				sb.Append(name.Name);
 
+			if (name.Server != null && !withoutSuffix)
+				BuildObjectNameSuffix(sb, name, escape);
+
+			return sb;
+		}
+
+		protected override StringBuilder BuildObjectNameSuffix(StringBuilder sb, SqlObjectName name, bool escape)
+		{
 			if (name.Server != null)
 			{
 				sb.Append('@');
@@ -718,9 +726,9 @@ END;",
 
 			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
-				if (HintBuilder.Length > 0 && HintBuilder[HintBuilder.Length - 1] != ' ')
+				if (HintBuilder.Length > 0 && HintBuilder[^1] != ' ')
 					HintBuilder.Append(' ');
-				BuildQueryExtensions(nullability, HintBuilder, statement.SqlQueryExtensions, null, " ", null);
+				BuildQueryExtensions(nullability, HintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 			}
 
 			if (_isTopLevelBuilder && HintBuilder!.Length > 0)

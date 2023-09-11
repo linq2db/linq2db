@@ -52,7 +52,7 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression  Column     { get; set; }
 		public ISqlExpression? Expression { get; set; }
 
-		private void RefineDbParameter(ISqlExpression column, ISqlExpression? value)
+		private static void RefineDbParameter(ISqlExpression column, ISqlExpression? value)
 		{
 			if (value is SqlParameter p && column is SqlField field)
 			{

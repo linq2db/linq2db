@@ -11,8 +11,16 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			var version      = attributes.FirstOrDefault(_ => _.Name == "version"     )?.Value;
-			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
+			string? version      = null;
+			string? assemblyName = null;
+
+			foreach (var attr in attributes)
+			{
+				if (attr.Name == "version" && version == null)
+					version = attr.Value;
+				else if (attr.Name == "assemblyName" && assemblyName == null)
+					assemblyName = attr.Value;
+			}
 
 			var dialect = OracleVersion.v12;
 			if (version?.Contains("11") == true)

@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
+	using Extensions;
 
 	readonly struct TransformInfoVisitor<TContext>
 	{
@@ -356,7 +356,7 @@ namespace LinqToDB.Expressions
 				Transform(cs.Body));
 		}
 
-		IEnumerable<T> Transform<T>(IList<T> source, Func<T, T> func)
+		static IEnumerable<T> Transform<T>(IList<T> source, Func<T, T> func)
 			where T : class
 		{
 			List<T>? list = null;

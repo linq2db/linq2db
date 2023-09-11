@@ -1275,7 +1275,7 @@ namespace LinqToDB.Linq.Builder
 					expr = ColumnDescriptor.ApplyConversions(MappingSchema, expr, dbType, null, true);
 			}
 
-			var value = expr.EvaluateExpression();
+			var value = expr.EvaluateExpression(DataContext);
 
 			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
 
@@ -1314,7 +1314,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (arg.NodeType == ExpressionType.Constant || arg.NodeType == ExpressionType.Default)
 				{
-					var comparison = (StringComparison)(arg.EvaluateExpression() ?? throw new InvalidOperationException());
+					var comparison = (StringComparison)(arg.EvaluateExpression(DataContext) ?? throw new InvalidOperationException());
 					return new SqlValue(comparison == StringComparison.CurrentCulture   ||
 					                    comparison == StringComparison.InvariantCulture ||
 					                    comparison == StringComparison.Ordinal);

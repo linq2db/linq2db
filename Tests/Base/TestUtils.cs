@@ -145,7 +145,10 @@ namespace Tests
 			return context switch
 			{
 				string when context.IsAnyOf(TestProvName.AllSQLite)   => "main",
-				string when context.IsAnyOf(TestProvName.AllAccess)   => "Database\\TestData",
+				// Access adds extension automatically to database name, but if there are
+				// dots in name, extension not added as dot treated as extension separator by Access
+				string when context.IsAnyOf(ProviderName.Access)      => "Database\\TestData",
+				string when context.IsAnyOf(ProviderName.AccessOdbc)  => "Database\\TestData.ODBC.mdb",
 				string when context.IsAnyOf(
 					TestProvName.AllMySql,
 					TestProvName.AllClickHouse,

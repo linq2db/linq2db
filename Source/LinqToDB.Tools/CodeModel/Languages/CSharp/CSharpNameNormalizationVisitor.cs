@@ -293,7 +293,7 @@ namespace LinqToDB.CodeModel
 			// counter to use in name for conflict resolution
 			var cnt = 0;
 			// repeat until non-empty unique name generated
-			while (fullName == string.Empty || scopeNames.Contains(fullName))
+			while (fullName.Length == 0 || scopeNames.Contains(fullName))
 			{
 				// generate base name only if we need to generate new name
 				identifierName = baseName ??= GetBaseIdentifierName(name.Name, name.FixOptions, name.Position);

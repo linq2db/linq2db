@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Sybase
 			};
 		}
 
-		SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
+		static SqlStatement PrepareUpdateStatement(SqlUpdateStatement statement)
 		{
 			var tableToUpdate = statement.Update.Table;
 

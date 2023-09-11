@@ -1,17 +1,15 @@
 ﻿using System.Globalization;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using System.Linq;
-
-	using LinqToDB.DataProvider.Firebird;
-
 	[TestFixture]
 	public class Issue464Tests : TestBase
 	{
@@ -37,9 +35,10 @@ namespace Tests.UserTests
 				  .HasColumn(x => x.Value)
 				  .Build();
 
-			using (var db = new  DataConnection(context).AddMappingSchema(schema))
+			using (var db = new DataConnection(context))
 			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
 			{
+				db.AddMappingSchema(schema);
 				try
 				{
 					var temptable = db.CreateTable<Entity>();

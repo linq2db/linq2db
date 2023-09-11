@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider
 {
 	using Common.Internal;
 
-	public class DataTools
+	public static class DataTools
 	{
 		/// <summary>
 		/// Improved version of <c>Replace("[", "[[]")</c> code, used before.

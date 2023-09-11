@@ -11,10 +11,10 @@ namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using Extensions;
 
 	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
 	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }

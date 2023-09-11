@@ -713,7 +713,7 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression, false))
 							{
-								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
+								if (!(callExpression.EvaluateExpression(DataContext) is IQueryable appliedQuery))
 									throw new LinqToDBException($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Replace(fakeQuery.Expression, firstArgument);
 								return newExpression;
@@ -878,7 +878,7 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
-		MethodInfo GetMethodInfo(MethodCallExpression method, string name)
+		static MethodInfo GetMethodInfo(MethodCallExpression method, string name)
 		{
 			if (method.Method.DeclaringType == typeof(Enumerable))
 			{

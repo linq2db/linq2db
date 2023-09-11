@@ -1,6 +1,10 @@
-﻿namespace LinqToDB.Linq
+﻿using System;
+
+namespace LinqToDB.Linq
 {
-	using System;
+	using Common;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Mapping;
 
 	internal static class Exceptions
 	{

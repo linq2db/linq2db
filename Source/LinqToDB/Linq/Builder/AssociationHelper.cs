@@ -270,7 +270,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>() ??
+							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>(builder.DataContext) ??
 							                     throw new LinqException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
 							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];

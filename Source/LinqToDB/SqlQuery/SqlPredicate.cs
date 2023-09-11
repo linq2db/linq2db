@@ -59,7 +59,7 @@ namespace LinqToDB.SqlQuery
 
 		public abstract class BaseNotExpr : Expr, IInvertibleElement
 		{
-			public BaseNotExpr(ISqlExpression exp1, bool isNot, int precedence)
+			protected BaseNotExpr(ISqlExpression exp1, bool isNot, int precedence)
 				: base(exp1, precedence)
 			{
 				IsNot = isNot;
@@ -290,7 +290,7 @@ namespace LinqToDB.SqlQuery
 							{
 								if (Operator == Operator.Equal)
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, true), true));
@@ -300,7 +300,7 @@ namespace LinqToDB.SqlQuery
 								}
 								else if (Operator == Operator.NotEqual)
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, true), true));
@@ -329,7 +329,7 @@ namespace LinqToDB.SqlQuery
 							}
 							else if (Operator == Operator.NotEqual)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 
 								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, true), true));

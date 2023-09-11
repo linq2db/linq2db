@@ -41,7 +41,7 @@ namespace LinqToDB.CodeModel
 		private abstract class ColumnBase<TData> : ColumnBase
 			where TData : ColumnDataBase
 		{
-			public ColumnBase(string? name)
+			protected ColumnBase(string? name)
 				: base(name)
 			{
 			}
@@ -71,7 +71,7 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		private abstract class ColumnBase
 		{
-			public ColumnBase(string? name)
+			protected ColumnBase(string? name)
 			{
 				Name = name;
 			}
@@ -340,7 +340,7 @@ namespace LinqToDB.CodeModel
 					_rowValues.Add(null);
 
 				// for empty value we replace it with null, as we use null as empty column indicator
-				_rowValues.Add(value == string.Empty ? null : value);
+				_rowValues.Add(value.Length == 0 ? null : value);
 
 				// update max column length if needed
 				if (value.Length > MaxLength)

@@ -1223,9 +1223,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToLower() == "john" && p.ID == 1 select p;
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1236,9 +1234,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var param = "JOHN";
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToLower() == param.ToLower() && p.ID == 1 select p;
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1248,9 +1244,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToUpper() == "JOHN" && p.ID == 1 select p;
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}
@@ -1261,9 +1255,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var param = "john";
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 				var q = from p in db.Person where p.FirstName.ToUpper() == param.ToUpper() && p.ID == 1 select p;
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 				Assert.AreEqual(1, q.ToList().First().ID);
 			}
 		}

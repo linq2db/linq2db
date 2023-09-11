@@ -170,5 +170,53 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring("FOR UPDATE OF p, c_1 SKIP LOCKED"));
 		}
+
+		[Test]
+		public void PostgreSQLUnionTest([IncludeDataSources(true, TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			void Test()
+			{
+				using var db = GetDataContext(context);
+
+				var q =
+						(
+							from p in db.Parent.TableID("cc")
+							select p
+						)
+						.AsPostgreSQL()
+						.ForShareHint()
+						.Union
+						(
+							from p in db.Child
+							select p.Parent
+						)
+						.Union
+						(
+							from p in db.Parent
+							from c in db.Child.TableID("pp")
+								.AsSubQuery()
+								.AsPostgreSQL()
+								.ForShareHint()
+							select p
+						)
+						.AsPostgreSQL()
+						.ForShareHint()
+					;
+
+				_ = q.ToList();
+			}
+
+			Assert.That(Test, Throws.Exception.With.Message.Contains("FOR SHARE is not allowed with UNION"));
+
+			Assert.That(LastQuery, Should.Contain(
+				"FOR SHARE",
+				")",
+				"UNION",
+				"UNION",
+				"FOR SHARE",
+				")",
+				"FOR SHARE",
+				")"));
+		}
 	}
 }

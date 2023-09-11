@@ -404,11 +404,7 @@ namespace LinqToDB
 			{
 				try
 				{
-#if !NATIVE_ASYNC
-					table.Dispose();
-#else
 					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#endif
 				}
 				catch
 				{
@@ -491,11 +487,7 @@ namespace LinqToDB
 			{
 				try
 				{
-#if !NATIVE_ASYNC
-					table.Dispose();
-#else
 					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#endif
 				}
 				catch
 				{

@@ -2,12 +2,12 @@
 using System.Data;
 using System.Linq;
 
-
 namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Data;
 	using SchemaProvider;
+
 	// https://docs.microsoft.com/en-us/dotnet/framework/data/adonet/odbc-schema-collections
 	// unused tables:
 	// DataSourceInformation - database settings

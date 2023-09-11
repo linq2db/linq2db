@@ -42,7 +42,7 @@ namespace LinqToDB.Expressions
 			return new VisitActionVisitor<TContext>(context, func);
 		}
 
-		void Visit<T>(IEnumerable<T> source, Action<T> func)
+		static void Visit<T>(IEnumerable<T> source, Action<T> func)
 		{
 			foreach (var item in source)
 				func(item);

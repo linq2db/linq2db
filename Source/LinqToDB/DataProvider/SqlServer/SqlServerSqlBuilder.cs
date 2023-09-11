@@ -165,7 +165,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				throw new InvalidOperationException();
 		}
 
-		private string GetTablePhysicalName(string tableName, TableOptions tableOptions)
+		private static string GetTablePhysicalName(string tableName, TableOptions tableOptions)
 		{
 			if (tableName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
 				return tableName;
@@ -188,7 +188,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			var databaseName = name.Database;
 
@@ -496,7 +496,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(nullability, StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")");
+				BuildQueryExtensions(nullability, StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")", Sql.QueryExtensionScope.QueryHint);
 		}
 	}
 }

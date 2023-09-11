@@ -554,7 +554,7 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		bool FixRootSelect(SqlStatement statement)
+		static bool FixRootSelect(SqlStatement statement)
 		{
 			if (statement.SelectQuery is {} query         &&
 				query.Select.HasModifier == false         &&
@@ -1307,7 +1307,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
+		static void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
 		{
 			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
 			{

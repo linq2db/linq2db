@@ -99,7 +99,9 @@ namespace LinqToDB.Mapping
 
 			configuration ??= string.Empty;
 
+#pragma warning disable CA2214 // Do not call overridable methods in constructors
 			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
+#pragma warning restore CA2214 // Do not call overridable methods in constructors
 
 			if (schemas == null || schemas.Length == 0)
 			{

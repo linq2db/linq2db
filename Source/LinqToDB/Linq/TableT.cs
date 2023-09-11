@@ -4,6 +4,7 @@ using System.Reflection;
 namespace LinqToDB.Linq
 {
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;

@@ -297,7 +297,7 @@ namespace LinqToDB.DataProvider.MySql
 				BuildStep = Step.HavingClause;    BuildHavingClause   (nullability, statement.SelectQuery);
 				BuildStep = Step.OrderByClause;   BuildOrderByClause  (nullability, statement.SelectQuery);
 				BuildStep = Step.OffsetLimit;     BuildOffsetLimit    (nullability, statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildQueryExtensions(nullability, statement);
+				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(nullability, statement);
 			}
 
 			if (insertClause.WithIdentity)
@@ -444,7 +444,7 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			if (name.Database != null)
 			{
@@ -604,9 +604,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (statement.SqlQueryExtensions is not null && _hintBuilder is not null)
 			{
-				if (_hintBuilder.Length > 0 && _hintBuilder[_hintBuilder.Length - 1] != ' ')
+				if (_hintBuilder.Length > 0 && _hintBuilder[^1] != ' ')
 					_hintBuilder.Append(' ');
-				BuildQueryExtensions(nullability, _hintBuilder, statement.SqlQueryExtensions, null, " ", null);
+				BuildQueryExtensions(nullability, _hintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 			}
 
 			if (_isTopLevelBuilder && _hintBuilder!.Length > 0)
@@ -632,7 +632,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
-		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
+		protected override void BuildSubQueryExtensions(NullabilityContext nullability, SqlStatement statement)
 		{
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
@@ -651,8 +651,13 @@ namespace LinqToDB.DataProvider.MySql
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(nullability, StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(nullability, StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
+		}
+
+		protected override void BuildSql()
+		{
+			BuildSqlForUnion();
 		}
 	}
 }

@@ -726,7 +726,7 @@ namespace LinqToDB.Linq.Builder
 			return string.Join(separator, types.Select(GetTypeName));
 		}
 
-		bool IsAnonymous(Type type)
+		static bool IsAnonymous(Type type)
 		{
 			return type.Name.StartsWith("<>");
 		}
@@ -773,7 +773,7 @@ namespace LinqToDB.Linq.Builder
 			return IsUserNamespace(type.Namespace);
 		}
 
-		bool IsUserNamespace(string? @namespace)
+		static bool IsUserNamespace(string? @namespace)
 		{
 			return @namespace == null || SystemNamespaces.All(ns => @namespace != ns && !@namespace.StartsWith(ns + '.'));
 		}

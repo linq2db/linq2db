@@ -3,11 +3,12 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Common
 {
 	using Expressions;
-	using JetBrains.Annotations;
-	using LinqToDB.Common.Internal;
+	using Internal;
 	using Mapping;
 
 	/// <summary>

@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.Access
 			return statement;
 		}
 
-		private SqlStatement WrapParameters(SqlStatement statement)
+		private static SqlStatement WrapParameters(SqlStatement statement)
 		{
 			// ODBC cannot properly type result column, if it produced by parameter
 			// To fix it we will wrap all parameters, used as select columns into type-cast

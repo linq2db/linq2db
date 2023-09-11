@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var tag = (string?)methodCall.Arguments[1].EvaluateExpression();
+			var tag = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext);
 
 			if (!string.IsNullOrWhiteSpace(tag))
 			{

@@ -6,27 +6,28 @@ using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
+
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
-using LinqToDB.Extensions;
 using LinqToDB.Expressions;
+using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
 using NUnit.Framework.Internal;
+
 using Tests.Remote.ServerContainer;
-using TypeHelper = LinqToDB.Common.TypeHelper;
 
 namespace Tests
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Model;
 	using Tools;
 
@@ -229,11 +230,11 @@ namespace Tests
 
 				if (provider.Value.ConnectionString != null)
 				{
-				DataConnection.AddOrSetConfiguration(
-					provider.Key,
-					provider.Value.ConnectionString,
-					provider.Value.Provider ?? "");
-			}
+					DataConnection.AddOrSetConfiguration(
+						provider.Key,
+						provider.Value.ConnectionString,
+						provider.Value.Provider ?? "");
+				}
 			}
 #endif
 
@@ -740,7 +741,7 @@ namespace Tests
 		private   List<ParentInheritanceBase4>? _parentInheritance4;
 		protected List<ParentInheritanceBase4> ParentInheritance4 =>
 			_parentInheritance4 ??= Parent
-					.Where(p => p.Value1.HasValue && (new[] { 1, 2 }.Contains(p.Value1.Value)))
+					.Where(p => p.Value1.HasValue && (p.Value1.Value == 1 || p.Value1.Value == 2))
 					.Select(p => p.Value1 == 1 ?
 						(ParentInheritanceBase4)new ParentInheritance14 { ParentID = p.ParentID } :
 												new ParentInheritance24 { ParentID = p.ParentID }
@@ -1287,13 +1288,15 @@ namespace Tests
 			Assert.IsTrue(b);
 		}
 
+		static readonly char[] _newlineSeparators = new char[] { '\r', '\n' };
+		
 		protected void CompareSql(string expected, string result)
 		{
 			Assert.AreEqual(normalize(expected), normalize(result));
 
 			static string normalize(string sql)
 			{
-				var lines = sql.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+				var lines = sql.Split(_newlineSeparators, StringSplitOptions.RemoveEmptyEntries);
 				return string.Join("\n", lines.Where(l => !l.StartsWith("-- ")).Select(l => l.TrimStart('\t', ' ')));
 			}
 		}

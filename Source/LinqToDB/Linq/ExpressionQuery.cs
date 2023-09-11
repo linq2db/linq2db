@@ -10,8 +10,8 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using Async;
-	using Extensions;
 	using Data;
+	using Extensions;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{

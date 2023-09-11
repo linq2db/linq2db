@@ -23,6 +23,7 @@ namespace LinqToDB.Mapping
 
 		public  string           Configuration;
 		private MetadataReader? _metadataReader;
+		readonly object         _syncRoot = new();
 
 		public MetadataReader? MetadataReader
 		{
@@ -49,7 +50,7 @@ namespace LinqToDB.Mapping
 		public void SetDefaultValue(Type type, object? value, bool resetId = true)
 		{
 			if (_defaultValues == null)
-				lock (this)
+				lock (_syncRoot)
 					_defaultValues ??= new ();
 
 			_defaultValues[type] = value;
@@ -75,7 +76,7 @@ namespace LinqToDB.Mapping
 		public void SetCanBeNull(Type type, bool value, bool resetId = true)
 		{
 			if (_canBeNull == null)
-				lock (this)
+				lock (_syncRoot)
 					_canBeNull ??= new ();
 
 			_canBeNull[type] = value;
@@ -133,7 +134,7 @@ namespace LinqToDB.Mapping
 		public void SetGenericConvertProvider(Type type)
 		{
 			if (_genericConvertProviders == null)
-				lock (this)
+				lock (_syncRoot)
 					_genericConvertProviders ??= new Dictionary<Type,List<Type[]>>();
 
 			if (!_genericConvertProviders.ContainsKey(type))
@@ -187,7 +188,7 @@ namespace LinqToDB.Mapping
 		public void SetScalarType(Type type, bool isScalarType = true)
 		{
 			if (_scalarTypes == null)
-				lock (this)
+				lock (_syncRoot)
 					_scalarTypes ??= new ();
 
 			_scalarTypes[type] = isScalarType;
@@ -220,7 +221,7 @@ namespace LinqToDB.Mapping
 		public void SetDataType(Type type, SqlDataType dataType)
 		{
 			if (_dataTypes == null)
-				lock (this)
+				lock (_syncRoot)
 					_dataTypes ??= new ();
 
 			_dataTypes[type] = dataType;
@@ -261,7 +262,7 @@ namespace LinqToDB.Mapping
 		public void SetDefaultFromEnumType(Type enumType, Type defaultFromType)
 		{
 			if (_defaultFromEnumTypes == null)
-				lock (this)
+				lock (_syncRoot)
 					_defaultFromEnumTypes ??= new ();
 
 			_defaultFromEnumTypes[enumType] = defaultFromType;

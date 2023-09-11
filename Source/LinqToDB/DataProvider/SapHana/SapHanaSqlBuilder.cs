@@ -179,7 +179,7 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>
 			if (name.Server != null && name.Schema == null)

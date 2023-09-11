@@ -18,6 +18,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public class PostgreSQLSchemaProvider : SchemaProviderBase
 	{
+		private static readonly IReadOnlyList<string> _schemaSchemas = new[] { "pg_catalog", "information_schema" };
+
 		private readonly PostgreSQLDataProvider _provider;
 
 		public PostgreSQLSchemaProvider(PostgreSQLDataProvider provider)
@@ -204,7 +206,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			var excludeSchemas =
 				new HashSet<string?>(
-					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(new[] { "pg_catalog", "information_schema" }),
+					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas),
 					StringComparer.OrdinalIgnoreCase);
 			
 			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !string.IsNullOrEmpty(s)), StringComparer.OrdinalIgnoreCase);

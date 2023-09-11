@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
+
 using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
@@ -12,9 +16,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
 	using Model;
-	using System.Text.RegularExpressions;
 
 	[TestFixture]
 	public class WhereTests : TestBase
