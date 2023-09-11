@@ -1684,6 +1684,8 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.PostgreSQL   , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SQLite       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.MySql        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer    , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		public static string? TrimRight(string? str, params char[] trimChars)
 		{
 			return str?.TrimEnd(trimChars);
@@ -1701,7 +1703,8 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.PostgreSQL   , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SQLite       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Function("LTrim", 0, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		[Sql.Extension(ProviderName.MySql        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.SqlServer    , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		public static string? TrimLeft(string? str, params char[] trimChars)
 		{
 			return str?.TrimStart(trimChars);
@@ -1739,7 +1742,7 @@ namespace LinqToDB.Linq
 				var chars            = builder.GetValue<char[]>("trimChars");
 				if (chars == null || chars.Length == 0)
 				{
-					builder.ResultExpression = new SqlQuery.SqlFunction(
+					builder.ResultExpression = new SqlQuery.SqlExpression(
 						typeof(string),
 						"TRIM(TRAILING FROM {0})",
 						stringExpression);
