@@ -1538,6 +1538,11 @@ namespace LinqToDB.SqlQuery
 				NotifyReplaced(column.Expression, column);
 			}
 
+			if (subQuery.OrderBy.Items.Count > 0 && !selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			{
+				ApplySubsequentOrder(selectQuery, subQuery);
+			}
+
 			var subQueryTableSource = subQuery.From.Tables[0];
 			joinTable.Table.Joins.AddRange(subQueryTableSource.Joins);
 			joinTable.Table.Source = subQueryTableSource.Source;
@@ -1599,6 +1604,52 @@ namespace LinqToDB.SqlQuery
 			} while (true);
 
 			return element;
+		}
+
+		public override IQueryElement VisitSqlCondition(SqlCondition element)
+		{
+			if (element.Predicate is SqlSearchCondition sc && sc.Conditions.Count == 1)
+			{
+				var singleCondition = sc.Conditions[0];
+				if (element.IsNot == singleCondition.IsNot)
+				{
+					element.Predicate = singleCondition.Predicate;
+				}
+				else
+				{
+					element = new SqlCondition(true, singleCondition.Predicate, element.IsOr);
+				}
+			}
+
+			if (element is { IsNot: true, Predicate: IInvertibleElement invertible } && invertible.CanInvert())
+			{
+				element.IsNot     = false;
+				element.Predicate = (ISqlPredicate)invertible.Invert();
+			}
+
+			return base.VisitSqlCondition(element);
+		}
+
+		public override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
+		{
+			if (predicate.Expr1 is not SqlValue &&
+			    predicate.Expr1.TryEvaluateExpression(_evaluationContext, out var value))
+			{
+				predicate.Expr1 = new SqlValue(QueryHelper.GetDbDataType(predicate.Expr1), value);
+			}
+
+			return base.VisitExprPredicate(predicate);
+		}
+
+		public override IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
+		{
+			if (predicate is { IsNot: true, Expr1: IInvertibleElement invertible } && invertible.CanInvert())
+			{
+				var newNode = invertible.Invert();
+				return Visit(newNode);
+			}
+
+			return base.VisitNotExprPredicate(predicate);
 		}
 
 		bool OptimizeSubQueries(SelectQuery selectQuery)
