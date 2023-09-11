@@ -547,7 +547,6 @@ namespace LinqToDB
 		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA")
 		/// </code>
 		/// </example>
-		[Extension("", BuilderType = typeof(TableSourceBuilder), ServerSideOnly = true)]
 		public static ISqlExpression AliasExpr()
 		{
 			return new SqlAliasPlaceholder();

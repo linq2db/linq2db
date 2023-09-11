@@ -3531,7 +3531,8 @@ namespace LinqToDB.SqlProvider
 			OffsetLimit,
 			Tag,
 			Output,
-			QueryExtensions
+			QueryExtensions,
+			TypedExpression,
 		}
 
 		#endregion

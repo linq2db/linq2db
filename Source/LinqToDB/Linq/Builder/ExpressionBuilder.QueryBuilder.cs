@@ -376,6 +376,11 @@ namespace LinqToDB.Linq.Builder
 						var newExpr = CreatePlaceholder(context.SelectQuery, transformed, expr);
 						return newExpr;
 					}
+					
+					if (attr.ServerSideOnly)
+					{
+						return CreateSqlError(context, expr);
+					}
 				}
 			}
 
