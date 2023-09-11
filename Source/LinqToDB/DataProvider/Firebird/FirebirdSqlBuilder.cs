@@ -208,12 +208,15 @@ namespace LinqToDB.DataProvider.Firebird
 				StringBuilder.Append("NOT NULL");
 		}
 
-
-		SqlParameter? _currentParam;
-
 		protected override void BuildParameter(NullabilityContext nullability, SqlParameter parameter)
 		{
-			if (parameter != _currentParam && parameter.NeedsCast)
+			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
+			{
+				base.BuildParameter(nullability, parameter);
+				return;
+			}
+
+			if (parameter.NeedsCast)
 			{
 				var paramValue = parameter.GetParameterValue(OptimizationContext.Context.ParameterValues);
 
@@ -225,9 +228,10 @@ namespace LinqToDB.DataProvider.Firebird
 					return;
 				}
 
-				_currentParam = parameter;
+				var saveStep = BuildStep;
+				BuildStep = Step.TypedExpression;
 				BuildTypedExpression(nullability, new SqlDataType(paramValue.DbDataType), parameter);
-				_currentParam = null;
+				BuildStep = saveStep;
 
 				return;
 			}
