@@ -768,7 +768,37 @@ namespace LinqToDB.Linq.Builder
 						right = right.Unwrap();
 					}
 
-					columnDescriptor = SuggestColumnDescriptor(context, left, right, flags);
+					columnDescriptor = null;
+					switch (expression.NodeType)
+					{
+						case ExpressionType.Add:
+						case ExpressionType.AddChecked: 
+						case ExpressionType.And: 
+						case ExpressionType.Divide: 
+						case ExpressionType.ExclusiveOr: 
+						case ExpressionType.Modulo: 
+						case ExpressionType.Multiply:
+						case ExpressionType.MultiplyChecked: 
+						case ExpressionType.Or: 
+						case ExpressionType.Power: 
+						case ExpressionType.Subtract:
+						case ExpressionType.SubtractChecked: 
+						case ExpressionType.Coalesce:
+						{
+							columnDescriptor = SuggestColumnDescriptor(context, left, flags);
+							break;
+						}
+						case ExpressionType.Equal:
+						case ExpressionType.NotEqual:
+						case ExpressionType.GreaterThan:
+						case ExpressionType.GreaterThanOrEqual:
+						case ExpressionType.LessThan:
+						case ExpressionType.LessThanOrEqual:
+						{
+							columnDescriptor = SuggestColumnDescriptor(context, left, right, flags);
+							break;
+						}
+					}
 
 					var leftExpr  = ConvertToSqlExpr(context, left,  flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 					var rightExpr = ConvertToSqlExpr(context, right, flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
