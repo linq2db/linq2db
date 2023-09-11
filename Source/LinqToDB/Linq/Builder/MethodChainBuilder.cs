@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 			return functions.Length > 0;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
 
@@ -32,7 +32,13 @@ namespace LinqToDB.Linq.Builder
 
 			root = builder.ConvertExpressionTree(root);
 
-			var prevSequence  = builder.BuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
+			if (builder.CanBeCompiled(root, false) && builder.MappingSchema.IsScalarType(root.Type))
+				return null;
+
+			var prevSequence = builder.TryBuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
+			if (prevSequence == null)
+				return null;
+
 			var finalFunction = functions.First();
 			var sequence      = prevSequence;
 
