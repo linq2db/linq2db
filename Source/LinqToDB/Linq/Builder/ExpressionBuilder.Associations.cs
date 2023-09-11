@@ -167,7 +167,9 @@ namespace LinqToDB.Linq.Builder
 			LoadWithInfo? loadWith     = null;
 			MemberInfo[]? loadWithPath = null;
 
-			if (rootContext.BuildContext is ITableContext table)
+			var table = SequenceHelper.GetTableOrCteContext(rootContext.BuildContext);
+
+			if (table != null)
 			{
 				loadWith     = table.LoadWithRoot;
 				loadWithPath = table.LoadWithPath;

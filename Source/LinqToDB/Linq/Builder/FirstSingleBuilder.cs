@@ -276,6 +276,9 @@ namespace LinqToDB.Linq.Builder
 
 				var projected = base.MakeExpression(path, flags);
 
+				if (flags.IsTable())
+					return projected;
+
 				if (!flags.HasFlag(ProjectFlags.Test))
 				{
 					if (IsSubQuery)
