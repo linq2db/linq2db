@@ -637,12 +637,14 @@ namespace LinqToDB.Linq.Builder
 				// Shortcut: if expression can be compiled we can live it as is but inject accessors 
 				//
 				if (_flags.IsExpression()                         &&
-				    expr.NodeType != ExpressionType.New           &&
-				    expr.NodeType != ExpressionType.Default       &&
-				    expr is not DefaultValueExpression            &&
+					expr.NodeType != ExpressionType.New           &&
+					expr.NodeType != ExpressionType.Default       &&
+					expr is not DefaultValueExpression            &&
 					!(expr is ConstantExpression { Value: null }) &&
 					expr != ExpressionConstants.DataContextParam  &&
-				    Builder.CanBeCompiled(expr, false))
+					!Builder.CanBeConstant(expr)                  &&
+				    Builder.CanBeCompiled(expr, false)
+				)
 				{
 					if (expr.NodeType == ExpressionType.MemberAccess || expr.NodeType == ExpressionType.Call)
 					{
