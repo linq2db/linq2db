@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 
 			root = builder.ConvertExpressionTree(root);
 
-			if (builder.CanBeCompiled(root, false) && builder.MappingSchema.IsScalarType(root.Type))
+			if (builder.CanBeCompiled(root, false))
 				return null;
 
 			var prevSequence = builder.TryBuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });

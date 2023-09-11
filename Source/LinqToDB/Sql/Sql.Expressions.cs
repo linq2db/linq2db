@@ -564,14 +564,19 @@ namespace LinqToDB
 
 				var sqlArguments = arguments.Select(e => builder.ConvertExpressionToSql(e)).ToArray();
 
-				builder.ResultExpression = new SqlExpression(
-					memberType,
-					format,
-					Precedence.Primary,
-					memberType == typeof(bool) ? SqlFlags.IsPredicate | SqlFlags.IsPure : SqlFlags.IsPure,
-					ExpressionAttribute.ToParametersNullabilityType(builder.IsNullable),
-					builder.CanBeNull,
-					sqlArguments);
+				if (sqlArguments.Any(a => a == null))
+					builder.IsConvertible = false;
+				else
+				{
+					builder.ResultExpression = new SqlExpression(
+						memberType,
+						format,
+						Precedence.Primary,
+						memberType == typeof(bool) ? SqlFlags.IsPredicate | SqlFlags.IsPure : SqlFlags.IsPure,
+						ExpressionAttribute.ToParametersNullabilityType(builder.IsNullable),
+						builder.CanBeNull,
+						sqlArguments!);
+				}
 			}
 		}
 

@@ -12,12 +12,12 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsSameGenericMethod(Methods.LinqToDB.InlineParameters);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var saveInline = builder.DataContext.InlineParameters;
 			builder.DataContext.InlineParameters = true;
 
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
 			builder.DataContext.InlineParameters = saveInline;
 

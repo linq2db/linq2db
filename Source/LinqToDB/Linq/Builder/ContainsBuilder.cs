@@ -27,10 +27,14 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var innerQuery = new SelectQuery();
-			var sequence   = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery));
+			
+			var sequence   = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery));
+			if (sequence == null)
+				return null;
+
             sequence = new SubQueryContext(sequence);
 
 			return new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence);

@@ -22,10 +22,14 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable(MethodNames);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence1 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var sequence2 = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			var sequence1 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (sequence1 == null)
+				return null;
+			var sequence2 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			if (sequence2 == null)
+				return null;
 
 			SetOperation setOperation;
 			switch (methodCall.Method.Name)

@@ -146,6 +146,7 @@ namespace LinqToDB
 			MemberInfo      Member           { get; }
 			SqlExtension    Extension        { get; }
 			ISqlExpression? ResultExpression { get; set; }
+			bool            IsConvertible    { get; set; }
 			string          Expression       { get; set; }
 			Expression[]    Arguments        { get; }
 
@@ -157,11 +158,11 @@ namespace LinqToDB
 			object GetObjectValue(int    index);
 			object GetObjectValue(string argName);
 
-			ISqlExpression GetExpression(int index, bool unwrap = false);
-			ISqlExpression GetExpression(string argName, bool unwrap = false);
-			ISqlExpression ConvertToSqlExpression();
-			ISqlExpression ConvertToSqlExpression(int precedence);
-			ISqlExpression ConvertExpressionToSql(Expression expression, bool unwrap = false);
+			ISqlExpression? GetExpression(int    index,   bool unwrap = false);
+			ISqlExpression? GetExpression(string argName, bool unwrap = false);
+			ISqlExpression? ConvertToSqlExpression();
+			ISqlExpression? ConvertToSqlExpression(int        precedence);
+			ISqlExpression? ConvertExpressionToSql(Expression expression, bool unwrap = false);
 
 			SqlExtensionParam AddParameter(string name, ISqlExpression expr);
 		}
@@ -345,7 +346,7 @@ namespace LinqToDB
 
 				public MethodInfo?  Method { get; }
 
-				public ISqlExpression ConvertExpression(Expression expr, bool unwrap, ColumnDescriptor? columnDescriptor)
+				public ISqlExpression? ConvertExpression(Expression expr, bool unwrap, ColumnDescriptor? columnDescriptor)
 				{
 					if (unwrap)
 						expr = expr.UnwrapConvert();
@@ -363,6 +364,7 @@ namespace LinqToDB
 				public MemberInfo      Member           { get; }
 				public SqlExtension    Extension        { get; }
 				public ISqlExpression? ResultExpression { get; set; }
+				public bool            IsConvertible    { get; set; } = true;
 				public Expression[]    Arguments        { get; }
 				public IsNullableType  IsNullable       { get; }
 				public bool?           CanBeNull        { get; }
@@ -413,12 +415,12 @@ namespace LinqToDB
 					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
-				public ISqlExpression GetExpression(int index, bool unwrap)
+				public ISqlExpression? GetExpression(int index, bool unwrap)
 				{
 					return ConvertExpression(Arguments[index], unwrap, null);
 				}
 
-				public ISqlExpression GetExpression(string argName, bool unwrap)
+				public ISqlExpression? GetExpression(string argName, bool unwrap)
 				{
 					if (Method != null)
 					{
@@ -435,12 +437,12 @@ namespace LinqToDB
 					throw new InvalidOperationException(string.Format("Argument '{0}' not found", argName));
 				}
 
-				public ISqlExpression ConvertToSqlExpression()
+				public ISqlExpression? ConvertToSqlExpression()
 				{
 					return ConvertToSqlExpression(Extension.Precedence);
 				}
 
-				public ISqlExpression ConvertToSqlExpression(int precedence)
+				public ISqlExpression? ConvertToSqlExpression(int precedence)
 				{
 					return BuildSqlExpression(Extension, Extension.SystemType, precedence,
 						(Extension.IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
@@ -450,7 +452,7 @@ namespace LinqToDB
 						Extension.CanBeNull, IsNullableType.Undefined);
 				}
 
-				public ISqlExpression ConvertExpressionToSql(Expression expression, bool unwrap)
+				public ISqlExpression? ConvertExpressionToSql(Expression expression, bool unwrap)
 				{
 					return ConvertExpression(expression, unwrap, null);
 				}
@@ -567,7 +569,7 @@ namespace LinqToDB
 				return current;
 			}
 
-			protected List<SqlExtensionParam> BuildFunctionsChain<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expr, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			protected List<SqlExtensionParam>? BuildFunctionsChain<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expr, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var chains           = new List<SqlExtensionParam>();
 				Expression? current  = expr;
@@ -624,6 +626,12 @@ namespace LinqToDB
 						foreach (var attr in attributes)
 						{
 							var param = attr.BuildExtensionParam(context, dataContext, query, memberInfo, arguments!, converter);
+
+							if (param == null)
+							{
+								return null;
+							}
+
 							continueChain = continueChain || !string.IsNullOrEmpty(param.Name) ||
 							                param.Extension != null && param.Extension.ChainPrecedence != -1;
 							chains.Add(param);
@@ -639,7 +647,7 @@ namespace LinqToDB
 				return chains;
 			}
 
-			SqlExtensionParam BuildExtensionParam<TContext>(TContext context, IDataContext dataContext, SelectQuery query, MemberInfo member, Expression[] arguments, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			SqlExtensionParam? BuildExtensionParam<TContext>(TContext context, IDataContext dataContext, SelectQuery query, MemberInfo member, Expression[] arguments, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				var method = member as MethodInfo;
 				var type   = member.GetMemberType();
@@ -758,6 +766,9 @@ namespace LinqToDB
 
 					callBuilder.Build(builder);
 
+					if (!builder.IsConvertible)
+						return null;
+
 					result = builder.ResultExpression != null ?
 						new SqlExtensionParam(TokenName, builder.ResultExpression) :
 						new SqlExtensionParam(TokenName, builder.Extension);
@@ -774,7 +785,7 @@ namespace LinqToDB
 				return array.Expressions;
 			}
 
-			public static SqlExpression BuildSqlExpression(SqlExtension root, Type? systemType, int precedence,
+			public static SqlExpression? BuildSqlExpression(SqlExtension root, Type? systemType, int precedence,
 				SqlFlags flags, bool? canBeNull, IsNullableType isNullable)
 			{
 				var resolvedParams = new Dictionary<SqlExtensionParam, string?>();
@@ -843,10 +854,13 @@ namespace LinqToDB
 				return sqlExpression;
 			}
 
-			public override ISqlExpression GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
 			{
 				// chain starts from the tail
 				var chain  = BuildFunctionsChain(context, dataContext, query, expression, converter);
+
+				if (chain == null)
+					return null;
 
 				if (chain.Count == 0)
 					throw new InvalidOperationException("No sequence found for expression '{expression}'");

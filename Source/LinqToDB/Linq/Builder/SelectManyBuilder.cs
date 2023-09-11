@@ -14,11 +14,13 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("SelectMany");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var genericArguments = methodCall.Method.GetGenericArguments();
 
-			var sequence         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence         = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (sequence == null)
+				return null;
 
 			var collectionSelector = SequenceHelper.GetArgumentLambda(methodCall, "collectionSelector") ??
 			                         SequenceHelper.GetArgumentLambda(methodCall, "selector");
@@ -53,9 +55,12 @@ namespace LinqToDB.Linq.Builder
 			var fakejoin = new SqlFromClause.Join(JoinType.Auto, collectionSelectQuery, null, false, null);
 			sequence.SelectQuery.From.Tables[0].Joins.Add(fakejoin.JoinedTable);
 
-			var collection     = builder.BuildSequence(collectionInfo);
+			var collection = builder.TryBuildSequence(collectionInfo);
 
 			sequence.SelectQuery.From.Tables[0].Joins.Remove(fakejoin.JoinedTable);
+
+			if (collection == null)
+				return null;
 
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//

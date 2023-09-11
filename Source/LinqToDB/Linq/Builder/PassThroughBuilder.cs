@@ -16,9 +16,9 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsSameGenericMethod(_supportedMethods);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			return builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 		}
 	}
 }

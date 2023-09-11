@@ -15,10 +15,12 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("GroupJoin");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var outerExpression = methodCall.Arguments[0];
-			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, outerExpression, buildInfo.SelectQuery));
+			var outerContext = builder.TryBuildSequence(new BuildInfo(buildInfo, outerExpression, buildInfo.SelectQuery));
+			if (outerContext == null)
+				return null;
 
 			var innerExpression = methodCall.Arguments[1].Unwrap();
 
@@ -92,7 +94,7 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				var expr = GetGroupJoinCall();
-				var sequence = Builder.BuildSequence(new BuildInfo(Parent, expr, new SelectQuery()));
+				var sequence = Builder.TryBuildSequence(new BuildInfo(Parent, expr, new SelectQuery()));
 				return sequence;
 			}
 
