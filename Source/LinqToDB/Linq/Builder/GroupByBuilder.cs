@@ -102,12 +102,14 @@ namespace LinqToDB.Linq.Builder
 
 		 */
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequenceExpr    = methodCall.Arguments[0];
 			var groupingKind    = GroupingType.Default;
 
-			var dataSequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceExpr));
+			var dataSequence = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpr));
+			if (dataSequence == null)
+				return null;
 
 			var dataSubquery     = new SubQueryContext(dataSequence);
 			var groupingSubquery = new SubQueryContext(dataSubquery);

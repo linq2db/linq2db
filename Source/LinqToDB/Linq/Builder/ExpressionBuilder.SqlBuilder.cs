@@ -92,25 +92,12 @@ namespace LinqToDB.Linq.Builder
 		{
 			var inScopeExpr = SequenceHelper.MoveAllToScopedContext(expr, context);
 
-			var testInfo =
-				new BuildInfo(context, inScopeExpr, new SelectQuery()) { IsTest = true, CreateSubQuery = true };
-
-			if (!IsSequence(testInfo))
-				return null;
-
 			var info = new BuildInfo(context, inScopeExpr, new SelectQuery())
 			{
 				CreateSubQuery = true,
-				IsTest         = true
 			};
 
 			var ctx = TryBuildSequence(info);
-
-			if (ctx != null && !flags.IsTest())
-			{
-				info.IsTest = false;
-				ctx = TryBuildSequence(info);
-			}
 
 			return ctx;
 		}
