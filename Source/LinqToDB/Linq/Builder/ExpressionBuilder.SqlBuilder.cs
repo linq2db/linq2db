@@ -728,7 +728,7 @@ namespace LinqToDB.Linq.Builder
 					var condition = new SqlSearchCondition();
 					if (!BuildSearchCondition(context, expression, flags, condition.Conditions, out var error))
 						return error.WithType(expression.Type);
-					return CreatePlaceholder(context, condition, expression, alias: alias);
+					return CreatePlaceholder(context, condition, expression, alias : alias);
 				}
 
 				case ExpressionType.And:
@@ -820,17 +820,17 @@ namespace LinqToDB.Linq.Builder
 					switch (expression.NodeType)
 					{
 						case ExpressionType.Add:
-						case ExpressionType.AddChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), expression, alias: alias);
-						case ExpressionType.And: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), expression, alias: alias);
-						case ExpressionType.Divide: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), expression, alias: alias);
-						case ExpressionType.ExclusiveOr: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), expression, alias: alias);
-						case ExpressionType.Modulo: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), expression, alias: alias);
+						case ExpressionType.AddChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), expression, alias : alias);
+						case ExpressionType.And: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), expression, alias : alias);
+						case ExpressionType.Divide: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), expression, alias : alias);
+						case ExpressionType.ExclusiveOr: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), expression, alias : alias);
+						case ExpressionType.Modulo: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), expression, alias : alias);
 						case ExpressionType.Multiply:
-						case ExpressionType.MultiplyChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), expression, alias: alias);
-						case ExpressionType.Or: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), expression, alias: alias);
-						case ExpressionType.Power: return CreatePlaceholder(context, new SqlFunction(t, "Power", l, r), expression, alias: alias);
+						case ExpressionType.MultiplyChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), expression, alias : alias);
+						case ExpressionType.Or: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), expression, alias : alias);
+						case ExpressionType.Power: return CreatePlaceholder(context, new SqlFunction(t, "Power", l, r), expression, alias : alias);
 						case ExpressionType.Subtract:
-						case ExpressionType.SubtractChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), expression, alias: alias);
+						case ExpressionType.SubtractChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), expression, alias : alias);
 						case ExpressionType.Coalesce:
 						{
 							if (QueryHelper.UnwrapExpression(r, checkNullability: true) is SqlFunction c)
@@ -842,11 +842,11 @@ namespace LinqToDB.Linq.Builder
 									parms[0] = l;
 									c.Parameters.CopyTo(parms, 1);
 
-									return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, parms), expression, alias: alias);
+									return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, parms), expression, alias : alias);
 								}
 							}
 
-							return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, l, r), expression, alias: alias);
+							return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, l, r), expression, alias : alias);
 						}
 					}
 
@@ -866,7 +866,7 @@ namespace LinqToDB.Linq.Builder
 						case ExpressionType.UnaryPlus: return CreatePlaceholder(context, o, expression);
 						case ExpressionType.Negate:
 						case ExpressionType.NegateChecked:
-							return CreatePlaceholder(context, new SqlBinaryExpression(t, new SqlValue(-1), "*", o, Precedence.Multiplicative), expression, alias: alias);
+							return CreatePlaceholder(context, new SqlBinaryExpression(t, new SqlValue(-1), "*", o, Precedence.Multiplicative), expression, alias : alias);
 					}
 
 					break;
@@ -1017,13 +1017,13 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (e.Method.IsSqlPropertyMethodEx())
-						return CreatePlaceholder(context, ConvertToSql(context, ConvertExpression(expression), unwrap: unwrap), expression, alias: alias);
+						return CreatePlaceholder(context, ConvertToSql(context, ConvertExpression(expression), unwrap: unwrap), expression, alias : alias);
 
 					if (e.Method.DeclaringType == typeof(string) && e.Method.Name == "Format")
 					{
 						var sqlExpression = TryConvertFormatToSql(context, e, isPureExpression, flags);
 						if (sqlExpression != null)
-							return CreatePlaceholder(context, sqlExpression, expression, alias: alias);
+							return CreatePlaceholder(context, sqlExpression, expression, alias : alias);
 						break;
 					}
 
@@ -1071,7 +1071,7 @@ namespace LinqToDB.Linq.Builder
 
 						var pie = l.Body.Transform(dic, static (dic, wpi) => dic.TryGetValue(wpi, out var ppi) ? ppi : wpi);
 
-						return CreatePlaceholder(context, ConvertToSql(context, pie), expression, alias: alias);
+						return CreatePlaceholder(context, ConvertToSql(context, pie), expression, alias : alias);
 					}
 
 					break;
@@ -1081,7 +1081,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var condition = new SqlSearchCondition();
 					BuildSearchCondition(context, expression, flags, condition.Conditions);
-					return CreatePlaceholder(context, condition, expression, alias: alias);
+					return CreatePlaceholder(context, condition, expression, alias : alias);
 				}
 
 				case ExpressionType.TypeAs:
@@ -1097,13 +1097,13 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				case ChangeTypeExpression.ChangeTypeType:
-					return CreatePlaceholder(context, ConvertToSql(context, ((ChangeTypeExpression)expression).Expression), expression, alias: alias);
+					return CreatePlaceholder(context, ConvertToSql(context, ((ChangeTypeExpression)expression).Expression), expression, alias : alias);
 
 				case ExpressionType.Constant:
 				{
 					var cnt = (ConstantExpression)expression;
 					if (cnt.Value is ISqlExpression sql)
-						return CreatePlaceholder(context, sql, expression, alias: alias);
+						return CreatePlaceholder(context, sql, expression, alias : alias);
 					break;
 				}
 
@@ -1134,7 +1134,7 @@ namespace LinqToDB.Linq.Builder
 					return error!.WithType(expression.Type);
 
 				_convertedPredicates.Remove(expression);
-				return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, predicate)), expression, alias: alias);
+				return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, predicate)), expression, alias : alias);
 			}
 
 			return expression;

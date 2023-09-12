@@ -214,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path, trackingPath: path);
+				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path, trackingPath : path);
 
 				return placeholder;
 			}
@@ -238,7 +238,10 @@ namespace LinqToDB.Linq.Builder
 				if (!buildInfo.CreateSubQuery || buildInfo.IsTest)
 					return this;
 
-				var expr    = Builder.GetSequenceExpression(this);
+				var expr = Builder.GetSequenceExpression(this);
+				if (expr == null)
+					return this;
+
 				var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
 				return context;

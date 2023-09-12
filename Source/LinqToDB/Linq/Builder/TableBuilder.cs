@@ -180,17 +180,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				case BuildContextType.None                   : return null;
 				case BuildContextType.TableConstant:
-					{
-						return ApplyQueryFilters(builder, buildInfo, null,
-							AddTableInScope(new(builder, buildInfo, buildInfo.Expression.EvaluateExpression<IQueryable>(builder.DataContext)!.ElementType)));
-					}
+				{
+					var tableContext = new TableContext(builder, buildInfo, buildInfo.Expression.EvaluateExpression<IQueryable>(builder.DataContext)!.ElementType);
+					return ApplyQueryFilters(builder, buildInfo, null, AddTableInScope(tableContext));
+				}
 				case BuildContextType.GetTableMethod         :
 				case BuildContextType.MemberAccess           :
-					{
-						return ApplyQueryFilters(builder, buildInfo, null,
-							AddTableInScope(new(builder, buildInfo,
-								buildInfo.Expression.Type.GetGenericArguments()[0])));
-					}
+				{
+					var tableContext = new TableContext(builder, buildInfo, buildInfo.Expression.Type.GetGenericArguments()[0]);
+					return ApplyQueryFilters(builder, buildInfo, null, AddTableInScope(tableContext));
+				}
 				case BuildContextType.TableFunctionAttribute : return new TableContext    (builder, buildInfo);
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);

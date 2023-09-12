@@ -283,43 +283,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (IsSubQuery)
 					{
-						// Bad thing here. We expect that SelectQueryOptimizer will transfer OUTER APPLY to ROW_NUMBER query. We have to predict it here
-						if (!IsSupportedByProvider(path))
-						{
-							if (flags.HasFlag(ProjectFlags.Expression))
-							{
-								// Do not generate Take. Provider do not support Outer queries. Result will be filtered on the client side.
-								//
-								var sequenceExpression = GetEagerLoadingExpression(false);
-
-								if (!SequenceHelper.IsSameContext(path, this))
-								{
-									var param = Expression.Parameter(ElementType, "e");
-									var selectBody = SequenceHelper.ReplaceContext(path, this, param);
-									sequenceExpression = Expression.Call(Methods.Enumerable.Select.MakeGenericMethod(ElementType, path.Type), sequenceExpression,
-										Expression.Lambda(selectBody, param));
-								}
-
-								var result     = (Expression)new SqlEagerLoadExpression(sequenceExpression);
-
-								var methodInfo = _methodKind switch
-								{
-									MethodKind.First => Methods.Enumerable.First,
-									MethodKind.FirstOrDefault => Methods.Enumerable.FirstOrDefault,
-									MethodKind.Single => Methods.Enumerable.Single,
-									MethodKind.SingleOrDefault => Methods.Enumerable.SingleOrDefault,
-									_ => throw new ArgumentOutOfRangeException(nameof(_methodKind), _methodKind,
-										"Invalid method kind.")
-								};
-
-								methodInfo = methodInfo.MakeGenericMethod(path.Type);
-
-								result = Expression.Call(methodInfo, result);
-
-								return result;
-							}
-						}
-
 						CreateJoin();
 
 						return projected;
@@ -327,27 +290,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return projected;
-			}
-
-			Expression GetEagerLoadingExpression(bool withTake)
-			{
-				var sequenceExpression = Builder.GetSequenceExpression(this);
-				sequenceExpression = ((MethodCallExpression)sequenceExpression).Arguments[0];
-
-				if (!withTake)
-				{
-					return sequenceExpression;
-				}
-
-				var method = typeof(IQueryable<>).IsSameOrParentOf(sequenceExpression.Type)
-					? Methods.Queryable.Take
-					: Methods.Enumerable.Take;
-
-				method = method.MakeGenericMethod(ExpressionBuilder.GetEnumerableElementType(sequenceExpression.Type));
-
-				var result = Expression.Call(method, sequenceExpression, Expression.Constant(1));
-
-				return result;
 			}
 
 			public override IBuildContext Clone(CloningContext context)

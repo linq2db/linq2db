@@ -205,7 +205,7 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		Dictionary<IBuildContext, Expression> _sequenceExpressions = new();
 
-		public Expression GetSequenceExpression(IBuildContext sequence)
+		public Expression? GetSequenceExpression(IBuildContext sequence)
 		{
 			if (_sequenceExpressions.TryGetValue(sequence, out var expr))
 				return expr;
@@ -216,7 +216,15 @@ namespace LinqToDB.Linq.Builder
 			if (sequence is ScopeContext scoped)
 				return GetSequenceExpression(scoped.Context);
 
-			throw new InvalidOperationException("Sequence has no registered expression");
+			return null;
+		}
+
+		public void RegisterSequenceExpression(IBuildContext sequence, Expression expression)
+		{
+			if (!_sequenceExpressions.ContainsKey(sequence))
+			{
+				_sequenceExpressions[sequence] = expression;
+			}
 		}
 
 		Expression UnwrapSequenceExpression(Expression expression)
@@ -270,9 +278,9 @@ namespace LinqToDB.Linq.Builder
 
 					_reorder = _reorder || n < builder.BuildCounter;
 
-					if (sequence != null && !_sequenceExpressions.ContainsKey(sequence))
+					if (sequence != null)
 					{
-						_sequenceExpressions[sequence] = originalExpression;
+						RegisterSequenceExpression(sequence, originalExpression);
 					}
 
 					return sequence;

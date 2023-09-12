@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 						if (notNull == null)
 						{
 							notNull = ExpressionBuilder.CreatePlaceholder(this,
-								new SqlNullabilityExpression (new SqlValue(1), true), SequenceHelper.CreateSpecialProperty(path, typeof(int?), NotNullPropName), alias: NotNullPropName);
+								new SqlNullabilityExpression (new SqlValue(1), true), SequenceHelper.CreateSpecialProperty(path, typeof(int?), NotNullPropName), alias : NotNullPropName);
 						}
 
 						Expression notNullField = notNull;

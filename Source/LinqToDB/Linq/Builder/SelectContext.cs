@@ -185,11 +185,6 @@ namespace LinqToDB.Linq.Builder
 			QueryRunner.SetRunQuery(query, mapper);
 		}
 
-		public virtual Expression GetEagerLoadExpression(Expression path)
-		{
-			return Builder.GetSequenceExpression(this);
-		}
-
 		public override void SetAlias(string? alias)
 		{
 			if (!string.IsNullOrEmpty(alias) && !alias!.Contains("<") && SelectQuery.Select.From.Tables.Count == 1)

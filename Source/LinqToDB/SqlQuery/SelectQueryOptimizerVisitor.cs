@@ -1630,17 +1630,6 @@ namespace LinqToDB.SqlQuery
 			return base.VisitSqlCondition(element);
 		}
 
-		public override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
-		{
-			if (predicate.Expr1 is not SqlValue &&
-			    predicate.Expr1.TryEvaluateExpression(_evaluationContext, out var value))
-			{
-				predicate.Expr1 = new SqlValue(QueryHelper.GetDbDataType(predicate.Expr1), value);
-			}
-
-			return base.VisitExprPredicate(predicate);
-		}
-
 		public override IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
 		{
 			if (predicate is { IsNot: true, Expr1: IInvertibleElement invertible } && invertible.CanInvert())

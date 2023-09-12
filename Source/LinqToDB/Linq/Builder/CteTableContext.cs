@@ -43,7 +43,10 @@ namespace LinqToDB.Linq.Builder
 			if (!buildInfo.CreateSubQuery)
 				return this;
 
-			var expr    = Builder.GetSequenceExpression(this);
+			var expr = Builder.GetSequenceExpression(this);
+			if (expr == null)
+				return this;
+
 			var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
 			return context;

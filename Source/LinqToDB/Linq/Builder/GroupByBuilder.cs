@@ -263,12 +263,6 @@ namespace LinqToDB.Linq.Builder
 
 			public GroupByContext GroupByContext { get; set; } = null!;
 
-			public override Expression GetEagerLoadExpression(Expression path)
-			{
-				var subquery = GroupByContext.MakeSubQueryExpression(new ContextRefExpression(path.Type, GroupByContext));
-				return subquery;
-			}
-
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
