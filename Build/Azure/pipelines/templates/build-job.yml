@@ -83,8 +83,6 @@ jobs:
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\net472 testing\configs\net472
         if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\netcoreapp31 testing\configs\netcore31
-        if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\net60 testing\configs\net60
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\net70 testing\configs\net70
