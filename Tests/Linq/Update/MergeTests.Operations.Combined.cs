@@ -110,7 +110,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllSqlServer2008Plus,
-			ProviderName.PostgreSQL15,
+			TestProvName.AllPostgreSQL15Plus,
 			TestProvName.AllOracle,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
@@ -242,7 +242,7 @@ namespace Tests.xUpdate
 		public void InsertWithConditionInsertUpdateWithConditionDeleteWithConditionDelete([MergeDataContextSource(
 			TestProvName.AllSqlServer2008Plus,
 			TestProvName.AllOracle,
-			ProviderName.PostgreSQL15,
+			TestProvName.AllPostgreSQL15Plus,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
 			ProviderName.Firebird)]
@@ -317,7 +317,7 @@ namespace Tests.xUpdate
 		public void UpdateWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSqlServer2008Plus,
-			ProviderName.PostgreSQL15,
+			TestProvName.AllPostgreSQL15Plus,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
 			ProviderName.Firebird)]

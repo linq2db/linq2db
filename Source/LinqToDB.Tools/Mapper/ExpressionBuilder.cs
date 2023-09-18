@@ -122,16 +122,12 @@ namespace LinqToDB.Tools.Mapper
 			var binds        = new List<MemberAssignment>();
 			var key          = new Tuple<Type,Type>(fromExpression.Type, toType);
 
-			if (_data.MapperTypes.Contains(key))
+			if (!_data.MapperTypes.Add(key))
 			{
 				_data.RestartCounter++;
 
 				if (_data.IsRestart)
 					return null;
-			}
-			else
-			{
-				_data.MapperTypes.Add(key);
 			}
 
 			var initExpression = BuildCollectionMapper(fromExpression, toType);

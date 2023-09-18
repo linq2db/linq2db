@@ -300,8 +300,7 @@ namespace LinqToDB.Linq.Builder
 								if (context.builder.IsGroupJoinSource(context.context, ce))
 								{
 									foreach (var arg in ce.Arguments.Skip(1))
-										if (!context.builder._skippedExpressions.Contains(arg))
-											context.builder._skippedExpressions.Add(arg);
+										context.builder._skippedExpressions.Add(arg);
 
 									if (context.builder.IsSubQuery(context.context, ce))
 									{
