@@ -391,32 +391,31 @@ namespace LinqToDB.Linq.Builder
 			expression = expression.UnwrapConvertToObject();
 			var unwrapped = expression.Unwrap();
 
-			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(unwrapped.Type))
-			{
-				Expression preparedExpression;
-				if (unwrapped.NodeType == ExpressionType.Call)
-					preparedExpression = ((MethodCallExpression)unwrapped).Arguments[0];
-				else
-					preparedExpression = ((Sql.IQueryableContainer)unwrapped.EvaluateExpression()!).Query.Expression;
-				return ConvertToExtensionSql(context, flags, preparedExpression, columnDescriptor);
-			}
-
 			if (unwrapped is LambdaExpression lambda)
 			{
 				var contextRefExpression = new ContextRefExpression(lambda.Parameters[0].Type, context);
 
-				var aggregationRoot = GetRootContext(context, contextRefExpression, true);
+				/*var aggregationRoot = GetRootContext(context, contextRefExpression, true);
 
 				if (aggregationRoot is null)
 				{
 					throw new LinqException("Could not retrieve aggregation context.");
-				}
+				}*/
 
-				var body = lambda.GetBody(aggregationRoot);
+				var body = lambda.GetBody(contextRefExpression);
 
-				var result = ConvertToSql(context, body, unwrap: false, columnDescriptor: columnDescriptor);
+				if (TryConvertToSql(context, flags : flags.SqlFlag() | ProjectFlags.ForExtension, body, columnDescriptor, out var sqlExpression, out _))
+					return sqlExpression;
 
-				return result;
+				return null;
+			}
+
+			if (unwrapped is ContextRefExpression contextRef)
+			{
+				contextRef = contextRef.WithType(contextRef.BuildContext.ElementType);
+
+				if (TryConvertToSql(contextRef.BuildContext, flags : flags.SqlFlag() | ProjectFlags.ForExtension, contextRef, columnDescriptor, out var contextSql, out _))
+					return contextSql;
 			}
 
 			if (!TryConvertToSql(context, flags : flags.SqlFlag() | ProjectFlags.ForExtension, expression, columnDescriptor, out var sql, out _))
@@ -1013,7 +1012,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (attr != null)
 					{
-						return ConvertExtensionToSql(context!, flags, attr, e);
+						return ConvertExtensionToSql(context!, flags, attr, e, checkAggregateRoot: true);
 					}
 
 					if (e.Method.IsSqlPropertyMethodEx())
@@ -1162,7 +1161,7 @@ namespace LinqToDB.Linq.Builder
 			return QueryHelper.ConvertFormatToConcatenation(format, sqlArguments);
 		}
 
-		public Expression ConvertExtensionToSql(IBuildContext context, ProjectFlags flags, Sql.ExpressionAttribute attr, MethodCallExpression mc)
+		public Expression ConvertExtensionToSql(IBuildContext context, ProjectFlags flags, Sql.ExpressionAttribute attr, MethodCallExpression mc, bool checkAggregateRoot)
 		{
 			var inlineParameters = DataContext.InlineParameters;
 
@@ -1171,7 +1170,7 @@ namespace LinqToDB.Linq.Builder
 
 			var currentContext = context;
 			
-			if (attr.IsAggregate)
+			if (attr.IsAggregate && checkAggregateRoot)
 			{
 				var sequenceRef = new ContextRefExpression(context.ElementType, context);
 

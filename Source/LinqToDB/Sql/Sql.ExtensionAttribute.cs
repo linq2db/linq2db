@@ -19,11 +19,19 @@ namespace LinqToDB
 	using Mapping;
 	using SqlQuery;
 
+	public enum ExprParameterKind
+	{
+		Default,
+		Sequence,
+		Values
+	}
+
 	[AttributeUsage(AttributeTargets.Parameter)]
 	[MeansImplicitUse]
 	public class ExprParameterAttribute : Attribute
 	{
-		public string? Name { get; set; }
+		public string?           Name          { get; set; }
+		public ExprParameterKind ParameterKind { get; set; }
 
 		public ExprParameterAttribute(string name)
 		{
@@ -210,10 +218,9 @@ namespace LinqToDB
 
 			public SqlFlags Flags            { get; set; }
 
-			public bool     IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
-			public bool     IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
-			public bool     IsPure           => (Flags & SqlFlags.IsPure)           != 0;
-
+			public bool IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
+			public bool IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
+			public bool IsPure           => (Flags & SqlFlags.IsPure)           != 0;
 
 			public SqlExtensionParam AddParameter(string name, ISqlExpression sqlExpression)
 			{
@@ -501,7 +508,7 @@ namespace LinqToDB
 				return lambda.CompileExpression()();
 			}
 
-			public static ExtensionAttribute[] GetExtensionAttributes(Expression expression, MappingSchema mapping)
+			public static ExtensionAttribute[] GetExtensionAttributes(Expression expression, MappingSchema mapping, bool forFirstConfiguration = true)
 			{
 				MemberInfo memberInfo;
 
@@ -517,14 +524,15 @@ namespace LinqToDB
 						return Array<ExtensionAttribute>.Empty;
 				}
 
-				var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, forFirstConfiguration: true);
+				var attributes = mapping.GetAttributes<ExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, forFirstConfiguration: forFirstConfiguration);
 
 				return attributes;
 			}
 
-			public static Expression ExcludeExtensionChain(MappingSchema mapping, Expression expr)
+			public static Expression ExcludeExtensionChain(MappingSchema mapping, Expression expr, out bool isQueryable)
 			{
 				var current = expr;
+				isQueryable = false;
 
 				while (true)
 				{
@@ -547,10 +555,23 @@ namespace LinqToDB
 							{
 								var call = (MethodCallExpression) current;
 
-								if (call.Method.IsStatic)
+								if (call.Method.IsStatic && call.Method.DeclaringType != null)
 								{
-									if (call.Arguments.Count > 0)
-										current = call.Arguments[0];
+									isQueryable = false;
+									var firstArgType = call.Arguments[0].Type;
+									if (call.Arguments.Count > 0 && typeof(IQueryableContainer).IsSameOrParentOf(firstArgType) || typeof(IEnumerable<>).IsSameOrParentOf(firstArgType))
+									{
+										var paramAttribute = call.Method.GetParameters()[0].GetAttribute<ExprParameterAttribute>();
+										if (paramAttribute == null || 
+										    paramAttribute.ParameterKind == ExprParameterKind.Default ||
+										    paramAttribute.ParameterKind == ExprParameterKind.Sequence)
+										{
+											current     = call.Arguments[0];
+											isQueryable = typeof(IQueryableContainer).IsSameOrParentOf(current.Type);
+										}
+										else
+											return current;
+									}
 									else
 										return current;
 								}
@@ -620,10 +641,14 @@ namespace LinqToDB
 
 					if (memberInfo != null)
 					{
-						var attributes = GetExtensionAttributes(current, dataContext.MappingSchema);
-						var continueChain = false;
+						var attributes      = GetExtensionAttributes(current, dataContext.MappingSchema);
+						var tokenNames = new HashSet<string>(attributes.Where(a => !string.IsNullOrEmpty(a.TokenName)).Select(a => a.TokenName!));
+						var namedAttributes = GetExtensionAttributes(current, dataContext.MappingSchema, false)
+							.Where(e => !string.IsNullOrEmpty(e.TokenName) && !tokenNames.Contains(e.TokenName!));
 
-						foreach (var attr in attributes)
+						var continueChain   = false;
+
+						foreach (var attr in attributes.Concat(namedAttributes))
 						{
 							var param = attr.BuildExtensionParam(context, dataContext, query, memberInfo, arguments!, converter);
 

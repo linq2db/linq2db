@@ -68,6 +68,7 @@ namespace LinqToDB
 		[Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({source}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
+		[Extension("{source}",        TokenName = "aggregate")]
 		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
 			[ExprParameter] this IQueryable<string?> source,
 			[ExprParameter]      string              separator)
@@ -270,17 +271,17 @@ namespace LinqToDB
 		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
 		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
 		/// <returns></returns>
-		[Extension(PN.SqlServer2022, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')")]
-		[Extension(PN.SqlServer2019, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')")]
-		[Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')")]
-		[Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
-		[Extension(PN.MySql,         "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
-		[Extension(PN.SqlServer,     "", BuilderType = typeof(OldSqlServerConcatWsBuilder))]
-		[Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder))]
-		[Extension(PN.ClickHouse,   "arrayStringConcat([{arguments, ', '}], {separator})", CanBeNull = false)]
+		[Extension(PN.SqlServer2022, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
+		[Extension(PN.SqlServer2019, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
+		[Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
+		[Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null, IsAggregate = true)]
+		[Extension(PN.MySql,         "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null, IsAggregate = true)]
+		[Extension(PN.SqlServer,     "", BuilderType = typeof(OldSqlServerConcatWsBuilder), IsAggregate = true)]
+		[Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder), IsAggregate = true)]
+		[Extension(PN.ClickHouse,   "arrayStringConcat([{arguments, ', '}], {separator})", IsAggregate = true, CanBeNull = false)]
 		public static string ConcatStrings(
-			[ExprParameter] string separator,
-			[ExprParameter] params string?[] arguments)
+			[ExprParameter(ParameterKind = ExprParameterKind.Values)]        string    separator,
+			[ExprParameter(ParameterKind = ExprParameterKind.Values)] params string?[] arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
 		}

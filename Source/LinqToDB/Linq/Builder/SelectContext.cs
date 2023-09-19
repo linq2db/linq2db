@@ -85,12 +85,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				// Eager load case
-				if ((flags.IsSql() || flags.IsExpression()) && path.Type != ElementType && path.Type.IsEnumerableType(ElementType) && !path.Type.IsValueType)
-				{
-					return path;
-				}
-
 				if (flags.IsRoot() || flags.IsAssociationRoot() /*|| flags.HasFlag(ProjectFlags.Expand)*/ || flags.IsTable() || flags.IsTraverse())
 				{
 					if (Body is ContextRefExpression bodyRef)

@@ -145,9 +145,9 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema)
+		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema, out bool isQueryable)
 		{
-			return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr);
+			return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr, out isQueryable);
 		}
 
 		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)

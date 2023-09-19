@@ -1155,7 +1155,7 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="T">Mapping attribute type (must inherit <see cref="MappingAttribute"/>).</typeparam>
 		/// <param name="type">Member's owner type.</param>
 		/// <param name="memberInfo">Attributes owner member.</param>
-		/// <param name="forFirstConfiguration">If <c>true</c> - returns only atributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
+		/// <param name="forFirstConfiguration">If <c>true</c> - returns only attributes for first configuration with attributes from <see cref="ConfigurationList"/>.</param>
 		/// <returns>Attributes of specified type.</returns>
 		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool forFirstConfiguration = false)
 			where T : MappingAttribute

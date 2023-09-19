@@ -647,6 +647,11 @@ namespace Tests.Linq
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var srcExpr = builder.GetExpression("src");
+				if (srcExpr == null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
 				var newField = new SqlAnchor(srcExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumn);
 

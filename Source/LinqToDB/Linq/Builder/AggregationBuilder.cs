@@ -18,6 +18,7 @@ namespace LinqToDB.Linq.Builder
 			Max,
 			Sum,
 			Average,
+			Custom
 		}
 
 		static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
@@ -27,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			var function = methodCall.Method.GetExpressionAttribute(mapping);
-			return function != null && (function.IsAggregate || function.IsWindowFunction) ? function : null;
+			return function != null  && function is not Sql.ExtensionAttribute && (function.IsAggregate || function.IsWindowFunction) ? function : null;
 		}
 
 		static Type ExtractTaskType(Type taskType)
@@ -123,6 +124,11 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNamesAsync))
 				return true;
 
+			var definition = GetAggregateDefinition(methodCall, builder.MappingSchema);
+
+			if (definition != null)
+				return true;
+
 			return false;
 		}
 
@@ -136,9 +142,25 @@ namespace LinqToDB.Linq.Builder
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
 
-			var aggregationType = GetAggregationType(methodCall, out var argumentsCount, out var returnType);
 
 			var methodName = methodCall.Method.Name.Replace("Async", "");
+
+			AggregationType aggregationType;
+
+			int  argumentsCount;
+			Type returnType;
+			var  definition = GetAggregateDefinition(methodCall, builder.MappingSchema);
+
+			if (definition != null)
+			{
+				aggregationType = AggregationType.Custom;
+				returnType      = methodCall.Method.ReturnType;
+				argumentsCount  = methodCall.Arguments.Count;
+			}
+			else
+			{
+				aggregationType = GetAggregationType(methodCall, out argumentsCount, out returnType);
+			}
 
 			var sequenceArgument = builder.CorrectRoot(null, methodCall.Arguments[0]);
 
@@ -322,16 +344,29 @@ namespace LinqToDB.Linq.Builder
 						// OR sql = new SqlValue(typeof(int), 1);
 						sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
 					}
+
+					sql = new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true };
 				}
 				else
 				{
-					var sqlPlaceholder =
-						builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, buildInfo.GetFlags());
-					sql = sqlPlaceholder.Sql;
+					if (definition != null)
+					{
+						sql = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), builder.DataContext, placeholderSelect, methodCall,
+							static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
+
+						if (sql == null)
+							return null;
+					}
+					else
+					{
+						var sqlPlaceholder =
+							builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, buildInfo.GetFlags());
+						sql = sqlPlaceholder.Sql;
+						sql = new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true };
+					}
 				}
 
-				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/
-					new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression);
 
 				if (!isSimple)
 				{
