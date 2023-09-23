@@ -2,7 +2,7 @@
 
 namespace Tests.Model
 {
-	public class FirebirdSpecific
+	public static class FirebirdSpecific
 	{
 		public class SequenceTest
 		{

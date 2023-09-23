@@ -27,7 +27,6 @@ namespace LinqToDB.DataProvider
 
 		/// <summary>
 		/// Method should validate name characters and remove or replace invalid characters.
-		/// Implementation must not add additional characters, as it will lead to infinte loop from caller.
 		/// Default implementation removes all characters except ASCII letters/digits and underscore.
 		/// </summary>
 		protected virtual string MakeValidName(string name)
@@ -45,23 +44,36 @@ namespace LinqToDB.DataProvider
 
 			if (badIdx != -1)
 			{
-				using var sb = Pools.StringBuilder.Allocate();
-
-				if (badIdx > 0)
-					sb.Value.Append(name[0..badIdx]);
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+				// allocate memory on the stack if possible, and prepopulate it with the original string
+				Span<char> newName = name.Length < 500 ? stackalloc char[name.Length] : name.ToCharArray();
+				if (name.Length < 500)
+				{
+					// prepopulate the stack with the original string
+					name.AsSpan().CopyTo(newName);
+				}
+#else
+				var newName = name.ToCharArray();
+#endif
+				var newNameLength = badIdx;
 
 				for (var i = badIdx; i < name.Length; i++)
 				{
 					var chr = name[i];
 
-					// add allowed character
-					if (sb.Value.Length == 0 ? IsValidFirstCharacter(chr) : IsValidCharacter(chr))
-						sb.Value.Append(chr);
-
+					// add only allowed characters
+					if (newNameLength == 0 ? IsValidFirstCharacter(chr) : IsValidCharacter(chr))
+						newName[newNameLength++] = chr;
 				}
 
-				if (sb.Value.Length > 0)
-					name = sb.Value.ToString();
+				if (newNameLength > 0)
+				{
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+					name = new string(newName.Slice(0, newNameLength));
+#else
+					name = new string(newName, 0, newNameLength);
+#endif
+				}
 				else
 					name = DefaultName;
 			}
@@ -101,22 +113,36 @@ namespace LinqToDB.DataProvider
 			if (originalName!.Length > MaxLength)
 				originalName = originalName.Substring(0, MaxLength);
 
-			var name = originalName;
+			originalName = MakeValidName(originalName!);
+
+			string name;
 
 			while (true)
 			{
-				originalName = MakeValidName(originalName!);
-
 				name = originalName;
 
+				// if the name is reserved or already in use, generate a unique name for the parameter
 				var cnt = 0;
 				while (IsReserved(name) || _usedParameterNames?.Contains(name) == true)
 					name = $"{originalName}{CounterSeparator}{++cnt}";
 
-				if (name.Length > MaxLength)
-					originalName = originalName.Substring(0, name.Length - 1);
-				else
+				// if name is not too long, return it
+				if (name.Length <= MaxLength)
 					break;
+
+				// if the original name is already reduced to a single character, being the first character
+				// of the default name, throw an exception, so as to prevent an infinite loop
+				if (originalName.Length == 1)
+				{
+					originalName = originalName[0] != DefaultName[0]
+						? DefaultName
+						: throw new InvalidOperationException("Cannot sufficiently shorten original name");
+				}
+				else
+				{
+					// otherwise, shorten original name by one character and retry
+					originalName = originalName.Substring(0, originalName.Length - 1);
+				}
 			}
 
 			(_usedParameterNames ??= new(Comparer)).Add(name);

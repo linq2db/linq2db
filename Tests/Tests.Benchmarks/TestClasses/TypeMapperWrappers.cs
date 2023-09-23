@@ -186,7 +186,8 @@ namespace LinqToDB.Benchmarks.TypeMapping
 
 			public void Fire()
 			{
-				TestEvent?.Invoke(null, new TestClass2());
+				using var obj = new TestClass2();
+				TestEvent?.Invoke(null, obj);
 			}
 		}
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -12,7 +13,6 @@ using static System.Linq.Expressions.Expression;
 
 namespace LinqToDB.Tools.Mapper
 {
-	using System.Diagnostics.CodeAnalysis;
 	using Expressions;
 	using Extensions;
 	using Reflection;
@@ -122,16 +122,12 @@ namespace LinqToDB.Tools.Mapper
 			var binds        = new List<MemberAssignment>();
 			var key          = new Tuple<Type,Type>(fromExpression.Type, toType);
 
-			if (_data.MapperTypes.Contains(key))
+			if (!_data.MapperTypes.Add(key))
 			{
 				_data.RestartCounter++;
 
 				if (_data.IsRestart)
 					return null;
-			}
-			else
-			{
-				_data.MapperTypes.Add(key);
 			}
 
 			var initExpression = BuildCollectionMapper(fromExpression, toType);

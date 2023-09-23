@@ -8,8 +8,8 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Linq
 {
-	using Extensions;
 	using Common;
+	using Extensions;
 	using LinqToDB.Expressions;
 	using Internal;
 	using Reflection;

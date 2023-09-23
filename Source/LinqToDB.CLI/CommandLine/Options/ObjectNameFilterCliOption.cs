@@ -41,7 +41,7 @@ namespace LinqToDB.CommandLine
 
 			foreach (var name in names)
 			{
-				if (name == string.Empty || !filter.AddName(null, name))
+				if (name.Length == 0 || !filter.AddName(null, name))
 				{
 					errorDetails = $"comma-separated list contains empty or duplicate elements: {rawValue}";
 					return null;

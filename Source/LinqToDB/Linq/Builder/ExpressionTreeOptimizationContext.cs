@@ -9,8 +9,8 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Data;
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
 	using Reflection;
@@ -414,7 +414,7 @@ namespace LinqToDB.Linq.Builder
 		static HashSet<Expression> DefaultAllowedParams = new ()
 		{
 			ExpressionBuilder.ParametersParam,
-			ExpressionBuilder.DataContextParam
+			ExpressionConstants.DataContextParam
 		};
 
 		public bool CanBeCompiled(Expression expr)
@@ -758,11 +758,11 @@ namespace LinqToDB.Linq.Builder
 								return context.root;
 							}
 
-							if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							if (ExpressionConstants.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
 							{
-								if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
-									return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
-								return ExpressionBuilder.DataContextParam;
+								if (ExpressionConstants.DataContextParam.Type != wpi.Type)
+									return Expression.Convert(ExpressionConstants.DataContextParam, wpi.Type);
+								return ExpressionConstants.DataContextParam;
 							}
 
 							throw new LinqToDBException($"Can't convert {wpi} to expression.");
@@ -838,11 +838,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (n >= context.pi.Arguments.Count)
 						{
-							if (ExpressionBuilder.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
+							if (ExpressionConstants.DataContextParam.Type.IsSameOrParentOf(wpi.Type))
 							{
-								if (ExpressionBuilder.DataContextParam.Type != wpi.Type)
-									return Expression.Convert(ExpressionBuilder.DataContextParam, wpi.Type);
-								return ExpressionBuilder.DataContextParam;
+								if (ExpressionConstants.DataContextParam.Type != wpi.Type)
+									return Expression.Convert(ExpressionConstants.DataContextParam, wpi.Type);
+								return ExpressionConstants.DataContextParam;
 							}
 
 							throw new LinqToDBException($"Can't convert {wpi} to expression.");

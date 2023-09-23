@@ -26,12 +26,12 @@ namespace LinqToDB.Linq.Builder
 					break;
 				case 2 :
 					bodyExpr = methodCall.Arguments[0].Unwrap();
-					name     = methodCall.Arguments[1].EvaluateExpression() as string;
+					name     = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext);
 					break;
 				case 3 :
-					query    = methodCall.Arguments[0].EvaluateExpression() as IQueryable;
+					query    = methodCall.Arguments[0].EvaluateExpression<IQueryable>(builder.DataContext);
 					bodyExpr = methodCall.Arguments[1].Unwrap();
-					name     = methodCall.Arguments[2].EvaluateExpression() as string;
+					name     = methodCall.Arguments[2].EvaluateExpression<string>(builder.DataContext);
 					isRecursive = true;
 					break;
 				default:
@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 
 		static CteTableContext BuildCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var queryable    = (IQueryable)buildInfo.Expression.EvaluateExpression()!;
+			var queryable    = buildInfo.Expression.EvaluateExpression<IQueryable>(builder.DataContext)!;
 			var cteInfo      = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
 			var cteBuildInfo = new BuildInfo(buildInfo, cteInfo.Item3, buildInfo.SelectQuery);
 			var cteContext   = new CteTableContext(builder, cteBuildInfo, cteInfo.Item1, cteInfo.Item3);

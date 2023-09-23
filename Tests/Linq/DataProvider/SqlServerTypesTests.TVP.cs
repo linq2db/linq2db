@@ -302,7 +302,7 @@ namespace Tests.DataProvider
 			{
 				Result[] GetResult(params int[] values)
 				{
-					var table = new DataTable();
+					using var table = new DataTable();
 
 					table.Columns.Add("Id", typeof(int));
 					table.Columns.Add("Name", typeof(string));
@@ -363,7 +363,8 @@ namespace Tests.DataProvider
 			using (var external = GetDataConnection(context))
 			using (var db = GetDataConnection(context))
 			{
-				var result = TableTypeTestProc(db, GetDataTable());
+				using var table = GetDataTable();
+				var result = TableTypeTestProc(db, table);
 
 				AreEqualWithComparer(TestUDTData, result);
 			}

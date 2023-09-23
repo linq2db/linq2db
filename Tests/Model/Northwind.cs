@@ -5,7 +5,7 @@ using LinqToDB.Mapping;
 
 namespace Tests.Model
 {
-	public class Northwind
+	public static class Northwind
 	{
 		public abstract class EntityBase<T>
 			where T: notnull

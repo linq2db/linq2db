@@ -38,7 +38,7 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
 	{
-		private static readonly string _nextValSearchPattern = "nextval";
+		private const string _nextValSearchPattern = "nextval";
 
 		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
@@ -879,6 +879,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL15)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL16)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }

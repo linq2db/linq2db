@@ -12,12 +12,8 @@ jobs:
 
   # mitigate https://status.dev.azure.com/_event/182998791
   - task: NuGetToolInstaller@1
-
-  - task: UseDotNet@2
-    displayName: 'Install .NET'
-    inputs:
-      packageType: sdk
-      version: 7.x
+  
+  # .NET 7 SDK already installed https://github.com/actions/runner-images/blob/main/images/win/Windows2022-Readme.md#net-core-tools
 
   - task: PowerShell@2
     inputs:
@@ -86,8 +82,6 @@ jobs:
         copy Tests\DataProviders.json testing\net70x86
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\net472 testing\configs\net472
-        if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\netcoreapp31 testing\configs\netcore31
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\net60 testing\configs\net60
         if %errorlevel% neq 0 exit

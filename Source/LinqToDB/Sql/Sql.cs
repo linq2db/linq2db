@@ -962,17 +962,13 @@ namespace LinqToDB
 		[Function(PseudoFunctions.TO_LOWER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Lower(string? str)
 		{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			return str?.ToLower();
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 		}
 
 		[Function(PseudoFunctions.TO_UPPER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Upper(string? str)
 		{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			return str?.ToUpper();
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 		}
 
 		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]

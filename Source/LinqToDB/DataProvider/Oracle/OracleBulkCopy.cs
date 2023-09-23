@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 					if (supported)
 					{
-						var rd         = new BulkCopyReader<T>(dataConnection, columns, source);
+						using var rd   = new BulkCopyReader<T>(dataConnection, columns, source);
 						var sqlopt     = OracleProviderAdapter.BulkCopyOptions.Default;
 						var rc         = new BulkCopyRowsCopied();
 

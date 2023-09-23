@@ -165,7 +165,7 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllMySqlData))
 				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
 #endif
-			var cts = new CancellationTokenSource();
+			using var cts = new CancellationTokenSource();
 			cts.Cancel();
 			using (var db = GetDataContext(context))
 			{
@@ -210,7 +210,7 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllMySqlData))
 				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
 #endif
-			var cts = new CancellationTokenSource();
+			using var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);

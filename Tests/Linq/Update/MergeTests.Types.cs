@@ -341,11 +341,7 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssue(Configurations = new[]
-		{
-			TestProvName.Oracle21DevartDirect,
-			ProviderName.SapHanaNative
-		}, Details = "Native provider from SAP HANA 2 SPS04 045 cannot digest null/DBNull/byte[0] binary parameters")]
+		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{
