@@ -460,11 +460,11 @@ namespace LinqToDB.Tools.Mapper
 					if (_builder._mapperBuilder.MappingSchema.IsScalarType(fromMember.Type) ||
 						_builder._mapperBuilder.MappingSchema.IsScalarType(toMember.Type))
 					{
-						_expressions.Add(BuildAssignment(fromMember.GetGetterExpression, fromMember.GetSetterExpression, fromMember.Type, _localObject, toMember));
+						_expressions.Add(BuildAssignment(fromMember.GetGetterExpression, toMember.GetSetterExpression, fromMember.Type, _localObject, toMember));
 					}
 					else if (fromMember.Type == toMember.Type && _builder._mapperBuilder.DeepCopy == false)
 					{
-						_expressions.Add(fromMember.GetSetterExpression(_localObject, fromMember.GetGetterExpression(_fromExpression)));
+						_expressions.Add(toMember.GetSetterExpression(_localObject, fromMember.GetGetterExpression(_fromExpression)));
 					}
 					else
 					{
@@ -473,13 +473,13 @@ namespace LinqToDB.Tools.Mapper
 							// if (from == null)
 							Equal(getValue, Constant(_builder._mapperBuilder.MappingSchema.GetDefaultValue(getValue.Type), getValue.Type)),
 							//   localObject = null;
-							fromMember.GetSetterExpression(
+							toMember.GetSetterExpression(
 								_localObject,
 								Constant(_builder._mapperBuilder.MappingSchema.GetDefaultValue(toMember.Type), toMember.Type)),
 							// else
 							toMember.HasGetter ?
-								fromMember.GetSetterExpression(_localObject, BuildClassMapper(getValue, toMember)) :
-								fromMember.GetSetterExpression(_localObject, _builder.GetExpressionImpl(getValue, toMember.Type)!));
+								toMember.GetSetterExpression(_localObject, BuildClassMapper(getValue, toMember)) :
+								toMember.GetSetterExpression(_localObject, _builder.GetExpressionImpl(getValue, toMember.Type)!));
 
 						_expressions.Add(expr);
 					}
