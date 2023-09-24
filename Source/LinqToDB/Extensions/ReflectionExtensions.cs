@@ -99,6 +99,7 @@ namespace LinqToDB.Extensions
 			return type.GetMember(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
 		}
 
+		private static readonly ConcurrentDictionary<(Type, MemberInfo), MemberInfo?> _getMemberExCache = new();
 		/// <summary>
 		/// Returns <see cref="MemberInfo"/> of <paramref name="type"/> described by <paramref name="memberInfo"/>
 		/// It us useful when member's declared and reflected types are not the same.
@@ -109,36 +110,40 @@ namespace LinqToDB.Extensions
 		/// <returns><see cref="MemberInfo"/> or null</returns>
 		public static MemberInfo? GetMemberEx(this Type type, MemberInfo memberInfo)
 		{
-			if (memberInfo.ReflectedType == type)
-				return memberInfo;
-
-			if (memberInfo.IsPropertyEx())
+			return _getMemberExCache.GetOrAdd((type, memberInfo), static key =>
 			{
-				var props = type.GetProperties();
+				var (type, memberInfo) = key;
+				if (memberInfo.ReflectedType == type)
+					return memberInfo;
 
-				PropertyInfo? foundByName = null;
-				foreach (var prop in props)
+				if (memberInfo.IsPropertyEx())
 				{
-					if (prop.Name == memberInfo.Name)
+					var props = type.GetProperties();
+
+					PropertyInfo? foundByName = null;
+					foreach (var prop in props)
 					{
-						foundByName ??= prop;
-						if (prop.GetMemberType() == memberInfo.GetMemberType())
+						if (prop.Name == memberInfo.Name)
 						{
-							return prop;
+							foundByName ??= prop;
+							if (prop.GetMemberType() == memberInfo.GetMemberType())
+							{
+								return prop;
+							}
 						}
 					}
+
+					return foundByName;
 				}
 
-				return foundByName;
-			}
+				if (memberInfo.IsFieldEx())
+					return type.GetField(memberInfo.Name);
 
-			if (memberInfo.IsFieldEx())
-				return type.GetField   (memberInfo.Name);
+				if (memberInfo.IsMethodEx())
+					return type.GetMethodEx(memberInfo.Name, ((MethodInfo)memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
 
-			if (memberInfo.IsMethodEx())
-				return type.GetMethodEx(memberInfo.Name, ((MethodInfo) memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
-
-			return null;
+				return null;
+			});
 		}
 
 		public static MethodInfo? GetMethodEx(this Type type, string name)
