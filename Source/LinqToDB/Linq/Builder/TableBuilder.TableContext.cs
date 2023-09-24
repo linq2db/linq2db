@@ -206,9 +206,9 @@ namespace LinqToDB.Linq.Builder
 						if (member.Info.MemberInfo.IsDynamicColumnPropertyEx())
 						{
 							var typeAcc = TypeAccessor.GetAccessor(member.Info.MemberInfo.ReflectedType!);
-							var setter  = new MemberAccessor(typeAcc, member.Info.MemberInfo, EntityDescriptor).SetterExpression;
+							var setter  = new MemberAccessor(typeAcc, member.Info.MemberInfo, EntityDescriptor).GetSetterExpression(parentObject, ex);
 
-							exprs.Add(Expression.Invoke(setter, parentObject, ex));
+							exprs.Add(setter);
 						}
 						else
 						{
@@ -369,7 +369,7 @@ namespace LinqToDB.Linq.Builder
 					if (hasComplex)
 						foreach (var (column, _, exp) in members)
 							if (column.MemberAccessor.IsComplex)
-								exprs.Add(column.MemberAccessor.SetterExpression.GetBody(obj, exp));
+								exprs.Add(column.MemberAccessor.GetSetterExpression(obj, exp));
 
 					if (loadWith != null)
 						SetLoadWithBindings(objectType, obj, exprs);
