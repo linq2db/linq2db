@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/linq2db/linq2db)](MIT-LICENSE.txt)
 
-> Starting from version 4 we obsolete T4 nugets in favor of new command-line scaffolding tool: [linq2db.cli](https://www.nuget.org/packages/linq2db.cli). Consider migration as we don't plan to introduce new features and fixes to T4 functionality.
+Also check command-line scaffolding tool: [linq2db.cli](https://www.nuget.org/packages/linq2db.cli).
 
 This nuget package contains database scaffolding T4 templates to generate POCO classes from your database.
 
