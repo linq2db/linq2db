@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 		readonly LambdaExpression _lambda;
 		readonly Expression       _expression;
 
-		Query<T> GetInfo(IDataContext dataContext)
+		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
 		{
 			var configurationID = dataContext.ConfigurationID;
 			var dataOptions     = dataContext.Options;
@@ -31,7 +31,7 @@ namespace LinqToDB.Linq
 					expression : _expression,
 					queryFlags : dataContext.GetQueryFlags()
 				),
-				(dataContext, lambda: _lambda, dataOptions),
+				(dataContext, lambda: _lambda, dataOptions, parameterValues),
 				static (o, key, ctx) =>
 				{
 					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
@@ -41,7 +41,7 @@ namespace LinqToDB.Linq
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
 					var parametersContext = new ParametersContext(key.expression, optimizationContext, ctx.dataContext);
 
-					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, key.expression, ctx.lambda.Parameters.ToArray())
+					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, key.expression, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
 						.Build<T>();
 
 					query.ClearMemberQueryableInfo();
@@ -55,13 +55,13 @@ namespace LinqToDB.Linq
 		public IQueryable<T> Create(object[] parameters, object[] preambles)
 		{
 			var db = (IDataContext)parameters[0];
-			return new Table<T>(db, _expression) { Info = GetInfo(db), Parameters = parameters };
+			return new Table<T>(db, _expression) { Info = GetInfo(db, parameters), Parameters = parameters };
 		}
 
 		public T Execute(object[] parameters, object[] preambles)
 		{
 			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db);
+			var query = GetInfo(db, parameters);
 
 			return (T)query.GetElement(db, _expression, parameters, preambles)!;
 		}
@@ -69,7 +69,7 @@ namespace LinqToDB.Linq
 		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
 		{
 			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db);
+			var query = GetInfo(db, parameters);
 
 			return (T)(await query.GetElementAsync(db, _expression, parameters, preambles, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))!;
 		}

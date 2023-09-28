@@ -21,6 +21,7 @@ namespace LinqToDB.Linq.Builder
 		// (ParentType p) => dc.GetTable<ObjectType>().Where(...).DefaultIfEmpty
 		public static LambdaExpression CreateAssociationQueryLambda(
 			ExpressionBuilder     builder,
+			MappingSchema         mappingSchema,
 			AccessorMember        onMember,
 			AssociationDescriptor association,
 			Type                  parentOriginalType,
@@ -33,11 +34,7 @@ namespace LinqToDB.Linq.Builder
 			MemberInfo[]?         loadWithPath,
 			out bool?             isOuter)
 		{
-			Expression dataContextExpr = ExpressionConstants.DataContextParam;
-			if (dataContextExpr.Type != builder.DataContext.GetType())
-			{
-				dataContextExpr = Expression.Convert(dataContextExpr, builder.DataContext.GetType());
-			}
+			Expression dataContextExpr = SqlQueryRootExpression.Create(mappingSchema, builder.DataContext.GetType());
 
 			// We are trying to keep fast cache hit behaviour, so cache check should be added only if needed
 			//
@@ -48,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 			LambdaExpression? definedQueryMethod  = null;
 			if (association.HasQueryMethod())
 			{
-				// here we tell for Expression Comparer to compare optimized Association expressions
+				/*// here we tell for Expression Comparer to compare optimized Association expressions
 				//
 				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors((association, parentType, objectType), onMember, builder.DataContext, static (context, mi, dc) =>
 				{
@@ -57,8 +54,10 @@ namespace LinqToDB.Linq.Builder
 					var optimizedExpr       = optimizationContext.ExposeExpression(queryLambda);
 					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
 					return optimizedExpr;
-				});
+				});*/
 
+
+				definedQueryMethod = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
 				cacheCheckAdded = true;
 
 				var parameterMatch = new Dictionary<ParameterExpression, Expression>();
@@ -270,7 +269,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var filterDelegate = loadWithFunc.EvaluateExpression<Delegate>(builder.DataContext) ??
+							var filterDelegate = builder.EvaluateExpression<Delegate>(loadWithFunc) ??
 							                     throw new LinqException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
 							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
@@ -350,7 +349,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			definedQueryMethod = (LambdaExpression)builder.ConvertExpressionTree(definedQueryMethod);
-			definedQueryMethod = (LambdaExpression)builder.ConvertExpression(definedQueryMethod);
 			definedQueryMethod = (LambdaExpression)definedQueryMethod.OptimizeExpression(builder.MappingSchema)!;
 
 			return definedQueryMethod;
@@ -363,7 +361,7 @@ namespace LinqToDB.Linq.Builder
 			var parentExactType = descriptor.GetParentElementType();
 
 			var queryMethod = CreateAssociationQueryLambda(
-				builder, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
+				builder, tableContext.BuildContext.MappingSchema, onMember, descriptor, elementType /*tableContext.OriginalType*/, parentExactType, elementType,
 				additionalCondition,
 				inline, isOuter, loadwith, loadWithPath, out isOuter);
 

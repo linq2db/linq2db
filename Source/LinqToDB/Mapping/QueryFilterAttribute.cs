@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Mapping
 {
@@ -21,11 +22,11 @@ namespace LinqToDB.Mapping
 		/// <item>- T2 is <see cref="IDataContext"/></item>
 		/// </list>
 		/// </summary>
-		public Delegate? FilterFunc { get; set; }
+		public LambdaExpression? FilterFunc { get; set; }
 
 		public override string GetObjectID()
 		{
-			return IdentifierBuilder.GetObjectID(FilterFunc?.Method);
+			return IdentifierBuilder.GetObjectID(FilterFunc).ToString();
 		}
 	}
 }

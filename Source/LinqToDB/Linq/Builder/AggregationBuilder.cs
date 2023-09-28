@@ -351,11 +351,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (definition != null)
 					{
-						sql = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), builder.DataContext, placeholderSelect, methodCall,
+						var sqlExpr = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), builder.DataContext, placeholderSelect, methodCall,
 							static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
 
-						if (sql == null)
+						if (sqlExpr is not SqlPlaceholderExpression placeholder)
 							return null;
+
+						sql = placeholder.Sql;
 					}
 					else
 					{
@@ -446,7 +448,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
+				if (!SequenceHelper.IsSameContext(path, this))
+					return path;
+
+				if (flags.HasFlag(ProjectFlags.Root))
 					return path;
 
 				if (OuterJoinParentQuery != null)

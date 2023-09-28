@@ -6,21 +6,28 @@ namespace LinqToDB.Expressions
 	using Linq;
 	using Linq.Builder;
 
-	class SqlErrorExpression : Expression
+	public class SqlErrorExpression : Expression
 	{
-		public SqlErrorExpression(IBuildContext? buildContext, Expression expression) : this(buildContext, expression, expression.Type)
+		public SqlErrorExpression(object? buildContext, Expression expression) : this(buildContext, expression, expression.Type)
 		{}
 
-		public SqlErrorExpression(IBuildContext? buildContext, Expression expression, Type resultType)
+		public SqlErrorExpression(object? buildContext, Expression expression, Type resultType)
 		{
 			BuildContext = buildContext;
 			Expression   = expression;
 			ResultType   = resultType;
 		}
 
-		public IBuildContext? BuildContext { get; }
-		public Expression     Expression   { get; }
+		public SqlErrorExpression(string message, Type resultType)
+		{
+			Message    = message;
+			ResultType = resultType;
+		}
+
+		public object? BuildContext { get; }
+		public Expression?    Expression   { get; }
 		public Type           ResultType   { get; }
+		public string?        Message      { get; }
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      => ResultType;
@@ -40,14 +47,29 @@ namespace LinqToDB.Expressions
 
 		public Exception CreateError()
 		{
+			if (Expression == null)
+				return CreateError(Message ?? "Unknown error.");
+
 			return CreateError(Expression);
 		}
 
-		public static SqlErrorExpression EnsureError(IBuildContext? context, Expression expression)
+		public static SqlErrorExpression EnsureError(object? context, Expression expression)
 		{
 			if (expression is SqlErrorExpression error)
 				return error.WithType(expression.Type);
 			return new SqlErrorExpression(context, expression);
+		}
+
+		public static SqlErrorExpression EnsureError(Expression expression, Type resultType)
+		{
+			if (expression is SqlErrorExpression error)
+				return error.WithType(resultType);
+			return new SqlErrorExpression(null, expression, resultType);
+		}
+
+		public static Exception CreateError(string message)
+		{
+			return new LinqException(message);
 		}
 
 		public static Exception CreateError(Expression expression)

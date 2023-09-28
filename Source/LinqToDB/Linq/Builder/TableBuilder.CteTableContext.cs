@@ -52,7 +52,10 @@ namespace LinqToDB.Linq.Builder
 
 		static CteTableContext BuildCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var queryable = (IQueryable)buildInfo.Expression.EvaluateExpression()!;
+			var queryable = builder.EvaluateExpression<IQueryable>(buildInfo.Expression);
+			if (queryable == null)
+				throw new InvalidOperationException("Could not get CTE query.");
+
 			var cteContext = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
 
 			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, queryable.ElementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);

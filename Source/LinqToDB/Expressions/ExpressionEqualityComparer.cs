@@ -4,6 +4,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -113,7 +114,7 @@ namespace LinqToDB.Expressions
 						var constantExpression = (ConstantExpression)obj;
 
 						if (constantExpression.Value != null
-							&& !(constantExpression.Value is IQueryable))
+							&& !(constantExpression.Value is IQueryable) && !(constantExpression.Value is not string && constantExpression.Value is IEnumerable))
 						{
 							hashCode += (hashCode * 397) ^ constantExpression.Value.GetHashCode();
 						}
@@ -492,14 +493,26 @@ namespace LinqToDB.Expressions
 					return false; // EnumerableQueries are opaque
 				}
 
-/*
-				if (a.IsEntityQueryable()
-					&& b.IsEntityQueryable()
-					&& a.Value.GetType() == b.Value.GetType())
+				if (a.Value is IEnumerable ae && b.Value is IEnumerable be)
 				{
+					var enum1 = ae.GetEnumerator();
+					var enum2 = be.GetEnumerator();
+					using (enum1 as IDisposable)
+					using (enum2 as IDisposable)
+					{
+						while (enum1.MoveNext())
+						{
+							if (!enum2.MoveNext() || !Equals(enum1.Current, enum2.Current))
+								return false;
+						}
+
+						if (enum2.MoveNext())
+							return false;
+					}
+
 					return true;
 				}
-*/
+
 				if (typeof(ExpressionQuery<>).IsSameOrParentOf(a.GetType())
 					&& typeof(ExpressionQuery<>).IsSameOrParentOf(b.GetType())
 					&& a.Value.GetType() == b.Value.GetType())

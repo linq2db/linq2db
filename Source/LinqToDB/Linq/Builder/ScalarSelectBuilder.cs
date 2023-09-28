@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
@@ -31,7 +33,8 @@ namespace LinqToDB.Linq.Builder
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		sealed class ScalarSelectContext : BuildContextBase
 		{
-			public override Expression Expression => Body;
+			public override MappingSchema MappingSchema => Builder.MappingSchema;
+			public override Expression    Expression    => Body;
 
 			public Expression Body { get; }
 

@@ -41,14 +41,6 @@ namespace LinqToDB.Linq.Builder
 
 		public ParameterAccessor? RegisterParameter(Expression expression)
 		{
-			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
-			{
-				//TODO: Check this
-				var sql = ExpressionBuilder.ConvertToSqlConvertible(expression, DataContext);
-				if (sql != null)
-					return null;
-			}
-
 			if (!OptimizationContext.PreferServerSide(expression, false))
 			{
 				if (OptimizationContext.CanBeConstant(expression))
@@ -61,6 +53,19 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return null;
+		}
+
+		public void AddExpressionAccessors(IEnumerable<KeyValuePair<Expression, Expression>> accessors)
+		{
+			foreach (var a in accessors)
+			{
+#if NETSTANDARD2_1PLUS
+				_expressionAccessors.TryAdd(a.Key, a.Value);
+#else
+				if (!_expressionAccessors.ContainsKey(a.Key))
+					_expressionAccessors.Add(a.Key, a.Value);
+#endif
+			}
 		}
 
 		#region Build Parameter
@@ -80,7 +85,11 @@ namespace LinqToDB.Linq.Builder
 			InPredicate
 		}
 
-		public ParameterAccessor BuildParameter(Expression expr, ColumnDescriptor? columnDescriptor, bool forceConstant = false, string? alias = null,
+		public ParameterAccessor? BuildParameter(
+			Expression         expr, 
+			ColumnDescriptor?  columnDescriptor,
+			bool               forceConstant      = false, 
+			string?            alias              = null,
 			BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
 			string? name = alias;
@@ -229,8 +238,7 @@ namespace LinqToDB.Linq.Builder
 
 			var evaluatedExpr = Expression.Call(null,
 				Methods.LinqToDB.EvaluateExpression,
-				valueAccessorExpr,
-				Expression.Constant(null, typeof(IDataContext)));
+				valueAccessorExpr);
 
 			var valueAccessor = (Expression)evaluatedExpr;
 			valueAccessor = Expression.Convert(valueAccessor, expectedType);
@@ -404,14 +412,14 @@ namespace LinqToDB.Linq.Builder
 			//
 			if (name == null && expression.Type == typeof(DataParameter))
 			{
-				var dp = expression.EvaluateExpression<DataParameter>(dataContext);
+				var dp = expression.EvaluateExpression<DataParameter>();
 				if (dp != null && !string.IsNullOrEmpty(dp.Name))
 					name = dp.Name;
 			}
 
 			// see #820
-			accessorExpression         = CorrectAccessorExpression(accessorExpression,         dataContext, ExpressionConstants.DataContextParam);
-			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, ExpressionConstants.DataContextParam);
+			accessorExpression         = CorrectAccessorExpression(accessorExpression, dataContext);
+			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),
@@ -451,22 +459,13 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext, ParameterExpression dataContextParam)
+		static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext)
 		{
 			// see #820
-			accessorExpression = accessorExpression.Transform((dataContext, dataContextParam), static (context, e) =>
+			accessorExpression = accessorExpression.Transform(dataContext, static (context, e) =>
 			{
 				switch (e.NodeType)
 				{
-					case ExpressionType.Parameter:
-					{
-						// DataContext creates DataConnection which is not compatible with QueryRunner and parameter evaluation.
-						// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
-						// So for now decided to throw exception.
-						if (e == context.dataContextParam && !typeof(DataConnection).IsSameOrParentOf(context.dataContext.GetType()))
-							throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
-						return e;
-					}
 					case ExpressionType.MemberAccess:
 					{
 						var ma = (MemberExpression) e;
@@ -490,6 +489,25 @@ namespace LinqToDB.Linq.Builder
 								Expression.Equal(ce.Operand, Expression.Constant(null, ce.Operand.Type)),
 								Expression.Default(e.Type),
 								e);
+						}
+
+						return e;
+					}
+
+					case ExpressionType.Extension:
+					{
+						if (e is SqlQueryRootExpression root)
+						{
+							// DataContext creates DataConnection which is not compatible with QueryRunner and parameter evaluation.
+							// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
+							// So for now decided to throw exception.
+							if (!typeof(DataConnection).IsSameOrParentOf(context.GetType()))
+								throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
+
+							var newExpr = (Expression)ExpressionConstants.DataContextParam;
+							if (newExpr.Type != e.Type)
+								newExpr = Expression.Convert(newExpr, e.Type);
+							return newExpr;
 						}
 
 						return e;

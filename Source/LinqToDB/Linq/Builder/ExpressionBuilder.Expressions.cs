@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override Expression VisitMemberInit(MemberInitExpression node)
 		{
-			return Visit(SqlGenericConstructorExpression.Parse(node));
+			return Visit(Builder.ParseGenericConstructor(node));
 		}
 
 		protected override Expression VisitMember(MemberExpression node)
@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 			if (!ExpressionEqualityComparer.Instance.Equals(newNode, node))
 				return Visit(newNode);
 
-			var parsed = SqlGenericConstructorExpression.Parse(node);
+			var parsed = Builder.ParseGenericConstructor(node);
 
 			if (!ReferenceEquals(parsed, node))
 				return Visit(parsed);
@@ -493,7 +493,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
 				{
-					return TranslateExpression(node, useSql : true);
+					var translatedForced = TranslateExpression(node, useSql : true);
+
+					if (!ExpressionEqualityComparer.Instance.Equals(translatedForced, node))
+						return translatedForced;
+
+					return base.VisitMember(node);
 				}
 
 				var handled = Builder.HandleExtension(_context, node, _flags);
@@ -505,11 +510,25 @@ namespace LinqToDB.Linq.Builder
 
 				if (!useSql)
 				{
-					var expanded = Builder.ExposeExpression(node);
-
-					if (!ReferenceEquals(expanded, node))
+					var converted = Builder.ConvertSingleExpression(node, _flags.IsExpression());
+					if (!ReferenceEquals(converted, node))
 					{
-						useSql = true;
+						var accept = true;
+						if (_flags.IsExpression())
+						{
+							using var _ = NeedForce(true);
+
+							var expandedMethod = base.VisitMember(node);
+							if (Builder.CanBeCompiled(expandedMethod, true))
+								accept = false;
+						}
+
+						if (accept)
+						{
+							var translatedConverted = TranslateExpression(node, useSql : true);
+
+							return translatedConverted;
+						}
 					}
 				}
 
@@ -535,7 +554,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!_disableParseNew)
 				{
-					var newNode = SqlGenericConstructorExpression.Parse(node);
+					var newNode = Builder.ParseGenericConstructor(node);
 					if (!ReferenceEquals(newNode, node))
 						return Visit(newNode);
 				}
@@ -547,7 +566,7 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMemberInit(MemberInitExpression node)
 			{
-				var newNode = SqlGenericConstructorExpression.Parse(node);
+				var newNode = Builder.ParseGenericConstructor(node);
 				if (!ReferenceEquals(newNode, node))
 					return Visit(newNode);
 
@@ -595,15 +614,29 @@ namespace LinqToDB.Linq.Builder
 				if (!ReferenceEquals(newNode, node))
 					return Visit(newNode);
 
-				var converted = Builder.ConvertSingleExpression(node, _flags.IsExpression());
-				if (!ReferenceEquals(converted, node))
+				if (!localFlags.IsSql())
 				{
-					return TranslateExpression(converted, useSql : true);
+					var converted = Builder.ConvertSingleExpression(node, localFlags.IsExpression());
+					if (!ReferenceEquals(converted, node))
+					{
+						var accept = true;
+						if (_flags.IsExpression() && !Builder.PreferServerSide(converted, false))
+						{
+							using var _ = NeedForce(true);
+
+							var expandedMethod = base.VisitMethodCall(node);
+							if (Builder.CanBeCompiled(expandedMethod, true))
+								accept = false;
+						}
+
+						if (accept)
+							return TranslateExpression(node, useSql : true);
+					}
 				}
 
 				if ((_buildFlags & BuildFlags.ForceAssignments) != 0)
 				{
-					var parsed = SqlGenericConstructorExpression.Parse(node);
+					var parsed = Builder.ParseGenericConstructor(node);
 
 					if (!ReferenceEquals(parsed, node))
 						return Visit(parsed);

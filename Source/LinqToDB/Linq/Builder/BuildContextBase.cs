@@ -28,12 +28,12 @@ namespace LinqToDB.Linq.Builder
 #endif
 		}
 
-		public         ExpressionBuilder Builder       { get; }
-		public         MappingSchema     MappingSchema => Builder.MappingSchema;
-		public virtual Expression?       Expression    => null;
-		public         SelectQuery       SelectQuery   { get; protected set; }
-		public virtual SqlStatement?     Statement     { get; set; }
-		public         IBuildContext?    Parent        { get; set; }
+		public          ExpressionBuilder Builder       { get; }
+		public abstract MappingSchema     MappingSchema { get; }
+		public virtual  Expression?       Expression    => null;
+		public          SelectQuery       SelectQuery   { get; protected set; }
+		public virtual  SqlStatement?     Statement     { get; set; }
+		public          IBuildContext?    Parent        { get; set; }
 
 		public virtual  Type       ElementType { get; }
 		public abstract Expression MakeExpression(Expression path, ProjectFlags flags);

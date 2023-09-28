@@ -109,5 +109,10 @@ namespace LinqToDB.Expressions
 		{
 			return node.Update(Visit(node.ClosureExpression));
 		}
+
+		public virtual Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
+		{
+			return node;
+		}
 	}
 }

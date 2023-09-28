@@ -1,5 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
@@ -16,7 +18,8 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		public IBuildContext Context { get; protected set; }
+		public override MappingSchema MappingSchema => Context.MappingSchema;
+		public          IBuildContext Context       { get; protected set; }
 
 		public override Expression?   Expression => Context.Expression;
 		public override SqlStatement? Statement  { get => Context.Statement; set => Context.Statement = value; }

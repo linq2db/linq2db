@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Linq.Expressions;
+
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
 	class EagerContext : BuildContextBase
 	{
-		public IBuildContext Context    { get; }
+		public override MappingSchema MappingSchema => Context.MappingSchema;
+		public          IBuildContext Context       { get; }
 
 		public EagerContext(IBuildContext context, Type elementType) : base(context.Builder, elementType, context.SelectQuery)
 		{

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -10,6 +9,8 @@ namespace LinqToDB
 {
 	using Mapping;
 	using SqlQuery;
+	using Expressions;
+	using Linq.Builder;
 
 	partial class Sql
 	{
@@ -88,7 +89,9 @@ namespace LinqToDB
 				set => Expression = value;
 			}
 
-			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override Expression GetExpression<TContext>(TContext        context, IDataContext dataContext,
+				SelectQuery                                                    query,   Expression   expression,
+				Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
 			{
 				var expressionStr = Expression;
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);
@@ -96,13 +99,15 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve function name for expression '{expression}'.");
 
-				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter);
+				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, addDefault: true, knownExpressions, genericTypes, converter, out var error);
 
-				if (parameters.Any(p => p == null))
-					return null;
+				if (error != null)
+					return SqlErrorExpression.EnsureError(error, expression.Type);
 
-				return new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, Precedence,
+				var function = new SqlFunction(expression.Type, expressionStr!, IsAggregate, IsPure, Precedence,
 					ToParametersNullabilityType(IsNullable), _canBeNull, parameters!);
+
+				return ExpressionBuilder.CreatePlaceholder(query, function, expression);
 			}
 
 			public override string GetObjectID()

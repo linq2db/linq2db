@@ -469,54 +469,6 @@ namespace LinqToDB.Expressions
 			return result;
 		}
 
-		public static Expression Parse(Expression createExpression, bool force = false)
-		{
-			if (createExpression.Type.IsNullable())
-				return createExpression;
-
-			if (!force && createExpression.Type.IsValueType)
-				return createExpression;
-
-#if !NET45
-			if (typeof(FormattableString).IsSameOrParentOf(createExpression.Type))
-				return createExpression;
-#endif
-
-			switch (createExpression.NodeType)
-			{
-				case ExpressionType.New:
-				{
-					return new SqlGenericConstructorExpression((NewExpression)createExpression);
-				}
-
-				case ExpressionType.MemberInit:
-				{
-					return new SqlGenericConstructorExpression((MemberInitExpression)createExpression);
-				}
-
-				case ExpressionType.Call:
-				{
-					//TODO: Do we still need Alias?
-					var mc = (MethodCallExpression)createExpression;
-					if (mc.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
-						return Parse(mc.Arguments[0]);
-
-					if (mc.IsQueryable())
-						return mc;
-
-					if (!mc.Method.IsStatic)
-						break;
-
-					if (mc.Method.IsSqlPropertyMethodEx() || mc.IsSqlRow() || mc.Method.DeclaringType == typeof(string))
-						break;
-
-					return new SqlGenericConstructorExpression(mc);
-				}
-			}
-
-			return createExpression;
-		}
-
 		static int GetHashCode<T>(ICollection<T> collection, IEqualityComparer<T> comparer)
 		{
 			unchecked

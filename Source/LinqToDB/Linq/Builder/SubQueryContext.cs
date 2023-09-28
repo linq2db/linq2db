@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
@@ -29,7 +31,8 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		public IBuildContext SubQuery { get; }
+		public          IBuildContext SubQuery      { get; }
+		public override MappingSchema MappingSchema => SubQuery.MappingSchema;
 
 		protected virtual bool OptimizeColumns => true;
 
@@ -98,7 +101,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!flags.HasFlag(ProjectFlags.Test))
 			{
-				result = SequenceHelper.CorrectTrackingPath(result, path);
+				result = SequenceHelper.CorrectTrackingPath(Builder, result, path);
 
 				// correct all placeholders, they should target to appropriate SubQuery.SelectQuery
 				//

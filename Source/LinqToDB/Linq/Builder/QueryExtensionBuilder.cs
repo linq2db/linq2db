@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 			return Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema).Length > 0;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var methodParams = methodCall.Method.GetParameters();
 			var list         = new List<SqlQueryExtensionData>
@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 						var ex = ae.Expressions[j];
 
 						if (evaluateElements)
-							ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
+							ex = Expression.Constant(builder.EvaluateExpression(ex));
 
 						list.Add(new($"{name}.{j}", ex, p, j));
 					}
@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 					var ex   = methodCall.Arguments[i];
 
 					if (p.HasAttribute<SqlQueryDependentAttribute>())
-						ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
+						ex = Expression.Constant(builder.EvaluateExpression(ex));
 
 					list.Add(new(name, ex, p));
 				}
@@ -86,19 +86,34 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (data.ParamsIndex >= 0)
 					{
-						data.SqlExpression = data.Expression.Unwrap() switch
+						var converted = data.Expression.Unwrap() switch
 						{
 							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), lex, null),
-							var ex => builder.ConvertToSql(sequence, ex)
+							var ex => builder.ConvertToSqlExpr(sequence, ex)
 						};
+
+						if (converted is SqlPlaceholderExpression placeholder)
+							data.SqlExpression = placeholder.Sql;
+						else 
+							return null;
 					}
 					else if (data.Expression is LambdaExpression le)
 					{
-						data.SqlExpression = builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), le, null);
+						var converted = builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), le, null);
+
+						if (converted is SqlPlaceholderExpression placeholder)
+							data.SqlExpression = placeholder.Sql;
+						else 
+							return null;
 					}
 					else
 					{
-						data.SqlExpression = builder.ConvertToSql(sequence, data.Expression);
+						var converted = builder.ConvertToSqlExpr(sequence, data.Expression);
+
+						if (converted is SqlPlaceholderExpression placeholder)
+							data.SqlExpression = placeholder.Sql;
+						else 
+							return null;
 					}
 				}
 			}

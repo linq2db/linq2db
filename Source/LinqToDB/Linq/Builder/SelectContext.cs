@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
@@ -25,9 +27,12 @@ namespace LinqToDB.Linq.Builder
 		public MethodCallExpression? Debug_MethodCall;
 #endif
 
-		public Expression     Body         { [DebuggerStepThrough] get; set; }
-		public bool           IsSubQuery   { get; }
-		public IBuildContext? InnerContext { get; }
+		MappingSchema _mappingSchema;
+
+		public          Expression     Body          { [DebuggerStepThrough] get; set; }
+		public          bool           IsSubQuery    { get; }
+		public          IBuildContext? InnerContext  { get; }
+		public override MappingSchema  MappingSchema => _mappingSchema;
 
 		public override Expression? Expression => Body;
 
@@ -36,25 +41,29 @@ namespace LinqToDB.Linq.Builder
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, IBuildContext? innerContext, Expression body, SelectQuery selectQuery, bool isSubQuery)
 			: base(builder, body.Type, selectQuery)
 		{
-			Parent       = parent;
-			InnerContext = innerContext;
-			IsSubQuery   = isSubQuery;
-			Body         = body;
+			Parent         = parent;
+			InnerContext   = innerContext;
+			IsSubQuery     = isSubQuery;
+			Body           = body;
+			_mappingSchema = builder.MappingSchema;
 		}
 
 		public SelectContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, params IBuildContext[] sequences)
 			: this(parent, SequenceHelper.PrepareBody(lambda, sequences), sequences[0], sequences[0].SelectQuery, isSubQuery)
 		{
+			_mappingSchema = sequences[0].MappingSchema;
 		}
 
 		public SelectContext(IBuildContext? parent, Expression body, IBuildContext innerContext, bool isSubQuery)
 			: this(parent, body, innerContext, innerContext.SelectQuery, isSubQuery)
 		{
+			_mappingSchema = innerContext.MappingSchema;
 		}
 
 		public SelectContext(IBuildContext? parent, Expression body, IBuildContext innerContext, SelectQuery selectQuery, bool isSubQuery)
 			: this(parent, innerContext.Builder, innerContext, body, selectQuery, isSubQuery)
 		{
+			_mappingSchema = innerContext.MappingSchema;
 		}
 
 		#endregion
@@ -124,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				result = Body;
-				result = SequenceHelper.RemapToNewPathSimple(result, path, flags);
+				result = SequenceHelper.RemapToNewPathSimple(Builder, result, path, flags);
 			}
 			else
 			{
@@ -144,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 						result = Builder.Project(this, path, null, 0, flags, Body, strict: false);
 				}
 
-				result = SequenceHelper.RemapToNewPathSimple(result, path, flags);
+				result = SequenceHelper.RemapToNewPathSimple(Builder, result, path, flags);
 
 				if (!ReferenceEquals(result, Body))
 				{

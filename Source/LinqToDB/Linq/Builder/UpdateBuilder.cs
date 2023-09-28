@@ -333,8 +333,8 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				insertedContext = new TableBuilder.TableContext(builder, outputSelectQuery, targetTableContext.SqlTable);
-				deletedContext  = new TableBuilder.TableContext(builder, outputSelectQuery, targetTableContext.SqlTable);
+				insertedContext = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable);
+				deletedContext  = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable);
 			}
 
 			outputContext = deletedContext;
@@ -452,16 +452,17 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		static void ParseSet(
+			ExpressionBuilder           builder,
 			Expression                  targetPath,
 			Expression                  fieldExpression,
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes)
 		{
-			var correctedField = SqlGenericConstructorExpression.Parse(fieldExpression);
+			var correctedField = builder.ParseGenericConstructor(fieldExpression);
 
 			if (correctedField is SqlGenericConstructorExpression fieldGeneric)
 			{
-				var correctedValue = SqlGenericConstructorExpression.Parse(valueExpression);
+				var correctedValue = builder.ParseGenericConstructor(valueExpression);
 
 				if (correctedValue is not SqlGenericConstructorExpression valueGeneric)
 					throw SqlErrorExpression.CreateError(valueExpression);
@@ -474,19 +475,19 @@ namespace LinqToDB.Linq.Builder
 				foreach (var (f, v) in pairs)
 				{
 					var currentPath = Expression.MakeMemberAccess(targetPath, f.MemberInfo);
-					ParseSet(currentPath, f.Expression, v.Expression, envelopes);
+					ParseSet(builder, currentPath, f.Expression, v.Expression, envelopes);
 				}
 			}
 			else
 			{
-				var correctedValue = SqlGenericConstructorExpression.Parse(valueExpression);
+				var correctedValue = builder.ParseGenericConstructor(valueExpression);
 
 				if (correctedValue is SqlGenericConstructorExpression valueGeneric)
 				{
 					foreach (var assignment in valueGeneric.Assignments)
 					{
 						var currentPath = Expression.MakeMemberAccess(targetPath, assignment.MemberInfo);
-						ParseSet(currentPath, currentPath, assignment.Expression, envelopes);
+						ParseSet(builder, currentPath, currentPath, assignment.Expression, envelopes);
 					}
 				}
 				else
@@ -500,7 +501,7 @@ namespace LinqToDB.Linq.Builder
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes)
 		{
-			ParseSet((Expression)targetRef, fieldExpression, valueExpression, envelopes);
+			ParseSet(targetRef.BuildContext.Builder, targetRef, fieldExpression, valueExpression, envelopes);
 		}
 
 		internal static void ParseSetter(
@@ -509,7 +510,7 @@ namespace LinqToDB.Linq.Builder
 			Expression                  setterExpression,
 			List<SetExpressionEnvelope> envelopes)
 		{
-			var correctedSetter = SqlGenericConstructorExpression.Parse(setterExpression);
+			var correctedSetter = builder.ParseGenericConstructor(setterExpression);
 
 			if (correctedSetter is not SqlGenericConstructorExpression)
 			{
@@ -521,7 +522,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var assignment in generic.Assignments)
 				{
 					var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
-					ParseSet(memberAccess, memberAccess, assignment.Expression, envelopes);
+					ParseSet(builder, memberAccess, memberAccess, assignment.Expression, envelopes);
 				}
 			}
 			else
@@ -807,7 +808,7 @@ namespace LinqToDB.Linq.Builder
 						updateExpr = SequenceHelper.PrepareBody(lambda, sequence);
 					}
 
-					ParseSet(extractExpr, extractExpr, updateExpr, updateContext.SetExpressions);
+					ParseSet(builder, extractExpr, extractExpr, updateExpr, updateContext.SetExpressions);
 				}
 
 				return updateContext;

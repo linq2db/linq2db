@@ -8,10 +8,13 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using Common;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
+
 
 	internal class CteContext : BuildContextBase
 	{
-		public override Expression? Expression { get; }
+		public override Expression?   Expression    { get; }
+		public override MappingSchema MappingSchema => CteInnerQueryContext?.MappingSchema ?? Builder.MappingSchema;
 
 		public IBuildContext?   CteInnerQueryContext { get; private set; }
 		public SubQueryContext? SubqueryContext      { get; private set; }
@@ -131,7 +134,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression PostProcessExpression(Expression correctedPath, Expression subqueryPath)
 		{
-			correctedPath = SequenceHelper.CorrectTrackingPath(correctedPath, subqueryPath);
+			correctedPath = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, subqueryPath);
 
 			correctedPath = RemapRecursive(correctedPath);
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(correctedPath);

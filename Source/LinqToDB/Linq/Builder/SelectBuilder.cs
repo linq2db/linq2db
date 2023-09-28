@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
@@ -80,6 +82,8 @@ namespace LinqToDB.Linq.Builder
 			{
 
 			}
+
+			public override MappingSchema MappingSchema => Builder.MappingSchema;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{

@@ -8,7 +8,6 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Expressions;
 
 	sealed class Table<T> : ExpressionQuery<T>, ITable<T>, ITableMutable<T>, ITable
 		where T : notnull
@@ -18,7 +17,7 @@ namespace LinqToDB.Linq
 			var expression = typeof(T).IsScalar()
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
-					ExpressionConstants.DataContextParam);
+					SqlQueryRootExpression.Create(dataContext.MappingSchema, dataContext.GetType()));
 
 			InitTable(dataContext, expression, null);
 		}
@@ -28,7 +27,7 @@ namespace LinqToDB.Linq
 			var expression = typeof(T).IsScalar()
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
-					ExpressionConstants.DataContextParam);
+					SqlQueryRootExpression.Create(dataContext.MappingSchema, dataContext.GetType()));
 
 			InitTable(dataContext, expression, tableDescriptor);
 		}

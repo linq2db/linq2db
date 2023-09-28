@@ -371,16 +371,12 @@ namespace LinqToDB.Linq.Builder
 						static (context, e, descriptor) =>
 							context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
 
-					if (transformed != null)
-					{
-						var newExpr = CreatePlaceholder(context.SelectQuery, transformed, expr);
-						return newExpr;
-					}
-					
+					if (transformed is SqlPlaceholderExpression placeholder)
+						return placeholder.WithPath(expr);
+
+
 					if (attr.ServerSideOnly)
-					{
-						return CreateSqlError(context, expr);
-					}
+						return transformed;
 				}
 			}
 

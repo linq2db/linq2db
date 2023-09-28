@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 		public static string GetContextInfo(IBuildContext context)
 		{
 #if DEBUG
-			var contextId = $"_{context.ContextId}";
+			var contextId = $"[ID:{context.ContextId}]";
 #else
 			var contextId = string.Empty;
 #endif
@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			if (context is ScopeContext scope)
 			{
-				result += $"({scope.Context.SelectQuery.SourceID} -> {scope.UpTo.SelectQuery.SourceID})";
+				result += $"(S:{scope.Context.SelectQuery.SourceID} -> {scope.UpTo.SelectQuery.SourceID})";
 			}
 			else if (context is SubQueryContext sc)
 			{

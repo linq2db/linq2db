@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 			var arg   = methodCall.Arguments[1].Unwrap();
 
 			if (arg.Type == typeof(bool))
-				reset = (bool)arg.EvaluateExpression(builder.DataContext)!;
+				reset = (bool)builder.EvaluateExpression(arg)!;
 
 			sequence.Statement = new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset };
 

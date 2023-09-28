@@ -281,7 +281,7 @@ namespace Tests
 
 			expr = expr.Transform(e =>
 			{
-				if (e == ExpressionConstants.DataContextParam)
+				if (e == ExpressionConstants.DataContextParam || e is SqlQueryRootExpression)
 				{
 					return Expression.Constant(dc, e.Type);
 				}

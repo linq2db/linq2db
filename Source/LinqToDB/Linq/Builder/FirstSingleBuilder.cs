@@ -25,8 +25,8 @@ namespace LinqToDB.Linq.Builder
 		private static bool IsApplicable(MethodCallExpression methodCall)
 		{
 			return
-				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count == 1 ||
-				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
+				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count <= 2 ||
+				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count <= 3;
 		}
 
 		public enum MethodKind
@@ -56,6 +56,10 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var argument = methodCall.Arguments[0];
+			var argumentCount = methodCall.Arguments.Count;
+
+			if (methodCall.IsAsyncExtension(MethodNamesAsync))
+				--argumentCount;
 
 			SqlJoinedTable? fakeJoin = null;
 			if (buildInfo.Parent != null)
@@ -81,6 +85,16 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, argument));
 			if (sequence == null)
 				return null;
+
+			if (argumentCount > 1)
+			{
+				var filterLambda = methodCall.Arguments[1].UnwrapLambda();
+				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, false, false, buildInfo.IsTest,
+					isAggregationTest : buildInfo.AggregationTest);
+
+				if (sequence == null) 
+					return null;
+			}
 
 			if (fakeJoin != null)
 			{

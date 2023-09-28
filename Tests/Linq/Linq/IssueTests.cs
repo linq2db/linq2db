@@ -187,37 +187,25 @@ namespace Tests.Linq
 		[Test]
 		public void Issue424Test1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderBy(_ => _.ParentID).Take(1),
-					db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1)
-					);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1));
 		}
 
 		[Test]
 		public void Issue424Test2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1),
-					db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1)
-					);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1));
 		}
 
 		[Test]
 		public void Issue424Test3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1),
-					db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1)
-				);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1));
 		}
 
 		// https://github.com/linq2db/linq2db/issues/498

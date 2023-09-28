@@ -21,16 +21,19 @@ namespace LinqToDB.Linq.Builder
 		{
 			#region Properties
 
-			public override Expression? Expression  { get; }
-			public override Type        ElementType => ObjectType;
+			MappingSchema _mappingSchema;
+
+			public override Expression?   Expression    { get; }
+			public override MappingSchema MappingSchema => _mappingSchema;
+			public override Type          ElementType   => ObjectType;
 
 			public          Type             OriginalType;
 			public          EntityDescriptor EntityDescriptor;
 
-			public Type          ObjectType   { get; set; }
-			public SqlTable      SqlTable     { get; set; }
-			public LoadWithInfo  LoadWithRoot { get; set; } = new();
-			public MemberInfo[]? LoadWithPath { get; set; }
+			public Type          ObjectType    { get; set; }
+			public SqlTable      SqlTable      { get; set; }
+			public LoadWithInfo  LoadWithRoot  { get; set; } = new();
+			public MemberInfo[]? LoadWithPath  { get; set; }
 
 			public bool IsSubQuery { get; }
 
@@ -38,12 +41,13 @@ namespace LinqToDB.Linq.Builder
 
 			#region Init
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType) : base (builder, originalType, buildInfo.SelectQuery)
+			public TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo, Type originalType) : base (builder, originalType, buildInfo.SelectQuery)
 			{
-				Parent      = buildInfo.Parent;
-				Expression  = buildInfo.Expression;
-				SelectQuery = buildInfo.SelectQuery;
-				IsSubQuery  = buildInfo.IsSubQuery;
+				Parent         = buildInfo.Parent;
+				Expression     = buildInfo.Expression;
+				SelectQuery    = buildInfo.SelectQuery;
+				IsSubQuery     = buildInfo.IsSubQuery;
+				_mappingSchema = mappingSchema;
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
@@ -56,12 +60,13 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table) : base (builder, table.ObjectType, buildInfo.SelectQuery)
+			public TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo, SqlTable table) : base (builder, table.ObjectType, buildInfo.SelectQuery)
 			{
-				Parent      = buildInfo.Parent;
-				Expression  = buildInfo.Expression;
-				SelectQuery = buildInfo.SelectQuery;
-				IsSubQuery  = buildInfo.IsSubQuery;
+				Parent         = buildInfo.Parent;
+				Expression     = buildInfo.Expression;
+				SelectQuery    = buildInfo.SelectQuery;
+				IsSubQuery     = buildInfo.IsSubQuery;
+				_mappingSchema = mappingSchema;
 
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
@@ -74,11 +79,12 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table) : base(builder, table.ObjectType, selectQuery)
+			internal TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, SelectQuery selectQuery, SqlTable table) : base(builder, table.ObjectType, selectQuery)
 			{
-				Parent     = null;
-				Expression = null;
-				IsSubQuery = false;
+				Parent         = null;
+				Expression     = null;
+				IsSubQuery     = false;
+				_mappingSchema = mappingSchema;
 
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
@@ -91,11 +97,12 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo) : base (builder, typeof(object), buildInfo.SelectQuery)
+			public TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo) : base (builder, typeof(object), buildInfo.SelectQuery)
 			{
-				Parent     = buildInfo.Parent;
-				Expression = buildInfo.Expression;
-				IsSubQuery = buildInfo.IsSubQuery;
+				Parent         = buildInfo.Parent;
+				Expression     = buildInfo.Expression;
+				IsSubQuery     = buildInfo.IsSubQuery;
+				_mappingSchema = mappingSchema;
 
 				var mc   = (MethodCallExpression)buildInfo.Expression;
 				var attr = mc.Method.GetTableFunctionAttribute(MappingSchema)!;
@@ -110,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), MappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSql(context.context, a));
+				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), MappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSqlExpr(context.context, a));
 
 				Init(true);
 			}
@@ -171,6 +178,8 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					Expression fullEntity = Builder.BuildFullEntityExpression(this, path, ElementType, flags);
+					// Entity can contain calculated columns which should be exposed
+					fullEntity = Builder.ExposeExpression(fullEntity);
 
 					if (fullEntity.Type != path.Type)
 						fullEntity = Expression.Convert(fullEntity, path.Type);
@@ -198,19 +207,6 @@ namespace LinqToDB.Linq.Builder
 
 				if (sql == null)
 				{
-					var memberInfo = MemberHelper.GetMemberInfo(member);
-
-					if (EntityDescriptor.HasCalculatedMembers)
-					{
-						var found = EntityDescriptor.CalculatedMembers?.FirstOrDefault(ma =>
-							MemberInfoComparer.Instance.Equals(ma.MemberInfo, memberInfo));
-
-						if (found != null)
-						{
-							return Builder.ExposeExpression(member);
-						}
-					}
-
 					return path;
 				}
 
@@ -221,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new TableContext(Builder, context.CloneElement(SelectQuery), context.CloneElement(SqlTable));
+				return new TableContext(Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable));
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

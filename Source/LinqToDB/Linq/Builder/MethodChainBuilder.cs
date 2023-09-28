@@ -26,7 +26,6 @@ namespace LinqToDB.Linq.Builder
 
 			var root = methodCall.SkipMethodChain(builder.MappingSchema, out var isQueryable);
 
-			root = builder.ConvertExpressionTree(root);
 			root = builder.MakeExpression(null, root, ProjectFlags.Root);
 
 			if (root is ContextRefExpression)
@@ -112,12 +111,14 @@ namespace LinqToDB.Linq.Builder
 			var sqlExpression = finalFunction.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), builder.DataContext, placeholderSelect, methodCall,
 				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
 
-			if (sqlExpression == null)
+			if (sqlExpression is not SqlPlaceholderExpression placeholder)
 				return null;
 
 			var context = new ChainContext(buildInfo.Parent, placeholderSequence, methodCall);
 
-			var placeholder = ExpressionBuilder.CreatePlaceholder(placeholderSelect, sqlExpression, methodCall, alias: methodCall.Method.Name);
+			placeholder = placeholder
+					.WithPath(methodCall)
+					.WithAlias(methodCall.Method.Name);
 
 			if (!inAggregationContext && buildInfo.IsSubQuery)
 			{

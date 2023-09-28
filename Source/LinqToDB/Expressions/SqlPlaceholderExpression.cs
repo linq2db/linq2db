@@ -120,7 +120,7 @@ namespace LinqToDB.Expressions
 
 			var startStr = "SQL";
 #if DEBUG
-			startStr += $"[Id:{Id}]";
+			startStr += $"[ID:{Id}]";
 #endif
 			string result;
 			if (SelectQuery == null)

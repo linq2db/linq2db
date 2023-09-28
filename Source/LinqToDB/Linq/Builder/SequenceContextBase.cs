@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -23,9 +24,10 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-		public IBuildContext[]   Sequences   { get; set; }
-		public Expression?       Body        { get; set; }
-		public IBuildContext     Sequence    => Sequences[0];
+		public          IBuildContext[] Sequences     { get; set; }
+		public          Expression?     Body          { get; set; }
+		public          IBuildContext   Sequence      => Sequences[0];
+		public override MappingSchema   MappingSchema => Sequence.MappingSchema;
 
 		public override Expression? Expression => Body;
 

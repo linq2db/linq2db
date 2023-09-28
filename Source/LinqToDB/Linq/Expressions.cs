@@ -284,7 +284,9 @@ namespace LinqToDB.Linq
 				mi = objectType.GetMemberEx(mi) ?? mi;
 			}
 
-			return ConvertMemberInternal(mappingSchema, objectType, mi);
+			var result = ConvertMemberInternal(mappingSchema, objectType, mi);
+
+			return result;
 		}
 
 		static LambdaExpression? ConvertMemberInternal(MappingSchema mappingSchema, Type? objectType, MemberInfo mi)

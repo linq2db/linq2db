@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
@@ -202,6 +204,8 @@ namespace LinqToDB.Linq.Builder
 
 			public TableLikeQueryContext   QuerySource          { get; }
 			public SqlMultiInsertStatement MultiInsertStatement { get; }
+
+			public override MappingSchema MappingSchema => QuerySource.TargetContextRef.BuildContext.MappingSchema;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{

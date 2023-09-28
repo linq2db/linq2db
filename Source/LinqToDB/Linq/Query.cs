@@ -469,7 +469,7 @@ namespace LinqToDB.Linq
 			expr = optimizationContext.ExpandExpression(expr);
 //			// we need this call for correct processing parameters in ExpressionMethod
 //			// TODO: IT breaks performance. All these operations must be cached.
-			expr = optimizationContext.ExposeExpression(expr);
+			// expr = optimizationContext.ExposeExpression(expr);
 
 			dependsOnParameters = optimizationContext.IsDependsOnParameters();
 
@@ -513,7 +513,7 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = new ExpressionBuilder(query, optimizationContext, parametersContext, dataContext, expr, null).Build<T>();
+				query = new ExpressionBuilder(query, optimizationContext, parametersContext, dataContext, expr, null, null).Build<T>();
 			}
 			catch (Exception)
 			{

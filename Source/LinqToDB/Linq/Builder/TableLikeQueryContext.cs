@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
@@ -170,6 +172,9 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		//TODO: not sure
+		public override MappingSchema MappingSchema => TargetContextRef.BuildContext.MappingSchema;
+
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			if (flags.HasFlag(ProjectFlags.AssociationRoot))
@@ -246,7 +251,7 @@ namespace LinqToDB.Linq.Builder
 				if (!flags.IsTest())
 				{
 					// replace tracking path back
-					var translated = SequenceHelper.CorrectTrackingPath(correctedPath, path);
+					var translated = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, path);
 
 					var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
 

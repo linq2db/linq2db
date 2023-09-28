@@ -70,7 +70,7 @@ namespace LinqToDB.Linq.Builder
 					expr = Builder.UpdateNesting(this, expr);
 				}
 
-				expr = SequenceHelper.CorrectTrackingPath(expr, path);
+				expr = SequenceHelper.CorrectTrackingPath(Builder, expr, path);
 
 				if (!flags.IsKeys() && expr.UnwrapConvert() is not SqlEagerLoadExpression)
 				{

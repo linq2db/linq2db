@@ -20,8 +20,9 @@ namespace LinqToDB.Linq.Builder
 		readonly EntityDescriptor _entityDescriptor;
 		readonly bool _filedsDefined;
 
-		public override Expression?    Expression { get; }
-		public          SqlValuesTable Table      { get; }
+		public override Expression?    Expression    { get; }
+		public override MappingSchema  MappingSchema => Builder.MappingSchema;
+		public          SqlValuesTable Table         { get; }
 
 		public EnumerableContext(ExpressionBuilder builder, BuildInfo buildInfo, SelectQuery query, Type elementType)
 			: base(builder, elementType, query)

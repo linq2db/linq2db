@@ -6,12 +6,15 @@ using System.Reflection;
 
 using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
 	internal sealed class CteTableContext: BuildContextBase, ITableContext
 	{
+		public override MappingSchema MappingSchema => CteContext.MappingSchema;
+
 		public CteContext  CteContext { get; }
 		public SqlCteTable CteTable   { get; }
 
@@ -25,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			Parent     = parent;
 			CteContext = cteContext;
-			CteTable = new SqlCteTable(CteContext.CteClause, objectType);
+			CteTable   = new SqlCteTable(CteContext.CteClause, objectType);
 
 			if (!isTest)
 				SelectQuery.From.Table(CteTable);

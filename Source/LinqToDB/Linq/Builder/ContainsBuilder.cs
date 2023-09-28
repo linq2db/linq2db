@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 	using SqlQuery;
 
 	sealed class ContainsBuilder : MethodCallBuilder
@@ -50,7 +51,8 @@ namespace LinqToDB.Linq.Builder
 
 		sealed class ContainsContext : BuildContextBase
 		{
-			public override Expression Expression { get; }
+			public override Expression    Expression    { get; }
+			public override MappingSchema MappingSchema => InnerSequence.MappingSchema;
 
 			SelectQuery   OuterQuery    { get; }
 			IBuildContext InnerSequence { get; }

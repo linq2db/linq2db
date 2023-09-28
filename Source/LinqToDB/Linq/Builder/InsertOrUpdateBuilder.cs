@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
@@ -94,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 					keysExpressions, insertOrUpdateStatement.Update.Keys, false);
 			}
 
-			return new InsertOrUpdateContext(builder, sequence.SelectQuery, insertOrUpdateStatement);
+			return new InsertOrUpdateContext(builder, sequence, insertOrUpdateStatement);
 		}
 
 		#endregion
@@ -103,11 +105,16 @@ namespace LinqToDB.Linq.Builder
 
 		sealed class InsertOrUpdateContext : BuildContextBase
 		{
-			public SqlInsertOrUpdateStatement InsertOrUpdateStatement { get; }
+			public override MappingSchema MappingSchema => Context.MappingSchema;
+			
+			public IBuildContext Context { get; }
 
-			public InsertOrUpdateContext(ExpressionBuilder buider, SelectQuery selectQuery,
-				SqlInsertOrUpdateStatement insertOrUpdateStatement) : base(buider, typeof(object), selectQuery)
+			public   SqlInsertOrUpdateStatement InsertOrUpdateStatement { get; }
+
+			public InsertOrUpdateContext(ExpressionBuilder buider, IBuildContext sequence,
+				SqlInsertOrUpdateStatement insertOrUpdateStatement) : base(buider, typeof(object), sequence.SelectQuery)
 			{
+				Context                 = sequence;
 				InsertOrUpdateStatement = insertOrUpdateStatement;
 			}
 
@@ -133,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new InsertOrUpdateContext(Builder, context.CloneElement(SelectQuery), context.CloneElement(InsertOrUpdateStatement));
+				return new InsertOrUpdateContext(Builder, context.CloneContext(Context), context.CloneElement(InsertOrUpdateStatement));
 			}
 		}
 

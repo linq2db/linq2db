@@ -111,10 +111,16 @@ namespace LinqToDB.DataProvider.Oracle
 				return o => ValueConverter(converters, o);
 			}
 
-			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
 			{
 				var exp = methodCall.Arguments[1];
-				var arg = converter(context, exp, null);
+				var converted = converter(context, exp, null);
+
+				if (converted is not SqlPlaceholderExpression placeholder)
+					throw SqlErrorExpression.EnsureError(null, converted).CreateError();
+
+				var arg = placeholder.Sql;
+
 				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType, options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (arg is SqlParameter p)

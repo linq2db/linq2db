@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using LinqToDB.Expressions;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
@@ -20,6 +21,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			OnlyForSql = onlyForSql;
 		}
+
+		public override MappingSchema MappingSchema => Context.MappingSchema;
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{

@@ -152,7 +152,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 
-		public Delegate? QueryFilterFunc { get; private set; }
+		public LambdaExpression? QueryFilterFunc { get; private set; }
 
 		bool HasInheritanceMapping()
 		{

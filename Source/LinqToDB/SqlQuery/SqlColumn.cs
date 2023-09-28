@@ -158,7 +158,7 @@ namespace LinqToDB.SqlQuery
 				.Append('t')
 				.Append(Parent?.SourceID ?? -1)
 #if DEBUG
-				.Append('[').Append(Number).Append(']')
+				.Append("[Id:").Append(Number).Append(']')
 #endif
 				.Append('.')
 				.Append(Alias ?? "c")

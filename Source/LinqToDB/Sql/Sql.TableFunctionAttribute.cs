@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
@@ -9,6 +8,7 @@ namespace LinqToDB
 	using Common.Internal;
 	using SqlProvider;
 	using SqlQuery;
+	using Mapping;
 
 	partial class Sql
 	{
@@ -51,7 +51,7 @@ namespace LinqToDB
 			public string? Package       { get; set; }
 			public int[]?  ArgIndices    { get; set; }
 
-			public virtual void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public virtual void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
 			{
 				table.SqlTableType = SqlTableType.Function;
 				var expressionStr  = table.Expression = Name ?? methodCall.Method.Name!;
@@ -68,7 +68,10 @@ namespace LinqToDB
 					Server  : Server   ?? table.TableName.Server,
 					Package : Package  ?? table.TableName.Package);
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter);
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter, out var error);
+
+				if (error != null)
+					throw Expressions.SqlErrorExpression.EnsureError(null, error).CreateError();
 			}
 
 			public override string GetObjectID()

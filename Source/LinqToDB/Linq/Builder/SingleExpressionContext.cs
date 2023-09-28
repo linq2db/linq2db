@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using SqlQuery;
@@ -14,6 +16,8 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public ISqlExpression SqlExpression { get; }
+
+		public override MappingSchema MappingSchema => Builder.MappingSchema;
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{

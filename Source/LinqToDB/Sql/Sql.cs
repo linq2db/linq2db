@@ -1004,16 +1004,28 @@ namespace LinqToDB
 			{
 			}
 
-			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override Expression GetExpression<TContext>(TContext   context, IDataContext dataContext,
+				SelectQuery                                               query,   Expression   expression,
+				Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, true, out _, converter);
+				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true,
+					out var knownExpressions, true, out _, converter);
 
 				var arr = new ISqlExpression[knownExpressions.Count];
 
+				Expression? current = null;
+
 				for (var i = 0; i < knownExpressions.Count; i++)
 				{
-					var arg = converter(context, knownExpressions[i]!, null);
+					var converted = converter(context, knownExpressions[i]!, null);
+
+					if (converted is not SqlPlaceholderExpression placeholder)
+						return converted;
+
+					current = placeholder;
+
+					var arg = placeholder.Sql;
 
 					if (arg.SystemType == typeof(string))
 					{
@@ -1029,15 +1041,15 @@ namespace LinqToDB
 					}
 				}
 
-				if (arr.Length == 1)
-					return arr[0];
+				if (arr.Length == 1 && current != null)
+					return current;
 
 				var expr = new SqlBinaryExpression(typeof(string), arr[0], "+", arr[1]);
 
 				for (var i = 2; i < arr.Length; i++)
 					expr = new SqlBinaryExpression(typeof (string), expr, "+", arr[i]);
 
-				return expr;
+				return new SqlPlaceholderExpression(query, expr, expression);
 			}
 		}
 
@@ -1160,7 +1172,6 @@ namespace LinqToDB
 		public static int DateFirst => 7;
 
 #if NET6_0_OR_GREATER
-		[Function]
 		public static DateOnly? MakeDateOnly(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null ?

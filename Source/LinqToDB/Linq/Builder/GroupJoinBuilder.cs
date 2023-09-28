@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Reflection;
@@ -46,6 +48,8 @@ namespace LinqToDB.Linq.Builder
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		class GroupJoinInnerContext : BuildContextBase
 		{
+			public override MappingSchema MappingSchema => Parent?.MappingSchema ?? Builder.MappingSchema;
+
 			public GroupJoinInnerContext(IBuildContext? parent, SelectQuery outerQuery, ExpressionBuilder builder, Type elementType,
 				Expression outerKey, LambdaExpression innerKeyLambda,
 				Expression innerExpression)

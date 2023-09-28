@@ -354,7 +354,12 @@ namespace LinqToDB.Linq.Builder
 						if (idx >= 0)
 						{
 							var ai = constructorExpression.Assignments[idx];
-							parameterValues.Add(ai.Expression);
+
+							var assignment = ai.Expression;
+							if (parameterInfo.ParameterType != assignment.Type)
+								assignment = Expression.Convert(assignment, parameterInfo.ParameterType);
+
+							parameterValues.Add(assignment);
 
 							loadedColumns.Add(idx);
 						}
@@ -689,6 +694,18 @@ namespace LinqToDB.Linq.Builder
 		public Expression? TryConstructObject(MappingSchema mappingSchema,
 			SqlGenericConstructorExpression constructorExpression, Type constructType)
 		{
+			if (constructorExpression.ConstructorMethod != null)
+			{
+				var parameterInfos = constructorExpression.ConstructorMethod.GetParameters();
+				if (parameterInfos.Length != constructorExpression.Parameters.Count)
+					return null;
+
+				var constructedByMethod = Expression.Call(constructorExpression.ConstructorMethod,
+					constructorExpression.Parameters.Select(p => p.Expression));
+
+				return constructedByMethod;
+			}
+
 			if (constructType.IsAbstract)
 				return null;
 

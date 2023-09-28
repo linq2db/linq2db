@@ -152,6 +152,12 @@ namespace LinqToDB.DataProvider.Firebird
 				return base.VisitSqlUpdateStatement(element);
 			}
 
+			public override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+			{
+				using var scope = Needcast(true);
+				return base.VisitSqlBinaryExpression(element);
+			}
+
 			public override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 			{
 				if (_needCast)

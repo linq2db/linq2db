@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (expr.ElementType == QueryElementType.SqlValue)
 				{
-					var param   = builder.ParametersContext.BuildParameter(methodCall.Arguments[1], null, true).SqlParameter;
+					var param = builder.ParametersContext.BuildParameter(methodCall.Arguments[1], null, forceConstant : true)!.SqlParameter;
 					param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";
 					param.IsQueryParameter = param.IsQueryParameter && parametrize;
 					expr                   = param;
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				TakeHints? hints = null;
 				if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))
-					hints = (TakeHints)methodCall.Arguments[2].EvaluateExpression(builder.DataContext)!;
+					hints = (TakeHints)builder.EvaluateExpression(methodCall.Arguments[2])!;
 
 				BuildTake(builder, sequence, expr, hints);
 			}

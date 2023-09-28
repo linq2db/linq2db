@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 
 				var merge = new SqlMergeStatement(targetTable);
 				if (methodCall.Arguments.Count == 2)
-					merge.Hint = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext);
+					merge.Hint = builder.EvaluateExpression<string>(methodCall.Arguments[1]);
 
 				target.SetAlias(merge.Target.Alias!);
 				target.Statement = merge;

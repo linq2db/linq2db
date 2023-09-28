@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 
 				var merge = new SqlMergeStatement(targetTable);
 				if (methodCall.Arguments.Count == 3)
-					merge.Hint = methodCall.Arguments[2].EvaluateExpression<string>(builder.DataContext);
+					merge.Hint = builder.EvaluateExpression<string>(methodCall.Arguments[2]);
 
 				target.SetAlias(merge.Target.Alias!);
 				target.Statement = merge;

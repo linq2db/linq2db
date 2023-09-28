@@ -380,7 +380,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					return true;
 				}
-				if (testExpr.NodeType == ExpressionType.New || testExpr.NodeType == ExpressionType.MemberInit)
+				if (testExpr.NodeType == ExpressionType.New || testExpr.NodeType == ExpressionType.MemberInit || testExpr is SqlGenericConstructorExpression)
 				{
 					return false;
 				}
@@ -641,9 +641,33 @@ namespace LinqToDB.Linq.Builder
 			bool _inProjection;
 			bool _inMethod;
 
+			MappingSchema _mappingSchema = default!;
+
 			Stack<ReadOnlyCollection<ParameterExpression>>? _allowedParameters;
 
 			ExpressionTreeOptimizationContext _optimizationContext = default!;
+
+			bool CanBeCompiledFlag
+			{
+				get => _canBeCompiled;
+				set
+				{
+					_canBeCompiled = value;
+				}
+			}
+
+			public bool CanBeCompiled(Expression expression, MappingSchema mappingSchema, ExpressionTreeOptimizationContext optimizationContext, bool inProjection)
+			{
+				Cleanup();
+
+				_optimizationContext = optimizationContext;
+				_inProjection        = inProjection;
+				_mappingSchema       = mappingSchema;
+
+				_ = Visit(expression);
+
+				return _canBeCompiled;
+			}
 
 			public override void Cleanup()
 			{
@@ -651,6 +675,7 @@ namespace LinqToDB.Linq.Builder
 				_inMethod            = false;
 				_optimizationContext = default!;
 				_inProjection        = false;
+				_mappingSchema       = default!;
 
 				_allowedParameters?.Clear();
 
@@ -669,7 +694,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!_inMethod)
 				{
-					_canBeCompiled = false;
+					CanBeCompiledFlag = false;
 					return node;
 				}
 
@@ -692,11 +717,12 @@ namespace LinqToDB.Linq.Builder
 				if (node == ExpressionConstants.DataContextParam)
 				{
 					if (_inMethod)
-						_canBeCompiled = false;
+						CanBeCompiledFlag = false;
 				}
 				else
 				{
-					_canBeCompiled = _allowedParameters != null && _allowedParameters.Any(ps => ps.Contains(node));
+					if (_allowedParameters == null || !_allowedParameters.Any(ps => ps.Contains(node)))
+						CanBeCompiledFlag = false;
 				}
 
 				return node;
@@ -706,57 +732,62 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (typeof(IDataContext).IsSameOrParentOf(node.Type))
 				{
-					_canBeCompiled = false;
+					CanBeCompiledFlag = false;
 					return node;
 				}
 
 				if (node.Expression != null && typeof(IDataContext).IsSameOrParentOf(node.Expression.Type) && typeof(IQueryable<>).IsSameOrParentOf(node.Type))
 				{
-					_canBeCompiled = false;
+					CanBeCompiledFlag = false;
 					return node;
 				}
 
+				var save = _inMethod;
+				_inMethod = true;
+
 				_ = base.VisitMember(node);
 
-				if (!_canBeCompiled)
+				_inMethod = save;
+
+				if (!CanBeCompiledFlag)
 				{
 					return node;
 				}
 
 				if (_optimizationContext.IsServerSideOnly(node, false))
-					_canBeCompiled = false;
+					CanBeCompiledFlag = false;
 
 				return node;
 			}
 
 			internal override Expression VisitContextRefExpression(ContextRefExpression node)
 			{
-				_canBeCompiled = false;
+				CanBeCompiledFlag = false;
 				return node;
 			}
 
 			internal override Expression VisitSqlErrorExpression(SqlErrorExpression node)
 			{
-				_canBeCompiled = false;
+				CanBeCompiledFlag = false;
 				return node;
 			}
 
 			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
 			{
 				if (!_inProjection)
-					_canBeCompiled = false;
+					CanBeCompiledFlag = false;
 				return node;
 			}
 
 			internal override Expression VisitSqlGenericParamAccessExpression(SqlGenericParamAccessExpression node)
 			{
-				_canBeCompiled = false;
+				CanBeCompiledFlag = false;
 				return node;
 			}
 
 			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
 			{
-				_canBeCompiled = false;
+				CanBeCompiledFlag = false;
 				return node;
 			}
 
@@ -767,18 +798,18 @@ namespace LinqToDB.Linq.Builder
 					if (node.Arguments.Any(a => typeof(IDataContext).IsSameOrParentOf(a.Type)) || 
 					    node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type))
 					{
-						_canBeCompiled = false;
+						CanBeCompiledFlag = false;
 						return node;
 					}
 				}
 
-				if (!_canBeCompiled)
+				if (!CanBeCompiledFlag)
 				{
 					return node;
 				}
 
 				if (_optimizationContext.IsServerSideOnly(node, false))
-					_canBeCompiled = false;
+					CanBeCompiledFlag = false;
 
 				var save = _inMethod;
 				_inMethod = true;
@@ -792,33 +823,35 @@ namespace LinqToDB.Linq.Builder
 
 			internal override SqlGenericConstructorExpression.Assignment VisitSqlGenericAssignment(SqlGenericConstructorExpression.Assignment assignment)
 			{
-				_canBeCompiled = false;
+				CanBeCompiledFlag = false;
 				return assignment;
 			}
 
 			internal override SqlGenericConstructorExpression.Parameter VisitSqlGenericParameter(SqlGenericConstructorExpression.Parameter parameter)
 			{
-				_canBeCompiled = false;
+				CanBeCompiledFlag = false;
 				return parameter;
 			}
 
 			internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 			{
-				_canBeCompiled = false;
+				CanBeCompiledFlag = false;
 				return node;
 			}
 
-			public bool CanBeCompiled(Expression  expression,
-				ExpressionTreeOptimizationContext optimizationContext, bool inProjection)
+			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
 			{
-				Cleanup();
+				if (((IConfigurationID)node.MappingSchema).ConfigurationID ==
+				    ((IConfigurationID)_mappingSchema).ConfigurationID)
+				{
+					if (_inMethod)
+					{
+						return node;
+					}
+				}
 
-				_optimizationContext = optimizationContext;
-				_inProjection        = inProjection;
-
-				_ = Visit(expression);
-
-				return _canBeCompiled;
+				CanBeCompiledFlag = false;
+				return node;
 			}
 		}
 
@@ -826,7 +859,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var visitor = _canBeCompiledCheckVisitorPool.Allocate();
 
-			var result = visitor.Value.CanBeCompiled(expr, this, inProjection);
+			var result = visitor.Value.CanBeCompiled(expr, MappingSchema, this, inProjection);
 			
 			return result;
 		}
@@ -920,7 +953,7 @@ namespace LinqToDB.Linq.Builder
 
 		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _exposeExpressionTransformer;
 
-		private TransformInfo ExposeExpressionTransformer(Expression expr)
+		public TransformInfo ExposeExpressionTransformer(Expression expr)
 		{
 			switch (expr.NodeType)
 			{
@@ -965,14 +998,14 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(AliasCall(ex, alias!), false, true);
 					}
 
-					/*l = Expressions.ConvertMember(MappingSchema, me.Member.ReflectedType!, me.Member);
+					l = Expressions.ConvertMember(MappingSchema, me.Member.ReflectedType!, me.Member);
 
 					if (l != null)
 					{
 						var ex = ConvertMemberExpression(expr, me.Expression!, l);
 
 						return new TransformInfo(ex, false, true);
-					}*/
+					}
 
 					break;
 				}

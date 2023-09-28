@@ -49,13 +49,13 @@ namespace LinqToDB.Linq.Builder
 				default:
 					conditionIndex = 3;
 
-					joinType = (SqlJoinType) methodCall.Arguments[2].EvaluateExpression(builder.DataContext)! switch
+					joinType = (SqlJoinType) builder.EvaluateExpression(methodCall.Arguments[2])! switch
 					{
 						SqlJoinType.Inner => JoinType.Inner,
 						SqlJoinType.Left  => JoinType.Left,
 						SqlJoinType.Right => JoinType.Right,
 						SqlJoinType.Full  => JoinType.Full,
-						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)methodCall.Arguments[2].EvaluateExpression(builder.DataContext)!}")
+						_                 => throw new InvalidOperationException($"Unexpected join type: {(SqlJoinType)builder.EvaluateExpression(methodCall.Arguments[2])!}")
 					};
 					break;
 			}
