@@ -13,52 +13,51 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
-			Expression  bodyExpr;
-			IQueryable? query = null;
-			string?     name  = null;
-			bool        isRecursive = false;
+			string? name     = null;
 
-			switch (methodCall.Arguments.Count)
+			var bodyExpr = methodCall.Arguments[0].Unwrap();
+			if (methodCall.Arguments.Count > 1)
 			{
-				case 1 :
-					bodyExpr = methodCall.Arguments[0].Unwrap();
-					break;
-				case 2 :
-					bodyExpr = methodCall.Arguments[0].Unwrap();
-					name     = methodCall.Arguments[1].EvaluateExpression() as string;
-					break;
-				case 3 :
-					query    = methodCall.Arguments[0].EvaluateExpression() as IQueryable;
-					bodyExpr = methodCall.Arguments[1].Unwrap();
-					name     = methodCall.Arguments[2].EvaluateExpression() as string;
-					isRecursive = true;
-					break;
-				default:
-					throw new InvalidOperationException();
+				name = methodCall.Arguments[1].EvaluateExpression<string>();
 			}
 
-			bodyExpr = builder.ConvertExpression(bodyExpr);
-			var cteContext = builder.RegisterCte(query, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], isRecursive, name));
+			var cteContext = builder.RegisterCte(null, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], false, name));
 
-			var objectType      = methodCall.Method.GetGenericArguments()[0];
-			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, objectType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
-
-			// populate all fields
-			if (isRecursive)
-				_ = builder.MakeExpression(cteContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], cteContext), ProjectFlags.SQL);
+			var elementType = methodCall.Method.GetGenericArguments()[0];
+			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
 
 			return cteTableContext;
 		}
 
-		static CteTableContext BuildCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
+		static CteTableContext BuildRecursiveCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			var queryable = builder.EvaluateExpression<IQueryable>(buildInfo.Expression);
-			if (queryable == null)
-				throw new InvalidOperationException("Could not get CTE query.");
+			var methodCallExpression = ((MethodCallExpression)buildInfo.Expression);
+			var elementType          = methodCallExpression.Method.GetGenericArguments()[0];
 
-			var cteContext = builder.RegisterCte(queryable, null, () => new CteClause(null, queryable.ElementType, false, ""));
+			var parameters      = methodCallExpression.Method.GetParameters();
+			var isSecondVariant = parameters[1].ParameterType == typeof(string);
 
-			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, queryable.ElementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
+			var lambda    = methodCallExpression.Arguments[isSecondVariant ? 2 : 1].UnwrapLambda();
+			var tableName = builder.EvaluateExpression<string>(methodCallExpression.Arguments[isSecondVariant ? 1 : 2]);
+
+			var cteClause = new CteClause(null, elementType, true, tableName);
+			var cteContext = new CteContext(builder, null, cteClause, null!);
+
+			var cteBody = lambda.Body.Transform(e =>
+			{
+				if (e == lambda.Parameters[0]) 
+				{
+					var cteTableContext = new CteTableContext(builder, null, elementType, new SelectQuery(), cteContext, buildInfo.IsTest);
+					var cteTableContextRef = new ContextRefExpression(e.Type, cteTableContext);
+					return cteTableContextRef;
+				}
+
+				return e;
+			});
+
+			cteContext.CteExpression = cteBody;
+
+			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
 
 			return cteTableContext;
 		}

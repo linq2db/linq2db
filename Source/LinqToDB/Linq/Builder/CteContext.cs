@@ -13,25 +13,21 @@ namespace LinqToDB.Linq.Builder
 
 	internal class CteContext : BuildContextBase
 	{
-		public override Expression?   Expression    { get; }
+		public Expression CteExpression { get; set;  }
+
+		public override Expression?   Expression    => CteExpression;
 		public override MappingSchema MappingSchema => CteInnerQueryContext?.MappingSchema ?? Builder.MappingSchema;
 
 		public IBuildContext?   CteInnerQueryContext { get; private set; }
 		public SubQueryContext? SubqueryContext      { get; private set; }
 		public CteClause        CteClause            { get; }
 
-		ContextRefExpression CteContextRef { get; }
-
 		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression) 
 			: base(builder, cteClause.ObjectType, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
 		{
 			CteInnerQueryContext = cteInnerQueryContext; 
 			CteClause            = cteClause;
-			Expression           = cteExpression;
-
-			var elementType = ExpressionBuilder.GetEnumerableElementType(cteExpression.Type);
-
-			CteContextRef = new ContextRefExpression(elementType, this);
+			CteExpression        = cteExpression;
 		}
 
 		Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
@@ -42,10 +38,10 @@ namespace LinqToDB.Linq.Builder
 
 		public void InitQuery()
 		{
-			if (_isRecursiveCall)
+			if (CteInnerQueryContext != null)
 				return;
 
-			if (CteInnerQueryContext != null)
+			if (_isRecursiveCall)
 				return;
 
 			var cteBuildInfo = new BuildInfo((IBuildContext?)null, Expression!, new SelectQuery());

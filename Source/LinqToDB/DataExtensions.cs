@@ -1429,15 +1429,49 @@ namespace LinqToDB
 			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
 
 			var cteTable = new CteTable<T>(dataContext);
-			var param    = MethodHelper.GetMethodInfo(cteBody, cteTable).GetParameters()[0];
 
-			var cteQuery = cteBody(cteTable);
+			if (cteTableName == null)
+			{
+				var param = MethodHelper.GetMethodInfo(cteBody, cteTable).GetParameters()[0];
+				cteTableName = param.Name;
+			}
 
-			return ((IQueryable<T>)cteTable).Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, cteTableName),
-					cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)));
+			var cteQuery  = cteBody(cteTable);
+			var queryExpr = cteQuery.Expression;
+
+			var paramExpr = Expression.Parameter(typeof(IQueryable<T>), "cteParam");
+			queryExpr = queryExpr.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Constant)
+				{
+					var constantExpr = (ConstantExpression)e;
+					if (constantExpr.Value == cteTable)
+						return paramExpr;
+				}
+				else if (e.NodeType == ExpressionType.MemberAccess && e.Type == paramExpr.Type)
+				{
+					var me = (MemberExpression)e;
+					// closure handling
+					//
+					if (me.Expression.NodeType == ExpressionType.Constant)
+					{
+						var value = me.EvaluateExpression();
+						if (value == cteTable)
+							return paramExpr;
+					}
+				}
+				return e;
+			});
+
+			var queryLambda = Expression.Lambda<Func<IQueryable<T>, IQueryable<T>>>(queryExpr, paramExpr);
+
+			var methodInfo = MethodHelper.GetMethodInfo(GetCte, dataContext, cteBody, cteTableName);
+
+			var queryBody = Expression.Call(
+				methodInfo,
+				SqlQueryRootExpression.Create(dataContext), queryLambda, Expression.Constant(cteTableName));
+
+			return new ExpressionQueryImpl<T>(dataContext, queryBody);
 		}
 
 		/// <summary>

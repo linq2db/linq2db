@@ -19,12 +19,11 @@ namespace LinqToDB.Linq.Builder
 		enum BuildContextType
 		{
 			None,
-			TableConstant,
 			GetTableMethod,
 			MemberAccess,
 			TableFunctionAttribute,
 			AsCteMethod,
-			CteConstant,
+			GetCteMethod,
 			FromSqlMethod,
 			FromSqlScalarMethod
 		}
@@ -37,29 +36,6 @@ namespace LinqToDB.Linq.Builder
 
 			switch (expression.NodeType)
 			{
-				case ExpressionType.Constant:
-					{
-						var c = (ConstantExpression)expression;
-
-						if (c.Value is IQueryable queryable)
-						{
-							if (typeof(CteTable<>).IsSameOrParentOf(c.Value.GetType()))
-								return BuildContextType.CteConstant;
-
-							// Avoid collision with ArrayBuilder
-							var elementType = queryable.ElementType;
-							if (builder.MappingSchema.IsScalarType(elementType) && typeof(EnumerableQuery<>).IsSameOrParentOf(c.Value.GetType()))
-								break;
-
-							if (queryable.Expression.NodeType == ExpressionType.NewArrayInit)
-								break;
-
-							return BuildContextType.TableConstant;
-						}
-
-						break;
-					}
-
 				case ExpressionType.Call:
 					{
 						var mc = (MethodCallExpression)expression;
@@ -75,6 +51,9 @@ namespace LinqToDB.Linq.Builder
 
 							case "AsCte":
 								return BuildContextType.AsCteMethod;
+
+							case "GetCte":
+								return BuildContextType.GetCteMethod;
 
 							case "FromSql":
 								return BuildContextType.FromSqlMethod;
@@ -185,12 +164,6 @@ namespace LinqToDB.Linq.Builder
 			switch (type)
 			{
 				case BuildContextType.None                   : return null;
-				case BuildContextType.TableConstant:
-				{
-					throw new NotImplementedException(); // Set correct MappingSchema
-					var tableContext = new TableContext(builder, builder.MappingSchema, buildInfo, builder.EvaluateExpression<IQueryable>(buildInfo.Expression)!.ElementType);
-					return ApplyQueryFilters(builder, null, buildInfo, null, AddTableInScope(tableContext));
-				}
 				case BuildContextType.GetTableMethod         :
 				{
 					var mc = (MethodCallExpression)buildInfo.Expression;
@@ -225,10 +198,10 @@ namespace LinqToDB.Linq.Builder
 
 					return new TableContext(builder, mappingSchema, buildInfo);
 				};
-				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
-				case BuildContextType.CteConstant            : return BuildCteContextTable(builder, buildInfo);
-				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, false);
-				case BuildContextType.FromSqlScalarMethod    : return BuildRawSqlTable(builder, buildInfo, true);
+				case BuildContextType.AsCteMethod            :  return BuildCteContext     (builder, buildInfo);
+				case BuildContextType.GetCteMethod           : return BuildRecursiveCteContextTable (builder, buildInfo);
+				case BuildContextType.FromSqlMethod          :  return BuildRawSqlTable(builder, buildInfo, false);
+				case BuildContextType.FromSqlScalarMethod    :  return BuildRawSqlTable(builder, buildInfo, true);
 			}
 
 			TableContext AddTableInScope(TableContext context)
