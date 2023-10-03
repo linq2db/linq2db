@@ -30,9 +30,8 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			sequence.SqlTable.Set(ifExists, TableOptions.DropIfExists);
-			sequence.Statement = new SqlDropTableStatement(sequence.SqlTable);
 
-			return new DropContext(buildInfo.Parent, sequence);
+			return new DropContext(buildInfo.Parent, sequence, new SqlDropTableStatement(sequence.SqlTable));
 		}
 
 		#endregion
@@ -41,14 +40,18 @@ namespace LinqToDB.Linq.Builder
 
 		sealed class DropContext : SequenceContextBase
 		{
-			public DropContext(IBuildContext? parent, IBuildContext sequence)
+			readonly SqlDropTableStatement _dropTableStatement;
+
+			public DropContext(IBuildContext? parent, IBuildContext sequence,
+				SqlDropTableStatement         dropTableStatement)
 				: base(parent, sequence, null)
 			{
+				_dropTableStatement = dropTableStatement;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new DropContext(null, context.CloneContext(Sequence));
+				return new DropContext(null, context.CloneContext(Sequence), context.CloneElement(_dropTableStatement));
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -63,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlStatement GetResultStatement()
 			{
-				return Sequence.GetResultStatement();
+				return _dropTableStatement;
 			}
 		}
 

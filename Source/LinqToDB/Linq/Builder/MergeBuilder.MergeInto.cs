@@ -35,7 +35,6 @@ namespace LinqToDB.Linq.Builder
 					merge.Hint = builder.EvaluateExpression<string>(methodCall.Arguments[2]);
 
 				target.SetAlias(merge.Target.Alias!);
-				target.Statement = merge;
 
 				var genericArguments = methodCall.Method.GetGenericArguments();
 

@@ -25,9 +25,7 @@ namespace LinqToDB.Linq.Builder
 			if (arg.Type == typeof(bool))
 				reset = (bool)builder.EvaluateExpression(arg)!;
 
-			sequence.Statement = new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset };
-
-			return new TruncateContext(sequence);
+			return new TruncateContext(sequence, new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset });
 		}
 
 		#endregion
@@ -36,9 +34,12 @@ namespace LinqToDB.Linq.Builder
 
 		sealed class TruncateContext : PassThroughContext
 		{
-			public TruncateContext(IBuildContext sequence)
+			readonly SqlTruncateTableStatement _truncateTableStatement;
+
+			public TruncateContext(IBuildContext sequence, SqlTruncateTableStatement truncateTableStatement)
 				: base(sequence, sequence.SelectQuery)
 			{
+				_truncateTableStatement = truncateTableStatement;
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -48,7 +49,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new TruncateContext(context.CloneContext(Context));
+				return new TruncateContext(context.CloneContext(Context), context.CloneElement(_truncateTableStatement));
+			}
+
+			public override SqlStatement GetResultStatement()
+			{
+				return _truncateTableStatement;
 			}
 		}
 

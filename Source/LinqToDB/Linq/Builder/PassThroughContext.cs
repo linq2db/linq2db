@@ -22,7 +22,6 @@ namespace LinqToDB.Linq.Builder
 		public          IBuildContext Context       { get; protected set; }
 
 		public override Expression?   Expression => Context.Expression;
-		public override SqlStatement? Statement  { get => Context.Statement; set => Context.Statement = value; }
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{

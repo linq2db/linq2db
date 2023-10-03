@@ -15,17 +15,17 @@ namespace LinqToDB.Linq.Builder
 			public MergeContext(SqlMergeStatement merge, IBuildContext target)
 				: base(null, target, null)
 			{
-				Statement = merge;
+				Merge = merge;
 			}
 
 			public MergeContext(SqlMergeStatement merge, IBuildContext target, TableLikeQueryContext source)
 				: base(null, new[] { target, source }, null)
 			{
-				Statement    = merge;
-				merge.Source = source.Source;
+				Merge        = merge;
+				Merge.Source = source.Source;
 			}
 
-			public SqlMergeStatement Merge => (SqlMergeStatement)Statement!;
+			public SqlMergeStatement Merge { get; }
 
 			public ITableContext         TargetContext => (ITableContext)Sequence;
 			public TableLikeQueryContext SourceContext => (TableLikeQueryContext)Sequences[1];

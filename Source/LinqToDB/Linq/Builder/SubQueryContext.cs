@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlStatement GetResultStatement()
 		{
-			return Statement ??= new SqlSelectStatement(SelectQuery);
+			return new SqlSelectStatement(SelectQuery);
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

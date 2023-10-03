@@ -18,7 +18,6 @@ namespace LinqToDB.Linq.Builder
 		MappingSchema     MappingSchema { get; }
 		Expression?       Expression    { get; }
 		SelectQuery       SelectQuery   { get; }
-		SqlStatement?     Statement     { get; set; } // TODO: remove
 		IBuildContext?    Parent        { get; set; } // TODO: probably not needed
 
 		Type ElementType { get; }

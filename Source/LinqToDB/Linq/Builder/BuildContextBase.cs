@@ -32,7 +32,6 @@ namespace LinqToDB.Linq.Builder
 		public abstract MappingSchema     MappingSchema { get; }
 		public virtual  Expression?       Expression    => null;
 		public          SelectQuery       SelectQuery   { get; protected set; }
-		public virtual  SqlStatement?     Statement     { get; set; }
 		public          IBuildContext?    Parent        { get; set; }
 
 		public virtual  Type       ElementType { get; }

@@ -44,7 +44,6 @@ namespace LinqToDB.Linq.Builder
 					merge.Hint = builder.EvaluateExpression<string>(methodCall.Arguments[1]);
 
 				target.SetAlias(merge.Target.Alias!);
-				target.Statement = merge;
 
 				return new MergeContext(merge, target);
 			}
