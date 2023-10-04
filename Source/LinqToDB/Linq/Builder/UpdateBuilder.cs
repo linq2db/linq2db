@@ -664,7 +664,7 @@ namespace LinqToDB.Linq.Builder
 				static Expression BuildDefaultOutputExpression(ExpressionBuilder builder, Type outputType, IBuildContext querySequence, IBuildContext insertedContext, IBuildContext deletedContext)
 				{
 					// populate all accessible fields, especially for CTE
-					var queryRef  = new ContextRefExpression(outputType, querySequence);
+					var queryRef  = new ContextRefExpression(querySequence.ElementType, querySequence);
 					var allFields = builder.ConvertToSqlExpr(querySequence, queryRef);
 
 					if (allFields is not SqlGenericConstructorExpression constructorExpression)
