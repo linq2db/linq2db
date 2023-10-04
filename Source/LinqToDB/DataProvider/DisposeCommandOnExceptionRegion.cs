@@ -31,6 +31,9 @@ namespace LinqToDB
 
 #if NATIVE_ASYNC
 		ValueTask IAsyncDisposable.DisposeAsync()
+#else
+		Task Async.IAsyncDisposable.DisposeAsync()
+#endif
 		{
 			// https://stackoverflow.com/questions/2830073/
 			if (
@@ -48,8 +51,11 @@ namespace LinqToDB
 				_dataConnection.DisposeCommand();
 #endif
 
+#if NATIVE_ASYNC
 			return default;
-		}
+#else
+			return LinqToDB.Common.Internal.TaskCache.CompletedTask;
 #endif
 		}
+	}
 }

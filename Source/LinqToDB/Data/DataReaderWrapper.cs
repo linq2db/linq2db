@@ -10,8 +10,10 @@ namespace LinqToDB.Data
 	/// Disposable wrapper over <see cref="DbDataReader"/> instance, which properly disposes associated objects.
 	/// </summary>
 	public class DataReaderWrapper : IDisposable
-#if !NETFRAMEWORK
+#if NATIVE_ASYNC
 		, IAsyncDisposable
+#else
+		, Async.IAsyncDisposable
 #endif
 	{
 		private          bool            _disposed;
@@ -66,8 +68,11 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		public async ValueTask DisposeAsync()
+#else
+		public async Task DisposeAsync()
+#endif
 		{
 			if (_disposed)
 				return;
@@ -79,7 +84,11 @@ namespace LinqToDB.Data
 				if (_dataConnection is IInterceptable<ICommandInterceptor> interceptable && interceptable.Interceptor != null)
 					await interceptable.Interceptor.BeforeReaderDisposeAsync(new(_dataConnection), Command, DataReader).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
+#if NETSTANDARD2_1PLUS
 				await DataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+#else
+				DataReader.Dispose();
+#endif
 				DataReader = null;
 			}
 
@@ -88,17 +97,22 @@ namespace LinqToDB.Data
 				OnBeforeCommandDispose?.Invoke(Command);
 
 				if (_dataConnection != null)
+				{
+#if NETSTANDARD2_1PLUS
 					await _dataConnection.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+#else
+					_dataConnection.DataProvider.DisposeCommand(Command);
+#endif
+				}
 				else
+				{
+#if NETSTANDARD2_1PLUS
 					await Command.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+#else
+					Command.Dispose();
+#endif
+				}
 			}
 		}
-#elif !NETFRAMEWORK
-		public ValueTask DisposeAsync()
-		{
-			Dispose();
-			return new ValueTask(Task.CompletedTask);
-		}
-#endif
 	}
 }

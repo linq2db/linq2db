@@ -31,12 +31,18 @@ namespace LinqToDB
 
 #if NATIVE_ASYNC
 		ValueTask IAsyncDisposable.DisposeAsync()
+#else
+		Task Async.IAsyncDisposable.DisposeAsync()
+#endif
 		{
 			if (_original != null)
 				Thread.CurrentThread.CurrentCulture = _original;
 
+#if NATIVE_ASYNC
 			return _parentRegion?.DisposeAsync() ?? default;
-		}
+#else
+			return _parentRegion?.DisposeAsync() ?? LinqToDB.Common.Internal.TaskCache.CompletedTask;
 #endif
+		}
 	}
 }

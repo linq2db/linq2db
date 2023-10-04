@@ -414,7 +414,10 @@ namespace LinqToDB.Data
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
-					ret = await ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				{
+					ret = await ExecuteNonQueryAsync(cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				}
 
 				if (TraceSwitchConnection.TraceInfo)
 				{
@@ -566,8 +569,10 @@ namespace LinqToDB.Data
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
+				{
 					return await ExecuteReaderAsync(commandBehavior, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				}
 
 			var now = DateTime.UtcNow;
 			var sw  = Stopwatch.StartNew();
@@ -591,8 +596,10 @@ namespace LinqToDB.Data
 #else
 				using (DataProvider.ExecuteScope(this))
 #endif
+				{
 					ret = await ExecuteReaderAsync(commandBehavior, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				}
 
 				if (TraceSwitchConnection.TraceInfo)
 				{

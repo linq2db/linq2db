@@ -467,8 +467,8 @@ namespace LinqToDB.Linq
 #else
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
-				using var dr     = runner.ExecuteReader();
+				await using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
+				await using var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				var dataReader = dr.DataReader!;
 

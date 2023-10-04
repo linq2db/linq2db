@@ -111,13 +111,13 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+				await using var db = CreateDataContext(configuration);
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+				await using var _  = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -177,13 +177,13 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+				await using var db = CreateDataContext(configuration);
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+				await using var _ = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -280,17 +280,17 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-				using var db = CreateDataContext(configuration);
+				await using var db = CreateDataContext(configuration);
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				using var _  = db.DataProvider.ExecuteScope(db);
+				await using var _ = db.DataProvider.ExecuteScope(db);
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
-				using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
+				await using var rd = await DataConnection.QueryRunner.ExecuteReaderAsync(
 					db,
 					new QueryContext
 					{
@@ -489,7 +489,11 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
+#if NATIVE_ASYNC
+				await using var db = CreateDataContext(configuration);
+#else
 				using var db = CreateDataContext(configuration);
+#endif
 
 				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
@@ -497,7 +501,11 @@ namespace LinqToDB.Remote
 				foreach (var query in queries)
 					ValidateQuery(query);
 
+#if NATIVE_ASYNC
+				await using var _ = db.DataProvider.ExecuteScope(db);
+#else
 				using var _  = db.DataProvider.ExecuteScope(db);
+#endif
 
 				await db.BeginTransactionAsync(cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);

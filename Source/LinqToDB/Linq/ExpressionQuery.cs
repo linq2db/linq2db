@@ -204,7 +204,8 @@ namespace LinqToDB.Linq
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expression, Parameters, Preambles);
-			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+
+			await using var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
 
 			while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{
