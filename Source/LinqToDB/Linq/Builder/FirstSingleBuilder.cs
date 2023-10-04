@@ -288,20 +288,15 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
+				if (!flags.IsTest() && IsSubQuery)
+				{
+					CreateJoin();
+				}
+
 				var projected = base.MakeExpression(path, flags);
 
 				if (flags.IsTable())
 					return projected;
-
-				if (!flags.HasFlag(ProjectFlags.Test))
-				{
-					if (IsSubQuery)
-					{
-						CreateJoin();
-
-						return projected;
-					}
-				}
 
 				return projected;
 			}
