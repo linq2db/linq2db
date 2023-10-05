@@ -45,11 +45,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					newExpr = SequenceHelper.MoveAllToScopedContext(newExpr, UpTo);
 				}
-				newExpr = Builder.UpdateNesting(UpTo, newExpr);
 
 				if (flags.IsSql())
 				{
-					newExpr = Builder.BuildSqlExpression(Context, newExpr, flags,
+					newExpr = Builder.BuildSqlExpression(UpTo, newExpr, flags,
 						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
 
 					newExpr = Builder.UpdateNesting(UpTo, newExpr);

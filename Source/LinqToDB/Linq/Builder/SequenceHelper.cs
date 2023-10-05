@@ -801,9 +801,12 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						// already correctly scoped
-						if (contextRef.BuildContext is ScopeContext scopeContext && scopeContext.UpTo == ctx.upTo)
+						if (contextRef.BuildContext is ScopeContext scopeContext)
 						{
-							return e;
+							if (scopeContext.UpTo == ctx.upTo)
+								return e;
+
+							return contextRef.WithContext(new ScopeContext(scopeContext.Context, ctx.upTo));
 						}
 
 						return contextRef.WithContext(new ScopeContext(contextRef.BuildContext, ctx.upTo));
