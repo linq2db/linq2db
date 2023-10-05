@@ -251,8 +251,7 @@ namespace LinqToDB.Linq.Builder
 
 					var cm = ConvertMethod(expr);
 					if (cm != null)
-						//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
-						return new TransformInfo(OptimizeExpression(ConvertExpression(cm)));
+						return new TransformInfo(ConvertExpression(cm));
 					break;
 				}
 
@@ -273,7 +272,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						//TODO: looks like a mess: ConvertExpression can not work without OptimizeExpression
-						return new TransformInfo(OptimizeExpression(ConvertExpression(expr)));
+						return new TransformInfo(ConvertExpression(expr));
 					}
 
 					if (ma.Member.IsNullableValueMember())
