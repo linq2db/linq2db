@@ -886,7 +886,7 @@ namespace LinqToDB.Linq.Builder
 		private FindVisitor<ExpressionTreeOptimizationContext>? _canBeConstantFindVisitor;
 		private bool CanBeConstantFind(Expression ex)
 		{
-			if (ex is BinaryExpression || ex is UnaryExpression /*|| ex.NodeType == ExpressionType.Convert*/)
+			if (ex is BinaryExpression)
 				return false;
 
 			if (MappingSchema.GetConvertExpression(ex.Type, typeof(DataParameter), false, false) != null)
@@ -905,7 +905,17 @@ namespace LinqToDB.Linq.Builder
 					if (c.Value == null || ex.Type.IsConstantable(false))
 						return false;
 
-					break;
+					return true;
+				}
+
+				case ExpressionType.ConvertChecked:
+				case ExpressionType.Convert:
+				{
+					var unary = (UnaryExpression)ex;
+					if (unary.Operand.Type.IsNullableType() && !unary.Type.IsNullableType())
+						return true;
+
+					return false;
 				}
 
 				case ExpressionType.MemberAccess:
