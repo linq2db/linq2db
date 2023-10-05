@@ -19,7 +19,12 @@ namespace LinqToDB.Linq.Builder
 				methodCall.Arguments[1].UnwrapLambda().Body,
 				buildInfo.SelectQuery, buildInfo.IsSubQuery);
 
-			return sequence;
+			var subquery = new SubQueryContext(sequence);
+
+			var translated = builder.BuildSqlExpression(subquery, new ContextRefExpression(subquery.ElementType, subquery),
+				ProjectFlags.SQL, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+
+			return subquery;
 		}
 
 		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
