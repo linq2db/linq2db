@@ -42,6 +42,7 @@ namespace LinqToDB.Linq.Builder
 			new AllJoinsBuilder            (),
 			new AllJoinsLinqBuilder        (),
 			new TakeSkipBuilder            (),
+			new ElementAtBuilder           (),
 			new DefaultIfEmptyBuilder      (),
 			new DistinctBuilder            (),
 			new FirstSingleBuilder         (),
@@ -515,8 +516,6 @@ namespace LinqToDB.Linq.Builder
 								case "SingleOrDefaultAsync" :
 								case "FirstAsync"           :
 								case "FirstOrDefaultAsync"  : return new TransformInfo(ConvertPredicateAsync(call));
-								case "ElementAt"            :
-								case "ElementAtOrDefault"   : return new TransformInfo(ConvertElementAt     (call));
 								case "LoadWithAsTable"      : return new TransformInfo(expr, true);
 								case "With"                 : return new TransformInfo(expr);
 								case "LoadWith":
@@ -834,38 +833,6 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		#region ConvertElementAt
-
-		Expression ConvertElementAt(MethodCallExpression method)
-		{
-			var sequence   = OptimizeExpression(method.Arguments[0]);
-			var index      = OptimizeExpression(method.Arguments[1]).Unwrap();
-			var sourceType = method.Method.GetGenericArguments()[0];
-
-			MethodInfo skipMethod;
-
-			if (index.NodeType == ExpressionType.Lambda)
-			{
-				skipMethod = MemberHelper.MethodOf(() => LinqExtensions.Skip<object>(null!, null!));
-				skipMethod = skipMethod.GetGenericMethodDefinition();
-			}
-			else
-			{
-				skipMethod = GetQueryableMethodInfo((object?)null, method, static (_,mi,_) => mi.Name == "Skip");
-			}
-
-			skipMethod = skipMethod.MakeGenericMethod(sourceType);
-
-			var methodName  = method.Method.Name == "ElementAt" ? "First" : "FirstOrDefault";
-			var firstMethod = GetQueryableMethodInfo(methodName, method, static (methodName, mi,_) => mi.Name == methodName && mi.GetParameters().Length == 1);
-
-			firstMethod = firstMethod.MakeGenericMethod(sourceType);
-
-			var skipCall = Expression.Call(skipMethod, sequence, method.Arguments[1]);
-
-			var converted = Expression.Call(null, firstMethod, skipCall);
-
-			return converted;
-		}
 
 		#endregion
 

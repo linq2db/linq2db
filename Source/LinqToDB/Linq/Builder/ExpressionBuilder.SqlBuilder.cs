@@ -69,19 +69,62 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region BuildTake
+		#region Build Skip/Take
 
-		public void BuildTake(IBuildContext context, ISqlExpression expr, TakeHints? hints)
+		public void BuildTake(IBuildContext sequence, ISqlExpression expr, TakeHints? hints)
 		{
-			var sql = context.SelectQuery;
+			var sql = sequence.SelectQuery;
+
+			if (hints != null && !DataContext.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
+				throw new LinqException($"TakeHints are {hints} not supported by current database");
+
+			if (hints != null && sql.Select.SkipValue != null)
+				throw new LinqException("Take with hints could not be applied with Skip");
+
+			if (sql.Select.TakeValue != null)
+			{
+				expr = new SqlFunction(
+					typeof(int),
+					"CASE",
+					new SqlBinaryExpression(typeof(bool), sql.Select.TakeValue, "<", expr, Precedence.Comparison),
+					sql.Select.TakeValue,
+					expr);
+			}
 
 			sql.Select.Take(expr, hints);
 
-			if (sql.Select.SkipValue != null &&
+			if ( sql.Select.SkipValue != null &&
 				 DataContext.SqlProviderFlags.IsTakeSupported &&
 				!DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue))
+			{
 				sql.Select.Take(
-					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive), hints);
+					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!,
+						Precedence.Additive), hints);
+			}
+		}
+
+		public void BuildSkip(IBuildContext sequence, ISqlExpression expr)
+		{
+			var sql = sequence.SelectQuery;
+
+			if (sql.Select.TakeHints != null)
+				throw new LinqException("Skip could not be applied with Take with hints");
+
+			if (sql.Select.SkipValue != null)
+				sql.Select.Skip(new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive));
+			else
+				sql.Select.Skip(expr);
+
+			if (sql.Select.TakeValue != null)
+			{
+				if (DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue) ||
+					!DataContext.SqlProviderFlags.IsTakeSupported)
+				{
+					sql.Select.Take(
+						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", expr, Precedence.Additive),
+						sql.Select.TakeHints);
+				}
+			}
 		}
 
 		#endregion

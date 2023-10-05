@@ -64,11 +64,11 @@ namespace LinqToDB.Linq.Builder
 				if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))
 					hints = (TakeHints)builder.EvaluateExpression(methodCall.Arguments[2])!;
 
-				BuildTake(builder, sequence, expr, hints);
+				builder.BuildTake(sequence, expr, hints);
 			}
 			else
 			{
-				BuildSkip(builder, sequence, expr);
+				builder.BuildSkip(sequence, expr);
 			}
 
 			return new TakeSkipContext(sequence);
@@ -83,62 +83,6 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new TakeSkipContext(context.CloneContext(Context));
-			}
-		}
-
-		static void BuildTake(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr, TakeHints? hints)
-		{
-			var sql = sequence.SelectQuery;
-
-			if (hints != null && !builder.DataContext.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
-				throw new LinqException($"TakeHints are {hints} not supported by current database");
-
-			if (hints != null && sql.Select.SkipValue != null)
-				throw new LinqException("Take with hints could not be applied with Skip");
-
-			if (sql.Select.TakeValue != null)
-			{
-				expr = new SqlFunction(
-					typeof(int),
-					"CASE",
-					new SqlBinaryExpression(typeof(bool), sql.Select.TakeValue, "<", expr, Precedence.Comparison),
-					sql.Select.TakeValue,
-					expr);
-			}
-
-			sql.Select.Take(expr, hints);
-
-			if ( sql.Select.SkipValue != null &&
-				 builder.DataContext.SqlProviderFlags.IsTakeSupported &&
-				!builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue))
-			{
-				sql.Select.Take(
-					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!,
-						Precedence.Additive), hints);
-			}
-		}
-
-		static void BuildSkip(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr)
-		{
-			var sql = sequence.SelectQuery;
-
-			if (sql.Select.TakeHints != null)
-				throw new LinqException("Skip could not be applied with Take with hints");
-
-			if (sql.Select.SkipValue != null)
-				sql.Select.Skip(new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive));
-			else
-				sql.Select.Skip(expr);
-
-			if (sql.Select.TakeValue != null)
-			{
-				if (builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue) ||
-					!builder.DataContext.SqlProviderFlags.IsTakeSupported)
-				{
-					sql.Select.Take(
-						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", expr, Precedence.Additive),
-						sql.Select.TakeHints);
-				}
 			}
 		}
 	}

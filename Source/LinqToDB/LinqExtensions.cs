@@ -1613,7 +1613,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Into, dataContext, target),
-					Expression.Constant(null, typeof(IDataContext)), query.Expression));
+					SqlQueryRootExpression.Create(dataContext), query.Expression));
 
 			return new ValueInsertable<T>(q);
 		}
@@ -3023,8 +3023,6 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Quote(count)));
 		}
 
-		static readonly MethodInfo _elementAtMethodInfo = MemberHelper.MethodOf(() => ElementAt<int>(null!,null!)).GetGenericMethodDefinition();
-
 		/// <summary>
 		/// Selects record at specified position from source query.
 		/// If query doesn't return enough records, <see cref="InvalidOperationException"/> will be thrown.
@@ -3047,7 +3045,7 @@ namespace LinqToDB
 			return currentSource.Provider.Execute<TSource>(
 				Expression.Call(
 					null,
-					_elementAtMethodInfo.MakeGenericMethod(typeof(TSource)),
+					Methods.LinqToDB.ElementAtLambda.MakeGenericMethod(typeof(TSource)),
 					currentSource.Expression, Expression.Quote(index)));
 		}
 
@@ -3075,7 +3073,7 @@ namespace LinqToDB
 			var expr =
 				Expression.Call(
 					null,
-					_elementAtMethodInfo.MakeGenericMethod(typeof(TSource)),
+					Methods.LinqToDB.ElementAtLambda.MakeGenericMethod(typeof(TSource)),
 					currentSource.Expression, Expression.Quote(index));
 
 			if (currentSource is IQueryProviderAsync query)
@@ -3628,7 +3626,7 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(AsQueryable, source, dataContext),
 					Expression.Constant(source),
-					ExpressionConstants.DataContextParam
+					SqlQueryRootExpression.Create(dataContext)
 				));
 
 			return query;

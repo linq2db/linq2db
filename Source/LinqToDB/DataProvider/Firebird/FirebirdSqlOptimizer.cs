@@ -77,7 +77,8 @@ namespace LinqToDB.DataProvider.Firebird
 
 		class WrapParametersVisitor : SqlQueryVisitor
 		{
-			bool                       _needCast;
+			bool _needCast;
+			bool _inModifier;
 
 			public WrapParametersVisitor(VisitMode visitMode) : base(visitMode)
 			{
@@ -104,6 +105,20 @@ namespace LinqToDB.DataProvider.Firebird
 			NeedCastScope Needcast(bool needCast)
 			{
 				return new NeedCastScope(this, needCast);
+			}
+
+			public override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+			{
+				var save  = _inModifier;
+
+				_inModifier = true;
+
+				using var scope = Needcast(false);
+				var newNode = base.VisitSqlSelectClause(element);
+
+				_inModifier = save;
+
+				return newNode;
 			}
 
 			public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
@@ -154,7 +169,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 			public override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 			{
-				using var scope = Needcast(true);
+				using var scope = Needcast(!_inModifier);
 				return base.VisitSqlBinaryExpression(element);
 			}
 
