@@ -162,7 +162,7 @@ namespace LinqToDB.Data
 				{
 					if (m.column.MemberAccessor.IsComplex)
 					{
-						exprs.Add(m.column.MemberAccessor.SetterExpression.GetBody(obj, m.expr));
+						exprs.Add(m.column.MemberAccessor.GetSetterExpression(obj, m.expr));
 					}
 				}
 
