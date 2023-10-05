@@ -111,14 +111,22 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				var save  = _inModifier;
 
-				_inModifier = true;
-
 				using var scope = Needcast(false);
-				var newNode = base.VisitSqlSelectClause(element);
+				{
+					_inModifier = true;
 
-				_inModifier = save;
+					element.TakeValue = (ISqlExpression?)Visit(element.TakeValue);
+					element.SkipValue = (ISqlExpression?)Visit(element.SkipValue);
 
-				return newNode;
+					_inModifier = save;
+				}
+
+				foreach (var column in element.Columns)
+				{
+					column.Expression = VisitSqlColumnExpression(column, column.Expression);
+				}
+
+				return element;
 			}
 
 			public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
