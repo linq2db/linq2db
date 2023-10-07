@@ -79,7 +79,6 @@ namespace LinqToDB.SqlProvider
 				);
 			}
 
-
 //statement.EnsureFindTables();
 			if (dataOptions.LinqOptions.OptimizeJoins)
 			{
@@ -2142,11 +2141,78 @@ namespace LinqToDB.SqlProvider
 				static (visitor, e) =>
 				{
 					var ne = e;
+
 					if (ne is ISqlExpression expr1)
 						ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
 
-					if (ne is ISqlPredicate pred1)
-						ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
+					switch (ne)
+					{
+						case ISqlPredicate pred1:
+							ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
+							break;
+
+						case SqlCondition(true, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: false}]}) insq, var isOr1) cond]), var isOr)
+							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery:
+							return new SqlCondition(false, new SqlSearchCondition().Expr(insq.Expr1).IsNull.Or.Add(new (true, insq, isOr1)), isOr);
+
+						case SqlCondition(false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: true} col]} subQuery) insq, _) cond]), var isOr)
+							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+						{
+							var newQuery = subQuery.Convert((subQuery,col.Expression), static (v, e) =>
+							{
+								if (ReferenceEquals(e, v.Context.Expression))
+									return new SqlValue(1);
+
+								if (e is SqlWhereClause w && w == v.Context.subQuery.Where)
+								{
+									var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
+									wc.SearchCondition.Conditions.Add(new(
+										false,
+										new SqlPredicate.IsNull(v.Context.subQuery.Select.Columns[0].Expression, false)));
+									return wc;
+								}
+
+								return e;
+							});
+
+							return new SqlCondition(
+								false,
+								new SqlSearchCondition()
+									.Expr(insq.Expr1).IsNull.   And.Expr(new SqlValue(1)).InSubQuery(newQuery).Or
+									.Expr(insq.Expr1).IsNotNull.And.Add(cond), isOr);
+						}
+
+						case SqlCondition(false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, true, {Select.Columns : [{CanBeNull: false}]}) insq, _) cond]), var isOr)
+							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							return new SqlCondition(false, new SqlSearchCondition().Expr(insq.Expr1).IsNull.Or.Add(cond), isOr);
+
+						case SqlCondition(false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, false, {Select.Columns : [{CanBeNull: true} col]} subQuery), var isOr)
+							when !visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							return ConvertInSubquery(ex1, false, col, subQuery, isOr);
+
+						case SqlCondition(false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, true, {Select.Columns : [{CanBeNull: false} col]} subQuery), var isOr)
+							when !visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+							return ConvertInSubquery(ex1, true, col, subQuery, isOr);
+					}
+
+					static IQueryElement ConvertInSubquery(ISqlExpression ex1, bool isNot, SqlColumn col, SelectQuery subQuery, bool isOr)
+					{
+						var newQuery = subQuery.Convert((subQuery,col,ex1), static (v, e) =>
+						{
+							if (e is SqlWhereClause w && w == v.Context.subQuery.Where)
+							{
+								var wc = new SqlWhereClause(new SqlSearchCondition(w.SearchCondition.Conditions));
+								wc.SearchCondition.Conditions.Add(new(
+									false,
+									new SqlPredicate.ExprExpr(v.Context.col.Expression, SqlPredicate.Operator.Equal, v.Context.ex1, true)));
+								return wc;
+							}
+
+							return e;
+						});
+
+						return new SqlCondition(isNot, new SqlPredicate.FuncLike(SqlFunction.CreateExists(newQuery)), isOr);
+					}
 
 					if (!ReferenceEquals(ne, e))
 						return ne;

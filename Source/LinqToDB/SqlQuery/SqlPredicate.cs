@@ -345,7 +345,7 @@ namespace LinqToDB.SqlQuery
 
 				if (search == null)
 					return predicate;
-				
+
 				return search;
 			}
 
@@ -522,7 +522,7 @@ namespace LinqToDB.SqlQuery
 				sb.Append(IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
 				Expr2.ToString(sb, dic);
 			}
-		
+
 		}
 
 		// expression [ NOT ] BETWEEN expression AND expression
@@ -614,7 +614,7 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
-				if (WithNull == null || !Expr1.ShouldCheckForNull()) 
+				if (WithNull == null || !Expr1.ShouldCheckForNull())
 					return predicate;
 
 				var search = new SqlSearchCondition();
@@ -699,6 +699,13 @@ namespace LinqToDB.SqlQuery
 
 				((IQueryElement)SubQuery).ToString(sb, dic);
 				sb.Append(')');
+			}
+
+			public void Deconstruct(out ISqlExpression exp1, out bool isNot, out SelectQuery subQuery)
+			{
+				exp1     = Expr1;
+				isNot    = IsNot;
+				subQuery = SubQuery;
 			}
 		}
 

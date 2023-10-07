@@ -1103,7 +1103,7 @@ namespace LinqToDB.Linq.Builder
 								return IsExpressionResult.False;
 
 							if (contextInfo.Field != null)
-								return IsExpressionResult.True;
+								return new (contextInfo.Field);
 
 							if (contextInfo.CurrentExpression == null
 								|| contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
@@ -1759,7 +1759,7 @@ namespace LinqToDB.Linq.Builder
 					var ed = Builder.MappingSchema.GetEntityDescriptor(m.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 					if (ed.FindAssociationDescriptor(memberInfo) is AssociationDescriptor inheritedAssociationDescriptor)
 						return inheritedAssociationDescriptor;
-				}	
+				}
 
 				return null;
 			}

@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Access
 						{
 							switch (sc.Conditions[0].Predicate)
 							{
-								case SqlPredicate.FuncLike p when p.Function.Name == "EXISTS":
+								case SqlPredicate.FuncLike { Function.Name: "EXISTS" } :
 									BuildAnyAsCount(selectQuery);
 									return;
 								case SqlPredicate.InSubQuery:

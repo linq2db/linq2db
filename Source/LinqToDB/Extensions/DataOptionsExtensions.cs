@@ -217,6 +217,17 @@ namespace LinqToDB
 			return options with { EnableContextSchemaEdit = enableContextSchemaEdit };
 		}
 
+		/// <summary>
+		/// Depending on this option linq2db generates different SQL for <c>sequence.Contains(value)</c>.<br/>
+		/// <c>true</c> - <c>EXISTS (SELECT * FROM sequence WHERE sequence.key = value)</c>.<br/>
+		/// <c>false</c> - <c>value IN (SELECT sequence.key FROM sequence)</c>.<br/>
+		/// Default value: <c>false</c>.
+		/// </summary>
+		public static LinqOptions WithPreferExistsForScalar(this LinqOptions options, bool preferExistsForScalar)
+		{
+			return options with { PreferExistsForScalar = preferExistsForScalar };
+		}
+
 		#endregion
 
 		#region DataOptions.LinqOptions
@@ -411,6 +422,17 @@ namespace LinqToDB
 		public static DataOptions UseEnableContextSchemaEdit(this DataOptions options, bool enableContextSchemaEdit)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { EnableContextSchemaEdit = enableContextSchemaEdit });
+		}
+
+		/// <summary>
+		/// Depending on this option linq2db generates different SQL for <c>sequence.Contains(value)</c>.<br/>
+		/// <c>true</c> - <c>EXISTS (SELECT * FROM sequence WHERE sequence.key = value)</c>.<br/>
+		/// <c>false</c> - <c>value IN (SELECT sequence.key FROM sequence)</c>.<br/>
+		/// Default value: <c>false</c>.
+		/// </summary>
+		public static DataOptions UsePreferExistsForScalar(this DataOptions options, bool preferExistsForScalar)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { PreferExistsForScalar = preferExistsForScalar });
 		}
 
 		#endregion
