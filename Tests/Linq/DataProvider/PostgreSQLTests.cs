@@ -2417,6 +2417,41 @@ namespace Tests.DataProvider
 
 			db.BulkCopy(options, new[] { new Issue3895Table() { timestampDataType = dt, timestampTZDataType = dt } });
 		}
+
+		// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+		// SQL identifiers and key words must begin with
+		// - a letter
+		// - an underscore (_).
+		// Subsequent characters in an identifier or key word can be
+		// - letters
+		// - underscores
+		// - digits (0-9)
+		// - dollar signs ($). 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4285")]
+		public void TestIdentifierHasNoEscaping(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values("test", "тест", "_test", "x_", "x1", "x$")] string tableName)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<Person>(tableName: tableName);
+
+			t.ToList();
+
+			Assert.That(db.LastQuery, Does.Not.Contain($"\"{tableName}\""));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4285")]
+		public void TestIdentifierHasEscaping(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values("Test", "Тест", "1test", "$test", "te-st", "te\"st")] string tableName)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<Person>(tableName: tableName);
+
+			t.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain($"\"{tableName.Replace("\"", "\"\"")}\""));
+		}
 	}
 
 	public static class TestPgAggregates
