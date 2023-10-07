@@ -2485,8 +2485,7 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		// TODO: function names should be escaped by linq2db, but it is not implemented yet
-		[Sql.TableFunction("\"TestTableFunctionSchema\"")]
+		[Sql.TableFunction("TestTableFunctionSchema")]
 		public LinqToDB.ITable<PostgreSQLTests.AllTypes> GetAllTypes()
 		{
 			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", Array<Type>.Empty)!;
@@ -2494,13 +2493,14 @@ namespace Tests.DataProvider
 			return _ctx.GetTable<PostgreSQLTests.AllTypes>(this, methodInfo);
 		}
 
+		// TODO: function names should be escaped by linq2db, but it is not implemented yet
 		[Sql.Function("\"TestFunctionParameters\"", ServerSideOnly = true)]
 		public static TestParametersResult TestParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[Sql.TableFunction("\"TestTableFunction\"")]
+		[Sql.TableFunction("TestTableFunction")]
 		public LinqToDB.ITable<TestScalarTableFunctionResult> TestScalarTableFunction(int? param1)
 		{
 			var methodInfo = typeof(TestPgFunctions).GetMethod("TestScalarTableFunction", new[] { typeof(int?) })!;
@@ -2508,7 +2508,7 @@ namespace Tests.DataProvider
 			return _ctx.GetTable<TestScalarTableFunctionResult>(this, methodInfo, param1);
 		}
 
-		[Sql.TableFunction("\"TestTableFunction1\"")]
+		[Sql.TableFunction("TestTableFunction1")]
 		public LinqToDB.ITable<TestRecordTableFunctionResult> TestRecordTableFunction(int? param1, int? param2)
 		{
 			var methodInfo = typeof(TestPgFunctions).GetMethod("TestRecordTableFunction", new[] { typeof(int?), typeof(int?) })!;
