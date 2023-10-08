@@ -15,6 +15,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Extensions
 {
+	using Common;
 	using Reflection;
 
 	[PublicAPI]
@@ -332,8 +333,8 @@ namespace LinqToDB.Extensions
 					{
 						TargetType       = t,
 						InterfaceType    = i,
-						TargetMethods    = Array.Empty<MethodInfo>(),
-						InterfaceMethods = Array.Empty<MethodInfo>()
+						TargetMethods    = Array<MethodInfo>.Empty,
+						InterfaceMethods = Array<MethodInfo>.Empty
 					};
 				}
 			}
