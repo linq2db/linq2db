@@ -84,6 +84,34 @@ namespace LinqToDB.DataProvider.ClickHouse
 				SetProviderField<DbDataReader, byte[], string>((DbDataReader rd, int idx) => rd.GetFieldValue<byte[]>(idx));
 				SetProviderField<DbDataReader, Binary, string>((DbDataReader rd, int idx) => new Binary(rd.GetFieldValue<byte[]>(idx)));
 			}
+
+			if (Provider == ClickHouseProvider.MySqlConnector)
+			{
+				if (Adapter.GetMySqlDecimalReaderMethod != null)
+				{
+					var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+					var indexParameter      = Expression.Parameter(typeof(int), "i");
+
+					// rd.GetMySqlDecimal(i).ToString(0
+					var body = Expression.Call(
+						Expression.Call(
+							dataReaderParameter,
+							Adapter.GetMySqlDecimalReaderMethod,
+							Array<Type>.Empty,
+							indexParameter),
+						"ToString",
+						Array<Type>.Empty);
+
+					ReaderExpressions[new ReaderInfo
+					{
+						ToType            = typeof(string),
+						ProviderFieldType = typeof(decimal),
+						DataReaderType    = Adapter.DataReaderType,
+						DataTypeName      = "DECIMAL",
+						FieldType         = typeof(decimal),
+					}]                    = Expression.Lambda(body, dataReaderParameter, indexParameter);
+				}
+			}
 		}
 
 		public ClickHouseProvider Provider { get; }
