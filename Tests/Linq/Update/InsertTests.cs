@@ -553,6 +553,7 @@ namespace Tests.xUpdate
 			[Column] public short     SmallIntValue;
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InsertArray1([DataSources] string context)
 		{
@@ -574,6 +575,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InsertArray2([DataSources] string context)
 		{
@@ -600,6 +602,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InsertArray3([DataSources] string context)
 		{
@@ -626,6 +629,7 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void InsertArray4([DataSources] string context)
 		{

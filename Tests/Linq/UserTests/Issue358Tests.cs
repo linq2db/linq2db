@@ -103,6 +103,7 @@ namespace Tests.UserTests
 			return data;
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test1([DataSources] string context)
 		{
@@ -114,6 +115,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test2([DataSources] string context)
 		{
@@ -125,6 +127,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test3([DataSources] string context)
 		{
@@ -136,6 +139,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test4([DataSources] string context)
 		{
@@ -149,6 +153,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
@@ -161,6 +166,7 @@ namespace Tests.UserTests
 				db.Types2.Where(_ => !bigintFilter.Contains(_.BigIntValue)));
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test5([DataSources] string context)
 		{
@@ -174,6 +180,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test6([DataSources] string context)
 		{
@@ -187,6 +194,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test7([DataSources] string context)
 		{
@@ -200,6 +208,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test8([DataSources] string context)
 		{
@@ -213,6 +222,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test9([DataSources] string context)
 		{
@@ -226,6 +236,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test81([DataSources] string context)
 		{
@@ -239,6 +250,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test91([DataSources] string context)
 		{
@@ -252,6 +264,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test82([DataSources] string context)
 		{
@@ -265,6 +278,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test92([DataSources] string context)
 		{
