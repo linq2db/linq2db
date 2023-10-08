@@ -307,14 +307,15 @@ namespace LinqToDB.Extensions
 			return type.GetMember(name);
 		}
 
-#if NETSTANDARD2_0
+// TODO: V6: reenable TFM filtering after NativeAOT testing added
+//#if NETSTANDARD2_0
 		private static Func<Type, Type, InterfaceMapping>? _getInterfaceMap;
-#endif
+//#endif
 		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
 		{
 			// native UWP builds (corert) had no GetInterfaceMap() implementation
 			// (added here https://github.com/dotnet/corert/pull/8144)
-#if NETSTANDARD2_0
+//#if NETSTANDARD2_0
 			if (_getInterfaceMap == null)
 			{
 				_getInterfaceMap = (t, i) => t.GetInterfaceMap(i);
@@ -322,7 +323,8 @@ namespace LinqToDB.Extensions
 				{
 					return _getInterfaceMap(type, interfaceType);
 				}
-				catch (PlatformNotSupportedException)
+				//catch (PlatformNotSupportedException)
+				catch (Exception ex) when (ex is NotSupportedException or PlatformNotSupportedException)
 				{
 					// porting of https://github.com/dotnet/corert/pull/8144 is not possible as it requires access
 					// to non-public runtime data and reflection doesn't work in corert
@@ -337,9 +339,9 @@ namespace LinqToDB.Extensions
 			}
 
 			return _getInterfaceMap(type, interfaceType);
-#else
-			return type.GetInterfaceMap(interfaceType);
-#endif
+//#else
+//			return type.GetInterfaceMap(interfaceType);
+//#endif
 		}
 
 		/// <summary>
