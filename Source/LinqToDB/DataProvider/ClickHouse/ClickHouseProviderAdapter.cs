@@ -97,10 +97,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 			ParameterType  = mySqlProviderAdapter.ParameterType;
 			CommandType    = mySqlProviderAdapter.CommandType;
 
-			GetSByteReaderMethod  = mySqlProviderAdapter.GetSByteMethodName;
-			GetUInt16ReaderMethod = mySqlProviderAdapter.GetUInt16MethodName;
-			GetUInt32ReaderMethod = mySqlProviderAdapter.GetUInt32MethodName;
-			GetUInt64ReaderMethod = mySqlProviderAdapter.GetUInt64MethodName;
+			GetSByteReaderMethod        = mySqlProviderAdapter.GetSByteMethodName;
+			GetUInt16ReaderMethod       = mySqlProviderAdapter.GetUInt16MethodName;
+			GetUInt32ReaderMethod       = mySqlProviderAdapter.GetUInt32MethodName;
+			GetUInt64ReaderMethod       = mySqlProviderAdapter.GetUInt64MethodName;
+			GetMySqlDecimalReaderMethod = mySqlProviderAdapter.GetMySqlDecimalMethodName;
+
 		}
 
 		// IDynamicProviderAdapter
@@ -132,6 +134,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		internal string? GetSByteReaderMethod          { get; }
 		internal string? GetBigIntegerReaderMethod     { get; }
 		internal string? GetDateOnlyReaderMethod       { get; }
+		internal string? GetMySqlDecimalReaderMethod   { get; }
 
 		// Client connection management
 		internal Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? CreateClientConnectionStringBuilder { get; }
@@ -182,7 +185,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateClientAdapter()
 		{
-			var assembly = Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
+			var assembly = Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
 
@@ -247,7 +250,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
 		{
-			var assembly = Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
+			var assembly = Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
 
