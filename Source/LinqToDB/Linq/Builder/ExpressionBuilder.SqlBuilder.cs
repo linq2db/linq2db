@@ -25,9 +25,11 @@ namespace LinqToDB.Linq.Builder
 
 	partial class ExpressionBuilder
 	{
-		#region CompareNullsAsValues
+		#region LinqOptions shortcuts
 
-		public bool CompareNullsAsValues { get; set; } = Configuration.Linq.CompareNullsAsValues;
+		public bool CompareNullsAsValues => DataOptions.LinqOptions.CompareNullsAsValues;
+
+		public bool PreferExistsForScalar { get; set; }
 
 		#endregion
 
@@ -2979,8 +2981,17 @@ namespace LinqToDB.Linq.Builder
 						var e            = (UnaryExpression)expression;
 						var notCondition = new SqlSearchCondition();
 
-						if (!BuildSearchCondition(context, e.Operand, flags, notCondition.Conditions, out error))
-							return false;
+						var save = PreferExistsForScalar;
+						PreferExistsForScalar = true;
+						try
+						{
+							if (!BuildSearchCondition(context, e.Operand, flags, notCondition.Conditions, out error))
+								return false;
+						}
+						finally
+						{
+							PreferExistsForScalar = save;
+						}
 
 						conditions.Add(new SqlCondition(true, notCondition));
 					break;

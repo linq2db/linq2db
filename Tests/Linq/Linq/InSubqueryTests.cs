@@ -241,7 +241,7 @@ namespace Tests.Linq
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
 
 			var q1 = t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID)));
-			var q2 = t1.         Where(t => t.ID.In(t2.         Select(p => p.ID)));
+			var q2 = t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))).ToList();
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));

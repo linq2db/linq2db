@@ -126,10 +126,34 @@ namespace LinqToDB.Linq.Builder
 				if (Parent != null)
 					placeholderQuery = Parent.SelectQuery;
 
-				if (testPlaceholders.Count == 1 && sequencePlaceholders.Count == 1)
+				var useExists = Builder.PreferExistsForScalar;
+
+				if (!useExists)
+				{
+					if (testPlaceholders.Count == 1 && sequencePlaceholders.Count == 1)
+					{
+						if (Builder.DataOptions.LinqOptions.CompareNullsAsValues)
+						{
+							var nullability = NullabilityContext.GetContext(placeholderQuery);
+							if (testPlaceholders[0].Sql.CanBeNullable(nullability))
+							{
+								useExists = true;
+							}
+						}
+					}
+					else
+					{
+						useExists = true;
+					}
+				}
+
+				if (!useExists)
 				{
 					if (!flags.IsTest())
-						_ = Builder.ToColumns(InnerSequence, sequenceExpr);
+					{
+						var columns = Builder.ToColumns(InnerSequence, sequenceExpr);
+					}
+
 					cond = new SqlCondition(false, new SqlPredicate.InSubQuery(testPlaceholders[0].Sql, false, InnerSequence.SelectQuery));
 				}
 				else

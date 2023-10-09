@@ -143,6 +143,8 @@ namespace LinqToDB.Linq.Builder
 			_parametersContext   = parametersContext;
 			Expression           = ConvertExpressionTree(expression);
 			_optimizationContext.ClearVisitedCache();
+
+			PreferExistsForScalar = DataOptions.LinqOptions.PreferExistsForScalar;
 		}
 
 		#endregion
