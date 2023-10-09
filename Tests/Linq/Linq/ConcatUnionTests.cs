@@ -899,6 +899,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void UnionGroupByTest1([DataSources] string context)
 		{
@@ -1102,6 +1103,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void SelectWithNulls([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1115,6 +1117,7 @@ namespace Tests.Linq
 			query.Invoking(q => q.ToArray()).Should().NotThrow();
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void SelectWithNulls2([DataSources(TestProvName.AllSybase)] string context)
 		{

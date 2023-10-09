@@ -41,6 +41,7 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/42
 		//
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Issue42Test([DataSources] string context)
 		{

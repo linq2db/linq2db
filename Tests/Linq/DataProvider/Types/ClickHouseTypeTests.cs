@@ -436,6 +436,7 @@ namespace Tests.DataProvider
 			await TestType<DateTime, DateTime?>(context, new(typeof(DateTime), DataType.DateTime), min, max);
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public async ValueTask TestDateTime64Type([ClickHouseDataSources(false)] string context)
 		{

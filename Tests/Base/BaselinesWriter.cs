@@ -51,6 +51,7 @@ namespace Tests
 			// " used in each test name, for now we just remove it
 			return name
 				.Replace("\"", string.Empty)
+				.Replace("\\" , $"0x{(ushort)'\\':X4}")
 				.Replace(">" , $"0x{(ushort)'>':X4}")
 				.Replace("<" , $"0x{(ushort)'<':X4}")
 				.Replace("/" , $"0x{(ushort)'/':X4}")

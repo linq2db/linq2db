@@ -68,5 +68,12 @@ namespace LinqToDB.SqlQuery
 				&& IsOr  == other.IsOr
 				&& Predicate.Equals(other.Predicate, comparer);
 		}
+
+		public void Deconstruct(out bool isNot, out ISqlPredicate predicate, out bool isOr)
+		{
+			isNot     = IsNot;
+			predicate = Predicate;
+			isOr      = IsOr;
+		}
 	}
 }

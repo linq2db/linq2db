@@ -444,13 +444,16 @@ namespace LinqToDB.Mapping
 		private void InitializeDynamicColumnsAccessors(bool hasInheritanceMapping)
 		{
 			// initialize dynamic columns store accessors
-			var dynamicStoreAttributes = new List<MappingAttribute>();
+			List<MappingAttribute>?                                   dynamicStoreAttributes = null;
+			Dictionary<DynamicColumnsStoreAttribute, MemberAccessor>? storeMembers           = null;
+
 			var accessors = MappingSchema.GetAttribute<DynamicColumnAccessorAttribute>(TypeAccessor.Type);
 			if (accessors != null)
 			{
-				dynamicStoreAttributes.Add(accessors);
+#pragma warning disable CA1508 // Avoid dead conditional code : analyzer bug
+				(dynamicStoreAttributes ??= new()).Add(accessors);
+#pragma warning restore CA1508 // Avoid dead conditional code
 			}
-			var storeMembers = new Dictionary<DynamicColumnsStoreAttribute, MemberAccessor>();
 
 			foreach (var member in TypeAccessor.Members)
 			{
@@ -459,12 +462,12 @@ namespace LinqToDB.Mapping
 
 				if (dcsProp != null)
 				{
-					dynamicStoreAttributes.Add(dcsProp);
-					storeMembers.Add(dcsProp, member);
+					(dynamicStoreAttributes ??= new()).Add(dcsProp);
+					(storeMembers ??= new()).Add(dcsProp, member);
 				}
 			}
 
-			if (dynamicStoreAttributes.Count > 0)
+			if (dynamicStoreAttributes != null)
 			{
 				MappingAttribute dynamicStoreAttribute;
 				if (dynamicStoreAttributes.Count > 1)
@@ -486,7 +489,7 @@ namespace LinqToDB.Mapping
 
 				if (dynamicStoreAttribute is DynamicColumnsStoreAttribute storeAttribute)
 				{
-					var member          = storeMembers[storeAttribute];
+					var member          = storeMembers![storeAttribute];
 					DynamicColumnsStore = new ColumnDescriptor(MappingSchema, this, new ColumnAttribute(member.Name), member, hasInheritanceMapping);
 
 					// getter expression

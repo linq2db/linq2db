@@ -43,6 +43,12 @@ namespace LinqToDB.SqlQuery
 
 		public List<SqlCondition> Conditions { get; private set; } = new();
 
+		public SqlSearchCondition Add(SqlCondition condition)
+		{
+			Conditions.Add(condition);
+			return this;
+		}
+
 		public void Modify(List<SqlCondition> conditions)
 		{
 			Conditions = conditions;
@@ -182,5 +188,10 @@ namespace LinqToDB.SqlQuery
 		}
 
 		#endregion
+
+		public void Deconstruct(out List<SqlCondition> conditions)
+		{
+			conditions = Conditions;
+		}
 	}
 }

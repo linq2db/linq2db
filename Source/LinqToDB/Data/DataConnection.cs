@@ -632,7 +632,7 @@ namespace LinqToDB.Data
 		/// Defaults to <see cref="WriteTraceLine"/>.
 		/// Used for the current instance.
 		/// </summary>
-		public Action<string?,string?,TraceLevel> WriteTraceLineConnection { get; private set; } = WriteTraceLine;
+		public Action<string?, string?, TraceLevel> WriteTraceLineConnection { get; protected set; } = WriteTraceLine;
 
 		#endregion
 

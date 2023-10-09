@@ -151,7 +151,7 @@ namespace LinqToDB.Tools.Mapper
 					{
 						if (item.Item1.Length == 1 && item.Item1[0] == toMember.MemberInfo)
 						{
-							binds.Add(BuildAssignment(item.Item2, fromExpression, item.Item2.Type, toMember));
+							binds.Add(BuildAssignment(item.Item2.GetBody, fromExpression, item.Item2.Type, toMember));
 							processed = true;
 							break;
 						}
@@ -178,19 +178,17 @@ namespace LinqToDB.Tools.Mapper
 				if (fromMember == null || !fromMember.HasGetter)
 					continue;
 
-				var getter = fromMember.GetterExpression;
-
 				if (_mapperBuilder.MappingSchema.IsScalarType(fromMember.Type) || _mapperBuilder.MappingSchema.IsScalarType(toMember.Type))
 				{
-					binds.Add(BuildAssignment(getter, fromExpression, fromMember.Type, toMember));
+					binds.Add(BuildAssignment(fromMember.GetGetterExpression, fromExpression, fromMember.Type, toMember));
 				}
 				else if (fromMember.Type == toMember.Type && _mapperBuilder.DeepCopy == false)
 				{
-					binds.Add(Bind(toMember.MemberInfo, getter.GetBody(fromExpression)));
+					binds.Add(Bind(toMember.MemberInfo, fromMember.GetGetterExpression(fromExpression)));
 				}
 				else
 				{
-					var getValue = getter.GetBody(fromExpression);
+					var getValue = fromMember.GetGetterExpression(fromExpression);
 					var exExpr   = GetExpressionImpl(getValue, toMember.Type);
 
 					if (_data.IsRestart)
@@ -277,12 +275,12 @@ namespace LinqToDB.Tools.Mapper
 		}
 
 		MemberAssignment BuildAssignment(
-			LambdaExpression getter,
-			Expression       fromExpression,
-			Type             fromMemberType,
-			MemberAccessor   toMember)
+			Func<Expression, Expression> getter,
+			Expression                   fromExpression,
+			Type                         fromMemberType,
+			MemberAccessor               toMember)
 		{
-			var getValue = getter.GetBody(fromExpression);
+			var getValue = getter(fromExpression);
 			var expr     = _mapperBuilder.MappingSchema.GetConvertExpression(fromMemberType, toMember.Type)!;
 			var convert  = expr.GetBody(getValue);
 
@@ -424,8 +422,6 @@ namespace LinqToDB.Tools.Mapper
 					if (!toMember.HasSetter)
 						continue;
 
-					var setter = toMember.SetterExpression;
-
 					if (_builder._data.MemberMappers != null)
 					{
 						var processed = false;
@@ -434,7 +430,7 @@ namespace LinqToDB.Tools.Mapper
 						{
 							if (item.Item1.Length == 1 && item.Item1[0] == toMember.MemberInfo)
 							{
-								_expressions.Add(BuildAssignment(item.Item2, setter, item.Item2.Type, _localObject, toMember));
+								_expressions.Add(BuildAssignment(item.Item2.GetBody, toMember.GetSetterExpression, item.Item2.Type, _localObject, toMember));
 								processed = true;
 								break;
 							}
@@ -461,31 +457,29 @@ namespace LinqToDB.Tools.Mapper
 					if (fromMember == null || !fromMember.HasGetter)
 						continue;
 
-					var getter = fromMember.GetterExpression;
-
 					if (_builder._mapperBuilder.MappingSchema.IsScalarType(fromMember.Type) ||
 						_builder._mapperBuilder.MappingSchema.IsScalarType(toMember.Type))
 					{
-						_expressions.Add(BuildAssignment(getter, setter, fromMember.Type, _localObject, toMember));
+						_expressions.Add(BuildAssignment(fromMember.GetGetterExpression, toMember.GetSetterExpression, fromMember.Type, _localObject, toMember));
 					}
 					else if (fromMember.Type == toMember.Type && _builder._mapperBuilder.DeepCopy == false)
 					{
-						_expressions.Add(setter.GetBody(_localObject, getter.GetBody(_fromExpression)));
+						_expressions.Add(toMember.GetSetterExpression(_localObject, fromMember.GetGetterExpression(_fromExpression)));
 					}
 					else
 					{
-						var getValue = getter.GetBody(_fromExpression);
+						var getValue = fromMember.GetGetterExpression(_fromExpression);
 						var expr     = IfThenElse(
 							// if (from == null)
 							Equal(getValue, Constant(_builder._mapperBuilder.MappingSchema.GetDefaultValue(getValue.Type), getValue.Type)),
 							//   localObject = null;
-							setter.GetBody(
+							toMember.GetSetterExpression(
 								_localObject,
 								Constant(_builder._mapperBuilder.MappingSchema.GetDefaultValue(toMember.Type), toMember.Type)),
 							// else
 							toMember.HasGetter ?
-								setter.GetBody(_localObject, BuildClassMapper(getValue, toMember)) :
-								setter.GetBody(_localObject, _builder.GetExpressionImpl(getValue, toMember.Type)!));
+								toMember.GetSetterExpression(_localObject, BuildClassMapper(getValue, toMember)) :
+								toMember.GetSetterExpression(_localObject, _builder.GetExpressionImpl(getValue, toMember.Type)!));
 
 						_expressions.Add(expr);
 					}
@@ -497,7 +491,7 @@ namespace LinqToDB.Tools.Mapper
 				var key   = Tuple.Create(_fromExpression.Type, toMember.Type);
 				var pFrom = Parameter(getValue.Type, "pFrom");
 				var pTo   = Parameter(toMember.Type, "pTo");
-				var toObj = toMember.GetterExpression.GetBody(_localObject);
+				var toObj = toMember.GetGetterExpression(_localObject);
 
 				ParameterExpression? nullPrm = null;
 
@@ -609,17 +603,17 @@ namespace LinqToDB.Tools.Mapper
 			}
 
 			Expression BuildAssignment(
-				LambdaExpression getter,
-				LambdaExpression setter,
-				Type             fromMemberType,
-				Expression       toExpression,
-				MemberAccessor   toMember)
+				Func<Expression, Expression>             getter,
+				Func<Expression, Expression, Expression> setter,
+				Type                                     fromMemberType,
+				Expression                               toExpression,
+				MemberAccessor                           toMember)
 			{
-				var getValue = getter.GetBody(_fromExpression);
+				var getValue = getter(_fromExpression);
 				var expr     = _builder._mapperBuilder.MappingSchema.GetConvertExpression(fromMemberType, toMember.Type)!;
 				var convert  = expr.GetBody(getValue);
 
-				return setter.GetBody(toExpression, convert);
+				return setter(toExpression, convert);
 			}
 		}
 

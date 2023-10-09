@@ -375,7 +375,7 @@ namespace LinqToDB.SqlQuery
 
 				if (search == null)
 					return predicate;
-				
+
 				return search;
 			}
 
@@ -559,7 +559,7 @@ namespace LinqToDB.SqlQuery
 				writer.Append(IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
 				writer.AppendElement(Expr2);
 			}
-		
+
 		}
 
 		// expression [ NOT ] BETWEEN expression AND expression
@@ -742,6 +742,13 @@ namespace LinqToDB.SqlQuery
 				writer.Append(" IN (")
 					.AppendElement(SubQuery)
 					.Append(')');
+			}
+
+			public void Deconstruct(out ISqlExpression exp1, out bool isNot, out SelectQuery subQuery)
+			{
+				exp1     = Expr1;
+				isNot    = IsNot;
+				subQuery = SubQuery;
 			}
 		}
 

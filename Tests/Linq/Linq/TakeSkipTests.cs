@@ -781,6 +781,7 @@ namespace Tests.Linq
 				Assert.Throws<LinqException>(() => db.Parent.Take(10, TakeHints.Percent).ToList());
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TakeSkipJoin([DataSources(TestProvName.AllSybase)] string context, [Values] bool withParameters)
 		{
