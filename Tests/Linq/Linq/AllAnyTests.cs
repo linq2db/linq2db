@@ -231,7 +231,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				Assert.AreEqual(
-					         Child.All     (c => c.ParentID > 3),
+							 Child.All     (c => c.ParentID > 3),
 					await db.Child.AllAsync(c => c.ParentID > 3));
 		}
 
@@ -305,6 +305,21 @@ namespace Tests.Linq
 					.Select(_ => _.Patient)
 					.Any().Should().BeTrue();
 			}
+		}
+
+		sealed record Filter(string[]? NamesProp);
+
+		[Test]
+		public void TestIssue4261([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var filter = new Filter(new[] { "John", "Not John" });
+
+			var res = db.Person.Where(x => filter.NamesProp!.Any(y => y == x.FirstName)).ToArray();
+
+			Assert.AreEqual(1, res.Length);
+			Assert.AreEqual(1, res[0].ID);
 		}
 	}
 }
