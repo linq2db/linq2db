@@ -104,7 +104,7 @@ namespace LinqToDB
 		}
 
 		[Pure]
-		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
 		public static string FieldName<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldExpr)
 			where T : notnull
 		{
@@ -112,7 +112,7 @@ namespace LinqToDB
 		}
 
 		[Pure]
-		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
 		public static string FieldName<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldExpr, [SqlQueryDependent] bool qualified)
 			where T : notnull
 		{
@@ -141,14 +141,14 @@ namespace LinqToDB
 			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions
 		}
 
-		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr<T, TV>([NoEnumeration] ITable<T> table, Expression<Func<T, TV>> fieldExpr)
 			where T : notnull
 		{
 			return FieldExpr(table, fieldExpr, true);
 		}
 
-		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr<T, TV>([NoEnumeration] ITable<T> table, Expression<Func<T, TV>> fieldExpr, bool qualified)
 			where T : notnull
 		{

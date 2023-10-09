@@ -168,19 +168,30 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression ConvertExpression(Expression expression)
 		{
-			return (_convertExpressionTransformer ??= TransformInfoVisitor<ExpressionBuilder>.Create(this, static (ctx, e) => ctx.ConvertExpressionTransformer(e, false, true)))
-				.Transform(expression);
+			using var visitor = _exposeVisitorPool.Allocate();
+
+			var result = visitor.Value.ExposeExpression(expression, this, MappingSchema, true);
+
+			return result;
 		}
 
 		public Expression ConvertSingleExpression(Expression expression, bool inProjection)
 		{
-			var result = ConvertExpressionTransformer(expression, inProjection, false).Expression;
-			if (!ReferenceEquals(result, expression))
+			// We can convert only these expressions, so it is shortcut to do not allocate visitor
+
+			if (expression.NodeType == ExpressionType.Call         || 
+			    expression.NodeType == ExpressionType.MemberAccess ||
+			    expression.NodeType == ExpressionType.New          ||
+			    expression is BinaryExpression)
 			{
-				result = ExposeExpression(result);
+				using var visitor = _exposeVisitorPool.Allocate();
+
+				var result = visitor.Value.ExposeExpression(expression, this, MappingSchema, true);
+
+				return result;
 			}
 
-			return result;
+			return expression;
 		}
 
 		private TransformInfoVisitor<ExpressionBuilder>? _convertExpressionTransformer;
@@ -655,20 +666,22 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (CanBeCompiled(newExpr, flags.IsExpression()))
 					{
-						if ((newExpr.NodeType == ExpressionType.MemberInit ||
-						     newExpr.NodeType == ExpressionType.New)
-						    && !MappingSchema.IsScalarType(newExpr.Type))
+						if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.Type))
 						{
-							// expression will be needed for comparison
-							newExpr = ParseGenericConstructor(newExpr);
+							sql = EvaluateExpression<ISqlExpression>(newExpr);
 						}
 						else
 						{
-							if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.Type))
+							var shouldBeParameter = columnDescriptor?.ValueConverter != null;
+
+							if (!shouldBeParameter &&
+							    (newExpr.NodeType == ExpressionType.MemberInit || newExpr.NodeType == ExpressionType.New) 
+							    && !MappingSchema.IsScalarType(newExpr.Type))
 							{
-								sql = EvaluateExpression<ISqlExpression>(newExpr);
+								// expression will be needed for comparison
+								newExpr = ParseGenericConstructor(newExpr);
 							}
-							else 
+							else
 							{
 								sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias)?.SqlParameter;
 							}
@@ -4472,69 +4485,6 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					var handled = false;
-
-					/*
-					if (!handled)
-					{
-						var exposed = ExposeExpression(path);
-						if (!ReferenceEquals(exposed, path))
-						{
-							expression = MakeExpression(currentContext, exposed, flags);
-							handled    = true;
-						}
-					}
-					*/
-
-					/*
-					if (!handled && !flags.IsExpression())
-					{
-						var converted = ConvertExpression(path);
-						if (!ReferenceEquals(converted, path))
-						{
-							expression = MakeExpression(currentContext, converted, flags);
-							handled    = true;
-						}
-					}
-					*/
-
-					if (!handled)
-					{
-						var applyConvert = true;
-						if (currentContext != null && flags.IsSql())
-						{
-							if (CanBeCompiled(path, true) || CanBeConstant(path))
-							{
-								applyConvert = false;
-							}
-
-							/*if (applyConvert && path is MethodCallExpression mc)
-							{
-								var converted = ConvertSingleExpression(path);
-								if (!ReferenceEquals(converted, path))
-								{
-									return MakeExpression(currentContext, converted, flags);
-								}
-							}*/
-						}
-
-						if (applyConvert && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsTraverse()))
-						{
-							var converted = ConvertSingleExpression(path, flags.IsExpression());
-							if (!ReferenceEquals(converted, path))
-							{
-								if (currentContext != null && !IsSequence(currentContext, converted))
-								{
-									expression = path;
-									handled = true;
-								}
-								else
-								{
-									expression = MakeExpression(currentContext, converted, flags);
-									handled    = true;
-								}
-							}
-						}
-					}
 
 					if (flags.IsExpression() && path.NodeType == ExpressionType.NewArrayInit)
 					{

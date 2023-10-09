@@ -21,6 +21,9 @@ namespace LinqToDB.Linq.Builder
 				name = methodCall.Arguments[1].EvaluateExpression<string>();
 			}
 
+			// ensure prepared for SQL
+			bodyExpr = builder.ConvertExpression(bodyExpr);
+
 			var cteContext = builder.RegisterCte(null, bodyExpr, () => new CteClause(null, bodyExpr.Type.GetGenericArguments()[0], false, name));
 
 			var elementType = methodCall.Method.GetGenericArguments()[0];

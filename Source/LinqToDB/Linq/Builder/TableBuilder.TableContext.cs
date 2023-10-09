@@ -105,19 +105,22 @@ namespace LinqToDB.Linq.Builder
 				_mappingSchema = mappingSchema;
 
 				var mc   = (MethodCallExpression)buildInfo.Expression;
-				var attr = mc.Method.GetTableFunctionAttribute(MappingSchema)!;
+				var attr = mc.Method.GetTableFunctionAttribute(mappingSchema);
+
+				if (attr == null)
+					throw new LinqException($"Method '{mc.Method}' has no '{nameof(Sql.TableFunctionAttribute)}'.");
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
 					throw new LinqException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
-				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = mappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				SqlTable         = new SqlTable(EntityDescriptor);
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), MappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSqlExpr(context.context, a));
+				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSqlExpr(context.context, a));
 
 				Init(true);
 			}

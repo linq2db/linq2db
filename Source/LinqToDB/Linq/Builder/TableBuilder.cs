@@ -22,6 +22,7 @@ namespace LinqToDB.Linq.Builder
 			GetTableMethod,
 			MemberAccess,
 			TableFunctionAttribute,
+			TableFromExpression,
 			AsCteMethod,
 			GetCteMethod,
 			FromSqlMethod,
@@ -48,6 +49,13 @@ namespace LinqToDB.Linq.Builder
 										return BuildContextType.GetTableMethod;
 									break;
 								}
+
+							case "TableFromExpression":
+							{
+								if (typeof(ITable<>).IsSameOrParentOf(expression.Type))
+									return BuildContextType.TableFromExpression;
+								break;
+							}
 
 							case "AsCte":
 								return BuildContextType.AsCteMethod;
@@ -184,24 +192,22 @@ namespace LinqToDB.Linq.Builder
 				{
 					var mappingSchema = builder.MappingSchema;
 
-					if (buildInfo.Expression is MethodCallExpression mc)
-					{
-						if (mc.Method.IsStatic)
-						{
-							mappingSchema = GetRootMappingSchema(builder, mc.Arguments[0]);
-						}
-						else
-						{
-							mappingSchema = GetRootMappingSchema(builder, mc.Object!);
-						}
-					}
-
 					return new TableContext(builder, mappingSchema, buildInfo);
 				};
-				case BuildContextType.AsCteMethod            :  return BuildCteContext     (builder, buildInfo);
+				case BuildContextType.TableFromExpression :
+				{
+					var mappingSchema = builder.MappingSchema;
+
+					var mc = (MethodCallExpression)buildInfo.Expression;
+
+					var bodyMethod = mc.Arguments[1].UnwrapLambda().Body;
+
+					return new TableContext(builder, mappingSchema, new BuildInfo(buildInfo, bodyMethod));
+				};
+				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.GetCteMethod           : return BuildRecursiveCteContextTable (builder, buildInfo);
-				case BuildContextType.FromSqlMethod          :  return BuildRawSqlTable(builder, buildInfo, false);
-				case BuildContextType.FromSqlScalarMethod    :  return BuildRawSqlTable(builder, buildInfo, true);
+				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, false);
+				case BuildContextType.FromSqlScalarMethod    : return BuildRawSqlTable(builder, buildInfo, true);
 			}
 
 			TableContext AddTableInScope(TableContext context)

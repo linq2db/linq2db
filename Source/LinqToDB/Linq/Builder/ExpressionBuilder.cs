@@ -407,7 +407,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(expression, this, MappingSchema);
+			var result = visitor.Value.ExposeExpression(expression, this, MappingSchema, false);
 
 			return result;
 		}

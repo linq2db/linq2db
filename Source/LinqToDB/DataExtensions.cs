@@ -1714,5 +1714,32 @@ namespace LinqToDB
 		}
 
 		#endregion
+
+		/// <summary>Creates a <see cref="ITable{T}"/> for given query expression.</summary>
+		/// <typeparam name="TResult">The result type of the table expression.</typeparam>
+		/// <param name="expression">The query expression to create.</param>
+		/// <returns>An <see cref="ITable{T}" /> representing the query.</returns>
+		public static ITable<TResult> TableFromExpression<TResult>(
+			this IDataContext                 dataContext, 
+			Expression<Func<ITable<TResult>>> expression) 
+			where TResult : notnull
+		{
+			var body = expression.UnwrapLambda().Body;
+
+			if (body is not MethodCallExpression mc)
+				throw new InvalidOperationException("TableFromExpression accepts only methods in body.");
+
+			var attr = mc.Method.GetTableFunctionAttribute(dataContext.MappingSchema);
+			if (attr == null)
+				throw new InvalidOperationException($"TableFromExpression accepts only methods which have '{nameof(Sql.TableFunctionAttribute)}' attribute.");
+
+			return new Table<TResult>(dataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableFromExpression, dataContext, expression),
+					SqlQueryRootExpression.Create(dataContext),
+					Expression.Quote(expression)
+				));
+		}
 	}
 }
