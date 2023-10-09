@@ -310,7 +310,7 @@ namespace Tests.Linq
 		sealed record Filter(string[]? NamesProp);
 
 		[Test]
-		public void TestIssue4261([DataSources] string context)
+		public void TestIssue4261([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
