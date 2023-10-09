@@ -309,8 +309,11 @@ namespace Tests.Linq
 
 		sealed record Filter(string[]? NamesProp);
 
+		// Access: unsupported syntax for enumerable subquery
+		// ClickHouse: EXISTS with correlated scalar subquery used, we should generate IN instead
+		[ActiveIssue(Configurations = new[] { TestProvName.AllAccess, TestProvName.AllClickHouse })]
 		[Test]
-		public void TestIssue4261([DataSources(TestProvName.AllAccess)] string context)
+		public void TestIssue4261([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
