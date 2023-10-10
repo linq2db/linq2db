@@ -216,7 +216,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 					rc.RowsCopied += rows;
 					options.RowsCopiedCallback(rc);
 					if (rc.Abort)
+					{
+						if (table.DataContext.CloseAfterUse)
+							table.DataContext.Close();
+
 						return rc;
+					}
 				}
 
 				clear = true;
@@ -226,6 +231,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
+
+			if (table.DataContext.CloseAfterUse)
+				table.DataContext.Close();
 
 			return rc;
 		}
@@ -326,7 +334,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 						rc.RowsCopied += rows;
 						options.RowsCopiedCallback(rc);
 						if (rc.Abort)
+						{
+							if (table.DataContext.CloseAfterUse)
+								await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 							return rc;
+						}
 					}
 
 					clear = true;
@@ -336,6 +349,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
+
+				if (table.DataContext.CloseAfterUse)
+					await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				return rc;
 			}
@@ -437,7 +453,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 						rc.RowsCopied += rows;
 						options.RowsCopiedCallback(rc);
 						if (rc.Abort)
+						{
+							if (table.DataContext.CloseAfterUse)
+								await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 							return rc;
+						}
 					}
 
 					clear = true;
@@ -447,6 +468,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
+
+				if (table.DataContext.CloseAfterUse)
+					await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				return rc;
 			}
@@ -488,7 +512,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						disposeConnection    = true;
 
 						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpening(new(null), connection);
-						await connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpened(new(null), connection);
 					}
 				}
@@ -533,6 +557,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 #endif
 				}
 			}
+
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return rc;
 		}
