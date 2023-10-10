@@ -16,6 +16,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Extensions
 {
 	using Common;
+	using Common.Internal;
 	using Reflection;
 
 	[PublicAPI]
@@ -815,10 +816,17 @@ namespace LinqToDB.Extensions
 
 		public static object? GetDefaultValue(this Type type)
 		{
+			if (type.IsNullableType())
+				return null;
+
+#if NETSTANDARD2_1PLUS
+			return RuntimeHelpers.GetUninitializedObject(type);
+#else
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
 			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype)!;
 
 			return helper.GetDefaultValue();
+#endif
 		}
 
 		public static EventInfo? GetEventEx(this Type type, string eventName)
