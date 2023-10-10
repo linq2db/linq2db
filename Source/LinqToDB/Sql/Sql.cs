@@ -253,6 +253,24 @@ namespace LinqToDB
 			return Guid.NewGuid();
 		}
 
+		sealed class GuidToStringBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var para = builder.GetExpression(0);
+				
+				builder.ResultExpression = PseudoFunctions.MakeConvert(SqlDataType.String, SqlDataType.Guid, para);
+			}
+		}
+
+		[CLSCompliant(false)]
+		[Expression(PN.SQLite, "(substr(hex({0}), 7, 2) || substr(hex({0}), 5, 2) || substr(hex({0}), 3, 2) || substr(hex({0}), 1, 2) || '-' || substr(hex({0}), 11, 2) || substr(hex({0}), 9, 2) || '-' || substr(hex({0}), 15, 2) || substr(hex({0}), 13, 2) || '-' || substr(hex({0}), 17, 4) || '-' || substr(hex({0}), 21, 12))", IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Extension("", BuilderType = typeof(GuidToStringBuilder))]
+		public static string? GuidToString(Guid? value)
+		{
+			return value == null ? null : value.ToString();
+		}
+
 		#endregion
 
 		#region Convert Functions
