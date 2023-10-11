@@ -179,6 +179,9 @@ namespace LinqToDB.DataProvider.MySql
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
 
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 			return rc;
 		}
 
@@ -243,6 +246,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
+
+			if (table.DataContext.CloseAfterUse)
+				table.DataContext.Close();
 
 			return rc;
 		}
@@ -313,6 +319,9 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
+
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return rc;
 		}
