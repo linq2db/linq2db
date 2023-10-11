@@ -1,48 +1,48 @@
-``` ini
+```
 
-BenchmarkDotNet=v0.13.5, OS=Windows 10 (10.0.17763.4010/1809/October2018Update/Redstone5), VM=Hyper-V
+BenchmarkDotNet v0.13.9+228a464e8be6c580ad9408e98f18813f6407fb5a, Windows 10 (10.0.17763.4644/1809/October2018Update/Redstone5) (Hyper-V)
 AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
-.NET SDK=7.0.201
-  [Host]     : .NET 7.0.3 (7.0.323.6910), X64 RyuJIT AVX2
-  Job-ZOLDKB : .NET 6.0.14 (6.0.1423.7309), X64 RyuJIT AVX2
-  Job-EHWHZK : .NET 7.0.3 (7.0.323.6910), X64 RyuJIT AVX2
-  Job-LWJRKG : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
-  Job-AGOWOF : .NET Framework 4.8 (4.8.4614.0), X64 RyuJIT VectorSize=256
+.NET SDK 7.0.401
+  [Host]     : .NET 7.0.11 (7.0.1123.42427), X64 RyuJIT AVX2
+  Job-DAXXNM : .NET 6.0.22 (6.0.2223.42425), X64 RyuJIT AVX2
+  Job-SLTPYD : .NET 7.0.11 (7.0.1123.42427), X64 RyuJIT AVX2
+  Job-YOWJJJ : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-OZLLFF : .NET Framework 4.8 (4.8.4645.0), X64 RyuJIT VectorSize=256
 
 Jit=RyuJit  Platform=X64  
 
 ```
-|                        Method |              Runtime |      Mean | Allocated |
+| Method                        | Runtime              | Mean      | Allocated |
 |------------------------------ |--------------------- |----------:|----------:|
-|               Update_Nullable |             .NET 6.0 | 252.65 μs |  45.21 KB |
-|          Update_Nullable_Full |             .NET 6.0 | 273.07 μs |   47.9 KB |
-|      Compiled_Update_Nullable |             .NET 6.0 |  59.12 μs |  16.44 KB |
-| Compiled_Update_Nullable_Full |             .NET 6.0 |  72.81 μs |  19.13 KB |
-|                        Update |             .NET 6.0 | 242.94 μs |  43.59 KB |
-|                   Update_Full |             .NET 6.0 | 266.82 μs |  46.27 KB |
-|               Compiled_Update |             .NET 6.0 |  63.01 μs |  16.42 KB |
-|          Compiled_Update_Full |             .NET 6.0 |  73.56 μs |  19.11 KB |
-|               Update_Nullable |             .NET 7.0 | 198.09 μs |   32.2 KB |
-|          Update_Nullable_Full |             .NET 7.0 | 216.72 μs |  35.17 KB |
-|      Compiled_Update_Nullable |             .NET 7.0 |  58.63 μs |  16.38 KB |
-| Compiled_Update_Nullable_Full |             .NET 7.0 |  71.39 μs |  19.05 KB |
-|                        Update |             .NET 7.0 | 195.78 μs |  32.09 KB |
-|                   Update_Full |             .NET 7.0 | 197.03 μs |  34.76 KB |
-|               Compiled_Update |             .NET 7.0 |  27.36 μs |  16.36 KB |
-|          Compiled_Update_Full |             .NET 7.0 |  66.77 μs |  19.03 KB |
-|               Update_Nullable |        .NET Core 3.1 | 325.04 μs |  44.95 KB |
-|          Update_Nullable_Full |        .NET Core 3.1 | 303.93 μs |  47.63 KB |
-|      Compiled_Update_Nullable |        .NET Core 3.1 |  82.66 μs |  16.36 KB |
-| Compiled_Update_Nullable_Full |        .NET Core 3.1 |  96.71 μs |  19.05 KB |
-|                        Update |        .NET Core 3.1 | 314.28 μs |  46.82 KB |
-|                   Update_Full |        .NET Core 3.1 | 312.87 μs |  49.51 KB |
-|               Compiled_Update |        .NET Core 3.1 |  83.92 μs |  16.34 KB |
-|          Compiled_Update_Full |        .NET Core 3.1 |  96.28 μs |  19.03 KB |
-|               Update_Nullable | .NET Framework 4.7.2 | 405.15 μs |  51.02 KB |
-|          Update_Nullable_Full | .NET Framework 4.7.2 | 391.91 μs |  54.15 KB |
-|      Compiled_Update_Nullable | .NET Framework 4.7.2 |  95.63 μs |  16.93 KB |
-| Compiled_Update_Nullable_Full | .NET Framework 4.7.2 | 111.03 μs |  20.06 KB |
-|                        Update | .NET Framework 4.7.2 | 390.43 μs |  49.12 KB |
-|                   Update_Full | .NET Framework 4.7.2 | 421.86 μs |  52.25 KB |
-|               Compiled_Update | .NET Framework 4.7.2 |  91.37 μs |  16.93 KB |
-|          Compiled_Update_Full | .NET Framework 4.7.2 | 112.86 μs |  20.06 KB |
+| Update_Nullable               | .NET 6.0             | 110.82 μs |  47.66 KB |
+| Update_Nullable_Full          | .NET 6.0             | 263.42 μs |  50.35 KB |
+| Compiled_Update_Nullable      | .NET 6.0             |  60.50 μs |  16.88 KB |
+| Compiled_Update_Nullable_Full | .NET 6.0             |  70.44 μs |  19.56 KB |
+| Update                        | .NET 6.0             | 243.56 μs |  46.09 KB |
+| Update_Full                   | .NET 6.0             | 263.14 μs |  48.77 KB |
+| Compiled_Update               | .NET 6.0             |  40.02 μs |  16.88 KB |
+| Compiled_Update_Full          | .NET 6.0             |  69.23 μs |  19.56 KB |
+| Update_Nullable               | .NET 7.0             | 187.40 μs |  32.51 KB |
+| Update_Nullable_Full          | .NET 7.0             | 204.00 μs |  35.02 KB |
+| Compiled_Update_Nullable      | .NET 7.0             |  57.04 μs |  16.81 KB |
+| Compiled_Update_Nullable_Full | .NET 7.0             |  61.97 μs |  19.48 KB |
+| Update                        | .NET 7.0             | 181.73 μs |  32.79 KB |
+| Update_Full                   | .NET 7.0             | 207.70 μs |  35.16 KB |
+| Compiled_Update               | .NET 7.0             |  56.18 μs |  16.81 KB |
+| Compiled_Update_Full          | .NET 7.0             |  64.16 μs |  19.48 KB |
+| Update_Nullable               | .NET Core 3.1        | 303.79 μs |  45.32 KB |
+| Update_Nullable_Full          | .NET Core 3.1        | 328.07 μs |  48.01 KB |
+| Compiled_Update_Nullable      | .NET Core 3.1        |  80.70 μs |  16.78 KB |
+| Compiled_Update_Nullable_Full | .NET Core 3.1        |  41.13 μs |  19.47 KB |
+| Update                        | .NET Core 3.1        | 301.16 μs |  45.99 KB |
+| Update_Full                   | .NET Core 3.1        | 323.46 μs |  48.68 KB |
+| Compiled_Update               | .NET Core 3.1        |  78.28 μs |  16.78 KB |
+| Compiled_Update_Full          | .NET Core 3.1        |  91.00 μs |  19.47 KB |
+| Update_Nullable               | .NET Framework 4.7.2 | 400.03 μs |  51.77 KB |
+| Update_Nullable_Full          | .NET Framework 4.7.2 | 301.20 μs |   54.9 KB |
+| Compiled_Update_Nullable      | .NET Framework 4.7.2 |  70.98 μs |  17.35 KB |
+| Compiled_Update_Nullable_Full | .NET Framework 4.7.2 | 107.42 μs |  20.48 KB |
+| Update                        | .NET Framework 4.7.2 | 351.68 μs |  50.97 KB |
+| Update_Full                   | .NET Framework 4.7.2 | 294.61 μs |  54.11 KB |
+| Compiled_Update               | .NET Framework 4.7.2 |  88.19 μs |  17.33 KB |
+| Compiled_Update_Full          | .NET Framework 4.7.2 | 104.65 μs |  20.47 KB |
