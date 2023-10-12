@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
@@ -15,8 +16,10 @@ namespace LinqToDB.Linq.Builder.Visitors
 	using LinqToDB.Expressions;
 	using LinqToDB.Common.Internal;
 
-	class ExposeExpressionVisitor : ExpressionVisitorBase
+	class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
 	{
+		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods       = new ();
+
 		static ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);
 
 		IDataContext                      _dataContext         = default!;
@@ -151,32 +154,58 @@ namespace LinqToDB.Linq.Builder.Visitors
 					return Visit(newNode);
 			}
 
-			/*var parameters  = node.Method.GetParameters();
-			var arguments   = node.Arguments;
-			Expression[]? newArguments = null;
-
-			for (var i = 0; i < arguments.Count; i++)
-			{
-				var attr       = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
-				if (attr != null)
+			var mi = node.Method.GetGenericMethodDefinitionCached();
+			var dependentParameters = _queryDependentMethods.GetOrAdd(
+				mi, static mi =>
 				{
-					var argument = arguments[i];
-					if (argument.NodeType != ExpressionType.Constant && IsCompilable(argument))
+					var parameters = mi.GetParameters();
+					if (parameters.Length == 0)
+						return null;
+					SqlQueryDependentAttribute?[]? attributes = null;
+					for (var i = 0; i < parameters.Length; i++)
 					{
-						if (newArguments == null)
+						var attr = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
+						if (attr != null)
 						{
-							newArguments = arguments.ToArray();
+							attributes    ??= new SqlQueryDependentAttribute[parameters.Length];
+							attributes[i] =   attr;
 						}
+					}
+					return attributes;
+				});
 
-						newArguments[i] = Expression.Constant(EvaluateExpression(argument), argument.Type);
+			if (dependentParameters != null)
+			{
+				var           arguments    = node.Arguments;
+				Expression[]? newArguments = null;
+
+				for (var i = 0; i < arguments.Count; i++)
+				{
+					var attr = dependentParameters[i];
+					if (attr != null)
+					{
+						var argument = arguments[i];
+						if (argument.NodeType != ExpressionType.Constant)
+						{
+							var newArgument = attr.PrepareForCache(argument, this);
+							if (newArgument.Type != argument.Type)
+								newArgument = Expression.Convert(newArgument, argument.Type);
+
+							if (newArguments == null)
+							{
+								newArguments = arguments.ToArray();
+							}
+
+							newArguments[i] = newArgument;
+						}
 					}
 				}
-			}
 
-			if (newArguments != null)
-			{
-				node = node.Update(node.Object, newArguments);
-			}*/
+				if (newArguments != null)
+				{
+					node = node.Update(node.Object, newArguments);
+				}
+			}
 
 			var result = base.VisitMethodCall(node);
 			return result;
@@ -1006,5 +1035,18 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 		#endregion
 
+		#region IExpressionEvaluator
+
+		bool IExpressionEvaluator.CanBeEvaluated(Expression expression)
+		{
+			return IsCompilable(expression);
+		}
+
+		object? IExpressionEvaluator.Evaluate(Expression expression)
+		{
+			return EvaluateExpression(expression);
+		}
+
+		#endregion
 	}
 }

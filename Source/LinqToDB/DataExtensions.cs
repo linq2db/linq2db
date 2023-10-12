@@ -1510,61 +1510,6 @@ namespace LinqToDB
 
 #if !NET45
 		/// <summary>
-		/// Compares two FormattableString parameters
-		/// </summary>
-		public class SqlFormattableComparerAttribute : SqlQueryDependentAttribute
-		{
-			public override bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2, Func<TContext, Expression, Expression, bool> comparer)
-			{
-				if (expr1.NodeType != expr2.NodeType)
-					return false;
-
-				if (expr1.NodeType == ExpressionType.Call)
-				{
-					var mc1 = (MethodCallExpression)expr1;
-					var mc2 = (MethodCallExpression)expr2;
-					if (!ObjectsEqual(mc1.Arguments[0].EvaluateExpression(), mc2.Arguments[0].EvaluateExpression()))
-						return false;
-					return comparer(context, mc1.Arguments[1], mc2.Arguments[1]);
-				}
-
-				if (expr1.NodeType == ExpressionType.Constant)
-				{
-					var c1 = (ConstantExpression)expr1;
-					var c2 = (ConstantExpression)expr2;
-
-					if (c1.Value is FormattableString str1 && c2.Value is FormattableString str2)
-					{
-						if (str1.Format != str2.Format || str1.ArgumentCount != str2.ArgumentCount)
-							return false;
-
-						for (var i = 0; i < str1.ArgumentCount; i++)
-							if (!comparer(context, Expression.Constant(str1.GetArgument(i)), Expression.Constant(str2.GetArgument(i))))
-								return false;
-
-						return true;
-					}
-				}
-
-				return base.ExpressionsEqual(context, expr1, expr2, comparer);
-			}
-
-			public override Expression PrepareForCache(Expression expression)
-			{
-				if (expression.NodeType != ExpressionType.Call)
-					return base.PrepareForCache(expression);
-
-				var mc = (MethodCallExpression)expression;
-				var newArguments = new List<Expression>();
-				newArguments.Add(Expression.Constant(mc.Arguments[0].EvaluateExpression()));
-				newArguments.AddRange(mc.Arguments.Skip(1));
-
-				mc = mc.Update(mc.Object, newArguments);
-				return mc;
-			}
-		}
-
-		/// <summary>
 		///     <para>
 		///         Creates a LINQ query based on an interpolated string representing a SQL query.
 		///     </para>
@@ -1673,9 +1618,9 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this IDataContext                          dataContext,
-			RawSqlString                               sql,
-			[SqlQueryDependentParams] params object?[] parameters)
+			this IDataContext dataContext,
+			RawSqlString      sql, 
+			params object?[]  parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 

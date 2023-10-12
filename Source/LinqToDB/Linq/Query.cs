@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -71,29 +70,14 @@ namespace LinqToDB.Linq
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
-				Expression!.EqualsTo(expr, dataContext, _parametrized, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
+				Expression!.EqualsTo(expr, dataContext, _parametrized, _queryableMemberAccessorDic);
 		}
 
-		readonly Dictionary<Expression, QueryableAccessor>        _queryableAccessorDic  = new();
 		readonly List<QueryableAccessor>                          _queryableAccessorList = new();
-		readonly Dictionary<Expression, Expression>               _queryDependedObjects  = new();
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
 		private  List<Expression>?                                _parametrized;
 
 		internal bool IsFastCacheable => _queryableMemberAccessorDic == null;
-
-		internal int AddQueryableAccessors(Expression expr, Expression<Func<Expression,IQueryable>> qe)
-		{
-			if (_queryableAccessorDic.TryGetValue(expr, out var e))
-				return _queryableAccessorList.IndexOf(e);
-
-			e = new QueryableAccessor(qe.CompileExpression(), expr);
-
-			_queryableAccessorDic. Add(expr, e);
-			_queryableAccessorList.Add(e);
-
-			return _queryableAccessorList.Count - 1;
-		}
 
 		internal void SetParametrized(List<Expression>? parametrized)
 		{
@@ -116,18 +100,6 @@ namespace LinqToDB.Linq
 			_queryableMemberAccessorDic.Add(memberInfo, e);
 
 			return e.Expression;
-		}
-
-		internal void AddQueryDependedObject(Expression expression, SqlQueryDependentAttribute attr)
-		{
-			foreach (var expr in attr.SplitExpression(expression))
-			{
-				if (_queryDependedObjects.ContainsKey(expr))
-					continue;
-
-				var prepared = attr.PrepareForCache(expr);
-				_queryDependedObjects.Add(expr, prepared);
-			}
 		}
 
 		internal Expression GetIQueryable(int n, Expression expr, bool force)

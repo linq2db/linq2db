@@ -114,28 +114,6 @@ namespace LinqToDB.Linq.Builder
 			return newAccessor;
 		}
 
-		public ParameterAccessor BuildParameterFromArgumentProperty(MethodCallExpression methodCall, int argumentIndex, ColumnDescriptor columnDescriptor,
-			BuildParameterType buildParameterType = BuildParameterType.Default)
-		{
-			var valueAccessor = GenerateArgumentAccessor(methodCall, argumentIndex, null);
-
-			valueAccessor = Expression.MakeMemberAccess(valueAccessor, columnDescriptor.MemberInfo);
-
-			var dataType = columnDescriptor.GetDbDataType(true);
-			var newExpr  = new ValueTypeExpression
-			{
-				DataType             = dataType,
-				DbDataTypeExpression = Expression.Constant(dataType),
-				ValueExpression      = valueAccessor
-			};
-
-			var p = PrepareConvertersAndCreateParameter(newExpr, valueAccessor, null, columnDescriptor,
-				buildParameterType);
-			AddCurrentSqlParameter(p);
-
-			return p;
-		}
-
 		public ParameterAccessor BuildParameterFromArgument(MethodCallExpression methodCall, int argumentIndex, ColumnDescriptor? columnDescriptor,
 			BuildParameterType buildParameterType = BuildParameterType.Default)
 		{

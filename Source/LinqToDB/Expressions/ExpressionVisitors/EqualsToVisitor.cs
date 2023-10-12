@@ -16,12 +16,10 @@ namespace LinqToDB.Expressions
 			Expression                                                expr2,
 			IDataContext                                              dataContext,
 			List<Expression>?                                         parametrizedExpressions,
-			IReadOnlyDictionary<Expression, QueryableAccessor>?       queryableAccessorDic,
 			IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
-			IReadOnlyDictionary<Expression, Expression>?              queryDependedObjects,
 			bool                                                      compareConstantValues = false)
 		{
-			return EqualsTo(expr1, expr2, PrepareEqualsInfo(dataContext, parametrizedExpressions, queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues));
+			return EqualsTo(expr1, expr2, PrepareEqualsInfo(dataContext, parametrizedExpressions, queryableMemberAccessorDic, compareConstantValues));
 		}
 
 		/// <summary>
@@ -30,12 +28,10 @@ namespace LinqToDB.Expressions
 		internal static EqualsToInfo PrepareEqualsInfo(
 			IDataContext                                              dataContext,
 			List<Expression>?                                         parametrizedExpressions,
-			IReadOnlyDictionary<Expression, QueryableAccessor>?       queryableAccessorDic       = null,
 			IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic = null,
-			IReadOnlyDictionary<Expression, Expression>?              queryDependedObjects       = null,
 			bool                                                      compareConstantValues      = false)
 		{
-			return new EqualsToInfo(dataContext, parametrizedExpressions, queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues);
+			return new EqualsToInfo(dataContext, parametrizedExpressions, queryableMemberAccessorDic, compareConstantValues);
 		}
 
 		internal sealed class EqualsToInfo
@@ -43,24 +39,18 @@ namespace LinqToDB.Expressions
 			public EqualsToInfo(
 				IDataContext                                              dataContext,
 				List<Expression>?                                         parametrizedExpressions,
-				IReadOnlyDictionary<Expression, QueryableAccessor>?       queryableAccessorDic,
 				IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
-				IReadOnlyDictionary<Expression, Expression>?              queryDependedObjects,
 				bool                                                      compareConstantValues)
 			{
 				DataContext                = dataContext;
 				ParametrizedExpressions    = parametrizedExpressions;
-				QueryableAccessorDic       = queryableAccessorDic;
 				QueryableMemberAccessorDic = queryableMemberAccessorDic;
-				QueryDependedObjects       = queryDependedObjects;
 				CompareConstantValues      = compareConstantValues;
 			}
 
 			public readonly IDataContext                                              DataContext;
 			public readonly List<Expression>?                                         ParametrizedExpressions;
 			public readonly IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? QueryableMemberAccessorDic;
-			public readonly IReadOnlyDictionary<Expression, Expression>?              QueryDependedObjects;
-			public readonly IReadOnlyDictionary<Expression, QueryableAccessor>?       QueryableAccessorDic;
 			public readonly bool                                                      CompareConstantValues;
 
 			public HashSet<Expression>?          Visited;
@@ -324,11 +314,6 @@ namespace LinqToDB.Expressions
 			{
 				if (expr1.Expression == expr2.Expression || expr1.Expression!.Type == expr2.Expression!.Type)
 				{
-					if (info.QueryableAccessorDic != null && info.QueryableAccessorDic.TryGetValue(expr1, out var qa))
-						return
-							expr1.Expression.EqualsTo(expr2.Expression, info) &&
-							qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
-
 					if (!CompareMemberExpression(expr1.Member, info))
 						return false;
 				}

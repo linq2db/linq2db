@@ -11,6 +11,7 @@ namespace LinqToDB.Expressions
 	[AttributeUsage(AttributeTargets.Parameter)]
 	public class SqlQueryDependentParamsAttribute : SqlQueryDependentAttribute
 	{
+		[Obsolete("Not used in current codebase.")]
 		public override bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2, Func<TContext, Expression, Expression, bool> comparer)
 		{
 			if (expr1 is ConstantExpression c1 && expr2 is ConstantExpression c2)

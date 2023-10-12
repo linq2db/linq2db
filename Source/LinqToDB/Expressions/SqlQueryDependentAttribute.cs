@@ -64,6 +64,7 @@ namespace LinqToDB.Expressions
 		/// <param name="expr2"></param>
 		/// <param name="comparer">Default function for comparing expressions.</param>
 		/// <returns>Result of comparison</returns>
+		[Obsolete("Not used in current codebase.")]
 		public virtual bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2,
 			Func<TContext, Expression, Expression, bool> comparer)
 		{
@@ -75,9 +76,11 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		/// <param name="expression">Expression for caching.</param>
 		/// <returns>Ready to cache expression.</returns>
-		public virtual Expression PrepareForCache(Expression expression)
+		public virtual Expression PrepareForCache(Expression expression, IExpressionEvaluator evaluator)
 		{
-			return Expression.Constant(expression.EvaluateExpression());
+			if (evaluator.CanBeEvaluated(expression))
+				return Expression.Constant(evaluator.Evaluate(expression));
+			return expression;
 		}
 
 		/// <summary>
