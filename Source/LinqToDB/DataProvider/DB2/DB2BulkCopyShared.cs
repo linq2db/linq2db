@@ -77,6 +77,9 @@ namespace LinqToDB.DataProvider.DB2
 					options.RowsCopiedCallback(rc);
 			}
 
+			if (table.DataContext.CloseAfterUse)
+				table.DataContext.Close();
+
 			return rc;
 		}
 	}

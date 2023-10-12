@@ -190,6 +190,9 @@ namespace LinqToDB.DataProvider.Informix
 					options.RowsCopiedCallback(rc);
 			}
 
+			if (table.DataContext.CloseAfterUse)
+				table.DataContext.Close();
+
 			return rc;
 		}
 

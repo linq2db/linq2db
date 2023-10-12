@@ -63,7 +63,7 @@ namespace LinqToDB.Expressions
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Default:
-					return !expr.Type.IsNullableType() ? TypeAccessor.GetAccessor(expr.Type).CreateInstanceEx() : null;
+					return ReflectionExtensions.GetDefaultValue(expr.Type);
 
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;

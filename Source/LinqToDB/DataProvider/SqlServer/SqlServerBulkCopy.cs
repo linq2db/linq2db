@@ -177,6 +177,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					options.RowsCopiedCallback(rc);
 			}
 
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 			return rc;
 		}
 
@@ -252,6 +255,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					options.RowsCopiedCallback(rc);
 			}
 
+			if (table.DataContext.CloseAfterUse)
+				table.DataContext.Close();
+
 			return rc;
 		}
 
@@ -261,6 +267,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			BulkCopyRowsCopied ret;
 
 			var helper = new MultipleRowsHelper<T>(table, options);
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
@@ -272,7 +279,12 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
+
+				if (helper.OriginalContext.CloseAfterUse)
+					helper.OriginalContext.Close();
+			}
 
 			return ret;
 		}
@@ -283,6 +295,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			BulkCopyRowsCopied ret;
 
 			var helper = new MultipleRowsHelper<T>(table, options);
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
@@ -301,8 +314,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (helper.OriginalContext.CloseAfterUse)
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 
 			return ret;
 		}
@@ -314,6 +332,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			BulkCopyRowsCopied ret;
 
 			var helper = new MultipleRowsHelper<T>(table, options);
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
@@ -332,8 +351,13 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (helper.OriginalContext.CloseAfterUse)
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 
 			return ret;
 		}

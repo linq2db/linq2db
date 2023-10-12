@@ -15,8 +15,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Extensions
 {
-	using LinqToDB.Common;
-	using LinqToDB.Reflection;
+	using Common;
+	using Common.Internal;
+	using Reflection;
 
 	[PublicAPI]
 	public static class ReflectionExtensions
@@ -308,39 +309,28 @@ namespace LinqToDB.Extensions
 			return type.GetMember(name);
 		}
 
-#if NETSTANDARD2_0
-		private static Func<Type, Type, InterfaceMapping>? _getInterfaceMap;
-#endif
+		// GetInterfaceMap could fail in AOT builds
+		// - CoreRT runtime could miss this method implementation
+		// - NativeAOT builds at least up to .NET 8 doesn't support interfaces with statics or/and default implementations
+		// for such cases we return empty stub
 		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
 		{
-			// native UWP builds (corert) had no GetInterfaceMap() implementation
-			// (added here https://github.com/dotnet/corert/pull/8144)
-#if NETSTANDARD2_0
-			if (_getInterfaceMap == null)
+			try
 			{
-				_getInterfaceMap = (t, i) => t.GetInterfaceMap(i);
-				try
-				{
-					return _getInterfaceMap(type, interfaceType);
-				}
-				catch (PlatformNotSupportedException)
-				{
-					// porting of https://github.com/dotnet/corert/pull/8144 is not possible as it requires access
-					// to non-public runtime data and reflection doesn't work in corert
-					_getInterfaceMap = (t, i) => new InterfaceMapping()
-					{
-						TargetType       = t,
-						InterfaceType    = i,
-						TargetMethods    = Array.Empty<MethodInfo>(),
-						InterfaceMethods = Array.Empty<MethodInfo>()
-					};
-				}
+				return type.GetInterfaceMap(interfaceType);
 			}
-
-			return _getInterfaceMap(type, interfaceType);
-#else
-			return type.GetInterfaceMap(interfaceType);
-#endif
+			// PNSE: corert
+			// NSE: NativeAOUT
+			catch (Exception ex) when (ex is NotSupportedException or PlatformNotSupportedException)
+			{
+				return new InterfaceMapping()
+				{
+					TargetType = type,
+					InterfaceType = interfaceType,
+					TargetMethods = Array<MethodInfo>.Empty,
+					InterfaceMethods = Array<MethodInfo>.Empty
+				};
+			}
 		}
 
 		/// <summary>
@@ -844,10 +834,17 @@ namespace LinqToDB.Extensions
 
 		public static object? GetDefaultValue(this Type type)
 		{
+			if (type.IsNullableType())
+				return null;
+
+#if NETSTANDARD2_1PLUS
+			return RuntimeHelpers.GetUninitializedObject(type);
+#else
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
 			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype)!;
 
 			return helper.GetDefaultValue();
+#endif
 		}
 
 		public static EventInfo? GetEventEx(this Type type, string eventName)
