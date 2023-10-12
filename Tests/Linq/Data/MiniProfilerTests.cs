@@ -43,11 +43,7 @@ using Tests.Model;
 using IBM.Data.Informix;
 #endif
 
-#if NETFRAMEWORK
-using MySqlConnectorDateTime   = MySqlConnector::MySql.Data.Types.MySqlDateTime;
-#else
 using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
-#endif
 using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
@@ -71,7 +67,9 @@ namespace Tests.Data
 		public class MiniProfilerDataContext : DataConnection
 		{
 			public MiniProfilerDataContext(string configurationString)
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				: base(GetDataProvider(), GetConnection(configurationString)) { }
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
 			private static IDataProvider GetDataProvider()
 			{
@@ -80,7 +78,9 @@ namespace Tests.Data
 
 			private static DbConnection GetConnection(string configurationString)
 			{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				var dbConnection = new SqlConnection(GetConnectionString(configurationString));
+#pragma warning restore CA2000 // Dispose objects before losing scope
 				return new ProfiledDbConnection(dbConnection, MiniProfiler.Current);
 			}
 		}
@@ -131,7 +131,7 @@ namespace Tests.Data
 #if NET472
 				// assert custom schema table access
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
-				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Any()));
+				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Count > 0));
 #endif
 			}
 		}
@@ -938,7 +938,11 @@ namespace Tests.Data
 		public async Task TestSapHanaNative([IncludeDataSources(ProviderName.SapHanaNative)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+#if NETFRAMEWORK
 			using (var db = CreateDataConnection(new SapHanaDataProvider(), context, type, DbProviderFactories.GetFactory("Sap.Data.Hana").GetType().Assembly.GetType("Sap.Data.Hana.HanaConnection")!))
+#else
+			using (var db = CreateDataConnection(new SapHanaDataProvider(), context, type, "Sap.Data.Hana.HanaConnection, Sap.Data.Hana.Core.v2.1"))
+#endif
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>

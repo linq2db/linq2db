@@ -38,7 +38,7 @@ namespace Tests.DataProvider
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
 	{
-		private static readonly string _nextValSearchPattern = "nextval";
+		private const string _nextValSearchPattern = "nextval";
 
 		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
@@ -879,6 +879,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL15)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL16)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
@@ -2416,6 +2417,41 @@ namespace Tests.DataProvider
 
 			db.BulkCopy(options, new[] { new Issue3895Table() { timestampDataType = dt, timestampTZDataType = dt } });
 		}
+
+		// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+		// SQL identifiers and key words must begin with
+		// - a letter
+		// - an underscore (_).
+		// Subsequent characters in an identifier or key word can be
+		// - letters
+		// - underscores
+		// - digits (0-9)
+		// - dollar signs ($). 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4285")]
+		public void TestIdentifierHasNoEscaping(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values("test", "тест", "_test", "x_", "x1", "x$")] string tableName)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<Person>(tableName: tableName);
+
+			t.ToList();
+
+			Assert.That(db.LastQuery, Does.Not.Contain($"\"{tableName}\""));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4285")]
+		public void TestIdentifierHasEscaping(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values("Test", "Тест", "1test", "$test", "te-st", "te\"st")] string tableName)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<Person>(tableName: tableName);
+
+			t.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain($"\"{tableName.Replace("\"", "\"\"")}\""));
+		}
 	}
 
 	public static class TestPgAggregates
@@ -2449,8 +2485,7 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		// TODO: function names should be escaped by linq2db, but it is not implemented yet
-		[Sql.TableFunction("\"TestTableFunctionSchema\"")]
+		[Sql.TableFunction("TestTableFunctionSchema")]
 		public LinqToDB.ITable<PostgreSQLTests.AllTypes> GetAllTypes()
 		{
 			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", Array<Type>.Empty)!;
@@ -2458,13 +2493,14 @@ namespace Tests.DataProvider
 			return _ctx.GetTable<PostgreSQLTests.AllTypes>(this, methodInfo);
 		}
 
+		// TODO: function names should be escaped by linq2db, but it is not implemented yet
 		[Sql.Function("\"TestFunctionParameters\"", ServerSideOnly = true)]
 		public static TestParametersResult TestParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[Sql.TableFunction("\"TestTableFunction\"")]
+		[Sql.TableFunction("TestTableFunction")]
 		public LinqToDB.ITable<TestScalarTableFunctionResult> TestScalarTableFunction(int? param1)
 		{
 			var methodInfo = typeof(TestPgFunctions).GetMethod("TestScalarTableFunction", new[] { typeof(int?) })!;
@@ -2472,7 +2508,7 @@ namespace Tests.DataProvider
 			return _ctx.GetTable<TestScalarTableFunctionResult>(this, methodInfo, param1);
 		}
 
-		[Sql.TableFunction("\"TestTableFunction1\"")]
+		[Sql.TableFunction("TestTableFunction1")]
 		public LinqToDB.ITable<TestRecordTableFunctionResult> TestRecordTableFunction(int? param1, int? param2)
 		{
 			var methodInfo = typeof(TestPgFunctions).GetMethod("TestRecordTableFunction", new[] { typeof(int?), typeof(int?) })!;

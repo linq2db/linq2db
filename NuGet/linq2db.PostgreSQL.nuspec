@@ -23,7 +23,7 @@
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db" version="5.0.0"  />
-				<dependency id="Npgsql"  version="7.0.2"  />
+				<dependency id="Npgsql"  version="7.0.6"  />
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -32,7 +32,6 @@
 	</metadata>
 	<files>
 		<file src="..\Nuget\README.T4.md"                                                        target="README.md"                                                                                          />
-		<file src="..\Nuget\readme.T4.txt"                                                       target="readme.txt"                                                                                         />
 
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                             target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                                 target="tools"                                                                                              />

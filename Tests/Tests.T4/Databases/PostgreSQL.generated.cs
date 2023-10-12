@@ -94,8 +94,8 @@ namespace PostreSQLDataContext
 
 		public partial class TestTableFunction1Result
 		{
-			public int? param3 { get; set; }
-			public int? param4 { get; set; }
+			[Column("param3")] public int? Param3 { get; set; }
+			[Column("param4")] public int? Param4 { get; set; }
 		}
 
 		#endregion
@@ -111,7 +111,7 @@ namespace PostreSQLDataContext
 
 		public partial class TestTableFunctionResult
 		{
-			public int? param2 { get; set; }
+			[Column("param2")] public int? Param2 { get; set; }
 		}
 
 		#endregion
@@ -126,53 +126,53 @@ namespace PostreSQLDataContext
 
 		public partial class TestTableFunctionSchemaResult
 		{
-			public int?              ID                  { get; set; }
-			public long?             bigintDataType      { get; set; }
-			public decimal?          numericDataType     { get; set; }
-			public short?            smallintDataType    { get; set; }
-			public int?              intDataType         { get; set; }
-			public decimal?          moneyDataType       { get; set; }
-			public double?           doubleDataType      { get; set; }
-			public float?            realDataType        { get; set; }
-			public DateTime?         timestampDataType   { get; set; }
-			public DateTimeOffset?   timestampTZDataType { get; set; }
-			public DateTime?         dateDataType        { get; set; }
-			public TimeSpan?         timeDataType        { get; set; }
-			public DateTimeOffset?   timeTZDataType      { get; set; }
-			public NpgsqlInterval?   intervalDataType    { get; set; }
-			public NpgsqlInterval?   intervalDataType2   { get; set; }
-			public char?             charDataType        { get; set; }
-			public string?           char20DataType      { get; set; }
-			public string?           varcharDataType     { get; set; }
-			public string?           textDataType        { get; set; }
-			public byte[]?           binaryDataType      { get; set; }
-			public Guid?             uuidDataType        { get; set; }
-			public BitArray?         bitDataType         { get; set; }
-			public bool?             booleanDataType     { get; set; }
-			public string?           colorDataType       { get; set; }
-			public NpgsqlPoint?      pointDataType       { get; set; }
-			public NpgsqlLSeg?       lsegDataType        { get; set; }
-			public NpgsqlBox?        boxDataType         { get; set; }
-			public NpgsqlPath?       pathDataType        { get; set; }
-			public NpgsqlPolygon?    polygonDataType     { get; set; }
-			public NpgsqlCircle?     circleDataType      { get; set; }
-			public NpgsqlLine?       lineDataType        { get; set; }
-			public NpgsqlInet?       inetDataType        { get; set; }
-			public NpgsqlInet?       cidrDataType        { get; set; }
-			public PhysicalAddress?  macaddrDataType     { get; set; }
-			public PhysicalAddress?  macaddr8DataType    { get; set; }
-			public string?           jsonDataType        { get; set; }
-			public string?           jsonbDataType       { get; set; }
-			public string?           xmlDataType         { get; set; }
-			public BitArray?         varBitDataType      { get; set; }
-			public string[]?         strarray            { get; set; }
-			public int[]?            intarray            { get; set; }
-			public int[]?            int2darray          { get; set; }
-			public long[]?           longarray           { get; set; }
-			public NpgsqlInterval[]? intervalarray       { get; set; }
-			public double[]?         doublearray         { get; set; }
-			public decimal[]?        numericarray        { get; set; }
-			public decimal[]?        decimalarray        { get; set; }
+			                                public int?              ID                  { get; set; }
+			[Column("bigintDataType")     ] public long?             BigintDataType      { get; set; }
+			[Column("numericDataType")    ] public decimal?          NumericDataType     { get; set; }
+			[Column("smallintDataType")   ] public short?            SmallintDataType    { get; set; }
+			[Column("intDataType")        ] public int?              IntDataType         { get; set; }
+			[Column("moneyDataType")      ] public decimal?          MoneyDataType       { get; set; }
+			[Column("doubleDataType")     ] public double?           DoubleDataType      { get; set; }
+			[Column("realDataType")       ] public float?            RealDataType        { get; set; }
+			[Column("timestampDataType")  ] public DateTime?         TimestampDataType   { get; set; }
+			[Column("timestampTZDataType")] public DateTimeOffset?   TimestampTZDataType { get; set; }
+			[Column("dateDataType")       ] public DateTime?         DateDataType        { get; set; }
+			[Column("timeDataType")       ] public TimeSpan?         TimeDataType        { get; set; }
+			[Column("timeTZDataType")     ] public DateTimeOffset?   TimeTZDataType      { get; set; }
+			[Column("intervalDataType")   ] public NpgsqlInterval?   IntervalDataType    { get; set; }
+			[Column("intervalDataType2")  ] public NpgsqlInterval?   IntervalDataType2   { get; set; }
+			[Column("charDataType")       ] public char?             CharDataType        { get; set; }
+			[Column("char20DataType")     ] public string?           Char20DataType      { get; set; }
+			[Column("varcharDataType")    ] public string?           VarcharDataType     { get; set; }
+			[Column("textDataType")       ] public string?           TextDataType        { get; set; }
+			[Column("binaryDataType")     ] public byte[]?           BinaryDataType      { get; set; }
+			[Column("uuidDataType")       ] public Guid?             UuidDataType        { get; set; }
+			[Column("bitDataType")        ] public BitArray?         BitDataType         { get; set; }
+			[Column("booleanDataType")    ] public bool?             BooleanDataType     { get; set; }
+			[Column("colorDataType")      ] public string?           ColorDataType       { get; set; }
+			[Column("pointDataType")      ] public NpgsqlPoint?      PointDataType       { get; set; }
+			[Column("lsegDataType")       ] public NpgsqlLSeg?       LsegDataType        { get; set; }
+			[Column("boxDataType")        ] public NpgsqlBox?        BoxDataType         { get; set; }
+			[Column("pathDataType")       ] public NpgsqlPath?       PathDataType        { get; set; }
+			[Column("polygonDataType")    ] public NpgsqlPolygon?    PolygonDataType     { get; set; }
+			[Column("circleDataType")     ] public NpgsqlCircle?     CircleDataType      { get; set; }
+			[Column("lineDataType")       ] public NpgsqlLine?       LineDataType        { get; set; }
+			[Column("inetDataType")       ] public NpgsqlInet?       InetDataType        { get; set; }
+			[Column("cidrDataType")       ] public NpgsqlInet?       CidrDataType        { get; set; }
+			[Column("macaddrDataType")    ] public PhysicalAddress?  MacaddrDataType     { get; set; }
+			[Column("macaddr8DataType")   ] public PhysicalAddress?  Macaddr8DataType    { get; set; }
+			[Column("jsonDataType")       ] public string?           JsonDataType        { get; set; }
+			[Column("jsonbDataType")      ] public string?           JsonbDataType       { get; set; }
+			[Column("xmlDataType")        ] public string?           XmlDataType         { get; set; }
+			[Column("varBitDataType")     ] public BitArray?         VarBitDataType      { get; set; }
+			[Column("strarray")           ] public string[]?         Strarray            { get; set; }
+			[Column("intarray")           ] public int[]?            Intarray            { get; set; }
+			[Column("int2darray")         ] public int[]?            Int2darray          { get; set; }
+			[Column("longarray")          ] public long[]?           Longarray           { get; set; }
+			[Column("intervalarray")      ] public NpgsqlInterval[]? Intervalarray       { get; set; }
+			[Column("doublearray")        ] public double[]?         Doublearray         { get; set; }
+			[Column("numericarray")       ] public decimal[]?        Numericarray        { get; set; }
+			[Column("decimalarray")       ] public decimal[]?        Decimalarray        { get; set; }
 		}
 
 		#endregion
@@ -572,7 +572,7 @@ namespace PostreSQLDataContext
 		#region AddIfNotExists
 
 		[Sql.Function(Name="\"public\".add_if_not_exists", ServerSideOnly=true)]
-		public static object? AddIfNotExists(string? p_name)
+		public static object? AddIfNotExists(string? pName)
 		{
 			throw new InvalidOperationException();
 		}

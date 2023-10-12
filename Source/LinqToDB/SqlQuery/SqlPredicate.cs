@@ -62,7 +62,7 @@ namespace LinqToDB.SqlQuery
 
 		public abstract class BaseNotExpr : Expr, IInvertibleElement
 		{
-			public BaseNotExpr(ISqlExpression exp1, bool isNot, int precedence)
+			protected BaseNotExpr(ISqlExpression exp1, bool isNot, int precedence)
 				: base(exp1, precedence)
 			{
 				IsNot = isNot;
@@ -228,13 +228,13 @@ namespace LinqToDB.SqlQuery
 							{
 								if (Operator != Operator.Equal)
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
 							}
 							else if (Operator == Operator.NotEqual)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 							}
 						}
@@ -248,13 +248,13 @@ namespace LinqToDB.SqlQuery
 						{
 							if (Operator != Operator.Equal)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 							}
 						}
 						else if (Operator == Operator.NotEqual)
 						{
-							(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+							(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 							search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 						}
 					}
@@ -269,7 +269,7 @@ namespace LinqToDB.SqlQuery
 							{
 								if (Operator == Operator.Equal)
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, true), true));
@@ -279,7 +279,7 @@ namespace LinqToDB.SqlQuery
 								}
 								else if (Operator == Operator.NotEqual)
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, true), true));
@@ -289,26 +289,26 @@ namespace LinqToDB.SqlQuery
 								}
 								else if (Operator == Operator.LessOrEqual || Operator == Operator.GreaterOrEqual)
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
 								else
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 								}
 							}
 							else if (Operator == Operator.Equal)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 							}
 							else if (Operator == Operator.NotEqual)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, true), true));
@@ -317,12 +317,11 @@ namespace LinqToDB.SqlQuery
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 							}
 						}
-						else
-							if (isInverted)
-							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
-							}
+						else if (isInverted)
+						{
+							(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
+							search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
+						}
 					}
 					else
 					{
@@ -330,13 +329,13 @@ namespace LinqToDB.SqlQuery
 						{
 							if (isInverted)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 							}
 						}
 						else
 						{
-							(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+							(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 							search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, false), false));
 							search.Conditions.Add(new SqlCondition(false, new IsNull(Expr2, false), false));
 						}
@@ -346,7 +345,7 @@ namespace LinqToDB.SqlQuery
 
 				if (search == null)
 					return predicate;
-				
+
 				return search;
 			}
 
@@ -523,7 +522,7 @@ namespace LinqToDB.SqlQuery
 				sb.Append(IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
 				Expr2.ToString(sb, dic);
 			}
-		
+
 		}
 
 		// expression [ NOT ] BETWEEN expression AND expression
@@ -615,7 +614,7 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
-				if (WithNull == null || !Expr1.ShouldCheckForNull()) 
+				if (WithNull == null || !Expr1.ShouldCheckForNull())
 					return predicate;
 
 				var search = new SqlSearchCondition();
@@ -700,6 +699,13 @@ namespace LinqToDB.SqlQuery
 
 				((IQueryElement)SubQuery).ToString(sb, dic);
 				sb.Append(')');
+			}
+
+			public void Deconstruct(out ISqlExpression exp1, out bool isNot, out SelectQuery subQuery)
+			{
+				exp1     = Expr1;
+				isNot    = IsNot;
+				subQuery = SubQuery;
 			}
 		}
 

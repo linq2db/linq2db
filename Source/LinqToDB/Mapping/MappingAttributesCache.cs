@@ -106,7 +106,7 @@ namespace LinqToDB.Metadata
 							else if (attrs.Length == 0)
 								attrs = ifaceAttrs;
 							else
-								(list ??= new(attrs)).AddRange(ifaceAttrs);
+								(list = new(attrs)).AddRange(ifaceAttrs);
 						}
 					}
 				}
@@ -124,7 +124,7 @@ namespace LinqToDB.Metadata
 							else if (attrs.Length == 0)
 								attrs = baseAttrs;
 							else
-								(list ??= new(attrs)).AddRange(baseAttrs);
+								(list = new(attrs)).AddRange(baseAttrs);
 						}
 					}
 				}

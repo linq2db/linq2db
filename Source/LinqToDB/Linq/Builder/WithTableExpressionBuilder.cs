@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
-			var value    = (string)methodCall.Arguments[1].EvaluateExpression()!;
+			var value    = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext)!;
 
 			table.SqlTable.SqlTableType   = SqlTableType.Expression;
 			table.SqlTable.TableArguments = Array<ISqlExpression>.Empty;

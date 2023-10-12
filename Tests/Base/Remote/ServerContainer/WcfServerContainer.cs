@@ -83,7 +83,9 @@ namespace Tests.Remote.ServerContainer
 					return service;
 				}
 
+#pragma warning disable CA2000 // Dispose objects before losing scope
 				var host = new ServiceHost(service = new TestWcfLinqService(new TestLinqService(), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
+#pragma warning restore CA2000 // Dispose objects before losing scope
 
 				if (ms != null)
 					service.MappingSchema = ms;

@@ -1,8 +1,8 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using System.Collections.Generic;
 	using SqlQuery;
 
 	partial class InformixSqlBuilder

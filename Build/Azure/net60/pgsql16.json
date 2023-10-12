@@ -1,8 +1,7 @@
 ﻿{
 	"NET60.Azure": {
 		"Providers": [
-			// posgresql 10
-			"PostgreSQL.10"
+			"PostgreSQL.16"
 		]
 	}
 }

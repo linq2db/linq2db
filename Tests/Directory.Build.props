@@ -23,4 +23,7 @@
 		<Reference Include="System.Data.Linq" />
 	</ItemGroup>
 
+	<PropertyGroup  Condition="'$(TargetFramework)' == 'netcoreapp3.1' ">
+		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+	</PropertyGroup>
 </Project>

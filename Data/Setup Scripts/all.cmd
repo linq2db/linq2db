@@ -65,6 +65,10 @@ echo ========== PostgreSQL 15 ==========
 
 call pgsql15.cmd
 
+echo ========== PostgreSQL 16 ==========
+
+call pgsql16.cmd
+
 echo ========== SAP Hana ==========
 
 call saphana2.cmd
@@ -103,6 +107,7 @@ docker update --restart unless-stopped pgsql92
 docker update --restart unless-stopped pgsql93
 docker update --restart unless-stopped pgsql95
 docker update --restart unless-stopped pgsql15
+docker update --restart unless-stopped pgsql16
 docker update --restart unless-stopped hana2
 docker update --restart unless-stopped sql2017
 docker update --restart unless-stopped sql2019

@@ -101,7 +101,9 @@ namespace LinqToDB.Mapping
 
 			configuration ??= string.Empty;
 
+#pragma warning disable CA2214 // Do not call overridable methods in constructors
 			var schemaInfo = CreateMappingSchemaInfo(configuration, this);
+#pragma warning restore CA2214 // Do not call overridable methods in constructors
 
 			if (schemas == null || schemas.Length == 0)
 			{
@@ -1718,7 +1720,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public static Action<MappingSchema, IEntityChangeDescriptor>? EntityDescriptorCreatedCallback { get; set; }
 
-		internal static MemoryCache<(Type entityType, int schemaId),EntityDescriptor> EntityDescriptorsCache { get; } = new (new ());
+		private static MemoryCache<(Type entityType, int schemaId),EntityDescriptor> EntityDescriptorsCache { get; } = new (new ());
 
 		/// <summary>
 		/// Returns mapped entity descriptor.

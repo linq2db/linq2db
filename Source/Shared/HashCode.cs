@@ -51,7 +51,7 @@ namespace System
 
 	internal struct HashCode
 	{
-		private static readonly uint s_seed = 397;
+		private const uint s_seed = 397;
 
 		private const uint Prime1 = 2654435761U;
 		private const uint Prime2 = 2246822519U;
@@ -247,10 +247,10 @@ namespace System
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void Initialize(out uint v1, out uint v2, out uint v3, out uint v4)
 		{
-			v1 = s_seed + Prime1 + Prime2;
+			v1 = unchecked(s_seed + Prime1 + Prime2);
 			v2 = s_seed + Prime2;
 			v3 = s_seed;
-			v4 = s_seed - Prime1;
+			v4 = unchecked(s_seed - Prime1);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

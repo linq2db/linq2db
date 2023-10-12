@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Expressions
 {
 	using Common;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 	using Reflection;
 
@@ -24,6 +24,9 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		/// <param name="expression">Expression to get DebugView.</param>
 		/// <returns>DebugView value.</returns>
+#if NET6_0_OR_GREATER
+		[DynamicDependency("get_DebugView", typeof(Expression))]
+#endif
 		public static string GetDebugView(this Expression expression)
 		{
 			if (_getDebugView == null)
@@ -40,11 +43,7 @@ namespace LinqToDB.Expressions
 				}
 				catch (ArgumentException)
 				{
-					var l = Expression.Lambda<Func<Expression,string>>(
-						Expression.Call(p, MemberHelper.MethodOf<Expression>(e => e.ToString())),
-						p);
-
-					_getDebugView = l.CompileExpression();
+					_getDebugView = e => e.ToString();
 				}
 			}
 

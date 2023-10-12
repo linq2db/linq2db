@@ -34,7 +34,9 @@ namespace Tests.UserTests
 
 			if (values == null || values.Length == 0)
 			{
-				throw new ArgumentNullException("values", "Values for \"In\" operation should not be empty");
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
+				throw new ArgumentNullException(nameof(values), "Values for \"In\" operation should not be empty");
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 			}
 
 			foreach (var value in values)

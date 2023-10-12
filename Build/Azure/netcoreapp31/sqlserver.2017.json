@@ -1,8 +1,0 @@
-﻿{
-	"CORE31.Azure": {
-		"Providers": [
-			"SqlServer.2017",
-			"SqlServer.2017.MS"
-		]
-	}
-}

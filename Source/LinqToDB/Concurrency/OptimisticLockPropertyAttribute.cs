@@ -44,7 +44,7 @@ namespace LinqToDB.Concurrency
 
 				case VersionBehavior.AutoIncrement:
 					return Expression.Lambda(
-						Expression.Add(column.MemberAccessor.GetterExpression.GetBody(record), ExpressionInstances.Constant1),
+						Expression.Add(column.MemberAccessor.GetGetterExpression(record), ExpressionInstances.Constant1),
 						record);
 
 				case VersionBehavior.Guid:

@@ -246,7 +246,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		#region Wrap Parameters
-		private SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		private static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
 		{
 			// for some reason Firebird doesn't use parameter type information (not supported?) is some places, so
 			// we need to wrap parameter into CAST() to add type information explicitly

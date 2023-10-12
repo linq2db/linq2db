@@ -6,7 +6,7 @@ using LinqToDB.Async;
 
 namespace LinqToDB.Common
 {
-	public class EnumerableHelper
+	public static class EnumerableHelper
 	{
 #if NATIVE_ASYNC
 		internal static IEnumerable<T> AsyncToSyncEnumerable<T>(IAsyncEnumerator<T> enumerator)

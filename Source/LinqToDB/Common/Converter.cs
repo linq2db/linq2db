@@ -26,7 +26,8 @@ namespace LinqToDB.Common
 		{
 			var xml = new XmlDocument() { XmlResolver = null };
 
-			xml.Load(XmlReader.Create(new StringReader(str), new XmlReaderSettings() { XmlResolver = null }));
+			using var reader = XmlReader.Create(new StringReader(str), new XmlReaderSettings() { XmlResolver = null });
+			xml.Load(reader);
 
 			return xml;
 		}

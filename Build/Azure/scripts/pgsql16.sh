@@ -1,6 +1,6 @@
 #!/bin/bash
-#docker pull postgres:10
-docker run -d --name pgsql --net host -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:10
+
+docker run -d --name pgsql -e POSTGRES_PASSWORD=Password12! -p 5432:5432 -v /var/run/postgresql:/var/run/postgresql postgres:16
 
 retries=0
 until docker exec pgsql psql -U postgres -c '\l' | grep -q 'testdata'; do

@@ -5,9 +5,9 @@ namespace LinqToDB.Benchmarks.TypeMapping
 	// shows small performance degradation due to indirect call
 	public class WrapSetterBenchmark
 	{
-		private static readonly string StringParameter  = "TestString";
-		private static readonly int    IntParameter     = 11;
-		private static readonly bool   BooleanParameter = true;
+		private const string StringParameter  = "TestString";
+		private const int    IntParameter     = 11;
+		private const bool   BooleanParameter = true;
 
 		private Original.TestClass2 _originalInstance = null!;
 		private Wrapped.TestClass2  _wrapperInstance = null!;

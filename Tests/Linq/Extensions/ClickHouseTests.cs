@@ -5,6 +5,7 @@ using LinqToDB;
 using LinqToDB.DataProvider.ClickHouse;
 
 using NUnit.Framework;
+using NUnit.Framework.Constraints;
 
 namespace Tests.Extensions
 {
@@ -231,6 +232,40 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("ALL LEFT SEMI JOIN"));
+		}
+
+		[Test]
+		public void ClickHouseUnionTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from p in db.GetTable<ReplacingMergeTreeTable>()
+					.AsClickHouse()
+					.FinalHint()
+				select p
+			)
+			.Union
+			(
+				from p in db.GetTable<ReplacingMergeTreeTable>()
+				from c in db.GetTable<ReplacingMergeTreeTable>()
+					.AsSubQuery()
+					.AsClickHouse()
+					.FinalHint()
+				select p
+			)
+			.AsClickHouse()
+			.SettingsHint("convert_query_to_cnf=false")
+			;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Should.Contain(
+				"FINAL",
+				"UNION",
+				"FINAL",
+				"SETTINGS convert_query_to_cnf=false"));
 		}
 	}
 }

@@ -31,7 +31,7 @@ namespace Tests.Model
 		{
 		}
 
-		static object _sync = new ();
+//		static object _sync = new ();
 
 //		[Table("AllTypes")]
 //		class AllTypes

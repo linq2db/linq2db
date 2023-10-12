@@ -216,7 +216,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 					rc.RowsCopied += rows;
 					options.RowsCopiedCallback(rc);
 					if (rc.Abort)
+					{
+						if (table.DataContext.CloseAfterUse)
+							table.DataContext.Close();
+
 						return rc;
+					}
 				}
 
 				clear = true;
@@ -226,6 +231,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				options.RowsCopiedCallback(rc);
+
+			if (table.DataContext.CloseAfterUse)
+				table.DataContext.Close();
 
 			return rc;
 		}
@@ -269,7 +277,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var sql = cmd.Value.ToString();
 
 			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#if NATIVE_ASYNC
+			await using (bc.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
 			await using (bc)
+#endif
 			{
 				for (var i = 0; i < columnTypes.Length; i++)
 				{
@@ -322,7 +334,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 						rc.RowsCopied += rows;
 						options.RowsCopiedCallback(rc);
 						if (rc.Abort)
+						{
+							if (table.DataContext.CloseAfterUse)
+								await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 							return rc;
+						}
 					}
 
 					clear = true;
@@ -332,6 +349,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
+
+				if (table.DataContext.CloseAfterUse)
+					await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 				return rc;
 			}
@@ -433,7 +453,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 						rc.RowsCopied += rows;
 						options.RowsCopiedCallback(rc);
 						if (rc.Abort)
+						{
+							if (table.DataContext.CloseAfterUse)
+								await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 							return rc;
+						}
 					}
 
 					clear = true;
@@ -444,12 +469,15 @@ namespace LinqToDB.DataProvider.ClickHouse
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
 
+				if (table.DataContext.CloseAfterUse)
+					await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 				return rc;
 			}
 		}
 #endif
 
-		#endregion
+#endregion
 
 		#region Client
 
@@ -484,7 +512,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						disposeConnection    = true;
 
 						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpening(new(null), connection);
-						connection.Open();
+						await connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpened(new(null), connection);
 					}
 				}
@@ -529,6 +557,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 #endif
 				}
 			}
+
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return rc;
 		}

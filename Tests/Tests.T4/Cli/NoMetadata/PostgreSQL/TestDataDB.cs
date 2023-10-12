@@ -40,24 +40,19 @@ namespace Cli.NoMetadata.PostgreSQL
 			: base(new DataOptions().UseMappingSchema(ContextSchema))
 		{
 			InitSchemas();
-			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(new DataOptions().UseConfiguration(configuration, ContextSchema))
 		{
 			InitSchemas();
-			InitDataContext();
 		}
 
 		public TestDataDB(DataOptions<TestDataDB> options)
 			: base(options.Options.UseMappingSchema(options.Options.ConnectionOptions.MappingSchema == null ? ContextSchema : MappingSchema.CombineSchemas(options.Options.ConnectionOptions.MappingSchema, ContextSchema)))
 		{
 			InitSchemas();
-			InitDataContext();
 		}
-
-		partial void InitDataContext();
 
 		#region Schemas
 		public void InitSchemas()
