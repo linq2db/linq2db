@@ -467,8 +467,10 @@ namespace LinqToDB.Linq
 #else
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
+#pragma warning disable CA2007
 				await using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
 				await using var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#pragma warning restore CA2007
 
 				var dataReader = dr.DataReader!;
 

@@ -204,8 +204,7 @@ namespace LinqToDB.Linq.Builder
 				definedQueryMethod = (LambdaExpression)builder.AddQueryableMemberAccessors(closureExpr, onMember, builder.DataContext, static (closureExpr, mi, dc) =>
 				{
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
-					var optimizedExpr       = optimizationContext.ExposeExpression(closureExpr);
-					    optimizedExpr       = optimizationContext.ExpandQueryableMethods(optimizedExpr);
+					var optimizedExpr       = ExpressionBuilder.ExposeExpression(closureExpr, dc, optimizationContext, true);
 					    optimizedExpr       = optimizedExpr.OptimizeExpression(dc.MappingSchema)!;
 					return optimizedExpr;
 				});

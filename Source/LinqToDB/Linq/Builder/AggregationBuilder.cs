@@ -127,7 +127,13 @@ namespace LinqToDB.Linq.Builder
 			var definition = GetAggregateDefinition(methodCall, builder.MappingSchema);
 
 			if (definition != null)
-				return true;
+			{
+				if (methodCall.Arguments.Count > 0)
+				{
+					if (builder.IsSequence(new BuildInfo(buildInfo, methodCall.Arguments[0])))
+						return true;
+				}
+			}
 
 			return false;
 		}

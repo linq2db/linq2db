@@ -71,13 +71,14 @@ namespace LinqToDB.Linq
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
-				Expression!.EqualsTo(expr, dataContext, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
+				Expression!.EqualsTo(expr, dataContext, _parametrized, _queryableAccessorDic, _queryableMemberAccessorDic, _queryDependedObjects);
 		}
 
 		readonly Dictionary<Expression, QueryableAccessor>        _queryableAccessorDic  = new();
 		readonly List<QueryableAccessor>                          _queryableAccessorList = new();
 		readonly Dictionary<Expression, Expression>               _queryDependedObjects  = new();
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
+		private  List<Expression>?                                _parametrized;
 
 		internal bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
@@ -92,6 +93,16 @@ namespace LinqToDB.Linq
 			_queryableAccessorList.Add(e);
 
 			return _queryableAccessorList.Count - 1;
+		}
+
+		internal void SetParametrized(List<Expression>? parametrized)
+		{
+			_parametrized = parametrized;
+		}
+
+		public bool IsParametrized(Expression expr)
+		{
+			return _parametrized?.Contains(expr) == true;
 		}
 
 		internal Expression AddQueryableMemberAccessors<TContext>(TContext context, MemberInfo memberInfo, IDataContext dataContext, Func<TContext, MemberInfo, IDataContext, Expression> qe)
@@ -177,8 +188,6 @@ namespace LinqToDB.Linq
 		/// </summary>
 		public static void ClearCaches()
 		{
-			EqualsToVisitor.ClearCaches();
-
 			foreach (var cleaner in CacheCleaners)
 			{
 				cleaner();
@@ -398,7 +407,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Search for query in cache and of found, try to move it to better position in cache.
 			/// </summary>
-			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags, DataOptions dataOptions)
+			public Query<T>? Find(IDataContext dataContext, Expression expr, QueryFlags queryFlags, bool onlyExpanded)
 			{
 				QueryCacheEntry[] cache;
 				int[]             indexes;
@@ -420,15 +429,18 @@ namespace LinqToDB.Linq
 						// if we have reordering lock, we can enumerate queries in priority order
 						var idx = allowReordering ? indexes[i] : i;
 
-						if (cache[idx].Compare(dataContext, expr, queryFlags))
+						if (onlyExpanded == ((cache[idx].QueryFlags & QueryFlags.ExpandedQuery) != 0))
 						{
-							// do reorder only if it is not blocked and cache wasn't replaced by new one
-							if (i > 0 && version == _version && allowReordering)
+							if (cache[idx].Compare(dataContext, expr, queryFlags))
 							{
-								(indexes[i - 1], indexes[i]) = (indexes[i], indexes[i - 1]);
-							}
+								// do reorder only if it is not blocked and cache wasn't replaced by new one
+								if (i > 0 && version == _version && allowReordering)
+								{
+									(indexes[i - 1], indexes[i]) = (indexes[i], indexes[i - 1]);
+								}
 
-							return cache[idx].Query;
+								return cache[idx].Query;
+							}
 						}
 					}
 				}
@@ -438,9 +450,12 @@ namespace LinqToDB.Linq
 						Monitor.Exit(_syncPriority);
 				}
 
-				Interlocked.Increment(ref CacheMissCount);
-
 				return null;
+			}
+
+			public void TriggerCacheMiss()
+			{
+				Interlocked.Increment(ref CacheMissCount);
 			}
 		}
 
@@ -466,12 +481,10 @@ namespace LinqToDB.Linq
 		{
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
-			expr = optimizationContext.ExpandExpression(expr);
-//			// we need this call for correct processing parameters in ExpressionMethod
-//			// TODO: IT breaks performance. All these operations must be cached.
-			// expr = optimizationContext.ExposeExpression(expr);
+			// I hope fast tree optimization for unbalanced Binary Expressions. 
+			expr = optimizationContext.AggregateExpression(expr);
 
-			dependsOnParameters = optimizationContext.IsDependsOnParameters();
+			dependsOnParameters = false;
 
 			if (dataContext is IExpressionPreprocessor preprocessor)
 				expr = preprocessor.ProcessExpression(expr);
@@ -482,14 +495,37 @@ namespace LinqToDB.Linq
 				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
 			var queryFlags = dataContext.GetQueryFlags();
-			var query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
 
-			if (query == null)
+			var query = _queryCache.Find(dataContext, expr, queryFlags, false);
+			if (query != null)
+				return query;
+
+			var exposed   = ExpressionBuilder.ExposeExpression(expr, dataContext, optimizationContext, true);
+			var isExposed = !ReferenceEquals(exposed, expr);
+
+			expr = exposed;
+			if (isExposed)
 			{
-				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
+				dependsOnParameters = true;
 
-				if (!query.DoNotCache)
-					_queryCache.TryAdd(dataContext, query, queryFlags, dataOptions);
+				queryFlags |= QueryFlags.ExpandedQuery;
+
+				// search again
+				query = _queryCache.Find(dataContext, expr, queryFlags, true);
+				if (query != null)
+					return query;
+			}
+
+			// Cache missed, Build query
+			//
+			_queryCache.TriggerCacheMiss();
+
+			query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext),
+				dataContext, expr);
+
+			if (!query.DoNotCache)
+			{
+				_queryCache.TryAdd(dataContext, query, queryFlags, dataOptions);
 			}
 
 			return query;

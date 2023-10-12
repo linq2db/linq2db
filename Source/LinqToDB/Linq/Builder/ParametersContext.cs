@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -37,36 +38,7 @@ namespace LinqToDB.Linq.Builder
 		};
 
 		public readonly   List<ParameterAccessor>           CurrentSqlParameters = new ();
-		internal readonly Dictionary<Expression,Expression> _expressionAccessors;
-
-		public ParameterAccessor? RegisterParameter(Expression expression)
-		{
-			if (!OptimizationContext.PreferServerSide(expression, false))
-			{
-				if (OptimizationContext.CanBeConstant(expression))
-					return null;
-
-				if (OptimizationContext.CanBeCompiled(expression, false))
-				{
-					return BuildParameter(expression, null);
-				}
-			}
-
-			return null;
-		}
-
-		public void AddExpressionAccessors(IEnumerable<KeyValuePair<Expression, Expression>> accessors)
-		{
-			foreach (var a in accessors)
-			{
-#if NETSTANDARD2_1PLUS
-				_expressionAccessors.TryAdd(a.Key, a.Value);
-#else
-				if (!_expressionAccessors.ContainsKey(a.Key))
-					_expressionAccessors.Add(a.Key, a.Value);
-#endif
-			}
-		}
+		readonly Dictionary<Expression,Expression> _expressionAccessors;
 
 		#region Build Parameter
 
@@ -94,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			string? name = alias;
 
-			var newExpr = ReplaceParameter(_expressionAccessors, expr, forceConstant, nm => name = nm);
+			var newExpr = ReplaceParameter(expr, forceConstant, nm => name = nm);
 
 			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
 
@@ -123,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 					else if (!ReferenceEquals(column, columnDescriptor))
 						continue;
 
-					if (paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))
+					if (paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true, null)))
 					{
 						found = accessor;
 						break;
@@ -338,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 			public DbDataType DataType;
 		}
 
-		public ValueTypeExpression ReplaceParameter(IDictionary<Expression, Expression> expressionAccessors, Expression expression, bool forceConstant, Action<string>? setName)
+		public ValueTypeExpression ReplaceParameter(Expression expression, bool forceConstant, Action<string>? setName)
 		{
 			var result = new ValueTypeExpression
 			{
@@ -354,17 +326,28 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			result.ValueExpression = expression.Transform(
-				(forceConstant, (expression as MemberExpression)?.Member, expressionAccessors, result, setName, paramContext: this),
+				(forceConstant, (expression as MemberExpression)?.Member, result, setName, paramContext: this),
 				static (context, expr) =>
 				{
 					if (expr.NodeType == ExpressionType.Constant
 						&& (context.forceConstant || !expr.Type.IsConstantable(false) || !context.paramContext.CanBeConstant(expr)))
 					{
-						if (context.expressionAccessors.TryGetValue(expr, out var val))
+						var exprType = expr.Type;
+						if (context.paramContext.GetAccessorExpression(expr, out var val, true))
 						{
-							expr = Expression.Convert(val, expr.Type);
+							var constantValue = ((ConstantExpression)expr).Value;
 
-							if (context.Member != null)
+							expr = Expression.Convert(val, exprType);
+
+							if (constantValue is DataParameter dataParameter)
+							{
+								context.result.DataType = dataParameter.DbDataType;
+								var dataParamExpr = Expression.Convert(expr, typeof(DataParameter));
+								context.result.DbDataTypeExpression = Expression.Property(dataParamExpr, nameof(DataParameter.DbDataType));
+
+								expr = Expression.Property(dataParamExpr, nameof(DataParameter.Value));
+							}
+							else if (context.Member != null)
 							{
 								var mt = ExpressionBuilder.GetMemberDataType(context.paramContext.MappingSchema, context.Member);
 
@@ -525,7 +508,7 @@ namespace LinqToDB.Linq.Builder
 			if (member is MethodInfo mi)
 				member = mi.GetPropertyInfo()!; // ??
 
-			var vte  = ReplaceParameter(_expressionAccessors, ex, forceConstant: false, null);
+			var vte  = ReplaceParameter(ex, forceConstant: false, null);
 			var par  = vte.ValueExpression;
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType ?? typeof(object)) : par, member);
 
@@ -553,19 +536,43 @@ namespace LinqToDB.Linq.Builder
 			return p.SqlParameter;
 		}
 
-		HashSet<Expression>? _constantsAsParameters;
+		List<Expression>? _parametrized;
+
+		public List<Expression>? GetParametrized() => _parametrized;
 
 		public void MarkAsParameter(ConstantExpression expression)
 		{
-			_constantsAsParameters ??= new ();
-			_constantsAsParameters.Add(expression);
+			AddAsParametrized(expression);
 		}
 
 		public bool CanBeConstant(Expression expr)
 		{
-			if (_constantsAsParameters != null && _constantsAsParameters.Contains(expr))
+			if (_parametrized != null && _parametrized.Contains(expr))
 				return false;
 			return true;
 		}
+
+		public void AddAsParametrized(Expression expression)
+		{
+			_parametrized ??= new ();
+			if (!_parametrized.Contains(expression))
+				_parametrized.Add(expression);
+		}
+
+		public bool GetAccessorExpression(Expression expression, [NotNullWhen(true)] out Expression? accessor, bool register)
+		{
+			if (_expressionAccessors.TryGetValue(expression, out accessor))
+			{
+				if (register)
+					AddAsParametrized(expression);
+
+				return true;
+			}
+
+			accessor = null;
+			return false;
+		}
+
+
 	}
 }

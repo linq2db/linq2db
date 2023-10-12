@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
@@ -7,14 +6,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-using JetBrains.Annotations;
-
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Extensions;
 	using Mapping;
-	using Reflection;
 	using SqlQuery;
 	using Visitors;
 	using LinqToDB.Expressions;
@@ -131,8 +127,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			_query               = query;
 
-			CollectQueryDepended(expression);
-
 			CompiledParameters = compiledParameters;
 			ParameterValues    = parameterValues;
 			DataContext        = dataContext;
@@ -141,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 
 			_optimizationContext = optimizationContext;
 			_parametersContext   = parametersContext;
-			Expression           = ConvertExpressionTree(expression);
+			Expression           = expression;
 			_optimizationContext.ClearVisitedCache();
 
 			PreferExistsForScalar = DataOptions.LinqOptions.PreferExistsForScalar;
@@ -190,6 +184,7 @@ namespace LinqToDB.Linq.Builder
 			BuildQuery((Query<T>)_query, sequence, param, ref preambles, Array<Expression>.Empty);
 
 			_query.SetPreambles(preambles);
+			_query.SetParametrized(_parametersContext.GetParametrized());
 
 			return (Query<T>)_query;
 		}
@@ -225,6 +220,11 @@ namespace LinqToDB.Linq.Builder
 				return GetSequenceExpression(scoped.Context);
 
 			return null;
+		}
+
+		public void AddAsParametrized(Expression expression)
+		{
+			_parametersContext.AddAsParametrized(expression);
 		}
 
 		public void RegisterSequenceExpression(IBuildContext sequence, Expression expression)
@@ -350,7 +350,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var expr = expression;
 
-			expr = ExposeExpression(expression);
+			expr = ExposeExpression(expression, DataContext, _optimizationContext, false);
 
 			return expr;
 		}
@@ -405,11 +405,11 @@ namespace LinqToDB.Linq.Builder
 
 		static ObjectPool<ExposeExpressionVisitor> _exposeVisitorPool = new(() => new ExposeExpressionVisitor(), v => v.Cleanup(), 100);
 
-		public Expression ExposeExpression(Expression expression)
+		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, bool optimizeConditions)
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(expression, this, MappingSchema, false);
+			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, expression, false, optimizeConditions);
 
 			return result;
 		}
@@ -426,71 +426,6 @@ namespace LinqToDB.Linq.Builder
 
 		public static readonly MethodInfo[] EnumerableMethods      = typeof(Enumerable     ).GetMethods();
 		public static readonly MethodInfo[] QueryableMethods       = typeof(Queryable      ).GetMethods();
-		public static readonly MethodInfo[] AsyncExtensionsMethods = typeof(AsyncExtensions).GetMethods();
-
-		Dictionary<Expression, Expression>? _optimizedExpressions;
-
-		static void CollectLambdaParameters(Expression expression, HashSet<ParameterExpression> foundParameters)
-		{
-			expression.Visit(foundParameters, static (foundParameters, e) =>
-			{
-				if (e.NodeType == ExpressionType.Lambda)
-					foundParameters.AddRange(((LambdaExpression)e).Parameters);
-			});
-		}
-
-		#endregion
-
-		#region ConvertIQueryable
-
-		public Expression ConvertIQueryable(Expression expression)
-		{
-			if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
-			{
-				if (expression.NodeType == ExpressionType.Call)
-				{
-					var mc = (MethodCallExpression)expression;
-					if (mc.Method.DeclaringType != null && MappingSchema.HasAttribute<Sql.QueryExtensionAttribute>(mc.Method.DeclaringType, mc.Method))
-						return mc;
-				}
-
-				var p    = Expression.Parameter(typeof(Expression), "exp");
-				var exas = expression.GetExpressionAccessors(p);
-				var expr = _parametersContext.ReplaceParameter(exas, expression, forceConstant: false, null).ValueExpression;
-
-				var parameters = new[] { p };
-
-				var l    = Expression.Lambda<Func<Expression,IQueryable>>(Expression.Convert(expr, typeof(IQueryable)), parameters);
-				var n    = _query.AddQueryableAccessors(expression, l);
-
-				_parametersContext._expressionAccessors.TryGetValue(expression, out var accessor);
-				if (accessor == null)
-					throw new LinqToDBException($"IQueryable value accessor for '{expression}' not found.");
-
-				var path =
-					Expression.Call(
-						Expression.Constant(_query),
-						Methods.Query.GetIQueryable,
-						ExpressionInstances.Int32(n), accessor, Expression.Constant(true));
-
-				var qex = _query.GetIQueryable(n, expression, force: false);
-
-				/*if (expression.NodeType == ExpressionType.Call && qex.NodeType == ExpressionType.Call)
-				{
-					var m1 = (MethodCallExpression)expression;
-					var m2 = (MethodCallExpression)qex;
-
-					if (m1.Method == m2.Method)
-						return expression;
-				}*/
-
-				ParametersContext.AddExpressionAccessors(qex.GetExpressionAccessors(path));
-
-				return qex;
-			}
-
-			throw new InvalidOperationException();
-		}
 
 		#endregion
 
@@ -499,24 +434,6 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		#region SqQueryDepended support
-
-		void CollectQueryDepended(Expression expr)
-		{
-			expr.Visit(_query, static (query, e) =>
-			{
-				if (e.NodeType == ExpressionType.Call)
-				{
-					var call = (MethodCallExpression)e;
-					var parameters = call.Method.GetParameters();
-					for (int i = 0; i < parameters.Length; i++)
-					{
-						var attr = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
-						if (attr != null)
-							query.AddQueryDependedObject(call.Arguments[i], attr);
-					}
-				}
-			});
-		}
 
 		public Expression AddQueryableMemberAccessors<TContext>(TContext context, AccessorMember memberInfo, IDataContext dataContext,
 			Func<TContext, MemberInfo, IDataContext, Expression> qe)
@@ -613,12 +530,16 @@ namespace LinqToDB.Linq.Builder
 			if (expression == null)
 				return null;
 
+			// Shortcut for constants
+			if (expression.NodeType == ExpressionType.Constant)
+				return ((ConstantExpression)expression).Value;
+
 			var expr = expression.Transform(e =>
 			{
 				if (e is SqlQueryRootExpression root)
 				{
 					if (((IConfigurationID)root.MappingSchema).ConfigurationID ==
-						((IConfigurationID)DataContext.MappingSchema).ConfigurationID)
+					    ((IConfigurationID)DataContext.MappingSchema).ConfigurationID)
 					{
 						return Expression.Constant(DataContext, e.Type);
 					}

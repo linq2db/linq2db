@@ -111,13 +111,17 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
+#pragma warning disable CA2007
 				await using var db = CreateDataContext(configuration);
+#pragma warning restore CA2007
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
-				await using var _  = db.DataProvider.ExecuteScope(db);
+#pragma warning disable CA2007
+				await using var _ = db.DataProvider.ExecuteScope(db);
+#pragma warning restore CA2007
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -177,13 +181,17 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
+#pragma warning disable CA2007
 				await using var db = CreateDataContext(configuration);
+#pragma warning restore CA2007
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
 
+#pragma warning disable CA2007
 				await using var _ = db.DataProvider.ExecuteScope(db);
+#pragma warning restore CA2007
 
 				if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
@@ -280,6 +288,7 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
+#pragma warning disable CA2007
 				await using var db = CreateDataContext(configuration);
 
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
@@ -303,6 +312,7 @@ namespace LinqToDB.Remote
 				var ret = ProcessDataReaderWrapper(query, db, rd);
 
 				return LinqServiceSerializer.Serialize(SerializationMappingSchema, ret);
+#pragma warning restore CA2007
 			}
 			catch (Exception exception)
 			{
@@ -490,7 +500,9 @@ namespace LinqToDB.Remote
 			try
 			{
 #if NATIVE_ASYNC
+#pragma warning disable CA2007
 				await using var db = CreateDataContext(configuration);
+#pragma warning restore CA2007
 #else
 				using var db = CreateDataContext(configuration);
 #endif
@@ -502,7 +514,9 @@ namespace LinqToDB.Remote
 					ValidateQuery(query);
 
 #if NATIVE_ASYNC
+#pragma warning disable CA2007
 				await using var _ = db.DataProvider.ExecuteScope(db);
+#pragma warning restore CA2007
 #else
 				using var _  = db.DataProvider.ExecuteScope(db);
 #endif

@@ -41,12 +41,7 @@ namespace LinqToDB.Expressions
 				{
 					var member = (MemberExpression) expr;
 
-					if (member.Member.MemberType == MemberTypes.Property)
-					{
-						return IsSimpleEvaluatable(member.Expression);
-					}
-
-					return false;
+					return IsSimpleEvaluatable(member.Expression);
 				}
 
 				case ExpressionType.Call:
@@ -60,6 +55,58 @@ namespace LinqToDB.Expressions
 		}
 
 
+		static object? EvaluateExpressionInternal(this Expression? expr)
+		{
+			if (expr == null)
+				return null;
+
+			switch (expr.NodeType)
+			{
+				case ExpressionType.Default:
+					return !expr.Type.IsNullableType() ? TypeAccessor.GetAccessor(expr.Type).CreateInstanceEx() : null;
+
+				case ExpressionType.Constant:
+					return ((ConstantExpression)expr).Value;
+
+				case ExpressionType.MemberAccess:
+				{
+					var member = (MemberExpression) expr;
+
+					if (member.Member.IsFieldEx())
+						return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpressionInternal());
+
+					if (member.Member is PropertyInfo propertyInfo)
+					{
+						var obj = member.Expression.EvaluateExpressionInternal();
+						if (obj == null)
+						{
+							if (propertyInfo.IsNullableValueMember())
+								return null;
+							if (propertyInfo.IsNullableHasValueMember())
+								return false;
+						}
+						return propertyInfo.GetValue(obj, null);
+					}
+
+					break;
+				}
+
+				case ExpressionType.Call:
+				{
+					var mc        = (MethodCallExpression)expr;
+					var arguments = mc.Arguments.Select(a => a.EvaluateExpressionInternal()).ToArray();
+					var instance  = mc.Object.EvaluateExpressionInternal();
+
+					if (instance == null && mc.Method.IsNullableGetValueOrDefault())
+						return null;
+
+					return mc.Method.Invoke(instance, arguments);
+				}
+			}
+
+			throw new InvalidOperationException($"Expression '{expr}' cannot be evaluated");
+		}
+
 		public static object? EvaluateExpression(this Expression? expr)
 		{
 			if (expr == null)
@@ -67,49 +114,7 @@ namespace LinqToDB.Expressions
 
 			if (IsSimpleEvaluatable(expr))
 			{
-				switch (expr.NodeType)
-				{
-					case ExpressionType.Default:
-						return !expr.Type.IsNullableType() ? TypeAccessor.GetAccessor(expr.Type).CreateInstanceEx() : null;
-
-					case ExpressionType.Constant:
-						return ((ConstantExpression)expr).Value;
-
-					case ExpressionType.MemberAccess:
-					{
-						var member = (MemberExpression) expr;
-
-						if (member.Member.IsFieldEx())
-							return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
-
-						if (member.Member is PropertyInfo propertyInfo)
-						{
-							var obj = member.Expression.EvaluateExpression();
-							if (obj == null)
-							{
-								if (propertyInfo.IsNullableValueMember())
-									return null;
-								if (propertyInfo.IsNullableHasValueMember())
-									return false;
-							}
-							return propertyInfo.GetValue(obj, null);
-						}
-
-						break;
-					}
-
-					case ExpressionType.Call:
-					{
-						var mc        = (MethodCallExpression)expr;
-						var arguments = mc.Arguments.Select(a => a.EvaluateExpression()).ToArray();
-						var instance  = mc.Object.EvaluateExpression();
-
-						if (instance == null && mc.Method.IsNullableGetValueOrDefault())
-							return null;
-
-						return mc.Method.Invoke(instance, arguments);
-					}
-				}
+				return expr.EvaluateExpressionInternal();
 			}
 
 			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();

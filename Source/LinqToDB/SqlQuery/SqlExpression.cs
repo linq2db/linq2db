@@ -178,6 +178,11 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
+		public override bool Equals(object obj)
+		{
+			return Equals(obj, DefaultComparer);;
+		}
+
 		#region Public Static Members
 
 		public static bool NeedsEqual(IQueryElement ex)

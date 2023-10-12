@@ -4,6 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
@@ -1126,12 +1128,14 @@ namespace Tests.Linq
 
 		#region Regression: query comparison
 		[Test(Description = "Tests regression introduced in 3.5.2")]
-		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void ComparisonTest1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context, [Values(1, 2)] int iteration)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var left  = GetQuery(db, null);
 				var right = GetQuery(db, 2);
+
+				var cacheMiss = Query<Patient>.CacheMissCount;
 
 				Assert.False(
 					db.Person.Where(_ =>
@@ -1139,6 +1143,9 @@ namespace Tests.Linq
 					&&
 					right.Where(rec => !left.Select(r2 => r2.PersonID).Contains(rec.PersonID)).Select(_ => Sql.Ext.Count(_.PersonID, Sql.AggregateModifier.None).ToValue()).Single() == 0)
 					.Any());
+
+				if (iteration > 1)
+					Query<Patient>.CacheMissCount.Should().Be(cacheMiss);
 			}
 		}
 

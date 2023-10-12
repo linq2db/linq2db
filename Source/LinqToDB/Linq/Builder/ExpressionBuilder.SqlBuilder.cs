@@ -172,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(expression, this, MappingSchema, true);
+			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, expression, true, false);
 
 			return result;
 		}
@@ -186,9 +186,7 @@ namespace LinqToDB.Linq.Builder
 			    expression.NodeType == ExpressionType.New          ||
 			    expression is BinaryExpression)
 			{
-				using var visitor = _exposeVisitorPool.Allocate();
-
-				var result = visitor.Value.ExposeExpression(expression, this, MappingSchema, true);
+				var result = ConvertExpression(expression);
 
 				return result;
 			}
@@ -668,7 +666,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (CanBeCompiled(newExpr, flags.IsExpression()))
 					{
-						if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.Type))
+						if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.UnwrapConvert().Type))
 						{
 							sql = EvaluateExpression<ISqlExpression>(newExpr);
 						}
@@ -1197,6 +1195,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						return ConvertToSqlExpr(context, converted, flags, unwrap, columnDescriptor, isPureExpression, alias);
 					}
+
+					break;
+				}
+
+				case ExpressionType.Switch:
+				{
+					var switchExpression = (SwitchExpression)expression;
+					throw new NotImplementedException();
 
 					break;
 				}
@@ -2635,7 +2641,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			expr = expr.Unwrap();
 
-			var converted = ConvertToSqlExpr(context, expr, ProjectFlags.SQL | ProjectFlags.Test);
+			var converted = ConvertToSqlExpr(context, expr, ProjectFlags.SQL);
 			if (converted is not SqlPlaceholderExpression placeholderTest)
 				return null;
 
@@ -3421,7 +3427,7 @@ namespace LinqToDB.Linq.Builder
 				for (var index = 0; index < _ctes.Count; index++)
 				{
 					var tuple = _ctes[index];
-					if (tuple.Item1.EqualsTo(cteExpression, OptimizationContext.GetSimpleEqualsToContext(false)))
+					if (tuple.Item1.EqualsTo(cteExpression, OptimizationContext.GetSimpleEqualsToContext(false, ParametersContext.GetParametrized())))
 					{
 						idx = index;
 						return tuple.Item2;

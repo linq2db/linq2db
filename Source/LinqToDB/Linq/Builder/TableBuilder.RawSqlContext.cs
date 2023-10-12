@@ -14,7 +14,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
-			PrepareRawSqlArguments(methodCall.Arguments[1],
+			var formatArg = methodCall.Arguments[1];
+
+			PrepareRawSqlArguments(formatArg,
 				methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null,
 				out var format, out var arguments);
 
@@ -61,13 +63,7 @@ namespace LinqToDB.Linq.Builder
 
 					for (var i = 0; i < array.Length; i++)
 					{
-						var type = array[i]?.GetType() ?? typeof(object);
-
-						Expression expr = Expression.Call(formatArg, ReflectionHelper.Functions.FormattableString.GetArguments, ExpressionInstances.Int32Array(i));
-
-						if (type != typeof(object))
-							expr = Expression.Convert(expr, type);
-
+						Expression expr = Expression.Constant(array[i], typeof(object));
 						args[i] = expr;
 					}
 

@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 
 					Expression fullEntity = Builder.BuildFullEntityExpression(this, path, ElementType, flags);
 					// Entity can contain calculated columns which should be exposed
-					fullEntity = Builder.ExposeExpression(fullEntity);
+					fullEntity = Builder.ConvertExpressionTree(fullEntity);
 
 					if (fullEntity.Type != path.Type)
 						fullEntity = Expression.Convert(fullEntity, path.Type);

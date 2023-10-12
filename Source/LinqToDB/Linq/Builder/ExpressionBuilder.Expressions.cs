@@ -599,7 +599,7 @@ namespace LinqToDB.Linq.Builder
 				if (IsForcedToConvert(node))
 					localFlags = _flags.SqlFlag();
 
-				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || node.Method.IsSqlPropertyMethodEx())
+				if (Builder.IsServerSideOnly(node, _flags.IsExpression())/* || node.Method.IsSqlPropertyMethodEx()*/)
 					localFlags = _flags.SqlFlag();
 
 				var method = Builder.MakeExpression(_context, node, localFlags);
@@ -691,8 +691,7 @@ namespace LinqToDB.Linq.Builder
 
 					// correct expression based on accessors
 
-					var valueAccessor = Builder.ParametersContext.ReplaceParameter(
-						Builder.ParametersContext._expressionAccessors, expr, false, s => { });
+					var valueAccessor = Builder.ParametersContext.ReplaceParameter(expr, false, s => { });
 
 					var valueExpr = valueAccessor.ValueExpression;
 

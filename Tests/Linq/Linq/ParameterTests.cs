@@ -1258,7 +1258,7 @@ namespace Tests.Linq
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-				Assert.AreEqual(3, _cnt1);
+				Assert.AreEqual(1, _cnt1);
 				Assert.AreEqual(1, _cnt2);
 				Assert.AreEqual(1, _cnt3);
 
@@ -1271,8 +1271,8 @@ namespace Tests.Linq
 				Assert.AreEqual(2, persons.Count);
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
-				Assert.AreEqual(5, _cnt1);
-				Assert.AreEqual(3, _cnt2);
+				Assert.AreEqual(1, _cnt1);
+				Assert.AreEqual(1, _cnt2);
 				Assert.AreEqual(1, _cnt3);
 
 				_cnt1   = 0;
@@ -1283,9 +1283,9 @@ namespace Tests.Linq
 
 				Assert.AreEqual(1, persons.Count);
 				Assert.AreEqual(1, persons[0].ID);
-				Assert.AreEqual(4, _cnt1);
-				Assert.AreEqual(2, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.AreEqual(1, _cnt1);
+				Assert.AreEqual(1, _cnt2);
+				Assert.AreEqual(1, _cnt3);
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1296,9 +1296,9 @@ namespace Tests.Linq
 				Assert.AreEqual(2, persons.Count);
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
-				Assert.AreEqual(2, _cnt1);
-				Assert.AreEqual(2, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.AreEqual(1, _cnt1);
+				Assert.AreEqual(1, _cnt2);
+				Assert.AreEqual(1, _cnt3);
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1310,9 +1310,9 @@ namespace Tests.Linq
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
 				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-				Assert.AreEqual(4, _cnt1);
-				Assert.AreEqual(3, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.AreEqual(1, _cnt1);
+				Assert.AreEqual(1, _cnt2);
+				Assert.AreEqual(1, _cnt3);
 			}
 
 			List<Person> Query(ITestDataContext db)

@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq.Builder;
@@ -236,7 +238,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestParameters([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(14, 15)] int endId)
+		public void TestParameters([DataSources(ProviderName.DB2, TestProvName.AllSapHana)] string context, [Values(1, 2)] int iteration, [Values(14, 15)] int endId)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(GenerateTestData()))
@@ -245,11 +247,19 @@ namespace Tests.Linq
 
 				var query = db.FromSql<SampleClass>("SELECT * FROM\n{0}\nwhere {3} >= {1} and {3} < {2}",
 					GetName(table), new DataParameter("startId", startId, DataType.Int64), endId, GetColumn("id"));
+
+				var save = Query<SampleClass>.CacheMissCount;
+
 				var projection = query
 					.Where(c => c.Id > 10)
 					.Select(c => new { c.Value, c.Id })
 					.OrderBy(_ => _.Id)
 					.ToArray();
+
+				if (iteration > 1)
+				{
+					Query<SampleClass>.CacheMissCount.Should().Be(save);
+				}
 
 				var expected = table
 					.Where(t => t.Id >= startId && t.Id < endId)
@@ -761,10 +771,16 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				Test(null, null);
+
+				var saveCount = Query<Values<int?>>.CacheMissCount;
+
 				Test(1, 2);
 				Test(null, 2);
 				Test(2, null);
 				Test(3, 3);
+
+
+				Query<Values<int?>>.CacheMissCount.Should().Be(saveCount);
 
 				void Test(int? value1, int? value2)
 				{

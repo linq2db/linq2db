@@ -205,7 +205,9 @@ namespace LinqToDB.Linq
 
 			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expression, Parameters, Preambles);
 
+#pragma warning disable CA2007
 			await using var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+#pragma warning restore CA2007
 
 			while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 			{

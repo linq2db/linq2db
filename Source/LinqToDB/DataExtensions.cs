@@ -1495,6 +1495,19 @@ namespace LinqToDB
 
 		#region FromSql
 
+		static Expression GenerateArray(object?[] arguments)
+		{
+			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select(p =>
+			{
+				Expression constant = Expression.Constant(p, p?.GetType() ?? typeof(object));
+				if (constant.Type != typeof(object))
+					constant = Expression.Convert(constant, typeof(object));
+				return constant;
+			}));
+
+			return argumentsExpr;
+		}
+
 #if !NET45
 		/// <summary>
 		/// Compares two FormattableString parameters
@@ -1573,18 +1586,26 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this                     IDataContext      dataContext,
-			[SqlFormattableComparer] FormattableString sql)
+			this IDataContext dataContext,
+			FormattableString sql)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (sql         == null) throw new ArgumentNullException(nameof(sql));
+
+			var arguments = sql.GetArguments();
+			var methodInfo = MethodHelper.GetMethodInfo(System.Runtime.CompilerServices.FormattableStringFactory.Create,
+				sql.Format, arguments);
+			var argumentsExpr = GenerateArray(arguments);
+
+			var formattableStringExpr =
+				Expression.Call(null, methodInfo, Expression.Constant(sql.Format), argumentsExpr);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
-					ExpressionConstants.DataContextParam, Expression.Constant(sql)));
+					SqlQueryRootExpression.Create(dataContext), formattableStringExpr));
 		}
 
 		/// <summary>
@@ -1610,7 +1631,7 @@ namespace LinqToDB
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSqlScalar<TEntity>(
 			this                     IDataContext      dataContext,
-			[SqlFormattableComparer] FormattableString sql)
+			FormattableString sql)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (sql         == null) throw new ArgumentNullException(nameof(sql));
@@ -1652,18 +1673,20 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this                             IDataContext dataContext,
-			[SqlQueryDependent]              RawSqlString sql,
-			[SqlQueryDependentParams] params object?[]    parameters)
+			this IDataContext                          dataContext,
+			RawSqlString                               sql,
+			[SqlQueryDependentParams] params object?[] parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
+			var paramsExpr = GenerateArray(parameters);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql, parameters),
-					ExpressionConstants.DataContextParam, Expression.Constant(sql), Expression.Constant(parameters)));
+					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql), paramsExpr));
 		}
 
 		#endregion

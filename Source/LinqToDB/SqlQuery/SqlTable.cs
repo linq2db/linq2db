@@ -309,7 +309,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
-			return this == other;
+			return Equals(this, other);
 		}
 
 		#endregion
@@ -318,7 +318,15 @@ namespace LinqToDB.SqlQuery
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
 		{
-			return this == other;
+			if (ReferenceEquals(this, other))
+				return true;
+
+			if (other is not SqlTable otherTable)
+				return false;
+
+			return ObjectType == otherTable.ObjectType &&
+			       TableName  == otherTable.TableName  &&
+			       Alias      == otherTable.Alias;
 		}
 
 		#endregion
@@ -363,5 +371,11 @@ namespace LinqToDB.SqlQuery
 			return new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
 		}
 
+		public override bool Equals(object? obj)
+		{
+			if (obj is ISqlExpression other)
+				return ((IEquatable<ISqlExpression>)this).Equals(other);
+			return base.Equals(obj);
+		}
 	}
 }

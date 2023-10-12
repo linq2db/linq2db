@@ -36,12 +36,14 @@ namespace LinqToDB.Linq
 				{
 					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
-					var query = new Query<T>(ctx.dataContext, key.expression);
-
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
-					var parametersContext = new ParametersContext(key.expression, optimizationContext, ctx.dataContext);
+					var exposed             = ExpressionBuilder.ExposeExpression(key.expression, ctx.dataContext, optimizationContext, true);
 
-					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, key.expression, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
+					var query               = new Query<T>(ctx.dataContext, exposed);
+
+					var parametersContext = new ParametersContext(exposed, optimizationContext, ctx.dataContext);
+
+					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
 						.Build<T>();
 
 					query.ClearMemberQueryableInfo();

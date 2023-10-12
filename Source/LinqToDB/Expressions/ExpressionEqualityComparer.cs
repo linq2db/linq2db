@@ -272,6 +272,23 @@ namespace LinqToDB.Expressions
 
 						break;
 					}
+					case ExpressionType.Switch:
+					{
+						var switchExpression = (SwitchExpression)obj;
+
+						hashCode += (hashCode * 397) ^ GetHashCode(switchExpression.SwitchValue);
+
+						for (var i = 0; i < switchExpression.Cases.Count; i++)
+						{
+							var switchCase = switchExpression.Cases[i];
+							hashCode += (hashCode * 397) ^ GetHashCode(switchCase.TestValues);
+							hashCode += (hashCode * 397) ^ GetHashCode(switchCase.Body);
+						}
+
+						hashCode += (hashCode * 397) ^ GetHashCode(switchExpression.DefaultBody);
+
+						break;
+					}
 					default:
 						throw new NotImplementedException();
 				}
@@ -440,6 +457,8 @@ namespace LinqToDB.Expressions
 						return CompareUnary((UnaryExpression)a, (UnaryExpression)b);
 					case ExpressionType.Index:
 						return CompareIndex((IndexExpression)a, (IndexExpression)b);
+					case ExpressionType.Switch:
+						return CompareSwitch((SwitchExpression)a, (SwitchExpression)b);
 					default:
 						throw new NotImplementedException();
 				}
@@ -450,6 +469,29 @@ namespace LinqToDB.Expressions
 				return Equals(a.Indexer, b.Indexer)
 					&& Equals(a.Object, b.Object)
 					&& CompareExpressionList(a.Arguments, b.Arguments);
+			}
+
+			bool CompareSwitch(SwitchExpression a, SwitchExpression b)
+			{
+				if (! (Equals(a.SwitchValue, b.SwitchValue) && 
+				       Equals(a.DefaultBody, b.DefaultBody) && 
+				       Equals(a.Comparison, b.Comparison) &&
+					   a.Cases.Count != b.Cases.Count))
+				{
+					return false;
+				}
+
+				for (var i = 0; i < a.Cases.Count; i++)
+				{
+					if (!Equals(a.Cases[i].Body, b.Cases[i].Body))
+						return false;
+					if (!Equals(a.Cases[i].Body, b.Cases[i].Body))
+						return false;
+					if (!CompareExpressionList(a.Cases[i].TestValues, b.Cases[i].TestValues))
+						return false;
+				}
+
+				return true;
 			}
 
 			bool CompareUnary(UnaryExpression a, UnaryExpression b)
