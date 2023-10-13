@@ -1201,10 +1201,49 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Switch:
 				{
-					var switchExpression = (SwitchExpression)expression;
-					throw new NotImplementedException();
+					var switchExpression  = (SwitchExpression)expression;
+					var d = switchExpression.DefaultBody == null ||
+					        switchExpression.DefaultBody is not UnaryExpression
+					        {
+						        NodeType : ExpressionType.Convert, Operand : MethodCallExpression { Method : var m }
+					        } || m != ConvertBuilder.DefaultConverter;
 
-					break;
+					var ps = new ISqlExpression[switchExpression.Cases.Count * 2 + (d? 1 : 0)];
+					var svExpr = ConvertToSqlExpr(context, switchExpression.SwitchValue, flags, unwrap, columnDescriptor, isPureExpression, alias);
+					if (svExpr is not SqlPlaceholderExpression svPlaceholder)
+						return SqlErrorExpression.EnsureError(svExpr, switchExpression.Type);
+					var sv = svPlaceholder.Sql;
+
+					for (var i = 0; i < switchExpression.Cases.Count; i++)
+					{
+						SqlSearchCondition.Next? expr = null;
+
+						foreach (var testValue in switchExpression.Cases[i].TestValues)
+						{
+							if (testValue == null)
+								continue;
+
+							var sc = expr == null ? new() : expr.Or;
+
+							var testValueExpr = ConvertToSqlExpr(context, testValue, flags, unwrap, columnDescriptor, isPureExpression, alias);
+							if (testValueExpr is not SqlPlaceholderExpression testPlaceholder)
+								return SqlErrorExpression.EnsureError(testValueExpr, switchExpression.Type);
+
+							expr = sc.Expr(sv).Equal.Expr(testPlaceholder.Sql);
+						}
+
+						ps[i * 2]     = expr!.ToExpr();
+						ps[i * 2 + 1] = ConvertToSql(context, switchExpression.Cases[i].Body);
+					}
+
+					if (d)
+						ps[^1] = ConvertToSql(context, switchExpression.DefaultBody!);
+
+					var nullability = NullabilityContext.GetContext(context?.SelectQuery);
+
+					var caseFunc = new SqlFunction(switchExpression.Type, "CASE", ps) { CanBeNull = ps.Any(p => p.CanBeNullable(nullability)) };
+
+					return CreatePlaceholder(context, caseFunc, expression, alias : alias);
 				}
 
 				/*default:
