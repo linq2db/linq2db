@@ -38,12 +38,32 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext? BuildWhere(IBuildContext? parent, IBuildContext sequence, LambdaExpression condition,
 			bool                                        checkForSubQuery, bool enforceHaving, bool isTest, bool isAggregationTest)
 		{
-			if (sequence is not SubQueryContext)
+			var buildSequnce = sequence;
+
+			if (enforceHaving)
 			{
-				sequence = new SubQueryContext(sequence);
+				var root = sequence.Builder.GetRootContext(sequence,
+					new ContextRefExpression(sequence.ElementType, sequence), true);
+
+				if (root != null && root.BuildContext is GroupByBuilder.GroupByContext groupByContext)
+				{
+					buildSequnce = groupByContext.SubQuery;
+				}
+				else
+				{
+					enforceHaving = false;
+				}
 			}
 
-			sequence.SetAlias(condition.Parameters[0].Name);
+			if (!enforceHaving)
+			{
+				if (buildSequnce is not SubQueryContext)
+				{
+					buildSequnce = new SubQueryContext(sequence);
+				}
+
+				sequence.SetAlias(condition.Parameters[0].Name);
+			}
 
 			var body = SequenceHelper.PrepareBody(condition, sequence);
 			var expr = body.Unwrap();
@@ -54,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 			if (isTest)
 				flags |= ProjectFlags.Test;
 
-			if (!BuildSearchCondition(sequence, expr, flags, sc.Conditions, out var error))
+			if (!BuildSearchCondition(buildSequnce, expr, flags, sc.Conditions, out var error))
 			{
 				if (!isTest)
 					throw error.CreateError();
@@ -63,7 +83,15 @@ namespace LinqToDB.Linq.Builder
 
 			if (!isTest || isAggregationTest)
 			{
-				sequence.SelectQuery.Where.ConcatSearchCondition(sc);
+				if (enforceHaving)
+					buildSequnce.SelectQuery.Having.ConcatSearchCondition(sc);
+				else 
+					buildSequnce.SelectQuery.Where.ConcatSearchCondition(sc);
+			}
+
+			if (!enforceHaving)
+			{
+				return buildSequnce;
 			}
 
 			return sequence;
