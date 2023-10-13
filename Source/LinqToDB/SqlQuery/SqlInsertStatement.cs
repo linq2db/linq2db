@@ -37,7 +37,11 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return writer.AppendElement(_insert).AppendElement(SelectQuery);
+			return writer
+				.AppendElement(_insert)
+				.AppendLine()
+				.AppendElement(SelectQuery)
+				.AppendElement(Output);
 		}
 
 		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)

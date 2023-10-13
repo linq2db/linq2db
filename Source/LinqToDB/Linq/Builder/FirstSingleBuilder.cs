@@ -234,13 +234,24 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			bool _isJoinCreated;
+			bool _asSubquery;
 
 			void CreateJoin()
 			{
 				// sequence created in test mode and there can be no tables.
 				//
-				if (IsTest || Parent!.SelectQuery.From.Tables.Count == 0)
+				if (IsTest)
 					return;
+
+				if (_isJoinCreated  || _asSubquery)
+					return;
+
+				// process as subquery
+				if (Parent!.SelectQuery.From.Tables.Count == 0)
+				{
+					_asSubquery = true;
+					return;
+				}
 
 				if (!_isJoinCreated)
 				{
@@ -294,6 +305,32 @@ namespace LinqToDB.Linq.Builder
 
 				if (flags.IsTable())
 					return projected;
+
+				if (_asSubquery)
+				{
+					if (Parent == null)
+						return path;
+
+					projected = Builder.BuildSqlExpression(this, projected, ProjectFlags.SQL,
+						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+
+					if (projected is SqlPlaceholderExpression placeholder)
+					{
+						var column = Builder.ToColumns(this, placeholder);
+						if (column is SqlPlaceholderExpression)
+						{
+							projected = ExpressionBuilder.CreatePlaceholder(Parent, SelectQuery, path);
+						}
+						else
+						{
+							projected = path;
+						}
+					}
+					else
+					{
+						projected = path;
+					}
+				}
 
 				return projected;
 			}

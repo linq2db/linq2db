@@ -154,9 +154,21 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
+					var sourceSequence = new SelectContext(buildInfo.Parent,
+						builder,
+						null,
+						setterExpr,
+						new SelectQuery(), buildInfo.IsSubQuery);
+
+					var sourceRef = new ContextRefExpression(sourceSequence.ElementType, sourceSequence);
+
+					var redirectedExpression = SequenceHelper.RemapToNewPathSimple(builder, setterExpr, sourceRef, ProjectFlags.SQL);
+					insertContext.QuerySequence = sourceSequence;
+					insertContext.InsertStatement.SelectQuery = sourceSequence.SelectQuery;
+
 					UpdateBuilder.ParseSetter(builder,
 						intoContextRef, 
-						setterExpr, 
+						redirectedExpression, 
 						insertContext.SetExpressions);
 				}
 
@@ -235,6 +247,7 @@ namespace LinqToDB.Linq.Builder
 			public InsertContext(IBuildContext querySequence, InsertTypeEnum insertType, SqlInsertStatement insertStatement, LambdaExpression? outputExpression)
 				: base(querySequence, querySequence.SelectQuery)
 			{
+				QuerySequence    = querySequence;
 				InsertType       = insertType;
 				InsertStatement  = insertStatement;
 				OutputExpression = outputExpression;
@@ -244,7 +257,7 @@ namespace LinqToDB.Linq.Builder
 
 			public List<UpdateBuilder.SetExpressionEnvelope> SetExpressions { get; } = new ();
 
-			public IBuildContext              QuerySequence    => Context;
+			public IBuildContext              QuerySequence    { get; set; }
 			public IBuildContext?             Into             { get; set; }
 			public BuildInfo?                 LastBuildInfo    { get; set; }
 			public LambdaExpression?          OutputExpression { get; set; }
@@ -394,7 +407,7 @@ namespace LinqToDB.Linq.Builder
 
 				// static IValueInsertable<T> Into<T>(this IDataContext dataContext, Table<T> target)
 				//
-				if (source.IsNullValue())
+				if (source.IsNullValue() || typeof(IDataContext).IsSameOrParentOf(source.Type))
 				{
 					sequence = builder.BuildSequence(new BuildInfo((IBuildContext?)null, into, new SelectQuery()));
 					destinationSequence = sequence;
