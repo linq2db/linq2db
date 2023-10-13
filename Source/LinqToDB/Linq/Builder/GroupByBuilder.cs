@@ -231,9 +231,8 @@ namespace LinqToDB.Linq.Builder
 		static void AppendGroupBy(ExpressionBuilder builder, List<SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression result)
 		{
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(result);
-			var allowed      = placeholders.Where(p => !QueryHelper.IsConstantFast(p.Sql));
 
-			foreach (var p in allowed)
+			foreach (var p in placeholders)
 			{
 				if (currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path)) == null)
 				{

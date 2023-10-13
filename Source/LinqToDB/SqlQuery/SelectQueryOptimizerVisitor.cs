@@ -349,9 +349,13 @@ namespace LinqToDB.SqlQuery
 				//
 				for (int i = selectQuery.GroupBy.Items.Count - 1; i >= 0; i--)
 				{
-					if (QueryHelper.IsConstantFast(selectQuery.GroupBy.Items[i]))
+					var groupByItem = selectQuery.GroupBy.Items[i];
+					if (QueryHelper.IsConstantFast(groupByItem))
 					{
-						selectQuery.GroupBy.Items.RemoveAt(i);
+						if (!selectQuery.Select.Columns.Any(c => ReferenceEquals(c.Expression, groupByItem)))
+						{
+							selectQuery.GroupBy.Items.RemoveAt(i);
+						}
 					}
 				}
 			}
@@ -1135,10 +1139,23 @@ namespace LinqToDB.SqlQuery
 
 			int found = 0;
 
-			if (!parentQuery.GroupBy.IsEmpty && columnExpression.ElementType != QueryElementType.SqlValue)
+			if (!parentQuery.GroupBy.IsEmpty)
 			{
 				if (null != parentQuery.GroupBy.Find(e => ReferenceEquals(e, column)))
-					return false;
+				{
+					if (columnExpression.ElementType == QueryElementType.SqlValue ||
+					    columnExpression.ElementType == QueryElementType.SqlParameter)
+					{
+						if (null != parentQuery.Select.Find(e => ReferenceEquals(e, column)))
+						{
+							return false;
+						}
+					}
+					else
+					{
+						return false;
+					}
+				}
 			}
 
 			if (QueryHelper.IsAggregationOrWindowFunction(column.Expression))
