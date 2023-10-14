@@ -375,7 +375,19 @@ namespace LinqToDB.SqlQuery
 		{
 			if (obj is ISqlExpression other)
 				return ((IEquatable<ISqlExpression>)this).Equals(other);
-			return base.Equals(obj);
+			return false;
 		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = (Alias != null ? Alias.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ TableName.GetHashCode();
+				hashCode = (hashCode * 397) ^ ObjectType.GetHashCode();
+				return hashCode;
+			}
+		}
+
 	}
 }

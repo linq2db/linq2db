@@ -1344,6 +1344,7 @@ namespace LinqToDB.Linq.Builder
 			var sqlExpression = attr.GetExpression(
 				(this_: this, context: currentContext, flags),
 				DataContext,
+				this,
 				currentContext.SelectQuery,
 				mc,
 				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, context.flags, e, descriptor));

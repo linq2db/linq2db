@@ -518,9 +518,13 @@ namespace LinqToDB
 				return parms.Select(static p => p ?? UnknownExpression).ToArray();
 			}
 
-			public virtual Expression GetExpression<TContext>(TContext context, IDataContext dataContext,
-				SelectQuery query,
-				Expression expression, Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
+			public virtual Expression GetExpression<TContext>(
+				TContext                                                  context, 
+				IDataContext                                              dataContext,
+				IExpressionEvaluator                                      evaluator,
+				SelectQuery                                               query, 
+				Expression                                                expression, 
+				Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
 			{
 				var expressionStr = Expression;
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);

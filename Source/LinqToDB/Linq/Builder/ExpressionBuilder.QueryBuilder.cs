@@ -367,6 +367,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var transformed = attr.GetExpression((builder: this, context, flags),
 						DataContext,
+						this,
 						context.SelectQuery, expr,
 						static (context, e, descriptor) =>
 							context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor));

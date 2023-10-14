@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using LinqToDB.Common.Internal;
 
-	internal sealed partial class ExpressionBuilder
+	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{
 		#region Sequence
 
@@ -579,5 +579,20 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
+
+		#region IExpressionEvaluator
+
+		public bool CanBeEvaluated(Expression expression)
+		{
+			return CanBeCompiled(expression, false);
+		}
+
+		public object? Evaluate(Expression expression)
+		{
+			return EvaluateExpression(expression);
+		}
+
+		#endregion
+		
 	}
 }

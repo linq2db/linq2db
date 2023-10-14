@@ -327,28 +327,30 @@ namespace LinqToDB
 				readonly Func<TContext, Expression, ColumnDescriptor?, Expression> _convert;
 
 				public ExtensionBuilder(
-					TContext       context,
-					string?        configuration,
-					object?        builderValue,
-					IDataContext   dataContext,
-					SelectQuery    query,
-					SqlExtension   extension,
+					TContext                                                  context,
+					IExpressionEvaluator                                      evaluator, 
+					string?                                                   configuration,
+					object?                                                   builderValue,
+					IDataContext                                              dataContext,
+					SelectQuery                                               query,
+					SqlExtension                                              extension,
 					Func<TContext, Expression, ColumnDescriptor?, Expression> converter,
-					MemberInfo     member,
-					Expression[]   arguments,
-					IsNullableType isNullable,
-					bool?          canBeNull)
+					MemberInfo                                                member,
+					Expression[]                                              arguments,
+					IsNullableType                                            isNullable,
+					bool?                                                     canBeNull)
 				{
 					_context      = context;
+					Evaluator     = evaluator;
 					Configuration = configuration;
 					BuilderValue  = builderValue;
-					DataContext   = dataContext  ?? throw new ArgumentNullException(nameof(dataContext));
-					Query         = query        ?? throw new ArgumentNullException(nameof(query));
-					Extension     = extension    ?? throw new ArgumentNullException(nameof(extension));
-					_convert      = converter    ?? throw new ArgumentNullException(nameof(converter));
+					DataContext   = dataContext ?? throw new ArgumentNullException(nameof(dataContext));
+					Query         = query       ?? throw new ArgumentNullException(nameof(query));
+					Extension     = extension   ?? throw new ArgumentNullException(nameof(extension));
+					_convert      = converter   ?? throw new ArgumentNullException(nameof(converter));
 					Member        = member;
 					Method        = member as MethodInfo;
-					Arguments     = arguments    ?? throw new ArgumentNullException(nameof(arguments));
+					Arguments     = arguments ?? throw new ArgumentNullException(nameof(arguments));
 					IsNullable    = isNullable;
 					CanBeNull     = canBeNull;
 				}
@@ -369,18 +371,19 @@ namespace LinqToDB
 
 				#region ISqExtensionBuilder Members
 
-				public string?         Configuration    { get; }
-				public object?         BuilderValue     { get; }
-				public IDataContext    DataContext      { get; }
-				public MappingSchema   Mapping          => DataContext.MappingSchema;
-				public SelectQuery     Query            { get; }
-				public MemberInfo      Member           { get; }
-				public SqlExtension    Extension        { get; }
-				public ISqlExpression? ResultExpression { get; set; }
-				public bool            IsConvertible    { get; set; } = true;
-				public Expression[]    Arguments        { get; }
-				public IsNullableType  IsNullable       { get; }
-				public bool?           CanBeNull        { get; }
+				public IExpressionEvaluator Evaluator        { get; }
+				public string?              Configuration    { get; }
+				public object?              BuilderValue     { get; }
+				public IDataContext         DataContext      { get; }
+				public MappingSchema        Mapping          => DataContext.MappingSchema;
+				public SelectQuery          Query            { get; }
+				public MemberInfo           Member           { get; }
+				public SqlExtension         Extension        { get; }
+				public ISqlExpression?      ResultExpression { get; set; }
+				public bool                 IsConvertible    { get; set; } = true;
+				public Expression[]         Arguments        { get; }
+				public IsNullableType       IsNullable       { get; }
+				public bool?                CanBeNull        { get; }
 
 				public string Expression
 				{
@@ -480,28 +483,7 @@ namespace LinqToDB
 					if (expression == null)
 						return null;
 
-					var expr = expression.Transform(e =>
-					{
-						if (e is SqlQueryRootExpression root)
-						{
-							if (((IConfigurationID)root.MappingSchema).ConfigurationID ==
-							    ((IConfigurationID)DataContext.MappingSchema).ConfigurationID)
-							{
-								return System.Linq.Expressions.Expression.Constant(DataContext, e.Type);
-							}
-						}
-						else if (e.NodeType == ExpressionType.Parameter)
-						{
-							if (e == ExpressionConstants.DataContextParam)
-							{
-								return System.Linq.Expressions.Expression.Constant(DataContext, e.Type);
-							}
-						}
-
-						return e;
-					});
-
-					return expr.EvaluateExpression();
+					return Evaluator.Evaluate(expression);
 				}
 
 				public SqlExtensionParam AddParameter(string name, ISqlExpression expr)
@@ -630,7 +612,7 @@ namespace LinqToDB
 				return current;
 			}
 
-			protected List<SqlExtensionParam>? BuildFunctionsChain<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expr, Func<TContext, Expression, ColumnDescriptor?, Expression> converter, out Expression? error)
+			protected List<SqlExtensionParam>? BuildFunctionsChain<TContext>(TContext context, IDataContext dataContext, IExpressionEvaluator evaluator, SelectQuery query, Expression expr, Func<TContext, Expression, ColumnDescriptor?, Expression> converter, out Expression? error)
 			{
 				error = null;
 				var chains           = new List<SqlExtensionParam>();
@@ -692,7 +674,7 @@ namespace LinqToDB
 
 						foreach (var attr in attributes.Concat(namedAttributes))
 						{
-							var param = attr.BuildExtensionParam(context, expr, dataContext, query, memberInfo, arguments!, converter, out error);
+							var param = attr.BuildExtensionParam(context, expr, dataContext, evaluator, query, memberInfo, arguments!, converter, out error);
 
 							if (param == null)
 							{
@@ -714,7 +696,7 @@ namespace LinqToDB
 				return chains;
 			}
 
-			SqlExtensionParam? BuildExtensionParam<TContext>(TContext context, Expression extensionExpression, IDataContext dataContext, SelectQuery query, MemberInfo member, Expression[] arguments, Func<TContext, Expression, ColumnDescriptor?, Expression> converter, out Expression? error)
+			SqlExtensionParam? BuildExtensionParam<TContext>(TContext context, Expression extensionExpression, IDataContext dataContext, IExpressionEvaluator evaluator, SelectQuery query, MemberInfo member, Expression[] arguments, Func<TContext, Expression, ColumnDescriptor?, Expression> converter, out Expression? error)
 			{
 				var method = member as MethodInfo;
 				var type   = member.GetMemberType();
@@ -850,7 +832,7 @@ namespace LinqToDB
 						}
 					);
 
-					var builder = new ExtensionBuilder<TContext>(context, Configuration, BuilderValue, dataContext,
+					var builder = new ExtensionBuilder<TContext>(context, evaluator, Configuration, BuilderValue, dataContext,
 						query, extension, converter, member, arguments, IsNullable, _canBeNull);
 
 					callBuilder.Build(builder);
@@ -958,10 +940,10 @@ namespace LinqToDB
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpression, System.Linq.Expressions.Expression.Default(systemType));
 			}
 
-			public override Expression GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
+			public override Expression GetExpression<TContext>(TContext context, IDataContext dataContext, IExpressionEvaluator evaluator, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
 			{
 				// chain starts from the tail
-				var chain  = BuildFunctionsChain(context, dataContext, query, expression, converter, out var error);
+				var chain  = BuildFunctionsChain(context, dataContext, evaluator, query, expression, converter, out var error);
 
 				if (chain == null)
 					return expression;

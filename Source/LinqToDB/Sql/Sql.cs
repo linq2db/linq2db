@@ -1004,8 +1004,12 @@ namespace LinqToDB
 			{
 			}
 
-			public override Expression GetExpression<TContext>(TContext   context, IDataContext dataContext,
-				SelectQuery                                               query,   Expression   expression,
+			public override Expression GetExpression<TContext>(
+				TContext                                                  context, 
+				IDataContext                                              dataContext,
+				IExpressionEvaluator                                      evaluator,
+				SelectQuery                                               query, 
+				Expression                                                expression,
 				Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
 			{
 				var expressionStr = Expression;

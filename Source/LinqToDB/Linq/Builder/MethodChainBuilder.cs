@@ -108,7 +108,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var sqlExpression = finalFunction.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), builder.DataContext, placeholderSelect, methodCall,
+			var sqlExpression = finalFunction.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), 
+				builder.DataContext, 
+				builder, 
+				placeholderSelect, 
+				methodCall,
 				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
 
 			if (sqlExpression is not SqlPlaceholderExpression placeholder)

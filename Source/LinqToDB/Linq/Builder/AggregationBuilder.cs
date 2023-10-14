@@ -357,7 +357,11 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (definition != null)
 					{
-						var sqlExpr = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), builder.DataContext, placeholderSelect, methodCall,
+						var sqlExpr = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), 
+							builder.DataContext, 
+							builder,
+							placeholderSelect, 
+							methodCall,
 							static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
 
 						if (sqlExpr is not SqlPlaceholderExpression placeholder)

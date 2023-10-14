@@ -8,6 +8,7 @@ namespace LinqToDB
 	using SqlQuery;
 	using Linq.Builder;
 	using Mapping;
+	using Expressions;
 
 	partial class Sql
 	{
@@ -58,8 +59,12 @@ namespace LinqToDB
 				set => Expression = value;
 			}
 
-			public override Expression GetExpression<TContext>(TContext   context, IDataContext dataContext,
-				SelectQuery                                               query,   Expression   expression,
+			public override Expression GetExpression<TContext>(
+				TContext                                                  context, 
+				IDataContext                                              dataContext,
+				IExpressionEvaluator                                      evaluator,
+				SelectQuery                                               query,   
+				Expression                                                expression,
 				Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
 			{
 				var name = Name;
