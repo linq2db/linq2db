@@ -71,7 +71,8 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		private static readonly TransformVisitor<object?> _aggregateExpressionTransformer = TransformVisitor<object?>.Create(AggregateExpressionTransformer);
-		private static Expression AggregateExpressionTransformer(Expression expr)
+
+		internal static Expression AggregateExpressionTransformer(Expression expr)
 		{
 			switch (expr.NodeType)
 			{

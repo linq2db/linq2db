@@ -200,7 +200,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, expression, true, false);
+			var result = visitor.Value.ExposeExpression(DataContext, _optimizationContext, expression, includeConvert : true, optimizeConditions : false, compactBinary : false);
 
 			return result;
 		}
@@ -2709,7 +2709,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			expr = expr.Unwrap();
 
-			var converted = ConvertToSqlExpr(context, expr, ProjectFlags.SQL);
+			var converted = ConvertToSqlExpr(context, expr, flags.SqlFlag());
 			if (converted is not SqlPlaceholderExpression placeholderTest)
 				return null;
 

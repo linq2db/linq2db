@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -230,6 +231,25 @@ namespace LinqToDB.Expressions
 				{
 					var idx = lambda.Parameters.IndexOf((ParameterExpression)e);
 					if (idx >= 0 && idx < replacement.Length)
+						return replacement[idx];
+				}
+
+				return e;
+			});
+		}
+
+		/// <summary>
+		/// Returns the body of <paramref name="lambda"/> but replaces all parameters
+		/// with the given replace expressions.
+		/// </summary>
+		public static Expression GetBody(this LambdaExpression lambda, ReadOnlyCollection<Expression> replacement)
+		{
+			return Transform(lambda.Body, e =>
+			{
+				if (e.NodeType == ExpressionType.Parameter)
+				{
+					var idx = lambda.Parameters.IndexOf((ParameterExpression)e);
+					if (idx >= 0 && idx < replacement.Count)
 						return replacement[idx];
 				}
 

@@ -26,23 +26,25 @@ namespace LinqToDB.Linq.Builder.Visitors
 		ExpressionTreeOptimizationContext _optimizationContext = default!;
 		bool                              _includeConvert;
 		bool                              _optimizeConditions;
+		bool                              _compactBinary;
 
 		public IDataContext  DataContext   => _dataContext;
 		public MappingSchema MappingSchema => _dataContext.MappingSchema;
 
 		Stack<ReadOnlyCollection<ParameterExpression>>? _allowedParameters;
 
-		public Expression ExposeExpression(
-			IDataContext                      dataContext, 
-			ExpressionTreeOptimizationContext optimizationContext,
-			Expression                        expression,
-			bool                              includeConvert,
-			bool                              optimizeConditions)
+		public Expression ExposeExpression(IDataContext dataContext,
+			ExpressionTreeOptimizationContext           optimizationContext,
+			Expression                                  expression,
+			bool                                        includeConvert,
+			bool                                        optimizeConditions, 
+			bool                                        compactBinary)
 		{
 			_dataContext         = dataContext;
 			_includeConvert      = includeConvert;
 			_optimizationContext = optimizationContext;
 			_optimizeConditions  = optimizeConditions;
+			_compactBinary       = compactBinary;
 
 			return Visit(expression);
 		}
@@ -53,6 +55,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 			_includeConvert      = default;
 			_optimizationContext = default!;
 			_optimizeConditions  = default;
+			_compactBinary       = false;
 
 			_allowedParameters?.Clear();
 
@@ -145,7 +148,14 @@ namespace LinqToDB.Linq.Builder.Visitors
 			}
 
 			if (TryConvertIQueryable(node, out var convertedQuery))
-				return Visit(convertedQuery);
+			{
+				var save = _compactBinary;
+				_compactBinary = true;
+				convertedQuery= Visit(convertedQuery);
+				_compactBinary = save;
+
+				return convertedQuery;
+			}
 
 			if (_includeConvert)
 			{
@@ -423,7 +433,14 @@ namespace LinqToDB.Linq.Builder.Visitors
 			}
 
 			if (TryConvertIQueryable(node, out var convertedQuery))
-				return Visit(convertedQuery);
+			{
+				var save = _compactBinary;
+				_compactBinary = true;
+				convertedQuery = Visit(convertedQuery);
+				_compactBinary = save;
+
+				return convertedQuery;
+			}
 
 			if (_includeConvert)
 			{
@@ -546,6 +563,19 @@ namespace LinqToDB.Linq.Builder.Visitors
 			return null;
 		}
 
+		static Expression ReplaceInvocationWithLambdaBody(InvocationExpression node, LambdaExpression lambda)
+		{
+			var newBody = lambda.Body;
+			if (node.Arguments.Count > 0)
+			{
+				var map = new Dictionary<Expression, Expression>();
+
+				newBody = lambda.GetBody(node.Arguments);
+			}
+
+			return newBody;
+		}
+
 		protected override Expression VisitInvocation(InvocationExpression node)
 		{
 			if (node.Expression.NodeType == ExpressionType.Call)
@@ -556,25 +586,15 @@ namespace LinqToDB.Linq.Builder.Visitors
 				{
 					if (mc.Object.EvaluateExpression() is LambdaExpression lambda)
 					{
-						var newBody = lambda.Body;
-						if (node.Arguments.Count > 0)
-						{
-							var map = new Dictionary<Expression, Expression>();
-							for (int i = 0; i < node.Arguments.Count; i++)
-								map.Add(lambda.Parameters[i], node.Arguments[i]);
-
-							newBody = lambda.Body.Transform(map, static (map, se) =>
-							{
-								if (se.NodeType == ExpressionType.Parameter &&
-								    map.TryGetValue(se, out var newExpr))
-									return newExpr;
-								return se;
-							});
-						}
-
+						var newBody = lambda.GetBody(node.Arguments);
 						return Visit(newBody);
 					}
 				}
+			}
+			else if (node.Expression.NodeType == ExpressionType.Lambda)
+			{
+				var newBody = ((LambdaExpression)node.Expression).GetBody(node.Arguments);
+				return Visit(newBody);
 			}
 
 			return base.VisitInvocation(node);
@@ -668,7 +688,23 @@ namespace LinqToDB.Linq.Builder.Visitors
 				}
 			}
 
-			return base.VisitBinary(node);
+			if (_compactBinary)
+			{
+				var compacted = ExpressionTreeOptimizationContext.AggregateExpressionTransformer(node);
+				if (!ReferenceEquals(compacted, node))
+				{
+					node = (BinaryExpression)compacted;
+				}
+			}
+
+			var save = _compactBinary;
+			_compactBinary = false;
+
+			var newNode = base.VisitBinary(node);
+
+			_compactBinary = save;
+
+			return newNode;
 		}
 
 		protected override Expression VisitNew(NewExpression node)

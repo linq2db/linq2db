@@ -37,7 +37,8 @@ namespace LinqToDB.Linq
 					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
-					var exposed             = ExpressionBuilder.ExposeExpression(key.expression, ctx.dataContext, optimizationContext, true);
+					var exposed = ExpressionBuilder.ExposeExpression(key.expression, ctx.dataContext,
+						optimizationContext, optimizeConditions : false, compactBinary : true);
 
 					var query               = new Query<T>(ctx.dataContext, exposed);
 

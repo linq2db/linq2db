@@ -453,7 +453,8 @@ namespace LinqToDB.Linq
 		{
 			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
-			// I hope fast tree optimization for unbalanced Binary Expressions. 
+			// I hope fast tree optimization for unbalanced Binary Expressions. See Issue447Tests.
+			//
 			expr = optimizationContext.AggregateExpression(expr);
 
 			dependsOnParameters = false;
@@ -472,7 +473,15 @@ namespace LinqToDB.Linq
 			if (query != null)
 				return query;
 
-			var exposed   = ExpressionBuilder.ExposeExpression(expr, dataContext, optimizationContext, true);
+			// Expose expression, call all needed invocations.
+			// After execution there should be no constants which contains IDataContext reference, no constants with ExpressionQueryImpl  
+			// Parameters with SqlQueryDependentAttribute will be transferred to constants
+			// No LambdaExpressions which are located in constants, they will be expanded and injected into tree
+			//
+			var exposed = ExpressionBuilder.ExposeExpression(expr, dataContext, optimizationContext,
+				optimizeConditions : true, compactBinary : false /* binary already compacted by AggregateExpression*/);
+
+			// simple trees do not mutate
 			var isExposed = !ReferenceEquals(exposed, expr);
 
 			expr = exposed;

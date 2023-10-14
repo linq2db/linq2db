@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static ProjectFlags SqlFlag(this ProjectFlags flags)
 		{
-			var result = (flags & (ProjectFlags.Test | ProjectFlags.Keys)) | ProjectFlags.SQL;
+			var result = (flags & (FlagsToPreserve | ProjectFlags.Keys)) | ProjectFlags.SQL;
 			return result;
 		}
 

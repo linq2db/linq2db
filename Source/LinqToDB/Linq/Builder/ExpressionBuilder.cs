@@ -350,7 +350,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var expr = expression;
 
-			expr = ExposeExpression(expression, DataContext, _optimizationContext, false);
+			expr = ExposeExpression(expression, DataContext, _optimizationContext, optimizeConditions:false, compactBinary:true);
 
 			return expr;
 		}
@@ -405,11 +405,11 @@ namespace LinqToDB.Linq.Builder
 
 		static ObjectPool<ExposeExpressionVisitor> _exposeVisitorPool = new(() => new ExposeExpressionVisitor(), v => v.Cleanup(), 100);
 
-		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, bool optimizeConditions)
+		public static Expression ExposeExpression(Expression expression, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext, bool optimizeConditions, bool compactBinary)
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, expression, false, optimizeConditions);
+			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, expression, false, optimizeConditions, compactBinary);
 
 			return result;
 		}
