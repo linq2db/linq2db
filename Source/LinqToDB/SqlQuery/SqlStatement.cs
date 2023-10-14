@@ -231,7 +231,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public abstract ISqlTableSource? GetTableSource(ISqlTableSource table);
+		public abstract ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias);
 
 		internal void EnsureFindTables()
 		{
@@ -239,7 +239,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (e is SqlField f)
 				{
-					var ts = statement.SelectQuery?.GetTableSource(f.Table!) ?? statement.GetTableSource(f.Table!);
+					var ts = statement.SelectQuery?.GetTableSource(f.Table!) ?? statement.GetTableSource(f.Table!, out _);
 
 					if (ts == null && f != f.Table!.All)
 						throw new SqlException("Table '{0}' not found.", f.Table);

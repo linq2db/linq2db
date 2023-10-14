@@ -108,8 +108,10 @@ namespace LinqToDB.SqlQuery
 			set => throw new InvalidOperationException();
 		}
 
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
+			noAlias = false;
+
 			if (Target.Source == table)
 				return Target;
 

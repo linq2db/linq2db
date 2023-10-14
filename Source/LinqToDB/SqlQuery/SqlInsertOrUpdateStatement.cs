@@ -47,11 +47,16 @@ namespace LinqToDB.SqlQuery
 			return base.Walk(options, context, func);
 		}
 
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
-			if (_update?.Table == table)
+			if (Equals(_update?.Table, table))
+			{
+				noAlias = true;
 				return table;
-			if (_insert?.Into == table)
+			}
+
+			noAlias = false;
+			if (Equals(_insert?.Into, table))
 				return table;
 
 			return SelectQuery!.GetTableSource(table);

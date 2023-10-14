@@ -26,9 +26,10 @@ namespace LinqToDB.SqlQuery
 			_selectQuery = selectQuery;
 		}
 
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
 			var ts = SelectQuery!.GetTableSource(table) ?? With?.GetTableSource(table);
+			noAlias = false;
 			return ts;
 		}
 	}

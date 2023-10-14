@@ -49,26 +49,30 @@ namespace LinqToDB.SqlQuery
 			return base.Walk(options, context, func);
 		}
 
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
 			var result = SelectQuery.GetTableSource(table);
+			noAlias = false;
 
 			if (result != null)
 				return result;
 
-			if (_update != null && table == _update.Table)
-				return table;
-
-			if (Update != null)
+			if (ReferenceEquals(table, Update.Table))
 			{
-				foreach (var item in Update.Items)
+				noAlias = true;
+				return table;
+			}
+
+			if (ReferenceEquals(Update.TableSource?.Source, table))
+				return Update.TableSource;
+
+			foreach (var item in Update.Items)
+			{
+				if (item.Expression is SelectQuery q)
 				{
-					if (item.Expression is SelectQuery q)
-					{
-						result = q.GetTableSource(table);
-						if (result != null)
-							return result;
-					}
+					result = q.GetTableSource(table);
+					if (result != null)
+						return result;
 				}
 			}
 

@@ -75,7 +75,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (QueryHelper.EnumerateAccessibleTables(updateStatement.SelectQuery).Take(2).Count() == 1)
 				{
 					if (RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table, out removedTableSource))
+					{
 						hasUpdateTableInQuery = false;
+					}
 				}
 			}
 

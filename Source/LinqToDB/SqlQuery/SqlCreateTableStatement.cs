@@ -46,8 +46,9 @@ namespace LinqToDB.SqlQuery
 			return base.Walk(options, context, func);
 		}
 
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
+			noAlias = false;
 			return null;
 		}
 

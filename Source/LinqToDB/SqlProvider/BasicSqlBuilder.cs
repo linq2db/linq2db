@@ -2864,13 +2864,14 @@ namespace LinqToDB.SqlProvider
 								? field.Table
 								: Statement.SelectQuery?.GetTableSource(field.Table);
 
+							var noAlias = false;
 							if (ts == null)
 							{
 								var current = Statement;
 
 								do
 								{
-									ts = current.GetTableSource(field.Table);
+									ts = current.GetTableSource(field.Table, out noAlias);
 									if (ts != null)
 										break;
 									current = current.ParentStatement;
@@ -2891,7 +2892,7 @@ namespace LinqToDB.SqlProvider
 							}
 							else
 							{
-								var table = GetTableAlias(ts);
+								var table = noAlias ? null : GetTableAlias(ts);
 								var len   = StringBuilder.Length;
 
 								if (table == null)
@@ -2934,10 +2935,11 @@ namespace LinqToDB.SqlProvider
 
 						ISqlTableSource? table;
 						var currentStatement = Statement;
+						var noAlias = false;
 
 						do
 						{
-							table = currentStatement.GetTableSource(column.Parent!);
+							table = currentStatement.GetTableSource(column.Parent!, out noAlias);
 							if (table != null)
 								break;
 							currentStatement = currentStatement.ParentStatement;
@@ -2947,13 +2949,13 @@ namespace LinqToDB.SqlProvider
 						if (table == null)
 						{
 #if DEBUG
-							table = Statement.GetTableSource(column.Parent!);
+							table = Statement.GetTableSource(column.Parent!, out noAlias);
 #endif
 
 							throw new SqlException("Table not found for '{0}'.", column);
 						}
 
-						var tableAlias = GetTableAlias(table) ?? GetPhysicalTableName(nullability, column.Parent!, null, true);
+						var tableAlias = (noAlias ? null : GetTableAlias(table)) ?? GetPhysicalTableName(nullability, column.Parent!, null, true);
 
 						if (string.IsNullOrEmpty(tableAlias))
 							throw new SqlException("Table {0} should have an alias.", column.Parent);
@@ -3112,11 +3114,11 @@ namespace LinqToDB.SqlProvider
 					if (sqlField == null || sqlField.Table == null)
 						throw new LinqToDBException("Can not find Table or Column associated with expression");
 
-					var ts = Statement.GetTableSource(sqlField.Table);
+					var ts = Statement.GetTableSource(sqlField.Table, out var noAlias);
 					if (ts == null)
 						throw new LinqToDBException("Can not find Table Source for table.");
 
-					var table = GetTableAlias(ts);
+					var table = noAlias ? null : GetTableAlias(ts);
 
 					if (table == null)
 						StringBuilder.Append(GetPhysicalTableName(nullability, sqlField.Table, null, true));
@@ -3632,11 +3634,16 @@ namespace LinqToDB.SqlProvider
 						return alias is not ("$" or "$F") ? alias : null;
 					}
 				case QueryElementType.SqlRawSqlTable  :
-					{
-						var ts = Statement.SelectQuery?.GetTableSource(table) ?? Statement.GetTableSource(table);
+				{
+						var noAlias = false;
+						var ts = Statement.SelectQuery?.GetTableSource(table) ?? Statement.GetTableSource(table, out noAlias);
 
 						if (ts != null)
+						{
+							if (noAlias)
+								return null;
 							return GetTableAlias(ts);
+						}
 
 						var alias = ((SqlTable)table).Alias;
 						return alias is not ("$" or "$F") ? alias : null;
