@@ -78,7 +78,16 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var provider = (PostgreSQLDataProvider)dataConnection.DataProvider;
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
-			list.Add(new DataTypeInfo { TypeName = "cidr"                       , DataType = provider.Adapter.NpgsqlInetType.    AssemblyQualifiedName!, ProviderSpecific = true });
+
+			if (provider.Adapter.NpgsqlCidrType != null)
+			{
+				list.Add(new DataTypeInfo { TypeName = "cidr", DataType = provider.Adapter.NpgsqlCidrType.AssemblyQualifiedName!, ProviderSpecific = true });
+			}
+			else
+			{
+				list.Add(new DataTypeInfo { TypeName = "cidr", DataType = provider.Adapter.NpgsqlInetType.AssemblyQualifiedName!, ProviderSpecific = true });
+			}
+
 			list.Add(new DataTypeInfo { TypeName = "point"                      , DataType = provider.Adapter.NpgsqlPointType.   AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "line"                       , DataType = provider.Adapter.NpgsqlLineType.    AssemblyQualifiedName!, ProviderSpecific = true });
 			list.Add(new DataTypeInfo { TypeName = "lseg"                       , DataType = provider.Adapter.NpgsqlLSegType.    AssemblyQualifiedName!, ProviderSpecific = true });
@@ -103,7 +112,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 
 			list.Add(new DataTypeInfo { TypeName = "inet"                   , DataType = typeof(IPAddress).      AssemblyQualifiedName!       });
-			list.Add(new DataTypeInfo { TypeName = "cidr"                   , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+			if (provider.Adapter.NpgsqlCidrType != null)
+				list.Add(new DataTypeInfo { TypeName = "cidr"               , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Byte, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+			else
+				list.Add(new DataTypeInfo { TypeName = "cidr"               , DataType = "System.ValueTuple`2[[System.Net.IPAddress, System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089],[System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089]], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" });
+
 			list.Add(new DataTypeInfo { TypeName = "date"                   , DataType = typeof(DateTime).       AssemblyQualifiedName! });
 			list.Add(new DataTypeInfo { TypeName = "timetz"                 , DataType = typeof(DateTimeOffset). AssemblyQualifiedName!, CreateFormat = "time ({0}) with time zone",         CreateParameters = "precision" });
 			list.Add(new DataTypeInfo { TypeName = "time without time zone" , DataType = typeof(TimeSpan).       AssemblyQualifiedName!, CreateFormat = "time ({0}) without time zone",      CreateParameters = "precision" });
@@ -571,7 +584,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case "path"                        : return _provider.Adapter.NpgsqlPathType     .Name;
 				case "polygon"                     : return _provider.Adapter.NpgsqlPolygonType  .Name;
 				case "line"                        : return _provider.Adapter.NpgsqlLineType     .Name;
-				case "cidr"                        :
+				case "cidr"                        : return (_provider.Adapter.NpgsqlCidrType ?? _provider.Adapter.NpgsqlInetType).Name;
 				case "inet"                        : return _provider.Adapter.NpgsqlInetType     .Name;
 				case "geometry"                    : return "PostgisGeometry";
 			}

@@ -1007,6 +1007,8 @@ static bool IsValueTypeDefault(string typeName)
 		case "NpgsqlInet?":
 		case "NpgsqlDateTime":
 		case "NpgsqlDateTime?":
+		case "NpgsqlCidr":
+		case "NpgsqlCidr?":
 			return true;
 		case "object":
 		case "string":
