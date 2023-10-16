@@ -371,23 +371,5 @@ namespace LinqToDB.SqlQuery
 			return new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
 		}
 
-		public override bool Equals(object? obj)
-		{
-			if (obj is ISqlExpression other)
-				return ((IEquatable<ISqlExpression>)this).Equals(other);
-			return false;
-		}
-
-		public override int GetHashCode()
-		{
-			unchecked
-			{
-				var hashCode = (Alias != null ? Alias.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ TableName.GetHashCode();
-				hashCode = (hashCode * 397) ^ ObjectType.GetHashCode();
-				return hashCode;
-			}
-		}
-
 	}
 }
