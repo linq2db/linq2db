@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string term)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, *, {term})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTable<TTable, TKey>(table, term));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl1<TTable, TKey>()
@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string term, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, *, {term}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTable<TTable, TKey>(table, term, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, int, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl2<TTable, TKey>()
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string term, string language)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, *, {term}, LANGUAGE {language})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTableWithLanguage<TTable, TKey>(table, term, language));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, string, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl3<TTable, TKey>()
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string term, string language, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, *, {term}, LANGUAGE {language}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTableWithLanguage<TTable, TKey>(table, term, language, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, string, int, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl4<TTable, TKey>()
@@ -134,7 +134,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string term, int language, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, *, {term}, LANGUAGE {language}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTableWithLanguage<TTable, TKey>(table, term, language, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, int, int, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl5<TTable, TKey>()
@@ -158,7 +158,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string term, int language)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, *, {term}, LANGUAGE {language})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTableWithLanguage<TTable, TKey>(table, term, language));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, int, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl6<TTable, TKey>()
@@ -182,7 +182,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string term)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {term})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTable<TTable, TKey>(table, columns, term));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl7<TTable, TKey>()
@@ -207,7 +207,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTable<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string term, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {term}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTable<TTable, TKey>(table, columns, term, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, int, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl8<TTable, TKey>()
@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string term, string language)
 			where TTable : notnull
 		{
-				return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {term}, LANGUAGE {language})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTableWithLanguage<TTable, TKey>(table, columns, term, language));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, string, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl9<TTable, TKey>()
@@ -258,7 +258,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string term, string language, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {term}, LANGUAGE {language}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTableWithLanguage<TTable, TKey>(table, columns, term, language, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, string, int, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl10<TTable, TKey>()
@@ -284,7 +284,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string term, int language, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {term}, LANGUAGE {language}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTableWithLanguage<TTable, TKey>(table, columns, term, language, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, int, int, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl11<TTable, TKey>()
@@ -309,7 +309,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> FreeTextTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string term, int language)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"FREETEXTTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {term}, LANGUAGE {language})");
+			return table.DataContext.QueryFromExpression(() => ext.FreeTextTableWithLanguage<TTable, TKey>(table, columns, term, language));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, int, IQueryable<FreeTextKey<TKey>>>> FreeTextTableImpl12<TTable, TKey>()
@@ -334,7 +334,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTable<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string search)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, *, {search})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTable<TTable, TKey>(table, search));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl1<TTable, TKey>()
@@ -358,7 +358,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTable<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string search, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, *, {search}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTable<TTable, TKey>(table, search, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, int, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl2<TTable, TKey>()
@@ -382,7 +382,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string search, string language)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, *, {search}, LANGUAGE {language})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTableWithLanguage<TTable, TKey>(table, search, language));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, string, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl3<TTable, TKey>()
@@ -407,7 +407,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string search, string language, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, *, {search}, LANGUAGE {language}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTableWithLanguage<TTable, TKey>(table, search, language, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, string, int, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl4<TTable, TKey>()
@@ -432,7 +432,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string search, int language, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, *, {search}, LANGUAGE {language}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTableWithLanguage<TTable, TKey>(table, search, language, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, int, int, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl5<TTable, TKey>()
@@ -456,7 +456,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, string search, int language)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, *, {search}, LANGUAGE {language})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTableWithLanguage<TTable, TKey>(table, search, language));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, string, int, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl6<TTable, TKey>()
@@ -480,7 +480,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTable<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string search)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {search})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTable<TTable, TKey>(table, columns, search));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl7<TTable, TKey>()
@@ -505,7 +505,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTable<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string search, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {search}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTable<TTable, TKey>(table, columns, search, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, int, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl8<TTable, TKey>()
@@ -531,7 +531,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string search, string language, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {search}, LANGUAGE {language}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTableWithLanguage<TTable, TKey>(table, columns, search, language, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, string, int, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl9<TTable, TKey>()
@@ -556,7 +556,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string search, string language)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {search}, LANGUAGE {language})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTableWithLanguage<TTable, TKey>(table, columns, search, language));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, string, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl10<TTable, TKey>()
@@ -582,7 +582,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string search, int language, int top)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {search}, LANGUAGE {language}, {top})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTableWithLanguage<TTable, TKey>(table, columns, search, language, top));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, int, int, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl11<TTable, TKey>()
@@ -607,7 +607,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static IQueryable<FreeTextKey<TKey>> ContainsTableWithLanguage<TTable, TKey>(this ISqlServerExtensions? ext, ITable<TTable> table, Expression<Func<TTable, object?>> columns, string search, int language)
 			where TTable : notnull
 		{
-			return table.DataContext.FromSql<FreeTextKey<TKey>>($"CONTAINSTABLE({Sql.TableExpr(table)}, ({Sql.FieldsExpr(table, columns)}), {search}, LANGUAGE {language})");
+			return table.DataContext.QueryFromExpression(() => ext.ContainsTableWithLanguage<TTable, TKey>(table, columns, search, language));
 		}
 
 		static Expression<Func<ISqlServerExtensions, ITable<TTable>, Expression<Func<TTable, object?>>, string, int, IQueryable<FreeTextKey<TKey>>>> ContainsTableImpl12<TTable, TKey>()

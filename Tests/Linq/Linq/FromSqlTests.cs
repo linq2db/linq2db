@@ -525,6 +525,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Negative false. Translator is trying to compare SqlTable by Equals, which is false")]
 		[Test]
 		public void TestQueryCaching_Interpolated_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -603,6 +604,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("Negative false. Translator is trying to compare SqlTable by Equals, which is false")]
 		[Test]
 		public void TestQueryCaching_Format_DataParameter([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

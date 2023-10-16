@@ -147,6 +147,15 @@ namespace LinqToDB.Linq.Builder.Visitors
 				}
 			}
 
+			if (node.Method.Name          == nameof(DataExtensions.QueryFromExpression) &&
+			    node.Method.DeclaringType == typeof(DataExtensions))
+			{
+				if (node.Arguments[1].EvaluateExpression() is LambdaExpression lambda)
+				{
+					return Visit(lambda.Body);
+				}
+			}
+
 			if (TryConvertIQueryable(node, out var convertedQuery))
 			{
 				var save = _compactBinary;

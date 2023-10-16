@@ -1709,5 +1709,18 @@ namespace LinqToDB
 					Expression.Quote(expression)
 				));
 		}
+
+		/// <summary>Creates a <see cref="IQueryable{T}"/> for given query expression.</summary>
+		/// <typeparam name="TResult">The result type of the query expression.</typeparam>
+		/// <param name="expression">The query expression to create.</param>
+		/// <returns>An <see cref="IQueryable{T}" /> representing the query.</returns>
+		public static IQueryable<TResult> QueryFromExpression<TResult>(
+			this IDataContext                     dataContext,
+			Expression<Func<IQueryable<TResult>>> expression)
+			where TResult : notnull
+		{
+			return new ExpressionQueryImpl<TResult>(dataContext, expression.Body);
+		}
+
 	}
 }

@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static IQueryable<TEntity> MatchTable<TEntity>(this ISQLiteExtensions? ext, ITable<TEntity> table, string match)
 			where TEntity : class
 		{
-			return table.DataContext.FromSql<TEntity>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}({match})");
+			return table.DataContext.QueryFromExpression(() => ext.MatchTable(table, match));
 		}
 
 		static Expression<Func<ISQLiteExtensions, ITable<TEntity>, string, IQueryable<TEntity>>> MatchTableImpl1<TEntity>()

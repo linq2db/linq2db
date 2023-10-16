@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
@@ -10,6 +12,35 @@ namespace LinqToDB.Linq.Builder
 
 	partial class TableBuilder
 	{
+		class SimpleSelectContext : BuildContextBase
+		{
+			public SimpleSelectContext(ExpressionBuilder builder, Type elementType, SelectQuery selectQuery) : base(builder, elementType, selectQuery)
+			{
+			}
+
+			public override MappingSchema MappingSchema => Builder.MappingSchema;
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				throw new InvalidOperationException();
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				throw new NotImplementedException();
+			}
+
+			public override SqlStatement GetResultStatement()
+			{
+				throw new NotImplementedException();
+			}
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				throw new NotImplementedException();
+			}
+		}
+
 		static IBuildContext BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo, bool isScalar)
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
@@ -21,8 +52,11 @@ namespace LinqToDB.Linq.Builder
 				out var format, out var arguments);
 
 			var sqlArguments = new ISqlExpression[arguments.Count];
+
+			var context = buildInfo.Parent ?? new SimpleSelectContext(builder, typeof(object), buildInfo.SelectQuery);
+
 			for (var i = 0; i < arguments.Count; i++)
-				sqlArguments[i] = builder.ConvertToSql(buildInfo.Parent, arguments[i]);
+				sqlArguments[i] = builder.ConvertToSql(context, arguments[i]);
 
 			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments);
 		}
