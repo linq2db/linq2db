@@ -1753,8 +1753,7 @@ namespace LinqToDB.SqlProvider
 						if (isAggregateQuery)
 						{
 							// remove unwanted join
-							if (!QueryHelper.IsDependsOnSources(statement, new HashSet<ISqlTableSource> { query },
-								new HashSet<IQueryElement> { join }))
+							if (!QueryHelper.IsDependsOnSources(statement, new[] { query }, new[] { join }))
 								return true;
 						}
 					}

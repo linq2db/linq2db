@@ -219,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is NewExpression or MemberInitExpression)
 			{
-				var parsed = builder.ParseGenericConstructor(expression);
+				var parsed = builder.ParseGenericConstructor(expression, ProjectFlags.SQL, null);
 				if (!ReferenceEquals(parsed, expression))
 					return CorrectTrackingPath(builder, parsed, toPath);
 			}
@@ -353,7 +353,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var memberPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
-					var parsed     = builder.ParseGenericConstructor(assignment.Expression);
+					var parsed     = builder.ParseGenericConstructor(assignment.Expression, flags, null);
 
 					var newExpression = ReferenceEquals(parsed, assignment.Expression)
 						? memberPath
@@ -433,7 +433,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is NewExpression or MemberInitExpression)
 			{
-				var parsed = builder.ParseGenericConstructor(expression);
+				var parsed = builder.ParseGenericConstructor(expression, ProjectFlags.SQL, null);
 				if (!ReferenceEquals(parsed, expression))
 					return RemapToNewPathSimple(builder, parsed, toPath, flags);
 			}
@@ -547,7 +547,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is NewExpression or MemberInitExpression)
 			{
-				return RemapToNewPath(builder, builder.ParseGenericConstructor(expression), toPath, flags);
+				return RemapToNewPath(builder, builder.ParseGenericConstructor(expression, ProjectFlags.SQL, null), toPath, flags);
 			}
 
 			if (expression is SqlPlaceholderExpression placeholder)

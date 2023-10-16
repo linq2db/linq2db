@@ -295,7 +295,7 @@ namespace LinqToDB.Linq.Builder
 							var constructed = Builder.TryConstruct(MappingSchema, generic1, this, flags);
 							if (constructed == null)
 								return false;
-							if (TryMergeProjections(Builder.ParseGenericConstructor(constructed), generic2, flags, out merged))
+							if (TryMergeProjections(Builder.ParseGenericConstructor(constructed, flags, null), generic2, flags, out merged))
 								return true;
 							return false;
 						}
@@ -308,7 +308,7 @@ namespace LinqToDB.Linq.Builder
 							var constructed = Builder.TryConstruct(MappingSchema, generic2, this, flags);
 							if (constructed == null)
 								return false;
-							if (TryMergeProjections(generic1, Builder.ParseGenericConstructor(constructed), flags, out merged))
+							if (TryMergeProjections(generic1, Builder.ParseGenericConstructor(constructed, flags, null), flags, out merged))
 								return true;
 							return false;
 						}

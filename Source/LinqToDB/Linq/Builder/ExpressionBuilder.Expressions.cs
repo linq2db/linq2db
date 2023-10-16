@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB.Common.Internal;
+using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -23,9 +24,14 @@ namespace LinqToDB.Linq.Builder
 			_context = context;
 		}
 
+		Expression ParseGenericConstructor(Expression expression)
+		{
+			return Builder.ParseGenericConstructor(expression, ProjectFlags.ExtractProjection, null);
+		}
+
 		protected override Expression VisitMemberInit(MemberInitExpression node)
 		{
-			return Visit(Builder.ParseGenericConstructor(node));
+			return Visit(ParseGenericConstructor(node));
 		}
 
 		protected override Expression VisitMember(MemberExpression node)
@@ -43,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 			if (!ExpressionEqualityComparer.Instance.Equals(newNode, node))
 				return Visit(newNode);
 
-			var parsed = Builder.ParseGenericConstructor(node);
+			var parsed = ParseGenericConstructor(node);
 
 			if (!ReferenceEquals(parsed, node))
 				return Visit(parsed);
@@ -550,11 +556,16 @@ namespace LinqToDB.Linq.Builder
 				return base.VisitMember(node);
 			}
 
+			Expression ParseGenericConstructor(Expression expression)
+			{
+				return Builder.ParseGenericConstructor(expression, _flags, _columnDescriptor);
+			}
+
 			protected override Expression VisitNew(NewExpression node)
 			{
 				if (!_disableParseNew)
 				{
-					var newNode = Builder.ParseGenericConstructor(node);
+					var newNode = ParseGenericConstructor(node);
 					if (!ReferenceEquals(newNode, node))
 						return Visit(newNode);
 				}
@@ -566,11 +577,21 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMemberInit(MemberInitExpression node)
 			{
-				var newNode = Builder.ParseGenericConstructor(node);
-				if (!ReferenceEquals(newNode, node))
-					return Visit(newNode);
+				if (!Builder.CanBeEvaluated(node))
+				{
+					var parsedNode = ParseGenericConstructor(node);
+					if (!ReferenceEquals(parsedNode, node))
+						return Visit(parsedNode);
+				}
 
-				return base.VisitMemberInit(node);
+				var save = _disableParseNew;
+				_disableParseNew = true;
+
+				var newNode = base.VisitMemberInit(node);
+
+				_disableParseNew = save;
+
+				return newNode;
 			}
 
 			protected override Expression VisitListInit(ListInitExpression node)
@@ -636,7 +657,7 @@ namespace LinqToDB.Linq.Builder
 
 				if ((_buildFlags & BuildFlags.ForceAssignments) != 0)
 				{
-					var parsed = Builder.ParseGenericConstructor(node);
+					var parsed = ParseGenericConstructor(node);
 
 					if (!ReferenceEquals(parsed, node))
 						return Visit(parsed);
@@ -667,17 +688,27 @@ namespace LinqToDB.Linq.Builder
 					return false;
 				}
 
+				var canBeCompiled = Builder.CanBeCompiled(expr, false);
+
+				// some types has custom converter, we have to handle them
+				//
+				if (canBeCompiled && Builder.IsForceParameter(expr, _columnDescriptor))
+				{
+					transformed = TranslateExpression(expr, _alias, true);
+					return !ExpressionEqualityComparer.Instance.Equals(expr, transformed);
+				}
+
 				// Shortcut: if expression can be compiled we can live it as is but inject accessors 
 				//
-				if (_flags.IsExpression()                         &&
-					expr.NodeType != ExpressionType.New           &&
-					expr.NodeType != ExpressionType.Default       &&
-					expr is not DefaultValueExpression            &&
-					!(expr is ConstantExpression { Value: null }) &&
-					expr != ExpressionConstants.DataContextParam  &&
-					!Builder.CanBeConstant(expr)                  &&
-				    Builder.CanBeCompiled(expr, false)
-				)
+				if ((_flags.IsExpression()      &&
+				     expr.NodeType != ExpressionType.New           &&
+				     expr.NodeType != ExpressionType.Default       &&
+				     expr is not DefaultValueExpression            &&
+				     !(expr is ConstantExpression { Value: null }) &&
+				     expr != ExpressionConstants.DataContextParam  &&
+				     !Builder.CanBeConstant(expr)                  &&
+				     canBeCompiled)
+				   )
 				{
 					if (expr.NodeType == ExpressionType.MemberAccess || expr.NodeType == ExpressionType.Call)
 					{

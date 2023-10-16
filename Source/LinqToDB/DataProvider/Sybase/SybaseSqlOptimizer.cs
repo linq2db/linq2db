@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 			if (statement.SelectQuery.From.Tables.Count > 0)
 			{
-				if (tableToUpdate == statement.SelectQuery.From.Tables[0].Source)
+				if (ReferenceEquals(tableToUpdate, statement.SelectQuery.From.Tables[0].Source))
 					return statement;
 
 				var sourceTable = statement.SelectQuery.From.Tables[0];
@@ -44,9 +44,9 @@ namespace LinqToDB.DataProvider.Sybase
 				for (int i = 0; i < sourceTable.Joins.Count; i++)
 				{
 					var join = sourceTable.Joins[i];
-					if (join.Table.Source == tableToUpdate)
+					if (ReferenceEquals(join.Table.Source, tableToUpdate))
 					{
-						var sources = new HashSet<ISqlTableSource>() { tableToUpdate };
+						var sources = new[] { tableToUpdate };
 						if (sourceTable.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOnSources(j, sources)))
 							break;
 						statement.SelectQuery.From.Tables.Insert(0, join.Table);

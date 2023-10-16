@@ -63,6 +63,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				sequence.SetAlias(condition.Parameters[0].Name);
+				sequence = buildSequnce;
 			}
 
 			var body = SequenceHelper.PrepareBody(condition, sequence);
@@ -700,16 +701,9 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							var shouldBeParameter = columnDescriptor?.ValueConverter != null;
+							newExpr = ParseGenericConstructor(newExpr, flags, columnDescriptor);
 
-							if (!shouldBeParameter &&
-							    (newExpr.NodeType == ExpressionType.MemberInit || newExpr.NodeType == ExpressionType.New) 
-							    && !MappingSchema.IsScalarType(newExpr.Type))
-							{
-								// expression will be needed for comparison
-								newExpr = ParseGenericConstructor(newExpr);
-							}
-							else
+							if (newExpr is not SqlGenericConstructorExpression)
 							{
 								sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias)?.SqlParameter;
 							}
@@ -792,6 +786,21 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		bool IsForceParameter(Expression expression, ColumnDescriptor? columnDescriptor)
+		{
+			if (columnDescriptor?.ValueConverter != null)
+			{
+				return true;
+			}
+
+			var converter = MappingSchema.GetConvertExpression(expression.Type, typeof(DataParameter), false, false);
+			if (converter != null)
+			{
+				return true;
+			}
+
+			return false;
+		}
 
 		Expression ConvertToSqlInternal(IBuildContext? context, Expression expression, ProjectFlags flags, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, bool forExtension = false, string? alias = null)
 		{
@@ -1213,7 +1222,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.New:
 				case ExpressionType.MemberInit:
 				{
-					if (!flags.IsExpression() && ParseGenericConstructor(expression, true) is SqlGenericConstructorExpression transformed)
+					if (!flags.IsExpression() && ParseGenericConstructor(expression, flags, columnDescriptor, true) is SqlGenericConstructorExpression transformed)
 					{
 						return ConvertToSqlExpr(context, transformed, flags, unwrap, columnDescriptor, isPureExpression, alias);
 					}
@@ -1925,8 +1934,8 @@ namespace LinqToDB.Linq.Builder
 					if (l != null && r != null)
 						break;
 
-					leftExpr  = ParseGenericConstructor(leftExpr, true);
-					rightExpr = ParseGenericConstructor(rightExpr, true);
+					leftExpr  = ParseGenericConstructor(leftExpr, flags, columnDescriptor, true);
+					rightExpr = ParseGenericConstructor(rightExpr, flags, columnDescriptor, true);
 
 					if (leftExpr is SqlGenericConstructorExpression leftGenericConstructor &&
 					    rightExpr is SqlGenericConstructorExpression rightGenericConstructor)
@@ -4171,7 +4180,7 @@ namespace LinqToDB.Linq.Builder
 			return CreateSqlError(context, next!);
 		}
 
-		public Expression ParseGenericConstructor(Expression createExpression, bool force = false)
+		public Expression ParseGenericConstructor(Expression createExpression, ProjectFlags flags, ColumnDescriptor? columnDescriptor, bool force = false)
 		{
 			if (createExpression.Type.IsNullable())
 				return createExpression;
@@ -4186,6 +4195,8 @@ namespace LinqToDB.Linq.Builder
 			if (typeof(FormattableString).IsSameOrParentOf(createExpression.Type))
 				return createExpression;
 #endif
+			if (flags.IsSql() && IsForceParameter(createExpression, columnDescriptor))
+				return createExpression;
 
 			switch (createExpression.NodeType)
 			{
@@ -4204,7 +4215,7 @@ namespace LinqToDB.Linq.Builder
 					//TODO: Do we still need Alias?
 					var mc = (MethodCallExpression)createExpression;
 					if (mc.IsSameGenericMethod(Methods.LinqToDB.SqlExt.Alias))
-						return ParseGenericConstructor(mc.Arguments[0]);
+						return ParseGenericConstructor(mc.Arguments[0], flags, columnDescriptor);
 
 					if (mc.IsQueryable())
 						return mc;

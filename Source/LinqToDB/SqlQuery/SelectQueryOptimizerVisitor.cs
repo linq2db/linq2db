@@ -638,8 +638,8 @@ namespace LinqToDB.SqlQuery
 
 					if (join.IsWeak)
 					{
-						var sources = new HashSet<ISqlTableSource>(QueryHelper.EnumerateAccessibleSources(join.Table));
-						var ignore  = new HashSet<IQueryElement> { join };
+						var sources = QueryHelper.EnumerateAccessibleSources(join.Table).ToList();
+						var ignore  = new[] { join };
 						if (QueryHelper.IsDependsOnSources(_rootElement, sources, ignore))
 						{
 							join.IsWeak = false;
@@ -826,7 +826,7 @@ namespace LinqToDB.SqlQuery
 			return newJoinType;
 		}
 
-		bool OptimizeApply(SelectQuery parentQuery, HashSet<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported)
+		bool OptimizeApply(SelectQuery parentQuery, List<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported)
 		{
 			var joinSource = joinTable.Table;
 
@@ -974,7 +974,7 @@ namespace LinqToDB.SqlQuery
 						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters.ToArray());
 				}
 
-				var whereToIgnore = new HashSet<IQueryElement> { sql.Where, sql.Select };
+				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };
 
 				// add join conditions
 				foreach (var join in sql.From.Tables.SelectMany(t => t.Joins))
@@ -991,7 +991,7 @@ namespace LinqToDB.SqlQuery
 
 				var conditions = sql.Where.SearchCondition.Conditions;
 
-				var toIgnore = new HashSet<IQueryElement> { joinTable };
+				var toIgnore = new [] { joinTable };
 
 				if (conditions.Count > 0)
 				{
@@ -1045,9 +1045,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				var toCheck = new HashSet<ISqlTableSource>();
-
-				toCheck.AddRange(QueryHelper.EnumerateAccessibleSources(sql));
+				var toCheck = QueryHelper.EnumerateAccessibleSources(sql).ToList();
 
 				for (int i = 0; i < searchCondition.Count; i++)
 				{
@@ -1705,7 +1703,7 @@ namespace LinqToDB.SqlQuery
 
 		bool OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)
 		{
-			var tableSources = new HashSet<ISqlTableSource>();
+			var tableSources = new List<ISqlTableSource>();
 
 			var optimized = false;
 

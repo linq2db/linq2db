@@ -227,6 +227,8 @@ namespace LinqToDB.Linq.Builder
 
 						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType, true);
 
+						newExpr.DbDataTypeExpression = Expression.Constant(newExpr.DataType);
+
 						if (name == null)
 						{
 							if (columnDescriptor.MemberName.Contains("."))
@@ -235,8 +237,6 @@ namespace LinqToDB.Linq.Builder
 								name = columnDescriptor.MemberName;
 
 						}
-
-						newExpr.DbDataTypeExpression = Expression.Constant(newExpr.DataType);
 					}
 					else
 					{
@@ -260,15 +260,16 @@ namespace LinqToDB.Linq.Builder
 				if (typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
 				{
 					newExpr.DbDataTypeExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.DbDataType);
-
+					newExpr.ValueExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.Value);
+				}
+				else
+				{
 					if (columnDescriptor != null)
 					{
 						var dbDataType = columnDescriptor.GetDbDataType(false);
 						newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
 							DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
 					}
-
-					newExpr.ValueExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.Value);
 				}
 			}
 

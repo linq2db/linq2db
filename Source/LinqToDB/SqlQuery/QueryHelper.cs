@@ -23,24 +23,24 @@ namespace LinqToDB.SqlQuery
 
         sealed class IsDependsOnSourcesContext
 		{
-			public IsDependsOnSourcesContext(HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore)
+			public IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore)
 			{
 				OnSources = onSources;
 				ElementsToIgnore = elementsToIgnore;
 			}
 
-			public readonly HashSet<ISqlTableSource> OnSources;
-			public readonly HashSet<IQueryElement>?  ElementsToIgnore;
+			public readonly IReadOnlyCollection<ISqlTableSource> OnSources;
+			public readonly IReadOnlyCollection<IQueryElement>?  ElementsToIgnore;
 
 			public          bool                     DependencyFound;
 		}
 
-        public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, HashSet<IQueryElement>? elementsToIgnore = null)
+        public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
         {
-	        return IsDependsOnSources(testedRoot, new HashSet<ISqlTableSource> { onSource }, elementsToIgnore);
+	        return IsDependsOnSources(testedRoot, new [] { onSource }, elementsToIgnore);
         }
 
-		public static bool IsDependsOnSources(IQueryElement testedRoot, HashSet<ISqlTableSource> onSources, HashSet<IQueryElement>? elementsToIgnore = null)
+		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
 		{
 			var ctx = new IsDependsOnSourcesContext(onSources, elementsToIgnore);
 
@@ -49,10 +49,10 @@ namespace LinqToDB.SqlQuery
 				if (context.DependencyFound)
 					return false;
 
-				if (context.ElementsToIgnore != null && context.ElementsToIgnore.Contains(e))
+				if (context.ElementsToIgnore != null && context.ElementsToIgnore.Contains(e, QueryElement.ReferenceComparer))
 					return false;
 
-				if (e is ISqlTableSource source && context.OnSources.Contains(source))
+				if (e is ISqlTableSource source && context.OnSources.Contains(source, QueryElement.ReferenceComparer))
 				{
 					context.DependencyFound = true;
 					return false;
@@ -63,14 +63,14 @@ namespace LinqToDB.SqlQuery
 					case QueryElementType.Column:
 					{
 						var c = (SqlColumn) e;
-						if (context.OnSources.Contains(c.Parent!))
+						if (context.OnSources.Contains(c.Parent!, QueryElement.ReferenceComparer))
 							context.DependencyFound = true;
 						break;
 					}
 					case QueryElementType.SqlField:
 					{
 						var f = (SqlField) e;
-						if (context.OnSources.Contains(f.Table!))
+						if (context.OnSources.Contains(f.Table!, QueryElement.ReferenceComparer))
 							context.DependencyFound = true;
 						break;
 					}

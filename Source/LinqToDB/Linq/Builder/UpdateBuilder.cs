@@ -405,8 +405,8 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var envelope in envelopes)
 			{
-				var fieldExpression = builder.ConvertExpression(envelope.FieldExpression);
-				var valueExpression = envelope.ValueExpression != null ? builder.ConvertExpression(envelope.ValueExpression) : null;
+				var fieldExpression = envelope.FieldExpression;
+				var valueExpression = envelope.ValueExpression;
 
 				if (valueExpression != null)
 					valueExpression = SequenceHelper.MoveAllToScopedContext(valueExpression, valuesContext);
@@ -459,11 +459,11 @@ namespace LinqToDB.Linq.Builder
 			Expression                  valueExpression,
 			List<SetExpressionEnvelope> envelopes)
 		{
-			var correctedField = builder.ParseGenericConstructor(fieldExpression);
+			var correctedField = builder.ParseGenericConstructor(fieldExpression, ProjectFlags.SQL, null);
 
 			if (correctedField is SqlGenericConstructorExpression fieldGeneric)
 			{
-				var correctedValue = builder.ParseGenericConstructor(valueExpression);
+				var correctedValue = builder.ParseGenericConstructor(valueExpression, ProjectFlags.SQL, null);
 
 				if (correctedValue is not SqlGenericConstructorExpression valueGeneric)
 					throw SqlErrorExpression.CreateError(valueExpression);
@@ -496,7 +496,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var correctedValue = builder.ParseGenericConstructor(valueExpression);
+					var correctedValue = builder.ParseGenericConstructor(valueExpression, ProjectFlags.SQL, null);
 
 					if (correctedValue is SqlGenericConstructorExpression valueGeneric)
 					{
@@ -527,7 +527,7 @@ namespace LinqToDB.Linq.Builder
 			Expression                  setterExpression,
 			List<SetExpressionEnvelope> envelopes)
 		{
-			var correctedSetter = builder.ParseGenericConstructor(setterExpression);
+			var correctedSetter = builder.ParseGenericConstructor(setterExpression, ProjectFlags.SQL, null);
 
 			if (correctedSetter is not SqlGenericConstructorExpression)
 			{

@@ -162,7 +162,9 @@ namespace LinqToDB.Linq.Builder
 
 					var sourceRef = new ContextRefExpression(sourceSequence.ElementType, sourceSequence);
 
-					var redirectedExpression = SequenceHelper.RemapToNewPathSimple(builder, setterExpr, sourceRef, ProjectFlags.SQL);
+					var redirectedExpression = builder.BuildSqlExpression(sourceSequence, sourceRef, ProjectFlags.SQL,
+						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+
 					insertContext.QuerySequence = sourceSequence;
 					insertContext.InsertStatement.SelectQuery = sourceSequence.SelectQuery;
 
