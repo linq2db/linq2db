@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlExpression : ISqlExpression
+	public class SqlExpression : SqlExpressionBase
 	{
 		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
 		{
@@ -42,35 +42,23 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public Type?                     SystemType        { get; }
-		public string                    Expr              { get; }
-		public int                       Precedence        { get; }
-		public ISqlExpression[]          Parameters        { get; }
-		public SqlFlags                  Flags             { get; }
-		public bool?                     CanBeNullNullable => _canBeNull;
-		public ParametersNullabilityType NullabilityType   { get; }
+		public override Type?                     SystemType        { get; }
+		public override int                       Precedence        { get; }
+
+		public          string                    Expr              { get; }
+		public          ISqlExpression[]          Parameters        { get; }
+		public          SqlFlags                  Flags             { get; }
+		public          bool?                     CanBeNullNullable => _canBeNull;
+		public          ParametersNullabilityType NullabilityType   { get; }
 
 		public bool             IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
 		public bool             IsPure           => (Flags & SqlFlags.IsPure)           != 0;
 		public bool             IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
 		public bool             IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		#endregion
-
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			for (var i = 0; i < Parameters.Length; i++)
 				Parameters[i] = Parameters[i].Walk(options, context, func)!;
@@ -82,7 +70,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
+		public override bool Equals(ISqlExpression? other)
 		{
 			return Equals(other, DefaultComparer);
 		}
@@ -91,7 +79,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability)
+		public override bool CanBeNullable(NullabilityContext nullability)
 		{
 			return QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
 				       Parameters.Select(p => p.CanBeNullable(nullability)));
@@ -127,7 +115,7 @@ namespace LinqToDB.SqlQuery
 			return hashCode;
 		}
 
-		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -146,13 +134,15 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SqlExpression;
+		public override QueryElementType ElementType => QueryElementType.SqlExpression;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
+#if DEBUG
+			writer.Append("[UID:")
+				.Append(UniqueId)
+				.Append(']');
+#endif
 			var len = writer.Length;
 			var ss  = Parameters.Select(p =>
 			{
