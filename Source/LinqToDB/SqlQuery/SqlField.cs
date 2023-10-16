@@ -6,7 +6,7 @@ namespace LinqToDB.SqlQuery
 
 	using Mapping;
 
-	public class SqlField : ISqlExpression
+	public class SqlField : SqlExpressionBase
 	{
 		internal static SqlField All(ISqlTableSource table)
 		{
@@ -98,7 +98,7 @@ namespace LinqToDB.SqlQuery
 		public ISqlTableSource?  Table             { get; set; }
 		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
 
-		Type ISqlExpression.SystemType => Type.SystemType;
+		public override Type SystemType => Type.SystemType;
 
 		string? _physicalName;
 		public  string   PhysicalName
@@ -107,37 +107,24 @@ namespace LinqToDB.SqlQuery
 			set => _physicalName = value;
 		}
 
-		#region Overrides
-
-//#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-//#endif
-
-		#endregion
-
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability) => nullability.CanBeNull(this);
+		public override bool CanBeNullable(NullabilityContext nullability) => nullability.CanBeNull(this);
 
 		public bool CanBeNull { get; set; }
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return this == other;
 		}
 
-		public int Precedence => SqlQuery.Precedence.Primary;
+		public override int Precedence => SqlQuery.Precedence.Primary;
 
 		#endregion
 
 		#region ISqlExpressionWalkable Members
 
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+		public override ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
 		{
 			return func(context, this);
 		}
@@ -146,7 +133,7 @@ namespace LinqToDB.SqlQuery
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
+		public override bool Equals(ISqlExpression? other)
 		{
 			return this == other;
 		}
@@ -155,13 +142,12 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SqlField;
+		public override QueryElementType ElementType => QueryElementType.SqlField;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
+			writer.DebugAppendUniqueId(this);
+
 			if (Table != null)
 				writer
 					.Append('t')

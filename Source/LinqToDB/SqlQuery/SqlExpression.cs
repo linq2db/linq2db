@@ -138,11 +138,8 @@ namespace LinqToDB.SqlQuery
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-#if DEBUG
-			writer.Append("[UID:")
-				.Append(UniqueId)
-				.Append(']');
-#endif
+			writer.DebugAppendUniqueId(this);
+
 			var len = writer.Length;
 			var ss  = Parameters.Select(p =>
 			{

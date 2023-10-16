@@ -14,7 +14,7 @@ namespace LinqToDB.SqlQuery
 
 		public virtual string DebugText => this.ToDebugString();
 
-		// For debugging purpose. It helps to understand when specific item is created
+		// For debugging purpose. It helps to understand when specific item is created. Consider using DebugAppendUniqueId extension for printing this Id
 		public long UniqueId { get; }
 
 		protected QueryElement()

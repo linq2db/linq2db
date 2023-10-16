@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.SqlQuery
+﻿using System.Xml;
+
+namespace LinqToDB.SqlQuery
 {
 	public static class DebugStringExtensions
 	{
@@ -28,6 +30,25 @@
 				writer.AppendLine(" */");
 			}
 
+			return writer;
+		}
+
+		/// <summary>
+		/// Appends UniqId to writer only for Debug configuration.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="writer"></param>
+		/// <param name="element"></param>
+		/// <param name="selectQuery"></param>
+		/// <returns></returns>
+		internal static QueryElementTextWriter DebugAppendUniqueId<T>(this QueryElementTextWriter writer, T element, SelectQuery? selectQuery = null)
+			where T : QueryElement
+		{
+#if DEBUG
+			writer.Append("[UID:")
+				.Append(element.UniqueId)
+				.Append(']');
+#endif
 			return writer;
 		}
 
