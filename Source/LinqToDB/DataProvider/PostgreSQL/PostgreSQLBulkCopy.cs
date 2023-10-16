@@ -163,10 +163,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 					for (var i = 0; i < columns.Length; i++)
 					{
+						// DBNull.Value : https://github.com/npgsql/npgsql/issues/5330
+						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i]);
+						var dataType = columnTypes[i];
+
+						if (_provider.GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ && value is DateTimeOffset dto)
+						{
+							// https://github.com/npgsql/npgsql/issues/5332
+							// reset date
+							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
+						}
 						if (npgsqlTypes[i] != null)
-							writer.Write(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value);
+							writer.Write(value, npgsqlTypes[i]!.Value);
 						else
-							writer.Write(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!);
+							writer.Write(value, dbTypes[i]!);
 					}
 
 					currentCount++;
@@ -277,14 +287,23 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				foreach (var item in source)
 				{
 					await writer.StartRowAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 					for (var i = 0; i < columns.Length; i++)
 					{
+						// DBNull.Value : https://github.com/npgsql/npgsql/issues/5330
+						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i]);
+						var dataType = columnTypes[i];
+
+						if (_provider.GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ && value is DateTimeOffset dto)
+						{
+							// https://github.com/npgsql/npgsql/issues/5332
+							// reset date
+							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
+						}
 						if (npgsqlTypes[i] != null)
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
-								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await writer.WriteAsync(value, npgsqlTypes[i]!.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
-							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await writer.WriteAsync(value, dbTypes[i]!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					}
 
 					currentCount++;
@@ -395,12 +414,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					await writer.StartRowAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					for (var i = 0; i < columns.Length; i++)
 					{
+						// DBNull.Value : https://github.com/npgsql/npgsql/issues/5330
+						var value = _provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!) ?? DBNull.Value, columnTypes[i]);
+						var dataType = columnTypes[i];
+
+						if (_provider.GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimeTZ && value is DateTimeOffset dto)
+						{
+							// https://github.com/npgsql/npgsql/issues/5332
+							// reset date
+							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
+						}
 						if (npgsqlTypes[i] != null)
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), npgsqlTypes[i]!.Value, cancellationToken)
-								.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await writer.WriteAsync(value, npgsqlTypes[i]!.Value, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 						else
-							await writer.WriteAsync(_provider.NormalizeTimeStamp(pgOptions, columns[i].GetProviderValue(item!), columnTypes[i]), dbTypes[i]!, cancellationToken)
-							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await writer.WriteAsync(value, dbTypes[i]!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 					}
 
 					currentCount++;
