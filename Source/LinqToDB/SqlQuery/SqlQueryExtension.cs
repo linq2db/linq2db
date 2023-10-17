@@ -6,6 +6,10 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlQueryExtension : IQueryElement, ISqlExpressionWalkable
 	{
+		public SqlQueryExtension()
+		{
+		}
+
 		public string?                           Configuration { get; set; }
 		public Sql.QueryExtensionScope           Scope         { get; set; }
 		public Dictionary<string,ISqlExpression> Arguments     { get; init; } = new();

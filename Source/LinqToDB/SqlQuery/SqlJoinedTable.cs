@@ -5,7 +5,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Remote;
 
-	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
+	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
 		{

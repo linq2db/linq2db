@@ -295,6 +295,8 @@ namespace LinqToDB.Linq.Builder
 					_columnDescriptor = MappingSchema.GetEntityDescriptor(assignment.MemberInfo.DeclaringType).FindColumnDescriptor(assignment.MemberInfo);
 				}
 
+				using var _ = NeedForce((_buildFlags & BuildFlags.ForceAssignments) != 0);
+
 				var newNode = base.VisitSqlGenericAssignment(assignment);
 
 				_columnDescriptor = save;

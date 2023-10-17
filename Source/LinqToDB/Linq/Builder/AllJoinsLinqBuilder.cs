@@ -30,7 +30,8 @@ namespace LinqToDB.Linq.Builder
 
 			List<SqlQueryExtension>? extensions = null;
 
-			if (innerContext is QueryExtensionBuilder.JoinHintContext jhc)
+			var jhc = SequenceHelper.GetJoinHintContext(innerContext);
+			if (jhc != null)
 			{
 				innerContext = jhc.Context;
 				extensions   = jhc.Extensions;

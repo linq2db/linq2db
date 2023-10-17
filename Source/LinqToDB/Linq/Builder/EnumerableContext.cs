@@ -272,7 +272,11 @@ namespace LinqToDB.Linq.Builder
 		public override void SetAlias(string? alias)
 		{
 			if (SelectQuery.Select.Columns.Count == 1)
-				SelectQuery.Select.Columns[0].Alias = alias;
+			{
+				var sqlColumn = SelectQuery.Select.Columns[0];
+				if (sqlColumn.RawAlias == null)
+					sqlColumn.Alias = alias;
+			}
 		}
 
 		public override SqlStatement GetResultStatement()

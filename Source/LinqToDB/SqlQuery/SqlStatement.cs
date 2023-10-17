@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
-	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
+	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable
 	{
 		public string SqlText => this.ToDebugString(SelectQuery);
 

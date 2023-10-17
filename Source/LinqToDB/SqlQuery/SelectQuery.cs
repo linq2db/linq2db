@@ -9,7 +9,7 @@ namespace LinqToDB.SqlQuery
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SelectQuery : ISqlTableSource, IQueryExtendible
+	public class SelectQuery : ISqlTableSource
 	{
 		#region Init
 

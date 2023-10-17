@@ -404,11 +404,6 @@ namespace LinqToDB.Linq.Builder
 				return new LoadWithContext(context.CloneContext(Context), context.CloneContext(RegisterContext));
 			}
 
-			public override void SetAlias(string? alias)
-			{
-				base.SetAlias(alias);
-			}
-
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				return RegisterContext.GetContext(expression, buildInfo);

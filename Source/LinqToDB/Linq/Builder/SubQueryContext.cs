@@ -46,6 +46,8 @@ namespace LinqToDB.Linq.Builder
 			if (alias == null)
 				return;
 
+			SubQuery.SetAlias(alias);
+
 			if (alias.Contains('<'))
 				return;
 

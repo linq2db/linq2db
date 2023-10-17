@@ -975,6 +975,22 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.Arguments[idx].UnwrapLambda();
 		}
 
+
+		//TODO: I don't like this. Hints are like mess. Quick workaround before review
+		public static QueryExtensionBuilder.JoinHintContext? GetJoinHintContext(IBuildContext context)
+		{
+			if (context is QueryExtensionBuilder.JoinHintContext hintContext)
+				return hintContext;
+			if (context is PassThroughContext pt)
+				return GetJoinHintContext(pt.Context);
+			if (context is SubQueryContext sc)
+				return GetJoinHintContext(sc.SubQuery);
+			if (context is DefaultIfEmptyBuilder.DefaultIfEmptyContext di)
+				return GetJoinHintContext(di.Sequence);
+
+			return null;
+		}
+
 		#region Special fields helpers
 
 		public static MemberExpression CreateSpecialProperty(Expression obj, Type type, string name)

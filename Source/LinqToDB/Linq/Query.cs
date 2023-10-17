@@ -232,12 +232,6 @@ namespace LinqToDB.Linq
 		{
 			var statement = parseContext.GetResultStatement();
 
-			if (parseContext.Builder.Tag != null)
-				(statement.Tag ??= new()).Lines.AddRange(parseContext.Builder.Tag.Lines);
-
-			if (parseContext.Builder.SqlQueryExtensions != null)
-				(statement.SqlQueryExtensions ??= new()).AddRange(parseContext.Builder.SqlQueryExtensions);
-
 			Queries.Add(new QueryInfo
 			{
 				Statement          = statement,

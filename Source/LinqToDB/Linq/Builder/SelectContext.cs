@@ -192,7 +192,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (!string.IsNullOrEmpty(alias) && !alias!.Contains("<") && SelectQuery.Select.From.Tables.Count == 1)
 			{
-				SelectQuery.Select.From.Tables[0].Alias = alias;
+				var table = SelectQuery.Select.From.Tables[0];
+				if (table.RawAlias == null)
+					table.Alias = alias;
 			}
 		}
 

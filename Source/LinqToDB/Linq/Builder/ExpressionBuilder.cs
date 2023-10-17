@@ -183,6 +183,20 @@ namespace LinqToDB.Linq.Builder
 			List<Preamble>? preambles = null;
 			BuildQuery((Query<T>)_query, sequence, param, ref preambles, Array<Expression>.Empty);
 
+
+			foreach (var q in _query.Queries)
+			{
+				if (Tag?.Lines.Count > 0)
+				{
+					(q.Statement.Tag ??= new()).Lines.AddRange(Tag.Lines);
+				}
+
+				if (SqlQueryExtensions != null)
+				{
+					(q.Statement.SqlQueryExtensions ??= new()).AddRange(SqlQueryExtensions);
+				}
+			}
+
 			_query.SetPreambles(preambles);
 			_query.SetParametrized(_parametersContext.GetParametrized());
 

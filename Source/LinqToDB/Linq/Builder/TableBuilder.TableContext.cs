@@ -260,6 +260,9 @@ namespace LinqToDB.Linq.Builder
 				if (alias == null)
 					return;
 
+				if (SqlTable.Alias != null)
+					return;
+
 				if (!alias.Contains('<'))
 					SqlTable.Alias ??= alias;
 			}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.Common;
 
@@ -78,8 +79,45 @@ namespace LinqToDB.Expressions
 		/// <returns>Ready to cache expression.</returns>
 		public virtual Expression PrepareForCache(Expression expression, IExpressionEvaluator evaluator)
 		{
+			if (expression.NodeType == ExpressionType.Constant)
+				return expression;
+
+			if (expression.NodeType == ExpressionType.NewArrayInit)
+			{
+				var arrayInit   = (NewArrayExpression)expression;
+				var elementType = arrayInit.Type.GetElementType() ?? throw new InvalidOperationException();
+
+				Expression[]? newExpressions = null;
+
+				for (var i = 0; i < arrayInit.Expressions.Count; i++)
+				{
+					var arg      = arrayInit.Expressions[i];
+					var newValue = PrepareForCache(arg, evaluator);
+					if (!ReferenceEquals(newValue, arg))
+					{
+						if (newValue.Type != elementType)
+						{
+							newValue = Expression.Convert(newValue, elementType);
+						}
+
+						if (newExpressions == null)
+						{
+							newExpressions = arrayInit.Expressions.ToArray();
+						}
+
+						newExpressions[i] = newValue;
+					}
+				}
+
+				if (newExpressions != null)
+					return arrayInit.Update(newExpressions);
+
+				return expression;
+			}
+
 			if (evaluator.CanBeEvaluated(expression))
 				return Expression.Constant(evaluator.Evaluate(expression));
+
 			return expression;
 		}
 

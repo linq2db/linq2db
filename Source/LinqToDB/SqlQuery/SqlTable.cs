@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 	using Mapping;
 	using Remote;
 
-	public class SqlTable : ISqlTableSource, IQueryExtendible
+	public class SqlTable : ISqlTableSource
 	{
 		#region Init
 

@@ -701,7 +701,8 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
-							newExpr = ParseGenericConstructor(newExpr, flags, columnDescriptor);
+							if (flags.IsKeys())
+								newExpr = ParseGenericConstructor(newExpr, flags, columnDescriptor);
 
 							if (newExpr is not SqlGenericConstructorExpression)
 							{
@@ -3884,7 +3885,15 @@ namespace LinqToDB.Linq.Builder
 
 							if (MemberInfoEqualityComparer.Default.Equals(memberLocal, member))
 							{
-								return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
+								var projected = Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[i], strict);
+
+								// set alias
+								if (projected is ContextRefExpression contextRef)
+								{
+									contextRef.BuildContext.SetAlias(member.Name);
+								}
+
+								return projected;
 							}
 						}
 					}

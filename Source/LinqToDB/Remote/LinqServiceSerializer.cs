@@ -1010,6 +1010,9 @@ namespace LinqToDB.Remote
 
 							Append((int)elem.TableOptions);
 
+							Append(elem.SqlQueryExtensions);
+
+
 							break;
 						}
 
@@ -1027,6 +1030,8 @@ namespace LinqToDB.Remote
 
 							foreach (var field in elem.Fields)
 								Append(ObjectIndices[field]);
+
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1056,6 +1061,8 @@ namespace LinqToDB.Remote
 								foreach (var expr in elem.Parameters)
 									Append(ObjectIndices[expr]);
 							}
+
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1270,6 +1277,7 @@ namespace LinqToDB.Remote
 							Append(elem.Table);
 							Append(elem.IsWeak);
 							Append(elem.Condition);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1339,6 +1347,7 @@ namespace LinqToDB.Remote
 							Append(elem.Tag);
 							Append(elem.With);
 							Append(elem.SelectQuery);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1351,6 +1360,7 @@ namespace LinqToDB.Remote
 							Append(elem.Insert);
 							Append(elem.SelectQuery);
 							Append(elem.Output);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1363,6 +1373,7 @@ namespace LinqToDB.Remote
 							Append(elem.Insert);
 							Append(elem.Update);
 							Append(elem.SelectQuery);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1375,6 +1386,7 @@ namespace LinqToDB.Remote
 							Append(elem.SelectQuery);
 							Append(elem.Update);
 							Append(elem.Output);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1389,6 +1401,7 @@ namespace LinqToDB.Remote
 							Append(elem.Output);
 							Append(elem.Top);
 							Append(elem.SelectQuery);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1411,6 +1424,7 @@ namespace LinqToDB.Remote
 							Append(elem.StatementHeader);
 							Append(elem.StatementFooter);
 							Append((int)elem.DefaultNullable);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1421,6 +1435,7 @@ namespace LinqToDB.Remote
 
 						Append(elem.Tag);
 						Append(elem.Table);
+						Append(elem.SqlQueryExtensions);
 
 						break;
 					}
@@ -1432,6 +1447,7 @@ namespace LinqToDB.Remote
 						Append(elem.Tag);
 						Append(elem.Table);
 						Append(elem.ResetIdentity);
+						Append(elem.SqlQueryExtensions);
 
 						break;
 					}
@@ -1504,6 +1520,7 @@ namespace LinqToDB.Remote
 							Append(elem.On);
 							Append(elem.Operations);
 							Append(elem.Output);
+							Append(elem.SqlQueryExtensions);
 
 						break;
 						}
@@ -1515,6 +1532,7 @@ namespace LinqToDB.Remote
 							Append((int)elem.InsertType);
 							Append(elem.Source);
 							Append(elem.Inserts);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1580,36 +1598,27 @@ namespace LinqToDB.Remote
 						var elem = (SqlComment)e;
 						AppendStringList(elem.Lines);
 						break;
+					}
+
+					case QueryElementType.SqlQueryExtension:
+					{
+						var ext = (SqlQueryExtension)e;
+						Append(ext.Configuration);
+						Append((int)ext.Scope);
+						Append(ext.BuilderType);
+						Append(ext.Arguments.Count);
+
+						foreach (var argument in ext.Arguments)
+						{
+							Append(argument.Key);
+							Append(argument.Value);
 						}
+
+						break;
+					}
 
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
-				}
-
-				if (e is IQueryExtendible qe)
-				{
-					if (qe.SqlQueryExtensions == null || qe.SqlQueryExtensions.Count == 0)
-					{
-						Append(0);
-					}
-					else
-					{
-						Append(qe.SqlQueryExtensions.Count);
-
-						foreach (var ext in qe.SqlQueryExtensions)
-						{
-							Append(ext.Configuration);
-							Append((int)ext.Scope);
-							Append(ext.BuilderType);
-							Append(ext.Arguments.Count);
-
-							foreach (var argument in ext.Arguments)
-							{
-								Append(argument.Key);
-								Append(argument.Value);
-							}
-						}
-					}
 				}
 
 				Builder.AppendLine();
@@ -1865,9 +1874,9 @@ namespace LinqToDB.Remote
 									sequenceAttributes[i] = new SequenceNameAttribute(ReadString()!, ReadString()!);
 							}
 
-							var all    = Read<SqlField>()!;
-							var fields = ReadArray<SqlField>()!;
-							var flds   = new SqlField[fields.Length + 1];
+							var all        = Read<SqlField>()!;
+							var fields     = ReadArray<SqlField>()!;
+							var flds       = new SqlField[fields.Length + 1];
 
 							flds[0] = all;
 							Array.Copy(fields, 0, flds, 1, fields.Length);
@@ -1876,9 +1885,14 @@ namespace LinqToDB.Remote
 							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
 							var tableOptions = (TableOptions)ReadInt();
 
+							var extensions = ReadList<SqlQueryExtension>();
+
 							obj = new SqlTable(
 								sourceID, expression, alias, tableName, objectType, sequenceAttributes, flds,
-								sqlTableType, tableArgs, tableOptions, tableID);
+								sqlTableType, tableArgs, tableOptions, tableID)
+							{
+								SqlQueryExtensions = extensions
+							};
 
 							break;
 						}
@@ -1903,8 +1917,10 @@ namespace LinqToDB.Remote
 									cteTable.SetDelayedCteObject(cte);
 							});
 
-							var all    = Read<SqlField>()!;
-							var fields = ReadArray<SqlField>()!;
+							var all        = Read<SqlField>()!;
+							var fields     = ReadArray<SqlField>()!;
+							var extensions = ReadList<SqlQueryExtension>();
+
 							var flds   = new SqlField[fields.Length + 1];
 
 							flds[0] = all;
@@ -1913,6 +1929,8 @@ namespace LinqToDB.Remote
 							cteTable = isDelayed ?
 								new SqlCteTable(sourceID, alias, flds) :
 								new SqlCteTable(sourceID, alias, flds, cte!);
+
+							cteTable.SqlQueryExtensions = extensions;
 
 							obj = cteTable;
 
@@ -1934,8 +1952,12 @@ namespace LinqToDB.Remote
 
 							var sql        = ReadString()!;
 							var parameters = ReadArray<ISqlExpression>()!;
+							var extensions = ReadList<SqlQueryExtension>();
 
-							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters);
+							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters)
+							{
+								SqlQueryExtensions = extensions
+							};
 
 							break;
 						}
@@ -2108,6 +2130,8 @@ namespace LinqToDB.Remote
 
 							query.All = Read<SqlField>()!;
 
+							_statement.SqlQueryExtensions = ReadList<SqlQueryExtension>();
+
 							obj = query;
 
 							break;
@@ -2149,12 +2173,16 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.JoinedTable :
 						{
-							var joinType  = (JoinType)ReadInt();
-							var table     = Read<SqlTableSource>()!;
-							var isWeak    = ReadBool();
-							var condition = Read<SqlSearchCondition>()!;
+							var joinType   = (JoinType)ReadInt();
+							var table      = Read<SqlTableSource>()!;
+							var isWeak     = ReadBool();
+							var condition  = Read<SqlSearchCondition>()!;
+							var extensions = ReadList<SqlQueryExtension>();
 
-							obj = new SqlJoinedTable(joinType, table, isWeak, condition);
+							obj = new SqlJoinedTable(joinType, table, isWeak, condition)
+							{
+								SqlQueryExtensions = extensions
+							};
 
 							break;
 						}
@@ -2238,12 +2266,15 @@ namespace LinqToDB.Remote
 							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
 							var selectQuery = Read<SelectQuery>()!;
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlSelectStatement(selectQuery)
 							{
 								With = with,
-								Tag  = tag
+								Tag  = tag,
+								SqlQueryExtensions = extensions
 							};
+
 
 							break;
 						}
@@ -2255,13 +2286,15 @@ namespace LinqToDB.Remote
 							var insert      = Read<SqlInsertClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
 							var output      = Read<SqlOutputClause>();
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlInsertStatement(selectQuery)
 							{
-								Insert = insert,
-								Output = output,
-								With   = with,
-								Tag    = tag
+								Insert             = insert,
+								Output             = output,
+								With               = with,
+								Tag                = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2274,13 +2307,15 @@ namespace LinqToDB.Remote
 							var selectQuery = Read<SelectQuery>()!;
 							var update      = Read<SqlUpdateClause>()!;
 							var output      = Read<SqlOutputClause>()!;
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlUpdateStatement(selectQuery)
 							{
-								Update = update,
-								Output = output,
-								With   = with,
-								Tag    = tag
+								Update             = update,
+								Output             = output,
+								With               = with,
+								Tag                = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2293,13 +2328,15 @@ namespace LinqToDB.Remote
 							var insert      = Read<SqlInsertClause>()!;
 							var update      = Read<SqlUpdateClause>()!;
 							var selectQuery = Read<SelectQuery>();
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlInsertOrUpdateStatement(selectQuery)
 							{
-								Insert = insert,
-								Update = update,
-								With   = with,
-								Tag    = tag
+								Insert             = insert,
+								Update             = update,
+								With               = with,
+								Tag                = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2313,6 +2350,7 @@ namespace LinqToDB.Remote
 							var output      = Read<SqlOutputClause>();
 							var top         = Read<ISqlExpression>()!;
 							var selectQuery = Read<SelectQuery>();
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlDeleteStatement
 							{
@@ -2321,7 +2359,8 @@ namespace LinqToDB.Remote
 								Top         = top,
 								SelectQuery = selectQuery,
 								With        = with,
-								Tag         = tag
+								Tag         = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2334,13 +2373,15 @@ namespace LinqToDB.Remote
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
 							var defaultNullable = (DefaultNullable)ReadInt();
+							var extensions      = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlCreateTableStatement(table)
 							{
-								StatementHeader = statementHeader,
-								StatementFooter = statementFooter,
-								DefaultNullable = defaultNullable,
-								Tag             = tag
+								StatementHeader    = statementHeader,
+								StatementFooter    = statementFooter,
+								DefaultNullable    = defaultNullable,
+								Tag                = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2348,12 +2389,14 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.DropTableStatement :
 					{
-						var tag   = Read<SqlComment>();
-						var table = Read<SqlTable>()!;
+						var tag        = Read<SqlComment>();
+						var table      = Read<SqlTable>()!;
+						var extensions = ReadList<SqlQueryExtension>();
 
 						obj = _statement = new SqlDropTableStatement(table)
 						{
-							Tag = tag
+							Tag                = tag,
+							SqlQueryExtensions = extensions
 						};
 
 						break;
@@ -2361,15 +2404,17 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.TruncateTableStatement :
 					{
-						var tag   = Read<SqlComment>();
-						var table = Read<SqlTable>();
-						var reset = ReadBool();
+						var tag        = Read<SqlComment>();
+						var table      = Read<SqlTable>();
+						var reset      = ReadBool();
+						var extensions = ReadList<SqlQueryExtension>();
 
 						obj = _statement = new SqlTruncateTableStatement
 						{
-							Table         = table,
-							ResetIdentity = reset,
-							Tag           = tag
+							Table              = table,
+							ResetIdentity      = reset,
+							Tag                = tag,
+							SqlQueryExtensions = extensions
 						};
 
 						break;
@@ -2444,11 +2489,14 @@ namespace LinqToDB.Remote
 							var on         = Read<SqlSearchCondition>()!;
 							var operations = ReadArray<SqlMergeOperationClause>()!;
 							var output     = Read<SqlOutputClause>();
+							var extensions = ReadList<SqlQueryExtension>();
+							
 
 							obj = _statement = new SqlMergeStatement(with, hint, target, source, on, operations)
 							{
 								Tag    = tag,
-								Output = output
+								Output = output,
+								SqlQueryExtensions = extensions 
 							};
 
 							break;
@@ -2534,19 +2582,7 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					default:
-						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
-				}
-
-				if (obj is IQueryExtendible qe)
-				{
-					var count = ReadInt();
-
-					if (count > 0)
-					{
-						qe.SqlQueryExtensions = new(count);
-
-						for (var i = 0; i < count; i++)
+					case QueryElementType.SqlQueryExtension:
 						{
 							var ext = new SqlQueryExtension();
 
@@ -2564,9 +2600,12 @@ namespace LinqToDB.Remote
 								ext.Arguments.Add(key!, value!);
 							}
 
-							qe.SqlQueryExtensions.Add(ext);
+							obj = ext;
+							break;
 						}
-					}
+
+					default:
+						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
 
 				ObjectIndices.Add(idx, obj!);

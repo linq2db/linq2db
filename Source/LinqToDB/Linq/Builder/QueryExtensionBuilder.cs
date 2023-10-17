@@ -41,8 +41,6 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (arg is NewArrayExpression ae)
 				{
-					var evaluateElements = ae.Expressions.Count > 0 && p.HasAttribute<SqlQueryDependentAttribute>();
-
 					list.Add(new($"{name}.Count", arg, p)
 					{
 						SqlExpression = new SqlValue(ae.Expressions.Count),
@@ -52,18 +50,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ex = ae.Expressions[j];
 
-						if (evaluateElements)
-							ex = Expression.Constant(builder.EvaluateExpression(ex));
-
 						list.Add(new($"{name}.{j}", ex, p, j));
 					}
 				}
 				else
 				{
 					var ex   = methodCall.Arguments[i];
-
-					if (p.HasAttribute<SqlQueryDependentAttribute>())
-						ex = Expression.Constant(builder.EvaluateExpression(ex));
 
 					list.Add(new(name, ex, p));
 				}
@@ -128,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 					case Sql.QueryExtensionScope.IndexHint    :
 					case Sql.QueryExtensionScope.TableNameHint:
 					{
-						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
+						var table = SequenceHelper.GetTableOrCteContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
 						attr.ExtendTable(table.SqlTable, list);
 						break;
 					}
