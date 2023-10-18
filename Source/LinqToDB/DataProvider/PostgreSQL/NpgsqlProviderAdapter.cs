@@ -5,11 +5,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+
 	using Common;
 	using Data;
 	using Expressions;
@@ -311,7 +313,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							{
 								// v8 switched from int to byte for NpgsqlInet.Netmask
 								var netmaskType = typeof(byte);
-								var ctor = npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), netmaskType });
+								var ctor = npgsqlInetType.GetConstructor(BindingFlags.ExactBinding | BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(IPAddress), netmaskType }, null);
 								if (ctor == null)
 								{
 									netmaskType = typeof(int);
