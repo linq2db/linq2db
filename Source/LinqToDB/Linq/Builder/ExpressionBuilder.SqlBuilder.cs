@@ -1682,6 +1682,20 @@ namespace LinqToDB.Linq.Builder
 			return Expression.Lambda(body, param);
 		}
 
+		public SqlSearchCondition? TryGenerateComparison(
+			IBuildContext? context, 
+			Expression     left,
+			Expression     right,
+			ProjectFlags   flags = ProjectFlags.SQL)
+		{
+			var expr = ConvertCompareExpression(context, ExpressionType.Equal, left, right, flags);
+			if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
+				return sc;
+
+			return null;
+		}
+
+
 		public SqlSearchCondition GenerateComparison(
 			IBuildContext? context, 
 			Expression     left,

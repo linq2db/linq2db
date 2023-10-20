@@ -80,7 +80,9 @@ namespace LinqToDB.Linq.Builder
 			outerKeySelector = builder.BuildSqlExpression(outerContext, outerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys | ProjectFlags.SQL));
 			innerKeySelector = builder.BuildSqlExpression(innerContext, innerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys | ProjectFlags.SQL));
 
-			var compareSearchCondition = builder.GenerateComparison(outerContext, outerKeySelector, innerKeySelector, buildInfo.GetFlags());
+			var compareSearchCondition = builder.TryGenerateComparison(outerContext, outerKeySelector, innerKeySelector, buildInfo.GetFlags());
+			if (compareSearchCondition == null)
+				throw new SqlErrorExpression($"Could not compare '{outerKeyLambda}' with {innerKeyLambda}", typeof(bool)).CreateError();
 
 			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression ||
 			                           innerKeySelector is SqlGenericConstructorExpression;

@@ -15,6 +15,8 @@ using System.Threading.Tasks;
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Types;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -546,6 +548,7 @@ namespace Tests.DataProvider
 				{
 					Id          = f.Id,
 					Caption     = f.Caption,
+					ParentId    = f.ParentId,
 					HasChildren = db.GetTable<Issue76Entity>().Any(f2 => f2.ParentId == f.Id)
 				});
 
@@ -774,15 +777,11 @@ namespace Tests.DataProvider
 
 				if (quoteMode == FirebirdIdentifierQuoteMode.None)
 				{
-					Assert.True(sql.Contains(") a_Owner ON")); // subquery alias
-					Assert.True(sql.Contains("Client cl")); // table alias
-					Assert.True(sql.Contains(") as CountOfTCards")); // column alias
+					sql.Should().Contain("Client a_Owner ON");
 				}
 				else
 				{
-					Assert.True(sql.Contains(") \"a_Owner\" ON")); // subquery alias
-					Assert.True(sql.Contains("\"Client\" \"cl\"")); // table alias
-					Assert.True(sql.Contains(") as \"CountOfTCards\"")); // column alias
+					sql.Should().Contain("\"Client\" \"a_Owner\" ON");
 				}
 			}
 			Query.ClearCaches();

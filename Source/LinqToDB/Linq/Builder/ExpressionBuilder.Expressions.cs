@@ -514,7 +514,7 @@ namespace LinqToDB.Linq.Builder
 				if (!ExpressionEqualityComparer.Instance.Equals(handled, node))
 					return Visit(handled);
 
-				var useSql = IsForcedToConvert(node);
+				var useSql = IsForcedToConvert(node) || _flags.IsSql();
 
 				if (!useSql)
 				{
@@ -553,6 +553,10 @@ namespace LinqToDB.Linq.Builder
 						return Expression.Condition(Expression.NotEqual(expr, Expression.Default(expr.Type)),
 							node.Update(expr), Expression.Default(node.Type));
 					}
+				}
+				else
+				{
+					return node;
 				}
 
 				return base.VisitMember(node);
