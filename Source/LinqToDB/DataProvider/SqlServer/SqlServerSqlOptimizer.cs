@@ -136,6 +136,21 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 				}
 			}
+			else
+			{
+				if (updateStatement.Update.TableSource == null)
+				{
+					if (updateStatement.SelectQuery.From.Tables.Count > 0)
+					{
+						var suggestedSource = new SqlTableSource(updateStatement.Update.Table!,
+							QueryHelper.SuggestTableSourceAlias(updateStatement.SelectQuery, "u"));
+
+						updateStatement.SelectQuery.From.Tables.Insert(0, suggestedSource);
+
+						updateStatement.Update.TableSource = suggestedSource;
+					}
+				}
+			}
 
 			CorrectUpdateSetters(updateStatement);
 
