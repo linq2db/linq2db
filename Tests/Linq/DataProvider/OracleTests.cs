@@ -906,7 +906,7 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				Assert.That(parameters.Length, Is.EqualTo(2));
+				parameters.Should().HaveCount(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...
@@ -936,7 +936,8 @@ namespace Tests.DataProvider
 
 				_ = query.FirstOrDefault();
 
-				Assert.That(parameters.Length, Is.EqualTo(2));
+
+				parameters.Should().HaveCount(1);
 
 				if (context.IsAnyOf(TestProvName.AllOracleDevart))
 					// another case of sloppy implementation by devart...
