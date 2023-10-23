@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			string? name = alias;
 
-			var newExpr = ReplaceParameter(expr, forceConstant, nm => name = nm);
+			var newExpr = ReplaceParameter(expr, columnDescriptor, forceConstant, nm => name = nm);
 
 			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
 
@@ -260,16 +260,15 @@ namespace LinqToDB.Linq.Builder
 				if (typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
 				{
 					newExpr.DbDataTypeExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.DbDataType);
-					newExpr.ValueExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.Value);
-				}
-				else
-				{
+
 					if (columnDescriptor != null)
 					{
 						var dbDataType = columnDescriptor.GetDbDataType(false);
 						newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
 							DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
 					}
+
+					newExpr.ValueExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.Value);
 				}
 			}
 
@@ -289,11 +288,11 @@ namespace LinqToDB.Linq.Builder
 			public DbDataType DataType;
 		}
 
-		public ValueTypeExpression ReplaceParameter(Expression expression, bool forceConstant, Action<string>? setName)
+		public ValueTypeExpression ReplaceParameter(Expression expression, ColumnDescriptor? columnDescriptor, bool forceConstant, Action<string>? setName)
 		{
 			var result = new ValueTypeExpression
 			{
-				DataType             = new DbDataType(expression.Type),
+				DataType             = columnDescriptor?.GetDbDataType(true) ?? new DbDataType(expression.Type),
 				DbDataTypeExpression = Expression.Constant(new DbDataType(expression.Type), typeof(DbDataType)),
 			};
 
@@ -305,7 +304,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			result.ValueExpression = expression.Transform(
-				(forceConstant, (expression as MemberExpression)?.Member, result, setName, paramContext: this),
+				(forceConstant, columnDescriptor, (expression as MemberExpression)?.Member, result, setName, paramContext: this),
 				static (context, expr) =>
 				{
 					if (expr.NodeType == ExpressionType.Constant
@@ -328,24 +327,27 @@ namespace LinqToDB.Linq.Builder
 							}
 							else if (context.Member != null)
 							{
-								var mt = ExpressionBuilder.GetMemberDataType(context.paramContext.MappingSchema, context.Member);
-
-								if (mt.DataType != DataType.Undefined)
+								if (context.columnDescriptor == null)
 								{
-									context.result.DataType             = context.result.DataType.WithDataType(mt.DataType);
-									context.result.DbDataTypeExpression = Expression.Constant(mt);
-								}
+									var mt = ExpressionBuilder.GetMemberDataType(context.paramContext.MappingSchema, context.Member);
 
-								if (mt.DbType != null)
-								{
-									context.result.DataType             = context.result.DataType.WithDbType(mt.DbType);
-									context.result.DbDataTypeExpression = Expression.Constant(mt);
-								}
+									if (mt.DataType != DataType.Undefined)
+									{
+										context.result.DataType             = context.result.DataType.WithDataType(mt.DataType);
+										context.result.DbDataTypeExpression = Expression.Constant(mt);
+									}
 
-								if (mt.Length != null)
-								{
-									context.result.DataType             = context.result.DataType.WithLength(mt.Length);
-									context.result.DbDataTypeExpression = Expression.Constant(mt);
+									if (mt.DbType != null)
+									{
+										context.result.DataType             = context.result.DataType.WithDbType(mt.DbType);
+										context.result.DbDataTypeExpression = Expression.Constant(mt);
+									}
+
+									if (mt.Length != null)
+									{
+										context.result.DataType             = context.result.DataType.WithLength(mt.Length);
+										context.result.DbDataTypeExpression = Expression.Constant(mt);
+									}
 								}
 
 								context.setName?.Invoke(context.Member.Name);
@@ -487,7 +489,7 @@ namespace LinqToDB.Linq.Builder
 			if (member is MethodInfo mi)
 				member = mi.GetPropertyInfo()!; // ??
 
-			var vte  = ReplaceParameter(ex, forceConstant: false, null);
+			var vte  = ReplaceParameter(ex, columnDescriptor, forceConstant: false, null);
 			var par  = vte.ValueExpression;
 			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType ?? typeof(object)) : par, member);
 
