@@ -1121,6 +1121,7 @@ namespace LinqToDB.SqlQuery
 		bool IsColumnExpressionValid(SelectQuery parentQuery, SelectQuery subQuery, SqlColumn column, ISqlExpression columnExpression)
 		{
 			if (columnExpression.ElementType == QueryElementType.Column ||
+			    columnExpression.ElementType == QueryElementType.SqlRawSqlTable ||
 			    columnExpression.ElementType == QueryElementType.SqlField)
 			{
 				return true;

@@ -108,12 +108,17 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var sqlExpression = finalFunction.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), 
+			var sqlExpression = finalFunction.GetExpression((builder, context : placeholderSequence, forselect : placeholderSelect, flags: buildInfo.GetFlags()), 
 				builder.DataContext, 
 				builder, 
 				placeholderSelect, 
 				methodCall,
-				static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
+				static (ctx, e, descriptor) =>
+				{
+					var result = ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor);
+					result = ctx.builder.UpdateNesting(ctx.forselect, result);
+					return result;
+				});
 
 			if (sqlExpression is not SqlPlaceholderExpression placeholder)
 				return null;

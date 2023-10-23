@@ -503,7 +503,10 @@ namespace LinqToDB.Linq.Builder
 					flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
 
 				if (result is SqlPlaceholderExpression)
+				{
+					result = UpdateNesting(context, result);
 					return result;
+				}
 			}
 
 			return ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
