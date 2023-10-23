@@ -7,6 +7,8 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Extensions
 {
 	[TestFixture]
@@ -391,7 +393,7 @@ namespace Tests.Extensions
 			.Union
 			(
 				from p in db.Child
-				select p.Parent
+				select new Parent { ParentID = p.Parent.ParentID, Value1 = p.Parent.Value1 }
 			)
 			.AsMySql()
 			.ForUpdateHint()
@@ -418,10 +420,8 @@ namespace Tests.Extensions
 				"UNION",
 				"FOR UPDATE",
 				"UNION",
-				"FOR UPDATE",
-				")",
-				"FOR UPDATE",
-				")"));
+				"FOR UPDATE"
+				));
 		}
 	}
 }
