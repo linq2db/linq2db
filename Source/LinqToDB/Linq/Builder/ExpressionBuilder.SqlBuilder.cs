@@ -899,7 +899,10 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (left.Type != right.Type)
-						columnDescriptor = null;
+					{
+						if (left.Type.ToNullableUnderlying() != right.Type.ToNullableUnderlying())
+							columnDescriptor = null;
+					}
 
 					var leftExpr  = ConvertToSqlExpr(context, left,  flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 					var rightExpr = ConvertToSqlExpr(context, right, flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
