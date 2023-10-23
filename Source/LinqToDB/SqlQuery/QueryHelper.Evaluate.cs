@@ -183,7 +183,10 @@ namespace LinqToDB.SqlQuery
 
 					if (value == null)
 					{
-						result = false;
+						if (isTruePredicate.WithNull != null)
+							result = isTruePredicate.WithNull;
+						else
+							result = false;
 						return true;
 					}
 

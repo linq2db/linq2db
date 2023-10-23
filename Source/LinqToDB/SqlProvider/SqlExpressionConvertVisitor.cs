@@ -480,7 +480,12 @@ namespace LinqToDB.SqlProvider
 				return Visit(newElement);
 
 
-			return ConvertSqlFunction(element);
+			newElement = ConvertSqlFunction(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			return element;
 		}
 
 		public override IQueryElement VisitSqlExpression(SqlExpression element)

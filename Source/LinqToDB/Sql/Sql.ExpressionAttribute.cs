@@ -549,8 +549,17 @@ namespace LinqToDB
 				if (_canBeNull != null)
 					sqlExpression.CanBeNull = _canBeNull.Value;
 
+				ISqlExpression resultExpression = sqlExpression;
+
+				// Unwrapping Expression into appropriate SqlNullabilityExpression
+				if (sqlExpression.Expr == Expression && Expression == "{0}")
+				{
+					resultExpression = SqlNullabilityExpression.ApplyNullability(sqlExpression.Parameters[0], sqlExpression.CanBeNull);
+				}
+
+
 				// placeholder will be updated later by concrete path
-				return ExpressionBuilder.CreatePlaceholder(query, sqlExpression, expression);
+				return ExpressionBuilder.CreatePlaceholder(query, resultExpression, expression);
 			}
 
 			public static ParametersNullabilityType ToParametersNullabilityType(IsNullableType nullableType)

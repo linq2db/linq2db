@@ -355,9 +355,11 @@ namespace LinqToDB.Linq.Builder
 					var memberPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
 					var parsed     = builder.ParseGenericConstructor(assignment.Expression, flags, null);
 
-					var newExpression = ReferenceEquals(parsed, assignment.Expression)
-						? memberPath
-						: RemapToNewPathSimple(builder, assignment.Expression, memberPath, flags);
+					Expression newExpression = memberPath;
+					if (parsed is SqlGenericConstructorExpression genericParsed && genericParsed.Assignments.Count > 0)
+					{
+						newExpression = RemapToNewPathSimple(builder, assignment.Expression, memberPath, flags);
+					}
 
 					if (!ReferenceEquals(assignment.Expression, newExpression))
 					{
@@ -434,7 +436,7 @@ namespace LinqToDB.Linq.Builder
 			if (expression is NewExpression or MemberInitExpression)
 			{
 				var parsed = builder.ParseGenericConstructor(expression, ProjectFlags.SQL, null);
-				if (!ReferenceEquals(parsed, expression))
+				if (parsed is SqlGenericConstructorExpression genericParsed && genericParsed.Assignments.Count > 0)
 					return RemapToNewPathSimple(builder, parsed, toPath, flags);
 			}
 

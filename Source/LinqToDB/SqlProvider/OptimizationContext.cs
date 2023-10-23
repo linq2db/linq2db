@@ -120,6 +120,8 @@ namespace LinqToDB.SqlProvider
 
 			var newElement = _optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, element);
 			var result = (T)_convertVisitor.Convert(this, nullabilityContext, _sqlProviderFlags, _dataOptions, _mappingSchema, newElement);
+			if (!ReferenceEquals(result, newElement))
+				result = (T)_optimizerVisitor.Optimize(Context, nullabilityContext, _sqlProviderFlags, _dataOptions, result);
 
 			return result;
 		}

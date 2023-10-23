@@ -1045,6 +1045,36 @@ namespace LinqToDB.SqlQuery
 			return current as SqlField;
 		}
 
+		/// <summary>
+		/// Returns SqlTable from specific expression. Usually from SqlColumn.
+		/// Conversion is ignored.
+		/// </summary>
+		/// <param name="expression"></param>
+		/// <returns>SqlTable instance associated with expression</returns>
+		public static SqlTable? ExtractSqlTable(ISqlExpression? expression)
+		{
+			if (expression == null)
+				return null;
+
+			switch (expression)
+			{
+				case SqlTable t:
+					return t;
+				case SqlField field:
+					if (field.Table is SqlTable table)
+						return table;
+					if (field.Table is SelectQuery sq && sq.From.Tables.Count == 1)
+						return ExtractSqlTable(sq.From.Tables[0].Source);
+					break;
+				case SqlColumn column:
+					return ExtractSqlTable(ExtractField(column));
+			}
+
+			return null;
+		}
+
+
+
 		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2, bool compareNullsAsValues)
 		{
 			var compare = new SqlCondition(false,

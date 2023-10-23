@@ -344,13 +344,7 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var tableExpr = builder.GetExpression(0);
-				var sqlTable  = tableExpr switch
-				{
-					SqlTable  t      => t,
-					SqlField  field  => field.Table as SqlTable,
-					SqlColumn column => QueryHelper.ExtractField(column)?.Table as SqlTable,
-					_                => null
-				};
+				var sqlTable  = QueryHelper.ExtractSqlTable(tableExpr);
 
 				//TODO: review, maybe we need here TableSource
 				if (sqlTable == null)

@@ -682,7 +682,12 @@ namespace LinqToDB.Linq.Builder.Visitors
 						if (equalityLeft.Type.IsNullable())
 							if (equalityLeft.NodeType == ExpressionType.Equal && equalityLeft.Left.Type == equalityLeft.Right.Type)
 								if (constantRight.Value is bool val && val == false)
-									return Visit(equalityLeft);
+								{
+									var result = Visit(equalityLeft);
+									if (result.Type != node.Type)
+										result = Expression.Convert(result, node.Type);
+									return result;
+								}
 
 					break;
 				}

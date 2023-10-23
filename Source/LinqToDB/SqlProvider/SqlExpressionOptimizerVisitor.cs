@@ -681,10 +681,10 @@ namespace LinqToDB.SqlProvider
 			var isValue    = valueFirst;
 
 			if (valueFirst)
-				func = expr.Expr2 as SqlFunction;
+				func = QueryHelper.UnwrapNullablity(expr.Expr2) as SqlFunction;
 			else
 			{
-				func = expr.Expr1 as SqlFunction;
+				func    = QueryHelper.UnwrapNullablity(expr.Expr1) as SqlFunction;
 				isValue = expr.Expr2.TryEvaluateExpression(_evaluationContext, out value);
 			}
 
