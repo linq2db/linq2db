@@ -1227,6 +1227,8 @@ namespace LinqToDB.Remote
 							else
 								Builder.Append(" -");
 
+							Append(elem.SqlQueryExtensions);
+
 							break;
 						}
 
@@ -2111,8 +2113,6 @@ namespace LinqToDB.Remote
 
 							var query = new SelectQuery(sid);
 
-							_statement = new SqlSelectStatement(query);
-
 							query.Init(
 								select,
 								from,
@@ -2130,7 +2130,7 @@ namespace LinqToDB.Remote
 
 							query.All = Read<SqlField>()!;
 
-							_statement.SqlQueryExtensions = ReadList<SqlQueryExtension>();
+							query.SqlQueryExtensions = ReadList<SqlQueryExtension>();
 
 							obj = query;
 
