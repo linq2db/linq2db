@@ -515,9 +515,9 @@ namespace LinqToDB.Data
 								if (isFaulted)
 									throw;
 
-								isFaulted = true;
+								isFaulted    = true;
 								objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey);
-								result = objectReader(reader);
+								result       = objectReader(reader);
 							}
 
 							action(result);
@@ -1433,9 +1433,9 @@ namespace LinqToDB.Data
 						if (isFaulted)
 							throw;
 
-						isFaulted = true;
+						isFaulted    = true;
 						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey);
-						result = objectReader(rd);
+						result       = objectReader(rd);
 					}
 
 					action(result);

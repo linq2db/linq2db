@@ -596,9 +596,9 @@ namespace LinqToDB
 							Expression<Func<TTarget, TOutput>> outputExpression)
 			where TTarget : notnull
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
