@@ -277,7 +277,7 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql).QueryToArrayAsync(objectReader, cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns async sequence of values, mapped using provided mapping function.
 		/// </summary>
@@ -350,7 +350,7 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values, mapped using provided mapping function.
 		/// </summary>
@@ -460,7 +460,7 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values, mapped using provided mapping function.
 		/// </summary>
@@ -1125,7 +1125,7 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
@@ -1193,7 +1193,7 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
@@ -1262,7 +1262,7 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameter).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
@@ -1367,7 +1367,7 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values.
 		/// </summary>
@@ -1584,7 +1584,7 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values of specified type.
 		/// </summary>
@@ -1694,7 +1694,7 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and returns array of values of specified type.
 		/// </summary>

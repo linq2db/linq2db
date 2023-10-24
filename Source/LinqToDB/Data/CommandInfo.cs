@@ -262,7 +262,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and apply provided action to each record, mapped using provided mapping function.
 		/// </summary>
@@ -278,8 +278,12 @@ namespace LinqToDB.Data
 
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
+#if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 					while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						yield return objectReader(rd.DataReader!);
 			}
@@ -524,7 +528,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		/// <summary>
 		/// Executes command asynchronously and apply provided action to each record.
 		/// </summary>
@@ -539,8 +543,12 @@ namespace LinqToDB.Data
 
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 			{
+#if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 				{
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
@@ -702,11 +710,11 @@ namespace LinqToDB.Data
 #else
 				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
-			{
-					result = await ReadMultipleResultSetsAsync<T>(rd.DataReader!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				{
+						result = await ReadMultipleResultSetsAsync<T>(rd.DataReader!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-					SetRebindParameters(rd);
-			}
+						SetRebindParameters(rd);
+				}
 			}
 
 			return result;
@@ -1436,7 +1444,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		internal async IAsyncEnumerable<T> ExecuteQueryAsync<T>(DbDataReader rd, string sql, [EnumeratorCancellation] CancellationToken cancellationToken)
 		{
 			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
