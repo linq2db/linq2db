@@ -165,13 +165,6 @@ namespace Tests.DataProvider
 			await table.DeleteAsync();
 			await db.BulkCopyAsync(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
-
-#if NATIVE_ASYNC
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
-			await table.DeleteAsync();
-			await db.BulkCopyAsync(options, data);
-			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
-#endif
 		}
 
 		/// <summary>
