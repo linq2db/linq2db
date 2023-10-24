@@ -178,7 +178,7 @@ namespace LinqToDB.Data
 		}
 
 #if NATIVE_ASYNC
-		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>([EnumeratorCancellation] CancellationToken cancellationToken)
+		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>([EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			if (ReadNumber != 0)
 				if (!await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
@@ -230,9 +230,9 @@ namespace LinqToDB.Data
 		}
 
 #if NATIVE_ASYNC
-		public IAsyncEnumerable<T> QueryForEachAsync<T>(T template, CancellationToken cancellationToken)
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(T template)
 		{
-			return QueryToAsyncEnumerable<T>(cancellationToken);
+			return QueryToAsyncEnumerable<T>();
 		}
 #endif
 		
