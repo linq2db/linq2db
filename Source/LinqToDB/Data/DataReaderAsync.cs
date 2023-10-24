@@ -126,10 +126,15 @@ namespace LinqToDB.Data
 		}
 
 #if NATIVE_ASYNC
-		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader)
 		{
-			while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-				yield return objectReader(Reader);
+			return Impl(objectReader);
+
+			async IAsyncEnumerable<T> Impl(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					yield return objectReader(Reader);
+			}
 		}
 #endif
 
@@ -178,16 +183,27 @@ namespace LinqToDB.Data
 		}
 
 #if NATIVE_ASYNC
-		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>([EnumeratorCancellation] CancellationToken cancellationToken = default)
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>()
 		{
-			if (ReadNumber != 0)
-				if (!await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			return Impl();
+
+			async IAsyncEnumerable<T> Impl([EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				if (ReadNumber != 0
+					&& !await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
 					yield break;
+				}
 
-			ReadNumber++;
+				ReadNumber++;
 
-			await foreach (var element in CommandInfo!.ExecuteQueryAsync<T>(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-				yield return element;
+				await foreach (var element in CommandInfo!.ExecuteQueryAsync<T>(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber)
+						.WithCancellation(cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					yield return element;
+				}
+			}
 		}
 #endif
 

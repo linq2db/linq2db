@@ -268,24 +268,28 @@ namespace LinqToDB.Data
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
 		/// <param name="objectReader">Record mapping function from data reader.</param>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Async sequence of records returned by the query.</returns>
-		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			return Impl(objectReader);
 
-			InitCommand();
-
-			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			async IAsyncEnumerable<T> Impl(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				InitCommand();
+
+				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				{
 #if NETSTANDARD2_1PLUS
-				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
-					while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-						yield return objectReader(rd.DataReader!);
+						while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+							yield return objectReader(rd.DataReader!);
+				}
 			}
 		}
 #endif
@@ -533,51 +537,55 @@ namespace LinqToDB.Data
 		/// Executes command asynchronously and apply provided action to each record.
 		/// </summary>
 		/// <typeparam name="T">Result record type.</typeparam>
-		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Async sequence of records returned by the query.</returns>
-		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>([EnumeratorCancellation] CancellationToken cancellationToken = default)
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>()
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			return Impl();
 
-			InitCommand();
-
-			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			async IAsyncEnumerable<T> Impl([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-#if NETSTANDARD2_1PLUS
-				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				InitCommand();
+
+				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#if NETSTANDARD2_1PLUS
+					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 					{
-						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
-						var isFaulted     = false;
-
-						do
+						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
-							T result;
+							var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
+							var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
+							var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
+							var isFaulted     = false;
 
-							try
+							do
 							{
-								result = objectReader(reader);
-							}
-							catch (InvalidCastException)
-							{
-								if (isFaulted)
-									throw;
+								T result;
 
-								isFaulted = true;
-								objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey);
-								result = objectReader(reader);
-							}
+								try
+								{
+									result = objectReader(reader);
+								}
+								catch (InvalidCastException)
+								{
+									if (isFaulted)
+										throw;
 
-							yield return result;
+									isFaulted = true;
+									objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey);
+									result = objectReader(reader);
+								}
 
-						} while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+								yield return result;
+
+							} while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+						}
 					}
 				}
 			}
@@ -1445,35 +1453,40 @@ namespace LinqToDB.Data
 		}
 
 #if NATIVE_ASYNC
-		internal async IAsyncEnumerable<T> ExecuteQueryAsync<T>(DbDataReader rd, string sql, [EnumeratorCancellation] CancellationToken cancellationToken)
+		internal IAsyncEnumerable<T> ExecuteQueryAsync<T>(DbDataReader rd, string sql)
 		{
-			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			return Impl(rd, sql);
+
+			async IAsyncEnumerable<T> Impl(DbDataReader rd, string sql, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
-				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
-				var isFaulted     = false;
-
-				do
+				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					T result;
+					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
+					var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
+					var isFaulted     = false;
 
-					try
+					do
 					{
-						result = objectReader(rd);
-					}
-					catch (InvalidCastException)
-					{
-						if (isFaulted)
-							throw;
+						T result;
 
-						isFaulted = true;
-						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey);
-						result = objectReader(rd);
-					}
+						try
+						{
+							result = objectReader(rd);
+						}
+						catch (InvalidCastException)
+						{
+							if (isFaulted)
+								throw;
 
-					yield return result;
+							isFaulted = true;
+							objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey);
+							result = objectReader(rd);
+						}
 
-				} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+						yield return result;
+
+					} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+				}
 			}
 		}
 #endif
