@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -433,7 +434,8 @@ namespace Tests.xUpdate
 							SourceStr = source.s.ValueStr,
 							DeletedValue = deleted.Value,
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -467,7 +469,8 @@ namespace Tests.xUpdate
 						{
 							DeletedValue = deleted.Value,
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -503,7 +506,8 @@ namespace Tests.xUpdate
 						{
 							DeletedValue = deleted.Value,
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -537,7 +541,8 @@ namespace Tests.xUpdate
 						{
 							SourceStr     = source.s.ValueStr,
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -569,7 +574,8 @@ namespace Tests.xUpdate
 						(source, deleted, inserted) => new
 						{
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -603,7 +609,8 @@ namespace Tests.xUpdate
 						(source, deleted, inserted) => new
 						{
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1213,7 +1220,8 @@ namespace Tests.xUpdate
 							SourceStr = source.s.ValueStr,
 							DeletedValue = deleted.Value,
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1247,7 +1255,8 @@ namespace Tests.xUpdate
 						{
 							DeletedValue = deleted.Value,
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1283,7 +1292,8 @@ namespace Tests.xUpdate
 						{
 							DeletedValue = deleted.Value,
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1317,7 +1327,8 @@ namespace Tests.xUpdate
 						{
 							SourceStr     = source.s.ValueStr,
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1349,7 +1360,8 @@ namespace Tests.xUpdate
 						(source, deleted, inserted) => new
 						{
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1383,7 +1395,8 @@ namespace Tests.xUpdate
 						(source, deleted, inserted) => new
 						{
 							InsertedValue = inserted.Value,
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1879,7 +1892,8 @@ namespace Tests.xUpdate
 					.Where(s => s.Id > 3)
 					.UpdateWithOutputAsync(
 						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
-						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, });
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1907,7 +1921,8 @@ namespace Tests.xUpdate
 					.Where(s => s.Id == 3)
 					.UpdateWithOutputAsync(
 						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
-						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, });
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1934,7 +1949,8 @@ namespace Tests.xUpdate
 					.Where(s => s.Id > 3)
 					.UpdateWithOutputAsync(
 						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
-						(deleted, inserted) => new { InsertedValue = inserted.Value, });
+						(deleted, inserted) => new { InsertedValue = inserted.Value, })
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -1961,7 +1977,8 @@ namespace Tests.xUpdate
 					.Where(s => s.Id == 3)
 					.UpdateWithOutputAsync(
 						s => new TableWithData { Id = s.Id, Value = s.Value + 1, ValueStr = s.ValueStr + "Upd", },
-						(deleted, inserted) => new { InsertedValue = inserted.Value, });
+						(deleted, inserted) => new { InsertedValue = inserted.Value, })
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -2459,7 +2476,8 @@ namespace Tests.xUpdate
 					.Set(s => s.Value, s => s.Value + 1)
 					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
 					.UpdateWithOutputAsync(
-						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, });
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -2489,7 +2507,8 @@ namespace Tests.xUpdate
 					.Set(s => s.Value, s => s.Value + 1)
 					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
 					.UpdateWithOutputAsync(
-						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, });
+						(deleted, inserted) => new { DeletedValue = deleted.Value, InsertedValue = inserted.Value, })
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -2518,7 +2537,8 @@ namespace Tests.xUpdate
 					.Set(s => s.Value, s => s.Value + 1)
 					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
 					.UpdateWithOutputAsync(
-						(deleted, inserted) => new { InsertedValue = inserted.Value, });
+						(deleted, inserted) => new { InsertedValue = inserted.Value, })
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -2547,7 +2567,8 @@ namespace Tests.xUpdate
 					.Set(s => s.Value, s => s.Value + 1)
 					.Set(s => s.ValueStr, s => s.ValueStr + "Upd")
 					.UpdateWithOutputAsync(
-						(deleted, inserted) => new { InsertedValue = inserted.Value, });
+						(deleted, inserted) => new { InsertedValue = inserted.Value, })
+					.ToListAsync();
 
 				AreEqual(
 					expected,

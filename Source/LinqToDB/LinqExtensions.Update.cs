@@ -153,8 +153,7 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
@@ -164,17 +163,16 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TOutput[]> UpdateWithOutputAsync<TSource,TTarget,TOutput>(
-			                this IQueryable<TSource>                          source,
-			                ITable<TTarget>                                   target,
-			[InstantHandle] Expression<Func<TSource,TTarget>>                 setter,
-			                Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression,
-			                CancellationToken                                 token = default)
+		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
+							this IQueryable<TSource> source,
+							ITable<TTarget> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
+							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression)
 			where TTarget : class
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (target ==           null) throw new ArgumentNullException(nameof(target));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -187,6 +185,42 @@ namespace LinqToDB
 					((IQueryable<TTarget>)target).Expression,
 					Expression.Quote(setter),
 					Expression.Quote(outputExpression)))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Executes update-from-source operation against target table.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Sequence of records returned by output.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		[Obsolete("Will be removed in l2db 7.0")]
+		public static Task<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
+							this IQueryable<TSource> source,
+							ITable<TTarget> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
+							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression,
+							CancellationToken token)
+			where TTarget : class
+		{
+			return UpdateWithOutputAsync(source, target, setter, outputExpression)
 				.ToArrayAsync(token);
 		}
 
@@ -516,8 +550,7 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
@@ -527,16 +560,15 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TOutput[]> UpdateWithOutputAsync<TSource,TTarget,TOutput>(
-			                this IQueryable<TSource>                          source,
-			                Expression<Func<TSource,TTarget>>                 target,
-			[InstantHandle] Expression<Func<TSource,TTarget>>                 setter,
-							Expression<Func<TSource,TTarget,TTarget,TOutput>> outputExpression,
-							CancellationToken                                 token = default)
+		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
+							this IQueryable<TSource> source,
+							Expression<Func<TSource, TTarget>> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
+							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression)
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (target ==           null) throw new ArgumentNullException(nameof(target));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -549,6 +581,41 @@ namespace LinqToDB
 					Expression.Quote(target),
 					Expression.Quote(setter),
 					Expression.Quote(outputExpression)))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Executes update-from-source operation against target table.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TTarget">Target table mapping class.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="target">Target table.</param>
+		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: (<typeparamref name="TSource"/> source, <typeparamref name="TTarget"/> deleted, <typeparamref name="TTarget"/> inserted).
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Sequence of records returned by output.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		[Obsolete("Will be removed in l2db 7.0")]
+		public static Task<TOutput[]> UpdateWithOutputAsync<TSource, TTarget, TOutput>(
+							this IQueryable<TSource> source,
+							Expression<Func<TSource, TTarget>> target,
+			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
+							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression,
+							CancellationToken token)
+		{
+			return UpdateWithOutputAsync(source, target, setter, outputExpression)
 				.ToArrayAsync(token);
 		}
 
@@ -856,8 +923,7 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
@@ -867,14 +933,13 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TOutput[]> UpdateWithOutputAsync<T,TOutput>(
-			           this IQueryable<T>                 source,
-			[InstantHandle] Expression<Func<T,T>>         setter,
-			                Expression<Func<T,T,TOutput>> outputExpression,
-			                CancellationToken             token = default)
+		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<T, TOutput>(
+					   this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, T>> setter,
+							Expression<Func<T, T, TOutput>> outputExpression)
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
-			if (setter ==           null) throw new ArgumentNullException(nameof(setter));
+			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (setter == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -885,6 +950,38 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(UpdateWithOutput, source, setter, outputExpression),
 					currentSource.Expression, Expression.Quote(setter),
 					Expression.Quote(outputExpression)))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Executes update operation using source query as record filter.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Sequence of records returned by output.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		[Obsolete("Will be removed in l2db 7.0")]
+		public static Task<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
+					   this IQueryable<T> source,
+			[InstantHandle] Expression<Func<T, T>> setter,
+							Expression<Func<T, T, TOutput>> outputExpression,
+							CancellationToken token)
+		{
+			return UpdateWithOutputAsync(source, setter, outputExpression)
 				.ToArrayAsync(token);
 		}
 
@@ -1161,8 +1258,7 @@ namespace LinqToDB
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Output values from the update statement.</returns>
+		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
@@ -1172,12 +1268,11 @@ namespace LinqToDB
 		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TOutput[]> UpdateWithOutputAsync<T,TOutput>(
-			           this IUpdatable<T>                 source,
-			                Expression<Func<T,T,TOutput>> outputExpression,
-			                CancellationToken             token = default)
+		public static IAsyncEnumerable<TOutput> UpdateWithOutputAsync<T, TOutput>(
+					   this IUpdatable<T> source,
+							Expression<Func<T, T, TOutput>> outputExpression)
 		{
-			if (source ==           null) throw new ArgumentNullException(nameof(source));
+			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var query = ((Updatable<T>)source).Query;
@@ -1189,6 +1284,36 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(UpdateWithOutput, source, outputExpression),
 					currentSource.Expression,
 					Expression.Quote(outputExpression)))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Executes update operation using source query as record filter.
+		/// </summary>
+		/// <typeparam name="T">Updated table record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="source">Source data query.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Parameters passed are as follows: (<typeparamref name="T"/> deleted, <typeparamref name="T"/> inserted).
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Output values from the update statement.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL (doesn't support old data; database limitation)</item>
+		/// <item>SQLite 3.35+  (doesn't support old data; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		[Obsolete("Will be removed in l2db 7.0")]
+		public static Task<TOutput[]> UpdateWithOutputAsync<T, TOutput>(
+					   this IUpdatable<T> source,
+							Expression<Func<T, T, TOutput>> outputExpression,
+							CancellationToken token)
+		{
+			return UpdateWithOutputAsync(source, outputExpression)
 				.ToArrayAsync(token);
 		}
 

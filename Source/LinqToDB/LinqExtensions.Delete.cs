@@ -49,6 +49,37 @@ namespace LinqToDB
 		/// </summary>
 		/// <typeparam name="TSource">Source query record type.</typeparam>
 		/// <param name="source">Source query, that returns data for delete operation.</param>
+		/// <returns>Async sequence of records returned by output.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL</item>
+		/// <item>SQLite 3.35+</item>
+		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		public static IAsyncEnumerable<TSource> DeleteWithOutputAsync<TSource>(
+			this IQueryable<TSource> source)
+		{
+			if (source == null) throw new ArgumentNullException(nameof(source));
+
+			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return currentSource.Provider.CreateQuery<TSource>(
+					Expression.Call(
+						null,
+						MethodHelper.GetMethodInfo(DeleteWithOutput, source),
+						currentSource.Expression))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Deletes records from source query into target table asynchronously and returns deleted records.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <param name="source">Source query, that returns data for delete operation.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Array of records.</returns>
 		/// <remarks>
@@ -61,19 +92,12 @@ namespace LinqToDB
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
 		/// </remarks>
+		[Obsolete("Will be removed in l2db 7.0")]
 		public static Task<TSource[]> DeleteWithOutputAsync<TSource>(
 			this IQueryable<TSource> source,
-			CancellationToken        token = default)
+			CancellationToken token)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
-
-			return currentSource.Provider.CreateQuery<TSource>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DeleteWithOutput, source),
-						currentSource.Expression))
+			return DeleteWithOutputAsync(source)
 				.ToArrayAsync(token);
 		}
 
@@ -123,8 +147,7 @@ namespace LinqToDB
 		/// <param name="source">Source query, that returns data for delete operation.</param>
 		/// <param name="outputExpression">Output record constructor expression.
 		/// Expression supports only record new expression with field initializers.</param>
-		/// <param name="token">Optional asynchronous operation cancellation token.</param>
-		/// <returns>Array of records.</returns>
+		/// <returns>Async sequence of records returned by output.</returns>
 		/// <remarks>
 		/// Database support:
 		/// <list type="bullet">
@@ -135,10 +158,9 @@ namespace LinqToDB
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TOutput[]> DeleteWithOutputAsync<TSource,TOutput>(
+		public static IAsyncEnumerable<TOutput> DeleteWithOutputAsync<TSource,TOutput>(
 			this IQueryable<TSource>           source,
-			Expression<Func<TSource, TOutput>> outputExpression,
-			CancellationToken                  token = default)
+			Expression<Func<TSource, TOutput>> outputExpression)
 		{
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
@@ -151,6 +173,36 @@ namespace LinqToDB
 						MethodHelper.GetMethodInfo(DeleteWithOutput, source, outputExpression),
 						currentSource.Expression,
 						Expression.Quote(outputExpression)))
+				.AsAsyncEnumerable();
+		}
+
+		/// <summary>
+		/// Deletes records from source query into target table asynchronously and returns deleted records.
+		/// </summary>
+		/// <typeparam name="TSource">Source query record type.</typeparam>
+		/// <typeparam name="TOutput">Output table record type.</typeparam>
+		/// <param name="source">Source query, that returns data for delete operation.</param>
+		/// <param name="outputExpression">Output record constructor expression.
+		/// Expression supports only record new expression with field initializers.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>Array of records.</returns>
+		/// <remarks>
+		/// Database support:
+		/// <list type="bullet">
+		/// <item>SQL Server 2005+</item>
+		/// <item>Firebird 2.5+ (doesn't support more than one record; database limitation)</item>
+		/// <item>PostgreSQL</item>
+		/// <item>SQLite 3.35+</item>
+		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
+		/// </list>
+		/// </remarks>
+		[Obsolete("Will be removed in l2db 7.0")]
+		public static Task<TOutput[]> DeleteWithOutputAsync<TSource, TOutput>(
+			this IQueryable<TSource> source,
+			Expression<Func<TSource, TOutput>> outputExpression,
+			CancellationToken token)
+		{
+			return DeleteWithOutputAsync(source, outputExpression)
 				.ToArrayAsync(token);
 		}
 
