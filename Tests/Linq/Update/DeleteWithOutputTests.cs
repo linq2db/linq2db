@@ -103,13 +103,17 @@ namespace Tests.xUpdate
 			await using var db     = GetDataContext(context);
 			await using var source = db.CreateLocalTable(sourceData);
 
+			var expected = source
+				.Where(s => s.Id > 3)
+				.ToList();
+
 			var output = await source
 				.Where(s => s.Id > 3)
 				.DeleteWithOutputAsync()
 				.ToListAsync();
 
 			AreEqual(
-				source.Where(s => s.Id > 3).ToList(),
+				expected,
 				output,
 				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
