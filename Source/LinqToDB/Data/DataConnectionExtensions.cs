@@ -277,6 +277,21 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql).QueryToArrayAsync(objectReader, cancellationToken);
 		}
 
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and returns async sequence of values, mapped using provided mapping function.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="objectReader">Record mapping function from data reader.</param>
+		/// <param name="sql">Command text.</param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql)
+		{
+			return new CommandInfo(connection, sql).QueryToAsyncEnumerable(objectReader);
+		}
+#endif
+
 		/// <summary>
 		/// Executes command asynchronously and returns list of values, mapped using provided mapping function.
 		/// </summary>
@@ -334,6 +349,22 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
+
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and returns array of values, mapped using provided mapping function.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="objectReader">Record mapping function from data reader.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable(objectReader);
+		}
+#endif
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values, mapped using provided mapping function.
@@ -429,7 +460,32 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync(objectReader, cancellationToken);
 		}
 
-		#endregion
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and returns array of values, mapped using provided mapping function.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="objectReader">Record mapping function from data reader.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, Func<DbDataReader, T> objectReader, string sql, object? parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable(objectReader);
+		}
+#endif
+
+#endregion
 
 		#region Query
 
@@ -1069,6 +1125,20 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql).QueryToArrayAsync<T>(cancellationToken);
 		}
 
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and returns array of values.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text.</param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, string sql)
+		{
+			return new CommandInfo(connection, sql).QueryToAsyncEnumerable<T>();
+		}
+#endif
+
 		/// <summary>
 		/// Executes command asynchronously and returns list of values.
 		/// </summary>
@@ -1123,6 +1193,21 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and returns array of values.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
+		}
+#endif
+
 		/// <summary>
 		/// Executes command asynchronously and returns list of values.
 		/// </summary>
@@ -1176,6 +1261,21 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameter).QueryToArrayAsync<T>(cancellationToken);
 		}
+
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and returns array of values.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameter">Command parameter.</param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, string sql, DataParameter parameter)
+		{
+			return new CommandInfo(connection, sql, parameter).QueryToAsyncEnumerable<T>();
+		}
+#endif
 
 		/// <summary>
 		/// Executes command asynchronously and returns list of values.
@@ -1267,7 +1367,31 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
-		#endregion
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and returns array of values.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, string sql, object? parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
+		}
+#endif
+
+#endregion
 
 		#region Query with template
 
@@ -1460,6 +1584,22 @@ namespace LinqToDB.Data
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
 
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and returns array of values of specified type.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters.</param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, T template, string sql, params DataParameter[] parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
+		}
+#endif
+
 		/// <summary>
 		/// Executes command asynchronously and returns list of values of specified type.
 		/// </summary>
@@ -1553,6 +1693,31 @@ namespace LinqToDB.Data
 		{
 			return new CommandInfo(connection, sql, parameters).QueryToArrayAsync<T>(cancellationToken);
 		}
+
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and returns array of values of specified type.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="connection">Database connection.</param>
+		/// <param name="template">This value used only for <typeparamref name="T"/> parameter type inference, which makes this method usable with anonymous types.</param>
+		/// <param name="sql">Command text.</param>
+		/// <param name="parameters">Command parameters. Supported values:
+		/// <para> - <c>null</c> for command without parameters;</para>
+		/// <para> - single <see cref="DataParameter"/> instance;</para>
+		/// <para> - array of <see cref="DataParameter"/> parameters;</para>
+		/// <para> - mapping class entity.</para>
+		/// <para>Last case will convert all mapped columns to <see cref="DataParameter"/> instances using following logic:</para>
+		/// <para> - if column is of <see cref="DataParameter"/> type, column value will be used. If parameter name (<see cref="DataParameter.Name"/>) is not set, column name will be used;</para>
+		/// <para> - if converter from column type to <see cref="DataParameter"/> is defined in mapping schema, it will be used to create parameter with column name passed to converter;</para>
+		/// <para> - otherwise column value will be converted to <see cref="DataParameter"/> using column name as parameter name and column value will be converted to parameter value using conversion, defined by mapping schema.</para>
+		/// </param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public static IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(this DataConnection connection, T template, string sql, object? parameters)
+		{
+			return new CommandInfo(connection, sql, parameters).QueryToAsyncEnumerable<T>();
+		}
+#endif
 
 		#endregion
 
@@ -2620,6 +2785,6 @@ namespace LinqToDB.Data
 		}
 
 #endif
-		#endregion
+#endregion
 	}
 }
