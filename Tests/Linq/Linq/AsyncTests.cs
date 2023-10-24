@@ -9,6 +9,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Async;
+
 	using Model;
 	using UserTests;
 
@@ -123,6 +125,31 @@ namespace Tests.Linq
 				}
 			}
 		}
+
+#if NETSTANDARD2_1PLUS
+		[Test]
+		public async Task TestQueryToAsyncEnumerable([DataSources(false)] string context)
+		{
+			await TestQueryToAsyncEnumerableImpl(context);
+		}
+
+		async Task TestQueryToAsyncEnumerableImpl(string context)
+		{
+			using (var conn = GetDataConnection(context))
+			{
+				conn.InlineParameters = true;
+
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
+				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where(line => !line.StartsWith("--")));
+
+				var list = await conn.SetCommand(sql).QueryToAsyncEnumerable<string>()
+					.ToListAsync();
+
+				Assert.That(list[0], Is.EqualTo("John"));
+			}
+		}
+#endif
 
 		[Test]
 		public async Task FirstAsyncTest([DataSources] string context)

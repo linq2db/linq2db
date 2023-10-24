@@ -256,6 +256,30 @@ namespace LinqToDB.Data
 			}
 		}
 
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and apply provided action to each record, mapped using provided mapping function.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="objectReader">Record mapping function from data reader.</param>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+		{
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			InitCommand();
+
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			{
+				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						yield return objectReader(rd.DataReader!);
+			}
+		}
+#endif
+
 		#endregion
 
 		#region Query
@@ -457,9 +481,9 @@ namespace LinqToDB.Data
 								if (isFaulted)
 									throw;
 
-								isFaulted    = true;
+								isFaulted = true;
 								objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey);
-								result       = objectReader(reader);
+								result = objectReader(reader);
 							}
 
 							action(result);
@@ -469,6 +493,58 @@ namespace LinqToDB.Data
 				}
 			}
 		}
+
+#if NETSTANDARD2_1PLUS
+		/// <summary>
+		/// Executes command asynchronously and apply provided action to each record.
+		/// </summary>
+		/// <typeparam name="T">Result record type.</typeparam>
+		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
+		/// <returns>Async sequence of records returned by the query.</returns>
+		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>([EnumeratorCancellation] CancellationToken cancellationToken = default)
+		{
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+			InitCommand();
+
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			{
+				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				{
+					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					{
+						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
+						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
+						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
+						var isFaulted     = false;
+
+						do
+						{
+							T result;
+
+							try
+							{
+								result = objectReader(reader);
+							}
+							catch (InvalidCastException)
+							{
+								if (isFaulted)
+									throw;
+
+								isFaulted = true;
+								objectReader = GetObjectReader2<T>(DataConnection, reader, CommandText, additionalKey);
+								result = objectReader(reader);
+							}
+
+							yield return result;
+
+						} while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+					}
+				}
+			}
+		}
+#endif
 
 		#endregion
 
@@ -1291,9 +1367,9 @@ namespace LinqToDB.Data
 						if (isFaulted)
 							throw;
 
-						isFaulted    = true;
+						isFaulted = true;
 						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey);
-						result       = objectReader(rd);
+						result = objectReader(rd);
 					}
 
 					action(result);
@@ -1301,6 +1377,40 @@ namespace LinqToDB.Data
 				} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 			}
 		}
+
+#if NETSTANDARD2_1PLUS
+		internal async IAsyncEnumerable<T> ExecuteQueryAsync<T>(DbDataReader rd, string sql, [EnumeratorCancellation] CancellationToken cancellationToken)
+		{
+			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			{
+				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
+				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
+				var isFaulted     = false;
+
+				do
+				{
+					T result;
+
+					try
+					{
+						result = objectReader(rd);
+					}
+					catch (InvalidCastException)
+					{
+						if (isFaulted)
+							throw;
+
+						isFaulted = true;
+						objectReader = GetObjectReader2<T>(DataConnection, rd, sql, additionalKey);
+						result = objectReader(rd);
+					}
+
+					yield return result;
+
+				} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+			}
+		}
+#endif
 
 		internal async Task<T> ExecuteScalarAsync<T>(DbDataReader rd, string sql, CancellationToken cancellationToken)
 		{

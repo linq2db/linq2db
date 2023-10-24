@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -124,6 +125,14 @@ namespace LinqToDB.Data
 				action(objectReader(Reader));
 		}
 
+#if NETSTANDARD2_1PLUS
+		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+		{
+			while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				yield return objectReader(Reader);
+		}
+#endif
+
 		#endregion
 
 		#region Query
@@ -168,6 +177,20 @@ namespace LinqToDB.Data
 			await CommandInfo!.ExecuteQueryAsync(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
+#if NETSTANDARD2_1PLUS
+		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>([EnumeratorCancellation] CancellationToken cancellationToken)
+		{
+			if (ReadNumber != 0)
+				if (!await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					yield break;
+
+			ReadNumber++;
+
+			await foreach (var element in CommandInfo!.ExecuteQueryAsync<T>(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				yield return element;
+		}
+#endif
+
 		#endregion
 
 		#region Query with template
@@ -206,6 +229,13 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(action, cancellationToken);
 		}
 
+#if NETSTANDARD2_1PLUS
+		public IAsyncEnumerable<T> QueryForEachAsync<T>(T template, CancellationToken cancellationToken)
+		{
+			return QueryToAsyncEnumerable<T>(cancellationToken);
+		}
+#endif
+		
 		#endregion
 
 		#region Execute scalar
