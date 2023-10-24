@@ -126,7 +126,6 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
 		[Test]
 		public async Task TestQueryToAsyncEnumerable([DataSources(false)] string context)
 		{
@@ -149,7 +148,6 @@ namespace Tests.Linq
 				Assert.That(list[0], Is.EqualTo("John"));
 			}
 		}
-#endif
 
 		[Test]
 		public async Task FirstAsyncTest([DataSources] string context)

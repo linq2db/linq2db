@@ -125,7 +125,7 @@ namespace LinqToDB.Data
 				action(objectReader(Reader));
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 		{
 			while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
@@ -177,7 +177,7 @@ namespace LinqToDB.Data
 			await CommandInfo!.ExecuteQueryAsync(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		public async IAsyncEnumerable<T> QueryToAsyncEnumerable<T>([EnumeratorCancellation] CancellationToken cancellationToken)
 		{
 			if (ReadNumber != 0)
@@ -229,7 +229,7 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(action, cancellationToken);
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NATIVE_ASYNC
 		public IAsyncEnumerable<T> QueryForEachAsync<T>(T template, CancellationToken cancellationToken)
 		{
 			return QueryToAsyncEnumerable<T>(cancellationToken);
