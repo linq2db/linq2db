@@ -170,9 +170,9 @@ namespace LinqToDB
 							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression)
 			where TTarget : class
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -566,9 +566,9 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<TSource, TTarget>> setter,
 							Expression<Func<TSource, TTarget, TTarget, TOutput>> outputExpression)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (target == null) throw new ArgumentNullException(nameof(target));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (target           == null) throw new ArgumentNullException(nameof(target));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -938,8 +938,8 @@ namespace LinqToDB
 			[InstantHandle] Expression<Func<T, T>> setter,
 							Expression<Func<T, T, TOutput>> outputExpression)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-			if (setter == null) throw new ArgumentNullException(nameof(setter));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
+			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
@@ -1272,7 +1272,7 @@ namespace LinqToDB
 					   this IUpdatable<T> source,
 							Expression<Func<T, T, TOutput>> outputExpression)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var query = ((Updatable<T>)source).Query;

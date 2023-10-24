@@ -483,7 +483,7 @@ namespace LinqToDB.Data
 		}
 #endif
 
-#endregion
+		#endregion
 
 		#region Query
 
@@ -1389,7 +1389,7 @@ namespace LinqToDB.Data
 		}
 #endif
 
-#endregion
+		#endregion
 
 		#region Query with template
 
@@ -2746,6 +2746,6 @@ namespace LinqToDB.Data
 		}
 
 #endif
-#endregion
+		#endregion
 	}
 }
