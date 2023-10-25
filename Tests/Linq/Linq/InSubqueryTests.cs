@@ -18,8 +18,8 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
 			var q =
-				from c in db.Child
-				where c.ParentID.In(db.Parent.Select(p => p.ParentID))
+				from c in db.GrandChild
+				where c.ParentID.In(db.Parent.Select(p => p.Value1))
 				select c;
 
 			_ = q.ToList();
