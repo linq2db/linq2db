@@ -28,8 +28,8 @@ namespace LinqToDB.Linq.Builder
 			: base(builder, elementType, query)
 		{
 			Parent            = buildInfo.Parent;
-			_entityDescriptor = MappingSchema.GetEntityDescriptor(elementType,
-				Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+			_entityDescriptor = MappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+
 			Table      = BuildValuesTable(buildInfo.Expression, out _filedsDefined);
 			Expression = buildInfo.Expression;
 
@@ -54,8 +54,16 @@ namespace LinqToDB.Linq.Builder
 				return BuildValuesTableFromArray((NewArrayExpression)expr);
 			}
 
+			var param = Builder.ParametersContext.BuildParameter(expr, null, true,
+				buildParameterType : ParametersContext.BuildParameterType.InPredicate);
+
+			if (param == null)
+			{
+				throw new InvalidOperationException($"Expression '{expr}' not translated to parameter.");
+			}
+
 			fieldsDefined = false;
-			return new SqlValuesTable(Builder.ConvertToSql(this, expr));
+			return new SqlValuesTable(param.SqlParameter);
 		}
 
 		SqlValuesTable BuildValuesTableFromArray(NewArrayExpression arrayExpression)

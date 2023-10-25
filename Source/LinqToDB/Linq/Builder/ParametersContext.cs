@@ -69,6 +69,8 @@ namespace LinqToDB.Linq.Builder
 			var newExpr = ReplaceParameter(expr, columnDescriptor, forceConstant, nm => name = nm);
 
 			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
+			if (newAccessor == null)
+				return null;
 
 			var found = newAccessor;
 
@@ -196,27 +198,59 @@ namespace LinqToDB.Linq.Builder
 			return valueAccessor;
 		}
 
-		ParameterAccessor PrepareConvertersAndCreateParameter(ValueTypeExpression newExpr, Expression valueExpression, string? name, ColumnDescriptor? columnDescriptor, BuildParameterType buildParameterType)
+		static bool HasDbMapping(MappingSchema mappingSchema, Type testedType, out LambdaExpression? convertExpr)
+		{
+			convertExpr = mappingSchema.GetConvertExpression(testedType, typeof(DataParameter), false, false);
+
+			if (convertExpr != null)
+				return true;
+
+			if (testedType == typeof(object))
+				return false;
+
+			var dataType = mappingSchema.GetDataType(testedType);
+			if (dataType.Type.DataType != DataType.Undefined)
+				return true;
+
+			if (!testedType.IsEnum)
+				return false;
+
+			var defaultMapping = Converter.GetDefaultMappingFromEnumType(mappingSchema, testedType);
+			if (defaultMapping != null && defaultMapping != testedType)
+				return HasDbMapping(mappingSchema, defaultMapping, out convertExpr);
+
+			var enumDefault = mappingSchema.GetDefaultFromEnumType(testedType);
+			if (enumDefault != null && enumDefault != testedType)
+				return HasDbMapping(mappingSchema, enumDefault, out convertExpr);
+
+			return false;
+		}
+
+		ParameterAccessor? PrepareConvertersAndCreateParameter(ValueTypeExpression newExpr, Expression valueExpression, string? name, ColumnDescriptor? columnDescriptor, BuildParameterType buildParameterType)
 		{
 			var originalAccessor = newExpr.ValueExpression;
 			if (buildParameterType != BuildParameterType.InPredicate)
 			{
-				if (!typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
+				var valueExpressionType = newExpr.ValueExpression.Type;
+				if (!newExpr.IsDataParameter)
 				{
 					if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 					{
 						newExpr.DataType = columnDescriptor.GetDbDataType(true)
-							.WithSystemType(newExpr.ValueExpression.Type);
+							.WithSystemType(valueExpressionType);
 
-						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
+						if (valueExpressionType != columnDescriptor.MemberType)
 						{
 							newExpr.ValueExpression = newExpr.ValueExpression.UnwrapConvert()!;
+							valueExpressionType     = newExpr.ValueExpression.Type;
+
 							var memberType = columnDescriptor.MemberType;
-							if (newExpr.ValueExpression.Type != memberType)
+
+							if (valueExpressionType != memberType)
 							{
-								if (!newExpr.ValueExpression.Type.IsNullable() || newExpr.ValueExpression.Type.ToNullableUnderlying() != memberType)
+								if (!valueExpressionType.IsNullable() || valueExpressionType.ToNullableUnderlying() != memberType)
 								{
-									var convertLambda = MappingSchema.GenerateSafeConvert(newExpr.ValueExpression.Type,
+									var convertLambda = MappingSchema.GenerateSafeConvert(valueExpressionType,
 										memberType);
 									newExpr.ValueExpression =
 										InternalExtensions.ApplyLambdaToExpression(convertLambda,
@@ -242,12 +276,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						// Try GetConvertExpression<.., DataParameter>() first.
 						//
-						if (newExpr.ValueExpression.Type != typeof(DataParameter))
+						if (valueExpressionType != typeof(DataParameter))
 						{
-							var expr = MappingSchema.GetConvertExpression(newExpr.ValueExpression.Type, typeof(DataParameter), false, false);
+							LambdaExpression? convertExpr = null;
+							if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, valueExpressionType, out convertExpr))
+								return null;
 
-							newExpr.ValueExpression = expr != null ?
-								InternalExtensions.ApplyLambdaToExpression(expr, newExpr.ValueExpression) :
+							newExpr.ValueExpression = convertExpr != null ?
+								InternalExtensions.ApplyLambdaToExpression(convertExpr, newExpr.ValueExpression) :
 								ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
 						}
 						else
@@ -285,6 +321,7 @@ namespace LinqToDB.Linq.Builder
 			public Expression ValueExpression      = null!;
 			public Expression DbDataTypeExpression = null!;
 
+			public bool       IsDataParameter;
 			public DbDataType DataType;
 		}
 
@@ -319,7 +356,8 @@ namespace LinqToDB.Linq.Builder
 
 							if (constantValue is DataParameter dataParameter)
 							{
-								context.result.DataType = dataParameter.DbDataType;
+								context.result.IsDataParameter = true;
+								context.result.DataType        = dataParameter.DbDataType;
 								var dataParamExpr = Expression.Convert(expr, typeof(DataParameter));
 								context.result.DbDataTypeExpression = Expression.Property(dataParamExpr, nameof(DataParameter.DbDataType));
 

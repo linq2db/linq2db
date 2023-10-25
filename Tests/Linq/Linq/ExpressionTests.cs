@@ -85,7 +85,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable<ExpressionTestClass>())
 			{
 				Assert.Throws<LinqException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
-				Assert.Throws<InvalidOperationException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
+				Assert.Throws<LinqException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
 			}
 		}
 

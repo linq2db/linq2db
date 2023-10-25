@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -690,7 +691,7 @@ namespace LinqToDB.Linq.Builder
 
 			var simplified = expression.Transform(e =>
 			{
-				if (e.NodeType == ExpressionType.Convert)
+				if (e.NodeType == ExpressionType.Convert && e.Type != typeof(object))
 				{
 					if (((UnaryExpression)e).Operand is SqlPlaceholderExpression convertPlaceholder)
 					{
@@ -713,7 +714,6 @@ namespace LinqToDB.Linq.Builder
 					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
 
 					var valueType = columnDescriptor?.GetDbDataType(true).SystemType 
-					                ?? placeholder.Sql.SystemType 
 					                ?? placeholder.Type;
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullable();

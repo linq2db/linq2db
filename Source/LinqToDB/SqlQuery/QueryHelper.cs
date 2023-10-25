@@ -480,6 +480,9 @@ namespace LinqToDB.SqlQuery
 			if (expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter)
 				return true;
 
+			if (expr.ElementType == QueryElementType.SqlNullabilityExpression)
+				return IsConstantFast(((SqlNullabilityExpression)expr).SqlExpression);
+
 			return false;
 		}
 		

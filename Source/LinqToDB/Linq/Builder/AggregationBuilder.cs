@@ -148,7 +148,6 @@ namespace LinqToDB.Linq.Builder
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
 
-
 			var methodName = methodCall.Method.Name.Replace("Async", "");
 
 			AggregationType aggregationType;
@@ -194,7 +193,10 @@ namespace LinqToDB.Linq.Builder
 							return null;
 					}
 
-					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression);
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
+						SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression,
+						convertType : returnType);
+
 					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, methodName, returnType);
 				}
 				else
@@ -217,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 					var sql = sqlPlaceholder.Sql;
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, 
-						new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression);
+						new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression, convertType: returnType);
 				}
 			}
 			else
@@ -378,7 +380,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression);
+				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
 
 				if (!isSimple)
 				{

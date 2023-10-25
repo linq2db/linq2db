@@ -1961,6 +1961,19 @@ namespace LinqToDB.Linq.Builder
 					leftExpr  = ParseGenericConstructor(leftExpr, flags, columnDescriptor, true);
 					rightExpr = ParseGenericConstructor(rightExpr, flags, columnDescriptor, true);
 
+					// Handle case when one of the expressions can be parametrized
+					//
+					if (leftExpr is SqlGenericConstructorExpression leftGenericForParam)
+					{
+						if (rightExpr is not SqlGenericConstructorExpression && CanBeCompiled(rightExpr, false))
+							return GenerateObjectComparison(leftGenericForParam, rightExpr);
+					}
+					else if (rightExpr is SqlGenericConstructorExpression rightGenericForParam)
+					{
+						if (CanBeCompiled(leftExpr, false))
+							return GenerateObjectComparison(rightGenericForParam, leftExpr);
+					}
+
 					if (leftExpr is SqlGenericConstructorExpression leftGenericConstructor &&
 					    rightExpr is SqlGenericConstructorExpression rightGenericConstructor)
 					{
@@ -2017,9 +2030,6 @@ namespace LinqToDB.Linq.Builder
 
 					if (rightExpr is SqlGenericConstructorExpression rightGeneric)
 					{
-						if (l is SqlParameter lParam)
-							return GenerateObjectComparison(rightGeneric , left);
-
 						if (l != null)
 						{
 							var placeholders = CollectPlaceholders(rightExpr);
@@ -2032,9 +2042,6 @@ namespace LinqToDB.Linq.Builder
 
 					if (leftExpr is SqlGenericConstructorExpression leftGeneric)
 					{
-						if (r is SqlParameter rParam)
-							return GenerateObjectComparison(leftGeneric, right);
-
 						if (r != null)
 						{
 							var placeholders = CollectPlaceholders(leftExpr);

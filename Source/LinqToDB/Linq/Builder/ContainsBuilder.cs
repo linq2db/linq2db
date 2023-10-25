@@ -170,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 
 				var subQuerySql = new SqlSearchCondition(cond);
 
-				return ExpressionBuilder.CreatePlaceholder(placeholderQuery, subQuerySql, _methodCall);
+				return ExpressionBuilder.CreatePlaceholder(placeholderQuery, subQuerySql, _methodCall, convertType: typeof(bool));
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

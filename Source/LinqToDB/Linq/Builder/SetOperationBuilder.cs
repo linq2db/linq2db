@@ -152,6 +152,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (Builder.HandleAlias(this, path, flags, out var newResult))
 							return newResult;
+
+						if (flags.IsKeys() && projection2 is not SqlErrorExpression)
+						{
+							return RemapPathToPlaceholders(projection2, _pathMapping!);
+						}
+
 						projection1 = Builder.Project(this, path, null, 0, flags, _projection1, false);
 					}
 
@@ -159,6 +165,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (Builder.HandleAlias(this, path, flags, out var newResult))
 							return newResult;
+
+						if (flags.IsKeys() && projection1 is not SqlErrorExpression)
+						{
+							return RemapPathToPlaceholders(projection1, _pathMapping!);
+						}
+
 						projection2 = Builder.Project(this, path, null, 0, flags, _projection2, false);
 					}
 					
