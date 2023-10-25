@@ -576,8 +576,6 @@ namespace LinqToDB.Linq.Builder
 						return Visit(newNode);
 				}
 
-				using var _ = NeedForce(true);
-
 				return base.VisitNew(node);
 			}
 
