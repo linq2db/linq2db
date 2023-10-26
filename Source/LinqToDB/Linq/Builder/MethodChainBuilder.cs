@@ -97,6 +97,12 @@ namespace LinqToDB.Linq.Builder
 
 				inAggregationContext = rootContext != null;
 
+				if (!inAggregationContext)
+				{
+					rootContextref = new ContextRefExpression(root.Type, sequence);
+					methodCall     = (MethodCallExpression)methodCall.Replace(root, rootContextref);
+				}
+
 				placeholderSequence = rootContext?.BuildContext ?? sequence;
 
 				if (placeholderSequence is GroupByBuilder.GroupByContext groupCtx)

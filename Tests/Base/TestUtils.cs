@@ -260,7 +260,7 @@ namespace Tests
 		{
 			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
 
-			using (new DisableLogging())
+			//using (new DisableLogging())
 			{
 				if (db is DataConnection dc)
 				{

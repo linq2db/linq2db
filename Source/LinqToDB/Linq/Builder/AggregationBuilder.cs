@@ -316,7 +316,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					valueExpression = new ContextRefExpression(returnType, sequence);
+					valueExpression = new ContextRefExpression(sequence.ElementType, sequence);
 				}
 
 				context = new AggregationContext(buildInfo.Parent, placeholderSequence, aggregationType, methodName, returnType);

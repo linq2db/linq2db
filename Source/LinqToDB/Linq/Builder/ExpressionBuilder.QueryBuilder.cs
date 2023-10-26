@@ -378,7 +378,11 @@ namespace LinqToDB.Linq.Builder
 
 
 					if (attr.ServerSideOnly)
-						return transformed;
+					{
+						if (transformed is SqlErrorExpression errorExpr)
+							return SqlErrorExpression.EnsureError(errorExpr, expr.Type);
+						return SqlErrorExpression.EnsureError(expr, expr.Type);
+					}
 				}
 			}
 

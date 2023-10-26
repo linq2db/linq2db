@@ -509,7 +509,9 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
+			var converted = ConvertToSqlExpr(context, expression, flags : flags.SqlFlag() | ProjectFlags.ForExtension, columnDescriptor : columnDescriptor);
+
+			return converted;
 		}
 
 		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}")]
