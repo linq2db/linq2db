@@ -938,7 +938,7 @@ namespace LinqToDB.SqlQuery
 					{
 						if (partitionBy != null)
 							orderByItems.Add(new SqlOrderByItem(partitionBy[0], false));
-						else if (!_flags.SupportsRowNumberWithoutOrderBy)
+						else if (!_flags.IsRowNumberWithoutOrderBySupported)
 						{
 							if (sql.Select.Columns.Count == 0)
 							{
@@ -1305,6 +1305,15 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			if (!_flags.AcceptsOuterExpressionInAggregate)
+			{
+				if (QueryHelper.EnumerateJoins(subQuery).Any(j => j.JoinType != JoinType.Inner))
+				{
+					if (subQuery.Select.Columns.Any(c => IsInsideAggregate(selectQuery, c)))
+						return false;
+				}
+			}
+
 			if (subQuery.Select.Columns.Any(c => !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
 				return false;
 
@@ -1668,7 +1677,7 @@ namespace LinqToDB.SqlQuery
 				{
 					replaced = true;
 
-					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0)
+					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0 && !selectQuery.From.Tables.Any(t => t.Joins.Count > 0))
 					{
 						selectQuery.From.Tables.RemoveAt(i);
 					}

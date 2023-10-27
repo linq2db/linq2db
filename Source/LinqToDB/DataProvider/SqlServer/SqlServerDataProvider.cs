@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsApplyJoinSupported              = true;
 			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.SupportsRowNumberWithoutOrderBy   = false;
+			SqlProviderFlags.IsRowNumberWithoutOrderBySupported   = false;
 			SqlProviderFlags.IsSubQueryTakeSupported           = version > SqlServerVersion.v2005;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));

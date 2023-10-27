@@ -61,7 +61,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SubqueryAggregation([DataSources(ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		public void SubqueryAggregation([DataSources(ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMySql)] string context)
 		{
 			var ms      = new MappingSchema();
 			var builder = new FluentMappingBuilder(ms);

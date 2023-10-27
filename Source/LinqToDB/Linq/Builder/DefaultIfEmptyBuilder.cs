@@ -1,9 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using System.IO;
+
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -16,13 +19,93 @@ namespace LinqToDB.Linq.Builder
 
 		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			if (sequence == null)
-				return null;
-
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
 
-			return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue, true);
+			// Generating LEFT JOIN from one record resultset
+			// 
+			if (buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero))
+			{
+				var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
+				if (sequence == null)
+					return null;
+
+				if (buildInfo.IsSubQuery)
+				{
+					// At lease Oracle and MySql cannot handle such subquery
+					if (!SequenceHelper.IsSupportedSubqueryNesting(sequence))
+						return null;
+				}
+
+				defaultValue ??= Expression.Default(methodCall.Method.GetGenericArguments()[0]);
+
+				var defaultValueContext = new SelectContext(buildInfo.Parent,
+					builder,
+					null,
+					defaultValue,
+					new SelectQuery(), buildInfo.IsSubQuery);
+
+				var subqueryContext = new SubQueryContext(defaultValueContext);
+
+				var joinedTable = new SqlJoinedTable(JoinType.Left, sequence.SelectQuery, "d", false);
+
+				subqueryContext.SelectQuery.From.Tables[0].Joins.Add(joinedTable);
+
+				var defaultRef = new ContextRefExpression(defaultValueContext.ElementType, defaultValueContext);
+				
+				// force to generate fields
+				var translated = builder.BuildSqlExpression(defaultValueContext, defaultRef, ProjectFlags.SQL, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+				if (defaultValueContext.SelectQuery.Select.Columns.Count == 0)
+				{
+					//TODO: consider to move to SelectQueryOptimizerVisitor
+					defaultValueContext.SelectQuery.Select.AddNew(new SqlValue(1));
+				}
+
+				var sequenceRef = new ContextRefExpression(sequence.ElementType, sequence);
+				var expr = builder.BuildSqlExpression(subqueryContext, sequenceRef, ProjectFlags.SQL, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+				
+				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(expr);
+
+				var notNull = placeholders
+					.FirstOrDefault(p => !p.Sql.CanBeNullable(NullabilityContext.NonQuery));
+
+				if (notNull == null)
+				{
+					var propPath = SequenceHelper.CreateSpecialProperty(sequenceRef, typeof(int?), DefaultIfEmptyContext.NotNullPropName);
+
+					var notNullPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
+						new SqlNullabilityExpression(new SqlValue(1), true),
+						propPath,
+						alias : DefaultIfEmptyContext.NotNullPropName);
+
+					notNull = notNullPlaceholder;
+				}
+
+				var notNullNullable = notNull.MakeNullable();
+				notNullNullable = (SqlPlaceholderExpression)builder.UpdateNesting(subqueryContext, notNullNullable);
+
+				Expression defaultRefExpr = defaultRef;
+				if (defaultRefExpr.Type != sequenceRef.Type)
+				{
+					defaultRefExpr = Expression.Convert(defaultRefExpr, sequenceRef.Type);
+				}
+
+				var bodyValue =
+					Expression.Condition(Expression.NotEqual(notNullNullable, Expression.Default(notNullNullable.Type)),
+						sequenceRef, defaultRefExpr);
+
+				var resultSelectContext =
+					new SelectContext(buildInfo.Parent, bodyValue, subqueryContext, buildInfo.IsSubQuery);
+
+				return new SubQueryContext(resultSelectContext);
+			}
+			else
+			{
+				var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+				if (sequence == null)
+					return null;
+
+				return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue, true);
+			}
 		}
 
 		public sealed class DefaultIfEmptyContext : SequenceContextBase
@@ -38,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression? DefaultValue { get; }
 
-			const string NotNullPropName = "not_null";
+			public const string NotNullPropName = "not_null";
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{

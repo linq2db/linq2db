@@ -8,9 +8,10 @@ namespace LinqToDB.Linq.Builder
 	{
 		public BuildInfo(IBuildContext? parent, Expression expression, SelectQuery selectQuery)
 		{
-			Parent      = parent;
-			Expression  = expression;
-			SelectQuery = selectQuery;
+			Parent            = parent;
+			Expression        = expression;
+			SelectQuery       = selectQuery;
+			SourceCardinality = SourceCardinality.ZeroOrMany;
 		}
 
 		public BuildInfo(BuildInfo buildInfo, Expression expression)
@@ -49,6 +50,19 @@ namespace LinqToDB.Linq.Builder
 				if (SequenceInfo != null)
 					SequenceInfo.IsAssociationBuilt = value;
 			}
+		}
+
+		SourceCardinality _sourceCardinality;
+		public SourceCardinality SourceCardinality
+		{
+			get
+			{
+				if (SequenceInfo == null)
+					return _sourceCardinality;
+				return SequenceInfo.SourceCardinality;
+			}
+
+			set => _sourceCardinality = value;
 		}
 
 		private bool _isAggregation;

@@ -1119,6 +1119,13 @@ namespace LinqToDB.Linq.Builder
 
 					if (attr != null)
 					{
+						// Otherwise should be handled by MakeExpression
+						if (IsSequence(context, e))
+						{
+							if (attr.ServerSideOnly)
+								return SqlErrorExpression.EnsureError(e, e.Type);
+							break;
+						}
 						return ConvertExtensionToSql(context!, flags, attr, e, checkAggregateRoot: true);
 					}
 

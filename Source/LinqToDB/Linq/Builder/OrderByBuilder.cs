@@ -67,6 +67,10 @@ namespace LinqToDB.Linq.Builder
 				var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
 
 				var sqlExpr = builder.BuildSqlExpression(sequence, body, ProjectFlags.SQL);
+
+				if (!SequenceHelper.IsSqlReady(sqlExpr))
+					return null;
+
 				placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
 
 				// Do not create subquery for ThenByExtensions

@@ -43,6 +43,11 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
+		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		{
+			return true;
+		}
+
 		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);

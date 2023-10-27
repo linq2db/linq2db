@@ -346,7 +346,13 @@ namespace LinqToDB.SqlProvider
 		/// Provider supports ROW_NUMBER OVER () without ORDER BY
 		/// </summary>
 		[DataMember(Order = 42), DefaultValue(true)]
-		public bool SupportsRowNumberWithoutOrderBy { get; set; } = true;
+		public bool IsRowNumberWithoutOrderBySupported { get; set; } = true;
+
+		/// <summary>
+		/// Provider supports condition in subquery which references parent table
+		/// </summary>
+		[DataMember(Order = 43), DefaultValue(true)]
+		public bool IsSubqueryWithParentReferenceInJoinConditionSupported { get; set; } = true;
 
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
@@ -392,7 +398,8 @@ namespace LinqToDB.SqlProvider
 				^ DoesNotSupportCorrelatedSubquery             .GetHashCode()
 				^ IsExistsPreferableForContains                .GetHashCode()
 				^ IsProjectionBoolSupported                    .GetHashCode()
-				^ SupportsRowNumberWithoutOrderBy              .GetHashCode()
+				^ IsRowNumberWithoutOrderBySupported           .GetHashCode()
+				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -437,7 +444,8 @@ namespace LinqToDB.SqlProvider
 				&& DoesNotSupportCorrelatedSubquery     == other.DoesNotSupportCorrelatedSubquery
 				&& IsExistsPreferableForContains        == other.IsExistsPreferableForContains
 				&& IsProjectionBoolSupported            == other.IsProjectionBoolSupported
-				&& SupportsRowNumberWithoutOrderBy      == other.SupportsRowNumberWithoutOrderBy
+				&& IsRowNumberWithoutOrderBySupported   == other.IsRowNumberWithoutOrderBySupported
+				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0

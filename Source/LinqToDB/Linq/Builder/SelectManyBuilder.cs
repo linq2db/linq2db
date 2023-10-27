@@ -49,7 +49,11 @@ namespace LinqToDB.Linq.Builder
 
 
 			var collectionSelectQuery    = new SelectQuery();
-			var collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery) { CreateSubQuery = true };
+			var collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
+			{
+				CreateSubQuery = true, 
+				SourceCardinality = SourceCardinality.OneOrMany
+			};
 
 
 			var fakejoin = new SqlFromClause.Join(JoinType.Auto, collectionSelectQuery, null, false, null);

@@ -911,6 +911,13 @@ namespace LinqToDB.Linq.Builder
 			return tableContext;
 		}
 
+		public static bool IsSqlReady(Expression expression)
+		{
+			if (expression.Find(1, (_, e) => e is SqlErrorExpression || e is SqlEagerLoadExpression) != null)
+				return false;
+			return true;
+		}
+
 		/// <summary>
 		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/> 
 		/// </summary>
@@ -943,6 +950,41 @@ namespace LinqToDB.Linq.Builder
 
 			return false;
 		}
+
+
+		/// <summary>
+		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/> 
+		/// </summary>
+		/// <param name="context"></param>
+		/// <returns></returns>
+		public static bool IsSupportedSubqueryNesting(IBuildContext context)
+		{
+			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
+			{
+				if (context.Builder.DataContext.SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
+					return true;
+
+				if (!QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
+					return true;
+
+				if (HasDependencyWithOuter(context.SelectQuery))
+					return false;				
+			}
+
+			return true;
+		}
+
+		public static bool HasDependencyWithOuter(SelectQuery selectQuery)
+		{
+			foreach (var source in QueryHelper.EnumerateAccessibleSources(selectQuery))
+			{
+				if (source is SelectQuery sc && QueryHelper.IsDependsOnOuterSources(sc))
+					return true;
+			}
+
+			return false;
+		}
+
 
 		static IBuildContext UnwrapSubqueryContext(IBuildContext context)
 		{
