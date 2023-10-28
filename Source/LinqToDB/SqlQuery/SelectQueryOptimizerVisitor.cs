@@ -1500,7 +1500,9 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty)
 				return false;
 
+#pragma warning disable CA1508 // TODO:WAITFIX
 			var moveConditionToQuery = joinTable.JoinType != JoinType.Inner || joinTable.JoinType != JoinType.CrossApply;
+#pragma warning restore CA1508
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
@@ -1958,7 +1960,9 @@ namespace LinqToDB.SqlQuery
 
 								mainQuery = null;
 
+#pragma warning disable CA1508 // TODO:WAITFIX
 								if (mainQuery != null)
+#pragma warning restore CA1508
 								{
 									// moving into FROM query
 

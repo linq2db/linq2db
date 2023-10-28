@@ -7,6 +7,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Async
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Asynchronous version of the IEnumerator&lt;T&gt; interface, allowing elements to be retrieved asynchronously.
 	/// </summary>
@@ -43,7 +45,7 @@ namespace LinqToDB.Async
 		Task IAsyncDisposable.DisposeAsync()
 		{
 			_enumerator.Dispose();
-			return TaskEx.CompletedTask;
+			return TaskCache.CompletedTask;
 		}
 
 		Task<bool> IAsyncEnumerator<T>.MoveNextAsync()

@@ -8,11 +8,10 @@ using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
-	using System.Data.Common;
+	using Common;
 	using Expressions;
 	using Extensions;
 	using Linq;
-	using Common;
 	using SqlQuery;
 
 	/// <summary>

@@ -452,7 +452,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-		[return: NotNullIfNotNull(nameof(expression))]	
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? RemapToNewPath(ExpressionBuilder builder, Expression? expression, Expression toPath, ProjectFlags flags)
 		{
 			if (expression == null)
@@ -584,7 +584,9 @@ namespace LinqToDB.Linq.Builder
 					return newExpr;
 				}
 
+#pragma warning disable CS8825 // TODO:WAITFIX
 				return RemapToNewPath(builder, placeholder.TrackingPath, toPath, flags);
+#pragma warning restore CS8825
 			}
 
 			if (expression is BinaryExpression binary && toPath.Type != binary.Type)

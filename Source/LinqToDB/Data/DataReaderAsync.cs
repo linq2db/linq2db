@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
+	using Common.Internal;
+
 	public class DataReaderAsync : IDisposable
 #if !NETFRAMEWORK
 		, IAsyncDisposable
@@ -82,7 +84,7 @@ namespace LinqToDB.Data
 		public Task DisposeAsync()
 		{
 			Dispose();
-			return TaskEx.CompletedTask;
+			return TaskCache.CompletedTask;
 		}
 #endif
 

@@ -4235,9 +4235,11 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var prop = props[i];
 
+#pragma warning disable CS8601 // TODO:WAITFIX
 					ps[i] = prop.ParameterType == typeof(T)
 						? new SqlExpression('\'' + builder.GetValue<T>(prop.Name!)?.ToString() + '\'', Precedence.Primary)
 						: builder.GetExpression(prop.Name!);
+#pragma warning restore CS8601
 				}
 
 				builder.ResultExpression = new SqlFunction(method.ReturnType, builder.Expression, ps);

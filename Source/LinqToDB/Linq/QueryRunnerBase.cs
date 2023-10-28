@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Common.Internal;
 	using Data;
 	using SqlQuery;
 
@@ -50,7 +51,7 @@ namespace LinqToDB.Linq
 			if (DataContext.CloseAfterUse)
 				return DataContext.CloseAsync();
 
-			return TaskEx.CompletedTask;
+			return TaskCache.CompletedTask;
 		}
 #else
 		public virtual ValueTask DisposeAsync()

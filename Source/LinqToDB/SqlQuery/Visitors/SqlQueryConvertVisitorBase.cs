@@ -4,7 +4,7 @@ namespace LinqToDB.SqlQuery.Visitors
 {
 	public abstract class SqlQueryConvertVisitorBase : SqlQueryVisitor
 	{
-		public SqlQueryConvertVisitorBase(bool allowMutation) : base(allowMutation ? VisitMode.Modify : VisitMode.Transform)
+		protected SqlQueryConvertVisitorBase(bool allowMutation) : base(allowMutation ? VisitMode.Modify : VisitMode.Transform)
 		{
 		}
 

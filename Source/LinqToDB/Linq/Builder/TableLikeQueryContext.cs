@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-    sealed class TableLikeQueryContext : BuildContextBase
+	sealed class TableLikeQueryContext : BuildContextBase
 	{
 		public ContextRefExpression  TargetContextRef         { get; }
 		public ContextRefExpression  SourceContextRef         { get; }
@@ -126,7 +126,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var unwrappedObj = ((MemberExpression)e).Expression.UnwrapConvert();
 						if (ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetContextRef) || 
-						    ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetPropAccess))
+							ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetPropAccess))
 						{
 							return true;
 						}
@@ -193,7 +193,6 @@ namespace LinqToDB.Linq.Builder
 
 			var subqueryPath        = projectedPath;
 			var correctedPath       = subqueryPath;
-			var isTargetAssociation = false;
 			
 			if (!flags.IsTest())
 			{
@@ -209,8 +208,6 @@ namespace LinqToDB.Linq.Builder
 					// Redirecting to TargetInSourceContextRef for correct processing associations
 					//
 
-					isTargetAssociation = true;
- 
 					if (TargetInSourceContextRef == null)
 					{
 						var cloningContext = new CloningContext();

@@ -264,7 +264,7 @@ namespace LinqToDB.Linq.Builder
 					return;
 
 				if (!alias.Contains('<'))
-					SqlTable.Alias ??= alias;
+					SqlTable.Alias = alias;
 			}
 
 			#endregion

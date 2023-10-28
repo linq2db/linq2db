@@ -109,8 +109,10 @@ namespace LinqToDB.Linq.Builder
 		struct KeyDetailEnvelope<TKey, TDetail>
 			where TKey: notnull
 		{
+#pragma warning disable CS0649 // Field is never assigned: used by expressions
 			public TKey    Key;
 			public TDetail Detail;
+#pragma warning restore CS0649 // Field is never assigned
 		}
 
 		public static Type GetEnumerableElementType(Type type)
@@ -334,8 +336,8 @@ namespace LinqToDB.Linq.Builder
 				var detailParameter = Expression.Parameter(detailType, "d");
 
 				var keyDetailExpression = Expression.MemberInit(Expression.New(keyDetailType),
-					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Key)), detailKeyExpression),
-					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail)), detailParameter));
+					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Key))!, detailKeyExpression),
+					Expression.Bind(keyDetailType.GetField(nameof(KeyDetailEnvelope<int, int>.Detail))!, detailParameter));
 
 				var clonedParentContextRef = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(clonedParentContext.ElementType), clonedParentContext);
 

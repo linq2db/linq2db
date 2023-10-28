@@ -114,11 +114,13 @@ namespace LinqToDB.Linq.Builder
 					if (field == null)
 						throw new InvalidOperationException();
 
+#pragma warning disable CA1508 // TODO:WAITFIX
 					var newField = field != null
 						? new SqlField(field)
 						: null;
 
 					if (newField == null)
+#pragma warning restore CA1508
 					{
 						newField = new SqlField(QueryHelper.GetDbDataType(placeholder.Sql), "field",
 							placeholder.Sql.CanBeNullable(NullabilityContext.NonQuery));

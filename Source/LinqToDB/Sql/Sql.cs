@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS8604 // TODO:WAITFIX
+using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Linq.Expressions;
@@ -132,9 +133,11 @@ namespace LinqToDB
 
 				var nullability = new NullabilityContext(builder.Query);
 
+#pragma warning disable CS8602 // TODO:WAITFIX
 				SqlPredicate predicate = left.CanBeNullable(nullability) || right.CanBeNullable(nullability)
 					? new SqlPredicate.IsDistinct(left, isNot, right)
 					: new SqlPredicate.ExprExpr(left, isNot ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual, right, withNull: null);
+#pragma warning restore CS8602
 
 				builder.ResultExpression = new SqlSearchCondition(
 					new SqlCondition(isNot: false, predicate)
@@ -232,12 +235,16 @@ namespace LinqToDB
 				}
 
 				var sqlExpr = builder.ConvertExpressionToSql(newExpr);
-				sqlExpr     = sqlExpr.Convert(static (v, e) =>
+#pragma warning disable CS8631 // TODO:WAITFIX
+#pragma warning disable CS8634 // TODO:WAITFIX
+				sqlExpr = sqlExpr.Convert(static (v, e) =>
 				{
 					if (e is SqlFunction func && func.Name == PseudoFunctions.REMOVE_CONVERT)
 						return func.Parameters[0];
 					return e;
 				});
+#pragma warning restore CS8634
+#pragma warning restore CS8631
 
 				builder.ResultExpression = sqlExpr;
 			}

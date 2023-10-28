@@ -188,7 +188,7 @@ namespace LinqToDB.SqlProvider
 							case int     i when i == 0  :
 							case long    l when l == 0  :
 							case decimal d when d == 0  :
-							case string  s when s == "" : return element.Expr2;
+							case string  s when s.Length == 0: return element.Expr2;
 						}
 					}
 
@@ -237,7 +237,7 @@ namespace LinqToDB.SqlProvider
 								break;
 							}
 
-							case string vs when vs == "" : return element.Expr1;
+							case string vs when vs.Length == 0 : return element.Expr1;
 							case string vs when
 								element.Expr1    is SqlBinaryExpression be1 &&
 								//be1.Operation == "+"                   &&

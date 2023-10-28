@@ -135,17 +135,17 @@ namespace LinqToDB.Async
 		}
 
 		/// <summary>
-		///     Asynchronously returns the only element of a sequence, or a default value if the sequence is empty;
-		///     this method throws an exception if there is more than one element in the sequence.
+		/// Asynchronously returns the only element of a sequence, or a default value if the sequence is empty;
+		/// this method throws an exception if there is more than one element in the sequence.
 		/// </summary>
 		/// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
 		/// <param name="source">An <see cref="IQueryable{T}" /> to return the single element of.</param>
 		/// <param name="cancellationToken">A <see cref="CancellationToken" /> to observe while waiting for the task to complete.</param>
 		/// <returns>
-		///     A task that represents the asynchronous operation.
-		///     The task result contains the single element of the input sequence, or <see langword="default" /> (
-		///     <typeparamref name="TSource" />)
-		///     if the sequence contains no elements.
+		/// A task that represents the asynchronous operation.
+		/// The task result contains the single element of the input sequence, or <see langword="default" /> (
+		/// <typeparamref name="TSource" />)
+		/// if the sequence contains no elements.
 		/// </returns>
 		/// <exception cref="ArgumentNullException"><paramref name="source" /> is <see langword="null" />.</exception>
 		/// <exception cref="InvalidOperationException"><paramref name="source" /> contains more than one element.</exception>
@@ -175,15 +175,15 @@ namespace LinqToDB.Async
 		}
 
 		/// <summary>
-		///     Asynchronously returns the only element of a sequence, and throws an exception
-		///     if there is not exactly one element in the sequence.
+		/// Asynchronously returns the only element of a sequence, and throws an exception
+		/// if there is not exactly one element in the sequence.
 		/// </summary>
 		/// <typeparam name="TSource">The type of the elements of <paramref name="source" />.</typeparam>
 		/// <param name="source">An <see cref="IQueryable{T}" /> to return the single element of.</param>
 		/// <param name="cancellationToken">A <see cref="CancellationToken" /> to observe while waiting for the task to complete.</param>
 		/// <returns>
-		///     A task that represents the asynchronous operation.
-		///     The task result contains the single element of the input sequence.
+		/// A task that represents the asynchronous operation.
+		/// The task result contains the single element of the input sequence.
 		/// </returns>
 		/// <exception cref="ArgumentNullException"><paramref name="source" /> is <see langword="null" />.</exception>
 		/// <exception cref="InvalidOperationException">

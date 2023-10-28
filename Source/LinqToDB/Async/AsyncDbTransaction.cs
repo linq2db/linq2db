@@ -6,6 +6,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Async
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
 	/// missing from <see cref="DbTransaction"/>.
@@ -29,7 +31,7 @@ namespace LinqToDB.Async
 			return Transaction.CommitAsync(cancellationToken);
 #else
 			Commit();
-			return TaskEx.CompletedTask;
+			return TaskCache.CompletedTask;
 #endif
 		}
 
@@ -39,7 +41,7 @@ namespace LinqToDB.Async
 			return Transaction.RollbackAsync(cancellationToken);
 #else
 			Rollback();
-			return TaskEx.CompletedTask;
+			return TaskCache.CompletedTask;
 #endif
 		}
 
@@ -52,7 +54,7 @@ namespace LinqToDB.Async
 		public virtual Task DisposeAsync()
 		{
 			Dispose();
-			return TaskEx.CompletedTask;
+			return TaskCache.CompletedTask;
 		}
 #else
 		public virtual ValueTask DisposeAsync()

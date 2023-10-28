@@ -234,12 +234,9 @@ namespace LinqToDB.Linq.Builder
 					.FirstOrDefault(li =>
 						MemberInfoEqualityComparer.Default.Equals(li.MemberInfo, association.MemberInfo));
 
-				if (associationLoadWith == null)
-				{
-					associationLoadWith = loadWith.NextInfos
-						.FirstOrDefault(li =>
-							li.MemberInfo?.Name == association.MemberInfo.Name);
-				}
+				associationLoadWith ??= loadWith.NextInfos
+					.FirstOrDefault(li =>
+						li.MemberInfo?.Name == association.MemberInfo.Name);
 
 				if (associationLoadWith != null &&
 				    (associationLoadWith.MemberFilter != null || associationLoadWith.FilterFunc != null))

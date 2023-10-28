@@ -681,13 +681,10 @@ namespace LinqToDB.Linq.Builder
 					public async ValueTask<bool> MoveNextAsync()
 #endif
 					{
-						if (_grouped == null)
-						{
-							_grouped = (await _elements.ToListAsync(_cancellationToken)
-									.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-								.GroupBy(_groupingKey)
-								.GetEnumerator();
-						}
+						_grouped ??= (await _elements.ToListAsync(_cancellationToken)
+								.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+							.GroupBy(_groupingKey)
+							.GetEnumerator();
 
 						if (_grouped.MoveNext())
 						{

@@ -16,7 +16,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
-	using LinqToDB.Expressions;
 
 	partial class ExpressionBuilder
 	{
@@ -444,7 +443,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			public Expression     SequenceExpression = null!;
 			public IBuildContext? Context;
-			public Expression?    Expression;
 		}
 
 		public Expression CorrectRoot(IBuildContext? currentContext, Expression expr)

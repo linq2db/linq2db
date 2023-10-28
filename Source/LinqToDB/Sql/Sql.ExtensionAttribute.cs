@@ -460,7 +460,9 @@ namespace LinqToDB
 
 				public ISqlExpression? ConvertToSqlExpression(int precedence)
 				{
+#pragma warning disable CS8604 // TODO:WAITFIX
 					var converted = BuildSqlExpression(Query, Extension, Extension.SystemType, precedence,
+#pragma warning restore CS8604
 						(Extension.IsAggregate      ? SqlFlags.IsAggregate      : SqlFlags.None) |
 						(Extension.IsPure           ? SqlFlags.IsPure           : SqlFlags.None) |
 						(Extension.IsPredicate      ? SqlFlags.IsPredicate      : SqlFlags.None) |
@@ -925,8 +927,10 @@ namespace LinqToDB
 					return result;
 				};
 
-				if (valueProviderError != null)
-					return valueProviderError;
+#pragma warning disable CA1508 // TODO:WAITFIX
+					if (valueProviderError != null)
+#pragma warning restore CA1508
+						return valueProviderError;
 
 				var expr = ResolveExpressionValues(null, root.Expr, valueProvider, out var error);
 

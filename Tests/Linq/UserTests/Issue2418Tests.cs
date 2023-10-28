@@ -19,7 +19,7 @@ namespace Tests.UserTests
 		{
 			builder.Expression = "JSON_MODIFY({source}, {path}, {value})";
 
-			builder.AddParameter("source", builder.GetExpression(0));
+			builder.AddParameter("source", builder.GetExpression(0)!);
 
 			var member = (MemberExpression) ((LambdaExpression) ((UnaryExpression) builder.Arguments[1]).Operand).Body;
 

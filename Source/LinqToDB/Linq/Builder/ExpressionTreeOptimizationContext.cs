@@ -504,8 +504,6 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, bool>? _isServerSideOnlyCache;
 
-		private FindVisitor<ExpressionTreeOptimizationContext>? _isServerSideOnlyVisitor;
-
 		public bool IsServerSideOnly(Expression expr, bool inProjection)
 		{
 			if (_isServerSideOnlyCache != null && _isServerSideOnlyCache.TryGetValue(expr, out var result))
@@ -857,8 +855,6 @@ namespace LinqToDB.Linq.Builder
 			return Expression.Call(Methods.LinqToDB.SqlExt.Alias.MakeGenericMethod(expression.Type), expression,
 				Expression.Constant(alias));
 		}
-
-		private TransformInfoVisitor<ExpressionTreeOptimizationContext>? _exposeExpressionTransformer;
 
 		public TransformInfo ExposeExpressionTransformer(Expression expr)
 		{

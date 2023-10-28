@@ -68,7 +68,9 @@ namespace LinqToDB
 					Server  : Server   ?? table.TableName.Server,
 					Package : Package  ?? table.TableName.Package);
 
+#pragma warning disable CS8619 // TODO:WAITFIX
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter, out var error);
+#pragma warning restore CS8619
 
 				if (error != null)
 					throw Expressions.SqlErrorExpression.EnsureError(null, error).CreateError();

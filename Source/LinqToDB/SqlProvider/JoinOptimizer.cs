@@ -1378,7 +1378,7 @@ namespace LinqToDB.SqlProvider
 				return Equals((VirtualField) obj);
 			}
 
-			static string GetSourceString(ISqlTableSource source)
+			static string GetSourceString(ISqlTableSource? source)
 			{
 				if (source == null)
 					return "(unknown)";

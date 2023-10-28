@@ -19,7 +19,7 @@ namespace LinqToDB.SqlQuery
 		internal static readonly ObjectPool<SqlQueryParentFirstVisitor> ParentVisitorPool = new(() => new SqlQueryParentFirstVisitor(), v => v.Cleanup(), 100);
 		internal static readonly ObjectPool<SqlQueryCloneVisitor>       CloneVisitorPool  = new(() => new SqlQueryCloneVisitor(),       v => v.Cleanup(), 100);
 
-		class PoolHolder<TContext>
+		static class PoolHolder<TContext>
 		{
 			public static readonly ObjectPool<SqlQueryFindVisitor<TContext>>        FindPool        = new(() => new SqlQueryFindVisitor<TContext>(),         v => v.Cleanup(), 100);
 			public static readonly ObjectPool<SqlQueryActionVisitor<TContext>>      ActionPool      = new(() => new SqlQueryActionVisitor<TContext>(),       v => v.Cleanup(), 100);

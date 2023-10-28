@@ -15,6 +15,7 @@ namespace LinqToDB.DataProvider
 {
 	using Async;
 	using Common;
+	using Common.Internal;
 	using Data;
 	using Mapping;
 
@@ -99,7 +100,7 @@ namespace LinqToDB.DataProvider
 		public Task DisposeAsync()
 		{
 			Dispose(true);
-			return TaskEx.CompletedTask;
+			return TaskCache.CompletedTask;
 		}
 #endif
 

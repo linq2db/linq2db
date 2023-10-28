@@ -1,5 +1,4 @@
 ﻿using System;
-using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -7,8 +6,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+
+	using LinqToDB.Expressions;
+
 	using SqlQuery;
 
 	internal sealed class SetOperationBuilder : MethodCallBuilder
@@ -475,7 +476,9 @@ namespace LinqToDB.Linq.Builder
 					pathMapping.Add(path, (column1, column2));
 				}
 
+#pragma warning disable CA1508 // TODO:WAITFIX
 				if (_setOperation != SetOperation.Except || _setOperation != SetOperation.ExceptAll)
+#pragma warning restore CA1508
 				{
 					foreach (var (placeholder, path) in placeholders2)
 					{

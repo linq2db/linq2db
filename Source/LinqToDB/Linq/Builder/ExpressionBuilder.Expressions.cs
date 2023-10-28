@@ -127,7 +127,9 @@ namespace LinqToDB.Linq.Builder
 			BuildFlags        _buildFlags;
 			bool              _forceSql;
 			bool              _disableParseNew;
+#pragma warning disable CS0649 // TODO:WAITFIX
 			string?           _alias;
+#pragma warning restore CS0649
 			ColumnDescriptor? _columnDescriptor;
 			bool              _disableClosureHandling;
 			
@@ -146,13 +148,13 @@ namespace LinqToDB.Linq.Builder
 				if (HandleParametrized(node, out var parametrized))
 					return parametrized;
 
-				if (node.NodeType == ExpressionType.Conditional  || 
-				    node.NodeType == ExpressionType.Call         || 
-				    node.NodeType == ExpressionType.New          || 
-				    node.NodeType == ExpressionType.MemberInit   || 
-				    node.NodeType == ExpressionType.MemberAccess || 
-				    node.NodeType == ExpressionType.ListInit     || 
-				    node.NodeType == ExpressionType.Default      || 
+				if (node.NodeType == ExpressionType.Conditional  ||
+				    node.NodeType == ExpressionType.Call         ||
+				    node.NodeType == ExpressionType.New          ||
+				    node.NodeType == ExpressionType.MemberInit   ||
+				    node.NodeType == ExpressionType.MemberAccess ||
+				    node.NodeType == ExpressionType.ListInit     ||
+				    node.NodeType == ExpressionType.Default      ||
 				    node.NodeType == ExpressionType.Convert      ||
 				    node.NodeType == ExpressionType.Constant     ||
 				    node.NodeType == ExpressionType.Parameter    ||
@@ -547,7 +549,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (_flags.IsExpression())
 				{
-					var expr = Visit(node.Expression);
+					var expr = Visit(node.Expression!);
 					if (!ExpressionEqualityComparer.Instance.Equals(expr, node.Expression))
 					{
 						return Expression.Condition(Expression.NotEqual(expr, Expression.Default(expr.Type)),
@@ -834,7 +836,7 @@ namespace LinqToDB.Linq.Builder
 			if (expression is not MemberExpression memberExpression)
 				return false;
 
-			var ed = MappingSchema.GetEntityDescriptor(memberExpression.Expression.Type);
+			var ed = MappingSchema.GetEntityDescriptor(memberExpression.Expression!.Type);
 
 			if (ed.Aliases == null)
 				return false;

@@ -117,8 +117,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				table = deleteStatement.SelectQuery.From.FindTableSource(deleteStatement.Table);
 			}
 
-			if (table == null)
-				table = deleteStatement.SelectQuery.From.Tables[0];
+			table ??= deleteStatement.SelectQuery.From.Tables[0];
 
 			AppendIndent()
 				.Append("DELETE");

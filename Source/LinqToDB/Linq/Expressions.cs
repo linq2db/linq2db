@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS8604 // TODO:WAITFIX
+using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Data.SqlTypes;
@@ -1750,7 +1751,9 @@ namespace LinqToDB.Linq
 					return;
 				}
 
+#pragma warning disable CS8600 // TODO:WAITFIX
 				ISqlExpression result = stringExpression;
+#pragma warning restore CS8600
 
 				//TODO: Not accurate, we have to find way
 				foreach (var c in chars)

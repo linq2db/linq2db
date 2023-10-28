@@ -210,10 +210,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 							if (newArgument.Type != argument.Type)
 								newArgument = Expression.Convert(newArgument, argument.Type);
 
-							if (newArguments == null)
-							{
-								newArguments = arguments.ToArray();
-							}
+							newArguments ??= arguments.ToArray();
 
 							newArguments[i] = newArgument;
 						}
@@ -640,16 +637,17 @@ namespace LinqToDB.Linq.Builder.Visitors
 				case ExpressionType.ArrayLength:
 				{
 					//TODO: WTF?
+					// TODO:WAITFIX
 					throw new NotImplementedException();
-					var ll = Expressions.ConvertMember(MappingSchema, node.Operand?.Type, node.Operand!.Type.GetProperty(nameof(Array.Length))!);
-					if (ll != null)
-					{
-						var exposed = ConvertMemberExpression(node, MappingSchema, node.Operand!, ll);
+					//var ll = Expressions.ConvertMember(MappingSchema, node.Operand?.Type, node.Operand!.Type.GetProperty(nameof(Array.Length))!);
+					//if (ll != null)
+					//{
+					//	var exposed = ConvertMemberExpression(node, MappingSchema, node.Operand!, ll);
 
-						return Visit(exposed);
-					}
+					//	return Visit(exposed);
+					//}
 
-					break;
+					//break;
 				}
 
 				case ExpressionType.Convert:

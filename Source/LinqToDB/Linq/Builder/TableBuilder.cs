@@ -112,9 +112,7 @@ namespace LinqToDB.Linq.Builder
 			return FindBuildContext(builder, buildInfo, out var _) != BuildContextType.None;
 		}
 
-		static MethodInfo _callGetTable = MemberHelper.MethodOfGeneric((IDataContext dc) => CallGetTable<object>(dc));
-
-		static Expression CallGetTable<T>(IDataContext dataContext) 
+		static Expression CallGetTable<T>(IDataContext dataContext)
 			where T : class
 		{
 			return dataContext.GetTable<T>().Expression;
@@ -183,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 				case BuildContextType.MemberAccess           :
 				{
 					var me            = (MemberExpression)buildInfo.Expression;
-					var mappingSchema = GetRootMappingSchema(builder, me.Expression);
+					var mappingSchema = GetRootMappingSchema(builder, me.Expression!);
 
 					var tableContext = new TableContext(builder, mappingSchema, buildInfo, buildInfo.Expression.Type.GetGenericArguments()[0]);
 					return ApplyQueryFilters(builder, mappingSchema, buildInfo, null, AddTableInScope(tableContext));

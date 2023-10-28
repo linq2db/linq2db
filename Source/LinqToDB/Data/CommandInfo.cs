@@ -756,7 +756,7 @@ namespace LinqToDB.Data
 			}
 
 #if !NATIVE_ASYNC
-			public Task DisposeAsync() => TaskEx.CompletedTask;
+			public Task DisposeAsync() => TaskCache.CompletedTask;
 #else
 			public ValueTask DisposeAsync() => default;
 #endif

@@ -103,7 +103,9 @@ namespace LinqToDB.DataProvider.MySql
 				var searchExpr = predicate.Expr2;
 				var dataExpr   = predicate.Expr1;
 
+#pragma warning disable CA1508 // https://github.com/dotnet/roslyn-analyzers/issues/6868
 				if (caseSensitive == false)
+#pragma warning restore CA1508
 				{
 					searchExpr = PseudoFunctions.MakeToLower(searchExpr);
 					dataExpr   = PseudoFunctions.MakeToLower(dataExpr);
@@ -131,7 +133,9 @@ namespace LinqToDB.DataProvider.MySql
 					return newPredicate;
 				}
 
+#pragma warning disable CA1508 // https://github.com/dotnet/roslyn-analyzers/issues/6868
 				if (caseSensitive == false)
+#pragma warning restore CA1508
 				{
 					predicate = new SqlPredicate.SearchString(
 						dataExpr,
@@ -141,8 +145,7 @@ namespace LinqToDB.DataProvider.MySql
 						new SqlValue(false));
 				}
 			}
-
-			if (caseSensitive == true)
+			else
 			{
 				predicate = new SqlPredicate.SearchString(
 					new SqlExpression(typeof(string), $"{{0}} COLLATE utf8_bin", Precedence.Primary, predicate.Expr1),

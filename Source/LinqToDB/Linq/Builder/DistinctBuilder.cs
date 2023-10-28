@@ -1,13 +1,11 @@
-﻿using System.Reflection;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Reflection;
-
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Reflection;
 	using LinqToDB.Expressions;
+
+	using Reflection;
 
 	sealed class DistinctBuilder : MethodCallBuilder
 	{

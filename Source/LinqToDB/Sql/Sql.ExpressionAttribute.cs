@@ -544,7 +544,9 @@ namespace LinqToDB
 					(IsWindowFunction ? SqlFlags.IsWindowFunction : SqlFlags.None),
 					ToParametersNullabilityType(IsNullable),
 					_canBeNull,
+#pragma warning disable CS8620 // TODO:WAITFIX
 					parameters);
+#pragma warning restore CS8620
 
 				if (_canBeNull != null)
 					sqlExpression.CanBeNull = _canBeNull.Value;

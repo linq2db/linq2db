@@ -44,7 +44,9 @@ namespace LinqToDB.Linq
 					Queries = { new QueryInfo { Statement = deleteStatement, } }
 				};
 
+#pragma warning disable CS8604 // TODO:WAITFIX
 				var keys = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+#pragma warning restore CS8604
 
 				if (keys.Count == 0)
 					throw new LinqException($"Table '{sqlTable.NameForLogging}' does not have primary key.");

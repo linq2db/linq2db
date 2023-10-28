@@ -393,7 +393,7 @@ namespace Tests.Extensions
 			.Union
 			(
 				from p in db.Child
-				select new Parent { ParentID = p.Parent.ParentID, Value1 = p.Parent.Value1 }
+				select new Parent { ParentID = p.Parent!.ParentID, Value1 = p.Parent.Value1 }
 			)
 			.AsMySql()
 			.ForUpdateHint()
@@ -412,7 +412,6 @@ namespace Tests.Extensions
 			;
 
 			_ = q.ToList();
-
 
 			Assert.That(LastQuery, Should.Contain(
 				"/*+ NO_BNL(",

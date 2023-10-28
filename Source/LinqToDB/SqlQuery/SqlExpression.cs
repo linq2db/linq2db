@@ -165,9 +165,9 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
-			return Equals(obj, DefaultComparer);;
+			return Equals(obj, DefaultComparer);
 		}
 
 		#region Public Static Members

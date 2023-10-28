@@ -7,7 +7,7 @@ namespace LinqToDB.Mapping
 	using Common.Internal;
 
 	/// <summary>
-	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(Func{IQueryable{T},IDataContext,IQueryable{T}})"/>
+	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(Expression{Func{T, IDataContext, bool}})"/>
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class QueryFilterAttribute : MappingAttribute

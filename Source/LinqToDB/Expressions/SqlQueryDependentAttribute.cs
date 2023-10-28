@@ -100,10 +100,7 @@ namespace LinqToDB.Expressions
 							newValue = Expression.Convert(newValue, elementType);
 						}
 
-						if (newExpressions == null)
-						{
-							newExpressions = arrayInit.Expressions.ToArray();
-						}
+						newExpressions ??= arrayInit.Expressions.ToArray();
 
 						newExpressions[i] = newValue;
 					}

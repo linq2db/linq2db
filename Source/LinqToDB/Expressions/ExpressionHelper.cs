@@ -159,53 +159,5 @@ namespace LinqToDB.Expressions
 
 			throw new InvalidOperationException($"Static property or field with name {name} not found on type {type}");
 		}
-
-		// Function just for testing. It helps to understand where unique parameters are used.
-		internal static Expression UniqueParameters(Expression expression)
-		{
-			var replaced  = new Dictionary<ParameterExpression, ParameterExpression>();
-			var usedNames = new HashSet<string>();
-
-			var newExpression = expression.Transform(e =>
-			{
-				if (e.NodeType == ExpressionType.Parameter)
-				{
-					var parameterExpression = (ParameterExpression)e;
-					if (replaced.TryGetValue(parameterExpression, out var newParam))
-					{
-						return newParam;
-					}
-
-					var newName = parameterExpression!.Name;
-					if (!newName.EndsWith("]") || usedNames.Contains(newName))
-					{
-						for (var i = 1;; i++)
-						{
-							var candidateName = newName + "[" + i + "]";
-							if (!usedNames.Contains(candidateName))
-							{
-								newName = candidateName;
-								break;
-							}
-						}
-					}
-
-					usedNames.Add(newName);
-
-					if (newName == parameterExpression.Name)
-						newParam = parameterExpression;
-					else
-						newParam = Expression.Parameter(parameterExpression.Type, newName);
-
-					replaced.Add(parameterExpression, newParam);
-
-					return newParam;
-				}
-
-				return e;
-			});
-
-			return newExpression;
-		}
 	}
 }

@@ -249,13 +249,13 @@ namespace LinqToDB.SqlQuery
 							{
 								if (Operator != Operator.Equal)
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
 								}
 							}
 							else if (Operator == Operator.NotEqual)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
 							}
 						}
@@ -269,13 +269,13 @@ namespace LinqToDB.SqlQuery
 						{
 							if (Operator != Operator.Equal)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 							}
 						}
 						else if (Operator == Operator.NotEqual)
 						{
-							(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+							(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 							search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 						}
 					}
@@ -310,20 +310,20 @@ namespace LinqToDB.SqlQuery
 								}
 								else if (Operator == Operator.LessOrEqual || Operator == Operator.GreaterOrEqual)
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
 								}
 								else
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
 								}
 							}
 							else if (Operator == Operator.Equal)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
 							}
@@ -341,7 +341,7 @@ namespace LinqToDB.SqlQuery
 						else
 							if (isInverted)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
 							}
 					}
@@ -351,21 +351,21 @@ namespace LinqToDB.SqlQuery
 						{
 							if (isInverted)
 							{
-								(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 							}
 							else
 							{
 								if (Operator == Operator.NotEqual)
 								{
-									(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), true));
 								}
 							}
 						}
 						else
 						{
-							(search ??= new()).Conditions.Add(new SqlCondition(false, predicate, true));
+							(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
 							search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
 							search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
 						}

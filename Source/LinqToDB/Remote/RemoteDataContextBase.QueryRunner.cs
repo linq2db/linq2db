@@ -307,7 +307,7 @@ namespace LinqToDB.Remote
 				public Task DisposeAsync()
 				{
 					DataReader.Dispose();
-					return TaskEx.CompletedTask;
+					return TaskCache.CompletedTask;
 				}
 #else
 				public ValueTask DisposeAsync()

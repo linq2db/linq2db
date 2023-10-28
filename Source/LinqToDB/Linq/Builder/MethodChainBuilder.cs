@@ -115,7 +115,9 @@ namespace LinqToDB.Linq.Builder
 					placeholderSequence = groupCtx.Element;
 					placeholderSelect   = groupCtx.SubQuery.SelectQuery;
 
+#pragma warning disable CS8602 // TODO:WAITFIX
 					methodCall = (MethodCallExpression)SequenceHelper.ReplaceContext(methodCall, rootContextref.BuildContext, placeholderSequence);
+#pragma warning restore CS8602
 				}
 			}
 

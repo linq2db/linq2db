@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (expr.Expr1.SystemType == typeof(string) &&
 				    expr.Expr1.TryEvaluateExpression(EvaluationContext, out var value1) && value1 is string string1)
 				{
-					if (string1 == "")
+					if (string1.Length == 0)
 					{
 						var sc = new SqlSearchCondition();
 						sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.Oracle
 				if (expr.Expr2.SystemType == typeof(string)                             &&
 				    expr.Expr2.TryEvaluateExpression(EvaluationContext, out var value2) && value2 is string string2)
 				{
-					if (string2 == "")
+					if (string2.Length == 0)
 					{
 						var sc = new SqlSearchCondition();
 						sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));

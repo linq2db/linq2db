@@ -71,7 +71,7 @@ namespace LinqToDB.Data
 		public int? RecordsAffected { get; set; }
 
 		/// <summary>
-		/// Gets or sets the <see cref="Exception"/> for <see cref="JSType.Error"/> step.
+		/// Gets or sets the <see cref="Exception"/> for <see cref="TraceInfoStep.Error"/> step.
 		/// </summary>
 		public Exception? Exception { get; set; }
 

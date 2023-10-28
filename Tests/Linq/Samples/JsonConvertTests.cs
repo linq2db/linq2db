@@ -136,7 +136,7 @@ namespace Tests.Samples
 				var entity = pathList[0];
 				var field  = pathList[1];
 
-				var fieldSql = builder.ConvertExpressionToSql(field);
+				var fieldSql = builder.ConvertExpressionToSql(field)!;
 				builder.AddParameter("field", fieldSql);
 
 				var propPathStr = "$";

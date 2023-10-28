@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable CS8604 // TODO:WAITFIX
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 

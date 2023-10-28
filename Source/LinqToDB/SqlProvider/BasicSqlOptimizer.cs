@@ -65,7 +65,7 @@ namespace LinqToDB.SqlProvider
 
 			//statement.EnsureFindTables();
 
-            if (dataOptions.LinqOptions.OptimizeJoins)
+			if (dataOptions.LinqOptions.OptimizeJoins)
 			{
 				OptimizeJoins(statement);
 
@@ -165,7 +165,7 @@ namespace LinqToDB.SqlProvider
 		static bool IsCompatibleForUpdate(SqlJoinedTable joinedTable)
 		{
 			return joinedTable.JoinType == JoinType.Inner || joinedTable.JoinType == JoinType.Left ||
-			       joinedTable.JoinType == JoinType.Right;
+				   joinedTable.JoinType == JoinType.Right;
 		}
 
 		public static bool IsCompatibleForUpdate(List<IQueryElement> path)
@@ -274,9 +274,9 @@ namespace LinqToDB.SqlProvider
 					statement.Update.TableSource = tableSource;
 
 					var forceWrapping = wrapForOutput && statement.Output != null &&
-					                    (statement.SelectQuery.From.Tables.Count != 1 ||
-					                     statement.SelectQuery.From.Tables.Count          == 1 &&
-					                     statement.SelectQuery.From.Tables[0].Joins.Count == 0);
+										(statement.SelectQuery.From.Tables.Count != 1 ||
+										 statement.SelectQuery.From.Tables.Count          == 1 &&
+										 statement.SelectQuery.From.Tables[0].Joins.Count == 0);
 					
 					if (forceWrapping || !IsCompatibleForUpdate(queryPath))
 					{
@@ -860,8 +860,10 @@ namespace LinqToDB.SqlProvider
 				}
 				else
 				{
+#pragma warning disable CS8602 // TODO:WAITFIX
 					for (var i = 0; i < tableKeys.Count; i++)
 						deleteStatement.SelectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
+#pragma warning restore CS8602
 				}
 
 				newDeleteStatement.SelectQuery.From.Table(copy).Where.Exists(deleteStatement.SelectQuery);
@@ -1428,7 +1430,9 @@ namespace LinqToDB.SqlProvider
 			var visitor     = new DetachUpdateTableVisitor();
 			var clonedTable = visitor.DetachUpdateTable(updateStatement);
 
+#pragma warning disable CS8604 // TODO:WAITFIX
 			ApplyUpdateTableComparison(updateStatement.SelectQuery, updateStatement.Update, clonedTable, dataOptions);
+#pragma warning restore CS8604
 
 			return updateStatement;
 		}
@@ -1585,7 +1589,7 @@ namespace LinqToDB.SqlProvider
 			{
 
 				var supportsParameter = SqlProviderFlags.GetIsSkipSupportedFlag(query.Select.TakeValue, query.Select.SkipValue)
-				                        && SqlProviderFlags.AcceptsTakeAsParameter;
+										&& SqlProviderFlags.AcceptsTakeAsParameter;
 
 				if (!supportsParameter)
 				{
@@ -1797,7 +1801,7 @@ namespace LinqToDB.SqlProvider
 			if (skipExpr != null)
 			{
 				var supportsParameter = SqlProviderFlags.GetIsSkipSupportedFlag(selectQuery.Select.TakeValue, selectQuery.Select.SkipValue)
-				                        && SqlProviderFlags.AcceptsTakeAsParameter;
+										&& SqlProviderFlags.AcceptsTakeAsParameter;
 
 				if (supportsParameter)
 				{

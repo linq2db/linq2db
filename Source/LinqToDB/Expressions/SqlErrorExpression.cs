@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
@@ -11,7 +12,7 @@ namespace LinqToDB.Expressions
 		public SqlErrorExpression(object? buildContext, Expression expression) : this(buildContext, expression, expression.Type)
 		{}
 
-		public SqlErrorExpression(object? buildContext, Expression expression, Type resultType)
+		public SqlErrorExpression(object? buildContext, Expression? expression, Type resultType)
 		{
 			BuildContext = buildContext;
 			Expression   = expression;
@@ -24,7 +25,7 @@ namespace LinqToDB.Expressions
 			ResultType = resultType;
 		}
 
-		public object? BuildContext { get; }
+		public object?        BuildContext { get; }
 		public Expression?    Expression   { get; }
 		public Type           ResultType   { get; }
 		public string?        Message      { get; }
@@ -72,7 +73,7 @@ namespace LinqToDB.Expressions
 			return new LinqException(message);
 		}
 
-		public static Exception CreateError(Expression expression)
+		public static Exception CreateError(Expression? expression)
 		{
 			return new LinqException($"'{PrepareExpression(expression)}' cannot be converted to SQL.");
 		}
@@ -82,7 +83,8 @@ namespace LinqToDB.Expressions
 			throw CreateError(expression);
 		}
 
-		public static Expression PrepareExpression(Expression expression)
+		[return: NotNullIfNotNull(nameof(expression))]
+		public static Expression? PrepareExpression(Expression? expression)
 		{
 			var transformed = expression.Transform(e =>
 			{

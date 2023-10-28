@@ -17,11 +17,7 @@ namespace LinqToDB.Linq.Builder
 					var found = loadWith.NextInfos?.FirstOrDefault(li =>
 						MemberInfoEqualityComparer.Default.Equals(li.MemberInfo, memberInfo));
 
-					if (found == null)
-					{
-						found = loadWith.NextInfos?.FirstOrDefault(li =>
-							li.MemberInfo?.Name == memberInfo.Name);
-					}
+					found ??= loadWith.NextInfos?.FirstOrDefault(li => li.MemberInfo?.Name == memberInfo.Name);
 
 					if (found != null)
 					{

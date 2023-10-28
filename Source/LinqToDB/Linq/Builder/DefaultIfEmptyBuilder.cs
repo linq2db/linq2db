@@ -180,11 +180,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (notNull != null || _allowNullField)
 					{
-						if (notNull == null)
-						{
-							notNull = ExpressionBuilder.CreatePlaceholder(this,
-								new SqlNullabilityExpression (new SqlValue(1), true), SequenceHelper.CreateSpecialProperty(path, typeof(int?), NotNullPropName), alias : NotNullPropName);
-						}
+						notNull ??= ExpressionBuilder.CreatePlaceholder(this,
+							new SqlNullabilityExpression (new SqlValue(1), true), SequenceHelper.CreateSpecialProperty(path, typeof(int?), NotNullPropName), alias : NotNullPropName);
 
 						Expression notNullField = notNull;
 

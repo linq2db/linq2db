@@ -65,12 +65,14 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
+#pragma warning disable CS8620 // TODO:WAITFIX
 				builder.ResultExpression = new SqlRow(args);
+#pragma warning restore CS8620
 			}
 		}
 
 		// Note that SQL standard doesn't define OVERLAPS for all comparable data types, such as numbers.
-		// RDBMS only support OVERLAPS for date(-time) and interval types.		
+		// RDBMS only support OVERLAPS for date(-time) and interval types.
 		[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
 		public static bool Overlaps<T1, T2, T3, T4>(this SqlRow<T1, T2> thisRow, SqlRow<T3, T4> other)
 			=> throw new NotImplementedException();
@@ -79,6 +81,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
+#pragma warning disable CS8604 // TODO:WAITFIX
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
 				builder.ResultExpression = new SqlSearchCondition(new SqlCondition(false,
 					new SqlPredicate.ExprExpr(args[0], SqlPredicate.Operator.Overlaps, args[1], false)));

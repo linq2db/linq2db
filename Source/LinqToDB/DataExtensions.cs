@@ -1453,7 +1453,7 @@ namespace LinqToDB
 					var me = (MemberExpression)e;
 					// closure handling
 					//
-					if (me.Expression.NodeType == ExpressionType.Constant)
+					if (me.Expression!.NodeType == ExpressionType.Constant)
 					{
 						var value = me.EvaluateExpression();
 						if (value == cteTable)

@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider
 {
 	using Common;
 	using Common.Internal;

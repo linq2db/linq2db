@@ -581,6 +581,7 @@ namespace LinqToDB.Linq.Builder
 						if (false)
 						{
 							//TODO: strange behaviour, Member of inheritance has no Discriminator column
+#pragma warning disable CS0162 // TODO:WAITFIX
 
 							var dynamicPropCall = Expression.Call(Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(discriminatorMemberInfo.GetMemberType()),
 								currentRef, Expression.Constant(discriminatorMemberInfo.Name));
@@ -588,6 +589,7 @@ namespace LinqToDB.Linq.Builder
 							var dynamicSql = ConvertToSqlPlaceholder(context, dynamicPropCall, columnDescriptor: inheritance.Discriminator);
 
 							test = new SqlReaderIsNullExpression(dynamicSql, false);
+#pragma warning restore CS0162
 
 							// throw new InvalidOperationException(
 							// 	$"Type '{contextRef.Type.Name}' has no member '{inheritance.Discriminator.MemberInfo.Name}'");

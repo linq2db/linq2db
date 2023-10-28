@@ -673,7 +673,7 @@ namespace LinqToDB.Data
 				public Task DisposeAsync()
 				{
 					Dispose();
-					return TaskEx.CompletedTask;
+					return TaskCache.CompletedTask;
 				}
 #endif
 			}

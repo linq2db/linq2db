@@ -131,7 +131,9 @@ namespace LinqToDB.Linq.Builder
 
 			var p = PrepareConvertersAndCreateParameter(newExpr, valueAccessor, null, columnDescriptor,
 				buildParameterType);
+#pragma warning disable CS8604 // TODO:WAITFIX
 			AddCurrentSqlParameter(p);
+#pragma warning restore CS8604
 
 			return p;
 		}
@@ -549,8 +551,12 @@ namespace LinqToDB.Linq.Builder
 
 			var p = PrepareConvertersAndCreateParameter(vte, expr, member?.Name, columnDescriptor, BuildParameterType.Default);
 
+#pragma warning disable CS8620 // TODO:WAITFIX
 			(_parameters ??= new()).Add((expr, columnDescriptor, p));
+#pragma warning restore CS8620
+#pragma warning disable CS8604 // TODO:WAITFIX
 			AddCurrentSqlParameter(p);
+#pragma warning restore CS8604
 
 			return p.SqlParameter;
 		}

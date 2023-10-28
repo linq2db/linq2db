@@ -8,6 +8,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Async
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Implements <see cref="IAsyncDbConnection"/> wrapper over <see cref="DbConnection"/> instance with
 	/// synchronous implementation of asynchronous methods.
@@ -62,7 +64,7 @@ namespace LinqToDB.Async
 			return Connection.CloseAsync();
 #else
 			Close();
-			return TaskEx.CompletedTask;
+			return TaskCache.CompletedTask;
 #endif
 		}
 
@@ -108,7 +110,7 @@ namespace LinqToDB.Async
 		public virtual Task DisposeAsync()
 		{
 			Dispose();
-			return TaskEx.CompletedTask;
+			return TaskCache.CompletedTask;
 		}
 #else
 		public virtual ValueTask DisposeAsync()

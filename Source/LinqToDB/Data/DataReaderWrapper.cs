@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Data.Common;
 using System.Threading.Tasks;
+#if NATIVE_ASYNC
+using IAsyncDisposable = System.IAsyncDisposable;
+#else
+using IAsyncDisposable = LinqToDB.Async.IAsyncDisposable;
+#endif
 
 namespace LinqToDB.Data
 {
@@ -9,12 +14,7 @@ namespace LinqToDB.Data
 	/// <summary>
 	/// Disposable wrapper over <see cref="DbDataReader"/> instance, which properly disposes associated objects.
 	/// </summary>
-	public class DataReaderWrapper : IDisposable
-#if NATIVE_ASYNC
-		, IAsyncDisposable
-#else
-		, Async.IAsyncDisposable
-#endif
+	public class DataReaderWrapper : IDisposable, IAsyncDisposable
 	{
 		private          bool            _disposed;
 		private readonly DataConnection? _dataConnection;
