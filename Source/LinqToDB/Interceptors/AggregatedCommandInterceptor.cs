@@ -10,11 +10,6 @@ namespace LinqToDB.Interceptors
 
 	sealed class AggregatedCommandInterceptor : AggregatedInterceptor<ICommandInterceptor>, ICommandInterceptor
 	{
-		protected override AggregatedInterceptor<ICommandInterceptor> Create()
-		{
-			return new AggregatedCommandInterceptor();
-		}
-
 		public DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
 		{
 			return Apply(() =>

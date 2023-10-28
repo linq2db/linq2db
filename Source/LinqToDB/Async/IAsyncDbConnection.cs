@@ -24,11 +24,6 @@ namespace LinqToDB.Async
 		/// </summary>
 		DbConnection Connection { get; }
 
-		/// <summary>
-		/// Returns cloned connection instance, if underlying provider supports cloning or null otherwise.
-		/// </summary>
-		DbConnection? TryClone();
-
 		/// <inheritdoc cref="DbConnection.ConnectionString"/>
 		string ConnectionString { get; set; }
 

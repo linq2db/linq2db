@@ -124,7 +124,6 @@ namespace LinqToDB.Remote
 		}
 
 		protected abstract ILinqService GetClient();
-		protected abstract IDataContext Clone    ();
 		protected abstract string       ContextIDPrefix { get; }
 
 		string?            _contextName;
@@ -409,18 +408,6 @@ namespace LinqToDB.Remote
 					_queryBatch = null;
 				}
 			}
-		}
-
-		IDataContext IDataContext.Clone(bool forNestedQuery)
-		{
-			ThrowOnDisposed();
-
-			var ctx = (RemoteDataContextBase)Clone();
-
-			ctx._dataContextInterceptor   = _dataContextInterceptor   is AggregatedDataContextInterceptor   dc ? (AggregatedDataContextInterceptor)  dc.Clone() : _dataContextInterceptor;
-			ctx._entityServiceInterceptor = _entityServiceInterceptor is AggregatedEntityServiceInterceptor es ? (AggregatedEntityServiceInterceptor)es.Clone() : _entityServiceInterceptor;
-
-			return ctx;
 		}
 
 		protected bool Disposed { get; private set; }

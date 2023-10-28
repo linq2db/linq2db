@@ -66,8 +66,6 @@ namespace LinqToDB.Data.RetryPolicy
 
 		void IAsyncDbConnection.Open() => _policy.Execute(_connection.Open);
 		Task IAsyncDbConnection.OpenAsync(CancellationToken cancellationToken) => _policy.ExecuteAsync(_connection.OpenAsync, cancellationToken);
-
-		DbConnection? IAsyncDbConnection.TryClone() => _connection.TryClone();
 #endregion
 	}
 }

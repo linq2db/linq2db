@@ -5,11 +5,6 @@ namespace LinqToDB.Interceptors
 {
 	sealed class AggregatedUnwrapDataObjectInterceptor : AggregatedInterceptor<IUnwrapDataObjectInterceptor>, IUnwrapDataObjectInterceptor
 	{
-		protected override AggregatedInterceptor<IUnwrapDataObjectInterceptor> Create()
-		{
-			return new AggregatedUnwrapDataObjectInterceptor();
-		}
-
 		public DbConnection  UnwrapConnection(IDataContext dataContext, DbConnection  connection)
 		{
 			return Apply(() =>

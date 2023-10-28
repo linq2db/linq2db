@@ -93,12 +93,6 @@ namespace LinqToDB
 		bool?               IsDBNullAllowed    (DbDataReader reader, int idx);
 
 		/// <summary>
-		/// Clones current context.
-		/// </summary>
-		/// <returns>Cloned context.</returns>
-		IDataContext        Clone              (bool forNestedQuery);
-
-		/// <summary>
 		/// Closes context connection and disposes underlying resources.
 		/// </summary>
 		void                Close              ();

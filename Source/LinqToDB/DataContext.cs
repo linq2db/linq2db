@@ -374,41 +374,6 @@ namespace LinqToDB
 
 		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx) => DataProvider.IsDBNullAllowed(Options, reader, idx);
 
-		/// <summary>
-		/// Creates instance of <see cref="DataConnection"/> class, attached to same database connection/transaction passed in options.
-		/// Used by <see cref="IDataContext.Clone(bool)"/> API only if <see cref="DataConnection.IsMarsEnabled"/>
-		/// is <c>true</c> and there is an active connection associated with current context.
-		/// <param name="currentConnection"><see cref="DataConnection"/> instance, used by current context instance.</param>
-		/// <param name="options">Connection options, will have <see cref="DbConnection"/> or <see cref="DbTransaction"/> set.</param>
-		/// <returns>New <see cref="DataConnection"/> instance.</returns>
-		/// </summary>
-		protected virtual DataConnection CloneDataConnection(DataConnection currentConnection, DataOptions options) => new(options);
-
-		IDataContext IDataContext.Clone(bool forNestedQuery)
-		{
-			AssertDisposed();
-
-			var dc = new DataContext(Options)
-			{
-				KeepConnectionAlive = KeepConnectionAlive,
-				InlineParameters    = InlineParameters
-			};
-
-			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
-			{
-				var options = _dataConnection.TransactionAsync != null
-					? Options.WithOptions<ConnectionOptions>(o => o with { DbTransaction = _dataConnection.TransactionAsync.Transaction  })
-					: Options.WithOptions<ConnectionOptions>(o => o with { DbConnection  = _dataConnection.EnsureConnection().Connection });
-
-				dc._dataConnection = CloneDataConnection(_dataConnection, options);
-			}
-
-			dc.QueryHints.    AddRange(QueryHints);
-			dc.NextQueryHints.AddRange(NextQueryHints);
-
-			return dc;
-		}
-
 		void IDisposable.Dispose()
 		{
 			Dispose(disposing: true);

@@ -99,11 +99,5 @@ namespace LinqToDB
 				}
 			}
 		}
-
-		internal static T? CloneAggregated<T>(this T? interceptor)
-			where T : IInterceptor
-		{
-			return interceptor is AggregatedInterceptor<T> ai ? (T?)(object?)ai.Clone() : interceptor;
-		}
 	}
 }

@@ -7,11 +7,6 @@ namespace LinqToDB.Interceptors
 {
 	sealed class AggregatedConnectionInterceptor : AggregatedInterceptor<IConnectionInterceptor>, IConnectionInterceptor
 	{
-		protected override AggregatedInterceptor<IConnectionInterceptor> Create()
-		{
-			return new AggregatedConnectionInterceptor();
-		}
-
 		public void ConnectionOpening(ConnectionEventData eventData, DbConnection connection)
 		{
 			Apply(() =>

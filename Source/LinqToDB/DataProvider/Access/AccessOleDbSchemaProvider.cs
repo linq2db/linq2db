@@ -24,12 +24,20 @@ namespace LinqToDB.DataProvider.Access
 		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
 		// we create separate connection for GetSchema calls to workaround provider bug
 		// logic not applied if active transaction present - user must remove transaction if he has issues
+		// also it could fail to work when context uses external connection instance
 		private static TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
 		{
 			if (dataConnection.Transaction != null)
 				return action(dataConnection);
-			else using (var newConnection = (DataConnection)dataConnection.Clone())
-					return action(newConnection);
+
+			using var newConnection = new DataConnection(dataConnection.Options);
+
+			// user configured external connection: use it
+			// there is no big value in support for such edge case
+			if (newConnection.Connection == dataConnection.Connection)
+				return action(dataConnection);
+
+			return action(newConnection);
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
