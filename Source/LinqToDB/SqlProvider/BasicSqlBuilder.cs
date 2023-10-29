@@ -2012,7 +2012,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected void BuildQueryExtensions(
-            NullabilityContext      nullability, 
+			NullabilityContext      nullability, 
 			StringBuilder           sb,
 			List<SqlQueryExtension> sqlQueryExtensions,
 			string?                 prefix,
@@ -2115,7 +2115,7 @@ namespace LinqToDB.SqlProvider
 			switch (join.JoinType)
 			{
 				case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
-					                      StringBuilder.Append("CROSS JOIN ");  return false;
+										  StringBuilder.Append("CROSS JOIN ");  return false;
 				case JoinType.Inner     : StringBuilder.Append("INNER JOIN ");  return true;
 				case JoinType.Left      : StringBuilder.Append("LEFT JOIN ");   return true;
 				case JoinType.CrossApply: StringBuilder.Append("CROSS APPLY "); return false;
@@ -2736,7 +2736,7 @@ namespace LinqToDB.SqlProvider
 					if (++count > SqlProviderFlags.MaxInListValuesCount)
 					{
 						count       =  1;
-					 	multipleParts = true;
+						multipleParts = true;
 
 						// start building next bucket
 						firstValue = true;
@@ -2794,9 +2794,9 @@ namespace LinqToDB.SqlProvider
 					else if (p.WithNull == true && p.Expr1.ShouldCheckForNull(nullability))
 					{
 						StringBuilder.Append(" OR ");
-	 					BuildPredicate(nullability, new SqlPredicate.IsNull(p.Expr1, false));
-		 				multipleParts = true;
-			 		}
+						BuildPredicate(nullability, new SqlPredicate.IsNull(p.Expr1, false));
+						multipleParts = true;
+					}
 				}
 
 				if (multipleParts)
@@ -2841,7 +2841,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual bool BuildFieldTableAlias(SqlField field) => true;
 
 		protected virtual StringBuilder BuildExpression(
-			NullabilityContext nullability, 
+			NullabilityContext nullability,
 			ISqlExpression     expr,
 			bool               buildTableName,
 			bool               checkParentheses,

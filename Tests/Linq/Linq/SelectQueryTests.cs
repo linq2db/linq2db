@@ -172,7 +172,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(4284)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4284")]
 		public void Select_GroupBy_SelectAgain([DataSources(TestProvName.AllSqlServer2017)] string context)
 		{

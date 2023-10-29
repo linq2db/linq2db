@@ -21,7 +21,7 @@ namespace LinqToDB.SqlQuery
 			return null != testedRoot.Find(element, static (element, e) => e == element);
 		}
 
-        sealed class IsDependsOnSourcesContext
+		sealed class IsDependsOnSourcesContext
 		{
 			public IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore)
 			{
@@ -35,10 +35,10 @@ namespace LinqToDB.SqlQuery
 			public          bool                     DependencyFound;
 		}
 
-        public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
-        {
-	        return IsDependsOnSources(testedRoot, new [] { onSource }, elementsToIgnore);
-        }
+		public static bool IsDependsOnSource(IQueryElement testedRoot, ISqlTableSource onSource, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
+		{
+			return IsDependsOnSources(testedRoot, new [] { onSource }, elementsToIgnore);
+		}
 
 		public static bool IsDependsOnSources(IQueryElement testedRoot, IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore = null)
 		{
@@ -126,7 +126,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-        sealed class IsDependsOnElementContext
+		sealed class IsDependsOnElementContext
 		{
 			public IsDependsOnElementContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -158,7 +158,7 @@ namespace LinqToDB.SqlQuery
 			return ctx.DependencyFound;
 		}
 
-        sealed class DependencyCountContext
+		sealed class DependencyCountContext
 		{
 			public DependencyCountContext(IQueryElement onElement, HashSet<IQueryElement>? elementsToIgnore)
 			{
@@ -262,7 +262,7 @@ namespace LinqToDB.SqlQuery
 					else if (function.Name == "CASE" && function.Parameters.Length == 3)
 					{
 						return GetColumnDescriptor(function.Parameters[1]) ??
-						       GetColumnDescriptor(function.Parameters[2]);
+							   GetColumnDescriptor(function.Parameters[2]);
 					}
 					break;
 				}
@@ -1617,7 +1617,7 @@ namespace LinqToDB.SqlQuery
 			var newCondition = condition.Convert((sql, forTableSources), static (v, e) =>
 			{
 				if (   e is SqlColumn column && column.Parent != null && v.Context.forTableSources.Contains(column.Parent)
-				    || e is SqlField field   && field.Table   != null && v.Context.forTableSources.Contains(field.Table))
+					|| e is SqlField field   && field.Table   != null && v.Context.forTableSources.Contains(field.Table))
 				{
 					e = v.Context.sql.Select.AddColumn((ISqlExpression)e);
 				}
@@ -1683,7 +1683,7 @@ namespace LinqToDB.SqlQuery
 			return null != expression.Find(static e => (e.ElementType == QueryElementType.SqlParameter) && ((SqlParameter)e).IsQueryParameter);
 		}
 
-        sealed class NeedParameterInliningContext
+		sealed class NeedParameterInliningContext
 		{
 			public bool HasParameter;
 			public bool IsQueryParameter;
@@ -1731,9 +1731,9 @@ namespace LinqToDB.SqlQuery
 			var counts = CountElements(expr);
 
 			if (counts.ContainsKey(QueryElementType.SqlQuery) ||
-			    counts.ContainsKey(QueryElementType.LikePredicate) ||
-			    counts.ContainsKey(QueryElementType.SearchStringPredicate) ||
-			    counts.ContainsKey(QueryElementType.SearchCondition)
+				counts.ContainsKey(QueryElementType.LikePredicate) ||
+				counts.ContainsKey(QueryElementType.SearchStringPredicate) ||
+				counts.ContainsKey(QueryElementType.SearchCondition)
 			)
 			{
 				return true;
@@ -1910,8 +1910,8 @@ namespace LinqToDB.SqlQuery
 				if (condition.Predicate is SqlPredicate.ExprExpr exprExpr)
 				{
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
-					     exprExpr.Operator == SqlPredicate.Operator.NotEqual)
-					    && exprExpr.WithNull != null)
+						 exprExpr.Operator == SqlPredicate.Operator.NotEqual)
+						&& exprExpr.WithNull != null)
 					{
 						condition = new SqlCondition(condition.IsNot,
 							new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, exprExpr.Expr2, null),

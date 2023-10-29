@@ -92,12 +92,12 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public static Expression RemapToFields(
-			IBuildContext                                     subQueryContext, 
-			ISqlTableSource?                                  parentTable, 
-			List<SqlField>                                    fields, 
-			Dictionary<Expression, SqlPlaceholderExpression>  knownMap, 
-			Dictionary<Expression, SqlPlaceholderExpression>? recursiveMap, 
-			Expression                                        expression, 
+			IBuildContext                                     subQueryContext,
+			ISqlTableSource?                                  parentTable,
+			List<SqlField>                                    fields,
+			Dictionary<Expression, SqlPlaceholderExpression>  knownMap,
+			Dictionary<Expression, SqlPlaceholderExpression>? recursiveMap,
+			Expression                                        expression,
 			List<SqlPlaceholderExpression>                    placeholders)
 		{
 			if (placeholders.Count == 0)
