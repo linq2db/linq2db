@@ -37,7 +37,7 @@ namespace LinqToDB.SqlQuery
 			return expr.TryEvaluateExpression(context, out _);
 		}
 
-		internal static (object? value, bool success) TryEvaluateExpression(this IQueryElement expr, EvaluationContext context)
+		static (object? value, bool success) TryEvaluateExpression(this IQueryElement expr, EvaluationContext context)
 		{
 			if (!context.TryGetValue(expr, out var info))
 			{

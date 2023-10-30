@@ -268,9 +268,6 @@ namespace LinqToDB.SqlQuery
 		{
 			Expression = Expression.Walk(options, context, func)!;
 
-			if (options.ProcessParent)
-				Parent = (SelectQuery)func(context, Parent!);
-
 			return func(context, this);
 		}
 

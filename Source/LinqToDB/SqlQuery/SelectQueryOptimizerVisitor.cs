@@ -1205,6 +1205,15 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.DoNotRemove)
 				return false;
 
+			// // named sub-query cannot be removed
+			if (subQuery.QueryName != null
+				// parent also has name
+				&& (selectQuery.QueryName != null
+				// parent has other tables/sub-queries
+				|| selectQuery.From.Tables.Count > 1
+				|| selectQuery.From.Tables.Any(static t => t.Joins.Count > 0)))
+				return false;
+
 			if (_currentSetOperator?.SelectQuery == selectQuery || selectQuery.HasSetOperators)
 			{
 				// processing parent query as part of Set operation
@@ -1384,7 +1393,9 @@ namespace LinqToDB.SqlQuery
 			// Actual modification starts from this point
 			//
 
+#pragma warning disable CA1508 // Avoid dead conditional code : analyzer bug
 			selectQuery.QueryName ??= subQuery.QueryName;
+#pragma warning restore CA1508 // Avoid dead conditional code
 
 			if (subQuery.HasSetOperators)
 			{
@@ -1488,6 +1499,10 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.From.Tables.Count != 1)
 				return false;
 
+			// named sub-query cannot be removed
+			if (subQuery.QueryName != null)
+				return false;
+
 			if (!subQuery.GroupBy.IsEmpty)
 				return false;
 
@@ -1586,18 +1601,11 @@ namespace LinqToDB.SqlQuery
 
 			do
 			{
-				var isModified     = false;
-				var currentVersion = _version;
+				var isModified = false;
 
 				if (OptimizeSubQueries(element.SelectQuery))
 				{
 					isModified = true;
-				}
-
-				if (currentVersion != _version)
-				{
-					isModified = true;
-					EnsureReferencesCorrected(element.SelectQuery);
 				}
 
 				if (MoveOuterJoinsToSubQuery(element.SelectQuery))
@@ -1675,6 +1683,7 @@ namespace LinqToDB.SqlQuery
 				var tableSource = selectQuery.From.Tables[i];
 				if (MoveSubQueryUp(selectQuery, tableSource))
 				{
+					EnsureReferencesCorrected(selectQuery);
 					replaced = true;
 
 					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0 && !selectQuery.From.Tables.Any(t => t.Joins.Count > 0))

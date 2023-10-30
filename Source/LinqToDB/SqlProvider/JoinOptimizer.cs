@@ -241,7 +241,6 @@ namespace LinqToDB.SqlProvider
 			public readonly int            CurrentSourceId;
 		}
 
-
 		bool IsDependedOnJoin(SqlTableSource table, SqlJoinedTable testedJoin, HashSet<int> testedSources)
 		{
 			var ctx = new IsDependedOnJoinContext(this, table, testedSources, testedJoin.Table.SourceID);
@@ -1192,74 +1191,6 @@ namespace LinqToDB.SqlProvider
 
 				// add mapping to new source
 				ReplaceSource(fromTable, join2, join1.Table);
-
-				return true;
-			}
-
-			return false;
-		}
-
-		// here we can deal with LEFT JOIN and INNER JOIN
-		bool TryToRemoveIndependent(
-			SqlTableSource fromTable, SqlTableSource manySource, SqlJoinedTable join, List<VirtualField[]> uniqueKeys)
-		{
-			if (join.JoinType == JoinType.Inner)
-				return false;
-
-			if (!(join.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
-				return false;
-
-			// do not allow to remove JOIN if table used in statement
-			if (_statement.IsDependedOn(t))
-				return false;
-
-			var found = SearchForFields(manySource, join);
-
-			if (found == null)
-				return false;
-
-			HashSet<VirtualField>  foundFields  = new HashSet<VirtualField>(found.Select(f => f.OneField));
-			HashSet<VirtualField>? uniqueFields = null;
-
-			for (var i = 0; i < uniqueKeys.Count; i++)
-			{
-				var keys = uniqueKeys[i];
-
-				if (keys.All(foundFields.Contains))
-				{
-					uniqueFields ??= new HashSet<VirtualField>();
-					foreach (var key in keys)
-						uniqueFields.Add(key);
-				}
-			}
-
-			if (uniqueFields != null)
-			{
-				if (join.JoinType == JoinType.Inner)
-				{
-					foreach (var item in found)
-						if (uniqueFields.Contains(item.OneField))
-						{
-							// remove from second
-							join.Condition.Conditions.Remove(item.OneCondition);
-							AddEqualFields(item.ManyField, item.OneField, fromTable.SourceID);
-						}
-
-					// move rest conditions to Where
-					if (join.Condition.Conditions.Count > 0)
-					{
-						AddSearchConditions(_selectQuery.Where.SearchCondition, join.Condition.Conditions);
-						join.Condition.Conditions.Clear();
-					}
-
-					// add filer for nullable fileds because after INNER JOIN records with nulls disappear
-					foreach (var item in found)
-						if (item.ManyField.CanBeNullable(_nullablility))
-							AddSearchCondition(_selectQuery.Where.SearchCondition,
-								new SqlCondition(false, new SqlPredicate.IsNull(item.ManyField.Element, true)));
-				}
-
-				RemoveSource(fromTable, join);
 
 				return true;
 			}

@@ -2,20 +2,14 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class WalkOptions
+	// TODO:WAITFIX: ISqlExpressionWalkable will be removed
+	public sealed class WalkOptions
 	{
-		private WalkOptions(bool skipColumnDeclaration, bool processParent)
+		private WalkOptions()
 		{
-			SkipColumnDeclaration = skipColumnDeclaration;
-			ProcessParent         = processParent;
 		}
 
-		public readonly bool SkipColumnDeclaration;
-		public readonly bool ProcessParent;
-
-		public static readonly WalkOptions Default                   = new (false, false);
-		public static readonly WalkOptions WithSkipColumnDeclaration = new (true, false);
-		public static readonly WalkOptions WithProcessParent         = new (false, true);
+		public static readonly WalkOptions Default = new ();
 	}
 
 	public interface ISqlExpressionWalkable

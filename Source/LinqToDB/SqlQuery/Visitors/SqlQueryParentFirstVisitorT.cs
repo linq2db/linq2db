@@ -1,11 +1,11 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery.Visitors
 {
+	using Common;
+
 	public class SqlQueryParentFirstVisitor<TContext> : QueryElementVisitor
 	{
 		Func<TContext, IQueryElement, bool> _action  = default!;

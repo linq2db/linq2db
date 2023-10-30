@@ -2584,11 +2584,10 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlQueryExtension:
 						{
-							var ext = new SqlQueryExtension();
-
-							ext.Configuration = ReadString();
-							ext.Scope         = (Sql.QueryExtensionScope)ReadInt();
-							ext.BuilderType   = ReadType();
+							var configuration = ReadString();
+							var scope         = (Sql.QueryExtensionScope)ReadInt();
+							var builderType   = ReadType();
+							var arguments     = new Dictionary<string,ISqlExpression>();
 
 							var cnt = ReadInt();
 
@@ -2597,10 +2596,16 @@ namespace LinqToDB.Remote
 								var key   = ReadString();
 								var value = Read<ISqlExpression>();
 
-								ext.Arguments.Add(key!, value!);
+								arguments.Add(key!, value!);
 							}
 
-							obj = ext;
+							obj = new SqlQueryExtension()
+							{
+								Configuration = configuration,
+								Scope         = scope,
+								BuilderType   = builderType,
+								Arguments     = arguments
+							};
 							break;
 						}
 

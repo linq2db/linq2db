@@ -6,13 +6,6 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.SqlQuery
 {
-	public enum VisitMode
-	{
-		ReadOnly,
-		Modify,
-		Transform
-	}
-
 	public abstract class QueryElementVisitor
 	{
 		protected QueryElementVisitor(VisitMode visitMode)
@@ -3049,7 +3042,8 @@ namespace LinqToDB.SqlQuery
 				{
 					var current = extension.Arguments;
 					Dictionary<string, ISqlExpression>? modified = null;
-					foreach(var pair in current)
+
+					foreach (var pair in current)
 					{
 						var newValue = Visit(pair.Value);
 						if (!ReferenceEquals(newValue, pair.Value))
@@ -3060,7 +3054,7 @@ namespace LinqToDB.SqlQuery
 
 					if (modified != null)
 					{
-						current = current.ToDictionary(p => p.Key, p => p.Value);
+						current = current!.ToDictionary(p => p.Key, p => p.Value);
 						foreach(var m in modified)
 						{
 							current[m.Key] = m.Value;
@@ -3069,12 +3063,12 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(extension) || modified != null)
 					{
-						var newExtension = new SqlQueryExtension
+						var newExtension = new SqlQueryExtension()
 						{
-							Arguments = current,
-							BuilderType = extension.BuilderType,
+							Arguments     = current,
+							BuilderType   = extension.BuilderType,
 							Configuration = extension.Configuration,
-							Scope = extension.Scope
+							Scope         = extension.Scope
 						};
 
 						return NotifyReplaced(newExtension, extension);

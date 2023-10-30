@@ -1,5 +1,8 @@
 ﻿namespace LinqToDB.SqlQuery
 {
+	/// <summary>
+	/// SQL AST node types.
+	/// </summary>
 	public enum QueryElementType
 	{
 		SqlField,
@@ -77,6 +80,10 @@
 		SqlID, //TODO: remove?
 
 		SqlExtension,
+		/// <summary>
+		/// Custom query extensions, e.g. hints, applied to specific query fragment.
+		/// Implemented by <see cref="SqlQuery.SqlQueryExtension"/>.
+		/// </summary>
 		SqlQueryExtension,
 	}
 }

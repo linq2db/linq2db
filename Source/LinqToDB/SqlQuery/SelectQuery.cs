@@ -322,6 +322,9 @@ namespace LinqToDB.SqlQuery
 
 			writer.Append(' ');
 
+			if (QueryName != null)
+				writer.AppendFormat("/* {0} */ ", QueryName);
+
 			writer
 				.AppendElement(Select)
 				.AppendElement(From)

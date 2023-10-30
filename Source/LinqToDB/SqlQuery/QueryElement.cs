@@ -1,16 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+
+	/// <summary>
+	/// Base class for SQL AST nodes. Use only if you need to add debug functionality to AST node.
+	/// </summary>
 	public abstract class QueryElement : IQueryElement
 	{
+		/// <summary>
+		/// By-reference node comparer instance.
+		/// </summary>
 		public static readonly IEqualityComparer<IQueryElement> ReferenceComparer = Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default;
 
 #if DEBUG
-		internal static long IdCounter;
+		private static long IdCounter;
 
 		public virtual string DebugText => this.ToDebugString();
 
