@@ -1,8 +1,8 @@
-﻿using LinqToDB.Expressions;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+﻿	using Expressions;
 	//TODO: probably remove, SqlAdjustTypeExpression is doing what you need
 	[BuildsExpression(ChangeTypeExpression.ChangeTypeType)]
 	sealed class ChangeTypeExpressionBuilder : ISequenceBuilder
