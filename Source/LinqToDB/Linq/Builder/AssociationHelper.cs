@@ -328,14 +328,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (shouldAddDefaultIfEmpty)
 				{
-					var body = definedQueryMethod.Body.Unwrap();
-
-					body = Expression.Call(
-						(typeof(IQueryable<>).IsSameOrParentOf(body.Type)
-							? Methods.Queryable.DefaultIfEmpty
-							: Methods.Enumerable.DefaultIfEmpty).MakeGenericMethod(objectType), body);
-
-					definedQueryMethod = Expression.Lambda(body, definedQueryMethod.Parameters);
 					isOuter = true;
 				}
 				else
