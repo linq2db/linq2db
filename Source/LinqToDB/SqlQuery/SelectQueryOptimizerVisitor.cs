@@ -1944,43 +1944,14 @@ namespace LinqToDB.SqlQuery
 									}
 								}
 
-								//TODO: finish it 
-								var mainQuery = table.Source as SelectQuery;
-								/*
-								if (mainQuery?.Select.HasModifier == true)
-									continue;
-									*/
-
 								// moving whole join to subquery
 
 								table.Joins.RemoveAt(j);
 								tsQuery.Where.ConcatSearchCondition(join.Condition);
 
-								mainQuery = null;
+								// replacing column with subquery
 
-#pragma warning disable CA1508 // TODO:WAITFIX
-								if (mainQuery != null)
-#pragma warning restore CA1508
-								{
-									// moving into FROM query
-
-									var idx       = mainQuery.Select.Add(tsQuery);
-									var newColumn = mainQuery.Select.Columns[idx];
-									newColumn.RawAlias = testedColumn.RawAlias;
-
-									/*NotifyReplaced(testedColumn, newColumn);
-
-									foreach (var c in mainQuery.Select.Columns)
-									{
-										NotifyReplaced(c.Expression, c);
-									}*/
-								}
-								else
-								{
-									// replacing column with subquery
-
-									NotifyReplaced(tsQuery, testedColumn);
-								}
+								NotifyReplaced(tsQuery, testedColumn);
 							}
 						}
 					}
