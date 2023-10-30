@@ -30,17 +30,12 @@ namespace LinqToDB.Linq.Builder
 			if (!builder.CanBeCompiled(expr, info.CreateSubQuery))
 				return false;
 
-			switch (expr.NodeType)
+			return expr.NodeType switch
 			{
-				case ExpressionType.MemberAccess:
-					return ((MemberExpression)expr).Expression is null or { NodeType: ExpressionType.Constant };
-
-				case ExpressionType.Constant:
-					return ((ConstantExpression)expr).Value is IEnumerable;
-
-				default:
-					return false;
-			}
+				ExpressionType.MemberAccess => ((MemberExpression)expr).Expression is null or { NodeType: ExpressionType.Constant },
+				ExpressionType.Constant => ((ConstantExpression)expr).Value is IEnumerable,
+				_ => false,
+			};
 		}
 
 		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
