@@ -1150,31 +1150,33 @@ namespace LinqToDB.Linq.Builder
 						return sqlExpr;
 					}
 
-#pragma warning disable CS8604 // TODO:WAITFIX
-					var newExpr = HandleExtension(context, e, flags);
-#pragma warning restore CS8604
-					expression = newExpr;
+					if (context != null)
+					{
+						var newExpr = HandleExtension(context, e, flags);
+						expression = newExpr;
+					}
 
 					break;
 				}
 
 				case ExpressionType.MemberAccess:
 				{
-#pragma warning disable CS8604 // TODO:WAITFIX
-					var newExpr = HandleExtension(context, expression, flags);
-#pragma warning restore CS8604
-
-					if (!ExpressionEqualityComparer.Instance.Equals(newExpr, expression))
+					if (context != null)
 					{
-						expression = newExpr;
-						break;
+						var handled = HandleExtension(context, expression, flags);
+
+						if (!ExpressionEqualityComparer.Instance.Equals(handled, expression))
+						{
+							expression = handled;
+							break;
+						}
 					}
 
-					var expr = ExposeSingleExpression(expression, false);
+					var exposed = ExposeSingleExpression(expression, false);
 
-					if (!ReferenceEquals(expr, expression))
+					if (!ReferenceEquals(exposed, expression))
 					{
-						newExpr = ConvertToSqlExpr(context, expr, flags : flags, unwrap : unwrap,
+						var newExpr = ConvertToSqlExpr(context, exposed, flags : flags, unwrap : unwrap,
 							columnDescriptor : columnDescriptor, isPureExpression : isPureExpression, alias : alias);
 
 						if (newExpr is SqlPlaceholderExpression placeholder)
@@ -1219,10 +1221,11 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.TypeAs:
 				{
+					if (context == null)
+						break;
+
 					var unary     = (UnaryExpression)expression;
-#pragma warning disable CS8604 // TODO:WAITFIX
 					var testExpr  = MakeIsPredicateExpression(context, Expression.TypeIs(unary.Operand, unary.Type));
-#pragma warning restore CS8604
 					var trueCase  = Expression.Convert(unary.Operand, unary.Type);
 					var falseCase = Expression.Default(unary.Type);
 
@@ -1280,9 +1283,6 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var testValue in switchExpression.Cases[i].TestValues)
 						{
-							if (testValue == null)
-								continue;
-
 							var sc = expr == null ? new() : expr.Or;
 
 							var testValueExpr = ConvertToSqlExpr(context, testValue, flags, unwrap, columnDescriptor, isPureExpression, alias);
@@ -2081,6 +2081,7 @@ namespace LinqToDB.Linq.Builder
 				ExpressionType.LessThanOrEqual    => SqlPredicate.Operator.LessOrEqual,
 				_                                 => throw new InvalidOperationException(),
 			};
+
 			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual))
 			{
 				var p = ConvertEnumConversion(context!, left, op, right);
@@ -2088,12 +2089,7 @@ namespace LinqToDB.Linq.Builder
 					return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, p)), GetOriginalExpression());
 			}
 
-			if (l == null || r == null && flags.IsTest())
-				return GetOriginalExpression();
-
-#pragma warning disable CA1508 // TODO:WAITFIX
-			l ??= ConvertToSql(context, left, flags, unwrap: false, columnDescriptor: columnDescriptor);
-#pragma warning restore CA1508
+			l ??= ConvertToSql(context, left, flags,  unwrap: false, columnDescriptor: columnDescriptor);
 			r ??= ConvertToSql(context, right, flags, unwrap: true,  columnDescriptor: columnDescriptor);
 
 			var lOriginal = l;
@@ -2700,25 +2696,21 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression? expr = null;
 
-#pragma warning disable CA1508 // TODO:WAITFIX
-			if (expr == null)
-#pragma warning restore CA1508
+			var builtExpr = BuildSqlExpression(context, arg, ProjectFlags.SQL | ProjectFlags.Keys, null);
+
+			if (builtExpr is SqlPlaceholderExpression placeholder)
 			{
-				var builtExpr = BuildSqlExpression(context, arg, ProjectFlags.SQL | ProjectFlags.Keys, null);
+				expr = placeholder.Sql;
+			}
+			else if (builtExpr is SqlGenericConstructorExpression constructor)
+			{
+				var objParam = Expression.Parameter(typeof(object));
 
-				if (builtExpr is SqlPlaceholderExpression p)
-				{
-					expr = p.Sql;
-				}
-				else if (builtExpr is SqlGenericConstructorExpression constructor)
-				{
-					var objParam = Expression.Parameter(typeof(object));
+				var getters = new List<SqlGetValue>();
+				BuildObjectGetters(constructor, objParam, Expression.Convert(objParam, constructor.ObjectType),
+					getters);
 
-					var getters = new List<SqlGetValue>();
-					BuildObjectGetters(constructor, objParam, Expression.Convert(objParam, constructor.ObjectType), getters);
-
-					expr = new SqlObjectExpression(MappingSchema, getters.ToArray());
-				}
+				expr = new SqlObjectExpression(MappingSchema, getters.ToArray());
 			}
 
 			if (expr == null)

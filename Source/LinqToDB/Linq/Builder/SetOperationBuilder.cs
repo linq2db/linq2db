@@ -476,16 +476,14 @@ namespace LinqToDB.Linq.Builder
 					pathMapping.Add(path, (column1, column2));
 				}
 
-#pragma warning disable CA1508 // TODO:WAITFIX
-				if (_setOperation != SetOperation.Except || _setOperation != SetOperation.ExceptAll)
-#pragma warning restore CA1508
+				if (_setOperation != SetOperation.Except && _setOperation != SetOperation.ExceptAll)
 				{
 					foreach (var (placeholder, path) in placeholders2)
 					{
 						if (pathMapping.ContainsKey(path))
 							continue;
 
-						var placeholder2 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence2, placeholder);
+						var placeholder2 = Builder.UpdateNesting(_sequence2, placeholder);
 						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
 
 						var placeholderPath = new SqlPathExpression(path, placeholder2.Type);

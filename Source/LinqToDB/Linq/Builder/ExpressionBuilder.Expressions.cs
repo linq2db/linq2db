@@ -127,9 +127,7 @@ namespace LinqToDB.Linq.Builder
 			BuildFlags        _buildFlags;
 			bool              _forceSql;
 			bool              _disableParseNew;
-#pragma warning disable CS0649 // TODO:WAITFIX
 			string?           _alias;
-#pragma warning restore CS0649
 			ColumnDescriptor? _columnDescriptor;
 			bool              _disableClosureHandling;
 			
@@ -274,23 +272,28 @@ namespace LinqToDB.Linq.Builder
 
 			protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
 			{
-				var save = _columnDescriptor;
+				var saveDescriptor = _columnDescriptor;
+				var saveAlias      = _alias;
 
 				if (node.Member.DeclaringType != null)
 				{
 					_columnDescriptor = MappingSchema.GetEntityDescriptor(node.Member.DeclaringType).FindColumnDescriptor(node.Member);
 				}
 
+				_alias = node.Member.Name;
+
 				var newNode = base.VisitMemberAssignment(node);
 
-				_columnDescriptor = save;
+				_alias            = saveAlias;
+				_columnDescriptor = saveDescriptor;
 
 				return newNode;
 			}
 
 			internal override SqlGenericConstructorExpression.Assignment VisitSqlGenericAssignment(SqlGenericConstructorExpression.Assignment assignment)
 			{
-				var save = _columnDescriptor;
+				var saveDescriptor = _columnDescriptor;
+				var saveAlias      = _alias;
 
 				if (assignment.MemberInfo.DeclaringType != null)
 				{
@@ -299,9 +302,12 @@ namespace LinqToDB.Linq.Builder
 
 				using var _ = NeedForce((_buildFlags & BuildFlags.ForceAssignments) != 0);
 
+				_alias = assignment.MemberInfo.Name;
+
 				var newNode = base.VisitSqlGenericAssignment(assignment);
 
-				_columnDescriptor = save;
+				_alias            = saveAlias;
+				_columnDescriptor = saveDescriptor;
 
 				return newNode;
 
@@ -309,16 +315,20 @@ namespace LinqToDB.Linq.Builder
 
 			internal override SqlGenericConstructorExpression.Parameter VisitSqlGenericParameter(SqlGenericConstructorExpression.Parameter parameter)
 			{
-				var save = _columnDescriptor;
+				var saveDescriptor = _columnDescriptor;
+				var saveAlias      = _alias;
 
 				if (parameter.MemberInfo?.DeclaringType != null)
 				{
 					_columnDescriptor = MappingSchema.GetEntityDescriptor(parameter.MemberInfo.DeclaringType).FindColumnDescriptor(parameter.MemberInfo);
 				}
 
+				_alias = parameter.MemberInfo?.Name ?? parameter.ParameterInfo.Name;
+
 				var newNode = base.VisitSqlGenericParameter(parameter);
 
-				_columnDescriptor = save;
+				_alias            = saveAlias;
+				_columnDescriptor = saveDescriptor;
 
 				return newNode;
 

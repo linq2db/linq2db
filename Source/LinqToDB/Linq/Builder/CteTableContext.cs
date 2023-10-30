@@ -114,19 +114,7 @@ namespace LinqToDB.Linq.Builder
 					if (field == null)
 						throw new InvalidOperationException();
 
-#pragma warning disable CA1508 // TODO:WAITFIX
-					var newField = field != null
-						? new SqlField(field)
-						: null;
-
-					if (newField == null)
-#pragma warning restore CA1508
-					{
-						newField = new SqlField(QueryHelper.GetDbDataType(placeholder.Sql), "field",
-							placeholder.Sql.CanBeNullable(NullabilityContext.NonQuery));
-
-						Utils.MakeUniqueNames(new []{newField}, staticNames: CteTable.Fields.Select(f => f.Name), f => f.Name, (f, n, _) => f.Name = n);
-					}
+					var newField = new SqlField(field);
 
 					CteTable.Add(newField);
 

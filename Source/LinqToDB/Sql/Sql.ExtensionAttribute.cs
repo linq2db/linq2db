@@ -905,7 +905,7 @@ namespace LinqToDB
 							{
 								if (p.Expression != null)
 								{
-									paramValue = string.Format("{{{0}}}", newParams.Count);
+									paramValue = $"{{{newParams.Count}}}";
 									newParams.Add(p.Expression);
 								}
 							}
@@ -927,12 +927,12 @@ namespace LinqToDB
 					return result;
 				};
 
-#pragma warning disable CA1508 // TODO:WAITFIX
-					if (valueProviderError != null)
-#pragma warning restore CA1508
-						return valueProviderError;
-
 				var expr = ResolveExpressionValues(null, root.Expr, valueProvider, out var error);
+
+#pragma warning disable CA1508
+				if (valueProviderError != null)
+					return valueProviderError;
+#pragma warning restore CA1508
 
 				if (error != null)
 					return error;

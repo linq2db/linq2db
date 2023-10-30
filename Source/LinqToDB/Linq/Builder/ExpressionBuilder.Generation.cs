@@ -578,39 +578,21 @@ namespace LinqToDB.Linq.Builder
 						var currentRef = SequenceHelper.EnsureType(rootReference, onType);
 						var member     = currentRef.Type.GetMemberEx(discriminatorMemberInfo);
 						member = discriminatorMemberInfo;
-						if (false)
+
+						var memberAccess = GetMemberExpression(constructorExpression, member);
+
+						if (inheritance.Code == null)
 						{
-							//TODO: strange behaviour, Member of inheritance has no Discriminator column
-#pragma warning disable CS0162 // TODO:WAITFIX
-
-							var dynamicPropCall = Expression.Call(Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(discriminatorMemberInfo.GetMemberType()),
-								currentRef, Expression.Constant(discriminatorMemberInfo.Name));
-
-							var dynamicSql = ConvertToSqlPlaceholder(context, dynamicPropCall, columnDescriptor: inheritance.Discriminator);
-
-							test = new SqlReaderIsNullExpression(dynamicSql, false);
-#pragma warning restore CS0162
-
-							// throw new InvalidOperationException(
-							// 	$"Type '{contextRef.Type.Name}' has no member '{inheritance.Discriminator.MemberInfo.Name}'");
+							var discriminatorSql = ConvertToSqlPlaceholder(context, memberAccess,
+								columnDescriptor : inheritance.Discriminator);
+							test = new SqlReaderIsNullExpression(discriminatorSql, false);
 						}
 						else
 						{
-							//var memberAccess = Expression.MakeMemberAccess(currentRef, member);
-							var memberAccess = GetMemberExpression(constructorExpression, member);
-
-							if (inheritance.Code == null)
-							{
-								var discriminatorSql = ConvertToSqlPlaceholder(context, memberAccess, columnDescriptor: inheritance.Discriminator);
-								test = new SqlReaderIsNullExpression(discriminatorSql, false);
-							}
-							else
-							{
-								test = Equal(
-									MappingSchema,
-									memberAccess,
-									Expression.Constant(inheritance.Code));
-							}
+							test = Equal(
+								MappingSchema,
+								memberAccess,
+								Expression.Constant(inheritance.Code));
 						}
 
 						var fullEntity = TryConstructFullEntity(context, constructorExpression, inheritance.Type, flags, false);

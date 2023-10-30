@@ -636,7 +636,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 			{
 				case ExpressionType.ArrayLength:
 				{
-					//TODO: WTF?
 					// TODO:WAITFIX
 					throw new NotImplementedException();
 					//var ll = Expressions.ConvertMember(MappingSchema, node.Operand?.Type, node.Operand!.Type.GetProperty(nameof(Array.Length))!);
