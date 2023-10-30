@@ -214,6 +214,11 @@ namespace LinqToDB.Linq.Builder
 			if (dataType.Type.DataType != DataType.Undefined)
 				return true;
 
+			var notNullable = testedType.ToNullableUnderlying();
+
+			if (notNullable != testedType)
+				return HasDbMapping(mappingSchema, notNullable, out convertExpr);
+
 			if (!testedType.IsEnum)
 				return false;
 

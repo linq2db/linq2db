@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 
 			// process eager loading queries
 			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
-			if (!ExpressionEqualityComparer.Instance.Equals((correctedEager, postProcessed)))
+			if (!ExpressionEqualityComparer.Instance.Equals(correctedEager, postProcessed))
 			{
 				// convert all missed references
 				postProcessed = FinalizeConstructors(context, correctedEager, false);
@@ -144,9 +144,10 @@ namespace LinqToDB.Linq.Builder
 			return parentInfo.TryGetValue(currentQuery, out parentQuery);
 		}
 
-		public Expression UpdateNesting(IBuildContext upToContext, Expression expression)
+		public TExpression UpdateNesting<TExpression>(IBuildContext upToContext, TExpression expression)
+			where TExpression : Expression
 		{
-			return UpdateNesting(upToContext.SelectQuery, expression);
+			return (TExpression)UpdateNesting(upToContext.SelectQuery, expression);
 		}
 
 		public class ParentInfo
@@ -404,6 +405,9 @@ namespace LinqToDB.Linq.Builder
 				for (var index = 0; index < variables.Count; index++)
 				{
 					var (variable, assignment) = variables[index];
+
+					assignment = FinalizeConstructorInternal(context, assignment, null);
+
 					expressionGenerator.AddVariable(variable);
 					expressionGenerator.Assign(variable, assignment);
 				}

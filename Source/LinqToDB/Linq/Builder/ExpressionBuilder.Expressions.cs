@@ -361,7 +361,11 @@ namespace LinqToDB.Linq.Builder
 			protected override Expression VisitUnary(UnaryExpression node)
 			{
 				if (IsForcedToConvert(node))
-					return TranslateExpression(node);
+				{
+					var translated = TranslateExpression(node);
+					if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
+						return Visit(translated);
+				}
 
 				if (node.NodeType == ExpressionType.Convert)
 				{
@@ -373,7 +377,9 @@ namespace LinqToDB.Linq.Builder
 							return Visit(newNode);
 					}
 
-					return TranslateExpression(node);
+					var translated = TranslateExpression(node);
+					if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
+						return Visit(translated);
 				}
 				else if (node.NodeType == ExpressionType.Not)
 				{

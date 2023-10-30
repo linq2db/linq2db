@@ -2394,7 +2394,8 @@ namespace LinqToDB.Linq.Builder
 				// byte, sbyte and ushort comparison operands upcasted to int
 				else if (op2.NodeType == ExpressionType.Convert
 					&& op2 is UnaryExpression op2conv1
-					&& op1conv.Operand.Type == op2conv1.Operand.Type)
+					&& op1conv.Operand.Type == op2conv1.Operand.Type
+					&& op1conv.Operand.Type != typeof(object))
 				{
 					op1 = op1conv.Operand;
 					op2 = op2conv1.Operand;
@@ -4395,8 +4396,11 @@ namespace LinqToDB.Linq.Builder
 			{
 #if DEBUG
 				DebugCacheHit(currentContext, path, expression, flags);
-#endif
+				if (!ExpressionEqualityComparer.Instance.Equals(path, expression))
+					return expression;
+#else
 				return expression;
+#endif
 			}
 
 			var doNotProcess = false;
