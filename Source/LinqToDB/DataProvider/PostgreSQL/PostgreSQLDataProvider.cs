@@ -146,9 +146,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			mapType("datemultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.DateMultirange);
 
 
-			if (Adapter.NpgsqlTimeSpanType != null) SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod! , dataReaderType: Adapter.DataReaderType);
-			if (Adapter.NpgsqlDateTimeType != null) SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod!, dataReaderType: Adapter.DataReaderType);
-			if (Adapter.NpgsqlDateType     != null) SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , Adapter.GetDateReaderMethod!     , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlTimeSpanType != null) SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod!    , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlDateTimeType != null) SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod!   , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlDateType     != null) SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , Adapter.GetDateReaderMethod!        , dataReaderType: Adapter.DataReaderType);
+			if (Adapter.NpgsqlCidrType     != null) SetProviderField(Adapter.NpgsqlCidrType    , Adapter.NpgsqlCidrType    , GetProviderSpecificValueReaderMethod, dataReaderType: Adapter.DataReaderType);
 
 			if (Adapter.NpgsqlIntervalType != null)
 				ReaderExpressions[new ReaderInfo { ToType = Adapter.NpgsqlIntervalType }] = Adapter.NpgsqlIntervalReader!;

@@ -47,7 +47,6 @@
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="7.0.0.200"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="7.0.0.200"     />
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="2.2.9"         />
-		<PackageVersion Include="Npgsql"                                                Version="7.0.6"         />
 		<PackageVersion Include="ClickHouse.Client"                                     Version="6.7.5"         />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="7.0.11"        />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.1000.6"    />
@@ -120,6 +119,14 @@
 		<PackageVersion Include="System.Data.Odbc"                                      Version="7.0.0"         />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="7.0.0"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="7.0.0"         />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
+		<PackageVersion Include="Npgsql"                                                Version="8.0.0-rc.2"    />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net7.0' ">
+		<PackageVersion Include="Npgsql"                                                Version="7.0.6"         />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">
