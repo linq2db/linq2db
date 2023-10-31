@@ -30,7 +30,6 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-
 		public IQueryElement OptimizeQueries(IQueryElement root, SqlProviderFlags flags, DataOptions dataOptions,
 			EvaluationContext evaluationContext, IQueryElement rootElement, int level,
 			params IQueryElement[] dependencies)

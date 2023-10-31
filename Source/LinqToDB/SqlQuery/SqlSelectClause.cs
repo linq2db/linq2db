@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSelectClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
+	public class SqlSelectClause : ClauseBase, IQueryElement
 	{
 		#region Init
 
@@ -294,29 +294,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 #endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (var i = 0; i < Columns.Count; i++)
-			{
-				var col = Columns[i];
-				var expr = col.Walk(options, context, func);
-
-				if (expr is SqlColumn column)
-					Columns[i] = column;
-				else
-					Columns[i] = new SqlColumn(col.Parent, expr, col.Alias);
-			}
-
-			TakeValue = TakeValue?.Walk(options, context, func);
-			SkipValue = SkipValue?.Walk(options, context, func);
-
-			return null;
-		}
 
 		#endregion
 

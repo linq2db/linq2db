@@ -15,6 +15,8 @@ namespace LinqToDB.SqlQuery
 	{
 		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
 			new(() => new SelectQueryOptimizerVisitor(), v => v.Cleanup(), 100);
+		internal static ObjectPool<JoinOptimizerVisitor> JoinsOptimizer =
+			new(() => new JoinOptimizerVisitor(), v => v.Cleanup(), 100);
 
 		sealed class IsDependsOnSourcesContext
 		{

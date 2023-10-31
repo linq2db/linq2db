@@ -28,17 +28,5 @@ namespace LinqToDB.SqlQuery
 
 			return writer.AppendElement(SelectQuery);
 		}
-
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			With?.Walk(options, context, func);
-
-			var newQuery = SelectQuery.Walk(options, context, func);
-
-			if (!ReferenceEquals(newQuery, SelectQuery))
-				SelectQuery = (SelectQuery)newQuery;
-
-			return base.Walk(options, context, func);
-		}
 	}
 }

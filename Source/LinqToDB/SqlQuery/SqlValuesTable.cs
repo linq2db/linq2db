@@ -236,25 +236,5 @@ namespace LinqToDB.SqlQuery
 		#region IEquatable
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
 		#endregion
-
-		#region ISqlExpressionWalkable
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			if (Rows != null)
-			{
-				foreach (var row in Rows)
-				{
-					for (var i = 0; i < row.Length; i++)
-					{
-						row[i] = func(context, row[i]);
-					}
-				}
-			}
-
-			return func(context, this);
-		}
-
-		#endregion
 	}
 }

@@ -28,12 +28,6 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Table = ((ISqlExpressionWalkable?)Table)?.Walk(options, context, func) as SqlTable;
-			return base.Walk(options, context, func);
-		}
-
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
 			noAlias = false;

@@ -46,16 +46,6 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Source.Walk(options, context, func);
-
-			foreach (var insert in Inserts)
-				((ISqlExpressionWalkable)insert).Walk(options, context, func);
-
-			return base.Walk(options, context, func);
-		}
-
 		public override bool IsParameterDependent
 		{
 			get => Source.IsParameterDependent;

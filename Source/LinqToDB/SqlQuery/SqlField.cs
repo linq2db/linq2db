@@ -122,15 +122,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ISqlExpressionWalkable Members
-
-		public override ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return func(context, this);
-		}
-
-		#endregion
-
 		#region IEquatable<ISqlExpression> Members
 
 		public override bool Equals(ISqlExpression? other)

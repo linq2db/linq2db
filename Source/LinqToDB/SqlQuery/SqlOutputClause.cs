@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOutputClause : IQueryElement, ISqlExpressionWalkable
+	public class SqlOutputClause : IQueryElement
 	{
 		List<SqlSetExpression>? _outputItems;
 
@@ -39,31 +39,6 @@ namespace LinqToDB.SqlQuery
 			return this.ToDebugString();
 		}
 #endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)
-		{
-			((ISqlExpressionWalkable?)DeletedTable) ?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)InsertedTable)?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)OutputTable)  ?.Walk(options, context, func);
-
-			if (HasOutputItems)
-				foreach (var t in OutputItems)
-					((ISqlExpressionWalkable)t).Walk(options, context, func);
-
-			if (OutputColumns != null)
-			{
-				for (var i = 0; i < OutputColumns.Count; i++)
-				{
-					OutputColumns[i] = OutputColumns[i].Walk(options, context, func) ?? throw new InvalidOperationException();
-				}
-			}
-
-			return null;
-		}
 
 		#endregion
 

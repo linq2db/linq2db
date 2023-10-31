@@ -66,16 +66,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			SqlExpression = SqlExpression.Walk(options, context, func) ?? throw new InvalidOperationException();
-			return func(context, this);
-		}
-
-		#endregion
-
 		#region IEquatable<ISqlExpression> Members
 
 		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;

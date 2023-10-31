@@ -92,14 +92,6 @@ namespace LinqToDB.SqlQuery
 
 		public Type SystemType => typeof(bool);
 
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			foreach (var condition in Conditions)
-				condition.Predicate.Walk(options, context, func);
-
-			return func(context, this);
-		}
-
 		#endregion
 
 		#region IInvertibleElement Members

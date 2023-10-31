@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlUpdateClause : IQueryElement, ISqlExpressionWalkable
+	public class SqlUpdateClause : IQueryElement
 	{
 		public SqlUpdateClause()
 		{
@@ -36,24 +36,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 #endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			if (Table != null)
-				((ISqlExpressionWalkable)Table).Walk(options, context, func);
-
-			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(options, context, func);
-
-			foreach (var t in Keys)
-				((ISqlExpressionWalkable)t).Walk(options, context, func);
-
-			return null;
-		}
 
 		#endregion
 

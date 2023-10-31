@@ -56,18 +56,6 @@ namespace LinqToDB.SqlQuery
 		public bool             IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
 		public bool             IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 
-		#region ISqlExpressionWalkable Members
-
-		public override ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, context, func)!;
-
-			return func(context, this);
-		}
-
-		#endregion
-
 		#region IEquatable<ISqlExpression> Members
 
 		public override bool Equals(ISqlExpression? other)

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlWithClause : IQueryElement, ISqlExpressionWalkable
+	public class SqlWithClause : IQueryElement
 	{
 #if DEBUG
 		public string DebugText => this.ToDebugString();
@@ -112,14 +112,6 @@ namespace LinqToDB.SqlQuery
 				if (c.Body != null)
 					c.Body = func(context, c.Body);
 			}
-		}
-
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (var index = 0; index < Clauses.Count; index++)
-				Clauses[index].Walk(options, context, func);
-
-			return null;
 		}
 	}
 }

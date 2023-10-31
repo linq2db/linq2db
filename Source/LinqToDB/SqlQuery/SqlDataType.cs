@@ -380,15 +380,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return func(context, this);
-		}
-
-		#endregion
-
 		#region IEquatable<ISqlExpression> Members
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)

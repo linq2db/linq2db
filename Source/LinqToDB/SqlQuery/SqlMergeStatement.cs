@@ -75,24 +75,9 @@ namespace LinqToDB.SqlQuery
 					.AppendLine();
 			}
 
-            if (Output?.HasOutput == true)
-                writer.AppendElement(Output);
+			if (Output?.HasOutput == true)
+				writer.AppendElement(Output);
 			return writer;
-		}
-
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Target.Walk(options, context, func);
-			Source.Walk(options, context, func);
-
-			((ISqlExpressionWalkable)On).Walk(options, context, func);
-
-			for (var i = 0; i < Operations.Count; i++)
-				((ISqlExpressionWalkable)Operations[i]).Walk(options, context, func);
-
-			With = With?.Walk(options, context, func) as SqlWithClause;
-
-			return base.Walk(options, context, func);
 		}
 
 		public override bool IsParameterDependent

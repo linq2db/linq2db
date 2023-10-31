@@ -262,17 +262,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ISqlExpressionWalkable Members
-
-		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Expression = Expression.Walk(options, context, func)!;
-
-			return func(context, this);
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 #if DEBUG

@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public sealed class SqlQueryExtension : IQueryElement, ISqlExpressionWalkable
+	public sealed class SqlQueryExtension : IQueryElement
 	{
 		public SqlQueryExtension()
 		{
@@ -26,14 +26,6 @@ namespace LinqToDB.SqlQuery
 		/// Gets optional extension builder type. Must implement <see cref="ISqlQueryExtensionBuilder"/> or <see cref="ISqlTableExtensionBuilder"/> interface.
 		/// </summary>
 		public Type?                              BuilderType        { get; init; }
-
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext,ISqlExpression,ISqlExpression> func)
-		{
-			foreach (var argument in Arguments.ToList())
-				Arguments[argument.Key] = argument.Value.Walk(options, context, func)!;
-
-			return null;
-		}
 
 #if DEBUG
 		public string           DebugText   => this.ToDebugString();

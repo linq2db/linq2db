@@ -63,14 +63,6 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (var i = 0; i < Items.Count; i++)
-				Items[i] = Items[i].Walk(options, context, func)!;
-
-			return func(context, this);
-		}
-
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (this == other)

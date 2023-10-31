@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public interface ISqlExpression : IQueryElement, IEquatable<ISqlExpression>, ISqlExpressionWalkable
+	public interface ISqlExpression : IQueryElement, IEquatable<ISqlExpression>
 	{
 		bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer);
 

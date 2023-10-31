@@ -56,12 +56,5 @@ namespace LinqToDB.SqlQuery
 
 			return writer.Append(')');
 		}
-
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (int i = 0; i < Values.Length; ++i)
-				Values[i] = Values[i].Walk(options, context, func)!;
-			return func(context, this);
-		}
 	}
 }

@@ -7,7 +7,7 @@ using System.Threading;
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
-	public class CteClause : IQueryElement, ISqlExpressionWalkable
+	public class CteClause : IQueryElement
 	{
 #if DEBUG
 		public string DebugText => this.ToDebugString();
@@ -76,13 +76,6 @@ namespace LinqToDB.SqlQuery
 		public QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			return writer.Append($"CTE({CteID}, {Name})");
-		}
-
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Body = Body?.Walk(options, context, func) as SelectQuery;
-
-			return null;
 		}
 
 		public void UpdateIndex(int index, SqlField field)

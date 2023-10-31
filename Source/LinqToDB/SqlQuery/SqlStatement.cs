@@ -10,7 +10,7 @@ namespace LinqToDB.SqlQuery
 	using Remote;
 
 	[DebuggerDisplay("SQL = {" + nameof(DebugSqlText) + "}")]
-	public abstract class SqlStatement : IQueryElement, ISqlExpressionWalkable
+	public abstract class SqlStatement : IQueryElement
 	{
 		public string SqlText => this.ToDebugString(SelectQuery);
 
@@ -63,18 +63,6 @@ namespace LinqToDB.SqlQuery
 
 		public abstract QueryElementType       ElementType { get; }
 		public abstract QueryElementTextWriter ToString(QueryElementTextWriter writer);
-
-		#endregion
-
-		#region IEquatable<ISqlExpression>
-
-		public virtual ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			if (SqlQueryExtensions != null)
-				foreach (var e in SqlQueryExtensions)
-					e.Walk(options, context, func);
-			return null;
-		}
 
 		#endregion
 

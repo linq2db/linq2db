@@ -77,19 +77,5 @@ namespace LinqToDB.SqlQuery
 		public string SqlText => this.ToDebugString();
 
 		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		public override ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			if (Parameters != null)
-				for (var i = 0; i < Parameters.Length; i++)
-					Parameters[i] = Parameters[i].Walk(options, context, func)!;
-
-			return func(context, this);
-		}
-
-		#endregion
-
 	}
 }

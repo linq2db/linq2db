@@ -41,14 +41,6 @@ namespace LinqToDB.SqlQuery
 					&& Expr1.Equals(expr.Expr1, comparer);
 			}
 
-			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-			{
-				Expr1 = Expr1.Walk(options, context, func)!;
-
-				if (Expr1 == null)
-					throw new InvalidOperationException();
-			}
-
 			public override QueryElementType ElementType => QueryElementType.ExprPredicate;
 
 			protected override void ToString(QueryElementTextWriter writer)
@@ -125,12 +117,6 @@ namespace LinqToDB.SqlQuery
 					&& Operator == expr.Operator
 					&& Expr2.Equals(expr.Expr2, comparer)
 					&& base.Equals(other, comparer);
-			}
-
-			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-			{
-				base.Walk(options, context, func);
-				Expr2 = Expr2.Walk(options, context, func)!;
 			}
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
@@ -414,14 +400,6 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-			{
-				base.Walk(options, context, func);
-				Expr2 = Expr2.Walk(options, context, func)!;
-
-				Escape = Escape?.Walk(options, context, func);
-			}
-
 			public override IQueryElement Invert()
 			{
 				return new Like(Expr1, !IsNot, Expr2, Escape);
@@ -478,12 +456,6 @@ namespace LinqToDB.SqlQuery
 					&& Expr2.Equals(expr.Expr2, comparer)
 					&& CaseSensitive.Equals(expr.CaseSensitive, comparer)
 					&& base.Equals(other, comparer);
-			}
-
-			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-			{
-				base.Walk(options, context, func);
-				Expr2 = Expr2.Walk(options, context, func)!;
 			}
 
 			public override IQueryElement Invert()
@@ -543,12 +515,6 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-			{
-				base.Walk(options, context, func);
-				Expr2 = Expr2.Walk(options, context, func)!;
-			}
-
 			public override IQueryElement Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
 
 			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
@@ -582,13 +548,6 @@ namespace LinqToDB.SqlQuery
 					&& Expr2.Equals(expr.Expr2, comparer)
 					&& Expr3.Equals(expr.Expr3, comparer)
 					&& base.Equals(other, comparer);
-			}
-
-			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-			{
-				base.Walk(options, context, func);
-				Expr2 = Expr2.Walk(options, context, func)!;
-				Expr3 = Expr3.Walk(options, context, func)!;
 			}
 
 			public override IQueryElement Invert()
@@ -720,12 +679,6 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-			{
-				base.Walk(options, context, func);
-				SubQuery = (SelectQuery)((ISqlExpression)SubQuery).Walk(options, context, func)!;
-			}
-
 			public override IQueryElement Invert()
 			{
 				return new InSubQuery(Expr1, !IsNot, SubQuery);
@@ -800,13 +753,6 @@ namespace LinqToDB.SqlQuery
 				return true;
 			}
 
-			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-			{
-				base.Walk(options, context, func);
-				for (var i = 0; i < Values.Count; i++)
-					Values[i] = Values[i].Walk(options, context, func)!;
-			}
-
 			public override IQueryElement Invert()
 			{
 				return new InList(Expr1, !WithNull, !IsNot, Values);
@@ -861,11 +807,6 @@ namespace LinqToDB.SqlQuery
 					&& Function.Equals(expr.Function, comparer);
 			}
 
-			protected override void Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-			{
-				Function = (SqlFunction)((ISqlExpression)Function).Walk(options, context, func)!;
-			}
-
 			public override QueryElementType ElementType => QueryElementType.FuncLikePredicate;
 
 			protected override void ToString(QueryElementTextWriter writer)
@@ -897,13 +838,6 @@ namespace LinqToDB.SqlQuery
 		public int  Precedence { get; }
 
 		public abstract bool     Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer);
-		protected abstract void  Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func);
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Walk(options, context, func);
-			return null;
-		}
 
 		#endregion
 

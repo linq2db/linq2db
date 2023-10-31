@@ -26,16 +26,6 @@ namespace LinqToDB.SqlQuery
 
 		public SqlOutputClause? Output { get; set; }
 
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			With?.Walk(options, context, func);
-
-			Table       = ((ISqlExpressionWalkable?)Table)?.Walk(options, context, func) as SqlTable;
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
-
-			return base.Walk(options, context, func);
-		}
-
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer

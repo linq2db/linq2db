@@ -36,17 +36,6 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			With?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)_insert)?.Walk(options, context, func);
-			((ISqlExpressionWalkable?)_update)?.Walk(options, context, func);
-
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
-
-			return base.Walk(options, context, func);
-		}
-
 		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
 			if (Equals(_update?.Table, table))

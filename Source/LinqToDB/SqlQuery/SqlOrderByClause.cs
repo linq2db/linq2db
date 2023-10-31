@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlOrderByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
+	public class SqlOrderByClause : ClauseBase, IQueryElement
 	{
 		internal SqlOrderByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
@@ -54,17 +54,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 #endif
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			foreach (var t in Items)
-				t.Walk(options, context, func);
-			return null;
-		}
-
-		#endregion
 
 		#region IQueryElement Members
 

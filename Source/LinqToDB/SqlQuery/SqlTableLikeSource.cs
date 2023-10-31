@@ -79,15 +79,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ISqlExpressionWalkable
-
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return SourceQuery?.Walk(options, context, func);
-		}
-
-		#endregion
-
 		#region ISqlExpression
 
 		public bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();

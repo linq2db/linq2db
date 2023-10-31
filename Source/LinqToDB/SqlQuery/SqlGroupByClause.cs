@@ -11,9 +11,8 @@ namespace LinqToDB.SqlQuery
 		Cube
 	}
 
-	public class SqlGroupByClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
+	public class SqlGroupByClause : ClauseBase, IQueryElement
 	{
-
 		internal SqlGroupByClause(SelectQuery selectQuery) : base(selectQuery)
 		{
 		}
@@ -78,18 +77,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 #endif
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (var i = 0; i < Items.Count; i++)
-				Items[i] = Items[i].Walk(options, context, func)!;
-
-			return null;
-		}
-
-		#endregion
 
 		#region IQueryElement Members
 

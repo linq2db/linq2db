@@ -66,7 +66,8 @@ namespace LinqToDB.SqlProvider
 
 			if (dataOptions.LinqOptions.OptimizeJoins)
 			{
-				OptimizeJoins(statement);
+				using var joinsVisitor = QueryHelper.JoinsOptimizer.Allocate();
+				joinsVisitor.Value.OptimizeJoins(statement, evaluationContext);
 
 				// Do it again after JOIN Optimization
 				FinalizeCte(statement);
@@ -1443,16 +1444,6 @@ namespace LinqToDB.SqlProvider
 		}
 
 		#endregion
-
-		void OptimizeJoins(SqlStatement statement)
-		{
-			((ISqlExpressionWalkable) statement).Walk(WalkOptions.Default, statement, static (statement, element) =>
-			{
-				if (element is SelectQuery query)
-					new JoinOptimizer().OptimizeJoins(statement, query);
-				return element;
-			});
-		}
 
 		public virtual bool IsParameterDependedQuery(SelectQuery query)
 		{
