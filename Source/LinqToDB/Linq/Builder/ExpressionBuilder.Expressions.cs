@@ -587,7 +587,7 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitNew(NewExpression node)
 			{
-				if (!_disableParseNew)
+				if (!_disableParseNew && _flags.IsSql())
 				{
 					var newNode = ParseGenericConstructor(node);
 					if (!ReferenceEquals(newNode, node))
@@ -599,7 +599,7 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMemberInit(MemberInitExpression node)
 			{
-				if (!Builder.CanBeEvaluated(node))
+				if (_flags.IsSql() && !Builder.CanBeEvaluated(node))
 				{
 					var parsedNode = ParseGenericConstructor(node);
 					if (!ReferenceEquals(parsedNode, node))
@@ -638,6 +638,23 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
+				if (node.Method.Name == nameof(Sql.Alias) && node.Method.DeclaringType == typeof(Sql))
+				{
+					var saveAlias = _alias;
+
+					_alias = node.Arguments[1].EvaluateExpression() as string;
+
+					var aliasedNode = Visit(node.Arguments[0]);
+
+					if (!string.IsNullOrEmpty(_alias) && aliasedNode is SqlPlaceholderExpression placeholder)
+						aliasedNode = placeholder.WithAlias(_alias);
+
+					_alias = saveAlias;
+
+					return aliasedNode;
+				}
+
+
 				var localFlags = _flags;
 				if (IsForcedToConvert(node))
 					localFlags = _flags.SqlFlag();
@@ -677,7 +694,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if ((_buildFlags & BuildFlags.ForceAssignments) != 0)
+				if ((_buildFlags & BuildFlags.ForceAssignments) != 0 && _flags.IsSql())
 				{
 					var parsed = ParseGenericConstructor(node);
 
@@ -692,7 +709,14 @@ namespace LinqToDB.Linq.Builder
 						return translated;
 				}
 
-				return base.VisitMethodCall(node);
+				var saveDescriptor = _columnDescriptor;
+				_columnDescriptor = null;
+
+				newNode = base.VisitMethodCall(node);
+
+				_columnDescriptor = saveDescriptor;
+
+				return newNode;
 			}
 
 			bool HandleParametrized(Expression expr, [NotNullWhen(true)] out Expression? transformed)

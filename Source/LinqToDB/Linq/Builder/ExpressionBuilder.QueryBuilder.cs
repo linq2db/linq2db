@@ -334,13 +334,6 @@ namespace LinqToDB.Linq.Builder
 			return new SqlErrorExpression(context, expression);
 		}
 
-		public Expression BuildFinalProjection(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null)
-		{
-			var result = BuildSqlExpression(context, expression, flags, alias);
-
-			return result;
-		}
-
 		public static bool HasError(Expression expression)
 		{
 			return null != expression.Find(0, (_, e) => e is SqlErrorExpression);
@@ -422,7 +415,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression FinalizeConstructorInternal(IBuildContext context, Expression inputExpression, List<(ParameterExpression variable, Expression assignment)>? variables)
 		{
-			var expression = BuildFinalProjection(context, inputExpression, ProjectFlags.Expression);
+			var expression = BuildSqlExpression(context, inputExpression, ProjectFlags.Expression);
 
 			expression = OptimizationContext.OptimizeExpressionTree(expression, true);
 
@@ -433,12 +426,18 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (e is SqlGenericConstructorExpression generic)
 				{
-					return new TransformInfo(ctx.builder.Construct(ctx.builder.MappingSchema, generic, ctx.context,
-						ProjectFlags.Expression), false, true);
+					var construct = ctx.builder.Construct(ctx.builder.MappingSchema, generic, ctx.context,
+						ProjectFlags.Expression);
+					return new TransformInfo(construct, false, true);
 				}
 
 				return new TransformInfo(e);
 			});
+
+			if (!ReferenceEquals(reconstructed, expression))
+			{
+				reconstructed = FinalizeConstructorInternal(context, reconstructed, variables);
+			}
 
 			return reconstructed;
 		}

@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 				if (!allowNullField)
 					return null;
 
-				notNull = ExpressionBuilder.CreatePlaceholder(forContext,
+				notNull = ExpressionBuilder.CreatePlaceholder(sequence,
 					new SqlNullabilityExpression(new SqlValue(1), true),
 					SequenceHelper.CreateSpecialProperty(sequenceRef, typeof(int?), DefaultIfEmptyContext.NotNullPropName),
 					alias : DefaultIfEmptyContext.NotNullPropName);
@@ -79,6 +79,7 @@ namespace LinqToDB.Linq.Builder
 				
 				// force to generate fields
 				var translated = builder.BuildSqlExpression(defaultValueContext, defaultRef, ProjectFlags.SQL, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+				translated = builder.UpdateNesting(subqueryContext, translated);
 				if (defaultValueContext.SelectQuery.Select.Columns.Count == 0)
 				{
 					//TODO: consider to move to SelectQueryOptimizerVisitor

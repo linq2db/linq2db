@@ -685,9 +685,9 @@ namespace Tests.Mapping
 				TestContext.WriteLine(sql2);
 
 				if (finalAliases)
-					Assert.That(sql2, Does.Contain("[Age]"));
+					Assert.That(sql2, Does.Contain("[AGE]"));
 				else
-					Assert.That(sql2, Does.Not.Contain("[Age]"));
+					Assert.That(sql2, Does.Not.Contain("[AGE]"));
 			}
 		}
 
@@ -719,9 +719,9 @@ namespace Tests.Mapping
 				TestContext.WriteLine(sql2);
 
 				if (finalAliases)
-					Assert.That(sql2, Does.Contain("[Money]"));
+					Assert.That(sql2, Does.Contain("[MONEY]"));
 				else
-					Assert.That(sql2, Does.Not.Contain("[Money]"));
+					Assert.That(sql2, Does.Not.Contain("[MONEY]"));
 			}
 		}
 

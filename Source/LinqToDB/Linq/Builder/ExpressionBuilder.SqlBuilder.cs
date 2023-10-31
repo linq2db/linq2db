@@ -4508,10 +4508,21 @@ namespace LinqToDB.Linq.Builder
 				if (mc.Method.Name == nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
 				{
 					var translated = MakeExpression(currentContext, mc.Arguments[0], flags);
-					if (translated is SqlPlaceholderExpression { Sql: SqlColumn column })
+					if (ReferenceEquals(mc.Arguments[0], translated))
 					{
-						column.RawAlias = mc.Arguments[1].EvaluateExpression() as string;
+						translated = mc;
 					}
+					else if (translated is SqlPlaceholderExpression placeholder)
+					{
+						translated = placeholder.WithAlias(mc.Arguments[1].EvaluateExpression() as string);
+					}
+					else
+					{
+						var args = mc.Arguments.ToArray();
+						args[0]    = translated;
+						translated = mc.Update(mc.Object, args);
+					}
+
 					return translated;
 				}
 				
@@ -4726,11 +4737,13 @@ namespace LinqToDB.Linq.Builder
 
 			var alias = sqlPlaceholder.Alias;
 
-			if (sqlPlaceholder.TrackingPath is MemberExpression tme)
-				alias = tme.Member.Name;
-			else if (sqlPlaceholder.Path is MemberExpression me)
-				alias = me.Member.Name;
-
+			if (string.IsNullOrEmpty(alias))
+			{
+				if (sqlPlaceholder.TrackingPath is MemberExpression tme)
+					alias = tme.Member.Name;
+				else if (sqlPlaceholder.Path is MemberExpression me)
+					alias = me.Member.Name;
+			}
 
 			var sql    = sqlPlaceholder.Sql;
 			var idx    = sqlPlaceholder.SelectQuery.Select.AddNew(sql);
