@@ -1519,6 +1519,15 @@ namespace LinqToDB.Linq.Builder
 				return parameter.SqlParameter;
 			}
 
+			if (CanBeCompiled(expression, false))
+			{
+				var param = _parametersContext.BuildParameter(expression, null);
+				if (param != null)
+				{
+					return new SqlPredicate.Expr(param.SqlParameter);
+				}
+			}
+
 			switch (expression.NodeType)
 			{
 				case ExpressionType.Equal:
