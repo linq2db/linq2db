@@ -1904,6 +1904,32 @@ namespace LinqToDB.Linq.Builder
 					searchCondition.Conditions.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
 				}
 
+				if (usedMembers.Count == 0)
+				{
+					if (leftConstructor.Parameters.Count > 0 && leftConstructor.Parameters.Count == rightConstructor.Parameters.Count)
+					{
+						for (var index = 0; index < leftConstructor.Parameters.Count; index++)
+						{
+							var leftParam  = leftConstructor.Parameters[index];
+							var rightParam = rightConstructor.Parameters[index];
+
+							var predicateExpr = ConvertCompareExpression(context, nodeType, leftParam.Expression, rightParam.Expression, flags);
+							if (predicateExpr is not SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
+							{
+								if (strict)
+									return GetOriginalExpression();
+								continue;
+							}
+
+							searchCondition.Conditions.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
+						}
+
+					}
+					else
+						return GetOriginalExpression();
+				}
+
+
 				return CreatePlaceholder(context, searchCondition, GetOriginalExpression());
 			}
 
@@ -1917,7 +1943,7 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression? l = null;
 			ISqlExpression? r = null;
 
-			var nullability = new NullabilityContext(context.SelectQuery);
+			var nullability = NullabilityContext.GetContext(context.SelectQuery);
 
 			var keysFlag         = (flags & ~ProjectFlags.ForExtension) | ProjectFlags.Keys;
 			var columnDescriptor = SuggestColumnDescriptor(context, left, right, flags);
