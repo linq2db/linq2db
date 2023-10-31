@@ -365,6 +365,9 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
+							if (constructorExpression.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
+								return null;
+
 							parameterValues.Add(Expression.Constant(
 								MappingSchema.GetDefaultValue(parameterInfo.ParameterType),
 								parameterInfo.ParameterType));
