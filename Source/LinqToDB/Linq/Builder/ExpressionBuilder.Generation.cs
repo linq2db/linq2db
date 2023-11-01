@@ -659,11 +659,11 @@ namespace LinqToDB.Linq.Builder
 
 		ConstructorInfo? SelectParameterizedConstructor(Type objectType)
 		{
-			var constructors = objectType.GetConstructors();
+			var constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
 
 			if (constructors.Length == 0)
 			{
-				constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
+				return null;
 			}
 
 			if (constructors.Length > 1)
@@ -671,6 +671,11 @@ namespace LinqToDB.Linq.Builder
 				var noParams = constructors.FirstOrDefault(c => c.GetParameters().Length == 0);
 				if (noParams != null)
 					return noParams;
+
+				var publicConstructors = constructors.Where(c => c.IsPublic).ToList();
+
+				if (publicConstructors.Count == 1)
+					return publicConstructors[0];
 
 				throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
 			}
