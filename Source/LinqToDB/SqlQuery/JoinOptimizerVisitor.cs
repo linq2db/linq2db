@@ -1201,19 +1201,6 @@ namespace LinqToDB.SqlQuery
 			set.Add(Tuple.Create(levelSourceId, field2));
 		}
 
-		public override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
-		{
-			var condition = base.VisitSqlSearchCondition(element);
-
-			if (_correntMappings)
-				return condition;
-
-			if (condition is SqlSearchCondition cond && cond.Conditions.Count > 0)
-				return SelectQueryOptimizerVisitor.OptimizeSearchCondition(cond, _evaluationContext);
-
-			return condition;
-		}
-
 		private sealed class HasDependencyWithParentContext
 		{
 			public HasDependencyWithParentContext(SqlJoinedTable child, HashSet<int> sources)
