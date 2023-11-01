@@ -146,20 +146,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ISqlExpressionWalkable Members
-
-		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Source = (ISqlTableSource)Source.Walk(options, context, func)!;
-
-			foreach (var t in Joins)
-				((ISqlExpressionWalkable)t).Walk(options, context, func);
-
-			return this;
-		}
-
-		#endregion
-
 		#region ISqlTableSource Members
 
 		public int       SourceID => Source.SourceID;

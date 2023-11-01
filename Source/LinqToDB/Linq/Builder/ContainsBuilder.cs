@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 			if (sequence == null)
 				return null;
 
-            sequence = new SubQueryContext(sequence);
+			sequence = new SubQueryContext(sequence);
 
 			return new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence);
 		}
@@ -134,7 +134,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (Builder.DataOptions.LinqOptions.CompareNullsAsValues)
 						{
-							var nullability = NullabilityContext.GetContext(placeholderQuery);
+							var nullability = new NullabilityContext(placeholderQuery);
 							if (testPlaceholders[0].Sql.CanBeNullable(nullability))
 							{
 								useExists = true;

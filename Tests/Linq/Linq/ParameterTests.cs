@@ -317,8 +317,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// sequence evaluation fails in GetChildrenFiltered2
-		[ActiveIssue("Unable to cast object of type 'System.Linq.Expressions.FieldExpression' to type 'System.Linq.Expressions.LambdaExpression'.")]
 		[Test]
 		public void TestQueryableCallWithParametersWorkaround2([DataSources] string context)
 		{

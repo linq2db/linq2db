@@ -1,12 +1,12 @@
 ﻿using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Linq.Builder
 {
-	class NullabilityBuildContext : BuildContextBase
+	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
+
+	sealed class NullabilityBuildContext : BuildContextBase
 	{
 		public override MappingSchema MappingSchema => Context.MappingSchema;
 

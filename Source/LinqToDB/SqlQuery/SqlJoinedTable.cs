@@ -5,7 +5,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Remote;
 
-	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable
+	public class SqlJoinedTable : IQueryElement
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
 		{
@@ -42,23 +42,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 #endif
-
-		#region ISqlExpressionWalkable Members
-
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Condition = (SqlSearchCondition)((ISqlExpressionWalkable)Condition).Walk(options, context, func)!;
-
-			Table.Walk(options, context, func);
-
-			if (SqlQueryExtensions != null)
-				foreach (var e in SqlQueryExtensions)
-					e.Walk(options, context, func);
-
-			return null;
-		}
-
-		#endregion
 
 		#region IQueryElement Members
 

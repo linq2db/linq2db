@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSetExpression : IQueryElement, ISqlExpressionWalkable
+	public class SqlSetExpression : IQueryElement
 	{
 		// These are both nullable refs, but by construction either _column or _row is set.
 
@@ -83,17 +83,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 #endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Column     = Column.Walk(options, context, func)!;
-			Expression = Expression?.Walk(options, context, func);
-			return null;
-		}
 
 		#endregion
 

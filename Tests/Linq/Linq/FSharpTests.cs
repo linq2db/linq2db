@@ -85,7 +85,6 @@ namespace Tests.Linq
 				FSharp.InsertTest.Insert2(db, context.IsAnyOf(TestProvName.AllClickHouse) ? 100 : 0);
 		}
 
-		[ActiveIssue(417)]
 		[Test]
 		public void SelectLeftJoin([DataSources] string context)
 		{

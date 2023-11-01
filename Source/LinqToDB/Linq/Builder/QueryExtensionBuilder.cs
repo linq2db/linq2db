@@ -169,7 +169,7 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new JoinHintContext(context.CloneContext(Context),
-					Extensions.Select(e => new SqlQueryExtension
+					Extensions.Select(e => new SqlQueryExtension()
 					{
 						Configuration = e.Configuration,
 						Arguments     = e.Arguments.ToDictionary(a => a.Key, a => context.CloneElement(a.Value)),

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlWhereClause : ClauseBase<SqlWhereClause,SqlWhereClause.Next>, IQueryElement, ISqlExpressionWalkable
+	public class SqlWhereClause : ClauseBase<SqlWhereClause,SqlWhereClause.Next>, IQueryElement
 	{
 		public class Next : ClauseBase
 		{
@@ -46,16 +46,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 #endif
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			SearchCondition = (SqlSearchCondition)((ISqlExpressionWalkable)SearchCondition).Walk(options, context, func)!;
-			return null;
-		}
-
-		#endregion
 
 		#region IQueryElement Members
 

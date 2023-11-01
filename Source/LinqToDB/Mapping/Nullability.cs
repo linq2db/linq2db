@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
 	static class Nullability
 	{
-		private static Lazy<bool> _isSupported = new(() => 
+		private static Lazy<bool> _isSupported = new(() =>
 		{
 #if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER
 			try
@@ -34,25 +34,25 @@ namespace LinqToDB.Mapping
 			{
 				throw new NotSupportedException(
 					"Nullable metadata is not available. " +
-					"Check that you run on .NET Standard 2.0 or greater, " + 
+					"Check that you run on .NET Standard 2.0 or greater, " +
 					"and that you don't trim nullable metadata during build (see NullabilityInfoContextSupport).");
 			}
 		}
 
 		public static bool TryAnalyzeMember(MemberInfo member, out bool isNullable)
 		{
-#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER			
+#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER
 			// Extract info from C# Nullable Reference Types if available.
 			// Note that this also handles Nullable Value Types.
 			var context = new NullabilityInfoContext();
-			var nullability = member switch 
+			var nullability = member switch
 			{
 				PropertyInfo p => context.Create(p).ReadState,
 				FieldInfo    f => context.Create(f).ReadState,
 				MethodInfo   m => context.Create(m.ReturnParameter).ReadState,
 				_ => NullabilityState.Unknown,
 			};
-			
+
 			isNullable = nullability == NullabilityState.Nullable;
 			return nullability != NullabilityState.Unknown;
 #else

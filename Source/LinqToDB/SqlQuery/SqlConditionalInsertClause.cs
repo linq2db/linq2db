@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlConditionalInsertClause : IQueryElement, ISqlExpressionWalkable
+	public class SqlConditionalInsertClause : IQueryElement
 	{
 		public SqlInsertClause     Insert { get; private set; }
 		public SqlSearchCondition? When   { get; private set; }
@@ -18,19 +18,6 @@ namespace LinqToDB.SqlQuery
 			Insert = insert;
 			When   = when;
 		}
-
-		#region ISqlExpressionWalkable
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			((ISqlExpressionWalkable?)When)?.Walk(options, context, func);
-
-			((ISqlExpressionWalkable)Insert).Walk(options, context, func);
-
-			return null;
-		}
-
-		#endregion
 
 		#region IQueryElement
 

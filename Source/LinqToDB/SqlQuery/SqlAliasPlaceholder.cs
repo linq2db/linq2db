@@ -20,11 +20,6 @@ namespace LinqToDB.SqlQuery
 			return other != null && other.GetType() == GetType();
 		}
 
-		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return this;
-		}
-
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return comparer(this, other);

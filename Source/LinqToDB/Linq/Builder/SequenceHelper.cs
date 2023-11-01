@@ -825,7 +825,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static Expression StampNullability(Expression expression, SelectQuery query)
 		{
-			var nullability = NullabilityContext.GetContext(query);
+			var nullability = new NullabilityContext(query);
 			var translated = expression.Transform(e =>
 			{
 				if (e is SqlPlaceholderExpression placeholder)

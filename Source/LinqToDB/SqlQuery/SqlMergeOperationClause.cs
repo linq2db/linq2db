@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlMergeOperationClause : IQueryElement, ISqlExpressionWalkable
+	public class SqlMergeOperationClause : IQueryElement
 	{
 		public SqlMergeOperationClause(MergeOperationType type)
 		{
@@ -31,23 +31,6 @@ namespace LinqToDB.SqlQuery
 		public SqlSearchCondition?    WhereDelete   { get; internal set; }
 
 		public List<SqlSetExpression> Items         { get; } = new List<SqlSetExpression>();
-
-
-		#region ISqlExpressionWalkable
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			((ISqlExpressionWalkable?)Where)?.Walk(options, context, func);
-
-			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(options, context, func);
-
-			((ISqlExpressionWalkable?)WhereDelete)?.Walk(options, context, func);
-
-			return null;
-		}
-
-		#endregion
 
 		#region IQueryElement
 

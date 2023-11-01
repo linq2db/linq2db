@@ -163,7 +163,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return null;
-        }
+		}
 
 		SqlField BuildField(ColumnDescriptor? column, MemberExpression me)
 		{

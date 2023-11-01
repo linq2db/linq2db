@@ -2,7 +2,7 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public interface ISqlPredicate : IQueryElement, ISqlExpressionWalkable
+	public interface ISqlPredicate : IQueryElement
 	{
 		int  Precedence { get; }
 

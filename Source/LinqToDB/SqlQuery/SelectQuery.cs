@@ -222,31 +222,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ISqlExpressionWalkable Members
-
-		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			((ISqlExpressionWalkable)Select) .Walk(options, context, func);
-			((ISqlExpressionWalkable)From)   .Walk(options, context, func);
-			((ISqlExpressionWalkable)Where)  .Walk(options, context, func);
-			((ISqlExpressionWalkable)GroupBy).Walk(options, context, func);
-			((ISqlExpressionWalkable)Having) .Walk(options, context, func);
-			((ISqlExpressionWalkable)OrderBy).Walk(options, context, func);
-
-			if (HasSetOperators)
-				foreach (var setOperator in SetOperators)
-					((ISqlExpressionWalkable)setOperator.SelectQuery).Walk(options, context, func);
-
-			if (HasUniqueKeys)
-				foreach (var uk in UniqueKeys)
-					foreach (var k in uk)
-						k.Walk(options, context, func);
-
-			return func(context, this);
-		}
-
-		#endregion
-
 		#region IEquatable<ISqlExpression> Members
 
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
@@ -321,6 +296,9 @@ namespace LinqToDB.SqlQuery
 				.Append(')');
 
 			writer.Append(' ');
+
+			if (QueryName != null)
+				writer.AppendFormat("/* {0} */ ", QueryName);
 
 			writer
 				.AppendElement(Select)

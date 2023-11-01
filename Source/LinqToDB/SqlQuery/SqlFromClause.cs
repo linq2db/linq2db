@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlFromClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
+	public class SqlFromClause : ClauseBase, IQueryElement
 	{
 		#region Join
 
@@ -194,18 +194,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 #endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			foreach (var table in Tables)
-				((ISqlExpressionWalkable)table).Walk(options, context, func);
-
-			return null;
-		}
 
 		#endregion
 

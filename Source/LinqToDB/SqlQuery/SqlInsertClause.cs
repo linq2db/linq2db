@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlInsertClause : IQueryElement, ISqlExpressionWalkable
+	public class SqlInsertClause : IQueryElement
 	{
 		public SqlInsertClause()
 		{
@@ -30,20 +30,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 #endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			((ISqlExpressionWalkable?)Into)?.Walk(options, context, func);
-
-			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(options, context, func);
-
-			return null;
-		}
 
 		#endregion
 

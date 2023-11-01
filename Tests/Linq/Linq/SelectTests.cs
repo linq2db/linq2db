@@ -950,7 +950,7 @@ namespace Tests.Linq
 		{
 		}
 
-		[Test, Explicit("Fails")]
+		[Test]
 		public void SelectLocalTest([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1282,7 +1282,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Currently linq2db do not support such queries")]
 		[Test]
 		public void TestComplexMethodFabricProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

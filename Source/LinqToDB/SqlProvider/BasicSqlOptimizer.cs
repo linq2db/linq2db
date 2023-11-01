@@ -22,7 +22,7 @@ namespace LinqToDB.SqlProvider
 			SqlProviderFlags = sqlProviderFlags;
 		}
 
-		public SqlProviderFlags SqlProviderFlags { get; }
+		protected SqlProviderFlags SqlProviderFlags { get; }
 
 		#endregion
 
@@ -40,7 +40,6 @@ namespace LinqToDB.SqlProvider
 
 		public virtual SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
-			FixRootSelect (statement);
 			FixEmptySelect(statement);
 			FinalizeCte   (statement);
 
@@ -67,7 +66,8 @@ namespace LinqToDB.SqlProvider
 
 			if (dataOptions.LinqOptions.OptimizeJoins)
 			{
-				OptimizeJoins(statement);
+				using var joinsVisitor = QueryHelper.JoinsOptimizer.Allocate();
+				joinsVisitor.Value.OptimizeJoins(statement, evaluationContext);
 
 				// Do it again after JOIN Optimization
 				FinalizeCte(statement);
@@ -168,7 +168,7 @@ namespace LinqToDB.SqlProvider
 				   joinedTable.JoinType == JoinType.Right;
 		}
 
-		public static bool IsCompatibleForUpdate(List<IQueryElement> path)
+		static bool IsCompatibleForUpdate(List<IQueryElement> path)
 		{
 			if (path.Count > 2)
 				return false;
@@ -185,7 +185,7 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		public static bool IsCompatibleForUpdate(SelectQuery query, SqlTable updateTable, int level = 0)
+		protected static bool IsCompatibleForUpdate(SelectQuery query, SqlTable updateTable, int level = 0)
 		{
 			if (!IsCompatibleForUpdate(query))
 				return false;
@@ -213,7 +213,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public static ISqlExpression? PopulateNesting(List<SelectQuery> queryPath, ISqlExpression expression, int ignoreCount)
+		static ISqlExpression? PopulateNesting(List<SelectQuery> queryPath, ISqlExpression expression, int ignoreCount)
 		{
 			var current = expression;
 			for (var index = 0; index < queryPath.Count - ignoreCount; index++)
@@ -555,56 +555,6 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
-		static bool FixRootSelect(SqlStatement statement)
-		{
-			if (statement.SelectQuery is {} query         &&
-				query.Select.HasModifier == false         &&
-				query.DoNotRemove        == false         &&
-				query.QueryName is null                   &&
-				query.Where.  IsEmpty                     &&
-				query.GroupBy.IsEmpty                     &&
-				query.Having. IsEmpty                     &&
-				query.OrderBy.IsEmpty                     &&
-				query.From.Tables is { Count : 1 } tables &&
-				tables[0].Source  is SelectQuery   child  &&
-				tables[0].Joins.Count      == 0           &&
-				child.DoNotRemove          == false       &&
-				query.Select.Columns.Count == child.Select.Columns.Count)
-			{
-				for (var i = 0; i < query.Select.Columns.Count; i++)
-				{
-					var pc = query.Select.Columns[i];
-					var cc = child.Select.Columns[i];
-
-					if (pc.Expression != cc)
-						return false;
-				}
-
-				if (statement is SqlSelectStatement)
-				{
-					if (statement.SelectQuery.SqlQueryExtensions != null)
-						(child.SqlQueryExtensions ??= new()).AddRange(statement.SelectQuery.SqlQueryExtensions);
-					statement.SelectQuery = child;
-				}
-				else
-				{
-					var dic = new Dictionary<ISqlExpression,ISqlExpression>(query.Select.Columns.Count + 1)
-					{
-						{ statement.SelectQuery, child }
-					};
-
-					foreach (var pc in query.Select.Columns)
-						dic.Add(pc, pc.Expression);
-
-					statement.Walk(WalkOptions.Default, dic, static (d, ex) => d.TryGetValue(ex, out var e) ? e : ex);
-				}
-
-				return true;
-			}
-
-			return false;
-		}
-
 		//TODO: move tis to standard optimizer
 		protected virtual SqlStatement OptimizeUpdateSubqueries(SqlStatement statement, DataOptions dataOptions)
 		{
@@ -875,7 +825,7 @@ namespace LinqToDB.SqlProvider
 			return deleteStatement;
 		}
 
-		public static bool IsAggregationFunction(IQueryElement expr)
+		static bool IsAggregationFunction(IQueryElement expr)
 		{
 			if (expr is SqlFunction func)
 				return func.IsAggregate;
@@ -939,22 +889,6 @@ namespace LinqToDB.SqlProvider
 			}
 
 			return false;
-		}
-
-		protected static SqlOutputClause? RemapToOriginalTable(SqlOutputClause? outputClause)
-		{
-			//remapping to table back
-			if (outputClause != null)
-			{
-				outputClause = outputClause.Convert((object?)null, (_, e) =>
-				{
-					if (e is SqlAnchor { AnchorKind: SqlAnchor.AnchorKindEnum.Deleted } anchor)
-						return anchor.SqlExpression;
-					return e;
-				}, true);
-			}
-
-			return outputClause;
 		}
 
 		protected static bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
@@ -1310,48 +1244,6 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		static void ReplaceTable(ISqlExpressionWalkable? element, SqlTable replacing, SqlTable withTable)
-		{
-			element?.Walk(WalkOptions.Default, (replacing, withTable), static (ctx, e) =>
-			{
-				if (e is SqlField field && field.Table == ctx.replacing)
-					return ctx.withTable.FindFieldByMemberName(field.Name) ?? throw new LinqException($"Field {field.Name} not found in table {ctx.withTable}");
-
-				return e;
-			});
-		}
-
-		protected SqlTable? FindUpdateTable(SelectQuery selectQuery, SqlTable tableToFind)
-		{
-			foreach (var tableSource in selectQuery.From.Tables)
-			{
-				if (tableSource.Source is SqlTable table && QueryHelper.IsEqualTables(table, tableToFind))
-				{
-					return table;
-				}
-			}
-
-			foreach (var tableSource in selectQuery.From.Tables)
-			{
-				foreach (var join in tableSource.Joins)
-				{
-					if (join.Table.Source is SqlTable table)
-					{
-						if (QueryHelper.IsEqualTables(table, tableToFind))
-							return table;
-					}
-					else if (join.Table.Source is SelectQuery query)
-					{
-						var found = FindUpdateTable(query, tableToFind);
-						if (found != null)
-							return found;
-					}
-				}
-			}
-
-			return null;
-		}
-
 		class DetachUpdateTableVisitor : SqlQueryVisitor
 		{
 			SqlUpdateStatement? _updateStatement;
@@ -1553,20 +1445,6 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		#region Optimizing Joins
-
-		public void OptimizeJoins(SqlStatement statement)
-		{
-			((ISqlExpressionWalkable) statement).Walk(WalkOptions.Default, statement, static (statement, element) =>
-			{
-				if (element is SelectQuery query)
-					new JoinOptimizer().OptimizeJoins(statement, query);
-				return element;
-			});
-		}
-
-		#endregion
-
 		public virtual bool IsParameterDependedQuery(SelectQuery query)
 		{
 			var takeValue = query.Select.TakeValue;
@@ -1740,31 +1618,6 @@ namespace LinqToDB.SqlProvider
 				// ensure that parameters in expressions are well sorted
 				newStatement = NormalizeExpressions(newStatement, context.ParameterValues == null);
 			}
-
-			return newStatement;
-		}
-
-		public SqlStatement OptimizeAggregates(SqlStatement statement)
-		{
-			var newStatement = QueryHelper.JoinRemoval(statement, statement, static (statement, currentStatement, join) =>
-			{
-				if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply)
-				{
-					if (join.Table.Source is SelectQuery query && query.Select.Columns.Count > 0)
-					{
-						var isAggregateQuery =
-							query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
-						if (isAggregateQuery)
-						{
-							// remove unwanted join
-							if (!QueryHelper.IsDependsOnSources(statement, new[] { query }, new[] { join }))
-								return true;
-						}
-					}
-				}
-
-				return false;
-			});
 
 			return newStatement;
 		}
@@ -2016,71 +1869,5 @@ namespace LinqToDB.SqlProvider
 				allowMutation: true,
 				withStack: false);
 		}
-
-		#region Helper functions
-
-		protected static ISqlExpression TryConvertToValue(ISqlExpression expr, EvaluationContext context)
-		{
-			if (expr.ElementType != QueryElementType.SqlValue)
-			{
-				if (expr.TryEvaluateExpression(context, out var value))
-					expr = new SqlValue(expr.GetExpressionType(), value);
-			}
-
-			return expr;
-		}
-
-		protected static bool IsBooleanParameter(ISqlExpression expr, int count, int i)
-		{
-			if ((i % 2 == 1 || i == count - 1) && expr.SystemType == typeof(bool) || expr.SystemType == typeof(bool?))
-			{
-				switch (expr.ElementType)
-				{
-					case QueryElementType.SearchCondition: return true;
-				}
-			}
-
-			return false;
-		}
-
-		protected SqlFunction ConvertFunctionParameters(SqlFunction func, bool withParameters = false)
-		{
-			if (func.Name == "CASE")
-			{
-				ISqlExpression[]? parameters = null;
-				for (var i = 0; i < func.Parameters.Length; i++)
-				{
-					var p = func.Parameters[i];
-					if (IsBooleanParameter(p, func.Parameters.Length, i))
-					{
-						if (parameters == null)
-						{
-							parameters = new ISqlExpression[func.Parameters.Length];
-							for (var j = 0; j < i; j++)
-								parameters[j] = func.Parameters[j];
-						}
-						parameters[i] = new SqlFunction(typeof(bool), "CASE", p, new SqlValue(true), new SqlValue(false))
-						{
-							CanBeNull     = false,
-							DoNotOptimize = true
-						};
-					}
-					else if (parameters != null)
-						parameters[i] = p;
-				}
-
-				if (parameters != null)
-					return new SqlFunction(
-						func.SystemType,
-						func.Name,
-						false,
-						func.Precedence,
-						parameters);
-			}
-
-			return func;
-		}
-
-		#endregion
 	}
 }

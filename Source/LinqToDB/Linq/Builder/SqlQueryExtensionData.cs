@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 
 	[DebuggerDisplay("{ToDebugString()}")]
-	public class SqlQueryExtensionData
+	public sealed class SqlQueryExtensionData
 	{
 		public SqlQueryExtensionData(string name, Expression expr, ParameterInfo parameter, int paramsIndex = -1)
 		{

@@ -72,25 +72,26 @@ namespace LinqToDB
 
 			public virtual SqlQueryExtension GetExtension(List<SqlQueryExtensionData> parameters)
 			{
-				var ext = new SqlQueryExtension
+				var arguments = new Dictionary<string,ISqlExpression>();
+
+				foreach (var item in parameters)
+					arguments.Add(item.Name, item.SqlExpression!);
+
+				if (ExtensionArguments is not null)
+				{
+					arguments.Add(".ExtensionArguments.Count",  new SqlValue(ExtensionArguments.Length));
+
+					for (var i = 0; i < ExtensionArguments.Length; i++)
+						arguments.Add($".ExtensionArguments.{i}", new SqlValue(ExtensionArguments[i]));
+				}
+
+				return new SqlQueryExtension()
 				{
 					Configuration = Configuration,
 					Scope         = Scope,
 					BuilderType   = ExtensionBuilderType,
+					Arguments     = arguments
 				};
-
-				foreach (var item in parameters)
-					ext.Arguments.Add(item.Name, item.SqlExpression!);
-
-				if (ExtensionArguments is not null)
-				{
-					ext.Arguments.Add(".ExtensionArguments.Count",  new SqlValue(ExtensionArguments.Length));
-
-					for (var i = 0; i < ExtensionArguments.Length; i++)
-						ext.Arguments.Add($".ExtensionArguments.{i}", new SqlValue(ExtensionArguments[i]));
-				}
-
-				return ext;
 			}
 
 			public virtual void ExtendTable(SqlTable table, List<SqlQueryExtensionData> parameters)
