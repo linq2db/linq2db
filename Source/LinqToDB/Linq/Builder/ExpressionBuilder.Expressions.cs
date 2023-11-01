@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		static ObjectPool<BuildVisitor> _buildVisitorPool = new(() => new BuildVisitor(), v => v.Cleanup(), 100);
 
-		class BuildVisitor : ExpressionVisitorBase
+		sealed class BuildVisitor : ExpressionVisitorBase
 		{
 			ProjectFlags      _flags;
 			IBuildContext     _context = default!;
@@ -208,7 +208,6 @@ namespace LinqToDB.Linq.Builder
 				return new NeedForceScope(this, needForce);
 			}
 
-
 			public Expression Build(IBuildContext context, Expression expression, ProjectFlags flags, BuildFlags buildFlags)
 			{
 				_flags      = flags;
@@ -220,6 +219,20 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
+			public override void Cleanup()
+			{
+				_flags                  = default;
+				_context                = default!;
+				_buildFlags             = default;
+				_forceSql               = default;
+				_disableParseNew        = default;
+				_alias                  = default;
+				_columnDescriptor       = default;
+				_disableClosureHandling = default;
+
+				base.Cleanup();
+			}
+
 			public override Expression VisitDefaultValueExpression(DefaultValueExpression node)
 			{
 				if (_flags.IsExpression())
@@ -228,7 +241,7 @@ namespace LinqToDB.Linq.Builder
 				return TranslateExpression(node);
 			}
 
-			protected Expression TranslateExpression(Expression expression, string? alias = null, bool useSql = false)
+			Expression TranslateExpression(Expression expression, string? alias = null, bool useSql = false)
 			{
 				var asSql = _flags.IsSql() || _forceSql || useSql;
 
