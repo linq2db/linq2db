@@ -2,12 +2,12 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Builder
 {
 	using Reflection;
 	using SqlQuery;
+	using Common;
+	using Mapping;
 	using LinqToDB.Expressions;
 
 	class GroupJoinBuilder : MethodCallBuilder
@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 
 			var outerKey = SequenceHelper.PrepareBody(outerKeyLambda, outerContext);
 
-			var elementType = ExpressionBuilder.GetEnumerableElementType(resultLambda.Parameters[1].Type);
+			var elementType = TypeHelper.GetEnumerableElementType(resultLambda.Parameters[1].Type);
 			var innerContext = new GroupJoinInnerContext(buildInfo.Parent, outerContext.SelectQuery, builder, 
 				elementType,
 				outerKey,

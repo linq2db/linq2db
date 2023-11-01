@@ -4,10 +4,11 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
+	using Common;
 	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
 
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
@@ -178,8 +179,7 @@ namespace LinqToDB.Linq.Builder
 					sequence = new SubQueryContext(sequence);
 
 				// finalizing context
-				_ = builder.MakeExpression(sequence, new ContextRefExpression(buildInfo.Expression.Type, sequence),
-					ProjectFlags.ExtractProjection);
+				_ = builder.BuildSqlExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence), buildInfo.GetFlags());
 
 				if (aggregationType == AggregationType.Count)
 				{
@@ -316,7 +316,9 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					valueExpression = new ContextRefExpression(sequence.ElementType, sequence);
+					var valueType = TypeHelper.GetEnumerableElementType(methodCall.Method.GetParameters()[0].ParameterType);
+
+					valueExpression = new ContextRefExpression(valueType, sequence);
 				}
 
 				context = new AggregationContext(buildInfo.Parent, placeholderSequence, aggregationType, methodName, returnType);

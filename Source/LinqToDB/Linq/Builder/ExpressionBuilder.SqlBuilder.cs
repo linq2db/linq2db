@@ -1955,7 +1955,7 @@ namespace LinqToDB.Linq.Builder
 			var nullability = NullabilityContext.GetContext(context.SelectQuery);
 
 			var keysFlag         = (flags & ~ProjectFlags.ForExtension) | ProjectFlags.Keys;
-			var columnDescriptor = SuggestColumnDescriptor(context, left, right, flags);
+			var columnDescriptor = SuggestColumnDescriptor(context, left, right, keysFlag);
 			var leftExpr         = ConvertToSqlExpr(context, left,  keysFlag, columnDescriptor : columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, keysFlag, columnDescriptor : columnDescriptor);
 
@@ -1964,7 +1964,7 @@ namespace LinqToDB.Linq.Builder
 				//SQLRow case
 				//
 
-				var elementType = GetEnumerableElementType(rightExpr.Type);
+				var elementType = TypeHelper.GetEnumerableElementType(rightExpr.Type);
 				var singleCall  = Expression.Call(Methods.Enumerable.Single.MakeGenericMethod(elementType), right);
 				rightExpr = ConvertToSqlExpr(context, singleCall, keysFlag, columnDescriptor : columnDescriptor);
 			}

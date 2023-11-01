@@ -1141,10 +1141,9 @@ namespace LinqToDB.SqlQuery
 			{
 				if (null != parentQuery.GroupBy.Find(e => ReferenceEquals(e, column)))
 				{
-					if (columnExpression.ElementType == QueryElementType.SqlValue ||
-					    columnExpression.ElementType == QueryElementType.SqlParameter)
+					if (QueryHelper.IsConstantFast(columnExpression))
 					{
-						if (null != parentQuery.Select.Find(e => ReferenceEquals(e, column)))
+						if (parentQuery.Select.Columns.Count == 0 || null != parentQuery.Select.Find(e => ReferenceEquals(e, column)))
 						{
 							return false;
 						}

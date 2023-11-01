@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -12,6 +11,8 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using Common;
+	using LinqToDB.Expressions;
 
 	partial class ExpressionBuilder
 	{
@@ -286,7 +287,7 @@ namespace LinqToDB.Linq.Builder
 					return expression;
 			}
 
-			var elementType = GetEnumerableElementType(desiredType);
+			var elementType = TypeHelper.GetEnumerableElementType(desiredType);
 
 			var result = (Expression?)null;
 

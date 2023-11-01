@@ -115,42 +115,9 @@ namespace LinqToDB.Linq.Builder
 #pragma warning restore CS0649 // Field is never assigned
 		}
 
-		public static Type GetEnumerableElementType(Type type)
-		{
-			var genericType = typeof(IEnumerable<>).GetGenericType(type);
-			if (genericType == null)
-				throw new InvalidOperationException($"Type '{type.Name}' do not implement IEnumerable");
-
-			return genericType.GetGenericArguments()[0];
-		}
-
-		Expression ExpandLambdas(IBuildContext currentContext, Expression expression)
-		{
-			var result = expression.Transform((builder: this, currentContext), static (ctx, e) =>
-			{
-				if (e.NodeType == ExpressionType.Lambda)
-				{
-					var lambda  = (LambdaExpression)e;
-					if (lambda.Body.Find(1, (_, x) => x is ContextRefExpression) != null)
-					{
-						var newBody = ctx.builder.ExpandContexts(ctx.currentContext, lambda.Body);
-						if (!ExpressionEqualityComparer.Instance.Equals(lambda.Body, newBody))
-						{
-							return new TransformInfo(Expression.Lambda(newBody, lambda.Parameters), false);
-						}
-					}
-				}
-
-				return new TransformInfo(e);
-			});
-
-			return result;
-		}
-
 		Expression ExpandContexts(IBuildContext context, Expression expression)
 		{
-			var projectVisitor = new ProjectionVisitor(context);
-			var projected = projectVisitor.Visit(expression);
+			var projected = ExtractProjection(context, expression);
 
 			var lambdaResolver = new LambdaResolveVisitor(context);
 			projected = lambdaResolver.Visit(projected);
@@ -301,7 +268,7 @@ namespace LinqToDB.Linq.Builder
 			Expression resultExpression;
 
 			var mainType   = clonedParentContext.ElementType;
-			var detailType = GetEnumerableElementType(eagerLoad.Type);
+			var detailType = TypeHelper.GetEnumerableElementType(eagerLoad.Type);
 
 			if (dependencies.Count == 0)
 			{

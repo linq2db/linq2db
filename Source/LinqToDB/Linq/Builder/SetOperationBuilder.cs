@@ -909,8 +909,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var projected = Builder.BuildSqlExpression(context, current, ProjectFlags.Expression, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
 				
-					var projectVisitor = new ProjectionVisitor(context);
-					projected = projectVisitor.Visit(projected);
+					projected = Builder.ExtractProjection(context, projected);
 
 					var lambdaResolver = new LambdaResolveVisitor(context);
 					projected = lambdaResolver.Visit(projected);

@@ -843,6 +843,14 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
+		public Expression ExtractProjection(IBuildContext context, Expression expression)
+		{
+			var projectVisitor = new ProjectionVisitor(context);
+			var projected      = projectVisitor.Visit(expression);
+
+			return projected;
+		}
+
 		bool _handlingAlias;
 
 		Expression CheckForAlias(IBuildContext context, MemberExpression memberExpression, EntityDescriptor entityDescriptor, string alias, ProjectFlags flags)

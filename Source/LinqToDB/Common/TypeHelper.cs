@@ -126,5 +126,13 @@ namespace LinqToDB.Common
 			return callMethodInfo;
 		}
 		
+		public static Type GetEnumerableElementType(Type type)
+		{
+			var genericType = typeof(IEnumerable<>).GetGenericType(type);
+			if (genericType == null)
+				throw new InvalidOperationException($"Type '{type.Name}' do not implement IEnumerable");
+
+			return genericType.GetGenericArguments()[0];
+		}
 	}
 }

@@ -12,7 +12,6 @@ namespace LinqToDB.Linq.Builder
 {
 	using Async;
 	using Common;
-	using Common.Internal;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
@@ -408,11 +407,13 @@ namespace LinqToDB.Linq.Builder
 
 			public ElementContext Element { get; }
 
-			public override Type ElementType => Element.ElementType;
+			public override Type ElementType => _groupingType;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && (flags.IsRoot() || flags.IsTraverse()))
+				var isSameContext = SequenceHelper.IsSameContext(path, this);
+
+				if (isSameContext && (flags.IsRoot() || flags.IsTraverse()))
 				{
 					return path;
 				}
@@ -422,13 +423,13 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Keys) && GetInterfaceGroupingType().IsSameOrParentOf(path.Type))
+				if (isSameContext && flags.HasFlag(ProjectFlags.Keys) && GetInterfaceGroupingType().IsSameOrParentOf(path.Type))
 				{
 					var result = Builder.MakeExpression(this, _keyRef, flags);
 					return result;
 				}
 
-				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression)/* && GetInterfaceGroupingType().IsSameOrParentOf(path.Type)*/)
+				if (isSameContext && flags.HasFlag(ProjectFlags.Expression)/* && GetInterfaceGroupingType().IsSameOrParentOf(path.Type)*/)
 				{
 					if (!_isGroupingGuardDisabled)
 					{
@@ -502,13 +503,18 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (!SequenceHelper.IsSameContext(path, this) || !flags.HasFlag(ProjectFlags.SQL))
+				if (!isSameContext || !flags.HasFlag(ProjectFlags.SQL))
 				{
 					var root = Builder.GetRootContext(this, path, true);
 					if (root != null && typeof(IGrouping<,>).IsSameOrParentOf(root.Type))
 					{
 						return path;
 					}
+				}
+
+				if (isSameContext && flags.IsSql() && !flags.IsKeys() && path.Type != Element.ElementType)
+				{
+					return path;
 				}
 
 				var newPath = SequenceHelper.CorrectExpression(path, this, Element);
@@ -652,7 +658,7 @@ namespace LinqToDB.Linq.Builder
 					public Task DisposeAsync()
 					{
 						_grouped?.Dispose();
-						return TaskCache.CompletedTask;
+						return Common.Internal.TaskCache.CompletedTask;
 					}
 #else
 					public ValueTask DisposeAsync()
