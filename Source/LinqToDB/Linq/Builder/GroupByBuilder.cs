@@ -184,6 +184,12 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
+			if (buildInfo.IsSubQuery)
+			{
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(groupBy))
+					return null;
+			}
+
 			return groupBy;
 		}
 
@@ -538,7 +544,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				var clone = new GroupByContext(context.CloneContext(SubQuery), context.CloneElement(SelectQuery), _sequenceExpr, _groupingType,
+				var clone = new GroupByContext(context.CloneContext(SubQuery), context.CloneElement(SelectQuery), context.CloneExpression(_sequenceExpr), _groupingType,
 					context.CloneContext(_key), context.CloneExpression(_keyRef),
 					CurrentPlaceholders.Select(p => context.CloneExpression(p)).ToList(), context.CloneContext(Element),
 					_isGroupingGuardDisabled, false);

@@ -66,6 +66,12 @@ namespace LinqToDB.Linq.Builder
 			if (collection == null)
 				return null;
 
+			if (buildInfo.IsSubQuery)
+			{
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(collection))
+					return null;
+			}
+
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//
 			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)

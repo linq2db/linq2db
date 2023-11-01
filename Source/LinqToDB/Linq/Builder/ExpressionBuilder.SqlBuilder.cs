@@ -988,6 +988,9 @@ namespace LinqToDB.Linq.Builder
 
 					var operandExpr = ConvertToSqlExpr(context, e.Operand, flags, columnDescriptor: columnDescriptor);
 
+					if (!SequenceHelper.IsSqlReady(operandExpr))
+						return e;
+
 					var placeholders = CollectDistinctPlaceholders(operandExpr);
 
 					if (placeholders.Count == 1)
