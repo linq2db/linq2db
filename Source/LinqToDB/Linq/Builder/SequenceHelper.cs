@@ -799,7 +799,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (e is ContextRefExpression contextRef)
 					{
-						if (contextRef.BuildContext == upTo || contextRef.BuildContext.SelectQuery == upTo.SelectQuery)
+						if (contextRef.BuildContext is ScopeContext && 
+						    (contextRef.BuildContext == upTo || contextRef.BuildContext.SelectQuery == upTo.SelectQuery))
 						{
 							return e;
 						}

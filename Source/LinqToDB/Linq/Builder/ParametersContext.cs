@@ -37,8 +37,8 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder.ParametersParam
 		};
 
-		public readonly   List<ParameterAccessor>           CurrentSqlParameters = new ();
-		readonly Dictionary<Expression,Expression> _expressionAccessors;
+		public readonly List<ParameterAccessor>           CurrentSqlParameters = new();
+		readonly        Dictionary<Expression,Expression> _expressionAccessors;
 
 		#region Build Parameter
 

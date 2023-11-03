@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var genericArguments = methodCall.Method.GetGenericArguments();
 
-			var sequence         = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			if (sequence == null)
 				return null;
 
@@ -38,14 +38,13 @@ namespace LinqToDB.Linq.Builder
 
 			sequence = new SubQueryContext(sequence);
 
-			var scopeContext = new ScopeContext(sequence, sequence);
 			// correcting query for Eager Loading
-			expr = SequenceHelper.MoveAllToScopedContext(expr, scopeContext);
+			expr = SequenceHelper.MoveAllToScopedContext(expr, sequence);
 
-			expr = builder.UpdateNesting(scopeContext, expr);
+			expr = builder.UpdateNesting(sequence, expr);
 
 			// GroupJoin handling
-			expr = builder.MakeExpression(scopeContext, expr, ProjectFlags.ExtractProjection);
+			expr = builder.MakeExpression(sequence, expr, ProjectFlags.ExtractProjection);
 
 
 			var collectionSelectQuery    = new SelectQuery();
@@ -90,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 				resultExpression = SequenceHelper.ReplaceBody(resultSelector.Body, resultSelector.Parameters[0], sequence);
 				if (resultSelector.Parameters.Count > 1)
 				{
-					resultExpression = SequenceHelper.ReplaceBody(resultExpression, resultSelector.Parameters[1], collection);
+					resultExpression = SequenceHelper.ReplaceBody(resultExpression, resultSelector.Parameters[1], new ScopeContext(collection, sequence));
 				}
 			}
 

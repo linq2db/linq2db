@@ -725,6 +725,9 @@ namespace LinqToDB.Linq.Builder
 				var saveDescriptor = _columnDescriptor;
 				_columnDescriptor = null;
 
+				if (Builder.CanBeCompiled(node, true))
+					return node;
+
 				newNode = base.VisitMethodCall(node);
 
 				_columnDescriptor = saveDescriptor;

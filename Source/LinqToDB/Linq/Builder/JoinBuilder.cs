@@ -78,7 +78,7 @@ namespace LinqToDB.Linq.Builder
 			var innerKeySelector = SequenceHelper.PrepareBody(innerKeyLambda, innerKeyContext).Unwrap();
 
 			outerKeySelector = builder.BuildSqlExpression(outerContext, outerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys | ProjectFlags.SQL));
-			innerKeySelector = builder.BuildSqlExpression(innerContext, innerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys | ProjectFlags.SQL));
+			innerKeySelector = builder.BuildSqlExpression(outerContext, innerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys | ProjectFlags.SQL));
 
 			var compareSearchCondition = builder.TryGenerateComparison(outerContext, outerKeySelector, innerKeySelector, buildInfo.GetFlags());
 			if (compareSearchCondition == null)
@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 
 			join.JoinedTable.Condition = compareSearchCondition;
 
-			return new SelectContext(buildInfo.Parent, selector, buildInfo.IsSubQuery, outerContext, innerContext)
+			return new SelectContext(buildInfo.Parent, selector, buildInfo.IsSubQuery, outerContext, new ScopeContext(innerContext, outerContext))
 #if DEBUG
 				{
 					Debug_MethodCall = methodCall

@@ -160,7 +160,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (_notNullPlaceholder == null)
 					{
-						_notNullPlaceholder = PrepareNoNullPlaceholder(Builder, Sequence, this, true)!;
+						_notNullPlaceholder = PrepareNoNullPlaceholder(Builder, Sequence, Parent ?? this, true)!;
 						if (!_notNullPlaceholder.Type.IsNullable())
 							_notNullPlaceholder = _notNullPlaceholder.MakeNullable();
 					}

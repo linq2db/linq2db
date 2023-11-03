@@ -500,12 +500,12 @@ WHERE
 					x.SomeValue.Value
 				});
 
+				TestContext.WriteLine(q.ToString());
+
 				var select = q.GetSelectQuery();
 
 				// Ensure that cross apply inlined in query
 				Assert.AreEqual(2, select.Select.From.Tables[0].Joins.Count);
-
-				TestContext.WriteLine(q.ToString());
 			}
 		}
 

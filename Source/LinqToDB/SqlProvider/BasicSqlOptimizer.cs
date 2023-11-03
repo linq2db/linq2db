@@ -50,6 +50,9 @@ namespace LinqToDB.SqlProvider
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
 			var sqlText = statement.SqlText;
+
+			if (statement.SelectQuery != null)
+				QueryHelper.DebugCheckNesting(statement.SelectQuery, false);
 #endif
 
 			statement = (SqlStatement)visitor.Value.OptimizeQueries(statement, SqlProviderFlags, dataOptions,
@@ -58,6 +61,9 @@ namespace LinqToDB.SqlProvider
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
 			var newSqlText = statement.SqlText;
+
+			if (statement.SelectQuery != null)
+				QueryHelper.DebugCheckNesting(statement.SelectQuery, false);
 #endif
 
 //statement.EnsureFindTables();

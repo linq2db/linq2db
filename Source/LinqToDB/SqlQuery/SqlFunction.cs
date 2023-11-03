@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlFunction : ISqlExpression//ISqlTableSource
+	public class SqlFunction : SqlExpressionBase
 	{
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
 			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
@@ -25,7 +25,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
+		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters) 
 		{
 			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
 
@@ -45,15 +45,15 @@ namespace LinqToDB.SqlQuery
 			Parameters      = parameters;
 		}
 
-		public Type                      SystemType        { get; }
-		public string                    Name              { get; }
-		public int                       Precedence        { get; }
-		public SqlFlags                  FunctionFlags     { get; }
-		public bool                      IsAggregate       => (FunctionFlags & SqlFlags.IsAggregate) != 0;
-		public bool                      IsPure            => (FunctionFlags & SqlFlags.IsPure)      != 0;
-		public ISqlExpression[]          Parameters        { get; }
-		public bool?                     CanBeNullNullable => _canBeNull;
-		public ParametersNullabilityType NullabilityType   { get; }
+		public override Type                      SystemType        { get; }
+		public          string                    Name              { get; }
+		public override int                       Precedence        { get; }
+		public          SqlFlags                  FunctionFlags     { get; }
+		public          bool                      IsAggregate       => (FunctionFlags & SqlFlags.IsAggregate) != 0;
+		public          bool                      IsPure            => (FunctionFlags & SqlFlags.IsPure)      != 0;
+		public          ISqlExpression[]          Parameters        { get; }
+		public          bool?                     CanBeNullNullable => _canBeNull;
+		public          ParametersNullabilityType NullabilityType   { get; }
 
 		public bool DoNotOptimize { get; set; }
 
@@ -77,20 +77,11 @@ namespace LinqToDB.SqlQuery
 
 		#region Overrides
 
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
 		#endregion
 
 		#region IEquatable<ISqlExpression> Members
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
+		public override bool Equals(ISqlExpression? other)
 		{
 			return Equals(other, SqlExpression.DefaultComparer);
 		}
@@ -99,7 +90,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability)
+		public override bool CanBeNullable(NullabilityContext nullability)
 		{
 			return QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
 				Parameters.Select(p => p.CanBeNullable(nullability)));
@@ -137,7 +128,7 @@ namespace LinqToDB.SqlQuery
 			// ReSharper restore NonReadonlyMemberInGetHashCode
 		}
 
-		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -157,13 +148,12 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SqlFunction;
+		public override QueryElementType ElementType => QueryElementType.SqlFunction;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
+			writer.DebugAppendUniqueId(this);
+
 			writer
 				.Append(Name)
 				.Append('(');

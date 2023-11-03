@@ -29,6 +29,9 @@ namespace LinqToDB.Linq.Builder
 			var correctedPath = SequenceHelper.CorrectExpression(path, this, Context);
 			var newExpr       = Builder.MakeExpression(Context, correctedPath, flags);
 
+			if (flags.IsTable())
+				return newExpr;
+
 			if (flags.IsAggregationRoot())
 			{
 				newExpr = SequenceHelper.MoveAllToScopedContext(newExpr, UpTo);

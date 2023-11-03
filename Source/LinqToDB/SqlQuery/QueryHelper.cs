@@ -10,6 +10,7 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using Mapping;
 	using Common.Internal;
+	using Visitors;
 
 	public static partial class QueryHelper
 	{
@@ -1635,5 +1636,15 @@ namespace LinqToDB.SqlQuery
 			return expr;
 		}
 
+		public static bool HasTable(IQueryElement element, int sourceId)
+		{
+			return null != element.Find(e => e is SqlTableSource ts && ts.SourceID == sourceId);
+		}
+
+		public static void DebugCheckNesting(SelectQuery selectQuery, bool isSubQuery)
+		{
+			var checkVisitor = new SqlQueryNestingValidationVisitor(isSubQuery, selectQuery);
+			checkVisitor.Visit(selectQuery);
+		}
 	}
 }

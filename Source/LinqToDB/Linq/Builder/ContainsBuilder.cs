@@ -111,7 +111,9 @@ namespace LinqToDB.Linq.Builder
 				var param = Expression.Parameter(args[0], "param");
 				var expr  = _methodCall.Arguments[1];
 
-				var testExpr = Builder.ConvertToSqlExpr(InnerSequence, expr, flags.SqlFlag() | ProjectFlags.Keys);
+				var placeholderContext = Parent ?? InnerSequence;
+
+				var testExpr = Builder.ConvertToSqlExpr(placeholderContext, expr, flags.SqlFlag() | ProjectFlags.Keys);
 
 				var contextRef   = new ContextRefExpression(args[0], InnerSequence);
 				var sequenceExpr = Builder.ConvertToSqlExpr(InnerSequence, contextRef, flags.SqlFlag());
@@ -154,7 +156,9 @@ namespace LinqToDB.Linq.Builder
 						var columns = Builder.ToColumns(InnerSequence, sequenceExpr);
 					}
 
-					cond = new SqlCondition(false, new SqlPredicate.InSubQuery(testPlaceholders[0].Sql, false, InnerSequence.SelectQuery));
+					var placeholder = Builder.UpdateNesting(placeholderContext, testPlaceholders[0]);
+
+					cond = new SqlCondition(false, new SqlPredicate.InSubQuery(placeholder.Sql, false, InnerSequence.SelectQuery));
 				}
 				else
 				{

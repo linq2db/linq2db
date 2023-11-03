@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	public abstract class SqlPredicate : ISqlPredicate
+	public abstract class SqlPredicate : QueryElement, ISqlPredicate
 	{
 		public enum Operator
 		{
@@ -43,7 +43,7 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.ExprPredicate;
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Expr1);
 			}
@@ -70,10 +70,10 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				if (IsNot) writer.Append("NOT (");
-				base.ToString(writer);
+				base.WritePredicate(writer);
 				if (IsNot) writer.Append(')');
 			}
 		}
@@ -105,8 +105,8 @@ namespace LinqToDB.SqlQuery
 				WithNull = withNull;
 			}
 
-			public new Operator   Operator { get; }
-			public ISqlExpression Expr2    { get; internal set; }
+			public new Operator       Operator { get; }
+			public     ISqlExpression Expr2    { get; internal set; }
 
 			public bool? WithNull          { get; }
 
@@ -121,8 +121,9 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.ExprExprPredicate;
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
+				writer.DebugAppendUniqueId(this);
 				writer.AppendElement(Expr1);
 				var op = Operator switch
 				{
@@ -407,7 +408,7 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.LikePredicate;
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Expr1);
 
@@ -465,7 +466,7 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.SearchStringPredicate;
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Expr1);
 
@@ -519,7 +520,7 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Expr1);
 				writer.Append(IsNot ? " IS NOT DISTINCT FROM " : " IS DISTINCT FROM ");
@@ -557,7 +558,7 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.BetweenPredicate;
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Expr1);
 
@@ -595,7 +596,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Reduce(writer.Nullability));
 			}
@@ -642,7 +643,7 @@ namespace LinqToDB.SqlQuery
 				return new IsNull(Expr1, !IsNot);
 			}
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer
 					.AppendElement(Expr1)
@@ -686,8 +687,9 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.InSubQueryPredicate;
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
+				writer.DebugAppendUniqueId(this);
 				writer.AppendElement(Expr1);
 
 				if (IsNot) writer.Append(" NOT");
@@ -760,7 +762,7 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.InListPredicate;
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Expr1);
 
@@ -809,24 +811,11 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.FuncLikePredicate;
 
-			protected override void ToString(QueryElementTextWriter writer)
+			protected override void WritePredicate(QueryElementTextWriter writer)
 			{
 				writer.AppendElement(Function);
 			}
 		}
-
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		#endregion
 
 		protected SqlPredicate(int precedence)
 		{
@@ -843,19 +832,14 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public abstract QueryElementType ElementType { get; }
+		protected abstract void WritePredicate(QueryElementTextWriter writer);
 
-		protected abstract void ToString(QueryElementTextWriter writer);
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
 
-			ToString(writer);
+			WritePredicate(writer);
 
 			writer.RemoveVisited(this);
 

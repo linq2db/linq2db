@@ -179,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 					sequence = new SubQueryContext(sequence);
 
 				// finalizing context
-				_ = builder.BuildSqlExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence), buildInfo.GetFlags());
+				_ = builder.BuildSqlExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence), buildInfo.GetFlags(ProjectFlags.Keys));
 
 				if (aggregationType == AggregationType.Count)
 				{

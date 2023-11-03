@@ -217,6 +217,8 @@ namespace LinqToDB.Linq.Builder
 						ProjectFlags.SQL | ProjectFlags.Keys,
 						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
 
+					setExpr = builder.UpdateNesting(sequence, setExpr);
+
 					var placeholders = ExpressionBuilder.CollectPlaceholders(setExpr);
 
 					sequence.SelectQuery.GroupBy.Items.Add(new SqlGroupingSet(placeholders.Select(p => p.Sql)));
@@ -243,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					currentPlaceholders.Add(p);
 
-					var updated = (SqlPlaceholderExpression)builder.UpdateNesting(query, p);
+					var updated = builder.UpdateNesting(query, p);
 					query.GroupBy.Expr(updated.Sql);
 				}
 			}
@@ -592,7 +594,11 @@ namespace LinqToDB.Linq.Builder
 					return null;
 
 				var expr = MakeSubQueryExpression(((ContextRefExpression)buildInfo.Expression).WithType(GetInterfaceGroupingType()));
-				expr = SequenceHelper.MoveToScopedContext(expr, this);
+
+				var parentContext = buildInfo.Parent ?? this;
+
+				expr = Builder.UpdateNesting(parentContext, expr);
+				expr = SequenceHelper.MoveAllToScopedContext(expr, parentContext);
 
 				var ctx = Builder.TryBuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false, CreateSubQuery = false});
 

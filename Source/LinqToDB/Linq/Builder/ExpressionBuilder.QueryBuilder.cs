@@ -117,13 +117,6 @@ namespace LinqToDB.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
-			// going to parent
-
-			while (context.Parent != null)
-			{
-				context = context.Parent;
-			}
-
 			// convert all missed references
 			var postProcessed = FinalizeConstructors(context, expression, true);
 
@@ -191,7 +184,8 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public Expression UpdateNesting(SelectQuery upToQuery, Expression expression)
+		public TExpression UpdateNesting<TExpression>(SelectQuery upToQuery, TExpression expression)
+			where TExpression : Expression
 		{
 			// short path
 			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToQuery)
@@ -228,7 +222,7 @@ namespace LinqToDB.Linq.Builder
 						return expr;
 					});
 
-			return withColumns;
+			return (TExpression)withColumns;
 		}
 
 		public Expression ToColumns(IBuildContext rootContext, Expression expression)
@@ -526,7 +520,8 @@ namespace LinqToDB.Linq.Builder
 				context = rootQuery.BuildContext;
 			}
 
-			var ctx = GetSubQuery(context, testExpression, flags);
+			var correctedForBuild = SequenceHelper.MoveAllToScopedContext(testExpression, context);
+			var ctx = GetSubQuery(context, correctedForBuild, flags);
 
 			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx };
 

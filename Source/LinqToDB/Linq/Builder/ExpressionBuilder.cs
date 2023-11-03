@@ -302,6 +302,10 @@ namespace LinqToDB.Linq.Builder
 
 					if (sequence != null)
 					{
+#if DEBUG
+						if (!buildInfo.IsTest)
+							QueryHelper.DebugCheckNesting(sequence.SelectQuery, buildInfo.IsSubQuery);
+#endif
 						RegisterSequenceExpression(sequence, originalExpression);
 					}
 
@@ -607,6 +611,6 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
-		
+
 	}
 }

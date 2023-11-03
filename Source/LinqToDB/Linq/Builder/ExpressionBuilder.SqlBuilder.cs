@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 			if (isTest)
 				flags |= ProjectFlags.Test;
 
-			if (!BuildSearchCondition(buildSequnce, expr, flags, sc.Conditions, out var error))
+			if (!BuildSearchCondition(parent ?? buildSequnce, expr, flags, sc.Conditions, out var error))
 			{
 				if (!isTest)
 					throw error.CreateError();
