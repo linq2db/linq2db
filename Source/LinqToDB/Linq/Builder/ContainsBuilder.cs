@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var innerQuery = new SelectQuery();
-			
+
 			var sequence   = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery));
 			if (sequence == null)
 				return null;
@@ -68,7 +68,6 @@ namespace LinqToDB.Linq.Builder
 				_methodCall       = methodCall;
 				InnerSequence     = innerSequence;
 			}
-
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{

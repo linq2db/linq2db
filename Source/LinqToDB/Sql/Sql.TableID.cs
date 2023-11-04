@@ -35,7 +35,6 @@ namespace LinqToDB
 				return Type == other.Type && ID == other.ID;
 			}
 
-
 			public override int GetHashCode()
 			{
 				return (int)Type | (ID.GetHashCode() >> 3);

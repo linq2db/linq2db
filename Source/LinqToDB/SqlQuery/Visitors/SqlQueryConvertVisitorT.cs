@@ -35,7 +35,8 @@ namespace LinqToDB.SqlQuery.Visitors
 			Stack?.Clear();
 		}
 
-		public override bool ShouldReplace(IQueryElement element)
+		// TODO: debug, remove
+		protected override bool ShouldReplace(IQueryElement element)
 		{
 			var result = base.ShouldReplace(element);
 			return result;
@@ -48,7 +49,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return newElement;
 		}
 
-		public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			ColumnExpression = expression;
 			var newExpression = base.VisitSqlColumnExpression(column, expression);

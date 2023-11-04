@@ -91,7 +91,6 @@ namespace LinqToDB
 				return pi;
 			});
 
-
 			info = info.Transform((query, ps, preambles), static (context, pi) =>
 			{
 				switch (pi.NodeType)

@@ -65,20 +65,19 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-
 		/*
 
 		-- describing subqueries when building GroupByContext
 
 		 SELECT GroupByContext.*
-		 FROM 
+		 FROM
 		 (
 		    SELECT
 				GroupByContext.SubQuery.Field1,
 				GroupByContext.SubQuery.Field2,
 				Count(*),
 				SUM(GroupByContext.SubQuery.Field3)
-		    FROM 
+		    FROM
 			(
 				SELECT dataSubquery.*
 				FROM (
@@ -94,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 
 		 OUTER APPLY (  -- applying complex aggregates
 			SELECT Count(*) FROM dataSubquery
-			WHERE dataSubquery.Field > 10 AND 
+			WHERE dataSubquery.Field > 10 AND
 				-- filter by grouping key
 				dataSubquery.Field1 == GroupByContext.Field1 AND dataSubquery.Field2 == GroupByContext.Field2
 		 )
@@ -158,7 +157,7 @@ namespace LinqToDB.Linq.Builder
 			groupingSubquery.SelectQuery.GroupBy.GroupingType = groupingKind;
 
 			var element = new ElementContext(buildInfo.Parent, elementSelector, dataSubquery, buildInfo.IsSubQuery);
-			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element, 
+			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element,
 				!builder.DataOptions.LinqOptions.GuardGrouping || builder.IsGroupingGuardDisabled, true);
 
 			// Will be used for eager loading generation
@@ -257,7 +256,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal class ElementContext : SelectContext
 		{
-			public ElementContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence, bool isSubQuery) : 
+			public ElementContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence, bool isSubQuery) :
 				base(parent, SequenceHelper.PrepareBody(lambda, sequence), sequence, isSubQuery)
 			{
 				Lambda   = lambda;
@@ -291,7 +290,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal sealed class KeyContext : SelectContext
 		{
-			public KeyContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence, bool isSubQuery) : 
+			public KeyContext(IBuildContext? parent, LambdaExpression lambda, IBuildContext sequence, bool isSubQuery) :
 				base(parent, SequenceHelper.PrepareBody(lambda, sequence), sequence, isSubQuery)
 			{
 				Lambda   = lambda;

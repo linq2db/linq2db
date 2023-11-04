@@ -59,11 +59,11 @@ namespace LinqToDB.Remote
 				var cc                     = sqlBuilder.CommandCount(query.Statement);
 
 				var optimizationContext = new OptimizationContext(
-					_evaluationContext, 
+					_evaluationContext,
 					DataContext.Options,
 					DataContext.SqlProviderFlags,
 					DataContext.MappingSchema,
-					query.Aliases!, 
+					query.Aliases!,
 					sqlOptimizer.CreateOptimizerVisitor(false),
 					sqlOptimizer.CreateConvertVisitor(false),
 					false, static () => NoopQueryParametersNormalizer.Instance);
@@ -138,7 +138,6 @@ namespace LinqToDB.Remote
 					sb.Value.Append(sqlStringBuilder.Value);
 					sqlStringBuilder.Value.Length = 0;
 				}
-
 
 				return sb.Value.ToString();
 			}

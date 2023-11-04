@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 			ExpressionTreeOptimizationContext           optimizationContext,
 			Expression                                  expression,
 			bool                                        includeConvert,
-			bool                                        optimizeConditions, 
+			bool                                        optimizeConditions,
 			bool                                        compactBinary)
 		{
 			_dataContext         = dataContext;
@@ -65,7 +65,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 		[return: NotNullIfNotNull(nameof(node))]
 		public override Expression? Visit(Expression? node)
 		{
-			if (node == null) 
+			if (node == null)
 				return null;
 
 			if (node.Type.IsSameOrParentOf(typeof(IToSqlConverter)) && IsCompilable(node))
@@ -87,7 +87,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 						return Visit(evaluatedExpr);
 				}
 			}
-
 
 			return base.Visit(node);
 		}
@@ -761,7 +760,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 			return null;
 		}
-
 
 		#region Helper methods
 

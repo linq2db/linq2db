@@ -70,12 +70,9 @@ namespace LinqToDB.SqlQuery
 
 		public  bool                    HasUniqueKeys => _uniqueKeys != null && _uniqueKeys.Count > 0;
 
-
-		public void Modify(ISqlTableSource source, List<SqlJoinedTable> joins, List<ISqlExpression[]>? uniqueKeys)
+		public void Modify(ISqlTableSource source)
 		{
-			Source      = source;
-			Joins       = joins;
-			_uniqueKeys = uniqueKeys;
+			Source = source;
 		}
 
 		public SqlTableSource? this[ISqlTableSource table] => this[table, null];

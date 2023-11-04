@@ -35,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 			SetOperation setOperation;
 			switch (methodCall.Method.Name)
 			{
-				case "Concat"       : 
+				case "Concat"       :
 				case "UnionAll"     : setOperation = SetOperation.UnionAll;     break;
 				case "Union"        : setOperation = SetOperation.Union;        break;
 				case "Except"       : setOperation = SetOperation.Except;       break;
@@ -124,7 +124,6 @@ namespace LinqToDB.Linq.Builder
 				if (flags.IsRoot() || flags.IsTraverse())
 					return path;
 
-
 				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))
 				{
 					return _setIdPlaceholder!;
@@ -147,7 +146,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					projection1 = Builder.Project(this, path, null, 0, flags, _projection1, true);
 					projection2 = Builder.Project(this, path, null, 0, flags, _projection2, true);
-
 
 					if (projection1 is SqlErrorExpression)
 					{
@@ -174,7 +172,7 @@ namespace LinqToDB.Linq.Builder
 
 						projection2 = Builder.Project(this, path, null, 0, flags, _projection2, false);
 					}
-					
+
 					// for Expression we can allow non translatable errors
 					if (flags.IsExpression())
 					{
@@ -404,7 +402,7 @@ namespace LinqToDB.Linq.Builder
 					if (ReferenceEquals(x, y))
 						return true;
 
-					if (x == null || y == null) 
+					if (x == null || y == null)
 						return false;
 
 					return x.SequenceEqual(y, ExpressionEqualityComparer.Instance);
@@ -625,7 +623,7 @@ namespace LinqToDB.Linq.Builder
 						return Visit(newNode);
 
 					if (node.IfTrue is ConditionalExpression condTrue                        &&
-					    ExpressionEqualityComparer.Instance.Equals(node.Test, condTrue.Test) &&  
+					    ExpressionEqualityComparer.Instance.Equals(node.Test, condTrue.Test) &&
 					    ExpressionEqualityComparer.Instance.Equals(node.IfFalse, condTrue.IfFalse))
 					{
 						return condTrue;
@@ -650,7 +648,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					_stack.Push(Expression.Constant("?"));
 					_stack.Push(Visit(node.Test));
-					
+
 					_stack.Push(Expression.Constant(true));
 					var ifTrue = Visit(node.IfTrue);
 					_stack.Pop();
@@ -898,7 +896,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			Expression BuildProjectionExpression(Expression path, IBuildContext context, 
+			Expression BuildProjectionExpression(Expression path, IBuildContext context,
 				out List<(SqlPlaceholderExpression placeholder, Expression[] path)> foundPlaceholders,
 				out List<SqlEagerLoadExpression> foundEager)
 			{
@@ -908,12 +906,11 @@ namespace LinqToDB.Linq.Builder
 				do
 				{
 					var projected = Builder.BuildSqlExpression(context, current, ProjectFlags.Expression, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
-				
+
 					projected = Builder.ExtractProjection(context, projected);
 
 					var lambdaResolver = new LambdaResolveVisitor(context);
 					projected = lambdaResolver.Visit(projected);
-
 
 					var optimizer = new ExpressionOptimizerVisitor();
 					projected = optimizer.Visit(projected);
@@ -923,7 +920,6 @@ namespace LinqToDB.Linq.Builder
 
 					current = projected;
 				} while (true);
-
 
 				var pathBuilder = new ExpressionPathVisitor();
 				var withPath    = pathBuilder.Visit(current);
@@ -951,7 +947,7 @@ namespace LinqToDB.Linq.Builder
 				cloned._setIdReference   = context.CloneExpression(_setIdReference);
 				cloned._leftSetId        = _leftSetId;
 				cloned._rightSetId       = _rightSetId;
-				
+
 				return cloned;
 			}
 

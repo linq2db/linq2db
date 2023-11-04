@@ -52,7 +52,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.Visit(element);
 		}
 
-		public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			Visit(column);
 			return base.VisitSqlColumnExpression(column, column.Expression);

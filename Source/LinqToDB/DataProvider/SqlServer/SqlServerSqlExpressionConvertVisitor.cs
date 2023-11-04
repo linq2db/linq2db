@@ -1,9 +1,8 @@
 ﻿using System;
 
-using LinqToDB.Extensions;
-
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using LinqToDB.Extensions;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -62,7 +61,7 @@ namespace LinqToDB.DataProvider.SqlServer
 								new SqlFunction(typeof(int), "CHARINDEX",
 									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
 										predicate.Expr2),
-									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary, 
+									new SqlFunction(typeof(byte[]), "Convert", SqlDataType.DbVarBinary,
 										predicate.Expr1)),
 								SqlPredicate.Operator.Greater,
 								new SqlValue(0), null);

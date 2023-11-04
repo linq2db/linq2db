@@ -196,7 +196,7 @@ namespace LinqToDB.SqlQuery
 		internal readonly List<SqlField>              _orderedFields = new();
 		readonly          Dictionary<string,SqlField> _fieldsLookup  = new();
 
-		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
+		public           List<SqlField> Fields => _orderedFields;
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		// identity fields cached, as it is most used fields filter

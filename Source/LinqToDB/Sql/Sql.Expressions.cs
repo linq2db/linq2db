@@ -384,7 +384,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				builder.ResultExpression = new SqlAliasPlaceholder();
+				builder.ResultExpression = SqlAliasPlaceholder.Instance;
 			}
 		}
 
@@ -420,7 +420,7 @@ namespace LinqToDB
 
 		static Expression<Func<TEntity, string, TColumn>> TableFieldIml<TEntity, TColumn>()
 		{
-			return (entity, fieldName) => Sql.Property<TColumn>(entity, fieldName);
+			return (entity, fieldName) => Property<TColumn>(entity, fieldName);
 		}
 
 		[Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
@@ -542,10 +542,7 @@ namespace LinqToDB
 		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA")
 		/// </code>
 		/// </example>
-		public static ISqlExpression AliasExpr()
-		{
-			return new SqlAliasPlaceholder();
-		}
+		public static ISqlExpression AliasExpr() => SqlAliasPlaceholder.Instance;
 
 		sealed class ExprBuilder : IExtensionCallBuilder
 		{

@@ -44,14 +44,12 @@ namespace LinqToDB.SqlQuery
 		public override QueryType            QueryType         => QueryType.Merge;
 		public override QueryElementType     ElementType       => QueryElementType.MergeStatement;
 
-		public void Modify(SqlTableSource target,     SqlTableLikeSource source, SqlSearchCondition on,
-			List<SqlMergeOperationClause> operations, SqlOutputClause?   output)
+		public void Modify(SqlTableSource target, SqlTableLikeSource source, SqlSearchCondition on, SqlOutputClause? output)
 		{
-			Target     = target;
-			Source     = source;
-			On         = on;
-			Operations = operations;
-			Output     = output;
+			Target = target;
+			Source = source;
+			On     = on;
+			Output = output;
 		}
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)

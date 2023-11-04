@@ -20,7 +20,7 @@ namespace LinqToDB.SqlQuery
 
 		internal bool HasUpdate => _update != null;
 
-		public SqlUpdateStatement(SelectQuery selectQuery) : base(selectQuery)
+		public SqlUpdateStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 

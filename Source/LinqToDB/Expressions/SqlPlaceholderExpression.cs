@@ -47,10 +47,8 @@ namespace LinqToDB.Expressions
 		public ISqlExpression Sql          { get; }
 		public Type           ConvertType  { get; }
 
-
 		public override ExpressionType NodeType => ExpressionType.Extension;
 		public override Type           Type     => ConvertType ?? Path.Type;
-
 
 		public SqlPlaceholderExpression MakeNullable()
 		{

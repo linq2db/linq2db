@@ -125,7 +125,7 @@ namespace LinqToDB.Mapping
 
 		public override object GetValue(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
 			=> throw new InvalidOperationException("SetValue on dynamic column is not to be called.");
-		
+
 		private T DummyGetter<T>()
 			=> throw new InvalidOperationException("Dynamic column getter is not to be called.");
 

@@ -20,7 +20,6 @@ namespace LinqToDB.SqlQuery
 			Items.AddRange(items);
 		}
 
-
 #if OVERRIDETOSTRING
 
 		public override string ToString()

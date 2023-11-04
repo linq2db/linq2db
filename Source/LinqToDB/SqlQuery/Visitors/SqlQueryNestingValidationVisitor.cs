@@ -18,7 +18,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			_forQuery = forQuery;
 		}
 
-		public override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveQuery = _currentQuery;
 			_currentQuery = selectQuery;
@@ -66,7 +66,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return new InvalidOperationException(messageString);
 		}
 
-		public override IQueryElement VisitSqlFieldReference(SqlField element)
+		protected override IQueryElement VisitSqlFieldReference(SqlField element)
 		{
 			if (element.Table != null)
 			{
@@ -84,7 +84,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.VisitSqlFieldReference(element);
 		}
 
-		public override IQueryElement VisitSqlColumnReference(SqlColumn element)
+		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
 			if (element.Parent != null)
 			{
@@ -102,7 +102,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.VisitSqlColumnReference(element);
 		}
 
-		public override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			_spotted.Add(element.Source);
 			_visibleSources.Peek().Add(element.Source);

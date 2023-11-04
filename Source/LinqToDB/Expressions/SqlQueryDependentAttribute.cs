@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.Common;
+
 	/// <summary>
 	/// Used for controlling query caching of custom SQL Functions.
 	/// Parameter with this attribute will be evaluated on client side before generating SQL.

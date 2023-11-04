@@ -104,7 +104,7 @@ namespace LinqToDB.Common
 
 			if (!methodInfo.IsGenericMethodDefinition)
 				methodInfo = methodInfo.GetGenericMethodDefinition();
-		
+
 			var genericArguments = methodInfo.GetGenericArguments();
 			var typesMapping     = new Dictionary<Type, Type>();
 
@@ -125,7 +125,7 @@ namespace LinqToDB.Common
 
 			return callMethodInfo;
 		}
-		
+
 		public static Type GetEnumerableElementType(Type type)
 		{
 			var genericType = typeof(IEnumerable<>).GetGenericType(type);

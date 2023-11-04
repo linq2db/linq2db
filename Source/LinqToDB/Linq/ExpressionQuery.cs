@@ -7,8 +7,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Expressions;
-
 namespace LinqToDB.Linq
 {
 	using Async;
@@ -253,7 +251,7 @@ namespace LinqToDB.Linq
 				{
 					Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					return Tuple.Create<IAsyncEnumerator<T>, IAsyncDisposable?>(
+					return Tuple.Create(
 						query.GetResultEnumerable(DataContext, expression, Parameters, Preambles)
 						.GetAsyncEnumerator(cancellationToken), tr);
 				}

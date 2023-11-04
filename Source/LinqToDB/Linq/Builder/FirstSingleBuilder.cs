@@ -89,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, false, false, buildInfo.IsTest,
 					isAggregationTest : buildInfo.AggregationTest);
 
-				if (sequence == null) 
+				if (sequence == null)
 					return null;
 			}
 

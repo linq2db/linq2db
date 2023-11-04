@@ -287,7 +287,6 @@ namespace LinqToDB.Linq.Builder
 						return true;
 					}
 
-
 				case ExpressionType.Lambda:
 					{
 						var le = (LambdaExpression)expr;
@@ -745,7 +744,7 @@ namespace LinqToDB.Linq.Builder
 
 		string MangleName(string? name, string prefix)
 		{
-			name ??= ""; 
+			name ??= "";
 			if (!_mangleNames)
 				return name;
 

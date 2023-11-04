@@ -133,7 +133,6 @@ namespace LinqToDB.SqlQuery
 			if (this == other)
 				return true;
 
-
 			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length || SystemType != func.SystemType)
 				return false;
 

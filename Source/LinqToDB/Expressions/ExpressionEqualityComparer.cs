@@ -314,7 +314,7 @@ namespace LinqToDB.Expressions
 						var memberAssignment = (MemberAssignment)memberBinding;
 						hashCode += (hashCode * 397) ^ GetHashCode(memberAssignment.Expression);
 						break;
-					}	
+					}
 					case MemberBindingType.ListBinding:
 					{
 						var memberListBinding = (MemberListBinding)memberBinding;
@@ -473,8 +473,8 @@ namespace LinqToDB.Expressions
 
 			bool CompareSwitch(SwitchExpression a, SwitchExpression b)
 			{
-				if (! (Equals(a.SwitchValue, b.SwitchValue) && 
-				       Equals(a.DefaultBody, b.DefaultBody) && 
+				if (! (Equals(a.SwitchValue, b.SwitchValue) &&
+				       Equals(a.DefaultBody, b.DefaultBody) &&
 				       Equals(a.Comparison, b.Comparison) &&
 					   a.Cases.Count != b.Cases.Count))
 				{

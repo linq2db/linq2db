@@ -42,8 +42,8 @@ namespace LinqToDB.SqlQuery
 			return new QueryElementTextWriter(Nullability.WithInnerSource(innerSource), _writer, _visited);
 		}
 
-		public int Length 
-		{ 
+		public int Length
+		{
 			get => _writer.Length;
 			set => _writer.Length = value;
 		}
@@ -118,7 +118,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public QueryElementTextWriter Append(byte value) 
+		public QueryElementTextWriter Append(byte value)
 		{
 			_writer.Append(value);
 			return this;
@@ -132,7 +132,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public QueryElementTextWriter Append(int value) 
+		public QueryElementTextWriter Append(int value)
 		{
 			_writer.Append(value);
 			return this;

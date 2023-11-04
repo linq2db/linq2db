@@ -164,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 					var cleanQuery = ReplaceSourceInQuery(selectQuery, clonedTargetTable, targetTable);
 
 					searchCondition.Conditions.Add(new SqlCondition(false,
-						new SqlPredicate.FuncLike(SqlFunction.CreateExists(cleanQuery))));					
+						new SqlPredicate.FuncLike(SqlFunction.CreateExists(cleanQuery))));
 				}
 			}
 			else if (!source.IsTargetAssociation(condition))

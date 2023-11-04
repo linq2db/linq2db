@@ -82,7 +82,7 @@ namespace LinqToDB.SqlQuery
 				.Append(AnchorKind.ToString())
 				.Append("$.")
 				.AppendElement(SqlExpression);
-				
+
 			return writer;
 		}
 

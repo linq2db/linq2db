@@ -359,7 +359,6 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-
 				if (search == null)
 					return predicate;
 
@@ -611,7 +610,7 @@ namespace LinqToDB.SqlQuery
 				}
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
-				if (WithNull == null || !Expr1.ShouldCheckForNull(nullability)) 
+				if (WithNull == null || !Expr1.ShouldCheckForNull(nullability))
 					return predicate;
 
 				var search = new SqlSearchCondition();
@@ -734,10 +733,9 @@ namespace LinqToDB.SqlQuery
 
 			public List<ISqlExpression> Values { get; private set; } = new();
 
-			public void Modify(ISqlExpression expr1, List<ISqlExpression> values)
+			public void Modify(ISqlExpression expr1)
 			{
 				Expr1  = expr1;
-				Values = values;
 			}
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)

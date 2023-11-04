@@ -37,7 +37,7 @@ namespace LinqToDB.Linq.Builder
 					setterExpressions);
 
 				UpdateBuilder.InitializeSetExpressions(builder, mergeContext.TargetContext, mergeContext.SourceContext, setterExpressions, operation.Items, false);
-				
+
 				if (!predicate.IsNullValue())
 				{
 					var condition          = predicate.UnwrapLambda();

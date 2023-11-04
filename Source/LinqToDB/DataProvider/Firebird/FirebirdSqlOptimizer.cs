@@ -102,16 +102,16 @@ namespace LinqToDB.DataProvider.Firebird
 				}
 			}
 
-			NeedCastScope Needcast(bool needCast)
+			NeedCastScope NeedCast(bool needCast)
 			{
 				return new NeedCastScope(this, needCast);
 			}
 
-			public override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+			protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
 			{
 				var save  = _inModifier;
 
-				using var scope = Needcast(false);
+				using var scope = NeedCast(false);
 				{
 					_inModifier = true;
 
@@ -129,19 +129,19 @@ namespace LinqToDB.DataProvider.Firebird
 				return element;
 			}
 
-			public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+			protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 			{
-				using var scope = Needcast(true);
+				using var scope = NeedCast(true);
 				return base.VisitSqlColumnExpression(column, expression);
 			}
 
-			public override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 			{
-				using var scope = Needcast(false);
+				using var scope = NeedCast(false);
 				return base.VisitSqlQuery(selectQuery);
 			}
 
-			public override IQueryElement VisitSqlFunction(SqlFunction element)
+			protected override IQueryElement VisitSqlFunction(SqlFunction element)
 			{
 				if (element.Name == PseudoFunctions.CONVERT)
 				{
@@ -169,19 +169,19 @@ namespace LinqToDB.DataProvider.Firebird
 				return base.VisitSqlFunction(element);
 			}
 
-			public override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+			protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 			{
-				using var scope = Needcast(true);
+				using var scope = NeedCast(true);
 				return base.VisitSqlUpdateStatement(element);
 			}
 
-			public override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+			protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 			{
-				using var scope = Needcast(!_inModifier);
+				using var scope = NeedCast(!_inModifier);
 				return base.VisitSqlBinaryExpression(element);
 			}
 
-			public override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
 			{
 				if (_needCast)
 				{
@@ -194,21 +194,21 @@ namespace LinqToDB.DataProvider.Firebird
 				return base.VisitSqlParameter(sqlParameter);
 			}
 
-			public override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+			protected override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
 			{
-				using var scope = Needcast(true);
+				using var scope = NeedCast(true);
 				return base.VisitSqlInsertOrUpdateStatement(element);
 			}
 
-			public override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
+			protected override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
 			{
-				using var scope = Needcast(true);
+				using var scope = NeedCast(true);
 				return base.VisitSqlOutputClause(element);
 			}
 
-			public override IQueryElement VisitSqlMergeOperationClause(SqlMergeOperationClause element)
+			protected override IQueryElement VisitSqlMergeOperationClause(SqlMergeOperationClause element)
 			{
-				using var scope = Needcast(true);
+				using var scope = NeedCast(true);
 				return base.VisitSqlMergeOperationClause(element);
 			}
 		}

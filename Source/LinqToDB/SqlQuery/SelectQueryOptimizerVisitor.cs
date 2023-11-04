@@ -75,7 +75,7 @@ namespace LinqToDB.SqlQuery
 			return base.NotifyReplaced(newElement, oldElement);
 		}
 
-		public override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
 		{
 			foreach (var arg in element.Function.Parameters)
 			{
@@ -88,7 +88,7 @@ namespace LinqToDB.SqlQuery
 			return base.VisitFuncLikePredicate(element);
 		}
 
-		public override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveQuery = _applySelect;
 
@@ -104,7 +104,7 @@ namespace LinqToDB.SqlQuery
 			return newElement;
 		}
 
-		public override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveParent = _parentSelect;
 
@@ -156,7 +156,7 @@ namespace LinqToDB.SqlQuery
 			return isModified;
 		}
 
-		public override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
+		protected override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
 		{
 			var saveCurrent = _currentSetOperator;
 			_currentSetOperator = element;
@@ -167,7 +167,7 @@ namespace LinqToDB.SqlQuery
 			return newElement;
 		}
 
-		public override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
 		{
 			var saveInsubquery = _inSubquery;
 
@@ -178,7 +178,7 @@ namespace LinqToDB.SqlQuery
 			return newNode;
 		}
 
-		public override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
+		protected override IQueryElement VisitSqlOrderByClause(SqlOrderByClause element)
 		{
 			var newElement = (SqlOrderByClause)base.VisitSqlOrderByClause(element);
 
@@ -672,7 +672,7 @@ namespace LinqToDB.SqlQuery
 						partitionBy = found.ToList();
 					}
 
-					var rnBuilder = new StringBuilder(); 
+					var rnBuilder = new StringBuilder();
 					rnBuilder.Append("ROW_NUMBER() OVER (");
 
 					if (partitionBy != null)
@@ -687,7 +687,6 @@ namespace LinqToDB.SqlQuery
 							parameters.Add(partitionBy[i]);
 						}
 					}
-
 
 					var orderByItems = sql.OrderBy.Items.ToList();
 
@@ -1194,7 +1193,7 @@ namespace LinqToDB.SqlQuery
 				ConcatSearchCondition(selectQuery.Having, subQuery.Having);
 			}
 
-			if (subQuery.Select.IsDistinct) 
+			if (subQuery.Select.IsDistinct)
 				selectQuery.Select.IsDistinct = true;
 
 			if (subQuery.Select.TakeValue != null)
@@ -1348,7 +1347,7 @@ namespace LinqToDB.SqlQuery
 			return true;
 		}
 
-		public override IQueryElement VisitSqlFromClause(SqlFromClause element)
+		protected override IQueryElement VisitSqlFromClause(SqlFromClause element)
 		{
 			element = (SqlFromClause)base.VisitSqlFromClause(element);
 
@@ -1395,7 +1394,7 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		public override IQueryElement VisitSqlCondition(SqlCondition element)
+		protected override IQueryElement VisitSqlCondition(SqlCondition element)
 		{
 			if (element.Predicate is SqlSearchCondition sc && sc.Conditions.Count == 1)
 			{
@@ -1419,7 +1418,7 @@ namespace LinqToDB.SqlQuery
 			return base.VisitSqlCondition(element);
 		}
 
-		public override IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
+		protected override IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
 		{
 			if (predicate is { IsNot: true, Expr1: IInvertibleElement invertible } && invertible.CanInvert())
 			{
@@ -1475,7 +1474,6 @@ namespace LinqToDB.SqlQuery
 			return replaced;
 		}
 
-
 		bool OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)
 		{
 			var tableSources = new List<ISqlTableSource>();
@@ -1529,12 +1527,12 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			expression = base.VisitSqlColumnExpression(column, expression);
 
 			expression = QueryHelper.SimplifyColumnExpression(expression);
-			
+
 			return expression;
 		}
 

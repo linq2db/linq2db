@@ -7,7 +7,6 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlCteTable : SqlTable
 	{
-		[DisallowNull]
 		public CteClause? Cte { get; set; }
 
 		public override SqlObjectName TableName
@@ -17,7 +16,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public SqlCteTable(
-			CteClause cte, 
+			CteClause cte,
 			Type      entityType)
 			: base(entityType, null, new SqlObjectName(cte.Name ?? string.Empty))
 		{
@@ -75,7 +74,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType = cte.ObjectType;
 		}
 
-		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause cte)
+		public SqlCteTable(SqlCteTable table, IEnumerable<SqlField> fields, CteClause? cte)
 			: base(table.ObjectType, null, table.TableName)
 		{
 			Alias              = table.Alias;

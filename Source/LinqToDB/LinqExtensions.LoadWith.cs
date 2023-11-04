@@ -3,15 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
 
 using JetBrains.Annotations;
-using LinqToDB.Linq;
 
 namespace LinqToDB
 {
-	using System.Reflection;
-	using Async;
+	using LinqToDB.Linq;
 	using LinqToDB.Linq.Builder;
 
 	public partial class LinqExtensions
@@ -659,7 +658,6 @@ namespace LinqToDB
 			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
-
 		/// <summary>
 		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
 		/// All associations, specified in <paramref name="selector"/> expression, will be loaded.
@@ -729,7 +727,7 @@ namespace LinqToDB
 		}
 
 		[LinqTunnel]
-		[Pure] 
+		[Pure]
 		internal static TSource LoadWithInternal<TSource>(
 			this TSource             source,
 			LoadWithInfo             loadWith,

@@ -131,10 +131,8 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-
 		public MappingSchema MappingSchema { get; }
 
 		internal SqlGetValue[] InfoParameters => _infoParameters;
-
 	}
 }

@@ -317,7 +317,6 @@ namespace LinqToDB.Linq
 							return e;
 						}
 
-
 						// test IsDBNull method by-name to support overrides
 						if (call.Method.Name == nameof(IDataReader.IsDBNull))
 							return context.IsNullParameter;

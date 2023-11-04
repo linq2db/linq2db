@@ -39,11 +39,6 @@ namespace LinqToDB.SqlQuery
 
 		public List<SqlOrderByItem>  Items { get; private set; } = new();
 
-		public void Modify(List<SqlOrderByItem> items)
-		{
-			Items = items;
-		}
-
 		public bool IsEmpty => Items.Count == 0;
 
 #if OVERRIDETOSTRING

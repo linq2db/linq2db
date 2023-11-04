@@ -9,7 +9,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public SqlInsertStatement(SelectQuery selectQuery) : base(selectQuery)
+		public SqlInsertStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 

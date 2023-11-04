@@ -4,6 +4,10 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlAliasPlaceholder : ISqlExpression
 	{
+		public static readonly SqlAliasPlaceholder Instance = new();
+
+		SqlAliasPlaceholder() { }
+
 #if DEBUG
 		public string DebugText => this.ToDebugString();
 #endif
@@ -17,7 +21,7 @@ namespace LinqToDB.SqlQuery
 
 		public bool Equals(ISqlExpression? other)
 		{
-			return other != null && other.GetType() == GetType();
+			return other == this;
 		}
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)

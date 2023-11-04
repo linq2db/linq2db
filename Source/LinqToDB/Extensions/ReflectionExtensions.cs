@@ -40,7 +40,7 @@ namespace LinqToDB.Extensions
 			var baseType = type.BaseType;
 			if (baseType == null || baseType == typeof(object) || baseType == typeof(ValueType))
 				return members;
-			
+
 			// in the case of inheritance, we want to:
 			//  - list base class members first
 			//  - remove shadowed members (new modifier)

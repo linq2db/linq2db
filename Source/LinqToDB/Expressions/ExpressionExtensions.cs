@@ -176,7 +176,6 @@ namespace LinqToDB.Expressions
 				static (map, e) => map.TryGetValue(e, out var newExpression) ? newExpression : e);
 		}
 
-
 		/// <summary>
 		/// Returns the body of <paramref name="lambda"/> but replaces the first parameter of that
 		/// lambda expression with the <paramref name="exprToReplaceParameter"/> expression.

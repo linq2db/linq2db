@@ -355,7 +355,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 
 		protected override StringBuilder BuildExpression(
-			NullabilityContext nullability, 
+			NullabilityContext nullability,
 			ISqlExpression     expr,
 			bool               buildTableName,
 			bool               checkParentheses,

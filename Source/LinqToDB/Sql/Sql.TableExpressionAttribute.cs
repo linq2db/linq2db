@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Mapping;
 
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
+	using LinqToDB.Mapping;
 	using LinqToDB.SqlProvider;
 	using SqlQuery;
 

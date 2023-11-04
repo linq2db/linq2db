@@ -56,7 +56,6 @@ namespace LinqToDB.Linq.Builder
 					return optimizedExpr;
 				});*/
 
-
 				definedQueryMethod = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
 				cacheCheckAdded = true;
 
@@ -187,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						newBody = Expression.Call(Methods.Enumerable.Where.MakeGenericMethod(objectType), 
+						newBody = Expression.Call(Methods.Enumerable.Where.MakeGenericMethod(objectType),
 							newBody,
 							additionalLambda);
 					}
@@ -342,7 +341,7 @@ namespace LinqToDB.Linq.Builder
 			return definedQueryMethod;
 		}
 
-		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext, 
+		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext,
 			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOuter)
 		{
 			var elementType     = descriptor.GetElementType(builder.MappingSchema);

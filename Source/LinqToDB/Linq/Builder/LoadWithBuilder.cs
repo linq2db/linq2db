@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 					if (sequence is LoadWithContext lw)
 						table = lw.RegisterContext as ITableContext;
 				}
-				
+
 				var path = SequenceHelper.PrepareBody(selector, sequence);
 
 				var extractResult = ExtractAssociations(builder, table, path, null);

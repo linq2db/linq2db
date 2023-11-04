@@ -58,9 +58,9 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public ParameterAccessor? BuildParameter(
-			Expression         expr, 
+			Expression         expr,
 			ColumnDescriptor?  columnDescriptor,
-			bool               forceConstant      = false, 
+			bool               forceConstant      = false,
 			string?            alias              = null,
 			BuildParameterType buildParameterType = BuildParameterType.Default)
 		{
@@ -467,7 +467,6 @@ namespace LinqToDB.Linq.Builder
 				;
 		}
 
-
 		static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext)
 		{
 			// see #820
@@ -602,7 +601,5 @@ namespace LinqToDB.Linq.Builder
 			accessor = null;
 			return false;
 		}
-
-
 	}
 }

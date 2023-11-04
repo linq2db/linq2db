@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
+	using SqlQuery;
 
 	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
 
@@ -51,7 +50,6 @@ namespace LinqToDB.Linq.Builder
 				multiInsertContext = new MultiInsertContext(source);
 			}
 		}
-
 
 		static IBuildContext BuildMultiInsert(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -99,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var setterExpression = source.PrepareSourceBody(setterLambda);
-			
+
 			var targetRef        = new ContextRefExpression(setterExpression.Type, into);
 
 			var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();

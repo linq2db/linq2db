@@ -66,7 +66,7 @@ namespace LinqToDB.SqlQuery.Visitors
 		}
 
 		public abstract IQueryElement ConvertElement(IQueryElement element);
-		
+
 		public IQueryElement PerformConvert(IQueryElement element)
 		{
 			return ProcessElement(element);

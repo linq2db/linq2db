@@ -360,7 +360,6 @@ namespace LinqToDB.Common
 					if (valueType.IsNullable())
 						valueType = valueType.ToNullableUnderlying();
 
-
 					var toTypeFields = fromFields
 						.Select(f => new { f.Field, Attrs = f.Attrs
 							.OrderBy(a =>

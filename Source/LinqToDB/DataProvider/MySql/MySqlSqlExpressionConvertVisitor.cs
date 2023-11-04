@@ -2,8 +2,6 @@
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using System;
-
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;

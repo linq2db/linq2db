@@ -1,23 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common;
-using LinqToDB.DataProvider.MySql;
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
-	using MySql;
 	using Expressions;
 	using Mapping;
+	using MySql;
 	using SqlQuery;
 
 	public class ClickHouseProviderAdapter : IDynamicProviderAdapter
@@ -416,7 +411,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotImplementedException();
 
 				void IDisposable.Dispose() => ((Action<ClickHouseBulkCopy>)CompiledWrappers[0])(this);
-
 
 				public int BatchSize
 				{

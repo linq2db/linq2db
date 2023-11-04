@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Mapping
 {
+	using Common;
+
 	/// <inheritdoc />
 	/// <summary>
 	/// Represents a dynamic column, which doesn't have a backing field in it's declaring type.
@@ -89,12 +90,10 @@ namespace LinqToDB.Mapping
 		public static bool operator !=(SpecialPropertyInfo? a, SpecialPropertyInfo? b)
 			=> !a?.Equals(b) ?? !ReferenceEquals(b, null);
 
-
 #pragma warning disable RS0030 // Do not used banned APIs
 		public override object[] GetCustomAttributes(bool inherit)
 #pragma warning restore RS0030 // Do not used banned APIs
 			=> Array<object>.Empty;
-
 
 #pragma warning disable RS0030 // Do not used banned APIs
 		public override object[] GetCustomAttributes(Type attributeType, bool inherit)
@@ -126,7 +125,7 @@ namespace LinqToDB.Mapping
 
 		public override object GetValue(object? obj, BindingFlags invokeAttr, Binder? binder, object?[]? index, CultureInfo? culture)
 			=> throw new InvalidOperationException("SetValue on special column is not to be called.");
-		
+
 		private T DummyGetter<T>()
 			=> throw new InvalidOperationException("Special column getter is not to be called.");
 

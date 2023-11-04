@@ -57,7 +57,6 @@ namespace LinqToDB
 				var date    = builder.GetExpression("date");
 				var number  = builder.GetExpression("number", true);
 
-
 				builder.ResultExpression = new SqlFunction(typeof(DateTimeOffset?), builder.Expression,
 					new SqlExpression(partStr, Precedence.Primary), number, date);
 			}

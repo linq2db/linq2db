@@ -1,11 +1,11 @@
 ﻿using System;
 
-using LinqToDB.Extensions;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.DataProvider.SapHana
 {
+	using LinqToDB.Extensions;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
+
 	public class SapHanaSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public SapHanaSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)
@@ -67,7 +67,6 @@ namespace LinqToDB.DataProvider.SapHana
 				case "CASE": func = ConvertCase(func, func.SystemType, func.Parameters, 0);
 					break;
 			}
-
 
 			return base.ConvertSqlFunction(func);
 		}

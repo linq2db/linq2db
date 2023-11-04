@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		ForceOuterAssociation = 0x200,
 		/// <summary>
-		/// Specify that we expect real expression under hidden by Selects chain 
+		/// Specify that we expect real expression under hidden by Selects chain
 		/// </summary>
 		Traverse = 0x800,
 

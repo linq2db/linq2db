@@ -34,7 +34,6 @@ namespace LinqToDB.Linq.Builder
 			};
 		}
 
-
 		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequqnceArg  = methodCall.Arguments[0];

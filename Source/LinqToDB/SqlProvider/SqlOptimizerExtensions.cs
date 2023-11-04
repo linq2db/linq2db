@@ -10,13 +10,13 @@
 			MappingSchema mappingSchema, DataOptions dataOptions, AliasesContext aliases, EvaluationContext context)
 		{
 			var optimizationContext = new OptimizationContext(
-				context, 
-				dataOptions, 
-				sqlProviderFlags: null, 
+				context,
+				dataOptions,
+				sqlProviderFlags: null,
 				mappingSchema,
-				aliases, 
-				optimizer.CreateOptimizerVisitor(false), 
-				optimizer.CreateConvertVisitor(false), 
+				aliases,
+				optimizer.CreateOptimizerVisitor(false),
+				optimizer.CreateConvertVisitor(false),
 				isParameterOrderDepended: false,
 				static () => NoopQueryParametersNormalizer.Instance);
 

@@ -15,7 +15,6 @@ namespace LinqToDB.Remote
 	using Mapping;
 	using SqlQuery;
 
-
 	static class LinqServiceSerializer
 	{
 		#region Public Members
@@ -669,7 +668,7 @@ namespace LinqToDB.Remote
 					return element;
 				}
 
-				public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+				protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 				{
 					base.VisitSqlColumnExpression(column, expression);
 
@@ -678,36 +677,36 @@ namespace LinqToDB.Remote
 					return expression;
 				}
 
-				public override IQueryElement VisitSqlTable(SqlTable element)
+				protected override IQueryElement VisitSqlTable(SqlTable element)
 				{
 					RegisterInSerializer(element.All);
-					VisitElementsReadOnly(element.Fields);
+					VisitElements(element.Fields, VisitMode.ReadOnly);
 					return base.VisitSqlTable(element);
 				}
 
-				public override IQueryElement VisitSqlCteTable(SqlCteTable element)
+				protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
 				{
 					RegisterInSerializer(element.All);
-					VisitElementsReadOnly(element.Fields);
+					VisitElements(element.Fields, VisitMode.ReadOnly);
 					return base.VisitSqlCteTable(element);
 				}
 
-				public override IQueryElement VisitSqlRawSqlTable(SqlRawSqlTable element)
+				protected override IQueryElement VisitSqlRawSqlTable(SqlRawSqlTable element)
 				{
 					RegisterInSerializer(element.All);
-					VisitElementsReadOnly(element.Fields);
+					VisitElements(element.Fields, VisitMode.ReadOnly);
 					return base.VisitSqlRawSqlTable(element);
 				}
 
-				public override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+				protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
 				{
-					VisitElementsReadOnly(element.SourceFields);
+					VisitElements(element.SourceFields, VisitMode.ReadOnly);
 					return base.VisitSqlTableLikeSource(element);
 				}
 
-				public override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+				protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 				{
-					VisitElementsReadOnly(element.Fields);
+					VisitElements(element.Fields, VisitMode.ReadOnly);
 					return base.VisitSqlValuesTable(element);
 				}
 
@@ -1011,7 +1010,6 @@ namespace LinqToDB.Remote
 							Append((int)elem.TableOptions);
 
 							Append(elem.SqlQueryExtensions);
-
 
 							break;
 						}
@@ -1562,7 +1560,6 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-
 					case QueryElementType.SqlAliasPlaceholder:
 						{
 							break;
@@ -1610,11 +1607,11 @@ namespace LinqToDB.Remote
 						Append(ext.BuilderType);
 						Append(ext.Arguments.Count);
 
-						foreach (var argument in ext.Arguments)
-						{
-							Append(argument.Key);
-							Append(argument.Value);
-						}
+							foreach (var argument in ext.Arguments)
+							{
+								Append(argument.Key);
+								Append(argument.Value);
+							}
 
 						break;
 					}
@@ -2275,7 +2272,6 @@ namespace LinqToDB.Remote
 								SqlQueryExtensions = extensions
 							};
 
-
 							break;
 						}
 
@@ -2490,13 +2486,12 @@ namespace LinqToDB.Remote
 							var operations = ReadArray<SqlMergeOperationClause>()!;
 							var output     = Read<SqlOutputClause>();
 							var extensions = ReadList<SqlQueryExtension>();
-							
 
 							obj = _statement = new SqlMergeStatement(with, hint, target, source, on, operations)
 							{
 								Tag    = tag,
 								Output = output,
-								SqlQueryExtensions = extensions 
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2528,10 +2523,10 @@ namespace LinqToDB.Remote
 							var fields    = ReadArray<SqlField>()!;
 
 							var rowsCount = ReadInt();
-							var rows      = new ISqlExpression[rowsCount][];
+							var rows      = new List<ISqlExpression[]>(rowsCount);
 
 							for (var i = 0; i < rowsCount; i++)
-								rows[i] = ReadArray<ISqlExpression>()!;
+								rows.Add(ReadArray<ISqlExpression>()!);
 
 							obj = new SqlValuesTable(fields, null, rows);
 
@@ -2540,7 +2535,7 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlAliasPlaceholder :
 						{
-							obj = new SqlAliasPlaceholder();
+							obj = SqlAliasPlaceholder.Instance;
 							break;
 						}
 

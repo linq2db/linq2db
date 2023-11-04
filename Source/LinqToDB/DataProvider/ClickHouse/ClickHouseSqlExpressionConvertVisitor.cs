@@ -299,7 +299,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 							case DataType.Decimal256:
 							{
 								// toDecimalX(S)
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true, 
+								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
 										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
 										value,
 										new SqlValue((byte)(toType.Type.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
@@ -314,7 +314,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 							{
 								// toDateTime64(S)
 
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true, 
+								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
 										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
 										value,
 										new SqlValue((byte)(toType.Type.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));

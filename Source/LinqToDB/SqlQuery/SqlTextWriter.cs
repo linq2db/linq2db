@@ -40,8 +40,8 @@ namespace LinqToDB.SqlQuery
 			StringBuilder = stringBuilder;
 		}
 
-		public int Length 
-		{ 
+		public int Length
+		{
 			get => StringBuilder.Length;
 			set => StringBuilder.Length = value;
 		}
@@ -102,7 +102,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SqlTextWriter Append(byte value) 
+		public SqlTextWriter Append(byte value)
 		{
 			AppendIndentIfNeeded();
 			StringBuilder.Append(value);
@@ -118,7 +118,7 @@ namespace LinqToDB.SqlQuery
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public SqlTextWriter Append(int value) 
+		public SqlTextWriter Append(int value)
 		{
 			AppendIndentIfNeeded();
 			StringBuilder.Append(value);
@@ -288,7 +288,6 @@ namespace LinqToDB.SqlQuery
 			StringBuilder.AppendFormat(format, args);
 			return this;
 		}
-
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SqlTextWriter Replace(string oldValue, string newValue, int startIndex, int count)

@@ -14,7 +14,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr}",                           TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> OrderBy<T, TR, TKey>(
-							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate, 
+							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -50,7 +50,7 @@ namespace LinqToDB
 		[Sql.Extension("ORDER BY {order_item, ', '}",      TokenName = "order_by_clause")]
 		[Sql.Extension("{expr} DESC",                      TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> OrderByDescending<T, TR, TKey>(
-							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate, 
+							this Sql.IAggregateFunctionNotOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>               expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -85,7 +85,7 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr}", TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> ThenBy<T, TR, TKey>(
-							this Sql.IAggregateFunctionOrdered<T, TR> aggregate, 
+							this Sql.IAggregateFunctionOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>            expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -102,7 +102,7 @@ namespace LinqToDB
 
 		[Sql.Extension("{expr} DESC", TokenName = "order_item")]
 		public static Sql.IAggregateFunctionOrdered<T, TR> ThenByDescending<T, TR, TKey>(
-							this Sql.IAggregateFunctionOrdered<T, TR> aggregate, 
+							this Sql.IAggregateFunctionOrdered<T, TR> aggregate,
 			[ExprParameter]      Expression<Func<T, TKey>>        expr)
 		{
 			if (aggregate == null) throw new ArgumentNullException(nameof(aggregate));
@@ -139,7 +139,7 @@ namespace LinqToDB
 			return aggregate.Query.Provider.Execute<TR>(
 				Expression.Call(
 					null,
-					MethodHelper.GetMethodInfo(ToValue, aggregate), 
+					MethodHelper.GetMethodInfo(ToValue, aggregate),
 					aggregateExpr));
 		}
 	}
@@ -168,7 +168,5 @@ namespace LinqToDB
 
 			public IQueryable Query { get; }
 		}
-
-
 	}
 }

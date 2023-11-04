@@ -11,7 +11,6 @@ namespace LinqToDB.Expressions
 	using Common.Internal;
 	using Reflection;
 
-
 	/// <summary>
 	/// Internal API.
 	/// </summary>
@@ -53,7 +52,6 @@ namespace LinqToDB.Expressions
 
 			return false;
 		}
-
 
 		static object? EvaluateExpressionInternal(this Expression? expr)
 		{

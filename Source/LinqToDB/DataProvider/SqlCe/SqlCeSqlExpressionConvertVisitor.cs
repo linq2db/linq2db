@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			{
 				case "%":
 					return element.Expr1.SystemType!.IsIntegerType()?
-						element : 
+						element :
 						new SqlBinaryExpression(
 							typeof(int),
 							new SqlFunction(typeof(int), "Convert", SqlDataType.Int32, element.Expr1),
@@ -132,7 +132,6 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			return like;
 		}
-
 
 		protected override ISqlExpression ConvertConversion(SqlFunction func)
 		{

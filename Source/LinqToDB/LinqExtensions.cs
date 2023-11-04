@@ -3358,7 +3358,6 @@ namespace LinqToDB
 					Expression.Quote(resultSelector)));
 		}
 
-
 		/// <summary>
 		/// Defines inner join between two sub-queries or tables.
 		/// </summary>
@@ -3979,7 +3978,6 @@ namespace LinqToDB
 					null,
 					MethodHelper.GetMethodInfo(SelectDistinct, source), currentSource.Expression));
 		}
-
 
 		#endregion;
 

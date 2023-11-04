@@ -1,8 +1,9 @@
 ﻿using System;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using LinqToDB.Expressions;
+
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _systemSyncRoot = new ();
@@ -123,7 +124,6 @@ namespace LinqToDB.DataProvider.SQLite
 		private static readonly Version UpdateFromMinVersionMDS       = new (3, 1, 20);
 		private static readonly Version UpdateFromMinVersionSDS       = new (1, 0, 114);
 		private static readonly Version MinDateOnlyAssemblyVersionMDS = new (6, 0, 0);
-		
 
 		public static SQLiteProviderAdapter GetInstance(string name)
 		{

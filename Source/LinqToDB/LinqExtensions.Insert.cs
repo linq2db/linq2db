@@ -402,7 +402,6 @@ namespace LinqToDB
 			return ((IQueryProviderAsync)query).ExecuteAsync<int>(expr, token);
 		}
 
-
 		#region Many records
 
 		/// <summary>

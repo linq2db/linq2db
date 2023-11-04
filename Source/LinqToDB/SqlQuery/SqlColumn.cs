@@ -202,7 +202,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var set in Parent.SetOperators)
 					{
-						if (index >= set.SelectQuery.Select.Columns.Count) 
+						if (index >= set.SelectQuery.Select.Columns.Count)
 							return true;
 
 						if (set.SelectQuery.Select.Columns[index].CanBeNullable(nullability))

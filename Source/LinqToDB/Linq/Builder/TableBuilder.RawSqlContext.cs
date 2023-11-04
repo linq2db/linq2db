@@ -2,12 +2,11 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 	using SqlQuery;
 
 	partial class TableBuilder
@@ -148,7 +147,7 @@ namespace LinqToDB.Linq.Builder
 			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
 				: base(builder, builder.MappingSchema, buildInfo, new SqlRawSqlTable(builder.MappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, parameters))
 			{
-				// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder 
+				// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder
 				if (isScalar)
 				{
 					SqlTable.CanBeNull = false;

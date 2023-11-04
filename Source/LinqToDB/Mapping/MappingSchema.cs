@@ -478,7 +478,6 @@ namespace LinqToDB.Mapping
 			return li == null ? null : (LambdaExpression)ReduceDefaultValue(checkNull ? li.CheckNullLambda : li.Lambda);
 		}
 
-
 		/// <summary>
 		/// Returns conversion delegate for conversion from <typeparamref name="TFrom"/> type to <typeparamref name="TTo"/> type.
 		/// </summary>
@@ -744,7 +743,6 @@ namespace LinqToDB.Mapping
 			valueExpr = InternalExtensions.ApplyLambdaToExpression(convertLambda, valueExpr);
 			return valueExpr;
 		}
-
 
 		static bool Simplify(ref DbDataType type)
 		{
@@ -1636,7 +1634,6 @@ namespace LinqToDB.Mapping
 
 			return SqlDataType.Undefined;
 		}
-
 
 		#endregion
 

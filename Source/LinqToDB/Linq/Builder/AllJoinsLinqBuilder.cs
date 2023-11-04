@@ -61,7 +61,6 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-
 			if (joinType == JoinType.Right || joinType == JoinType.Full)
 				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, null, false);
 			outerContext = new SubQueryContext(outerContext);
@@ -86,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 			if (conditionIndex != -1)
 			{
 				var condition     = methodCall.Arguments[conditionIndex].UnwrapLambda();
-				
+
 				// Comparison should be provided without DefaultIfEmptyBuilder, so we left original contexts for comparison
 				// ScopeContext ensures that comparison will placed on needed level.
 				//
@@ -105,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 				var flags = ProjectFlags.SQL;
 
 				builder.BuildSearchCondition(
-					joinContext, 
+					joinContext,
 					conditionExpr, flags,
 					join.JoinedTable.Condition.Conditions);
 

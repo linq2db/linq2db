@@ -1,9 +1,8 @@
 ﻿using System;
 
-using LinqToDB.Common;
-
 namespace LinqToDB.DataProvider.SQLite
 {
+	using LinqToDB.Common;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;

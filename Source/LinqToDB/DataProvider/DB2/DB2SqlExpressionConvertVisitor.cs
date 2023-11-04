@@ -1,9 +1,9 @@
-﻿using LinqToDB.Extensions;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-
-namespace LinqToDB.DataProvider.DB2
+﻿namespace LinqToDB.DataProvider.DB2
 {
+	using LinqToDB.Extensions;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
+
 	public class DB2SqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public DB2SqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

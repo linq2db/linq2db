@@ -122,16 +122,16 @@ namespace LinqToDB.Common
 		/// annotations in [Column], [Association], or [Nullable].
 		/// </summary>
 		/// <remarks>Defaults to false.</remarks>
-		public static bool UseNullableTypesMetadata 
-		{ 
+		public static bool UseNullableTypesMetadata
+		{
 			get => _useNullableTypesMetadata;
-			set 
+			set
 			{
-				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.				
+				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.
 				if (value) Mapping.Nullability.EnsureSupport();
 				_useNullableTypesMetadata = value;
 			}
-		}	
+		}
 
 		public static class Data
 		{

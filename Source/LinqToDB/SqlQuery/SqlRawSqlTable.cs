@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.SqlQuery
 {
+	using Mapping;
+
 	//TODO: Investigate how to implement only ISqlTableSource interface
 	public class SqlRawSqlTable : SqlTable, IQueryElement
 	{
@@ -47,11 +47,6 @@ namespace LinqToDB.SqlQuery
 
 			SQL                = table.SQL;
 			Parameters         = parameters;
-		}
-
-		public void Modify(ISqlExpression[] parameters)
-		{
-			Parameters = parameters;
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;

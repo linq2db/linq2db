@@ -3,12 +3,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
+	using SqlQuery;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class SubQueryContext : BuildContextBase
@@ -53,7 +52,7 @@ namespace LinqToDB.Linq.Builder
 
 			var table = SelectQuery.From.Tables.FirstOrDefault();
 
-			if (table is { Alias: null })  
+			if (table is { Alias: null })
 				table.Alias = alias;
 		}
 

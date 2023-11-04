@@ -129,7 +129,6 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, argument, toType);
-	
 		}
 	}
 }

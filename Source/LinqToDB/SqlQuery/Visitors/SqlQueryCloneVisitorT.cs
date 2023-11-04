@@ -24,7 +24,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			_context   = default!;
 		}
 
-		public override bool ShouldReplace(IQueryElement element)
+		protected override bool ShouldReplace(IQueryElement element)
 		{
 			if (base.ShouldReplace(element) && _cloneFunc(_context, element))
 			{

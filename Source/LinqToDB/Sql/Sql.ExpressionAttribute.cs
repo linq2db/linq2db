@@ -519,11 +519,11 @@ namespace LinqToDB
 			}
 
 			public virtual Expression GetExpression<TContext>(
-				TContext                                                  context, 
+				TContext                                                  context,
 				IDataContext                                              dataContext,
 				IExpressionEvaluator                                      evaluator,
-				SelectQuery                                               query, 
-				Expression                                                expression, 
+				SelectQuery                                               query,
+				Expression                                                expression,
 				Func<TContext, Expression, ColumnDescriptor?, Expression> converter)
 			{
 				var expressionStr = Expression;
@@ -558,7 +558,6 @@ namespace LinqToDB
 				{
 					resultExpression = SqlNullabilityExpression.ApplyNullability(sqlExpression.Parameters[0], sqlExpression.CanBeNull);
 				}
-
 
 				// placeholder will be updated later by concrete path
 				return ExpressionBuilder.CreatePlaceholder(query, resultExpression, expression);

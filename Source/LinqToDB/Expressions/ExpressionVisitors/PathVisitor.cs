@@ -4,10 +4,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using LinqToDB.Linq;
 
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.Linq;
+
 	// PathVisitor cannot be shared/reused due to _visited state field
 	internal sealed class PathVisitor<TContext>
 	{
@@ -301,7 +302,6 @@ namespace LinqToDB.Expressions
 			ConvertPathTo(typeof(SqlGenericConstructorExpression.Assignment));
 			Path(assignment.Expression, ReflectionHelper.SqlGenericConstructorAssignment.Expression);
 		}
-
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression ConvertPathTo(Type type)

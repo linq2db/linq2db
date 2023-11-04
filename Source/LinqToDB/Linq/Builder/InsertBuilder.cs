@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class InsertBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames = 
+		static readonly string[] MethodNames =
 		{
 			nameof(LinqExtensions.Insert),
 			nameof(LinqExtensions.InsertWithIdentity),
@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 				var genericArguments = methodCall.Method.GetGenericArguments();
 
 				if (typeof(IValueInsertable<>).IsSameOrParentOf(argument.Type) ||
-				    typeof(ISelectInsertable<,>).IsSameOrParentOf(argument.Type))
+					typeof(ISelectInsertable<,>).IsSameOrParentOf(argument.Type))
 				{
 					// static int Insert<T>              (this IValueInsertable<T> source)
 					// static int Insert<TSource,TTarget>(this ISelectInsertable<TSource,TTarget> source)
@@ -139,7 +139,7 @@ namespace LinqToDB.Linq.Builder
 							if (lambda.Parameters.Count == 0)
 							{
 								setterExpr = lambda.Body;
-							}	
+							}
 							else
 								throw new NotImplementedException();
 
@@ -169,8 +169,8 @@ namespace LinqToDB.Linq.Builder
 					insertContext.InsertStatement.SelectQuery = sourceSequence.SelectQuery;
 
 					UpdateBuilder.ParseSetter(builder,
-						intoContextRef, 
-						redirectedExpression, 
+						intoContextRef,
+						redirectedExpression,
 						insertContext.SetExpressions);
 				}
 
@@ -183,9 +183,9 @@ namespace LinqToDB.Linq.Builder
 					insertStatement.Output = new SqlOutputClause();
 					insertContext.OutputExpression = outputExpression;
 
-					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable 
-                        ? SqlTable.Inserted(sequence.MappingSchema.GetEntityDescriptor(outputExpression.Parameters[0].Type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
-                        : null;
+					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable
+						? SqlTable.Inserted(sequence.MappingSchema.GetEntityDescriptor(outputExpression.Parameters[0].Type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
+						: null;
 
 					if (insertedTable == null && insertContext.Into != null)
 					{
@@ -316,7 +316,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var tableContext = SequenceHelper.GetTableContext(Into);
-			
+
 				insert.Into = tableContext?.SqlTable;
 
 				if (tableContext == null || insert.Into == null)
@@ -358,18 +358,18 @@ namespace LinqToDB.Linq.Builder
 					{
 						QueryRunner.SetScalarQuery(query);
 						break;
-					}	
+					}
 					case InsertTypeEnum.InsertOutput:
 					{
 						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 						QueryRunner.SetRunQuery(query, mapper);
 						break;
-					}					
+					}
 					case InsertTypeEnum.InsertOutputInto:
 					{
 						QueryRunner.SetNonQueryQuery(query);
 						break;
-					}	
+					}
 					default:
 						throw new InvalidOperationException($"Unexpected insert type: {InsertType}");
 				}

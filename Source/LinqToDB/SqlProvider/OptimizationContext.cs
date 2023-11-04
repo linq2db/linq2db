@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlProvider
 {
-	using System.Diagnostics.CodeAnalysis;
-
 	using Common;
 	using DataProvider;
 	using Mapping;

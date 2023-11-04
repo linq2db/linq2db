@@ -30,21 +30,21 @@ namespace LinqToDB.Metadata
 	///     </Type>
 	/// </[Root]>
 	/// ]]>
-	/// 
+	///
 	/// <list type="number">
 	/// <item>Root node name could be any</item>
 	/// <item>Type nodes define entity classes with entity type name specified in Name attribute (must be <c>typeof(Entity).FullName</c> or <c>typeof(Entity).Name</c> value)</item>
 	/// <item>Member nodes define entity class members with mapping attributes with member name specified in Name attribute</item>
 	/// <item>Attr nodes define attributes of entity (if nested into Type node) or entity member (when nested into Member node)</item>
 	/// </list>
-	/// 
+	///
 	/// Attribute node format:
 	/// <![CDATA[
 	/// <[AttributeTypeName]>
 	///   <[PropertyName] Value="<serialized_value>" Type="<Type.FullName|Type.Name>" />
 	/// </[AttributeTypeName]>
 	/// ]]>
-	/// 
+	///
 	/// <list type="number">
 	/// <item>Node name is a mapping attribute type name as <c>Type.FullName</c>, <c>Type.Name</c> or <c>Type.Name</c> without <c>"Attribute"</c> suffix</item>
 	/// <item>PropertyName node name is a name of attribute property you want to set</item>

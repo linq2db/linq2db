@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.Common;
+
 	public class ValueTaskToTaskMapper : ICustomMapper
 	{
 		bool ICustomMapper.CanMap(Expression expression)

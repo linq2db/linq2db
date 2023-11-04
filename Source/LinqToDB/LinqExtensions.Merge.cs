@@ -240,7 +240,6 @@ namespace LinqToDB
 						UsingMethodInfo2.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 						mergeQuery.Expression, Expression.Constant(source)));
 
-
 			return new MergeQuery<TTarget, TSource>(query);
 		}
 

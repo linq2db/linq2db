@@ -109,7 +109,7 @@ namespace LinqToDB.Linq.Builder
 
 				var noConvert = corrected.UnwrapConvert();
 
-				if (SequenceHelper.IsSameContext(path, this) 
+				if (SequenceHelper.IsSameContext(path, this)
 				    && EntityType != noConvert.Type
 				    && noConvert is SqlGenericConstructorExpression { ConstructType: SqlGenericConstructorExpression.CreateType.Full })
 				{

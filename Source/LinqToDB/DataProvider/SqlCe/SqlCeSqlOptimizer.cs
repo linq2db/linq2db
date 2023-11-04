@@ -40,7 +40,6 @@ namespace LinqToDB.DataProvider.SqlCe
 					break;
 			}
 
-
 			// call fixer after CorrectSkipAndColumns for remaining cases
 			base.FixEmptySelect(statement);
 

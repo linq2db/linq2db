@@ -1,11 +1,11 @@
 ﻿using System;
 
-using LinqToDB.Extensions;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.DataProvider.Firebird
 {
+	using LinqToDB.Extensions;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
+
 	public class FirebirdSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		const string CASTEXPR = "Cast({0} as {1})";

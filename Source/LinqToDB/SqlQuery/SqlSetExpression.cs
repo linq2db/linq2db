@@ -26,7 +26,7 @@ namespace LinqToDB.SqlQuery
 					var columns = subquery.Select.Columns;
 					if (columns.Count != row.Values.Length)
 						throw new LinqToDBException("Arity of row expression and subquery do not match.");
-					for (int i = 0; i < row.Values.Length; i++)				
+					for (int i = 0; i < row.Values.Length; i++)
 						RefineDbParameter(row.Values[i], columns[i].Expression);
 				}
 				else if (expression is SqlRow sqlRow)
@@ -47,7 +47,6 @@ namespace LinqToDB.SqlQuery
 				RefineDbParameter(column, expression);
 			}
 		}
-
 
 		public ISqlExpression  Column     { get; set; }
 		public ISqlExpression? Expression { get; set; }

@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
 				if (expr == default) return default;
-				
+
 				var outputType = expr.Parameters[0].Type;
 				var param1     = Expression.Parameter(outputType, "source");
 
@@ -270,7 +270,7 @@ namespace LinqToDB.Linq.Builder
 
 			updateStatement.Output.DeletedTable  = deletedTable;
 			updateStatement.Output.InsertedTable = insertedTable;
-			
+
 			if (updateType == UpdateTypeEnum.UpdateOutput)
 			{
 				updateContext.OutputExpression = outputExpression;
@@ -338,7 +338,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			outputContext = deletedContext;
-			
+
 			outputSelectQuery.From.Tables.Clear();
 
 			var deletedTable = ((ITableContext)deletedContext).SqlTable;
@@ -565,7 +565,6 @@ namespace LinqToDB.Linq.Builder
 			public Expression? ValueExpression { get; }
 		}
 
-
 		#endregion
 
 		#region UpdateContext
@@ -574,7 +573,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			ITableContext? _targetTable;
 
-			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement) 
+			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement)
 				: base(querySequence, querySequence.SelectQuery)
 			{
 				UpdateStatement = updateStatement;
@@ -625,7 +624,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var tableContext = TargetTable;
-			
+
 				update.Table                = tableContext?.SqlTable;
 				UpdateStatement.SelectQuery = QuerySequence.SelectQuery;
 
@@ -649,12 +648,12 @@ namespace LinqToDB.Linq.Builder
 						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 						QueryRunner.SetRunQuery(query, mapper);
 						break;
-					}					
+					}
 					case UpdateTypeEnum.UpdateOutputInto:
 					{
 						QueryRunner.SetNonQueryQuery(query);
 						break;
-					}	
+					}
 					default:
 						throw new InvalidOperationException($"Unexpected insert type: {UpdateType}");
 				}
@@ -708,7 +707,7 @@ namespace LinqToDB.Linq.Builder
 					var insertedExpr = builder.RemapToNewPath(constructorProjection.path, constructorProjection.generic, insertedRef);
 					var deletedExpr  = builder.RemapToNewPath(constructorProjection.path, constructorProjection.generic, deletedRef);
 
-					return 
+					return
 						// new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
 						Expression.MemberInit(
 							Expression.New(returnType),
@@ -719,7 +718,7 @@ namespace LinqToDB.Linq.Builder
 				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
 				{
 					FinalizeSetters();
-					
+
 					if (UpdateType == UpdateTypeEnum.UpdateOutput)
 					{
 						if (DeletedContext == null || InsertedContext == null || LastBuildInfo == null || TargetTable == null)

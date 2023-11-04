@@ -25,10 +25,9 @@ namespace LinqToDB.SqlQuery
 		public void Add(SqlSearchCondition? when, SqlInsertClause insert)
 			=> Inserts.Add(new SqlConditionalInsertClause(insert, when));
 
-		public void Modify(SqlTableLikeSource source, List<SqlConditionalInsertClause> inserts)
+		public void Modify(SqlTableLikeSource source)
 		{
 			Source  = source;
-			Inserts = inserts;
 		}
 
 		public override QueryType          QueryType   => QueryType.MultiInsert;

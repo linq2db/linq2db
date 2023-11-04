@@ -696,7 +696,6 @@ namespace LinqToDB.Data
 				throw;
 			}
 
-
 			return _connection;
 		}
 

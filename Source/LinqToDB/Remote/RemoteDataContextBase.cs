@@ -166,7 +166,6 @@ namespace LinqToDB.Remote
 		public  bool InlineParameters { get; set; }
 		public  bool CloseAfterUse    { get; set; }
 
-
 		private List<string>? _queryHints;
 		public  List<string>  QueryHints => _queryHints ??= new();
 

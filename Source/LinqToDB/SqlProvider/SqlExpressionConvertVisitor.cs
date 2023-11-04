@@ -2,17 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml.Linq;
-
-using LinqToDB.Common;
-using LinqToDB.Extensions;
-using LinqToDB.Linq;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlProvider
 {
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
+	using LinqToDB.SqlQuery.Visitors;
+
 	public class SqlExpressionConvertVisitor : SqlQueryVisitor
 	{
 		protected OptimizationContext OptimizationContext = default!;
@@ -44,7 +43,7 @@ namespace LinqToDB.SqlProvider
 			return ProcessElement(element);
 		}
 
-		public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			var newElement = base.VisitSqlColumnExpression(column, expression);
 
@@ -54,13 +53,12 @@ namespace LinqToDB.SqlProvider
 			return expression;
 		}
 
-		public override IQueryElement VisitSqlValue(SqlValue element)
+		protected override IQueryElement VisitSqlValue(SqlValue element)
 		{
 			var newElement = base.VisitSqlValue(element);
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
-
 
 			if (element.Value is Sql.SqlID)
 				return element;
@@ -81,7 +79,7 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		public override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var newElement = base.VisitExprExprPredicate(predicate);
 
@@ -125,7 +123,6 @@ namespace LinqToDB.SqlProvider
 				return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull);
 			}
 
-
 			return predicate;
 		}
 
@@ -146,7 +143,7 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		public override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
+		protected override IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
 		{
 			var newElement = base.VisitInListPredicate(predicate);
 
@@ -275,7 +272,7 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		public override IQueryElement VisitSearchStringPredicate(SqlPredicate.SearchString predicate)
+		protected override IQueryElement VisitSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var newElement = base.VisitSearchStringPredicate(predicate);
 
@@ -328,7 +325,6 @@ namespace LinqToDB.SqlProvider
 			var newStr = str;
 
 			newStr = newStr.Replace(escape, escape + escape);
-
 
 			var toEscape = LikeCharactersToEscape;
 			foreach (var s in toEscape)
@@ -446,7 +442,7 @@ namespace LinqToDB.SqlProvider
 
 		#endregion
 
-		public override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
+		protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
 		{
 			var newElement = base.VisitIsTruePredicate(predicate);
 
@@ -456,7 +452,7 @@ namespace LinqToDB.SqlProvider
 			return predicate.Reduce(NullabilityContext);
 		}
 
-		public override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+		protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			var newElement = base.VisitIsNullPredicate(predicate);
 
@@ -465,20 +461,19 @@ namespace LinqToDB.SqlProvider
 
 			if (NullabilityContext.IsEmpty)
 				return predicate;
-			
+
 			if (!NullabilityContext.CanBeNull(predicate.Expr1))
 				return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
 
 			return predicate;
 		}
 
-		public override IQueryElement VisitSqlFunction(SqlFunction element)
+		protected override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			var newElement = base.VisitSqlFunction(element);
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
-
 
 			newElement = ConvertSqlFunction(element);
 
@@ -488,13 +483,12 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		public override IQueryElement VisitSqlExpression(SqlExpression element)
+		protected override IQueryElement VisitSqlExpression(SqlExpression element)
 		{
 			var newElement = base.VisitSqlExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
-
 
 			return ConvertSqlExpression(element);
 		}
@@ -544,7 +538,7 @@ namespace LinqToDB.SqlProvider
 			return func;
 		}
 
-		public override IQueryElement VisitLikePredicate(SqlPredicate.Like predicate)
+		protected override IQueryElement VisitLikePredicate(SqlPredicate.Like predicate)
 		{
 			var newElement = base.VisitLikePredicate(predicate);
 
@@ -559,7 +553,7 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		public override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			var newElement = base.VisitSqlBinaryExpression(element);
 
@@ -569,7 +563,7 @@ namespace LinqToDB.SqlProvider
 			return ConvertSqlBinaryExpression(element);
 		}
 
-		public override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
+		protected override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
 		{
 			var newElement = base.VisitBetweenPredicate(predicate);
 
@@ -639,7 +633,6 @@ namespace LinqToDB.SqlProvider
 
 			return element;
 		}
-
 
 		#region DataTypes
 
@@ -764,7 +757,7 @@ namespace LinqToDB.SqlProvider
 		protected ISqlPredicate RowComparisonFallback(SqlPredicate.Operator op, SqlRow row1, SqlRow row2, EvaluationContext context)
 		{
 			var rewrite = new SqlSearchCondition();
-						
+
 			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
 				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
@@ -1077,7 +1070,5 @@ namespace LinqToDB.SqlProvider
 		}
 
 		#endregion
-
-
 	}
 }

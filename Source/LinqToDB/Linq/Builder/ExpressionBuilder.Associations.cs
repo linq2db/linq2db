@@ -196,7 +196,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			Expression? notNullCheck = null;
-			if (associationDescriptor.IsList && (prevIsOuter || flags.IsSubquery()) && !flags.IsExtractProjection()) 
+			if (associationDescriptor.IsList && (prevIsOuter || flags.IsSubquery()) && !flags.IsExtractProjection())
 			{
 				var keys = MakeExpression(forContext, rootContext, flags.SqlFlag().KeyFlag());
 				notNullCheck = ExtractNotNullCheck(keys);

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery.Visitors
 {
+	using Common;
+
 	public class SqlQueryActionVisitor<TContext> : QueryElementVisitor
 	{
 		TContext                        _context     = default!;
@@ -51,9 +52,5 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			return result;
 		}
-
-
-
 	}
-
 }

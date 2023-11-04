@@ -72,7 +72,6 @@ namespace LinqToDB.SqlQuery
 		SqlField? _all;
 		SqlField ISqlTableSource.All => _all ??= SqlField.All(this);
 
-
 		public int SourceID { get; }
 
 		IList<ISqlExpression> ISqlTableSource.GetKeys(bool allIfEmpty) => throw new NotImplementedException();
@@ -88,7 +87,7 @@ namespace LinqToDB.SqlQuery
 		Type ISqlExpression.SystemType => throw new NotImplementedException();
 
 		bool ISqlExpression.Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer) => throw new NotImplementedException();
-		
+
 		#endregion
 
 		#region IEquatable

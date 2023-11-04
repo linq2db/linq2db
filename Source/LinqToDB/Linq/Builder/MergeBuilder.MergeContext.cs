@@ -49,14 +49,14 @@ namespace LinqToDB.Linq.Builder
 					{
 						QueryRunner.SetNonQueryQuery(query);
 						break;
-					}	
+					}
 					case MergeKind.MergeWithOutput:
 					case MergeKind.MergeWithOutputSource:
 					{
 						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 						QueryRunner.SetRunQuery(query, mapper);
 						break;
-					}	
+					}
 					default:
 						throw new ArgumentOutOfRangeException(Kind.ToString());
 				}
@@ -64,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) && flags.IsExpression() && 
+				if (SequenceHelper.IsSameContext(path, this) && flags.IsExpression() &&
 				    (Kind == MergeKind.MergeWithOutput || Kind == MergeKind.MergeWithOutputSource))
 				{
 					if (OutputExpression == null || OutputContext == null)

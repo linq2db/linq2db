@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					var isCompatibleForUpdate = IsCompatibleForUpdate(updateStatement.SelectQuery, updateStatement.Update.Table);
 					if (isCompatibleForUpdate)
-					{	
+					{
 						// for OUTPUT we have to use datached variant
 						if (!IsUpdateUsingSingeTable(updateStatement) && updateStatement.Output != null)
 						{

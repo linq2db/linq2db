@@ -1619,7 +1619,7 @@ namespace LinqToDB
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
 			this IDataContext dataContext,
-			RawSqlString      sql, 
+			RawSqlString      sql,
 			params object?[]  parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
@@ -1688,8 +1688,8 @@ namespace LinqToDB
 		/// <param name="expression">The query expression to create.</param>
 		/// <returns>An <see cref="ITable{T}" /> representing the query.</returns>
 		public static ITable<TResult> TableFromExpression<TResult>(
-			this IDataContext                 dataContext, 
-			Expression<Func<ITable<TResult>>> expression) 
+			this IDataContext                 dataContext,
+			Expression<Func<ITable<TResult>>> expression)
 			where TResult : notnull
 		{
 			var body = expression.UnwrapLambda().Body;

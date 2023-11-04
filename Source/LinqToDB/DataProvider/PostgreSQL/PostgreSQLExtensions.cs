@@ -148,7 +148,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			throw new LinqException($"'{nameof(ConcatArrays)}' is server-side method.");
 		}
 
-
 		[Sql.Extension("{array1} || {array2}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Additive)]
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[][] array2)
 		{
@@ -294,7 +293,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			throw new LinqException($"'{nameof(ArrayToString)}' is server-side method.");
 		}
 
-
 		[Sql.Extension("STRING_TO_ARRAY({str}, {delimiter})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static string[] StringToArray(this IPostgreSQLExtensions? ext, [ExprParameter] string str, [ExprParameter] string delimiter)
 		{
@@ -367,7 +365,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (dc, start, stop) => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop})");
 		}
 
-
 		static Func<IDataContext, int, int, int, IQueryable<int>>? _generateSeriesIntStepFunc;
 
 		[ExpressionMethod(nameof(GenerateSeriesIntStepImpl))]
@@ -380,7 +377,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, start, stop, step) => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop}, {step})");
 		}
-
 
 		static Func<IDataContext, DateTime, DateTime, TimeSpan, IQueryable<DateTime>>? _generateSeriesDateFunc;
 

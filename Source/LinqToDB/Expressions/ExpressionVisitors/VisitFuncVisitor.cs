@@ -144,7 +144,6 @@ namespace LinqToDB.Expressions
 				case ExpressionType.RuntimeVariables    : Visit(((RuntimeVariablesExpression)expr).Variables   ); break;
 				case ExpressionType.Loop                : Visit(((LoopExpression            )expr).Body        ); break;
 
-
 				case ExpressionType.MemberInit:
 				{
 					var e = (MemberInitExpression)expr;

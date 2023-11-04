@@ -190,7 +190,6 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-
 		static string[] _passThroughMethodsForUnwrappingDefaultIfEmpty = { nameof(Enumerable.Where), nameof(Enumerable.Select) };
 
 		static Expression UnwrapDefaultIfEmpty(Expression expression)
@@ -224,9 +223,9 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		Expression ProcessEagerLoadingExpression(
-			IBuildContext          buildContext,  
+			IBuildContext          buildContext,
 			SqlEagerLoadExpression eagerLoad,
-			ParameterExpression    queryParameter, 
+			ParameterExpression    queryParameter,
 			List<Preamble>         preambles,
 			Expression[]           previousKeys)
 		{
@@ -357,7 +356,7 @@ namespace LinqToDB.Linq.Builder
 							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
 
 					p => cloningContext.CorrectExpression(p.Value), SqlCacheKey.SqlCacheKeyComparer);
-				
+
 				var saveSqlCache = _cachedSql;
 
 				_cachedSql = _cachedSql.ToDictionary(p =>
@@ -383,7 +382,6 @@ namespace LinqToDB.Linq.Builder
 				_cachedSql       = saveSqlCache;
 				_associations    = saveAssociationsCache;
 			}
-
 
 			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
 
@@ -419,13 +417,13 @@ namespace LinqToDB.Linq.Builder
 			typeof(ExpressionBuilder).GetMethod(nameof(BuildPreambleQueryAttached), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
 
 		Expression BuildPreambleQueryAttached<TKey, T>(
-			IBuildContext       sequence, 
+			IBuildContext       sequence,
 			Expression          keyExpression,
-			Expression          queryExpression, 
+			Expression          queryExpression,
 			ParameterExpression queryParameter,
 			List<Preamble>      preambles,
 			List<(LambdaExpression, bool)>? additionalOrderBy,
-			Expression[]        previousKeys) 
+			Expression[]        previousKeys)
 			where TKey : notnull
 		{
 			var query = new Query<KeyDetailEnvelope<TKey, T>>(DataContext, queryExpression);
@@ -450,7 +448,6 @@ namespace LinqToDB.Linq.Builder
 				resultExpression = ApplyEnumerableOrderBy(resultExpression, additionalOrderBy);
 			}
 
-
 			return resultExpression;
 		}
 
@@ -458,10 +455,10 @@ namespace LinqToDB.Linq.Builder
 			typeof(ExpressionBuilder).GetMethod(nameof(BuildPreambleQueryDetached), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
 
 		Expression BuildPreambleQueryDetached<T>(
-			IBuildContext       sequence, 
-			Expression          queryExpression, 
+			IBuildContext       sequence,
+			Expression          queryExpression,
 			ParameterExpression queryParameter,
-			List<Preamble>      preambles) 
+			List<Preamble>      preambles)
 		{
 			var query = new Query<T>(DataContext, queryExpression);
 
@@ -479,7 +476,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		Expression CompleteEagerLoadingExpressions(
-			Expression          expression,     
+			Expression          expression,
 			IBuildContext       buildContext,
 			ParameterExpression queryParameter,
 			ref List<Preamble>? preambles,

@@ -30,7 +30,7 @@ namespace LinqToDB.SqlProvider
 			return ProcessElement(element);
 		}
 
-		public override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
+		protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
 		{
 			var newElement = base.VisitIsTruePredicate(predicate);
 
@@ -58,7 +58,7 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		public override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
+		protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			var newElement = base.VisitSqlSearchCondition(element);
 
@@ -70,7 +70,7 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		public override IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
+		protected override IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
 		{
 			var newElement = base.VisitNotExprPredicate(predicate);
 
@@ -109,7 +109,7 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		public override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
+		protected override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
 		{
 			var newElement = base.VisitIsDistinctPredicate(predicate);
 
@@ -141,7 +141,7 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		public override IQueryElement VisitSqlCondition(SqlCondition element)
+		protected override IQueryElement VisitSqlCondition(SqlCondition element)
 		{
 			var newElement = base.VisitSqlCondition(element);
 
@@ -168,7 +168,7 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		public override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
+		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
 		{
 			var newElement = base.VisitSqlBinaryExpression(element);
 
@@ -367,7 +367,7 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		public override IQueryElement VisitSqlFunction(SqlFunction element)
+		protected override IQueryElement VisitSqlFunction(SqlFunction element)
 		{
 			var newElement = base.VisitSqlFunction(element);
 
@@ -520,14 +520,14 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		public override IQueryElement VisitSqlExpression(SqlExpression element)
+		protected override IQueryElement VisitSqlExpression(SqlExpression element)
 		{
 			var newElement = base.VisitSqlExpression(element);
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			if (element.Expr      == "{0}" && element.Parameters.Length == 1 && 
+			if (element.Expr      == "{0}" && element.Parameters.Length == 1 &&
 			    element.CanBeNull == element.Parameters[0].CanBeNullable(_nullabilityContext))
 			{
 				return element.Parameters[0];
@@ -536,7 +536,7 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		public override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
+		protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
 			if (!predicate.Expr1.CanBeNullable(_nullabilityContext))
 			{
@@ -546,7 +546,7 @@ namespace LinqToDB.SqlProvider
 			return base.VisitIsNullPredicate(predicate);
 		}
 
-		public override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
+		protected override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
 		{
 			var newNode = base.VisitSqlNullabilityExpression(element);
 
@@ -567,7 +567,7 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		public override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var newElement = base.VisitExprExprPredicate(predicate);
 
@@ -636,7 +636,6 @@ namespace LinqToDB.SqlProvider
 
 			return predicate;
 		}
-
 
 		#region OptimizeCase
 
@@ -791,11 +790,10 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-
-			if (!_nullabilityContext.IsEmpty                   && 
-			    !expr.Expr1.CanBeNullable(_nullabilityContext) && 
-			    !expr.Expr2.CanBeNullable(_nullabilityContext) && 
-			    expr.Expr1.SystemType.IsSignedType()           && 
+			if (!_nullabilityContext.IsEmpty                   &&
+			    !expr.Expr1.CanBeNullable(_nullabilityContext) &&
+			    !expr.Expr2.CanBeNullable(_nullabilityContext) &&
+			    expr.Expr1.SystemType.IsSignedType()           &&
 			    expr.Expr2.SystemType.IsSignedType())
 			{
 				var newExpr = expr switch
@@ -835,7 +833,6 @@ namespace LinqToDB.SqlProvider
 
 							_ => null
 						},
-
 
 					_ => null
 				};

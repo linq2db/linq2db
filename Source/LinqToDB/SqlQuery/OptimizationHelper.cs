@@ -217,7 +217,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return searchCondition;
-		}		
+		}
 
 		public static SqlCondition OptimizeCondition(SqlCondition condition)
 		{

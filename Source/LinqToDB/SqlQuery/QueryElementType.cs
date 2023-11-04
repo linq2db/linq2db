@@ -77,7 +77,6 @@
 		GroupingSet,
 
 		Comment,
-		SqlID, //TODO: remove?
 
 		SqlExtension,
 		/// <summary>

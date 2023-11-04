@@ -122,7 +122,6 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-
 			if (GroupingType != GroupingType.Default)
 				writer.Append(')');
 

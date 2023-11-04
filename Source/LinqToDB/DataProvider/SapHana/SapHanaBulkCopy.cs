@@ -109,7 +109,6 @@ namespace LinqToDB.DataProvider.SapHana
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rc             = new BulkCopyRowsCopied();
 
-
 			var hanaOptions = SapHanaProviderAdapter.HanaBulkCopyOptions.Default;
 
 			if (options.KeepIdentity == true) hanaOptions |= SapHanaProviderAdapter.HanaBulkCopyOptions.KeepIdentity;
@@ -186,7 +185,6 @@ namespace LinqToDB.DataProvider.SapHana
 			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
 			var rc             = new BulkCopyRowsCopied();
-
 
 			var hanaOptions = SapHanaProviderAdapter.HanaBulkCopyOptions.Default;
 

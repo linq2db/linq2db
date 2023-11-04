@@ -51,7 +51,6 @@ namespace LinqToDB.Linq
 					return query;
 				})!;
 
-
 			return result;
 		}
 

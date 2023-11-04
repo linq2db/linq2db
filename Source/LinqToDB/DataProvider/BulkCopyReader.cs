@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider
 		{
 			if (_enumerator != null)
 				return _enumerator.MoveNext();
-			
+
 			return SafeAwaiter.Run(() => _asyncEnumerator!.MoveNextAsync());
 		}
 

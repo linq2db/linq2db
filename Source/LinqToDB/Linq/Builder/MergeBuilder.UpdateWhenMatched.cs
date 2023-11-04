@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 				if (!setter.IsNullValue())
 				{
 					var setterLambda = (LambdaExpression)setter.Unwrap();
-					
+
 					var setterExpression = mergeContext.SourceContext.PrepareTargetSource(setterLambda);
 
 					var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();

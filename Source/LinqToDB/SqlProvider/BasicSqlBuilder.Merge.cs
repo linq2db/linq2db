@@ -156,7 +156,6 @@ namespace LinqToDB.SqlProvider
 				.AppendLine(" THEN")
 				.Append("INSERT");
 
-
 			var insertClause = new SqlInsertClause();
 			insertClause.Items.AddRange(operation.Items);
 

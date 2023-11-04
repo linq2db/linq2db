@@ -183,7 +183,6 @@ namespace LinqToDB.Linq.Builder
 			List<Preamble>? preambles = null;
 			BuildQuery((Query<T>)_query, sequence, param, ref preambles, Array<Expression>.Empty);
 
-
 			foreach (var q in _query.Queries)
 			{
 				if (Tag?.Lines.Count > 0)
@@ -204,10 +203,10 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		void BuildQuery<T>(
-			Query<T>            query, 
-			IBuildContext       sequence, 
-			ParameterExpression queryParameter, 
-			ref List<Preamble>? preambles, 
+			Query<T>            query,
+			IBuildContext       sequence,
+			ParameterExpression queryParameter,
+			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
 			var expr = MakeExpression(sequence, new ContextRefExpression(typeof(T), sequence), ProjectFlags.Expression);
@@ -258,7 +257,7 @@ namespace LinqToDB.Linq.Builder
 		Expression ExpandToRoot(Expression expression, BuildInfo buildInfo)
 		{
 			var flags = buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root;
-			
+
 			flags = buildInfo.GetFlags(flags) | ProjectFlags.Subquery;
 
 			expression = UnwrapSequenceExpression(expression);
@@ -274,7 +273,7 @@ namespace LinqToDB.Linq.Builder
 				expression = result;
 
 			} while (true);
-			
+
 			return result;
 		}
 
@@ -393,7 +392,6 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-
 		#endregion
 
 		#region ConvertParameters
@@ -437,7 +435,6 @@ namespace LinqToDB.Linq.Builder
 			return _optimizationContext.ExposeExpressionTransformer(expression).Expression;
 		}
 
-
 		#endregion
 
 		#region OptimizeExpression
@@ -458,7 +455,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			return _query.AddQueryableMemberAccessors(context, memberInfo.MemberInfo, dataContext, qe);
 		}
-
 
 		#endregion
 
@@ -485,7 +481,7 @@ namespace LinqToDB.Linq.Builder
 #if DEBUG
 		int _contextCounter;
 
-		public int GenerateContextId() 
+		public int GenerateContextId()
 		{
 			var nextId = ++_contextCounter;
 			return nextId;
@@ -611,6 +607,5 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
-
 	}
 }

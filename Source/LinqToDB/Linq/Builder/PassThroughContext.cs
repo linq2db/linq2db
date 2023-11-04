@@ -1,9 +1,8 @@
 ﻿using System.Linq.Expressions;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Mapping;
 	using SqlQuery;
 
 	abstract class PassThroughContext : BuildContextBase

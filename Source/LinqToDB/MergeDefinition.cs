@@ -1,12 +1,13 @@
-﻿using LinqToDB.Common;
-using LinqToDB.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB
 {
+	using LinqToDB.Common;
+	using LinqToDB.Linq;
+
 	public enum MergeOperationType
 	{
 		Insert,
@@ -159,7 +160,6 @@ namespace LinqToDB
 				UpdateExpression         = update;
 				UpdateBySourceExpression = updateBySource;
 			}
-
 
 			public bool HasCondition
 			{

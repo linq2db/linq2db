@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 			var outerKey = SequenceHelper.PrepareBody(outerKeyLambda, outerContext);
 
 			var elementType = TypeHelper.GetEnumerableElementType(resultLambda.Parameters[1].Type);
-			var innerContext = new GroupJoinInnerContext(buildInfo.Parent, outerContext.SelectQuery, builder, 
+			var innerContext = new GroupJoinInnerContext(buildInfo.Parent, outerContext.SelectQuery, builder,
 				elementType,
 				outerKey,
 				innerKeyLambda, innerExpression);
@@ -72,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (SequenceHelper.IsSameContext(path, this) && (flags.IsExpression() || flags.IsExtractProjection()) 
+				if (SequenceHelper.IsSameContext(path, this) && (flags.IsExpression() || flags.IsExtractProjection())
 				                                             && !path.Type.IsAssignableFrom(ElementType))
 				{
 					var result = GetGroupJoinCall();
@@ -131,6 +131,5 @@ namespace LinqToDB.Linq.Builder
 			}
 
 		}
-		
 	}
 }

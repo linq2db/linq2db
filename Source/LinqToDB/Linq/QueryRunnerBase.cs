@@ -63,7 +63,6 @@ namespace LinqToDB.Linq
 		}
 #endif
 
-
 		protected virtual void SetCommand(bool forGetSqlText)
 		{
 			var parameterValues = new SqlParameterValues();

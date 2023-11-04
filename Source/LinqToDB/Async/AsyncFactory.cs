@@ -99,14 +99,14 @@ namespace LinqToDB.Async
 		private static async Task<IAsyncDbTransaction> Wrap<TTransaction>(Task<TTransaction> transaction)
 			where TTransaction: DbTransaction
 		{
-			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
+			return Create(await transaction.ConfigureAwait(Configuration.ContinueOnCapturedContext));
 		}
 
 #if NATIVE_ASYNC
 		private static async ValueTask<IAsyncDbTransaction> WrapValue<TTransaction>(ValueTask<TTransaction> transaction)
 			where TTransaction : DbTransaction
 		{
-			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
+			return Create(await transaction.ConfigureAwait(Configuration.ContinueOnCapturedContext));
 		}
 #endif
 
@@ -235,7 +235,6 @@ namespace LinqToDB.Async
 									   ?? CreateDelegate<Func<DbConnection, ValueTask>, DbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true);
 #endif
 
-
 			if (beginTransactionAsync      != null
 				|| beginTransactionIlAsync != null
 				|| openAsync               != null
@@ -334,7 +333,6 @@ namespace LinqToDB.Async
 		{
 			// taskType = typeof(Task<TResult>);
 			var taskType = body.Type;
-
 
 			// dataType = typeof(TResult);
 			var dataType = taskType.GenericTypeArguments[0];

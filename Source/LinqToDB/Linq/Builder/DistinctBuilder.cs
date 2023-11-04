@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			if (sequence == null)
 				return null;
-			
+
 			if (buildInfo.IsSubQuery)
 			{
 				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))

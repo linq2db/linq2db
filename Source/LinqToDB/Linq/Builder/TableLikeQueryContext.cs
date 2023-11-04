@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 	using SqlQuery;
 
 	sealed class TableLikeQueryContext : BuildContextBase
@@ -29,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 		Expression ProjectionBody       { get; }
 		Expression SelfTargetPropAccess { get; }
 
-		public TableLikeQueryContext(ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef) 
+		public TableLikeQueryContext(ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef)
 			: base(sourceContextRef.BuildContext.Builder, targetContextRef.ElementType, sourceContextRef.BuildContext.SelectQuery)
 		{
 			TargetContextRef  = targetContextRef;
@@ -125,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 					if (e.NodeType == ExpressionType.MemberAccess)
 					{
 						var unwrappedObj = ((MemberExpression)e).Expression.UnwrapConvert();
-						if (ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetContextRef) || 
+						if (ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetContextRef) ||
 							ExpressionEqualityComparer.Instance.Equals(unwrappedObj, ctx.TargetPropAccess))
 						{
 							return true;
@@ -193,7 +191,7 @@ namespace LinqToDB.Linq.Builder
 
 			var subqueryPath        = projectedPath;
 			var correctedPath       = subqueryPath;
-			
+
 			if (!flags.IsTest())
 			{
 				if (IsTargetAssociation(projectedPath))
@@ -287,7 +285,6 @@ namespace LinqToDB.Linq.Builder
 
 			return result;
 		}
-
 
 		class ProjectionHelper<TTarget, TSource>
 		{

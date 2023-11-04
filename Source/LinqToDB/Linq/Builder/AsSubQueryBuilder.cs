@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 				sequence.SelectQuery.QueryName = (string?)builder.EvaluateExpression(methodCall.Arguments[1]);
 
 			sequence = new SubQueryContext(sequence);
-			
+
 			return sequence;
 		}
 	}

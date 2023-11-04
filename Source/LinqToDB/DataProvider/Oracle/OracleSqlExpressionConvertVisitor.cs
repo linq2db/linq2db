@@ -1,8 +1,8 @@
-﻿using LinqToDB.Extensions;
-using System;
+﻿using System;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using LinqToDB.Extensions;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -119,7 +119,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					if (func.Parameters.Length == 2)
 						return ConvertCoalesceToBinaryFunc(func, "Nvl");
-							
+
 					return func;
 				}
 
@@ -154,7 +154,6 @@ namespace LinqToDB.DataProvider.Oracle
 				if (ex != null)
 					return ex;
 			}
-
 
 			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
 #if NET6_0_OR_GREATER

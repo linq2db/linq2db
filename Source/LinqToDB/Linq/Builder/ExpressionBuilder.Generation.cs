@@ -189,7 +189,7 @@ namespace LinqToDB.Linq.Builder
 						: SqlGenericConstructorExpression.CreateType.Full
 					: SqlGenericConstructorExpression.CreateType.Auto,
 				currentPath.Type,
-				null, 
+				null,
 				new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members),
 				context);
 
@@ -206,11 +206,10 @@ namespace LinqToDB.Linq.Builder
 				var ed = MappingSchema.GetEntityDescriptor(m.Type, DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				if (ed.FindAssociationDescriptor(memberInfo) is AssociationDescriptor inheritedAssociationDescriptor)
 					return inheritedAssociationDescriptor;
-			}	
+			}
 
 			return null;
 		}
-
 
 		#endregion Entity Construction
 
@@ -309,12 +308,11 @@ namespace LinqToDB.Linq.Builder
 			return found;
 		}
 
-
 		Expression? TryWithConstructor(
 			MappingSchema                                     mappingSchema,
 			TypeAccessor                                      typeAccessor,
 			ConstructorInfo?                                  constructorInfo,
-			SqlGenericConstructorExpression                   constructorExpression, 
+			SqlGenericConstructorExpression                   constructorExpression,
 			List<SqlGenericConstructorExpression.Assignment>? missed)
 		{
 			NewExpression newExpression;
@@ -377,7 +375,6 @@ namespace LinqToDB.Linq.Builder
 				newExpression = Expression.New(constructorInfo!, parameterValues);
 			}
 
-
 			if (constructorExpression.Assignments.Count == 0 || loadedColumns.Count == constructorExpression.Assignments.Count)
 			{
 				// Everything is fit into parameters
@@ -424,7 +421,7 @@ namespace LinqToDB.Linq.Builder
 								continue;
 							}
 						}
-						
+
 						if (!memberAccessor.HasSetter)
 						{
 							if (assignment.IsMandatory)
@@ -444,7 +441,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (loadedColumns.Count + bindings.Count + ignored + (dynamicProperties?.Count ?? 0) + (additionalSteps?.Count ?? 0) 
+			if (loadedColumns.Count + bindings.Count + ignored + (dynamicProperties?.Count ?? 0) + (additionalSteps?.Count ?? 0)
 			    != constructorExpression.Assignments.Count)
 			{
 				return null;
@@ -656,7 +653,6 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-
 		ConstructorInfo? SelectParameterizedConstructor(Type objectType)
 		{
 			var constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
@@ -759,10 +755,8 @@ namespace LinqToDB.Linq.Builder
 					throw new NotImplementedException();
 			}
 		}
-		
 
 		#endregion
-
 
 		public SqlGenericConstructorExpression RemapToNewPath(Expression prefixPath, SqlGenericConstructorExpression constructorExpression, Expression currentPath)
 		{

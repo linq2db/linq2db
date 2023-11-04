@@ -18,7 +18,6 @@ namespace LinqToDB.SqlProvider
 				.Append(param)
 				.Append(')');
 
-
 			object? GetValue(SqlValue value)
 			{
 				return value.Value is Sql.SqlID id ? sqlBuilder.BuildSqlID(id) : value.Value;

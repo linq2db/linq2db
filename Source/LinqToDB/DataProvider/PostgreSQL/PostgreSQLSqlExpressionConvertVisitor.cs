@@ -1,10 +1,9 @@
-﻿using LinqToDB.Extensions;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
-using LinqToDB.SqlQuery.Visitors;
-
-namespace LinqToDB.DataProvider.PostgreSQL
+﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using LinqToDB.Extensions;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
+
 	public class PostgreSQLSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public PostgreSQLSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

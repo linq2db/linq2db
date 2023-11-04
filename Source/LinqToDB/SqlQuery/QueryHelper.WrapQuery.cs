@@ -14,9 +14,9 @@ namespace LinqToDB.SqlQuery
 			public Action<TContext, IReadOnlyList<SelectQuery>>     OnWrap   { get; }
 
 			public WrapQueryVisitor(
-				VisitMode                                        visitMode, 
-				TContext                                         context, 
-				Func<TContext, SelectQuery, IQueryElement?, int> wrapTest, 
+				VisitMode                                        visitMode,
+				TContext                                         context,
+				Func<TContext, SelectQuery, IQueryElement?, int> wrapTest,
 				Action<TContext, IReadOnlyList<SelectQuery>>     onWrap
 				) : base(visitMode)
 			{
@@ -25,7 +25,7 @@ namespace LinqToDB.SqlQuery
 				OnWrap   = onWrap;
 			}
 
-			public override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+			protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 			{
 				selectQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
 
@@ -193,6 +193,5 @@ namespace LinqToDB.SqlQuery
 				allowMutation,
 				withStack);
 		}
-	
 	}
 }

@@ -104,7 +104,6 @@ namespace LinqToDB.Linq.Builder
 				wrapped = true;
 			}
 
-
 			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				sequence.SelectQuery.OrderBy.Items.Clear();
 

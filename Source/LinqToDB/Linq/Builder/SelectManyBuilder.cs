@@ -46,14 +46,12 @@ namespace LinqToDB.Linq.Builder
 			// GroupJoin handling
 			expr = builder.MakeExpression(sequence, expr, ProjectFlags.ExtractProjection);
 
-
 			var collectionSelectQuery    = new SelectQuery();
 			var collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
 			{
-				CreateSubQuery = true, 
+				CreateSubQuery = true,
 				SourceCardinality = SourceCardinality.OneOrMany
 			};
-
 
 			var fakejoin = new SqlFromClause.Join(JoinType.Auto, collectionSelectQuery, null, false, null);
 			sequence.SelectQuery.From.Tables[0].Joins.Add(fakejoin.JoinedTable);
@@ -84,7 +82,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				resultExpression = new ContextRefExpression(genericArguments[^1], collection);
 			}
-			else 
+			else
 			{
 				resultExpression = SequenceHelper.ReplaceBody(resultSelector.Body, resultSelector.Parameters[0], sequence);
 				if (resultSelector.Parameters.Count > 1)

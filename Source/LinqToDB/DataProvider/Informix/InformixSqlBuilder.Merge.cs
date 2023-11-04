@@ -1,6 +1,7 @@
-﻿namespace LinqToDB.DataProvider.Informix
+﻿using System.Collections.Generic;
+
+namespace LinqToDB.DataProvider.Informix
 {
-	using System.Collections.Generic;
 	using SqlQuery;
 
 	partial class InformixSqlBuilder

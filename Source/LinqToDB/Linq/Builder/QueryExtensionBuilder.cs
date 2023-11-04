@@ -86,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;
-						else 
+						else
 							return null;
 					}
 					else if (data.Expression is LambdaExpression le)
@@ -95,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;
-						else 
+						else
 							return null;
 					}
 					else
@@ -104,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;
-						else 
+						else
 							return null;
 					}
 				}

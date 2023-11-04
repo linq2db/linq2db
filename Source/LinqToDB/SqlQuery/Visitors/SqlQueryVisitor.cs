@@ -49,7 +49,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				return base.Visit(element);
 			}
 
-			public override IQueryElement VisitCteClauseReference(CteClause element)
+			protected override IQueryElement VisitCteClauseReference(CteClause element)
 			{
 				if (_queryVisitor.GetReplacement(element, out var newElement))
 					return newElement;
@@ -120,7 +120,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return newElement;
 		}
 
-		public override IQueryElement VisitCteClauseReference(CteClause element)
+		protected override IQueryElement VisitCteClauseReference(CteClause element)
 		{
 			if (GetReplacement(element, out var newElement))
 				return newElement;
@@ -128,7 +128,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.VisitCteClauseReference(element);
 		}
 
-		public override IQueryElement VisitCteClause(CteClause element)
+		protected override IQueryElement VisitCteClause(CteClause element)
 		{
 			if (GetReplacement(element, out var newElement))
 				return newElement;
@@ -136,7 +136,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.VisitCteClause(element);
 		}
 
-		public override IQueryElement VisitSqlColumnReference(SqlColumn element)
+		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
 			if (GetReplacement(element, out var replacement))
 				return replacement;
@@ -144,7 +144,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.VisitSqlColumnReference(element);
 		}
 
-		public override IQueryElement VisitSqlFieldReference(SqlField element)
+		protected override IQueryElement VisitSqlFieldReference(SqlField element)
 		{
 			if (GetReplacement(element, out var replacement))
 				return replacement;

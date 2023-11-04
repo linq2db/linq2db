@@ -328,7 +328,7 @@ namespace LinqToDB
 
 				public ExtensionBuilder(
 					TContext                                                  context,
-					IExpressionEvaluator                                      evaluator, 
+					IExpressionEvaluator                                      evaluator,
 					string?                                                   configuration,
 					object?                                                   builderValue,
 					IDataContext                                              dataContext,
@@ -586,7 +586,7 @@ namespace LinqToDB
 									if (call.Arguments.Count > 0 && typeof(IQueryableContainer).IsSameOrParentOf(firstArgType) || typeof(IEnumerable<>).IsSameOrParentOf(firstArgType))
 									{
 										var paramAttribute = call.Method.GetParameters()[0].GetAttribute<ExprParameterAttribute>();
-										if (paramAttribute == null || 
+										if (paramAttribute == null ||
 										    paramAttribute.ParameterKind == ExprParameterKind.Default ||
 										    paramAttribute.ParameterKind == ExprParameterKind.Sequence)
 										{
@@ -750,7 +750,6 @@ namespace LinqToDB
 									var sqlExpression = converter(context, arg, descriptor);
 									sqlExpressions = new[] { sqlExpression };
 								}
-
 
 								if (descriptor == null)
 								{

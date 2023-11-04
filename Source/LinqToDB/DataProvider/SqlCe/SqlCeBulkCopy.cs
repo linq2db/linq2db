@@ -79,7 +79,6 @@ namespace LinqToDB.DataProvider.SqlCe
 					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
-
 			return ret;
 		}
 #endif

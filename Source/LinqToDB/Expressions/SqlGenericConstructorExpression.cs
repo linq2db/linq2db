@@ -275,7 +275,7 @@ namespace LinqToDB.Expressions
 #pragma warning disable CS8604 // Possible null reference argument.
 			Parameters = GetMethodParameters(memberInitExpression.NewExpression.Constructor, memberInitExpression.NewExpression.Arguments);
 #pragma warning restore CS8604 // Possible null reference argument.
-			
+
 			var items = GetBindingsAssignments(memberInitExpression.Bindings);
 
 			NewExpression = memberInitExpression.NewExpression;

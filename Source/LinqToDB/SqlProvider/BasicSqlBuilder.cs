@@ -818,7 +818,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildAlterDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 		}
-		
+
 		protected virtual void BuildDeleteClause(NullabilityContext nullability, SqlDeleteStatement deleteStatement)
 		{
 			AppendIndent();
@@ -1953,7 +1953,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected void BuildTableExtensions(
-			NullabilityContext nullability, 
+			NullabilityContext nullability,
 			StringBuilder sb,
 			SqlTable table, string alias,
 			string? prefix, string delimiter, string? suffix)
@@ -1971,7 +1971,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected void BuildTableExtensions(
-			NullabilityContext nullability, 
+			NullabilityContext nullability,
 			StringBuilder sb,
 			SqlTable table, string alias,
 			string? prefix, string delimiter, string? suffix,
@@ -2012,7 +2012,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected void BuildQueryExtensions(
-			NullabilityContext      nullability, 
+			NullabilityContext      nullability,
 			StringBuilder           sb,
 			List<SqlQueryExtension> sqlQueryExtensions,
 			string?                 prefix,
@@ -2351,7 +2351,7 @@ namespace LinqToDB.SqlProvider
 					if (doTake)
 						StringBuilder.Append(' ');
 				}
-		
+
 				if (doTake)
 				{
 					StringBuilder.AppendFormat(
@@ -2392,7 +2392,7 @@ namespace LinqToDB.SqlProvider
 			{
 				BuildPredicate(nullability, parentPrecedence, parentPrecedence,
 					new SqlPredicate.ExprExpr(
-						new SqlValue(true), 
+						new SqlValue(true),
 						SqlPredicate.Operator.Equal,
 						new SqlValue(true), false));
 			}
@@ -3043,7 +3043,7 @@ namespace LinqToDB.SqlProvider
 
 						break;
 					}
-						
+
 				case QueryElementType.SqlDataType:
 					BuildDataType((SqlDataType)expr, forCreateTable: false, canBeNull: true);
 					break;

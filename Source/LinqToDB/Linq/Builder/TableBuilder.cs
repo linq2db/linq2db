@@ -3,13 +3,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 	using Reflection;
 
 	sealed partial class TableBuilder : ISequenceBuilder
@@ -88,11 +86,11 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (buildInfo.IsSubQuery && buildInfo.SelectQuery.From.Tables.Count == 0)
 						{
-							// It should be handled by GroupByElementBuilder 
+							// It should be handled by GroupByElementBuilder
 							//
 							if (typeof(IGrouping<,>).IsSameOrParentOf(expression.Type))
 								break;
-							
+
 							parentContext = builder.GetContext(buildInfo.Parent, expression);
 							if (parentContext != null)
 							{
@@ -161,7 +159,6 @@ namespace LinqToDB.Linq.Builder
 
 			throw new LinqException($"Could not retrieve DataContext information from expression '{expression}'");
 		}
-
 
 		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{

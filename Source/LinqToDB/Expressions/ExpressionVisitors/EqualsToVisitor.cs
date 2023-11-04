@@ -56,7 +56,6 @@ namespace LinqToDB.Expressions
 			public HashSet<Expression>?          Visited;
 			public Dictionary<MemberInfo, bool>? MemberCompareCache;
 
-
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool IsParametrized(Expression expr)
 			{
@@ -68,7 +67,6 @@ namespace LinqToDB.Expressions
 				Visited?.Clear();
 			}
 		}
-
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool CompareMemberExpression(MemberInfo memberInfo, EqualsToInfo info)
@@ -393,7 +391,6 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
-			
 			for (var i = 0; i < expr1.Arguments.Count; i++)
 			{
 				if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))

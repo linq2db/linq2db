@@ -4,7 +4,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlSelectStatement : SqlStatementWithQueryBase
 	{
-		public SqlSelectStatement(SelectQuery selectQuery) : base(selectQuery)
+		public SqlSelectStatement(SelectQuery? selectQuery) : base(selectQuery)
 		{
 		}
 

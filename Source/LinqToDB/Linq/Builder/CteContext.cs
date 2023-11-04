@@ -10,7 +10,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
-
 	internal class CteContext : BuildContextBase
 	{
 		public Expression CteExpression { get; set;  }
@@ -22,10 +21,10 @@ namespace LinqToDB.Linq.Builder
 		public SubQueryContext? SubqueryContext      { get; private set; }
 		public CteClause        CteClause            { get; }
 
-		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression) 
+		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
 			: base(builder, cteClause.ObjectType, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
 		{
-			CteInnerQueryContext = cteInnerQueryContext; 
+			CteInnerQueryContext = cteInnerQueryContext;
 			CteClause            = cteClause;
 			CteExpression        = cteExpression;
 		}
@@ -191,6 +190,5 @@ namespace LinqToDB.Linq.Builder
 		{
 			throw new InvalidOperationException();
 		}
-		
 	}
 }

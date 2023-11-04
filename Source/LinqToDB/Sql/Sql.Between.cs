@@ -1,9 +1,10 @@
 ﻿#pragma warning disable CS8604 // TODO:WAITFIX
 using System;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
+	using LinqToDB.SqlQuery;
+
 	partial class Sql
 	{
 
@@ -44,7 +45,7 @@ namespace LinqToDB
 					new SqlPredicate.Between(args[0], false, args[1], args[2])));
 			}
 		}
-		
+
 		private sealed class NotBetweenBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
@@ -54,6 +55,5 @@ namespace LinqToDB
 					new SqlPredicate.Between(args[0], true, args[1], args[2])));
 			}
 		}
-		
 	}
 }

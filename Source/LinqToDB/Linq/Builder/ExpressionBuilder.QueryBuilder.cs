@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 			[return: NotNullIfNotNull(nameof(node))]
 			public override Expression? Visit(Expression? node)
 			{
-				if (node == null) 
+				if (node == null)
 					return null;
 
 				if (node.NodeType == ExpressionType.Parameter || node.NodeType == ExpressionType.Call || node.NodeType == ExpressionType.MemberAccess ||
@@ -110,10 +110,10 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		Expression FinalizeProjection<T>(
-			Query<T>            query, 
-			IBuildContext       context, 
-			Expression          expression, 
-			ParameterExpression queryParameter, 
+			Query<T>            query,
+			IBuildContext       context,
+			Expression          expression,
+			ParameterExpression queryParameter,
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
@@ -212,8 +212,6 @@ namespace LinqToDB.Linq.Builder
 									break;
 
 								placeholder = context.builder.MakeColumn(parentQuery, placeholder);
-
-
 							} while (true);
 
 							return placeholder;
@@ -363,7 +361,6 @@ namespace LinqToDB.Linq.Builder
 					if (transformed is SqlPlaceholderExpression placeholder)
 						return placeholder.WithPath(expr);
 
-
 					if (attr.ServerSideOnly)
 					{
 						if (transformed is SqlErrorExpression errorExpr)
@@ -502,7 +499,7 @@ namespace LinqToDB.Linq.Builder
 			var testExpression = CorrectRoot(context, expr);
 
 			var shouldCache = flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsRoot();
-			
+
 			if (shouldCache && _buildContextCache?.TryGetValue(testExpression, out var item) == true)
 				return item;
 
@@ -511,7 +508,7 @@ namespace LinqToDB.Linq.Builder
 				if (_testbuildContextCache?.TryGetValue(testExpression, out var testItem) == true)
 					return testItem;
 			}
-			
+
 			var rootQuery = GetRootContext(context, testExpression, false);
 			rootQuery ??= GetRootContext(context, expr, false);
 
@@ -683,7 +680,7 @@ namespace LinqToDB.Linq.Builder
 		#region Build Mapper
 
 		public Expression ToReadExpression(
-			ExpressionGenerator expressionGenerator, 
+			ExpressionGenerator expressionGenerator,
 			NullabilityContext  nullability,
 			Expression          expression)
 		{
@@ -713,7 +710,7 @@ namespace LinqToDB.Linq.Builder
 
 					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
 
-					var valueType = columnDescriptor?.GetDbDataType(true).SystemType 
+					var valueType = columnDescriptor?.GetDbDataType(true).SystemType
 					                ?? placeholder.Type;
 
 					var canBeNull = nullability.CanBeNull(placeholder.Sql) || placeholder.Type.IsNullable();
@@ -798,12 +795,12 @@ namespace LinqToDB.Linq.Builder
 
 			var mappingBody = expressionGenerator.Build();
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>>(mappingBody, 
-				QueryRunnerParam, 
-				ExpressionConstants.DataContextParam, 
-				DataReaderParam, 
-				ExpressionParam, 
-				ParametersParam, 
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>>(mappingBody,
+				QueryRunnerParam,
+				ExpressionConstants.DataContextParam,
+				DataReaderParam,
+				ExpressionParam,
+				ParametersParam,
 				PreambleParam);
 
 			return mapper;

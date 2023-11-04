@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 	using SqlQuery;
 
 	sealed class InsertOrUpdateBuilder : MethodCallBuilder
@@ -106,7 +105,7 @@ namespace LinqToDB.Linq.Builder
 		sealed class InsertOrUpdateContext : BuildContextBase
 		{
 			public override MappingSchema MappingSchema => Context.MappingSchema;
-			
+
 			public IBuildContext Context { get; }
 
 			public   SqlInsertOrUpdateStatement InsertOrUpdateStatement { get; }

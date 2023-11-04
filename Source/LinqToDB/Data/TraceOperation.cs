@@ -50,7 +50,6 @@ namespace LinqToDB.Data
 		/// </summary>
 		DisposeQuery,
 
-
 		/// <summary>
 		/// <see cref="DataConnection.BeginTransaction()"/> or <see cref="DataConnection.BeginTransaction(System.Data.IsolationLevel)"/> or
 		/// <see cref="DataConnection.BeginTransactionAsync(System.Threading.CancellationToken)"/> or <see cref="DataConnection.BeginTransactionAsync(System.Data.IsolationLevel, System.Threading.CancellationToken)"/>operation.

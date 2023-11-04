@@ -83,7 +83,7 @@ namespace LinqToDB.Expressions
 					return ((UnaryExpression)ex).Operand.Unwrap();
 				case ExpressionType.Extension:
 				{
-					if (ex is SqlAdjustTypeExpression adjustType) 
+					if (ex is SqlAdjustTypeExpression adjustType)
 					{
 						return adjustType.Expression.Unwrap();
 					}
@@ -112,7 +112,7 @@ namespace LinqToDB.Expressions
 				}
 				case ExpressionType.Extension:
 				{
-					if (ex is SqlAdjustTypeExpression adjustType) 
+					if (ex is SqlAdjustTypeExpression adjustType)
 					{
 						return adjustType.Expression.Unwrap();
 					}

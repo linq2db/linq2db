@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class TableAttributeBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames = 
+		static readonly string[] MethodNames =
 		{
 			nameof(LinqExtensions.TableName),
 			nameof(LinqExtensions.ServerName),

@@ -231,15 +231,14 @@ namespace LinqToDB.Data
 					SqlStatement.PrepareQueryAndAliases(statement, query.Aliases, out aliases);
 				}
 
-
 				var optimizeVisitor = sqlOptimizer.CreateOptimizerVisitor(false);
 				var convertVisitor  = sqlOptimizer.CreateConvertVisitor(false);
 
 				for (var i = 0; i < cc; i++)
 				{
 					var optimizationContext = new OptimizationContext(evaluationContext, dataConnection.Options,
-						dataConnection.DataProvider.SqlProviderFlags, 
-						dataConnection.MappingSchema, 
+						dataConnection.DataProvider.SqlProviderFlags,
+						dataConnection.MappingSchema,
 						aliases,
 						optimizeVisitor,
 						convertVisitor,

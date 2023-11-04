@@ -139,10 +139,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new DeleteContext( 
-					context.CloneContext(QuerySequence), 
+				return new DeleteContext(
+					context.CloneContext(QuerySequence),
 					DeleteType,
-					context.CloneExpression(OutputExpression), 
+					context.CloneExpression(OutputExpression),
 					context.CloneElement(DeleteStatement),
 					context.CloneContext(DeletedContext));
 			}
@@ -161,12 +161,12 @@ namespace LinqToDB.Linq.Builder
 						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 						QueryRunner.SetRunQuery(query, mapper);
 						break;
-					}					
+					}
 					case DeleteTypeEnum.DeleteOutputInto:
 					{
 						QueryRunner.SetNonQueryQuery(query);
 						break;
-					}	
+					}
 					default:
 						throw new InvalidOperationException($"Unexpected delete type: {DeleteType}");
 				}

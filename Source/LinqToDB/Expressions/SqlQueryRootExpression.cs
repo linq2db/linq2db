@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Mapping;
+
 	public class SqlQueryRootExpression : Expression, IEquatable<SqlQueryRootExpression>
 	{
 		public MappingSchema MappingSchema { get; }
@@ -69,7 +69,7 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 			{
 				return false;
 			}

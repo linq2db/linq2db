@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 		protected override StringBuilder BuildExpression(
-			NullabilityContext nullability, 
+			NullabilityContext nullability,
 			ISqlExpression     expr,
 			bool               buildTableName,
 			bool               checkParentheses,

@@ -426,7 +426,6 @@ namespace LinqToDB.Mapping
 			return new DbDataType(systemType, dbDataType?.DataType ?? dataType, DbType ?? dbDataType?.DbType, Length ?? dbDataType?.Length, Precision ?? dbDataType?.Precision, Scale ?? dbDataType?.Scale);
 		}
 
-
 		/// <summary>
 		/// Returns DbDataType for current column after conversions.
 		/// </summary>

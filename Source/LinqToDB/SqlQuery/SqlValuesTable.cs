@@ -23,7 +23,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for convert visitor.
 		/// </summary>
-		internal SqlValuesTable(ISqlExpression source, List<Func<object, ISqlExpression>> valueBuilders, IEnumerable<SqlField> fields, IReadOnlyList<ISqlExpression[]>? rows)
+		internal SqlValuesTable(ISqlExpression? source, List<Func<object, ISqlExpression>>? valueBuilders, IEnumerable<SqlField> fields, List<ISqlExpression[]>? rows)
 		{
 			Source        = source;
 			ValueBuilders = valueBuilders;
@@ -42,7 +42,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for remote context.
 		/// </summary>
-		internal SqlValuesTable(SqlField[] fields, MemberInfo?[]? members, IReadOnlyList<ISqlExpression[]> rows)
+		internal SqlValuesTable(SqlField[] fields, MemberInfo?[]? members, List<ISqlExpression[]> rows)
 		{
 			Rows         = rows;
 			FieldsLookup = new();
@@ -101,12 +101,7 @@ namespace LinqToDB.SqlQuery
 			ValueBuilders.Add(valueBuilder);
 		}
 
-		internal IReadOnlyList<ISqlExpression[]>? Rows { get; private set; }
-
-		public void Modify(IReadOnlyList<ISqlExpression[]>? rows)
-		{
-			Rows = rows;
-		}
+		internal List<ISqlExpression[]>? Rows { get; private set; }
 
 		internal IReadOnlyList<ISqlExpression[]> BuildRows(EvaluationContext context)
 		{

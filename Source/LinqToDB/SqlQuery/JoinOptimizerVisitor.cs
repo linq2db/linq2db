@@ -27,7 +27,7 @@ namespace LinqToDB.SqlQuery
 		Dictionary<SqlSearchCondition,SqlSearchCondition>?                      _additionalFilter;
 		SelectQuery                                                             _selectQuery  = null!;
 		bool _correntMappings;
-		
+
 		public JoinOptimizerVisitor() : base(VisitMode.Modify)
 		{
 		}
@@ -60,7 +60,7 @@ namespace LinqToDB.SqlQuery
 			_correntMappings = false;
 		}
 
-		public override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
+		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			if (_correntMappings)
 				return base.VisitSqlQuery(selectQuery);
@@ -75,7 +75,7 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		public override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
 			element = (SqlTableSource)base.VisitSqlTableSource(element);
 
@@ -109,14 +109,14 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		public override IQueryElement VisitSqlFieldReference(SqlField element)
+		protected override IQueryElement VisitSqlFieldReference(SqlField element)
 		{
 			if (_correntMappings)
 				return GetNewField(new VirtualField(element)).Element;
 			return base.VisitSqlFieldReference(element);
 		}
 
-		public override IQueryElement VisitSqlColumnReference(SqlColumn element)
+		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
 			if (_correntMappings)
 				return GetNewField(new VirtualField(element)).Element;

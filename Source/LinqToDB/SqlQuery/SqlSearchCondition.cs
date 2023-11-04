@@ -49,11 +49,6 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public void Modify(List<SqlCondition> conditions)
-		{
-			Conditions = conditions;
-		}
-
 		protected override SqlSearchCondition Search => this;
 
 		protected override Next GetNext()

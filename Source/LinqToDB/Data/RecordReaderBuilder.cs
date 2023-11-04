@@ -316,7 +316,6 @@ namespace LinqToDB.Data
 			public ColumnDescriptor Column = null!;
 		}
 
-
 		public Func<DbDataReader, T> BuildReaderFunction<T>()
 		{
 			var expr   = BuildReaderExpression();
@@ -386,7 +385,7 @@ namespace LinqToDB.Data
 				if (dindex >= 0)
 				{
 					Expression testExpr;
-					
+
 					var isNullExpr = Expression.Call(
 						DataReaderLocal,
 						ReflectionHelper.DataReader.IsDBNull,

@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 
 			var cteBody = lambda.Body.Transform(e =>
 			{
-				if (e == lambda.Parameters[0]) 
+				if (e == lambda.Parameters[0])
 				{
 					var cteTableContext = new CteTableContext(builder, null, elementType, new SelectQuery(), cteContext, buildInfo.IsTest);
 					var cteTableContextRef = new ContextRefExpression(e.Type, cteTableContext);

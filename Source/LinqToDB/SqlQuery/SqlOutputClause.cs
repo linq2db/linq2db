@@ -20,16 +20,12 @@ namespace LinqToDB.SqlQuery
 			set => _outputItems = value;
 		}
 
-		public void Modify(SqlTable? insertedTable, SqlTable? deletedTable,
-			SqlTable? outputTable, List<ISqlExpression>? outputColumns, List<SqlSetExpression>? outputItems)
+		public void Modify(SqlTable? insertedTable, SqlTable? deletedTable, SqlTable? outputTable)
 		{
 			InsertedTable = insertedTable;
 			DeletedTable  = deletedTable;
 			OutputTable   = outputTable;
-			OutputColumns = outputColumns;
-			_outputItems  = outputItems;
 		}
-
 
 		#region Overrides
 
@@ -75,7 +71,6 @@ namespace LinqToDB.SqlQuery
 						writer.AppendLine();
 					}
 				}
-
 
 				if (OutputColumns != null)
 				{

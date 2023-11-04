@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
+	using LinqToDB.Common;
+
 	/// <summary>
 	/// Implements base class for typed wrappers over provider-specific type.
 	/// </summary>

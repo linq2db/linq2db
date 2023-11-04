@@ -21,7 +21,6 @@ namespace LinqToDB.DataProvider.Access
 
 		public override string[] LikeCharactersToEscape => AccessLikeCharactersToEscape;
 
-
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
 			if (predicate.Escape != null)

@@ -1,20 +1,20 @@
 ﻿namespace LinqToDB.SqlQuery
 {
 	/// <summary>
-	/// Defines query visitor behavior of <see cref="QueryElementVisitor"/> visitor implementation.
+	/// Defines query visitor behavior of <see cref="QueryElementVisitor"/> visitor implementation when visiting query element.
 	/// </summary>
 	public enum VisitMode
 	{
 		/// <summary>
-		/// Read-only visitor, which doesn't modify or clone query AST.
+		/// Read-only element inspection that shouldn't modify or replace AST.
 		/// </summary>
 		ReadOnly,
 		/// <summary>
-		/// Visitor (may) modify existing AST in-place.
+		/// Element inspection with potential in-place modification.
 		/// </summary>
 		Modify,
 		/// <summary>
-		/// Read-only visitor, which produce new clone (optionally with modifications) of query AST.
+		/// Element inspection with potential generation of new element.
 		/// </summary>
 		Transform
 	}

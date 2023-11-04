@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.SqlQuery;
+
 	static class TableLikeHelpers
 	{
 		public static List<MemberInfo> GetMemberPath(Expression expr)

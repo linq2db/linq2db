@@ -2,12 +2,11 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
+	using SqlQuery;
 
 	sealed class SelectBuilder : MethodCallBuilder
 	{

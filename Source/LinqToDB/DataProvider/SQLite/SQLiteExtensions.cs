@@ -1,13 +1,14 @@
-﻿using LinqToDB.Data;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using LinqToDB.Data;
+	using LinqToDB.Linq;
+	using LinqToDB.SqlProvider;
+
 	public interface ISQLiteExtensions
 	{
 	}
@@ -365,7 +366,6 @@ namespace LinqToDB.DataProvider.SQLite
 			return (ext, entity, weights) => Sql.Expr<double>($"bm25({Sql.TableAsField<TEntity, string>(entity)}, {Sql.Spread(weights)})");
 		}
 
-
 		/// <summary>
 		/// FTS5 highlight(fts_table, columnIndex, startMatch, endMatch) function.
 		/// Example: "highlight(table, columnIndex, 'startMatch', 'endMatch')".
@@ -573,7 +573,6 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
 		}
-
 
 		/// <summary>
 		/// Executes FTS5 'merge' command for specific table.

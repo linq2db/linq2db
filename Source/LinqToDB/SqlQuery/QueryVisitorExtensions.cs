@@ -4,13 +4,8 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
-	using System.Xml.Linq;
-
 	using Common.Internal;
-	using LinqToDB.Linq.Builder;
-
 	using Visitors;
-	using static LinqToDB.Linq.Builder.ContextParser;
 
 	public static class QueryVisitorExtensions
 	{

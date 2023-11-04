@@ -1,12 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System.IO;
-
+	using LinqToDB.Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -47,7 +44,6 @@ namespace LinqToDB.Linq.Builder
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
 
 			// Generating LEFT JOIN from one record resultset
-			// 
 			if (buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero))
 			{
 				var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
@@ -76,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 				subqueryContext.SelectQuery.From.Tables[0].Joins.Add(joinedTable);
 
 				var defaultRef = new ContextRefExpression(defaultValueContext.ElementType, defaultValueContext);
-				
+
 				// force to generate fields
 				var translated = builder.BuildSqlExpression(defaultValueContext, defaultRef, ProjectFlags.SQL, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
 				translated = builder.UpdateNesting(subqueryContext, translated);

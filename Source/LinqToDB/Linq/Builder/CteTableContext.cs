@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
+
 	internal sealed class CteTableContext: BuildContextBase, ITableContext
 	{
 		public override MappingSchema MappingSchema => CteContext.MappingSchema;
@@ -23,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 		public LoadWithInfo  LoadWithRoot { get; set; } = new();
 		public MemberInfo[]? LoadWithPath { get; set; }
 
-		public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest) 
+		public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest)
 			: base(builder, objectType, selectQuery)
 		{
 			Parent     = parent;
@@ -106,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (placeholder.TrackingPath == null)
 					continue;
-				
+
 				if (!_fieldsMap.TryGetValue(placeholder.TrackingPath, out var newPlaceholder))
 				{
 					var field = QueryHelper.GetUnderlyingField(placeholder.Sql);

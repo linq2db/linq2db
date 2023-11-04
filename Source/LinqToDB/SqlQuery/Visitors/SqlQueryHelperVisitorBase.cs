@@ -6,13 +6,13 @@
 		{
 		}
 
-		public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			Visit(column);
 			return base.VisitSqlColumnExpression(column, expression);
 		}
 
-		public override IQueryElement VisitSqlTable(SqlTable element)
+		protected override IQueryElement VisitSqlTable(SqlTable element)
 		{
 			return base.VisitSqlTable(element);
 		}

@@ -775,7 +775,6 @@ namespace LinqToDB.DataProvider.MySql
 			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
-
 		[ExpressionMethod(nameof(LockInShareModeHintImpl))]
 		public static IMySqlSpecificQueryable<TSource> LockInShareModeHint<TSource>(
 			this   IMySqlSpecificQueryable<TSource> query)

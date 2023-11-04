@@ -152,7 +152,6 @@ namespace LinqToDB.Linq.Builder
 						continue;
 					}
 
-
 					var memberTrackingPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
 					var newExpression = CorrectTrackingPath(builder, assignment.Expression, memberTrackingPath);
 
@@ -212,7 +211,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					generic = generic.ReplaceParameters(parameters);
 				}
-
 
 				return generic;
 			}
@@ -326,7 +324,7 @@ namespace LinqToDB.Linq.Builder
 			return transformed;
 		}
 
-		[return: NotNullIfNotNull(nameof(expression))]	
+		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? RemapToNewPathSimple(ExpressionBuilder builder, Expression? expression, Expression toPath, ProjectFlags flags)
 		{
 			if (expression == null)
@@ -450,7 +448,6 @@ namespace LinqToDB.Linq.Builder
 
 			return expression;
 		}
-
 
 		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? RemapToNewPath(ExpressionBuilder builder, Expression? expression, Expression toPath, ProjectFlags flags)
@@ -688,7 +685,6 @@ namespace LinqToDB.Linq.Builder
 			return toPath;
 		}
 
-
 		public static Expression ReplaceContext(Expression expression, IBuildContext current, IBuildContext onContext)
 		{
 			var newExpression = expression.Transform((expression, current, onContext), (ctx, e) =>
@@ -706,7 +702,6 @@ namespace LinqToDB.Linq.Builder
 					if (contextRef.BuildContext == ctx.current)
 						return new TransformInfo(new ContextRefExpression(contextRef.Type, ctx.onContext, contextRef.Alias));
 				}
-
 
 				if (e is SqlPlaceholderExpression { TrackingPath: { } } placeholder)
 				{
@@ -922,7 +917,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		/// <summary>
-		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/> 
+		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
@@ -954,9 +949,8 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-
 		/// <summary>
-		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/> 
+		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
@@ -971,7 +965,7 @@ namespace LinqToDB.Linq.Builder
 					return true;
 
 				if (HasDependencyWithOuter(context.SelectQuery))
-					return false;				
+					return false;
 			}
 
 			return true;
@@ -988,7 +982,6 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-
 		static IBuildContext UnwrapSubqueryContext(IBuildContext context)
 		{
 			var current = context;
@@ -1002,7 +995,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					current = pass.Context;
 				}
-				else 
+				else
 					break;
 			}
 
@@ -1021,7 +1014,6 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			return methodCall.Arguments[idx].UnwrapLambda();
 		}
-
 
 		//TODO: I don't like this. Hints are like mess. Quick workaround before review
 		public static QueryExtensionBuilder.JoinHintContext? GetJoinHintContext(IBuildContext context)

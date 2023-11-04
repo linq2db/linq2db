@@ -207,7 +207,7 @@ namespace LinqToDB.SqlProvider
 					{
 						return IsCompatibleForUpdate(join);
 					}
-					
+
 					if (IsCompatibleForUpdate(join) && join.Table.Source is SelectQuery sc)
 					{
 						if (IsCompatibleForUpdate(sc, updateTable))
@@ -215,7 +215,7 @@ namespace LinqToDB.SqlProvider
 					}
 				}
 			}
-			
+
 			return false;
 		}
 
@@ -283,7 +283,7 @@ namespace LinqToDB.SqlProvider
 										(statement.SelectQuery.From.Tables.Count != 1 ||
 										 statement.SelectQuery.From.Tables.Count          == 1 &&
 										 statement.SelectQuery.From.Tables[0].Joins.Count == 0);
-					
+
 					if (forceWrapping || !IsCompatibleForUpdate(queryPath))
 					{
 						// we have to create new Update table and join via Keys
@@ -423,7 +423,7 @@ namespace LinqToDB.SqlProvider
 
 				var selectQuery = selectStatement.SelectQuery;
 				var columns     = selectQuery.Select.Columns;
-	
+
 				for (var i = 0; i < columns.Count; i++)
 				{
 					var c = columns[i];
@@ -431,12 +431,12 @@ namespace LinqToDB.SqlProvider
 					{
 						if (columns.Count > 1)
 							throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
-	
+
 						var row = (SqlRow)columns[0].Expression;
 						columns.Clear();
 						foreach (var value in row.Values)
 							selectQuery.Select.AddNew(value);
-	
+
 						break;
 					}
 				}
@@ -568,7 +568,7 @@ namespace LinqToDB.SqlProvider
 			if (statement is SqlUpdateStatement updateStatement)
 			{
 				var evaluationContext = new EvaluationContext();
-				foreach (var setItem in updateStatement.Update.Items) 
+				foreach (var setItem in updateStatement.Update.Items)
 				{
 					if (setItem.Expression is SelectQuery q)
 					{
@@ -891,7 +891,6 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 				}
-						
 			}
 
 			return false;
@@ -903,7 +902,7 @@ namespace LinqToDB.SqlProvider
 
 			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
 				return false;
-				
+
 			for (int i = 0; i < query.From.Tables.Count; i++)
 			{
 				var ts = query.From.Tables[i];
@@ -955,7 +954,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		static SelectQuery CloneQuery(
-			SelectQuery                                  query, 
+			SelectQuery                                  query,
 			SqlTable?                                    exceptTable,
 			out Dictionary<IQueryElement, IQueryElement> replaceTree)
 		{
@@ -1011,7 +1010,7 @@ namespace LinqToDB.SqlProvider
 			bool insideColumns = true)
 		where TElement : class, IQueryElement
 		{
-			if (mainTree == null && innerTree == null) 
+			if (mainTree == null && innerTree == null)
 				return element;
 
 			var newElement = element.Convert((mainTree, innerTree, insideColumns), static (v, expr) =>
@@ -1034,10 +1033,10 @@ namespace LinqToDB.SqlProvider
 		}
 
 		static IEnumerable<(ISqlExpression, ISqlExpression)> GenerateRows(
-			ISqlExpression                            target, 
-			ISqlExpression                            source, 
+			ISqlExpression                            target,
+			ISqlExpression                            source,
 			Dictionary<IQueryElement, IQueryElement>? mainTree,
-			Dictionary<IQueryElement, IQueryElement>? innerTree, 
+			Dictionary<IQueryElement, IQueryElement>? innerTree,
 			SelectQuery                               selectQuery)
 		{
 			if (target is SqlRow targetRow && source is SqlRow sourceRow)
@@ -1259,7 +1258,7 @@ namespace LinqToDB.SqlProvider
 			{
 			}
 
-			public override IQueryElement VisitSqlTableSource(SqlTableSource element)
+			protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
 			{
 				if (element.Source == _updateStatement?.Update.Table)
 				{
@@ -1276,13 +1275,13 @@ namespace LinqToDB.SqlProvider
 				return base.VisitSqlTableSource(element);
 			}
 
-			public override IQueryElement VisitSqlUpdateClause(SqlUpdateClause element)
+			protected override IQueryElement VisitSqlUpdateClause(SqlUpdateClause element)
 			{
 				// Do nothing
 				return element;
 			}
 
-			public override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+			protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
 			{
 				// Do nothing
 				return element;

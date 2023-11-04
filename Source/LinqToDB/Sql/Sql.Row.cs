@@ -7,7 +7,7 @@ namespace LinqToDB
 	partial class Sql
 	{
 		public abstract class SqlRow<T1, T2> : IComparable
-		{ 
+		{
 			// Prevent someone from inheriting this class and creating instances.
 			// This class is never instantiated and its operators are never actually called.
 			// It's all just for typing in LINQ expressions that will translate to SQL.
@@ -28,13 +28,12 @@ namespace LinqToDB
 			public abstract int CompareTo(object? obj);
 		}
 
-		
-		[Extension("", BuilderType = typeof(RowBuilder), ServerSideOnly = true)]		
+		[Extension("", BuilderType = typeof(RowBuilder), ServerSideOnly = true)]
 		public static SqlRow<T1, T2> Row<T1, T2>(T1 value1, T2 value2)
 			=> throw new LinqToDBException("Row is only server-side method.");
 
 		// Nesting SqlRow looks inefficient, but it will never actually be instantiated.
-		// It's only for static typing and it's good enough for that purpose 
+		// It's only for static typing and it's good enough for that purpose
 		// without creating lots of types and operators.
 		[Extension("", BuilderType = typeof(RowBuilder), ServerSideOnly = true)]
 		public static SqlRow<T1, SqlRow<T2, T3>> Row<T1, T2, T3>(T1 value1, T2 value2, T3 value3)

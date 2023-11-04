@@ -25,7 +25,6 @@ namespace LinqToDB.Linq.Builder
 		static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
 		static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
 
-
 		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
 		{
 			var function = methodCall.Method.GetExpressionAttribute(mapping);
@@ -64,12 +63,12 @@ namespace LinqToDB.Linq.Builder
 					returnType      = typeof(int);
 					aggregationType = AggregationType.Count;
 					break;
-				}	
+				}
 				case "Min":
 				{
 					aggregationType = AggregationType.Min;
 					break;
-				}	
+				}
 				case "MinAsync":
 				{
 					--argumentsCount;
@@ -218,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 
 					var sql = sqlPlaceholder.Sql;
 
-					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence, 
+					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
 						new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression, convertType: returnType);
 				}
 			}
@@ -228,7 +227,6 @@ namespace LinqToDB.Linq.Builder
 
 				IBuildContext?      sequence            = null;
 				IBuildContext?      placeholderSequence = null;
-
 
 				var parentContext       = buildInfo.Parent!;
 				var placeholderSelect   = parentContext.SelectQuery;
@@ -268,7 +266,7 @@ namespace LinqToDB.Linq.Builder
 							new BuildInfo(buildInfo, sequenceArgument)
 								{ CreateSubQuery = false, IsAggregation = true });
 
-						if (sequence == null) 
+						if (sequence == null)
 							return null;
 
 						var sequenceRef = new ContextRefExpression(sequence.ElementType, sequence);
@@ -290,7 +288,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
 
-					if (sequence == null) 
+					if (sequence == null)
 						return null;
 
 					sequence = new SubQueryContext(sequence);
@@ -361,10 +359,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (definition != null)
 					{
-						var sqlExpr = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()), 
-							builder.DataContext, 
+						var sqlExpr = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()),
+							builder.DataContext,
 							builder,
-							placeholderSelect, 
+							placeholderSelect,
 							methodCall,
 							static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
 
@@ -390,7 +388,6 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-
 			functionPlaceholder.Alias = methodName;
 			context.Placeholder       = functionPlaceholder;
 
@@ -400,10 +397,10 @@ namespace LinqToDB.Linq.Builder
 		sealed class AggregationContext : SequenceContextBase
 		{
 			public AggregationContext(
-				IBuildContext?  parent, 
-				IBuildContext   sequence, 
+				IBuildContext?  parent,
+				IBuildContext   sequence,
 				AggregationType aggregationType,
-				string          methodName, 
+				string          methodName,
 				Type            returnType)
 				: base(parent, sequence, null)
 			{
@@ -435,7 +432,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					expr = Expression.Block(
 						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
-							Expression.Equal(expr, Expression.Default(expr.Type)), 
+							Expression.Equal(expr, Expression.Default(expr.Type)),
 							Expression.Constant(_methodName)),
 						expr);
 				}

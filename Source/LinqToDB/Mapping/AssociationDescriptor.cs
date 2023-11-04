@@ -189,7 +189,6 @@ namespace LinqToDB.Mapping
 			return MemberInfo.DeclaringType!;
 		}
 
-
 		/// <summary>
 		/// Loads predicate expression from <see cref="ExpressionPredicate"/> member.
 		/// </summary>

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.SqlQuery
 {
+	using Mapping;
+
 	public class SqlNullabilityExpression : ISqlExpression
 	{
 		readonly bool           _isNullable;

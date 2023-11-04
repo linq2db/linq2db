@@ -202,7 +202,6 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-
 		TransformInfoVisitor<ExpressionTreeOptimizationContext> _optimizeExpressionTreeTransformer;
 		TransformInfoVisitor<ExpressionTreeOptimizationContext> _optimizeExpressionTreeTransformerInProjection;
 
@@ -401,7 +400,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							return new TransformInfo(Expression.Constant(isNullLeft != isNullRight));
 						}
-					}	
+					}
 
 					break;
 				}
@@ -690,7 +689,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (typeof(IQueryable<>).IsSameOrParentOf(node.Type))
 				{
-					if (node.Arguments.Any(a => typeof(IDataContext).IsSameOrParentOf(a.Type)) || 
+					if (node.Arguments.Any(a => typeof(IDataContext).IsSameOrParentOf(a.Type)) ||
 					    node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type))
 					{
 						CanBeCompiledFlag = false;
@@ -755,7 +754,7 @@ namespace LinqToDB.Linq.Builder
 			var visitor = _canBeCompiledCheckVisitorPool.Allocate();
 
 			var result = visitor.Value.CanBeCompiled(expr, MappingSchema, this, inProjection);
-			
+
 			return result;
 		}
 
@@ -848,7 +847,6 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
-
 
 		static Expression AliasCall(Expression expression, string alias)
 		{

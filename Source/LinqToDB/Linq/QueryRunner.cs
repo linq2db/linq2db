@@ -388,7 +388,6 @@ namespace LinqToDB.Linq
 			return queryFunc;
 		}
 
-
 		class BasicResultEnumerable<T> : IResultEnumerable<T>
 		{
 			readonly IDataContext      _dataContext;
@@ -398,7 +397,6 @@ namespace LinqToDB.Linq
 			readonly object?[]?        _preambles;
 			readonly int               _queryNumber;
 			readonly Mapper<T>         _mapper;
-
 
 			public BasicResultEnumerable(
 				IDataContext      dataContext,
@@ -633,8 +631,8 @@ namespace LinqToDB.Linq
 		}
 
 		public static void WrapRunQuery<TSource, TResult>(
-			Query<TSource>                                               query, 
-			Query<TResult>                                               destQuery, 
+			Query<TSource>                                               query,
+			Query<TResult>                                               destQuery,
 			Func<IResultEnumerable<TSource>, IResultEnumerable<TResult>> wrapper)
 		{
 			var executeQuery = query.GetResultEnumerable;

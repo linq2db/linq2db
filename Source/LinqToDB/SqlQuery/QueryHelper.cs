@@ -434,7 +434,7 @@ namespace LinqToDB.SqlQuery
 
 			return false;
 		}
-		
+
 		/// <summary>
 		/// Returns <c>true</c> if tested expression is constant during query execution (e.g. value or parameter).
 		/// </summary>
@@ -1100,7 +1100,6 @@ namespace LinqToDB.SqlQuery
 				});
 			}
 
-		
 			if (!query.GroupBy.IsEmpty)
 			{
 				query.GroupBy = query.GroupBy.ConvertAll(columnsMap, (v, e) =>
@@ -1307,7 +1306,6 @@ namespace LinqToDB.SqlQuery
 
 			CollectUniqueKeys(tableSource.Source, true, knownKeys);
 		}
-
 
 		/// <summary>
 		/// Collects unique keys from different sources.

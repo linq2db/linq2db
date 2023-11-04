@@ -3,15 +3,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Common.Internal;
-using LinqToDB.Data;
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	class ProjectionVisitor : ExpressionVisitorBase
 	{
@@ -130,7 +128,7 @@ namespace LinqToDB.Linq.Builder
 			string?           _alias;
 			ColumnDescriptor? _columnDescriptor;
 			bool              _disableClosureHandling;
-			
+
 			ExpressionBuilder Builder       => _context.Builder;
 			MappingSchema     MappingSchema => _context.MappingSchema;
 
@@ -276,7 +274,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					translated = Builder.UpdateNesting(_context, translated);
 				}
-				
+
 				if (!ExpressionEqualityComparer.Instance.Equals(translated, expression))
 					return Visit(translated);
 
@@ -477,8 +475,8 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						node = node.Update(left, node.Conversion, right);
-						
-					} else if (node.NodeType == ExpressionType.Coalesce)
+					}
+					else if (node.NodeType == ExpressionType.Coalesce)
 					{
 						var left  = Visit(node.Left)!;
 						var right = Visit(node.Right)!;
@@ -506,7 +504,7 @@ namespace LinqToDB.Linq.Builder
 							return Visit(updatedNode);
 					}
 				}
-				
+
 				var newNode = TranslateExpression(node, useSql: true);
 
 				if (ExpressionEqualityComparer.Instance.Equals(newNode, node))
@@ -667,7 +665,6 @@ namespace LinqToDB.Linq.Builder
 					return aliasedNode;
 				}
 
-
 				var localFlags = _flags;
 				if (IsForcedToConvert(node))
 					localFlags = _flags.SqlFlag();
@@ -760,7 +757,7 @@ namespace LinqToDB.Linq.Builder
 					return !ExpressionEqualityComparer.Instance.Equals(expr, transformed);
 				}
 
-				// Shortcut: if expression can be compiled we can live it as is but inject accessors 
+				// Shortcut: if expression can be compiled we can live it as is but inject accessors
 				//
 				if ((_flags.IsExpression()      &&
 				     expr.NodeType != ExpressionType.New           &&
@@ -815,7 +812,6 @@ namespace LinqToDB.Linq.Builder
 						return translated;
 				}
 
-
 				if (IsForcedToConvert(node))
 				{
 					return TranslateExpression(node);
@@ -831,17 +827,16 @@ namespace LinqToDB.Linq.Builder
 				else if (ifFalse is SqlGenericConstructorExpression && ifTrue is SqlPlaceholderExpression)
 					ifTrue = node.IfTrue;
 
-				if (test is SqlPlaceholderExpression   && 
+				if (test is SqlPlaceholderExpression   &&
 				    ifTrue is SqlPlaceholderExpression &&
 					ifFalse is SqlPlaceholderExpression)
 				{
 					return TranslateExpression(node, useSql : true);
 				}
-				
+
 				return node.Update(test, ifTrue, ifFalse);
 			}
 		}
-
 
 		[Flags]
 		public enum BuildFlags

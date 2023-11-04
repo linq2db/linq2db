@@ -1,12 +1,10 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
-
-using LinqToDB.Mapping;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
 	using SqlQuery;
 
 	sealed class ScalarSelectBuilder : ISequenceBuilder

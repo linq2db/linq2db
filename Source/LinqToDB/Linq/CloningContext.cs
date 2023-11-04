@@ -4,12 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-
 namespace LinqToDB.Linq
 {
 	using Builder;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
 	using SqlQuery;
 
 	class CloningContext
@@ -141,7 +140,6 @@ namespace LinqToDB.Linq
 			return newExpression;
 		}
 
-
 		[return: NotNullIfNotNull(nameof(buildContext))]
 		public TContext? CloneContext<TContext>(TContext? buildContext)
 		where TContext : IBuildContext
@@ -165,7 +163,6 @@ namespace LinqToDB.Linq
 
 			if (_buildContexts.TryGetValue(buildContext, out var newContext))
 				return newContext;
-
 
 			if (!_currentlyCloning.Add(buildContext))
 				throw new InvalidOperationException("Circular context cloning.");

@@ -148,7 +148,7 @@ namespace LinqToDB.Remote
 			try
 			{
 				using var db = CreateDataContext(configuration);
-			
+
 				var query = LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 
 				ValidateQuery(query);
@@ -406,7 +406,6 @@ namespace LinqToDB.Remote
 				// async compiled query support
 				if (fieldType.IsGenericType && fieldType.GetGenericTypeDefinition() == typeof(Task<>))
 					fieldType = fieldType.GetGenericArguments()[0];
-
 
 				if (fieldType.IsEnum || fieldType.IsNullable() && fieldType.ToNullableUnderlying().IsEnum)
 				{

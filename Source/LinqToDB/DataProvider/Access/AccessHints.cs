@@ -57,7 +57,6 @@ namespace LinqToDB.DataProvider.Access
 					currentSource.Expression, Expression.Constant(hint))));
 		}
 
-
 		#endregion
 	}
 }

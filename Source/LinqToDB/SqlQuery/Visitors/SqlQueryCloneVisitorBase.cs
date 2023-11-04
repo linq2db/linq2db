@@ -13,7 +13,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			AddReplacements(replacements);
 		}
 
-		public override bool ShouldReplace(IQueryElement element)
+		protected override bool ShouldReplace(IQueryElement element)
 		{
 			if (base.ShouldReplace(element))
 				return true;

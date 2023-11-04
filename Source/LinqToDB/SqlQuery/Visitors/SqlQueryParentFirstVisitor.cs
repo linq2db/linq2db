@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery.Visitors
 {
+	using Common;
+
 	public class SqlQueryParentFirstVisitor : QueryElementVisitor
 	{
 		Func<IQueryElement, bool> _action = default!;
@@ -49,7 +50,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.Visit(element);
 		}
 
-		public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			Visit(column);
 			return base.VisitSqlColumnExpression(column, column.Expression);

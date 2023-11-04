@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
+	using LinqToDB.Mapping;
 	using SqlQuery;
 
 	// This class implements double functionality (scalar and member type selects)
