@@ -2502,8 +2502,13 @@ namespace LinqToDB.Remote
 							var insertType   = (MultiInsertType)ReadInt();
 							var source       = Read<SqlTableLikeSource>()!;
 							var inserts      = ReadList<SqlConditionalInsertClause>()!;
+							var extensions   = ReadList<SqlQueryExtension>();
 
-							obj = _statement = new SqlMultiInsertStatement(insertType, source, inserts);
+							obj = _statement =
+								new SqlMultiInsertStatement(insertType, source, inserts)
+								{
+									SqlQueryExtensions = extensions
+								};
 
 							break;
 						}
