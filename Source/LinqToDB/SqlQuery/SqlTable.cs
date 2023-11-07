@@ -9,7 +9,6 @@ namespace LinqToDB.SqlQuery
 
 	using Data;
 	using Mapping;
-	using Remote;
 
 	public class SqlTable : ISqlTableSource
 	{

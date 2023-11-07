@@ -303,7 +303,7 @@ namespace LinqToDB.Linq.Builder
 					{
 #if DEBUG
 						if (!buildInfo.IsTest)
-							QueryHelper.DebugCheckNesting(sequence.SelectQuery, buildInfo.IsSubQuery);
+							QueryHelper.DebugCheckNesting(sequence.GetResultStatement(), buildInfo.IsSubQuery);
 #endif
 						RegisterSequenceExpression(sequence, originalExpression);
 					}

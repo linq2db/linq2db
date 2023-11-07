@@ -104,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlStatement GetResultStatement()
 			{
-				throw new NotImplementedException();
+				return new SqlSelectStatement(SelectQuery);
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

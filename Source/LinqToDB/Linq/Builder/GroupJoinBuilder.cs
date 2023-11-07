@@ -106,7 +106,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override SqlStatement GetResultStatement()
 			{
-				throw new NotImplementedException();
+				return new SqlSelectStatement(SelectQuery);
 			}
 
 			Expression GetGroupJoinCall()

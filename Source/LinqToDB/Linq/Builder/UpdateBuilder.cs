@@ -235,6 +235,7 @@ namespace LinqToDB.Linq.Builder
 
 							var compareSearchCondition = builder.GenerateComparison(sequence, sequenceRef, intoRef);
 							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
+							updateStatement.Update.HasComparison = true;
 						}
 						else
 						{
@@ -430,6 +431,9 @@ namespace LinqToDB.Linq.Builder
 
 				if (valueExpression != null)
 				{
+					if (valueExpression.Unwrap() is LambdaExpression lambda)
+						valueExpression = lambda.Body;
+
 					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor);
 
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
@@ -820,7 +824,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						builder.ParametersContext.MarkAsParameter(constExpr);
 					}
-					else if (updateExpr is LambdaExpression lambda)
+					else if (updateExpr.Unwrap() is LambdaExpression lambda)
 					{
 						updateExpr = SequenceHelper.PrepareBody(lambda, sequence);
 					}

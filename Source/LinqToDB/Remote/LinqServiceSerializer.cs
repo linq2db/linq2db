@@ -1315,6 +1315,7 @@ namespace LinqToDB.Remote
 							Append(elem.Keys);
 							Append(elem.Table);
 							Append(elem.TableSource);
+							Append(elem.HasComparison);
 
 							break;
 						}
@@ -2214,12 +2215,13 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.UpdateClause :
 						{
-							var items       = ReadArray<SqlSetExpression>();
-							var keys        = ReadArray<SqlSetExpression>();
-							var table       = Read<SqlTable>();
-							var tableSource = Read<SqlTableSource>();
+							var items         = ReadArray<SqlSetExpression>();
+							var keys          = ReadArray<SqlSetExpression>();
+							var table         = Read<SqlTable>();
+							var tableSource   = Read<SqlTableSource>();
+							var hasComparison = ReadBool();
 
-							var c = new SqlUpdateClause { Table = table, TableSource = tableSource };
+							var c = new SqlUpdateClause { Table = table, TableSource = tableSource, HasComparison = hasComparison };
 
 							if (items != null)
 								c.Items.AddRange(items);

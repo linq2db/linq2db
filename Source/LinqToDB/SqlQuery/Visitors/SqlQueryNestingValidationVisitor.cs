@@ -7,15 +7,15 @@ namespace LinqToDB.SqlQuery.Visitors
 	public class SqlQueryNestingValidationVisitor : QueryElementVisitor
 	{
 		readonly bool                         _isSubQuery;
-		readonly SelectQuery                  _forQuery;
+		readonly IQueryElement                _forStatement;
 		readonly Stack<List<ISqlTableSource>> _visibleSources = new ();
 		readonly HashSet<ISqlTableSource>     _spotted        = new ();
 		SelectQuery?                          _currentQuery;
 
-		public SqlQueryNestingValidationVisitor(bool isSubQuery, SelectQuery forQuery) : base(VisitMode.ReadOnly)
+		public SqlQueryNestingValidationVisitor(bool isSubQuery, IQueryElement forStatement) : base(VisitMode.ReadOnly)
 		{
-			_isSubQuery    = isSubQuery;
-			_forQuery = forQuery;
+			_isSubQuery   = isSubQuery;
+			_forStatement = forStatement;
 		}
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
@@ -42,25 +42,22 @@ namespace LinqToDB.SqlQuery.Visitors
 			{
 				messageString += "has unknown source.\n";
 				messageString += "-----------------------------------------\n";
-				messageString += $"\nQuery:\n{_forQuery.ToDebugString()}";
+				messageString += $"In Statement:\n";
+				messageString += "-----------------------------------------\n";
+				messageString += $"{_forStatement.ToDebugString()}\n";
 			}
 			else
 			{
 				messageString += "has wrong nesting.\n";
 
-				if (_forQuery == _currentQuery)
-				{
-					messageString += "-----------------------------------------\n";
-					messageString += $"Query:\n{_forQuery.ToDebugString()}";
-				}
-				else
-				{
-					messageString += "-----------------------------------------\n";
-
-					messageString += $"SubQuery:\n{_currentQuery!.ToDebugString()}\n";
-					messageString += "-----------------------------------------\n";
-					messageString += $"In Query:\n{_forQuery.ToDebugString()}";
-				}
+				messageString += "-----------------------------------------\n";
+				messageString += $"SubQuery:\n";
+				messageString += "-----------------------------------------\n";
+				messageString += $"{_currentQuery!.ToDebugString()}\n";
+				messageString += "-----------------------------------------\n";
+				messageString += $"In Statement:\n";
+				messageString += "-----------------------------------------\n";
+				messageString += $"{_forStatement.ToDebugString()}\n";
 			}
 
 			return new InvalidOperationException(messageString);
@@ -108,6 +105,49 @@ namespace LinqToDB.SqlQuery.Visitors
 			_visibleSources.Peek().Add(element.Source);
 
 			return base.VisitSqlTableSource(element);
+		}
+
+
+		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
+		{
+			var tableSources = new List<ISqlTableSource>();
+			_visibleSources.Push(tableSources);
+
+			if (element.Update.Table != null)
+			{
+				tableSources.Add(element.Update.Table);
+			}
+
+			if (element.Update.TableSource != null)
+			{
+				tableSources.Add(element.Update.TableSource.Source);
+			}
+
+			tableSources.Add(element.SelectQuery);
+			tableSources.AddRange(element.SelectQuery.From.Tables.Select(t => t.Source));
+
+			var newElement = base.VisitSqlUpdateStatement(element);
+
+			_visibleSources.Pop();
+
+			return newElement;
+		}
+
+		protected override IQueryElement VisitSqlInsertStatement(SqlInsertStatement element)
+		{
+			var tableSources = new List<ISqlTableSource>();
+			_visibleSources.Push(tableSources);
+
+			if (element.Insert.Into != null)
+				tableSources.Add(element.Insert.Into);
+
+			tableSources.Add(element.SelectQuery);
+
+			var newElement = base.VisitSqlInsertStatement(element);
+
+			_visibleSources.Pop();
+
+			return newElement;
 		}
 	}
 }

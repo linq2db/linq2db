@@ -1639,10 +1639,10 @@ namespace LinqToDB.SqlQuery
 			return null != element.Find(e => e is SqlTableSource ts && ts.SourceID == sourceId);
 		}
 
-		public static void DebugCheckNesting(SelectQuery selectQuery, bool isSubQuery)
+		public static void DebugCheckNesting(SqlStatement statement, bool isSubQuery)
 		{
-			var checkVisitor = new SqlQueryNestingValidationVisitor(isSubQuery, selectQuery);
-			checkVisitor.Visit(selectQuery);
+			var checkVisitor = new SqlQueryNestingValidationVisitor(isSubQuery, statement);
+			checkVisitor.Visit(statement);
 		}
 	}
 }

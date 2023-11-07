@@ -51,8 +51,7 @@ namespace LinqToDB.SqlProvider
 			// ReSharper disable once NotAccessedVariable
 			var sqlText = statement.SqlText;
 
-			if (statement.SelectQuery != null)
-				QueryHelper.DebugCheckNesting(statement.SelectQuery, false);
+			QueryHelper.DebugCheckNesting(statement, false);
 #endif
 
 			statement = (SqlStatement)visitor.Value.OptimizeQueries(statement, SqlProviderFlags, dataOptions,
@@ -62,8 +61,7 @@ namespace LinqToDB.SqlProvider
 			// ReSharper disable once NotAccessedVariable
 			var newSqlText = statement.SqlText;
 
-			if (statement.SelectQuery != null)
-				QueryHelper.DebugCheckNesting(statement.SelectQuery, false);
+			QueryHelper.DebugCheckNesting(statement, false);
 #endif
 
 //statement.EnsureFindTables();
@@ -856,51 +854,18 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		static bool HasComparisonInCondition(SqlSearchCondition search, SqlTable table)
-		{
-			return null != search.Find(e => e is SqlField field && field.Table == table);
-		}
-
-		protected static bool HasComparisonInQuery(SelectQuery query, SqlTable table)
-		{
-			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
-				return false;
-
-			if (HasComparisonInCondition(query.Where.SearchCondition, table))
-				return true;
-
-			foreach (var ts in query.From.Tables)
-			{
-				if (ts.Source is SelectQuery sc)
-				{
-					if (HasComparisonInQuery(sc, table))
-						return true;
-				}
-
-				foreach (var join in ts.Joins)
-				{
-					if (join.JoinType == JoinType.Inner)
-					{
-						if (HasComparisonInCondition(join.Condition, table))
-							return true;
-
-						if (join.Table.Source is SelectQuery jq)
-						{
-							if (HasComparisonInQuery(jq, table))
-								return true;
-						}
-					}
-				}
-			}
-
-			return false;
-		}
-
 		protected static bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
 		{
 			source = null;
 
 			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
+				return false;
+
+			var elementsToIgnore = new List<IQueryElement> { query.Where };
+			elementsToIgnore.AddRange(QueryHelper.EnumerateJoins(query).Where(j => j.Table.Source == table));
+			elementsToIgnore.AddRange(query.From.Tables.Select(t => t.Source));
+
+			if (QueryHelper.IsDependsOnSource(query, table, elementsToIgnore))
 				return false;
 
 			for (int i = 0; i < query.From.Tables.Count; i++)
@@ -929,9 +894,6 @@ namespace LinqToDB.SqlProvider
 						var join = ts.Joins[j];
 						if (join.Table.Source == table)
 						{
-							if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
-								return false;
-
 							source = join.Table;
 
 							ts.Joins.RemoveAt(j);
@@ -1080,7 +1042,7 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			var needsComparison = !HasComparisonInQuery(updateStatement.SelectQuery, updateStatement.Update.Table);
+			var needsComparison = !updateStatement.Update.HasComparison;
 
 			if (!needsComparison)
 			{
@@ -1341,7 +1303,8 @@ namespace LinqToDB.SqlProvider
 				statement = QueryHelper.WrapQuery(statement, statement.SelectQuery, allowMutation: true);
 			}
 
-			var tableToUpdate  = statement.Update.Table!;
+			var tableToUpdate = statement.Update.Table!;
+			var tableSource   = statement.Update.TableSource;
 
 			var hasUpdateTableInQuery = QueryHelper.HasTableInQuery(statement.SelectQuery, tableToUpdate);
 
@@ -1358,7 +1321,8 @@ namespace LinqToDB.SqlProvider
 
 			CorrectUpdateSetters(statement);
 
-			statement.Update.Table = tableToUpdate;
+			statement.Update.Table       = tableToUpdate;
+			statement.Update.TableSource = tableSource;
 
 			return statement;
 		}

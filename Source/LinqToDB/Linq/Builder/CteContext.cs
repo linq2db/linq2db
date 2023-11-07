@@ -188,7 +188,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override SqlStatement GetResultStatement()
 		{
-			throw new InvalidOperationException();
+			return new SqlSelectStatement(SelectQuery);
 		}
 	}
 }

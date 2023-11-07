@@ -46,14 +46,14 @@ namespace LinqToDB.SqlQuery
 			if (result != null)
 				return result;
 
+			if (ReferenceEquals(Update.TableSource?.Source, table))
+				return Update.TableSource;
+
 			if (ReferenceEquals(table, Update.Table))
 			{
 				noAlias = true;
 				return table;
 			}
-
-			if (ReferenceEquals(Update.TableSource?.Source, table))
-				return Update.TableSource;
 
 			foreach (var item in Update.Items)
 			{
