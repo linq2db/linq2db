@@ -861,7 +861,7 @@ namespace LinqToDB.SqlProvider
 			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
 				return false;
 
-			var elementsToIgnore = new List<IQueryElement> { query.Where };
+			var elementsToIgnore = new List<IQueryElement> { query.Select, query.Where };
 			elementsToIgnore.AddRange(QueryHelper.EnumerateJoins(query).Where(j => j.Table.Source == table));
 			elementsToIgnore.AddRange(query.From.Tables.Select(t => t.Source));
 

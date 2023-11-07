@@ -107,6 +107,66 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.VisitSqlTableSource(element);
 		}
 
+		protected override IQueryElement VisitSqlMergeStatement(SqlMergeStatement element)
+		{
+			var tableSources = new List<ISqlTableSource>();
+			_visibleSources.Push(tableSources);
+
+			tableSources.Add(element.Source);
+			tableSources.Add(element.Target);
+
+			base.VisitSqlMergeStatement(element);
+			_visibleSources.Pop();
+
+			return element;
+		}
+
+
+		protected override IQueryElement VisitSqlMultiInsertStatement(SqlMultiInsertStatement element)
+		{
+			var tableSources = new List<ISqlTableSource>();
+			_visibleSources.Push(tableSources);
+
+			tableSources.Add(element.Source);
+
+			base.VisitSqlMultiInsertStatement(element);
+
+			_visibleSources.Pop();
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlConditionalInsertClause(SqlConditionalInsertClause element)
+		{
+			if (element.Insert.Into != null)
+				_visibleSources.Peek().Add(element.Insert.Into);
+
+			base.VisitSqlConditionalInsertClause(element);
+
+			if (element.Insert.Into != null)
+				_visibleSources.Peek().Remove(element.Insert.Into);
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
+		{
+			var tableSources = new List<ISqlTableSource>();
+			_visibleSources.Push(tableSources);
+
+			if (element.Insert.Into != null)
+				tableSources.Add(element.Insert.Into);
+
+			if (element.Update.Table != null)
+				tableSources.Add(element.Update.Table);
+
+
+			base.VisitSqlInsertOrUpdateStatement(element);
+
+			_visibleSources.Pop();
+
+			return element;
+		}
 
 		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 		{
@@ -126,11 +186,55 @@ namespace LinqToDB.SqlQuery.Visitors
 			tableSources.Add(element.SelectQuery);
 			tableSources.AddRange(element.SelectQuery.From.Tables.Select(t => t.Source));
 
-			var newElement = base.VisitSqlUpdateStatement(element);
+			base.VisitSqlUpdateStatement(element);
 
 			_visibleSources.Pop();
 
-			return newElement;
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
+		{
+			var tableSources = _visibleSources.Peek();
+
+			if (element.DeletedTable != null)
+				tableSources.Add(element.DeletedTable);
+
+			if (element.InsertedTable != null)
+				tableSources.Add(element.InsertedTable);
+
+			if (element.OutputTable != null)
+				tableSources.Add(element.OutputTable);
+
+			base.VisitSqlOutputClause(element);
+
+			if (element.DeletedTable != null)
+				tableSources.Remove(element.DeletedTable);
+
+			if (element.InsertedTable != null)
+				tableSources.Remove(element.InsertedTable);
+
+			if (element.OutputTable != null)
+				tableSources.Remove(element.OutputTable);
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlDeleteStatement(SqlDeleteStatement element)
+		{
+			var tableSources = new List<ISqlTableSource>();
+			_visibleSources.Push(tableSources);
+
+			if (element.Table != null)
+			{
+				tableSources.Add(element.Table);
+			}
+
+			base.VisitSqlDeleteStatement(element);
+
+			_visibleSources.Pop();
+
+			return element;
 		}
 
 		protected override IQueryElement VisitSqlInsertStatement(SqlInsertStatement element)
@@ -143,11 +247,12 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			tableSources.Add(element.SelectQuery);
 
-			var newElement = base.VisitSqlInsertStatement(element);
+			base.VisitSqlInsertStatement(element);
 
 			_visibleSources.Pop();
 
-			return newElement;
+			return element;
 		}
+
 	}
 }
