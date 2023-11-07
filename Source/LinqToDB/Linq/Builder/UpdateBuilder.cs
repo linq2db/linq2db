@@ -791,7 +791,7 @@ namespace LinqToDB.Linq.Builder
 				ExtractSequence(buildInfo, ref sequence, out var updateContext);
 
 				var extract  = methodCall.Arguments[1].UnwrapLambda();
-				var update   = methodCall.Arguments.Count > 2 ? methodCall.Arguments[2].Unwrap() : null;
+				var update   = methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null;
 
 				var extractExpr = SequenceHelper.PrepareBody(extract, sequence);
 				if (updateContext.TargetTable == null)
