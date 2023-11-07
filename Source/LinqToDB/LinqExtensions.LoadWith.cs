@@ -10,8 +10,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using LinqToDB.Linq;
-	using LinqToDB.Linq.Builder;
+	using Linq;
+	using Linq.Builder;
+	using Async;
 
 	public partial class LinqExtensions
 	{
