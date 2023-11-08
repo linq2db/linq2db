@@ -517,7 +517,7 @@ namespace LinqToDB.Mapping
 				return _getOriginalValueLambda;
 
 			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
-			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
+			var getterExpr = MemberAccessor.GetGetterExpression(objParam);
 
 			_getOriginalValueLambda = Expression.Lambda(getterExpr, objParam);
 			return _getOriginalValueLambda;
@@ -582,7 +582,7 @@ namespace LinqToDB.Mapping
 				return _getDbParamLambda;
 
 			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
-			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
+			var getterExpr = MemberAccessor.GetGetterExpression(objParam);
 			var dbDataType = GetDbDataType(true);
 
 			if (IsDiscriminator && MemberAccessor.HasSetter)

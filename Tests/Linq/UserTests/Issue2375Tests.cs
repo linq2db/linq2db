@@ -50,6 +50,7 @@ namespace Tests.UserTests
 			public string? ResourceLabel { get; set; }
 		}
 
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Issue2375Test(
 			[IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)

@@ -19,7 +19,7 @@
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                version="5.0.0"  />
-				<dependency id="Microsoft.Data.Sqlite"  version="7.0.10" />
+				<dependency id="Microsoft.Data.Sqlite"  version="7.0.11" />
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -28,7 +28,6 @@
 	</metadata>
 	<files>
 		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
-		<file src="..\Nuget\readme.T4.txt"                                           target="readme.txt"                                                                                         />
 
 		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />

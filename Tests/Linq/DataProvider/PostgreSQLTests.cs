@@ -866,9 +866,13 @@ namespace Tests.DataProvider
 			[Column]                                   public NpgsqlLine?    lineDataType               { get; set; }
 			// inet types
 			[Column]                                   public IPAddress?       inetDataType             { get; set; }
+#if NET7_0_OR_GREATER
+			[Column]                                   public NpgsqlCidr?      cidrDataType             { get; set; }
+#else
 #pragma warning disable CS0618 // NpgsqlInet obsolete
 			[Column  (DbType = "cidr")]                public NpgsqlInet?      cidrDataType             { get; set; }
 #pragma warning restore CS0618
+#endif
 			[Column  (DbType = "macaddr")]             public PhysicalAddress? macaddrDataType          { get; set; }
 			// PGSQL10+
 			// also supported by ProviderName.PostgreSQL, but it is hard to setup...
@@ -879,6 +883,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL13)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL15)]
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL16)]
 			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
@@ -949,9 +954,13 @@ namespace Tests.DataProvider
 					lineDataType        = new NpgsqlLine(3.3, 4.4, 5.5),
 
 					inetDataType        = IPAddress.Parse("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
+#if NET7_0_OR_GREATER
+					cidrDataType        = new NpgsqlCidr("::ffff:1.2.3.0/120"),
+#else
 #pragma warning disable CS0618 // NpgsqlInet obsolete
 					cidrDataType        = new NpgsqlInet("::ffff:1.2.3.0/120"),
 #pragma warning restore CS0618
+#endif
 					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
 					macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
 
@@ -1095,9 +1104,13 @@ namespace Tests.DataProvider
 					lineDataType        = new NpgsqlLine(3.3, 4.4, 5.5),
 
 					inetDataType        = IPAddress.Parse("2001:0db8:0000:0042:0000:8a2e:0370:7334"),
+#if NET7_0_OR_GREATER
+					cidrDataType        = new NpgsqlCidr("::ffff:1.2.3.0/120"),
+#else
 #pragma warning disable CS0618 // NpgsqlInet obsolete
 					cidrDataType        = new NpgsqlInet("::ffff:1.2.3.0/120"),
 #pragma warning restore CS0618
+#endif
 					macaddrDataType     = PhysicalAddress.Parse("08-00-2B-01-02-03"),
 					macaddr8DataType    = PhysicalAddress.Parse("08-00-2B-FF-FE-01-02-03"),
 
@@ -2416,6 +2429,41 @@ namespace Tests.DataProvider
 
 			db.BulkCopy(options, new[] { new Issue3895Table() { timestampDataType = dt, timestampTZDataType = dt } });
 		}
+
+		// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+		// SQL identifiers and key words must begin with
+		// - a letter
+		// - an underscore (_).
+		// Subsequent characters in an identifier or key word can be
+		// - letters
+		// - underscores
+		// - digits (0-9)
+		// - dollar signs ($). 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4285")]
+		public void TestIdentifierHasNoEscaping(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values("test", "тест", "_test", "x_", "x1", "x$")] string tableName)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<Person>(tableName: tableName);
+
+			t.ToList();
+
+			Assert.That(db.LastQuery, Does.Not.Contain($"\"{tableName}\""));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4285")]
+		public void TestIdentifierHasEscaping(
+			[IncludeDataSources(TestProvName.AllPostgreSQL)] string context,
+			[Values("Test", "Тест", "1test", "$test", "te-st", "te\"st")] string tableName)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<Person>(tableName: tableName);
+
+			t.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain($"\"{tableName.Replace("\"", "\"\"")}\""));
+		}
 	}
 
 	public static class TestPgAggregates
@@ -2449,8 +2497,7 @@ namespace Tests.DataProvider
 			throw new InvalidOperationException();
 		}
 
-		// TODO: function names should be escaped by linq2db, but it is not implemented yet
-		[Sql.TableFunction("\"TestTableFunctionSchema\"")]
+		[Sql.TableFunction("TestTableFunctionSchema")]
 		public LinqToDB.ITable<PostgreSQLTests.AllTypes> GetAllTypes()
 		{
 			var methodInfo = typeof(TestPgFunctions).GetMethod("GetAllTypes", Array<Type>.Empty)!;
@@ -2458,13 +2505,14 @@ namespace Tests.DataProvider
 			return _ctx.GetTable<PostgreSQLTests.AllTypes>(this, methodInfo);
 		}
 
+		// TODO: function names should be escaped by linq2db, but it is not implemented yet
 		[Sql.Function("\"TestFunctionParameters\"", ServerSideOnly = true)]
 		public static TestParametersResult TestParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
 		}
 
-		[Sql.TableFunction("\"TestTableFunction\"")]
+		[Sql.TableFunction("TestTableFunction")]
 		public LinqToDB.ITable<TestScalarTableFunctionResult> TestScalarTableFunction(int? param1)
 		{
 			var methodInfo = typeof(TestPgFunctions).GetMethod("TestScalarTableFunction", new[] { typeof(int?) })!;
@@ -2472,7 +2520,7 @@ namespace Tests.DataProvider
 			return _ctx.GetTable<TestScalarTableFunctionResult>(this, methodInfo, param1);
 		}
 
-		[Sql.TableFunction("\"TestTableFunction1\"")]
+		[Sql.TableFunction("TestTableFunction1")]
 		public LinqToDB.ITable<TestRecordTableFunctionResult> TestRecordTableFunction(int? param1, int? param2)
 		{
 			var methodInfo = typeof(TestPgFunctions).GetMethod("TestRecordTableFunction", new[] { typeof(int?), typeof(int?) })!;

@@ -341,7 +341,7 @@ namespace Tests.xUpdate
 			}
 		};
 
-		[ActiveIssue(Configuration = TestProvName.Oracle21DevartDirect)]
+		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, TestProvName.Oracle21DevartDirect })]
 		[Test]
 		public void TestMergeTypes([DataSources(true)] string context)
 		{

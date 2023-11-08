@@ -126,6 +126,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					else if (udtType == provider?.Adapter.NpgsqlDateType    ) StringBuilder.Append("date");
 					else if (udtType == provider?.Adapter.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
 					else if (udtType == provider?.Adapter.NpgsqlIntervalType) StringBuilder.Append("interval");
+					else if (udtType == provider?.Adapter.NpgsqlCidrType    ) StringBuilder.Append("cidr");
 					else if (udtType == typeof(PhysicalAddress) && provider != null && !provider.HasMacAddr8) StringBuilder.Append("macaddr");
 					else if (udtType == typeof(IPAddress)) StringBuilder.Append("inet");
 					else base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
@@ -165,15 +166,31 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.SequenceName         :
 					if (ProviderOptions.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
-						if (value.Length > 0 && value[0] == '"')
-							return sb.Append(value);
-
-						if (ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+						// current logic limitations (hardly an issue as they кузкуыуте quite exotic cases):
+						// - surrogate pairs/runes not handled
+						// - non-lowercase non-uppercase letters not handled
+						var quote =
+							// force quote enabled
+							ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+							// only for Auto mode - contains upper-case letter
+							|| ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && value.Any(char.IsUpper)
+							// is a keyword
 							|| IsReserved(value)
-							|| value.Any(c => char.IsWhiteSpace(c)
+							// starts from non-letter/underscore
 							|| (value.Length > 0 && value[0] != '_' && !char.IsLetter(value[0]))
-							|| ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
-							return sb.Append('"').Append(value).Append('"');
+							// contains non-letter/underscore/digit(0-9 only)/$
+#if NET7_0_OR_GREATER
+							|| value.Skip(1).Any(c => !char.IsLetter(c) && !char.IsAsciiDigit(c) && c is not '_' and not '$')
+#else
+							|| value.Skip(1).Any(c => !char.IsLetter(c) && !(c >= '0' && c <= '9') && c is not '_' and not '$')
+#endif
+							;
+
+						if (quote)
+						{
+							// don't forget to duplicate quotes
+							return sb.Append('"').Append(value.Replace("\"", "\"\"")).Append('"');
+						}
 					}
 
 					break;
