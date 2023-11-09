@@ -233,7 +233,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || element.Items != items)
 					{
-						return NotifyReplaced(new SqlGroupingSet(items), element);
+						return NotifyReplaced(new SqlGroupingSet(element.Items != items ? items : items.ToList()), element);
 					}
 
 					break;
@@ -282,7 +282,7 @@ namespace LinqToDB.SqlQuery
 								element.OperationType,
 								where,
 								whereDelete,
-								items),
+								element.Items != items ? items : items.ToList()),
 							element);
 					}
 
@@ -379,7 +379,7 @@ namespace LinqToDB.SqlQuery
 								Tag                = tag,
 								Table              = table,
 								ResetIdentity      = element.ResetIdentity,
-								SqlQueryExtensions = ext
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
 							}, element);
 					}
 
@@ -427,7 +427,12 @@ namespace LinqToDB.SqlQuery
 					    !ReferenceEquals(element.Table, table) ||
 					    element.SqlQueryExtensions != ext)
 					{
-						return NotifyReplaced(new SqlCreateTableStatement(table) { Tag = tag, SqlQueryExtensions = ext }, element);
+						return NotifyReplaced(
+							new SqlCreateTableStatement(table)
+							{
+								Tag                = tag,
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							}, element);
 					}
 
 					break;
@@ -474,7 +479,12 @@ namespace LinqToDB.SqlQuery
 					    !ReferenceEquals(element.Table, table) ||
 					    element.SqlQueryExtensions != ext)
 					{
-						return NotifyReplaced(new SqlCreateTableStatement(table) { Tag = tag, SqlQueryExtensions = ext }, element);
+						return NotifyReplaced(
+							new SqlCreateTableStatement(table)
+							{
+								Tag                = tag,
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							}, element);
 					}
 
 					break;
@@ -563,7 +573,10 @@ namespace LinqToDB.SqlQuery
 						return NotifyReplaced(new SqlMultiInsertStatement(
 								element.InsertType,
 								source,
-								inserts) { SqlQueryExtensions = ext },
+								element.Inserts != inserts ? inserts : inserts.ToList())
+							{
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							},
 							element);
 					}
 
@@ -638,11 +651,11 @@ namespace LinqToDB.SqlQuery
 								target,
 								source,
 								on,
-								operations)
+								element.Operations != operations ? operations : operations.ToList())
 							{
 								Tag                = tag,
 								Output             = output,
-								SqlQueryExtensions = ext
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
 							},
 							element);
 					}
@@ -714,7 +727,7 @@ namespace LinqToDB.SqlQuery
 								Table              = table,
 								Top                = top,
 								Output             = output,
-								SqlQueryExtensions = ext,
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList(),
 							}, element);
 					}
 
@@ -780,7 +793,7 @@ namespace LinqToDB.SqlQuery
 								With               = with,
 								Update             = update,
 								Output             = output,
-								SqlQueryExtensions = ext
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
 							}, element);
 					}
 
@@ -844,7 +857,7 @@ namespace LinqToDB.SqlQuery
 							With               = with,
 							Insert             = insert,
 							Update             = update,
-							SqlQueryExtensions = ext
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
 						}, element);
 					}
 
@@ -908,7 +921,7 @@ namespace LinqToDB.SqlQuery
 							With               = with,
 							Insert             = insert,
 							Output             = output,
-							SqlQueryExtensions = ext
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
 						}, element);
 					}
 
@@ -962,7 +975,7 @@ namespace LinqToDB.SqlQuery
 						{
 							Tag                = tag,
 							With               = with,
-							SqlQueryExtensions = ext
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
 						}, element);
 					}
 
@@ -1032,8 +1045,10 @@ namespace LinqToDB.SqlQuery
 							InsertedTable = insertedTable,
 							DeletedTable  = deletedTable,
 							OutputTable   = outputTable,
-							OutputColumns = outputColumns,
-							OutputItems   = outputItems! // TODO: refactor HasOutputItems/OutputItems...
+							OutputColumns = element.OutputColumns != outputColumns ? outputColumns : outputColumns?.ToList(),
+							OutputItems   = element.HasOutputItems ? (element.OutputItems != outputItems!
+								? outputItems!
+								: outputItems!.ToList()) : null! // TODO: refactor HasOutputItems/OutputItems...
 						}, element);
 
 						return newElement;
@@ -1113,7 +1128,10 @@ namespace LinqToDB.SqlQuery
 					    element.Parameters != parameters ||
 					    element.SqlQueryExtensions != ext)
 					{
-						var newTable = new SqlRawSqlTable(element, parameters) { SqlQueryExtensions = ext };
+						var newTable = new SqlRawSqlTable(element, element.Parameters != parameters ? parameters : parameters.ToArray())
+						{
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+						};
 
 						for (var index = 0; index < newTable.Fields.Count; index++)
 						{
@@ -1165,7 +1183,10 @@ namespace LinqToDB.SqlQuery
 						element.SqlQueryExtensions != ext)
 					{
 						var newFields = CopyFields(element.Fields);
-						var newTable  = new SqlCteTable(element, newFields, clause) { SqlQueryExtensions = ext };
+						var newTable = new SqlCteTable(element, newFields, clause)
+						{
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+						};
 
 						return NotifyReplaced(newTable, element);
 					}
@@ -1200,7 +1221,9 @@ namespace LinqToDB.SqlQuery
 					var clauses = VisitElements(element.Clauses, VisitMode.Transform);
 					if (ShouldReplace(element) || element.Clauses != clauses)
 					{
-						return NotifyReplaced(new SqlWithClause {Clauses = clauses }, element);
+						return NotifyReplaced(
+							new SqlWithClause { Clauses = element.Clauses != clauses ? clauses : clauses.ToList() },
+							element);
 					}
 
 					break;
@@ -1301,7 +1324,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || element.Items != items)
 					{
-						return NotifyReplaced(new SqlOrderByClause(items), element);
+						return NotifyReplaced(new SqlOrderByClause(element.Items != items ? items : items.ToList()), element);
 					}
 
 					break;
@@ -1335,7 +1358,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || element.Items != items)
 					{
-						return NotifyReplaced(new SqlGroupByClause(element.GroupingType, items), element);
+						return NotifyReplaced(new SqlGroupByClause(element.GroupingType, element.Items != items ? items : items.ToList()), element);
 					}
 
 					break;
@@ -1403,7 +1426,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || element.Tables != tables)
 					{
-						return NotifyReplaced(new SqlFromClause(tables), element);
+						return NotifyReplaced(new SqlFromClause(element.Tables != tables ? tables : tables.ToList()), element);
 					}
 
 					break;
@@ -1495,8 +1518,8 @@ namespace LinqToDB.SqlQuery
 						{
 							Table       = table,
 							TableSource = ts,
-							Items       = items,
-							Keys        = keys
+							Items       = element.Items != items ? items : items.ToList(),
+							Keys        = element.Keys != keys ? keys : keys.ToList(),
 						};
 
 						return NotifyReplaced(newUpdate, element);
@@ -1541,7 +1564,13 @@ namespace LinqToDB.SqlQuery
 					    !ReferenceEquals(element.Into, into) ||
 					    element.Items != items)
 					{
-						return NotifyReplaced(new SqlInsertClause { Into = into, Items = items, WithIdentity = element.WithIdentity }, element);
+						return NotifyReplaced(
+							new SqlInsertClause
+							{
+								Into         = into,
+								Items        = element.Items != items ? items : items.ToList(),
+								WithIdentity = element.WithIdentity
+							}, element);
 					}
 
 					break;
@@ -1584,7 +1613,11 @@ namespace LinqToDB.SqlQuery
 					    !ReferenceEquals(cond, element.Condition) ||
 					    element.SqlQueryExtensions != ext)
 					{
-						return NotifyReplaced(new SqlJoinedTable(element.JoinType, table, element.IsWeak, cond) { SqlQueryExtensions = ext }, element);
+						return NotifyReplaced(
+							new SqlJoinedTable(element.JoinType, table, element.IsWeak, cond)
+							{
+								SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
+							}, element);
 					}
 
 					break;
@@ -1631,7 +1664,7 @@ namespace LinqToDB.SqlQuery
 						(element.HasUniqueKeys && element.UniqueKeys != uk) ||
 					    element.Joins != joins)
 					{
-						return NotifyReplaced(new SqlTableSource(source, element.RawAlias, joins, uk), element);
+						return NotifyReplaced(new SqlTableSource(source, element.RawAlias, element.Joins != joins ? joins : joins.ToList(), uk), element);
 					}
 
 					break;
@@ -1695,7 +1728,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || element.Conditions != conditions)
 					{
-						return NotifyReplaced(new SqlSearchCondition(conditions), element);
+						return NotifyReplaced(new SqlSearchCondition(element.Conditions != conditions ? conditions : conditions.ToList()), element);
 					}
 
 					break;
@@ -1845,7 +1878,7 @@ namespace LinqToDB.SqlQuery
 						|| !ReferenceEquals(oc, selectQuery.OrderBy)
 						|| (selectQuery.HasSetOperators && so != selectQuery.SetOperators)
 						|| (selectQuery.HasUniqueKeys   && uk != selectQuery.UniqueKeys)
-						|| ex != selectQuery.SqlQueryExtensions)
+						|| selectQuery.SqlQueryExtensions != ex)
 					{
 						// we force clone strong components (clauses) of select query, that were not cloned above
 						// as they cannot belong to more than one query due to Parent reference to SelectQuery instance
@@ -1917,6 +1950,21 @@ namespace LinqToDB.SqlQuery
 
 							NotifyReplaced(oc, selectQuery.OrderBy);
 						}
+
+						if (selectQuery.HasSetOperators)
+						{
+							if (so == selectQuery.SetOperators)
+								so = so.ToList();
+						}
+
+						if (selectQuery.HasUniqueKeys)
+						{
+							if (uk == selectQuery.UniqueKeys)
+								uk = uk.ToList();
+						}
+
+						if (selectQuery.SqlQueryExtensions == ex)
+							ex = ex?.ToList();
 
 						nq.Init(sc, fc, wc, gc, hc, oc, so, uk,
 							selectQuery.IsParameterDependent,
@@ -2014,7 +2062,9 @@ namespace LinqToDB.SqlQuery
 					    !ReferenceEquals(predicate.Expr1, expr1) ||
 					    predicate.Values != values)
 					{
-						return NotifyReplaced(new SqlPredicate.InList(expr1, predicate.WithNull, predicate.IsNot, values), predicate);
+						return NotifyReplaced(
+							new SqlPredicate.InList(expr1, predicate.WithNull, predicate.IsNot,
+								predicate.Values != values ? values : values.ToList()), predicate);
 					}
 
 					break;
@@ -2423,7 +2473,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || element.Values != values)
 					{
-						return NotifyReplaced(new SqlRow(values), element);
+						return NotifyReplaced(new SqlRow(element.Values != values ? values : values.ToArray()), element);
 					}
 
 					break;
@@ -2466,8 +2516,8 @@ namespace LinqToDB.SqlQuery
 					{
 						var newTable = new SqlTable(element)
 						{
-							TableArguments     = tableArguments,
-							SqlQueryExtensions = ext
+							TableArguments     = element.TableArguments != tableArguments ? tableArguments : tableArguments?.ToArray(),
+							SqlQueryExtensions = element.SqlQueryExtensions != ext ? ext : ext?.ToList()
 						};
 
 						for (var index = 0; index < newTable.Fields.Count; index++)
@@ -2681,7 +2731,7 @@ namespace LinqToDB.SqlQuery
 					{
 						return NotifyReplaced(new SqlExpression(
 							element.SystemType, element.Expr, element.Precedence,
-							element.Flags, element.NullabilityType, element.CanBeNullNullable, parameters),
+							element.Flags, element.NullabilityType, element.CanBeNullNullable, parameters != element.Parameters ? parameters : parameters.ToArray()),
 							element);
 					}
 
@@ -2719,7 +2769,7 @@ namespace LinqToDB.SqlQuery
 						return NotifyReplaced(
 							new SqlFunction(element.SystemType, element.Name, element.IsAggregate,
 								element.IsPure,
-								element.Precedence, element.NullabilityType, element.CanBeNullNullable, parameters)
+								element.Precedence, element.NullabilityType, element.CanBeNullNullable, parameters != element.Parameters ? parameters : parameters.ToArray())
 							{
 								DoNotOptimize = element.DoNotOptimize
 							},
@@ -3046,7 +3096,7 @@ namespace LinqToDB.SqlQuery
 
 								for (var j = 0; j < i; j++)
 								{
-									list2.Add(list1[j]);
+									list2.Add(list1[j].ToArray());
 								}
 							}
 
