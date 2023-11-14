@@ -209,10 +209,10 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var builder in _builders)
 			{
-				var mc       = ActivityService.Start(ActivityID.BuildSequenceCanBuild);
-				var canBuild = builder.CanBuild(this, buildInfo);
+				bool canBuild;
 
-				mc?.Dispose();
+				using (ActivityService.Start(ActivityID.BuildSequenceCanBuild))
+					canBuild = builder.CanBuild(this, buildInfo);
 
 				if (canBuild)
 				{

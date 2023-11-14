@@ -478,35 +478,39 @@ namespace LinqToDB.Linq
 		{
 			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
 
-			var mf  = ActivityService.Start(ActivityID.GetQueryFind);
-			var mfe = ActivityService.Start(ActivityID.GetQueryFindExpose);
+			ExpressionTreeOptimizationContext optimizationContext;
+			DataOptions                       dataOptions;
+			QueryFlags                        queryFlags;
+			Query<T>?                         query;
 
-			var optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
+			using (ActivityService.Start(ActivityID.GetQueryFind))
+			{
+				using (ActivityService.Start(ActivityID.GetQueryFindExpose))
+				{
+					optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
-			expr = optimizationContext.ExpandExpression(expr);
-//			// we need this call for correct processing parameters in ExpressionMethod
-//			// TODO: IT breaks performance. All these operations must be cached.
-			expr = optimizationContext.ExposeExpression(expr);
+					expr = optimizationContext.ExpandExpression(expr);
+//					// we need this call for correct processing parameters in ExpressionMethod
+//					// TODO: IT breaks performance. All these operations must be cached.
+					expr = optimizationContext.ExposeExpression(expr);
 
-			dependsOnParameters = optimizationContext.IsDependsOnParameters();
+					dependsOnParameters = optimizationContext.IsDependsOnParameters();
 
-			if (dataContext is IExpressionPreprocessor preprocessor)
-				expr = preprocessor.ProcessExpression(expr);
+					if (dataContext is IExpressionPreprocessor preprocessor)
+						expr = preprocessor.ProcessExpression(expr);
+				}
 
-			mfe?.Dispose();
+				using (ActivityService.Start(ActivityID.GetQueryFindFind))
+				{
+					dataOptions = dataContext.Options;
 
-			var mff = ActivityService.Start(ActivityID.GetQueryFindFind);
+					if (dataOptions.LinqOptions.DisableQueryCache)
+						return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
 
-			var dataOptions = dataContext.Options;
-
-			if (dataOptions.LinqOptions.DisableQueryCache)
-				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
-
-			var queryFlags = dataContext.GetQueryFlags();
-			var query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
-
-			mff?.Dispose();
-			mf ?.Dispose();
+					queryFlags = dataContext.GetQueryFlags();
+					query      = _queryCache.Find(dataContext, expr, queryFlags, dataOptions);
+				}
+			}
 
 			if (query == null)
 			{

@@ -27,6 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{64E5C3A3
 	ProjectSection(SolutionItems) = preProject
 		Compile.cmd = Compile.cmd
 		Directory.Build.props = Directory.Build.props
+		..\Directory.Packages.props = ..\Directory.Packages.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{03B313B1-C785-4FC9-A3C7-DE58295B7D20}"

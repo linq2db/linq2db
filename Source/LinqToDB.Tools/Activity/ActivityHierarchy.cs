@@ -43,13 +43,6 @@ namespace LinqToDB.Tools.Activity
 			}
 		}
 
-#if NET45
-#pragma warning disable RS0030
-		// TODO: Change to AsyncLocal<T> after removing FW 4.5 support.
-		[ThreadStatic]
-		static ActivityHierarchy? _current;
-#pragma warning restore RS0030
-#else
 		static readonly System.Threading.AsyncLocal<ActivityHierarchy?> _currentImpl = new ();
 
 		static ActivityHierarchy? _current
@@ -57,7 +50,6 @@ namespace LinqToDB.Tools.Activity
 			get => _currentImpl.Value;
 			set => _currentImpl.Value = value;
 		}
-#endif
 
 		public void Dispose()
 		{

@@ -267,7 +267,7 @@ namespace LinqToDB.Tools.Activity
 					1 => m.Elapsed,
 					_ => new TimeSpan(m.Elapsed.Ticks / m.CallCount)
 				},
-				Percent = FixUnixPercentFormat($"{(m.CallCount == 0 ? (decimal?)null : m.Elapsed.Ticks / totalTime),7:P}")
+				Percent = FixUnixPercentFormat($"{(m.CallCount == 0 ? null : m.Elapsed.Ticks / totalTime),7:P}")
 			})
 			.ToDiagnosticString();
 
