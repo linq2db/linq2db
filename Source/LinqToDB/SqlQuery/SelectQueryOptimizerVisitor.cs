@@ -1471,11 +1471,6 @@ namespace LinqToDB.SqlQuery
 			{
 				var isModified = false;
 
-				if (element.SelectQuery.SourceID == 17)
-				{
-
-				}
-
 				if (OptimizeSubQueries(element.SelectQuery))
 				{
 					isModified = true;

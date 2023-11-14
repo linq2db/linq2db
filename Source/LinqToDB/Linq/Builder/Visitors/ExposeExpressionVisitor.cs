@@ -639,17 +639,15 @@ namespace LinqToDB.Linq.Builder.Visitors
 			{
 				case ExpressionType.ArrayLength:
 				{
-					// TODO:WAITFIX
-					throw new NotImplementedException();
-					//var ll = Expressions.ConvertMember(MappingSchema, node.Operand?.Type, node.Operand!.Type.GetProperty(nameof(Array.Length))!);
-					//if (ll != null)
-					//{
-					//	var exposed = ConvertMemberExpression(node, MappingSchema, node.Operand!, ll);
-
-					//	return Visit(exposed);
-					//}
-
-					//break;
+					var ll = Expressions.ConvertMember(MappingSchema, node.Operand?.Type, node.Operand!.Type.GetProperty(nameof(Array.Length))!);
+					if (ll != null)
+					{
+						var exposed = ConvertMemberExpression(node, MappingSchema, node.Operand!, ll);
+				
+						return Visit(exposed);
+					}
+				
+					break;
 				}
 
 				case ExpressionType.Convert:

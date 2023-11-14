@@ -393,9 +393,9 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitUnary(UnaryExpression node)
 			{
-				if (IsForcedToConvert(node))
+				if (IsForcedToConvert(node)	|| Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
 				{
-					var translated = TranslateExpression(node);
+					var translated = TranslateExpression(node, useSql: true);
 					if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
 						return Visit(translated);
 				}
@@ -681,7 +681,7 @@ namespace LinqToDB.Linq.Builder
 				if (IsForcedToConvert(node))
 					localFlags = _flags.SqlFlag();
 
-				if (Builder.IsServerSideOnly(node, _flags.IsExpression())/* || node.Method.IsSqlPropertyMethodEx()*/)
+				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
 					localFlags = _flags.SqlFlag();
 
 				var method = Builder.MakeExpression(_context, node, localFlags);
