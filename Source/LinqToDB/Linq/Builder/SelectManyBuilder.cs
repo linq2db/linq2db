@@ -38,49 +38,55 @@ namespace LinqToDB.Linq.Builder
 
 			sequence = new SubQueryContext(sequence);
 
-			// correcting query for Eager Loading
-			expr = SequenceHelper.MoveAllToScopedContext(expr, sequence);
+			BuildInfo      collectionInfo;
+			IBuildContext? collection;
+			Expression     resultExpression;
+			Expression     projected;
 
-			expr = builder.UpdateNesting(sequence, expr);
-
-			// GroupJoin handling
-			expr = builder.MakeExpression(sequence, expr, ProjectFlags.ExtractProjection);
-
-			var collectionSelectQuery    = new SelectQuery();
-			var collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
+			using (builder.AllocateScope(buildInfo.Parent))
+			using (builder.AllocateScope(sequence, false))
 			{
-				CreateSubQuery = true,
-				SourceCardinality = SourceCardinality.OneOrMany
-			};
+				// GroupJoin handling
+				expr = builder.UpdateNesting(sequence, expr);
 
-			var fakejoin = new SqlFromClause.Join(JoinType.Auto, collectionSelectQuery, null, false, null);
-			sequence.SelectQuery.From.Tables[0].Joins.Add(fakejoin.JoinedTable);
+				var collectionSelectQuery = new SelectQuery();
+				collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
+				{
+					CreateSubQuery    = true,
+					SourceCardinality = SourceCardinality.OneOrMany
+				};
 
-			var collection = builder.TryBuildSequence(collectionInfo);
+				collection = builder.TryBuildSequence(collectionInfo);
 
-			sequence.SelectQuery.From.Tables[0].Joins.Remove(fakejoin.JoinedTable);
-
-			if (collection == null)
-				return null;
-
-			if (buildInfo.IsSubQuery)
-			{
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(collection))
+				if (collection == null)
 					return null;
-			}
 
-			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
-			//
-			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
-			{
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
-			}
+				if (buildInfo.IsSubQuery)
+				{
+					if (!SequenceHelper.IsSupportedSubqueryForModifier(collection))
+						return null;
+				}
 
-			Expression resultExpression;
+				// DefaultIfEmptyContext wil handle correctly projecting NULL objects
+				//
+				if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
+				{
+					sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
+				}
+
+				projected = builder.BuildSqlExpression(collection,
+					new ContextRefExpression(collection.ElementType, collection), buildInfo.GetFlags(),
+					buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+
+				collection = new SubQueryContext(collection);
+
+				projected = builder.UpdateNesting(collection, projected);
+
+			}
 
 			if (resultSelector == null)
 			{
-				resultExpression = new ContextRefExpression(genericArguments[^1], collection);
+				resultExpression = projected;
 			}
 			else
 			{
@@ -91,7 +97,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var context = new SelectContext(buildInfo.Parent, resultExpression, collection, sequence.SelectQuery, buildInfo.IsSubQuery);
+			var context = new SelectContext(buildInfo.Parent, builder, resultSelector == null ? collection : null, resultExpression, sequence.SelectQuery, buildInfo.IsSubQuery);
 			context.SetAlias(collectionSelector.Parameters[0].Name);
 
 			string? collectionAlias = null;
@@ -118,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 			};
 
 			var join = new SqlFromClause.Join(joinType, collection.SelectQuery, collectionAlias, false, null);
-			context.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+			sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
 			return context;
 		}

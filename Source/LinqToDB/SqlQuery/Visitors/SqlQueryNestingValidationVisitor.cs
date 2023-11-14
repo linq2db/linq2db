@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace LinqToDB.SqlQuery.Visitors
 {
@@ -8,7 +9,10 @@ namespace LinqToDB.SqlQuery.Visitors
 	{
 		readonly bool                         _isSubQuery;
 		readonly IQueryElement                _forStatement;
-		readonly Stack<List<ISqlTableSource>> _visibleSources = new ();
+
+		List<ISqlTableSource>? _outerSources;
+		List<ISqlTableSource>? _querySources;
+
 		readonly HashSet<ISqlTableSource>     _spotted        = new ();
 		SelectQuery?                          _currentQuery;
 
@@ -20,16 +24,19 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			var saveQuery = _currentQuery;
-			_currentQuery = selectQuery;
+			var saveQuery   = _currentQuery;
+			var saveOuter   = _outerSources;
+			var saveSources = _querySources;
 
-			_visibleSources.Push(new List<ISqlTableSource>());
+			_querySources = new List<ISqlTableSource>();
+
+			_currentQuery = selectQuery;
 
 			base.VisitSqlQuery(selectQuery);
 
-			_visibleSources.Pop();
-
 			_currentQuery = saveQuery;
+			_outerSources = saveOuter;
+			_querySources = saveSources;
 
 			return selectQuery;
 		}
@@ -70,7 +77,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				var sourceInQuery = _spotted.Contains(element.Table);
 				if (!_isSubQuery || sourceInQuery)
 				{
-					var contains = _visibleSources.SelectMany(s => s).Contains(element.Table);
+					var contains = _querySources?.Contains(element.Table) == true || _outerSources?.Contains(element.Table) == true;
 					if (!contains)
 					{
 						throw CreateErrorMessage(sourceInQuery, element);
@@ -81,6 +88,21 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.VisitSqlFieldReference(element);
 		}
 
+		protected override IQueryElement VisitSqlOrderByItem(SqlOrderByItem element)
+		{
+			var saveOuter = _outerSources;
+
+			_outerSources = (_outerSources ?? Enumerable.Empty<ISqlTableSource>())
+				.Concat(_querySources ?? Enumerable.Empty<ISqlTableSource>())
+				.ToList();
+
+			base.VisitSqlOrderByItem(element);
+
+			_outerSources = saveOuter;
+
+			return element;
+		}
+
 		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
 			if (element.Parent != null)
@@ -88,7 +110,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				var sourceInQuery = _spotted.Contains(element.Parent);
 				if (!_isSubQuery || sourceInQuery)
 				{
-					var contains = _visibleSources.SelectMany(s => s).Contains(element.Parent);
+					var contains = _querySources?.Contains(element.Parent) == true || _outerSources?.Contains(element.Parent) == true;
 					if (!contains)
 					{
 						throw CreateErrorMessage(sourceInQuery, element);
@@ -99,160 +121,235 @@ namespace LinqToDB.SqlQuery.Visitors
 			return base.VisitSqlColumnReference(element);
 		}
 
-		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
-			_spotted.Add(element.Source);
-			_visibleSources.Peek().Add(element.Source);
+			var saveOuter = _outerSources;
 
-			return base.VisitSqlTableSource(element);
+			_outerSources = (_outerSources ?? Enumerable.Empty<ISqlTableSource>())
+				.Concat(_querySources ?? Enumerable.Empty<ISqlTableSource>())
+			.ToList();
+
+			base.VisitSqlColumnExpression(column, expression);
+
+			_outerSources = saveOuter;
+
+			return expression;
 		}
 
-		protected override IQueryElement VisitSqlMergeStatement(SqlMergeStatement element)
+		protected override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
 		{
-			var tableSources = new List<ISqlTableSource>();
-			_visibleSources.Push(tableSources);
+			var saveOuter = _outerSources;
 
-			tableSources.Add(element.Source);
-			tableSources.Add(element.Target);
+			_outerSources = (_outerSources ?? Enumerable.Empty<ISqlTableSource>())
+				.Concat(_querySources ?? Enumerable.Empty<ISqlTableSource>())
+				.ToList();
 
-			base.VisitSqlMergeStatement(element);
-			_visibleSources.Pop();
+			base.VisitSqlWhereClause(element);
+
+			_outerSources = saveOuter;
 
 			return element;
 		}
 
+		protected override IQueryElement VisitSqlMergeStatement(SqlMergeStatement element)
+		{
+			var saveSources = _querySources;
+
+			_querySources = new();
+
+			_querySources.Add(element.Source);
+			_querySources.Add(element.Target);
+
+			base.VisitSqlMergeStatement(element);
+
+			_querySources = saveSources;
+
+			return element;
+		}
 
 		protected override IQueryElement VisitSqlMultiInsertStatement(SqlMultiInsertStatement element)
 		{
-			var tableSources = new List<ISqlTableSource>();
-			_visibleSources.Push(tableSources);
+			var saveOuter = _outerSources;
 
-			tableSources.Add(element.Source);
+			_outerSources = new();
+			_outerSources.Add(element.Source);
 
 			base.VisitSqlMultiInsertStatement(element);
 
-			_visibleSources.Pop();
+			_outerSources = saveOuter;
 
 			return element;
 		}
 
 		protected override IQueryElement VisitSqlConditionalInsertClause(SqlConditionalInsertClause element)
 		{
+			var saveOuter = _outerSources;
+
+			_outerSources = new();
+
 			if (element.Insert.Into != null)
-				_visibleSources.Peek().Add(element.Insert.Into);
+				_outerSources.Add(element.Insert.Into);
 
 			base.VisitSqlConditionalInsertClause(element);
 
-			if (element.Insert.Into != null)
-				_visibleSources.Peek().Remove(element.Insert.Into);
+			_outerSources = saveOuter;
 
 			return element;
 		}
 
 		protected override IQueryElement VisitSqlInsertOrUpdateStatement(SqlInsertOrUpdateStatement element)
 		{
-			var tableSources = new List<ISqlTableSource>();
-			_visibleSources.Push(tableSources);
+			var saveOuter = _outerSources;
+
+			_outerSources = new();
 
 			if (element.Insert.Into != null)
-				tableSources.Add(element.Insert.Into);
+				_outerSources.Add(element.Insert.Into);
 
 			if (element.Update.Table != null)
-				tableSources.Add(element.Update.Table);
-
+				_outerSources.Add(element.Update.Table);
 
 			base.VisitSqlInsertOrUpdateStatement(element);
 
-			_visibleSources.Pop();
+			_outerSources = saveOuter;
 
 			return element;
 		}
 
 		protected override IQueryElement VisitSqlUpdateStatement(SqlUpdateStatement element)
 		{
-			var tableSources = new List<ISqlTableSource>();
-			_visibleSources.Push(tableSources);
+			var saveOuter = _outerSources;
+
+			_outerSources = new();
+			_outerSources.Add(element.SelectQuery);
 
 			if (element.Update.Table != null)
 			{
-				tableSources.Add(element.Update.Table);
+				_outerSources.Add(element.Update.Table);
 			}
 
 			if (element.Update.TableSource != null)
 			{
-				tableSources.Add(element.Update.TableSource.Source);
+				_outerSources.Add(element.Update.TableSource.Source);
 			}
 
-			tableSources.Add(element.SelectQuery);
-			tableSources.AddRange(element.SelectQuery.From.Tables.Select(t => t.Source));
+			Visit(element.Tag);
+			Visit(element.With);
+			Visit(element.SelectQuery);
 
-			base.VisitSqlUpdateStatement(element);
+			_outerSources.AddRange(element.SelectQuery.From.Tables.Select(t => t.Source));
 
-			_visibleSources.Pop();
+			Visit(element.Update);
+			Visit(element.Output);
+
+			VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
+
+			_outerSources = saveOuter;
 
 			return element;
 		}
 
 		protected override IQueryElement VisitSqlOutputClause(SqlOutputClause element)
 		{
-			var tableSources = _visibleSources.Peek();
+			var saveOuter = _outerSources;
+
+			_outerSources = (_outerSources ?? Enumerable.Empty<ISqlTableSource>()).ToList();
 
 			if (element.DeletedTable != null)
-				tableSources.Add(element.DeletedTable);
+				_outerSources.Add(element.DeletedTable);
 
 			if (element.InsertedTable != null)
-				tableSources.Add(element.InsertedTable);
+				_outerSources.Add(element.InsertedTable);
 
 			if (element.OutputTable != null)
-				tableSources.Add(element.OutputTable);
-
+				_outerSources.Add(element.OutputTable);
+			
 			base.VisitSqlOutputClause(element);
 
-			if (element.DeletedTable != null)
-				tableSources.Remove(element.DeletedTable);
-
-			if (element.InsertedTable != null)
-				tableSources.Remove(element.InsertedTable);
-
-			if (element.OutputTable != null)
-				tableSources.Remove(element.OutputTable);
+			_outerSources = saveOuter;
 
 			return element;
 		}
 
 		protected override IQueryElement VisitSqlDeleteStatement(SqlDeleteStatement element)
 		{
-			var tableSources = new List<ISqlTableSource>();
-			_visibleSources.Push(tableSources);
+			var saveOuter = _outerSources;
+
+			_outerSources = new();
 
 			if (element.Table != null)
 			{
-				tableSources.Add(element.Table);
+				_outerSources.Add(element.Table);
 			}
 
 			base.VisitSqlDeleteStatement(element);
 
-			_visibleSources.Pop();
+			_outerSources = saveOuter;
 
 			return element;
 		}
 
 		protected override IQueryElement VisitSqlInsertStatement(SqlInsertStatement element)
 		{
-			var tableSources = new List<ISqlTableSource>();
-			_visibleSources.Push(tableSources);
+			var saveOuter = _outerSources;
+
+			_outerSources = new();
 
 			if (element.Insert.Into != null)
-				tableSources.Add(element.Insert.Into);
+				_outerSources.Add(element.Insert.Into);
 
-			tableSources.Add(element.SelectQuery);
+			_outerSources.Add(element.SelectQuery);
 
 			base.VisitSqlInsertStatement(element);
 
-			_visibleSources.Pop();
+			_outerSources = saveOuter;
 
 			return element;
 		}
 
+		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		{
+			if (_querySources != null)
+				_querySources.Add(element.Source);
+
+			base.VisitSqlTableSource(element);
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
+		{
+			if (element.JoinType == JoinType.CrossApply || element.JoinType == JoinType.OuterApply ||
+			    element.JoinType == JoinType.RightApply || element.JoinType == JoinType.FullApply)
+			{
+				var saveOuterApply   = _outerSources;
+
+				_outerSources = (_outerSources ?? Enumerable.Empty<ISqlTableSource>())
+					.Concat(_querySources ?? Enumerable.Empty<ISqlTableSource>())
+					.ToList();
+
+				base.VisitSqlJoinedTable(element);
+
+				_outerSources = saveOuterApply;
+
+				return element;
+			}
+
+			Visit(element.Table);
+
+			var saveOuter = _outerSources;
+
+			_outerSources = (_outerSources ?? Enumerable.Empty<ISqlTableSource>())
+				.Concat(_querySources ?? Enumerable.Empty<ISqlTableSource>())
+				.ToList();
+
+			Visit(element.Condition);
+
+			_outerSources = saveOuter;
+
+			VisitElements(element.SqlQueryExtensions, VisitMode.ReadOnly);
+
+			return element;
+		}
 	}
 }

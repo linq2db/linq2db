@@ -16,7 +16,7 @@ namespace LinqToDB.SqlQuery
 		public static readonly IEqualityComparer<IQueryElement> ReferenceComparer = Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default;
 
 #if DEBUG
-		private static long IdCounter;
+		static long IdCounter;
 
 		public virtual string DebugText => this.ToDebugString();
 
@@ -26,6 +26,12 @@ namespace LinqToDB.SqlQuery
 		protected QueryElement()
 		{
 			UniqueId = Interlocked.Increment(ref IdCounter);
+
+			// useful for putting breakpoint when finding when QueryElement was created
+			if (UniqueId == 0)
+			{
+
+			}
 		}
 #endif
 

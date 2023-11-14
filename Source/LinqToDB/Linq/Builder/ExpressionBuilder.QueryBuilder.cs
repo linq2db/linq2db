@@ -6,13 +6,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using LinqToDB.Common.Internal;
+	using Common;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
@@ -137,12 +135,6 @@ namespace LinqToDB.Linq.Builder
 			return parentInfo.TryGetValue(currentQuery, out parentQuery);
 		}
 
-		public TExpression UpdateNesting<TExpression>(IBuildContext upToContext, TExpression expression)
-			where TExpression : Expression
-		{
-			return (TExpression)UpdateNesting(upToContext.SelectQuery, expression);
-		}
-
 		public class ParentInfo
 		{
 			Dictionary<SelectQuery, SelectQuery>? _info;
@@ -151,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_info == null)
 				{
-					_info = new();
+					_info = new(Utils.ObjectReferenceEqualityComparer<SelectQuery>.Default);
 					BuildParentsInfo(rootQuery, _info);
 				}
 				return _info.TryGetValue(currentQuery, out parentQuery);
@@ -184,18 +176,46 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		public TExpression UpdateNesting<TExpression>(IBuildContext upToContext, TExpression expression)
+			where TExpression : Expression
+		{
+			var corrected = UpdateNesting(upToContext.SelectQuery, expression);
+			
+			return corrected;
+		}
+
 		public TExpression UpdateNesting<TExpression>(SelectQuery upToQuery, TExpression expression)
+			where TExpression : Expression
+		{
+			using var parentInfo = ParentInfoPool.Allocate();
+
+			var corrected = UpdateNestingInternal(upToQuery, expression, parentInfo.Value);
+
+			if (_scopes.Count > 0)
+			{
+				foreach (var scope in _scopes)
+				{
+					using var localInfo = ParentInfoPool.Allocate();
+					if (!localInfo.Value.GetParentQuery(scope, upToQuery, out _))
+					{
+						corrected = UpdateNestingInternal(scope, corrected, localInfo.Value);
+					}
+				}
+			}
+
+			return corrected;
+		}
+
+		TExpression UpdateNestingInternal<TExpression>(SelectQuery upToQuery, TExpression expression, ParentInfo parentInfo)
 			where TExpression : Expression
 		{
 			// short path
 			if (expression is SqlPlaceholderExpression currentPlaceholder && currentPlaceholder.SelectQuery == upToQuery)
 				return expression;
 
-			using var parentInfo = ParentInfoPool.Allocate();
-
 			var withColumns =
 				expression.Transform(
-					(builder: this, upToQuery, parentInfo: parentInfo.Value),
+					(builder: this, upToQuery, parentInfo),
 					static (context, expr) =>
 					{
 						if (expr is SqlPlaceholderExpression placeholder && !ReferenceEquals(context.upToQuery, placeholder.SelectQuery))
@@ -517,8 +537,8 @@ namespace LinqToDB.Linq.Builder
 				context = rootQuery.BuildContext;
 			}
 
-			var correctedForBuild = SequenceHelper.MoveAllToScopedContext(testExpression, context);
-			var ctx = GetSubQuery(context, correctedForBuild, flags);
+			var correctedForBuild = testExpression;
+			var ctx               = GetSubQuery(context, correctedForBuild, flags);
 
 			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx };
 

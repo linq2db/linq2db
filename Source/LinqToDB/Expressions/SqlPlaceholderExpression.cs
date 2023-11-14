@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 
@@ -18,12 +20,19 @@ namespace LinqToDB.Expressions
 		public SqlPlaceholderExpression(SelectQuery? selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
 			#if DEBUG
+
 			if (sql is SqlColumn column && column.Parent == selectQuery)
 				throw new InvalidOperationException();
 			if (path is SqlPlaceholderExpression)
 				throw new InvalidOperationException();
 			if (trackingPath is SqlPlaceholderExpression)
 				throw new InvalidOperationException();
+
+			if (null != sql.Find(e => e is SelectQuery sc && ReferenceEquals(sc, selectQuery)))
+			{
+				throw new InvalidOperationException($"Wrong select query.");
+			}
+
 			#endif
 
 			SelectQuery  = selectQuery;
@@ -36,6 +45,11 @@ namespace LinqToDB.Expressions
 
 #if DEBUG
 			Id = Interlocked.Increment(ref _placeholderCounter);
+
+			if (Id == 53)
+			{
+
+			}
 #endif
 		}
 
@@ -50,12 +64,30 @@ namespace LinqToDB.Expressions
 		public override ExpressionType NodeType => ExpressionType.Extension;
 		public override Type           Type     => ConvertType ?? Path.Type;
 
+#if DEBUG
+		public List<SqlPlaceholderExpression>? History { get; private set; }
+
+		void AppendHistory(SqlPlaceholderExpression ancestor)
+		{
+			History ??= new List<SqlPlaceholderExpression>();
+			if (ancestor.History != null)
+				History.AddRange(ancestor.History);
+
+			History.Add(ancestor);
+		}
+#endif
+
+
 		public SqlPlaceholderExpression MakeNullable()
 		{
 			if (!Type.IsNullableType())
 			{
-				var type = Type.AsNullable();
-				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
+				var type           = Type.AsNullable();
+				var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
+#if DEBUG
+				newPlaceholder.AppendHistory(this);
+#endif
+				return newPlaceholder;
 			}
 
 			return this;
@@ -65,8 +97,12 @@ namespace LinqToDB.Expressions
 		{
 			if (Type.IsNullable())
 			{
-				var type = Type.GetGenericArguments()[0];
-				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
+				var type           = Type.GetGenericArguments()[0];
+				var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
+#if DEBUG
+				newPlaceholder.AppendHistory(this);
+#endif
+				return newPlaceholder;
 			}
 
 			return this;
@@ -77,7 +113,11 @@ namespace LinqToDB.Expressions
 			if (ExpressionEqualityComparer.Instance.Equals(path, Path))
 				return this;
 
-			return new SqlPlaceholderExpression(SelectQuery, Sql, path, Type, Alias, Index, TrackingPath);
+			var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, Sql, path, Type, Alias, Index, TrackingPath);
+#if DEBUG
+			newPlaceholder.AppendHistory(this);
+#endif
+			return newPlaceholder;
 		}
 
 		public SqlPlaceholderExpression WithSql(ISqlExpression sqlExpression)
@@ -85,7 +125,11 @@ namespace LinqToDB.Expressions
 			if (Sql.Equals(sqlExpression))
 				return this;
 
-			return new SqlPlaceholderExpression(SelectQuery, sqlExpression, Path, Type, Alias, Index, TrackingPath);
+			var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, sqlExpression, Path, Type, Alias, Index, TrackingPath);
+#if DEBUG
+			newPlaceholder.AppendHistory(this);
+#endif
+			return newPlaceholder;
 		}
 
 		public SqlPlaceholderExpression WithSelectQuery(SelectQuery selectQuery)
@@ -93,7 +137,11 @@ namespace LinqToDB.Expressions
 			if (ReferenceEquals(SelectQuery, selectQuery))
 				return this;
 
-			return new SqlPlaceholderExpression(selectQuery, Sql, Path, Type, Alias, Index, TrackingPath);
+			var newPlaceholder = new SqlPlaceholderExpression(selectQuery, Sql, Path, Type, Alias, Index, TrackingPath);
+#if DEBUG
+			newPlaceholder.AppendHistory(this);
+#endif
+			return newPlaceholder;
 		}
 
 		public SqlPlaceholderExpression WithTrackingPath(Expression trackingPath)
@@ -101,7 +149,11 @@ namespace LinqToDB.Expressions
 			if (ReferenceEquals(trackingPath, TrackingPath) || ExpressionEqualityComparer.Instance.Equals(trackingPath, TrackingPath))
 				return this;
 
-			return new SqlPlaceholderExpression(SelectQuery, Sql, Path, Type, Alias, Index, trackingPath);
+			var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, Sql, Path, Type, Alias, Index, trackingPath);
+#if DEBUG
+			newPlaceholder.AppendHistory(this);
+#endif
+			return newPlaceholder;
 		}
 
 		public SqlPlaceholderExpression WithAlias(string? alias)
@@ -109,7 +161,11 @@ namespace LinqToDB.Expressions
 			if (Equals(Alias, alias))
 				return this;
 
-			return new SqlPlaceholderExpression(SelectQuery, Sql, Path, Type, alias, Index, TrackingPath);
+			var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, Sql, Path, Type, alias, Index, TrackingPath);
+#if DEBUG
+			newPlaceholder.AppendHistory(this);
+#endif
+			return newPlaceholder;
 		}
 
 		public override string ToString()
@@ -192,7 +248,14 @@ namespace LinqToDB.Expressions
 		public SqlPlaceholderExpression WithType(Type type)
 		{
 			if (Type != type)
-				return new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
+			{
+				var newPlaceholder = new SqlPlaceholderExpression(SelectQuery, Sql, Path, type, Alias, Index, TrackingPath);
+#if DEBUG
+				newPlaceholder.AppendHistory(this);
+#endif
+				return newPlaceholder;
+			}
+
 			return this;
 		}
 

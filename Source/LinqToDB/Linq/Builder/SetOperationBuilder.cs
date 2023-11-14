@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
 
 	using SqlQuery;
@@ -288,7 +288,10 @@ namespace LinqToDB.Linq.Builder
 				merged = null;
 
 				if (projection1.Type != projection2.Type)
-					return false;
+				{
+					if (projection1.Type.UnwrapNullableType() != projection2.Type.UnwrapNullableType())
+						return false;
+				}
 
 				if (ExpressionEqualityComparer.Instance.Equals(projection1, projection2))
 				{
@@ -349,12 +352,29 @@ namespace LinqToDB.Linq.Builder
 							resultAssignments.Add(a2);
 					}
 
-					if (generic1.Parameters.Count > 0 || generic2.Parameters.Count > 0)
+					if (generic1.Parameters.Count != generic2.Parameters.Count)
 					{
-						throw new NotImplementedException("Handling parameters not implemented yet.");
+						return false;
 					}
 
 					var resultGeneric = generic1.ReplaceAssignments(resultAssignments);
+
+					if (generic1.Parameters.Count > 0)
+					{
+						var resultParameters = new List<SqlGenericConstructorExpression.Parameter>(generic1.Parameters.Count);
+
+						for (int i = 0; i < generic1.Parameters.Count; i++)
+						{
+							if (!TryMergeProjections(generic1.Parameters[i].Expression,
+								    generic2.Parameters[i].Expression, flags, out var mergedAssignment))
+								return false;
+
+							resultParameters.Add(generic1.Parameters[i].WithExpression(mergedAssignment));
+						}
+
+
+						resultGeneric = resultGeneric.ReplaceParameters(resultParameters);
+					}
 
 					if (Builder.TryConstruct(MappingSchema, resultGeneric, this, flags) == null)
 						return false;
@@ -451,7 +471,7 @@ namespace LinqToDB.Linq.Builder
 					var alias           = GenerateColumnAlias(placeholderPath);
 
 					var placeholder1 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence1, placeholder);
-					placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
+					placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery, false);
 					placeholder1 = placeholder1.WithPath(placeholderPath).WithAlias(alias);
 
 					var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
@@ -465,7 +485,7 @@ namespace LinqToDB.Linq.Builder
 					else
 					{
 						placeholder2 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence2, placeholder2);
-						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
+						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery, false);
 					}
 
 					placeholder2 = placeholder2.WithPath(placeholderPath).WithAlias(alias);
@@ -482,7 +502,7 @@ namespace LinqToDB.Linq.Builder
 							continue;
 
 						var placeholder2 = Builder.UpdateNesting(_sequence2, placeholder);
-						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
+						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery, false);
 
 						var placeholderPath = new SqlPathExpression(path, placeholder2.Type);
 						var alias           = GenerateColumnAlias(placeholderPath);
@@ -701,8 +721,10 @@ namespace LinqToDB.Linq.Builder
 						{
 							var memberInfo = a.MemberInfo.DeclaringType?.GetMemberEx(a.MemberInfo) ?? a.MemberInfo;
 
+							var assignmentExpression = a.Expression;
+
 							_stack.Push(Expression.Constant(memberInfo));
-							newAssignments.Add(a.WithExpression(Visit(a.Expression)));
+							newAssignments.Add(a.WithExpression(Visit(assignmentExpression)));
 							_stack.Pop();
 						}
 
@@ -716,18 +738,21 @@ namespace LinqToDB.Linq.Builder
 						{
 							var param = node.Parameters[index];
 
+							var paramExpression = param.Expression;
+
 							if (param.MemberInfo != null)
 							{
 								// mimic assignment
 								var memberInfo = param.MemberInfo.DeclaringType?.GetMemberEx(param.MemberInfo) ?? param.MemberInfo;
+
 								_stack.Push(Expression.Constant(memberInfo));
-								newParameters.Add(param.WithExpression(Visit(param.Expression)));
+								newParameters.Add(param.WithExpression(Visit(paramExpression)));
 								_stack.Pop();
 							}
 							else
 							{
 								_stack.Push(Expression.Constant(index));
-								newParameters.Add(param.WithExpression(Visit(param.Expression)));
+								newParameters.Add(param.WithExpression(Visit(paramExpression)));
 								_stack.Pop();
 							}
 						}

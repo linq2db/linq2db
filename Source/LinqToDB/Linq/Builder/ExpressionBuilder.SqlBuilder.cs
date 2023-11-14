@@ -75,9 +75,9 @@ namespace LinqToDB.Linq.Builder
 			if (isTest)
 				flags |= ProjectFlags.Test;
 
-			if (!BuildSearchCondition(parent ?? buildSequnce, expr, flags, sc.Conditions, out var error))
+			if (!BuildSearchCondition(buildSequnce, expr, flags, sc.Conditions, out var error))
 			{
-				if (!isTest)
+				if (parent == null && !isTest)
 					throw error.CreateError();
 				return null;
 			}
@@ -164,9 +164,9 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags)
 		{
-			var inScopeExpr = SequenceHelper.MoveAllToScopedContext(expr, context);
+			using var _ = AllocateScope(context);
 
-			var info = new BuildInfo(context, inScopeExpr, new SelectQuery())
+			var info = new BuildInfo(context, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
 			};
@@ -638,6 +638,42 @@ namespace LinqToDB.Linq.Builder
 			return placeholder;
 		}
 
+		public bool TryGetAlreadyTranslated(IBuildContext? context, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out Expression? translated)
+		{
+			var cacheFlags = ProjectFlags.SQL;
+
+			var cacheKey = new SqlCacheKey(expression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
+
+			if (_cachedSql.TryGetValue(cacheKey, out translated))
+			{
+				return true;
+			}
+
+			if (columnDescriptor == null)
+			{
+				var keysWithDescriptor = _cachedSql.Keys.Select(k =>
+					new SqlCacheKey(expression, null, k.ColumnDescriptor, context?.SelectQuery, cacheFlags));
+
+				foreach (var key in keysWithDescriptor)
+				{
+					if (_cachedSql.TryGetValue(key, out translated))
+					{
+						return true;
+					}
+				}
+			}
+
+			var xx = _cachedSql.Keys.ElementAtOrDefault(4);
+
+			if (xx.Expression != null)
+			{
+				var cachedHash = SqlCacheKey.SqlCacheKeyComparer.GetHashCode(xx);
+				var keyHas     = SqlCacheKey.SqlCacheKeyComparer.GetHashCode(cacheKey);
+			}
+
+			return false;
+		}
+
 		/// <summary>
 		/// Converts to Expression which may contain SQL or convert error.
 		/// </summary>
@@ -995,23 +1031,23 @@ namespace LinqToDB.Linq.Builder
 
 					if (placeholders.Count == 1)
 					{
-						var o = placeholders[0].Sql;
+						var placeholder = placeholders[0].WithType(expression.Type).WithPath(expression);
 
 						if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
-							return CreatePlaceholder(context, o, expression, alias : alias);
+							return placeholder;
 
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
-							return CreatePlaceholder(context, o, expression, alias : alias);
+							return placeholder;
 
 						if (e.Type == typeof(Enum) && e.Operand.Type.IsEnum)
-							return CreatePlaceholder(context, o, expression, alias : alias);
+							return placeholder;
 
 						var t = e.Operand.Type;
 						var s = MappingSchema.GetDataType(t);
 
-						if (o.SystemType != null && s.Type.SystemType == typeof(object))
+						if (placeholder.Sql.SystemType != null && s.Type.SystemType == typeof(object))
 						{
-							t = o.SystemType;
+							t = placeholder.Sql.SystemType;
 							s = MappingSchema.GetDataType(t);
 						}
 
@@ -1019,11 +1055,11 @@ namespace LinqToDB.Linq.Builder
 							t.IsEnum      && Enum.GetUnderlyingType(t)      == e.Type ||
 							e.Type.IsEnum && Enum.GetUnderlyingType(e.Type) == t)
 						{
-							return CreatePlaceholder(context, o, expression, alias : alias);
+							return placeholder;
 						}
 
-						return CreatePlaceholder(context,
-							PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, o), expression,
+						return CreatePlaceholder(placeholder.SelectQuery,
+							PseudoFunctions.MakeConvert(MappingSchema.GetDataType(e.Type), s, placeholder.Sql), expression,
 							alias : alias);
 					}
 
@@ -1384,6 +1420,11 @@ namespace LinqToDB.Linq.Builder
 				static (context, e, descriptor) => context.this_.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
 
 			DataContext.InlineParameters = inlineParameters;
+
+			if (sqlExpression is SqlPlaceholderExpression placeholder)
+			{
+				sqlExpression = placeholder.WithPath(mc);
+			}
 
 			return sqlExpression;
 		}
@@ -4313,6 +4354,56 @@ namespace LinqToDB.Linq.Builder
 			return createExpression;
 		}
 
+
+		internal Stack<SelectQuery> _scopes = new ();
+
+		public readonly struct NeedScope : IDisposable
+		{
+			readonly ExpressionBuilder  _builder;
+			readonly SelectQuery?       _selectQuery;
+			readonly bool               _newStack;
+			readonly Stack<SelectQuery> _savedScope;
+
+			internal NeedScope(ExpressionBuilder builder, SelectQuery? selectQuery, bool newStack)
+			{
+				_builder     = builder;
+				_selectQuery = selectQuery;
+				_newStack    = newStack;
+
+				_savedScope = _builder._scopes;
+
+				if (newStack)
+					_builder._scopes = new Stack<SelectQuery>();
+
+				if (_selectQuery != null)
+					_builder._scopes.Push(_selectQuery);
+			}
+
+			public void Dispose()
+			{
+				if (!_newStack)
+				{
+					if (_selectQuery != null)
+						_builder._scopes.Pop();
+				}
+				else
+				{
+					_builder._scopes = _savedScope;
+				}
+			}
+		}
+
+		public NeedScope AllocateScope(IBuildContext? context, bool newStack = true)
+		{
+			return new NeedScope(this, context?.SelectQuery, newStack);
+		}
+
+		public NeedScope AllocateScope(SelectQuery? selectQuery, bool newStack = true)
+		{
+			return new NeedScope(this, selectQuery, newStack);
+		}
+
+
 		Dictionary<SqlCacheKey, Expression>                  _expressionCache    = new(SqlCacheKey.SqlCacheKeyComparer);
 		Dictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache = new(ColumnCacheKey.ColumnCacheKeyComparer);
 
@@ -4323,12 +4414,13 @@ namespace LinqToDB.Linq.Builder
 		/// <summary>
 		/// Caches expressions generated by context
 		/// </summary>
-		/// <param name="currentContext"></param>
+		/// <param name="forContext"></param>
 		/// <param name="path"></param>
 		/// <param name="flags"></param>
 		/// <returns></returns>
-		public Expression MakeExpression(IBuildContext? currentContext, Expression path, ProjectFlags flags)
+		public Expression MakeExpression(IBuildContext? forContext, Expression path, ProjectFlags flags)
 		{
+			var currentContext = forContext;
 #if DEBUG
 			Expression ExecuteMake(IBuildContext context, Expression expr, ProjectFlags projectFlags)
 			{
@@ -4338,11 +4430,6 @@ namespace LinqToDB.Linq.Builder
 				Debug.WriteLine($"\tCtx: {BuildContextDebuggingHelper.GetContextInfo(currentContext)}");
 				Debug.WriteLine($"\tPath: {path}");
 				Debug.WriteLine($"\tExpr: {expr}");
-
-				if (flags.IsExtractProjection())
-				{
-
-				}
 
 				var result = context.MakeExpression(expr, projectFlags);
 

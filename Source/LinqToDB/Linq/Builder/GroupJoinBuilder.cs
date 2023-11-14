@@ -98,8 +98,6 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				var expr = GetGroupJoinCall();
-				if (buildInfo.Parent != null)
-					expr = SequenceHelper.MoveAllToScopedContext(expr, buildInfo.Parent);
 				var sequence = Builder.TryBuildSequence(new BuildInfo(buildInfo.Parent, expr, new SelectQuery()));
 				return sequence;
 			}

@@ -91,6 +91,14 @@ namespace LinqToDB.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
+				if (flags.IsTable())
+				{
+					if (Body is ContextRefExpression)
+						return Body;
+					if (InnerContext != null)
+						return new ContextRefExpression(InnerContext.ElementType, InnerContext);
+				}
+
 				if (flags.IsRoot() || flags.IsAssociationRoot() /*|| flags.HasFlag(ProjectFlags.Expand)*/ || flags.IsTable() || flags.IsTraverse())
 				{
 					if (Body is ContextRefExpression bodyRef)

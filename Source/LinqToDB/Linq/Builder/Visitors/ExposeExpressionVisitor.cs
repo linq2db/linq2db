@@ -399,13 +399,17 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 		protected override Expression VisitMember(MemberExpression node)
 		{
-			var l = ConvertExpressionMethodAttribute(node.Expression?.Type ?? node.Member.ReflectedType!, node.Member, out var alias);
-
-			if (l != null)
+			if (!IsCompilable(node))
 			{
-				var converted = ConvertMemberExpression(node, MappingSchema, node.Expression!, l);
-				converted = Visit(converted);
-				return AliasCall(converted, alias);
+				var l = ConvertExpressionMethodAttribute(node.Expression?.Type ?? node.Member.ReflectedType!,
+					node.Member, out var alias);
+
+				if (l != null)
+				{
+					var converted = ConvertMemberExpression(node, MappingSchema, node.Expression!, l);
+					converted = Visit(converted);
+					return AliasCall(converted, alias);
+				}
 			}
 
 			// Replace Count with Count()

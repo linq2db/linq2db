@@ -37,8 +37,8 @@ namespace Tests.UserTests
 
 				var value2 = await db.GetTable<TestClass>()
 					.Where(x => x.Id == 0)
-					.Select(x => x.Value)
-					.DefaultIfEmpty()
+					.Select(x => (int?)x.Value)
+					.DefaultIfEmpty(0)
 					.MaxAsync();
 
 				Assert.AreEqual(0, value2);

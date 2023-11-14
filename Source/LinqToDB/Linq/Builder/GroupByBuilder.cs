@@ -597,7 +597,6 @@ namespace LinqToDB.Linq.Builder
 				var parentContext = buildInfo.Parent ?? this;
 
 				expr = Builder.UpdateNesting(parentContext, expr);
-				expr = SequenceHelper.MoveAllToScopedContext(expr, parentContext);
 
 				var ctx = Builder.TryBuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false, CreateSubQuery = false});
 

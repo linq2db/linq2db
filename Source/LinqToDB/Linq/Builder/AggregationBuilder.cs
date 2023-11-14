@@ -174,11 +174,14 @@ namespace LinqToDB.Linq.Builder
 				//shorter path
 
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()));
-				if (sequence.SelectQuery.Select.HasModifier)
-					sequence = new SubQueryContext(sequence);
 
 				// finalizing context
-				_ = builder.BuildSqlExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence), buildInfo.GetFlags(ProjectFlags.Keys));
+				var projected = builder.BuildSqlExpression(sequence,
+					new ContextRefExpression(sequence.ElementType, sequence), buildInfo.GetFlags(ProjectFlags.Keys),
+					buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+
+				sequence  = new SubQueryContext(sequence);
+				projected = builder.UpdateNesting(sequence, projected);
 
 				if (aggregationType == AggregationType.Count)
 				{
@@ -301,7 +304,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
+				if (!isSimple && !SequenceHelper.IsSupportedSubqueryForModifier(sequence))
 					return null;
 
 				placeholderSequence ??= sequence;

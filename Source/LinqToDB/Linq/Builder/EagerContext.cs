@@ -18,6 +18,9 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			if (flags.IsRoot() && flags.IsSubquery())
+				return path;
+
 			var corrected = SequenceHelper.CorrectExpression(path, this, Context);
 			return corrected;
 		}

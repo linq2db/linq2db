@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
@@ -19,7 +20,13 @@ namespace LinqToDB.SqlQuery
 			RawAlias    = alias;
 
 #if DEBUG
-			Number = ++_columnCounter;
+			Number = Interlocked.Increment(ref _columnCounter);
+
+			// useful for putting breakpoint when finding when SqlColumn was created
+			if (Number == 0)
+			{
+
+			}
 #endif
 		}
 

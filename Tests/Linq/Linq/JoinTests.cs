@@ -887,10 +887,17 @@ namespace Tests.Linq
 		[Test]
 		public void ReferenceJoin1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from c in    Child join g in    GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID },
-					from c in db.Child join g in db.GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID });
+			using var db = GetDataContext(context);
+
+			var query = from c in db.Child
+				join g in db.GrandChild on c equals g.Child
+				select new { c.ParentID, g.GrandChildID };
+
+			var xx = query.ToList();
+
+			AreEqual(
+				from c in    Child join g in    GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID },
+				from c in db.Child join g in db.GrandChild on c equals g.Child select new { c.ParentID, g.GrandChildID });
 		}
 
 		[Test]

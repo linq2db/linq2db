@@ -81,14 +81,18 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public static bool IsDependsOnOuterSources(
-			IQueryElement           testedRoot,
-			HashSet<IQueryElement>? elementsToIgnore = null)
+			IQueryElement                         testedRoot,
+			IReadOnlyCollection<IQueryElement>?   elementsToIgnore = null,
+			IReadOnlyCollection<ISqlTableSource>? currentSources   = null)
 		{
-			var dependedOnSources = new HashSet<ISqlTableSource>();
-			var foundSources = new HashSet<ISqlTableSource>();
+			var dependedOnSources = new List<ISqlTableSource>();
+			var foundSources = new List<ISqlTableSource>();
 
-			testedRoot.VisitParentFirst((elementsToIgnore, dependedOnSources, foundSources), static (context, e) =>
+			testedRoot.VisitParentFirst((elementsToIgnore, currentSources, dependedOnSources, foundSources), static (context, e) =>
 			{
+				if (context.elementsToIgnore?.Contains(e) == true)
+					return false;
+
 				if (e is SqlTableSource ts)
 					context.foundSources.Add(ts.Source);
 
@@ -103,7 +107,11 @@ namespace LinqToDB.SqlQuery
 				return true;
 			});
 
-			var result = dependedOnSources.Except(foundSources).Any();
+			var excepted = dependedOnSources.Except(foundSources);
+			if (currentSources != null)
+				excepted = excepted.Except(currentSources);
+
+			var result = excepted.Any();
 			return result;
 		}
 

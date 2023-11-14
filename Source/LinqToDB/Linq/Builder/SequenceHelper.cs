@@ -742,13 +742,14 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
-		public static Expression CorrectSelectQuery(Expression expression, SelectQuery selectQuery)
+		public static Expression CorrectSelectQuery(Expression expression, SelectQuery selectQuery, bool forceAll)
 		{
 			var newExpression = expression.Transform((expression, selectQuery), (ctx, e) =>
 			{
 				if (e.NodeType == ExpressionType.Extension && e is SqlPlaceholderExpression sqlPlaceholderExpression)
 				{
-					return sqlPlaceholderExpression.WithSelectQuery(ctx.selectQuery);
+					if (forceAll || sqlPlaceholderExpression.Sql.ElementType == QueryElementType.SqlValue || sqlPlaceholderExpression.Sql.ElementType == QueryElementType.SqlParameter)
+						return sqlPlaceholderExpression.WithSelectQuery(ctx.selectQuery);
 				}
 
 				return e;
@@ -774,42 +775,6 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						return contextRef.WithContext(new DefaultIfEmptyBuilder.DefaultIfEmptyContext(null, contextRef.BuildContext, null, false));
-					}
-				}
-
-				return e;
-			});
-
-			return newExpression;
-		}
-
-		public static Expression MoveAllToScopedContext(Expression expression, IBuildContext upTo)
-		{
-			if (expression is ContextRefExpression)
-				return expression;
-
-			var newExpression = expression.Transform((expression, upTo), (ctx, e) =>
-			{
-				if (e.NodeType == ExpressionType.Extension)
-				{
-					if (e is ContextRefExpression contextRef)
-					{
-						if (contextRef.BuildContext is ScopeContext && 
-						    (contextRef.BuildContext == upTo || contextRef.BuildContext.SelectQuery == upTo.SelectQuery))
-						{
-							return e;
-						}
-
-						// already correctly scoped
-						if (contextRef.BuildContext is ScopeContext scopeContext)
-						{
-							if (scopeContext.UpTo == ctx.upTo)
-								return e;
-
-							return contextRef.WithContext(new ScopeContext(scopeContext.Context, ctx.upTo));
-						}
-
-						return contextRef.WithContext(new ScopeContext(contextRef.BuildContext, ctx.upTo));
 					}
 				}
 

@@ -243,6 +243,15 @@ namespace LinqToDB.Linq.Builder
 			{
 				var asSql = _flags.IsSql() || _forceSql || useSql;
 
+				/*
+				if (!asSql)
+				{
+					if (Builder.TryGetAlreadyTranslated(_context, expression, _columnDescriptor, out var alreadyTranslated))
+					{
+						return alreadyTranslated;
+					}
+				}*/
+
 				var localFlags = _flags;
 				if (asSql)
 					localFlags = localFlags.SqlFlag();
@@ -276,7 +285,10 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (!ExpressionEqualityComparer.Instance.Equals(translated, expression))
-					return Visit(translated);
+				{
+					var result = Visit(translated);
+					return result;
+				}
 
 				return translated;
 			}

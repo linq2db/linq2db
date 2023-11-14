@@ -190,11 +190,6 @@ namespace LinqToDB.Linq.Builder
 				isOuter = isOuter == true || associationDescriptor.CanBeNull || prevIsOuter;
 			}
 
-			if (forContext != null)
-			{
-				rootContext = (ContextRefExpression)SequenceHelper.MoveToScopedContext(rootContext, forContext);
-			}
-
 			Expression? notNullCheck = null;
 			if (associationDescriptor.IsList && (prevIsOuter || flags.IsSubquery()) && !flags.IsExtractProjection())
 			{
@@ -217,9 +212,14 @@ namespace LinqToDB.Linq.Builder
 					IsAssociation = true
 				};
 
+				using var _ = AllocateScope(forContext, true);
+
 				var sequence = BuildSequence(buildInfo);
 
 				sequence.SetAlias(associationDescriptor.GenerateAlias());
+
+				if (forContext != null)
+					sequence = new ScopeContext(sequence, forContext);
 
 				associationExpression = new ContextRefExpression(association.Type, sequence);
 

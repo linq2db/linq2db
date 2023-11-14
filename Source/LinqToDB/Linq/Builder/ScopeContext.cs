@@ -27,6 +27,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			using var _ = Builder.AllocateScope(UpTo);
+
 			var correctedPath = SequenceHelper.CorrectExpression(path, this, Context);
 			var newExpr       = Builder.MakeExpression(Context, correctedPath, flags);
 
@@ -35,7 +37,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (flags.IsAggregationRoot())
 			{
-				newExpr = SequenceHelper.MoveAllToScopedContext(newExpr, UpTo);
 				return newExpr;
 			}
 
@@ -45,11 +46,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (!flags.IsTest())
 			{
-				if (!OnlyForSql)
-				{
-					newExpr = SequenceHelper.MoveAllToScopedContext(newExpr, UpTo);
-				}
-
 				if (flags.IsSql())
 				{
 					newExpr = Builder.BuildSqlExpression(UpTo, newExpr, flags,

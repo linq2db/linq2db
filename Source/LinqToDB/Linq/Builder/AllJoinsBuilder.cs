@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
 
-				var result = builder.BuildWhere(buildInfo.Parent, sequence,
+				var result = builder.BuildWhere(sequence, sequence,
 					condition: condition, checkForSubQuery: false, enforceHaving: false,
 					isTest: buildInfo.IsTest, isAggregationTest: buildInfo.AggregationTest);
 

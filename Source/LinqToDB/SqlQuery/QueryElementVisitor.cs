@@ -1754,7 +1754,7 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var column in element.Columns)
 					{
-						column.Expression = VisitSqlColumnExpression(column, column.Expression);
+						VisitSqlColumnExpression(column, column.Expression);
 					}
 
 					break;

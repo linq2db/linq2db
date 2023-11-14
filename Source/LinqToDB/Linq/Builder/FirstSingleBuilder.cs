@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -58,26 +59,7 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.IsAsyncExtension(MethodNamesAsync))
 				--argumentCount;
 
-			SqlJoinedTable? fakeJoin = null;
-			if (buildInfo.Parent != null)
-			{
-				argument = SequenceHelper.MoveAllToScopedContext(argument, buildInfo.Parent);
-
-				if (!buildInfo.IsTest)
-				{
-					if (buildInfo.Parent.SelectQuery.From.Tables.Count > 0)
-					{
-						// introducing fake join for correct nesting update
-
-						var join = buildInfo.SelectQuery.OuterApply();
-						join.JoinedTable.IsWeak = true;
-
-						fakeJoin = join.JoinedTable;
-
-						buildInfo.Parent.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
-					}
-				}
-			}
+			using var _ = builder.AllocateScope(buildInfo.Parent);
 
 			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, argument));
 			if (sequence == null)
@@ -91,11 +73,6 @@ namespace LinqToDB.Linq.Builder
 
 				if (sequence == null)
 					return null;
-			}
-
-			if (fakeJoin != null)
-			{
-				buildInfo.Parent!.SelectQuery.From.Tables[0].Joins.Remove(fakeJoin);
 			}
 
 			if (buildInfo.IsSubQuery)

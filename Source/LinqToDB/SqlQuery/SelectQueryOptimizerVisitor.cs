@@ -583,9 +583,11 @@ namespace LinqToDB.SqlQuery
 			return newJoinType;
 		}
 
-		bool OptimizeApply(SelectQuery parentQuery, List<ISqlTableSource> parentTableSources, SqlTableSource tableSource, SqlJoinedTable joinTable, bool isApplySupported)
+		bool OptimizeApply(SqlJoinedTable joinTable, bool isApplySupported)
 		{
 			var joinSource = joinTable.Table;
+
+			var accessible = QueryHelper.EnumerateAccessibleSources(joinTable.Table).ToList();
 
 			var optimized = false;
 
@@ -635,7 +637,6 @@ namespace LinqToDB.SqlQuery
 				{
 					var parameters = new List<ISqlExpression>();
 
-					var sources = QueryHelper.EnumerateAccessibleSources(sql).ToArray();
 					var found   = new HashSet<ISqlExpression>();
 
 					if (sql.Select.IsDistinct)
@@ -650,19 +651,16 @@ namespace LinqToDB.SqlQuery
 							var expr1 = SequenceHelper.UnwrapNullability(exprExpr.Expr1);
 							var expr2 = SequenceHelper.UnwrapNullability(exprExpr.Expr2);
 
-							var source1 = SequenceHelper.GetExpressionSource(expr1);
-							var source2 = SequenceHelper.GetExpressionSource(expr2);
+							var depended1 = QueryHelper.IsDependsOnOuterSources(expr1, currentSources : accessible);
+							var depended2 = QueryHelper.IsDependsOnOuterSources(expr2, currentSources : accessible);
 
-							if (source1 != null && source2 != null)
+							if (depended1 && !depended2)
 							{
-								if (sources.Contains(source2) && parentTableSources.Contains(source1))
-								{
-									found.Add(expr2);
-								}
-								else if (sources.Contains(source1) && parentTableSources.Contains(source2))
-								{
-									found.Add(expr1);
-								}
+								found.Add(expr2);
+							}
+							else if (!depended1 && depended2)
+							{
+								found.Add(expr1);
 							}
 						}
 					});
@@ -740,14 +738,15 @@ namespace LinqToDB.SqlQuery
 				}
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
-				if (QueryHelper.IsDependsOnSources(sql, parentTableSources, whereToIgnore))
+				if (QueryHelper.IsDependsOnOuterSources(sql, whereToIgnore))
 					return optimized;
 
 				var searchCondition = new List<SqlCondition>();
 
 				var conditions = sql.Where.SearchCondition.Conditions;
 
-				var toIgnore = new [] { joinTable };
+				var toIgnore       = new [] { joinTable };
+				var currentSources = new[] { joinTable.Table.Source };
 
 				if (conditions.Count > 0)
 				{
@@ -755,7 +754,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var condition = conditions[i];
 
-						var contains = QueryHelper.IsDependsOnSources(condition, parentTableSources, toIgnore);
+						var contains = QueryHelper.IsDependsOnOuterSources(condition, currentSources: accessible);
 
 						if (contains)
 						{
@@ -957,6 +956,12 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.From.Tables.Count > 1)
 				return false;
 
+			if (subQuery.From.Tables.Count == 0)
+			{
+				if (!selectQuery.IsSimple)
+					return false;
+			}
+
 			if (subQuery.DoNotRemove)
 				return false;
 
@@ -1136,12 +1141,6 @@ namespace LinqToDB.SqlQuery
 			if (selectQuery == _inSubquery && subQuery.Select.HasModifier)
 			{
 				return false;
-			}
-
-			if (subQuery.From.Tables.Count == 0)
-			{
-				if (selectQuery.From.Tables.Any(t => t.Joins.Count > 0))
-					return false;
 			}
 
 			// -------------------------------------------
@@ -1358,6 +1357,11 @@ namespace LinqToDB.SqlQuery
 			{
 				var isModified = false;
 
+				if (element.SelectQuery.SourceID == 17)
+				{
+
+				}
+
 				if (OptimizeSubQueries(element.SelectQuery))
 				{
 					isModified = true;
@@ -1441,7 +1445,7 @@ namespace LinqToDB.SqlQuery
 					EnsureReferencesCorrected(selectQuery);
 					replaced = true;
 
-					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0 && !selectQuery.From.Tables.Any(t => t.Joins.Count > 0))
+					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0 && selectQuery.IsSimple)
 					{
 						selectQuery.From.Tables.RemoveAt(i);
 					}
@@ -1476,30 +1480,17 @@ namespace LinqToDB.SqlQuery
 
 		bool OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)
 		{
-			var tableSources = new List<ISqlTableSource>();
-
 			var optimized = false;
 
 			foreach (var table in selectQuery.From.Tables)
 			{
-				tableSources.Add(table.Source);
-
-				if (table.Source is SelectQuery sq)
-					tableSources.AddRange(QueryHelper.EnumerateAccessibleSources(sq));
-
 				foreach (var join in table.Joins)
 				{
 					if (join.JoinType == JoinType.CrossApply || join.JoinType == JoinType.OuterApply|| join.JoinType == JoinType.FullApply|| join.JoinType == JoinType.RightApply)
 					{
-						if (OptimizeApply(selectQuery, tableSources, table, join, isApplySupported))
+						if (OptimizeApply(join, isApplySupported))
 							optimized = true;
 					}
-
-					join.Visit(tableSources, static (tableSources, e) =>
-					{
-						if (e is ISqlTableSource ts && !tableSources.Contains(ts))
-							tableSources.Add(ts);
-					});
 				}
 			}
 

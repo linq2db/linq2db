@@ -233,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 							var sequenceRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, sequenceTableContext);
 							var intoRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
 
-							var compareSearchCondition = builder.GenerateComparison(sequence, sequenceRef, intoRef);
+							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef);
 							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
 							updateStatement.Update.HasComparison = true;
 						}
@@ -408,9 +408,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				var fieldExpression = envelope.FieldExpression;
 				var valueExpression = envelope.ValueExpression;
-
-				if (valueExpression != null)
-					valueExpression = SequenceHelper.MoveAllToScopedContext(valueExpression, valuesContext);
 
 				if (fieldExpression.IsSqlRow())
 				{
@@ -745,7 +742,7 @@ namespace LinqToDB.Linq.Builder
 						var outputExpressions = new List<SetExpressionEnvelope>();
 
 						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
-						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
+						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery, true);
 
 						if (sqlExpr is SqlPlaceholderExpression)
 							outputExpressions.Add(new SetExpressionEnvelope(sqlExpr, sqlExpr));
