@@ -38,7 +38,7 @@ namespace LinqToDB.Tools.Activity
 						_parent._children.Add(this);
 				}
 			}
-			else if (!(activityID is ActivityID.QueryProviderExecuteT or ActivityID.QueryProviderGetEnumeratorT))
+			else if (activityID is not (ActivityID.QueryProviderExecuteT or ActivityID.QueryProviderGetEnumeratorT))
 			{
 			}
 		}

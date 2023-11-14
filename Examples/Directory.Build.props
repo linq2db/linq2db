@@ -4,9 +4,12 @@
 	<PropertyGroup>
 		<SignAssembly>False</SignAssembly>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
 		<ProjectReference Include="$(MSBuildThisFileDirectory)\..\Source\LinqToDB\LinqToDB.csproj" />
-	</ItemGroup>
 
+		<AdditionalFiles Remove="$(MSBuildThisFileDirectory)/../Build/BannedSymbols.txt" />
+
+		<Compile Remove="$(MSBuildThisFileDirectory)/../Source/Shared/*.cs" />
+	</ItemGroup>
 </Project>

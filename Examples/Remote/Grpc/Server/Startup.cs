@@ -3,10 +3,12 @@ using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Remote;
 using LinqToDB.Remote.Grpc;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using ProtoBuf.Grpc.Server;
 
 namespace Server

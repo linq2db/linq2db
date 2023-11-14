@@ -5,9 +5,9 @@ namespace LinqToDB.Tools
 {
 	public static class ActivityService
 	{
-		public static Func<ActivityID, IActivity?> Start { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; private set; } = static _ => null;
+		internal static Func<ActivityID, IActivity?> Start { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; private set; } = static _ => null;
 
-		public static IActivity? StartImpl(ActivityID activityID)
+		static IActivity? StartImpl(ActivityID activityID)
 		{
 			var factory = _factory!;
 
@@ -26,6 +26,10 @@ namespace LinqToDB.Tools
 
 		static Func<ActivityID,IActivity?>? _factory;
 
+		/// <summary>
+		/// Adds a factory method that returns an Activity object or <c>null</c> for provided <see cref="ActivityID"/> event.
+		/// </summary>
+		/// <param name="factory">A factory method.</param>
 		public static void AddFactory(Func<ActivityID,IActivity?> factory)
 		{
 			if (_factory == null)

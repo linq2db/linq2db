@@ -2,6 +2,9 @@
 
 namespace LinqToDB.Tools
 {
+	/// <summary>
+	/// Activity Service event ID.
+	/// </summary>
 	public enum ActivityID
 	{
 		QueryProviderExecuteT,
