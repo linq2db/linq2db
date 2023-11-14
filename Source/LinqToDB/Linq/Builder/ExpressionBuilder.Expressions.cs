@@ -393,13 +393,6 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitUnary(UnaryExpression node)
 			{
-				if (IsForcedToConvert(node)	|| Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
-				{
-					var translated = TranslateExpression(node, useSql: true);
-					if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
-						return Visit(translated);
-				}
-
 				if (node.NodeType == ExpressionType.Convert)
 				{
 					if (_flags.IsExpression())
@@ -427,6 +420,13 @@ namespace LinqToDB.Linq.Builder
 						var binary = (BinaryExpression)node.Operand;
 						return Visit(Expression.Equal(binary.Left, binary.Right));
 					}
+				}
+
+				if (IsForcedToConvert(node) || Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
+				{
+					var translated = TranslateExpression(node, useSql: true);
+					if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
+						return Visit(translated);
 				}
 
 				return base.VisitUnary(node);
@@ -726,7 +726,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (localFlags.IsSql())
 				{
-					var translated = TranslateExpression(method);
+					var translated = TranslateExpression(method, useSql: true);
 					if (!ReferenceEquals(translated, method))
 						return translated;
 				}

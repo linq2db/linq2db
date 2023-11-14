@@ -4638,9 +4638,12 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var args = mc.Arguments.ToArray();
-						args[0]    = translated;
-						translated = mc.Update(mc.Object, args);
+						if (!flags.IsRoot())
+						{
+							var args = mc.Arguments.ToArray();
+							args[0]    = translated;
+							translated = mc.Update(mc.Object, args);
+						}
 					}
 
 					return translated;

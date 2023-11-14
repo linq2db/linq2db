@@ -68,14 +68,14 @@ namespace LinqToDB.SqlProvider
 
 			//statement.EnsureFindTables();
 
-			if (dataOptions.LinqOptions.OptimizeJoins)
-			{
-				using var joinsVisitor = QueryHelper.JoinsOptimizer.Allocate();
-				joinsVisitor.Value.OptimizeJoins(statement, evaluationContext);
-			
-				// Do it again after JOIN Optimization
-				FinalizeCte(statement);
-			}
+			// if (dataOptions.LinqOptions.OptimizeJoins)
+			// {
+			// 	using var joinsVisitor = QueryHelper.JoinsOptimizer.Allocate();
+			// 	joinsVisitor.Value.OptimizeJoins(statement, evaluationContext);
+			//
+			// 	// Do it again after JOIN Optimization
+			// 	FinalizeCte(statement);
+			// }
 
 			statement = FinalizeInsert(statement);
 			statement = FinalizeSelect(statement);
