@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Tools
 {
 	public static class ActivityService
 	{
-		internal static Func<ActivityID, IActivity?> Start { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; private set; } = static _ => null;
+		internal static Func<ActivityID,IActivity?> Start { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; private set; } = static _ => null;
 
 		static IActivity? StartImpl(ActivityID activityID)
 		{
@@ -23,6 +24,36 @@ namespace LinqToDB.Tools
 
 			return new MultiActivity(activities);
 		}
+
+#if NATIVE_ASYNC
+//#if NETSTANDARD2_1PLUS
+
+		class AsyncDisposableWrapper : IAsyncDisposable
+		{
+			readonly ConfiguredAsyncDisposable _configured;
+
+			public AsyncDisposableWrapper(ConfiguredAsyncDisposable configured)
+			{
+				_configured = configured;
+			}
+
+			public async ValueTask DisposeAsync()
+			{
+				await _configured.DisposeAsync();
+			}
+		}
+
+		internal static IAsyncDisposable? StartAndConfigureAwait(ActivityID activityID)
+		{
+			var activity = Start(activityID);
+
+			if (activity is null)
+				return null;
+
+			return new AsyncDisposableWrapper(activity.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
+		}
+
+#endif
 
 		static Func<ActivityID,IActivity?>? _factory;
 
@@ -58,6 +89,21 @@ namespace LinqToDB.Tools
 				foreach (var activity in _activities)
 					activity?.Dispose();
 			}
+
+#if !NATIVE_ASYNC
+			public virtual Task DisposeAsync()
+			{
+				Dispose();
+				return TaskEx.CompletedTask;
+			}
+#else
+			public async ValueTask DisposeAsync()
+			{
+				foreach (var activity in _activities)
+					if (activity is not null)
+						await activity.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+#endif
 		}
 	}
 }

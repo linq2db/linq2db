@@ -13,8 +13,6 @@ using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-#pragma warning disable CA1812
-
 namespace OpenTelemetryExample
 {
 	static class Program
@@ -62,6 +60,12 @@ namespace OpenTelemetryExample
 				_activityPool.Return(this);
 			}
 
+			public ValueTask DisposeAsync()
+			{
+				Dispose();
+				return ValueTask.CompletedTask;
+			}
+
 			static readonly ObjectPool<LinqToDBActivity> _activityPool =
 				new DefaultObjectPool<LinqToDBActivity>(new DefaultPooledObjectPolicy<LinqToDBActivity>(), 100);
 
@@ -79,6 +83,8 @@ namespace OpenTelemetryExample
 				return l2db;
 			}
 		}
+
+#pragma warning disable CA1812
 
 		[Table(Name="Customers")]
 		public sealed class Customer

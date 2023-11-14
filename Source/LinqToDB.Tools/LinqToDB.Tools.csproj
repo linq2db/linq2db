@@ -12,8 +12,12 @@
 		<TargetFrameworks>$(TargetFrameworks);net472;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
 	</PropertyGroup>
 
+	<PropertyGroup Condition=" '$(TargetFramework)' != 'net45' AND '$(TargetFramework)' != 'net46' ">
+		<DefineConstants>NATIVE_ASYNC;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
-	  <Compile Include="..\LinqToDB\Compatibility\System\Threading\AsyncLocal.cs" Link="AsyncLocal.cs" />
+		<Compile Include="..\LinqToDB\Compatibility\System\Threading\AsyncLocal.cs" Link="AsyncLocal.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

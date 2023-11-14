@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Tools.Activity
 {
@@ -79,5 +80,13 @@ namespace LinqToDB.Tools.Activity
 				}
 			}
 		}
+
+#if NATIVE_ASYNC
+		public ValueTask DisposeAsync()
+		{
+			Dispose();
+			return default;
+		}
+#endif
 	}
 }

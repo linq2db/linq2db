@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Tools.Activity
 {
@@ -56,6 +57,14 @@ namespace LinqToDB.Tools.Activity
 				_stopwatch.Stop();
 				_metric.Stop(_stopwatch);
 			}
+
+#if NATIVE_ASYNC
+			public ValueTask DisposeAsync()
+			{
+				Dispose();
+				return default;
+			}
+#endif
 		}
 
 		sealed class WatcherLowRes : IActivity
@@ -73,6 +82,14 @@ namespace LinqToDB.Tools.Activity
 			{
 				_metric.Stop(DateTime.Now - _time);
 			}
+
+#if NATIVE_ASYNC
+			public ValueTask DisposeAsync()
+			{
+				Dispose();
+				return default;
+			}
+#endif
 		}
 	}
 }

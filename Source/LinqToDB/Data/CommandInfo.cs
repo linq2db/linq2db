@@ -969,34 +969,39 @@ namespace LinqToDB.Data
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public async Task<int> ExecuteAsync(CancellationToken cancellationToken = default)
 		{
-			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteAsync);
-
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			var startedOn     = DateTime.UtcNow;
-			var stopwatch     = Stopwatch.StartNew();
-
-			InitCommand();
-
-			var commandResult = await DataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			stopwatch.Stop();
-			if (DataConnection.TraceSwitchConnection.TraceInfo)
+#if NATIVE_ASYNC
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsync))
+#else
+			using (ActivityService.Start(ActivityID.CommandInfoExecuteAsync))
+#endif
 			{
-				DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				var startedOn = DateTime.UtcNow;
+				var stopwatch = Stopwatch.StartNew();
+
+				InitCommand();
+
+				var commandResult = await DataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				stopwatch.Stop();
+				if (DataConnection.TraceSwitchConnection.TraceInfo)
 				{
-					TraceLevel      = TraceLevel.Info,
-					Command         = DataConnection.CurrentCommand,
-					StartTime       = startedOn,
-					ExecutionTime   = stopwatch.Elapsed,
-					RecordsAffected = commandResult,
-				});
+					DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+					{
+						TraceLevel      = TraceLevel.Info,
+						Command         = DataConnection.CurrentCommand,
+						StartTime       = startedOn,
+						ExecutionTime   = stopwatch.Elapsed,
+						RecordsAffected = commandResult,
+					});
+				}
+
+				if (DataConnection.CurrentCommand?.Parameters.Count > 0 && Parameters?.Length > 0)
+					RebindParameters(DataConnection.CurrentCommand);
+
+				return commandResult;
 			}
-
-			if (DataConnection.CurrentCommand?.Parameters.Count > 0 && Parameters?.Length > 0)
-				RebindParameters(DataConnection.CurrentCommand);
-
-			return commandResult;
 		}
 
 		#endregion
@@ -1098,61 +1103,66 @@ namespace LinqToDB.Data
 		/// <returns>Task with resulting value.</returns>
 		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken = default)
 		{
-			using var m = ActivityService.Start(ActivityID.CommandInfoExecuteAsyncT);
-
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-			var startedOn = DateTime.UtcNow;
-			var stopwatch = Stopwatch.StartNew();
-			var hasParameters = InitCommand();
-
-			T result = default!;
-
 #if !NATIVE_ASYNC
-			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
+			using (ActivityService.Start(ActivityID.CommandInfoExecuteAsyncT))
 #else
-			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsyncT))
 #endif
 			{
-#if NETSTANDARD2_1PLUS
-				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+				var startedOn     = DateTime.UtcNow;
+				var stopwatch     = Stopwatch.StartNew();
+				var hasParameters = InitCommand();
+
+				T result = default!;
+
+#if !NATIVE_ASYNC
+				using (DataConnection.DataProvider.ExecuteScope(DataConnection))
 #else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #endif
 				{
-					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#if NETSTANDARD2_1PLUS
+					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#else
+					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+#endif
 					{
-						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-						try
+						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
+							var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
+							try
+							{
 								result = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
-						}
-						catch (InvalidCastException)
-						{
+							}
+							catch (InvalidCastException)
+							{
 								result = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+							}
 						}
-					}
 
-					stopwatch.Stop();
+						stopwatch.Stop();
 
-					if (DataConnection.TraceSwitchConnection.TraceInfo)
-					{
-						DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+						if (DataConnection.TraceSwitchConnection.TraceInfo)
 						{
-							TraceLevel      = TraceLevel.Info,
-							Command         = rd.Command,
-							StartTime       = startedOn,
-							ExecutionTime   = stopwatch.Elapsed,
-							RecordsAffected = 1,
-						});
+							DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: true)
+							{
+								TraceLevel      = TraceLevel.Info,
+								Command         = rd.Command,
+								StartTime       = startedOn,
+								ExecutionTime   = stopwatch.Elapsed,
+								RecordsAffected = 1,
+							});
+						}
+
+						SetRebindParameters(rd);
 					}
-
-					SetRebindParameters(rd);
 				}
-			}
 
-			return result;
+				return result;
+			}
 		}
 
 		#endregion

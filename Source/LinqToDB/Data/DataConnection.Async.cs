@@ -379,11 +379,16 @@ namespace LinqToDB.Data
 				result = await _commandInterceptor.ExecuteNonQueryAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQueryAsync);
-
-			return result.HasValue
-				? result.Value
-				: await CurrentCommand!.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+#if NATIVE_ASYNC
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync))
+#else
+			using (ActivityService.Start(ActivityID.CommandExecuteNonQueryAsync))
+#endif
+			{
+				return result.HasValue
+					? result.Value
+					: await CurrentCommand!.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		internal async Task<int> ExecuteNonQueryDataAsync(CancellationToken cancellationToken)
@@ -463,11 +468,16 @@ namespace LinqToDB.Data
 				result = await _commandInterceptor.ExecuteScalarAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			using var m = ActivityService.Start(ActivityID.CommandExecuteScalarAsync);
-
-			return result.HasValue
-				? result.Value
-				: await CurrentCommand!.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+#if NATIVE_ASYNC
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteScalarAsync))
+#else
+			using (ActivityService.Start(ActivityID.CommandExecuteScalarAsync))
+#endif
+			{
+				return result.HasValue
+					? result.Value
+					: await CurrentCommand!.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		internal async Task<object?> ExecuteScalarDataAsync(CancellationToken cancellationToken)
@@ -550,10 +560,16 @@ namespace LinqToDB.Data
 
 			DbDataReader? dr;
 
+#if NATIVE_ASYNC
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync))
+#else
 			using (ActivityService.Start(ActivityID.CommandExecuteReaderAsync))
+#endif
+			{
 				dr = result.HasValue
 					? result.Value
 					: await CurrentCommand!.ExecuteReaderAsync(commandBehavior, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 
 			if (_commandInterceptor != null)
 				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, dr);

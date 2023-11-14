@@ -67,6 +67,7 @@ namespace LinqToDB.Tools
 			ConnectionClose,
 			ConnectionCloseAsync,
 			ConnectionDispose,
+			ConnectionDisposeAsync,
 			ConnectionBeginTransaction,
 			ConnectionBeginTransactionAsync,
 			TransactionCommit,

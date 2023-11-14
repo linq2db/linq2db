@@ -38,8 +38,18 @@ namespace LinqToDB.Async
 		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
 #if NETSTANDARD2_1PLUS
-			using var a = ActivityService.Start(ActivityID.TransactionCommitAsync);
-			return Transaction.CommitAsync(cancellationToken);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync);
+
+			if (a is null)
+				return Transaction.CommitAsync(cancellationToken);
+
+			return CallAwaitUsing(a, Transaction, cancellationToken);
+
+			static async Task CallAwaitUsing(IAsyncDisposable activity, DbTransaction transaction, CancellationToken token)
+			{
+				await using (activity)
+					await transaction.CommitAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 #else
 			Commit();
 			return TaskEx.CompletedTask;
@@ -49,8 +59,18 @@ namespace LinqToDB.Async
 		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
 #if NETSTANDARD2_1PLUS
-			using var a = ActivityService.Start(ActivityID.TransactionRollbackAsync);
-			return Transaction.RollbackAsync(cancellationToken);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync);
+
+			if (a is null)
+				return Transaction.RollbackAsync(cancellationToken);
+
+			return CallAwaitUsing(a, Transaction, cancellationToken);
+
+			static async Task CallAwaitUsing(IAsyncDisposable activity, DbTransaction transaction, CancellationToken token)
+			{
+				await using (activity)
+					await transaction.RollbackAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 #else
 			Rollback();
 			return TaskEx.CompletedTask;
@@ -58,6 +78,7 @@ namespace LinqToDB.Async
 		}
 
 		#region IDisposable
+
 		public virtual void Dispose()
 		{
 			using var a = ActivityService.Start(ActivityID.TransactionDispose);
@@ -77,8 +98,20 @@ namespace LinqToDB.Async
 		public virtual ValueTask DisposeAsync()
 		{
 			if (Transaction is IAsyncDisposable asyncDisposable)
-				using (ActivityService.Start(ActivityID.TransactionDisposeAsync))
+			{
+				var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionDisposeAsync);
+
+				if (a is null)
 					return asyncDisposable.DisposeAsync();
+
+				return CallAwaitUsing(a, asyncDisposable);
+
+				static async ValueTask CallAwaitUsing(IAsyncDisposable activity, IAsyncDisposable disposable)
+				{
+					await using (activity)
+						await disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				}
+			}
 
 			Dispose();
 			return default;

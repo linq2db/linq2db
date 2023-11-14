@@ -108,6 +108,7 @@ namespace LinqToDB.Tools.Activity
 					ConnectionClose                 = new("      Connection Close"),
 					ConnectionCloseAsync            = new("      Connection CloseAsync"),
 					ConnectionDispose               = new("      Connection Dispose"),
+					ConnectionDisposeAsync          = new("      Connection DisposeAsync"),
 					ConnectionBeginTransaction      = new("      Connection BeginTransaction"),
 					ConnectionBeginTransactionAsync = new("      Connection BeginTransactionAsync"),
 					TransactionCommit               = new("      Transaction Commit"),
@@ -128,6 +129,7 @@ namespace LinqToDB.Tools.Activity
 				ConnectionClose,
 				ConnectionCloseAsync,
 				ConnectionDispose,
+				ConnectionDisposeAsync,
 				ConnectionBeginTransaction,
 				ConnectionBeginTransactionAsync,
 				TransactionCommit,
@@ -220,6 +222,7 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.ConnectionClose                 => ConnectionClose,
 				ActivityID.ConnectionCloseAsync            => ConnectionCloseAsync,
 				ActivityID.ConnectionDispose               => ConnectionDispose,
+				ActivityID.ConnectionDisposeAsync          => ConnectionDisposeAsync,
 				ActivityID.ConnectionBeginTransaction      => ConnectionBeginTransaction,
 				ActivityID.ConnectionBeginTransactionAsync => ConnectionBeginTransactionAsync,
 				ActivityID.TransactionCommit               => TransactionCommit,
@@ -346,6 +349,7 @@ namespace LinqToDB.Tools.Activity
 		static StatActivity ConnectionClose;
 		static StatActivity ConnectionCloseAsync;
 		static StatActivity ConnectionDispose;
+		static StatActivity ConnectionDisposeAsync;
 		static StatActivity ConnectionBeginTransaction;
 		static StatActivity ConnectionBeginTransactionAsync;
 		static StatActivity TransactionCommit;
