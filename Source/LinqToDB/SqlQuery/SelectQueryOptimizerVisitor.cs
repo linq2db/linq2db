@@ -153,6 +153,108 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+			if (selectQuery.OrderBy.Items.Count > 0)
+			{
+				if (selectQuery.HasSetOperators)
+				{
+					//
+					// SELECT *
+					// FROM t1
+					// ORDER BY ..
+					// UNION / INTERSECT
+					// SELECT * FROM t2
+					//
+					var setOperator = selectQuery.SetOperators[0];
+					if (setOperator.Operation == SetOperation.Union || 
+					    setOperator.Operation == SetOperation.Intersect)
+					{
+						isModified = true;
+						selectQuery.OrderBy.Items.Clear();
+					}
+				}
+			
+				if (_currentSetOperator != null)
+				{
+					//
+					// SELECT *
+					// FROM t1
+					// EXCEPT / EXCEPT ALL / INTERSECT / INTERSECT ALL / UNION
+					// SELECT *
+					// FROM t2
+					// ORDER BY ..
+					//
+					if (_currentSetOperator.Operation == SetOperation.Except       || 
+					    _currentSetOperator.Operation == SetOperation.ExceptAll    ||
+					    _currentSetOperator.Operation == SetOperation.Intersect    ||
+					    _currentSetOperator.Operation == SetOperation.IntersectAll ||
+					    _currentSetOperator.Operation == SetOperation.Union)
+					{
+						isModified = true;
+						selectQuery.OrderBy.Items.Clear();
+					}
+				}
+			}
+			
+			if (_currentSetOperator != null)
+			{
+				if (_currentSetOperator.Operation == SetOperation.Except       || 
+				    _currentSetOperator.Operation == SetOperation.ExceptAll    ||
+				    _currentSetOperator.Operation == SetOperation.Intersect    ||
+				    _currentSetOperator.Operation == SetOperation.IntersectAll ||
+				    _currentSetOperator.Operation == SetOperation.Union)
+				{
+					if (selectQuery.From.Tables.Count == 1)
+					{
+						// Force MoveSubQueryUp to optimize subquery
+						//
+						// SELECT *
+						// FROM t1
+						// EXCEPT / EXCEPT ALL / INTERSECT / INTERSECT ALL / UNION
+						// SELECT *
+						// FROM (SELECT * FROM t2 ORDER BY ..)
+						//
+						if (selectQuery.From.Tables[0].Source is SelectQuery subquery)
+						{
+							if (subquery.Select.SkipValue == null && subquery.Select.TakeValue == null &&
+							    !subquery.OrderBy.IsEmpty)
+							{
+								isModified = true;
+								subquery.OrderBy.Items.Clear();
+							}
+						}
+					}
+				}
+			}
+
+
+			if (selectQuery.HasSetOperators)
+			{
+				var setOperator = selectQuery.SetOperators[0];
+				if (setOperator.Operation == SetOperation.Union || 
+				    setOperator.Operation == SetOperation.Intersect)
+				{
+					if (selectQuery.From.Tables.Count == 1)
+					{
+						// Force MoveSubQueryUp to optimize subquery
+						//
+						// SELECT *
+						// FROM (SELECT * FROM t1 ORDER BY ..)
+						// UNION / INTERSECT
+						// SELECT * FROM t2
+						//
+						if (selectQuery.From.Tables[0].Source is SelectQuery subquery)
+						{
+							if (subquery.Select.SkipValue == null && subquery.Select.TakeValue == null &&
+							    !subquery.OrderBy.IsEmpty)
+							{
+								isModified = true;
+								subquery.OrderBy.Items.Clear();
+							}
+						}
+					}
+				}
+			}
+			
 			return isModified;
 		}
 
@@ -160,7 +262,20 @@ namespace LinqToDB.SqlQuery
 		{
 			var saveCurrent = _currentSetOperator;
 			_currentSetOperator = element;
+
 			var newElement = base.VisitSqlSetOperator(element);
+
+			_currentSetOperator = saveCurrent;
+
+			return newElement;
+		}
+
+		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
+		{
+			var saveCurrent = _currentSetOperator;
+			_currentSetOperator = null;
+
+			var newElement = base.VisitSqlTableSource(element);;
 
 			_currentSetOperator = saveCurrent;
 
@@ -989,8 +1104,7 @@ namespace LinqToDB.SqlQuery
 
 				if (!subQuery.Select.OrderBy.IsEmpty)
 				{
-					if (selectQuery.HasSetOperators && selectQuery.SetOperators[0].Operation == SetOperation.UnionAll)
-						return false;
+					return false;
 				}
 
 				/*
