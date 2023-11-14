@@ -804,6 +804,9 @@ namespace LinqToDB.Linq.Builder
 				if (expression is not SqlPlaceholderExpression)
 					placeholder = placeholder.WithTrackingPath(expression);
 
+				if (alias != null)
+					placeholder = placeholder.WithAlias(alias);
+
 				if (cache)
 				{
 					if (updateNesting && placeholder.SelectQuery != context?.SelectQuery &&

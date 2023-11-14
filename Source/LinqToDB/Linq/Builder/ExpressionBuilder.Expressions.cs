@@ -542,7 +542,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
 				{
-					var translatedForced = TranslateExpression(node, useSql : true);
+					var translatedForced = TranslateExpression(node, alias: node.Member.Name, useSql : true);
 
 					if (!ExpressionEqualityComparer.Instance.Equals(translatedForced, node))
 						return translatedForced;
@@ -574,14 +574,14 @@ namespace LinqToDB.Linq.Builder
 
 						if (accept)
 						{
-							var translatedConverted = TranslateExpression(node, useSql : true);
+							var translatedConverted = TranslateExpression(node, alias: node.Member.Name, useSql : true);
 
 							return translatedConverted;
 						}
 					}
 				}
 
-				var translated = TranslateExpression(node, useSql : useSql);
+				var translated = TranslateExpression(node, alias: node.Member.Name, useSql : useSql);
 
 				if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
 					return translated;
