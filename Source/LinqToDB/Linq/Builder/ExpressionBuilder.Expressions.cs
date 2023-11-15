@@ -681,7 +681,7 @@ namespace LinqToDB.Linq.Builder
 				if (IsForcedToConvert(node))
 					localFlags = _flags.SqlFlag();
 
-				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
+				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, false))
 					localFlags = _flags.SqlFlag();
 
 				var method = Builder.MakeExpression(_context, node, localFlags);

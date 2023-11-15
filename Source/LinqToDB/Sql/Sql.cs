@@ -537,9 +537,29 @@ namespace LinqToDB
 			return str.Substring(0, length.Value);
 		}
 
+		class OracleRightBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var stringExpr = builder.GetExpression(0);
+				var lengthExpr = builder.GetExpression(1);
+
+				if (stringExpr == null || lengthExpr == null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				lengthExpr = new SqlBinaryExpression(lengthExpr.SystemType, new SqlValue(-1), "*", lengthExpr, Precedence.Multiplicative);
+
+				builder.ResultExpression = new SqlFunction(stringExpr.SystemType, "substr", false, true, stringExpr, lengthExpr);
+			}
+		}
+
 		[Function(                            PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "RightStr",  PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.ClickHouse, "rightUTF8", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Extension(PN.Oracle,    "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(OracleRightBuilder))]
 		public static string? Right(string? str, int? length)
 		{
 			if (length == null || str == null) return null;
