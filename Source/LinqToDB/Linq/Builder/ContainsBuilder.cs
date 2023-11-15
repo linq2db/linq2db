@@ -112,6 +112,8 @@ namespace LinqToDB.Linq.Builder
 
 				var placeholderContext = Parent ?? InnerSequence;
 
+				using var _ = Builder.AllocateScope(Parent, false);
+
 				var testExpr = Builder.ConvertToSqlExpr(placeholderContext, expr, flags.SqlFlag() | ProjectFlags.Keys);
 
 				var contextRef   = new ContextRefExpression(args[0], InnerSequence);

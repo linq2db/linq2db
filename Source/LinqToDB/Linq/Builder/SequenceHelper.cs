@@ -742,14 +742,13 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
-		public static Expression CorrectSelectQuery(Expression expression, SelectQuery selectQuery, bool forceAll)
+		public static Expression CorrectSelectQuery(Expression expression, SelectQuery selectQuery)
 		{
 			var newExpression = expression.Transform((expression, selectQuery), (ctx, e) =>
 			{
 				if (e.NodeType == ExpressionType.Extension && e is SqlPlaceholderExpression sqlPlaceholderExpression)
 				{
-					if (forceAll || sqlPlaceholderExpression.Sql.ElementType == QueryElementType.SqlValue || sqlPlaceholderExpression.Sql.ElementType == QueryElementType.SqlParameter)
-						return sqlPlaceholderExpression.WithSelectQuery(ctx.selectQuery);
+					return sqlPlaceholderExpression.WithSelectQuery(ctx.selectQuery);
 				}
 
 				return e;

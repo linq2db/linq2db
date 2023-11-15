@@ -471,7 +471,7 @@ namespace LinqToDB.Linq.Builder
 					var alias           = GenerateColumnAlias(placeholderPath);
 
 					var placeholder1 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence1, placeholder);
-					placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery, false);
+					placeholder1 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder1, _sequence1.SelectQuery);
 					placeholder1 = placeholder1.WithPath(placeholderPath).WithAlias(alias);
 
 					var column1 = Builder.MakeColumn(SelectQuery, placeholder1.WithAlias(alias), true);
@@ -485,7 +485,7 @@ namespace LinqToDB.Linq.Builder
 					else
 					{
 						placeholder2 = (SqlPlaceholderExpression)Builder.UpdateNesting(_sequence2, placeholder2);
-						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery, false);
+						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
 					}
 
 					placeholder2 = placeholder2.WithPath(placeholderPath).WithAlias(alias);
@@ -502,7 +502,7 @@ namespace LinqToDB.Linq.Builder
 							continue;
 
 						var placeholder2 = Builder.UpdateNesting(_sequence2, placeholder);
-						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery, false);
+						placeholder2 = (SqlPlaceholderExpression)SequenceHelper.CorrectSelectQuery(placeholder2, _sequence2.SelectQuery);
 
 						var placeholderPath = new SqlPathExpression(path, placeholder2.Type);
 						var alias           = GenerateColumnAlias(placeholderPath);

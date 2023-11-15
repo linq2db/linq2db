@@ -71,6 +71,11 @@ namespace LinqToDB.Linq.Builder
 			{
 			}
 
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				return base.MakeExpression(path, flags);
+			}
+
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new TakeSkipContext(context.CloneContext(Context));

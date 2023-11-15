@@ -34,9 +34,9 @@ namespace LinqToDB.Linq.Builder
 			var selector       = SequenceHelper.GetArgumentLambda(methodCall, "selector");
 			var resultSelector = SequenceHelper.GetArgumentLambda(methodCall, "resultSelector");
 
-			var expr = SequenceHelper.PrepareBody(collectionSelector, sequence).Unwrap();
-
 			sequence = new SubQueryContext(sequence);
+
+			var expr = SequenceHelper.PrepareBody(collectionSelector, sequence).Unwrap();
 
 			BuildInfo      collectionInfo;
 			IBuildContext? collection;

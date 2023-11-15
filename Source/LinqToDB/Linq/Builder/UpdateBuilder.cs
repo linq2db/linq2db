@@ -742,7 +742,7 @@ namespace LinqToDB.Linq.Builder
 						var outputExpressions = new List<SetExpressionEnvelope>();
 
 						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
-						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery, true);
+						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
 
 						if (sqlExpr is SqlPlaceholderExpression)
 							outputExpressions.Add(new SetExpressionEnvelope(sqlExpr, sqlExpr));

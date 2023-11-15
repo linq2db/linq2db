@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 				// correct all placeholders, they should target to appropriate SubQuery.SelectQuery
 				//
 				result = Builder.UpdateNesting(this, result);
-				result = SequenceHelper.CorrectSelectQuery(result, SelectQuery, false);
+				result = SequenceHelper.CorrectSelectQuery(result, SelectQuery);
 
 				if (!flags.HasFlag(ProjectFlags.AssociationRoot))
 				{
