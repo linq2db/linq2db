@@ -87,6 +87,12 @@ namespace LinqToDB.Tools.Activity
 			Dispose();
 			return default;
 		}
+#else
+		public Task DisposeAsync()
+		{
+			Dispose();
+			return Task.FromResult(false);
+		}
 #endif
 	}
 }

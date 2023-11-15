@@ -61,7 +61,6 @@ namespace LinqToDB.Async
 			Connection.Open();
 		}
 
-#if NATIVE_ASYNC
 		public virtual Task OpenAsync(CancellationToken cancellationToken)
 		{
 			var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionOpenAsync);
@@ -71,31 +70,14 @@ namespace LinqToDB.Async
 
 			return CallAwaitUsing(a, Connection, cancellationToken);
 
-			static async Task CallAwaitUsing(IAsyncDisposable activity, DbConnection connection, CancellationToken token)
+			static async Task CallAwaitUsing(IAsyncDisposableEx activity, DbConnection connection, CancellationToken token)
 			{
 				await using (activity)
 					await connection.OpenAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
-#else
-		public virtual Task OpenAsync(CancellationToken cancellationToken)
-		{
-			var a = ActivityService.Start(ActivityID.ConnectionOpenAsync);
 
-			if (a is null)
-				return Connection.OpenAsync(cancellationToken);
-
-			return CallAwaitUsing(a, Connection, cancellationToken);
-
-			static async Task CallAwaitUsing(IActivity activity, DbConnection connection, CancellationToken token)
-			{
-				using (activity)
-					await connection.OpenAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-		}
-#endif
-
-		public virtual void Close     ()
+		public virtual void Close()
 		{
 			using var _ = ActivityService.Start(ActivityID.ConnectionClose);
 			Connection.Close();
@@ -117,6 +99,8 @@ namespace LinqToDB.Async
 					await connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 #else
+			using var _ = ActivityService.Start(ActivityID.ConnectionCloseAsync);
+
 			Close();
 			return TaskEx.CompletedTask;
 #endif
@@ -161,26 +145,24 @@ namespace LinqToDB.Async
 #else
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{
-#pragma warning disable CA2007
-			await using var _ = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync);
-#pragma warning restore CA2007
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync))
+			{
+				var transaction = await Connection.BeginTransactionAsync(cancellationToken)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var transaction = await Connection.BeginTransactionAsync(cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-			return AsyncFactory.Create(transaction);
+				return AsyncFactory.Create(transaction);
+			}
 		}
 
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
 		{
-#pragma warning disable CA2007
-			await using var _ = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync);
-#pragma warning restore CA2007
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync))
+			{
+				var transaction = await Connection.BeginTransactionAsync(isolationLevel, cancellationToken)
+					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-			var transaction = await Connection.BeginTransactionAsync(isolationLevel, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-			return AsyncFactory.Create(transaction);
+				return AsyncFactory.Create(transaction);
+			}
 		}
 
 #endif
@@ -199,7 +181,9 @@ namespace LinqToDB.Async
 #if !NATIVE_ASYNC
 		public virtual Task DisposeAsync()
 		{
-			Dispose();
+			using var _ = ActivityService.Start(ActivityID.ConnectionDisposeAsync);
+
+			Connection.Dispose();
 			return TaskEx.CompletedTask;
 		}
 #else
@@ -221,7 +205,9 @@ namespace LinqToDB.Async
 				}
 			}
 
-			Dispose();
+			using var _ = ActivityService.Start(ActivityID.ConnectionDisposeAsync);
+
+			Connection.Dispose();
 			return default;
 		}
 #endif

@@ -51,7 +51,9 @@ namespace LinqToDB.Async
 					await transaction.CommitAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 #else
-			Commit();
+			using var a = ActivityService.Start(ActivityID.TransactionCommitAsync);
+
+			Transaction.Commit();
 			return TaskEx.CompletedTask;
 #endif
 		}
@@ -72,6 +74,8 @@ namespace LinqToDB.Async
 					await transaction.RollbackAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 #else
+			using var a = ActivityService.Start(ActivityID.TransactionRollbackAsync);
+
 			Rollback();
 			return TaskEx.CompletedTask;
 #endif
@@ -81,7 +85,7 @@ namespace LinqToDB.Async
 
 		public virtual void Dispose()
 		{
-			using var a = ActivityService.Start(ActivityID.TransactionDispose);
+			using var _ = ActivityService.Start(ActivityID.TransactionDispose);
 			Transaction.Dispose();
 		}
 
@@ -91,7 +95,9 @@ namespace LinqToDB.Async
 #if !NATIVE_ASYNC
 		public virtual Task DisposeAsync()
 		{
-			Dispose();
+			using var _ = ActivityService.Start(ActivityID.TransactionDisposeAsync);
+
+			Transaction.Dispose();
 			return TaskEx.CompletedTask;
 		}
 #else
@@ -113,7 +119,9 @@ namespace LinqToDB.Async
 				}
 			}
 
-			Dispose();
+			using var _ = ActivityService.Start(ActivityID.TransactionDisposeAsync);
+
+			Transaction.Dispose();
 			return default;
 		}
 #endif

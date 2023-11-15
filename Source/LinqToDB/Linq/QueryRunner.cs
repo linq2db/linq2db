@@ -460,41 +460,36 @@ namespace LinqToDB.Linq
 			TakeSkipDelegate? takeAction,
 			CancellationToken cancellationToken)
 		{
-			using var _ = ActivityService.Start(ActivityID.ExecuteQueryAsync);
-
-			var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
-#if NATIVE_ASYNC
-			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteQueryAsync))
 			{
-				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if NATIVE_ASYNC
-				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				await using (dr)
-#endif
+				var runner = dataContext.GetQueryRunner(query, queryNumber, expression, ps, preambles);
+
+				await using (runner.ConfigureForUsing())
 				{
-					var skip = skipAction?.Invoke(query, expression, dataContext, ps) ?? 0;
+					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-					while (skip-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-					{}
-
-					var take = takeAction?.Invoke(query, expression, dataContext, ps) ?? int.MaxValue;
-
-					if (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					await using (dr.ConfigureForUsing())
 					{
-						var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader) ?? dr.DataReader;
-						var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+						var skip = skipAction?.Invoke(query, expression, dataContext, ps) ?? 0;
 
-						do
+						while (skip-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						{}
+
+						var take = takeAction?.Invoke(query, expression, dataContext, ps) ?? int.MaxValue;
+
+						if (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
-							if (!func(mapper.Map(dataContext, runner, dataReader, ref mapperInfo)))
-								break;
-							runner.RowsCount++;
+							var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader) ?? dr.DataReader;
+							var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+
+							do
+							{
+								if (!func(mapper.Map(dataContext, runner, dataReader, ref mapperInfo)))
+									break;
+								runner.RowsCount++;
+							}
+							while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 						}
-						while (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 					}
 				}
 			}
@@ -848,34 +843,29 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = ActivityService.Start(ActivityID.ExecuteElementAsync);
-
-			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
-#if NATIVE_ASYNC
-			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteElementAsync))
 			{
-				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if NATIVE_ASYNC
-				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				await using (dr)
-#endif
+				var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+
+				await using (runner.ConfigureForUsing())
 				{
-					if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+					await using (dr.ConfigureForUsing())
 					{
-						var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader) ?? dr.DataReader;
-						var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
-						var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
+						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						{
+							var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader) ?? dr.DataReader;
+							var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
+							var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
 
-						var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
-						runner.RowsCount++;
-						return ret;
+							var ret = dataContext.MappingSchema.ChangeTypeTo<T>(item);
+							runner.RowsCount++;
+							return ret;
+						}
+
+						return Array<T>.Empty.First();
 					}
-
-					return Array<T>.Empty.First();
 				}
 			}
 		}
@@ -912,15 +902,13 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = ActivityService.Start(ActivityID.ExecuteScalarAsync);
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAsync))
+			{
+				var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
 
-			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
-#if NATIVE_ASYNC
-			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
-				return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (runner.ConfigureForUsing())
+					return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		#endregion
@@ -956,15 +944,13 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = ActivityService.Start(ActivityID.ExecuteNonQueryAsync);
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteNonQueryAsync))
+			{
+				var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
 
-			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
-#if NATIVE_ASYNC
-			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
-				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (runner.ConfigureForUsing())
+					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		#endregion
@@ -1006,23 +992,21 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = ActivityService.Start(ActivityID.ExecuteNonQuery2Async);
-
-			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
-#if NATIVE_ASYNC
-			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteNonQuery2Async))
 			{
-				var n = await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 
-				if (n != 0)
-					return n;
+				await using (runner.ConfigureForUsing())
+				{
+					var n = await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				runner.QueryNumber = 1;
+					if (n != 0)
+						return n;
 
-				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					runner.QueryNumber = 1;
+
+					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
 			}
 		}
 
@@ -1065,23 +1049,21 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			using var m = ActivityService.Start(ActivityID.ExecuteScalar2Async);
-
-			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
-#if NATIVE_ASYNC
-			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalar2Async))
 			{
-				var n = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 
-				if (n != null)
-					return 0;
+				await using (runner.ConfigureForUsing())
+				{
+					var n = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				runner.QueryNumber = 1;
+					if (n != null)
+						return 0;
 
-				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					runner.QueryNumber = 1;
+
+					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
 			}
 		}
 

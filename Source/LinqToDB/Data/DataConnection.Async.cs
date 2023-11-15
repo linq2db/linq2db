@@ -379,11 +379,7 @@ namespace LinqToDB.Data
 				result = await _commandInterceptor.ExecuteNonQueryAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-#if NATIVE_ASYNC
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync))
-#else
-			using (ActivityService.Start(ActivityID.CommandExecuteNonQueryAsync))
-#endif
 			{
 				return result.HasValue
 					? result.Value
@@ -468,11 +464,7 @@ namespace LinqToDB.Data
 				result = await _commandInterceptor.ExecuteScalarAsync(new (this), CurrentCommand!, result, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-#if NATIVE_ASYNC
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteScalarAsync))
-#else
-			using (ActivityService.Start(ActivityID.CommandExecuteScalarAsync))
-#endif
 			{
 				return result.HasValue
 					? result.Value
@@ -560,11 +552,7 @@ namespace LinqToDB.Data
 
 			DbDataReader? dr;
 
-#if NATIVE_ASYNC
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync))
-#else
-			using (ActivityService.Start(ActivityID.CommandExecuteReaderAsync))
-#endif
 			{
 				dr = result.HasValue
 					? result.Value

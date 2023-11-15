@@ -969,11 +969,7 @@ namespace LinqToDB.Data
 		/// <returns>Task with number of records, affected by command execution.</returns>
 		public async Task<int> ExecuteAsync(CancellationToken cancellationToken = default)
 		{
-#if NATIVE_ASYNC
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsync))
-#else
-			using (ActivityService.Start(ActivityID.CommandInfoExecuteAsync))
-#endif
 			{
 				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -1103,11 +1099,7 @@ namespace LinqToDB.Data
 		/// <returns>Task with resulting value.</returns>
 		public async Task<T> ExecuteAsync<T>(CancellationToken cancellationToken = default)
 		{
-#if !NATIVE_ASYNC
-			using (ActivityService.Start(ActivityID.CommandInfoExecuteAsyncT))
-#else
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsyncT))
-#endif
 			{
 				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 

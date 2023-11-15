@@ -26,8 +26,6 @@ namespace LinqToDB.Tools
 		}
 
 #if NATIVE_ASYNC
-//#if NETSTANDARD2_1PLUS
-
 		class AsyncDisposableWrapper : IAsyncDisposable
 		{
 			readonly ConfiguredAsyncDisposable _configured;
@@ -52,7 +50,11 @@ namespace LinqToDB.Tools
 
 			return new AsyncDisposableWrapper(activity.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
 		}
-
+#else
+		internal static IAsyncDisposableEx? StartAndConfigureAwait(ActivityID activityID)
+		{
+			return Start(activityID);
+		}
 #endif
 
 		static Func<ActivityID,IActivity?>? _factory;

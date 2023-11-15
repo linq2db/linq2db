@@ -60,32 +60,33 @@ namespace LinqToDB.Linq
 				TableOptions      tableOptions,
 				CancellationToken token)
 			{
-				using var m = ActivityService.Start(ActivityID.DropTableAsync);
-
-				var sqlTable  = SqlTable.Create<T>(dataContext);
-				var dropTable = new SqlDropTableStatement(sqlTable);
-
-				if (tableName != null || schemaName != null || databaseName != null || serverName != null)
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.DropTableAsync))
 				{
-					sqlTable.TableName = new(
-						          tableName    ?? sqlTable.TableName.Name,
-						Server  : serverName   ?? sqlTable.TableName.Server,
-						Database: databaseName ?? sqlTable.TableName.Database,
-						Schema  : schemaName   ?? sqlTable.TableName.Schema);
+					var sqlTable  = SqlTable.Create<T>(dataContext);
+					var dropTable = new SqlDropTableStatement(sqlTable);
+
+					if (tableName != null || schemaName != null || databaseName != null || serverName != null)
+					{
+						sqlTable.TableName = new(
+							tableName              ?? sqlTable.TableName.Name,
+							Server  : serverName   ?? sqlTable.TableName.Server,
+							Database: databaseName ?? sqlTable.TableName.Database,
+							Schema  : schemaName   ?? sqlTable.TableName.Schema);
+					}
+
+					if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
+
+					sqlTable.Set(ifExists, TableOptions.DropIfExists);
+
+					var query = new Query<int>(dataContext, null)
+					{
+						Queries = { new QueryInfo { Statement = dropTable, } }
+					};
+
+					SetNonQueryQuery(query);
+
+					await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
-
-				if (tableOptions.IsSet()) sqlTable.TableOptions = tableOptions;
-
-				sqlTable.Set(ifExists, TableOptions.DropIfExists);
-
-				var query = new Query<int>(dataContext, null)
-				{
-					Queries = { new QueryInfo { Statement = dropTable, } }
-				};
-
-				SetNonQueryQuery(query);
-
-				await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}
