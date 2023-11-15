@@ -173,6 +173,12 @@ namespace LinqToDB.Linq.Builder
 
 			var ctx = TryBuildSequence(info);
 
+			if (ctx != null)
+			{
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(context, ctx))
+					return null;
+			}
+
 			return ctx;
 		}
 

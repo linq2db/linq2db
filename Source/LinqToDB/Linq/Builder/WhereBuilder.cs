@@ -16,7 +16,11 @@ namespace LinqToDB.Linq.Builder
 		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var isHaving  = methodCall.Method.Name == "Having";
-			var sequence  = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequence  = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			if (sequence == null)
+				return null;
+
 			var condition = methodCall.Arguments[1].UnwrapLambda();
 
 			if (sequence.SelectQuery.Select.IsDistinct        ||

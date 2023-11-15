@@ -22,12 +22,6 @@ namespace LinqToDB.Linq.Builder
 			if (sequence == null)
 				return null;
 
-			if (buildInfo.IsSubQuery)
-			{
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
-					return null;
-			}
-
 			var sql      = sequence.SelectQuery;
 			if (sql.Select.TakeValue != null || sql.Select.SkipValue != null)
 			{

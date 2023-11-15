@@ -304,9 +304,6 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (!isSimple && !SequenceHelper.IsSupportedSubqueryForModifier(sequence))
-					return null;
-
 				placeholderSequence ??= sequence;
 
 				Expression valueExpression;

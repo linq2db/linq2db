@@ -20,6 +20,7 @@ namespace LinqToDB.SqlQuery
 		IQueryElement[]   _dependencies      = default!;
 		SelectQuery?      _correcting        = default!;
 		int               _version;
+		bool              _removeWeakJoins;
 
 		SelectQuery?    _parentSelect;
 		SqlSetOperator? _currentSetOperator;
@@ -30,7 +31,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public IQueryElement OptimizeQueries(IQueryElement root, SqlProviderFlags flags, DataOptions dataOptions,
+		public IQueryElement OptimizeQueries(IQueryElement root, SqlProviderFlags flags, bool removeWeakJoins, DataOptions dataOptions,
 			EvaluationContext evaluationContext, IQueryElement rootElement, int level,
 			params IQueryElement[] dependencies)
 		{
@@ -42,6 +43,7 @@ namespace LinqToDB.SqlQuery
 #endif
 
 			_flags             = flags;
+			_removeWeakJoins   = removeWeakJoins;
 			_dataOptions       = dataOptions;
 			_evaluationContext = evaluationContext;
 			_rootElement       = rootElement;
@@ -500,6 +502,9 @@ namespace LinqToDB.SqlQuery
 
 		internal bool ResolveWeakJoins(SelectQuery selectQuery)
 		{
+			if (!_removeWeakJoins)
+				return false;
+
 			var isModified = false;
 
 			foreach (var table in selectQuery.From.Tables)
@@ -1351,7 +1356,7 @@ namespace LinqToDB.SqlQuery
 
 			ApplySubQueryExtensions(selectQuery, subQuery);
 
-			if (subQuery.OrderBy.Items.Count > 0 && !selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.OrderBy.Items.Count > 0 && !selectQuery.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
 			{
 				ApplySubsequentOrder(selectQuery, subQuery);
 			}

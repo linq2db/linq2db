@@ -75,12 +75,6 @@ namespace LinqToDB.Linq.Builder
 					return null;
 			}
 
-			if (buildInfo.IsSubQuery)
-			{
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
-					return null;
-			}
-
 			sequence = new SubQueryContext(sequence);
 
 			var take = 0;

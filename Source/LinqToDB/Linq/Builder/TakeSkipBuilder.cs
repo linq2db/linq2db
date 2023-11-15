@@ -22,15 +22,6 @@ namespace LinqToDB.Linq.Builder
 			if (sequence == null)
 				return null;
 
-			if (buildInfo.IsSubQuery)
-			{
-				if (sequence is not TakeSkipContext)
-				{
-					if (!SequenceHelper.IsSupportedSubqueryForModifier(sequence))
-						return null;
-				}
-			}
-
 			var arg      = methodCall.Arguments[1].Unwrap();
 
 			ISqlExpression expr;

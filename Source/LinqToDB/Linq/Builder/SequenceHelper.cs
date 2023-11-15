@@ -886,18 +886,46 @@ namespace LinqToDB.Linq.Builder
 		/// </summary>
 		/// <param name="context"></param>
 		/// <returns></returns>
-		public static bool IsSupportedSubqueryForModifier(IBuildContext context)
+		public static bool IsSupportedSubqueryForModifier(IBuildContext parent, IBuildContext context)
 		{
 			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
 			{
 				if (!QueryHelper.IsDependsOnOuterSources(context.SelectQuery))
 					return true;
 
-				if (!context.Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
-					return false;
+				// We are trying to simulate what will be with query after optimizer's work
+				//
+				var cloningContext = new CloningContext();
 
-				if (HasModifierWithOuter(context.SelectQuery))
+				var clonedParent = cloningContext.CloneElement(parent.SelectQuery);
+				var clonedQuery = cloningContext.CloneElement(context.SelectQuery);
+
+				// add fake join there is no still reference
+				if (null == parent.SelectQuery.Find(e => e is SelectQuery sc && sc == context.SelectQuery))
+				{
+					var fakeJoin = clonedQuery.OuterApply();
+
+					clonedParent.From.Tables[0].Joins.Add(fakeJoin.JoinedTable);
+				}
+
+				using var visitor = QueryHelper.SelectOptimizer.Allocate();
+
+				#if DEBUG
+
+				var sqlText = clonedParent.ToDebugString();
+
+				#endif
+
+				var optimizedQuery = visitor.Value.OptimizeQueries(clonedParent, parent.Builder.DataContext.SqlProviderFlags, false, parent.Builder.DataOptions,
+					new EvaluationContext(), clonedParent, 0);
+
+				// No apply joins are allowed
+				if (null != optimizedQuery.Find(e => e is SqlJoinedTable join && (
+					    join.JoinType == JoinType.CrossApply ||
+					    join.JoinType == JoinType.OuterApply)))
+				{
 					return false;
+				}
 			}
 
 			return true;

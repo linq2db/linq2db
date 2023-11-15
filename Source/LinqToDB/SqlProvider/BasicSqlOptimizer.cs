@@ -54,7 +54,7 @@ namespace LinqToDB.SqlProvider
 			QueryHelper.DebugCheckNesting(statement, false);
 #endif
 
-			statement = (SqlStatement)visitor.Value.OptimizeQueries(statement, SqlProviderFlags, dataOptions,
+			statement = (SqlStatement)visitor.Value.OptimizeQueries(statement, SqlProviderFlags, true, dataOptions,
 				evaluationContext, statement, 0);
 
 #if DEBUG

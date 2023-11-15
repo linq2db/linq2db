@@ -183,12 +183,6 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			if (buildInfo.IsSubQuery)
-			{
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(groupBy))
-					return null;
-			}
-
 			return groupBy;
 		}
 

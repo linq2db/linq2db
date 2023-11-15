@@ -1518,7 +1518,7 @@ namespace LinqToDB.SqlQuery
 			var visitor = SelectOptimizer.Allocate();
 
 			var evaluationContext = new EvaluationContext(null);
-			visitor.Value.OptimizeQueries(root, providerFlags, dataOptions, evaluationContext, selectQuery, 0);
+			visitor.Value.OptimizeQueries(root, providerFlags, true, dataOptions, evaluationContext, selectQuery, 0);
 		}
 
 		[return: NotNullIfNotNull(nameof(sqlExpression))]
