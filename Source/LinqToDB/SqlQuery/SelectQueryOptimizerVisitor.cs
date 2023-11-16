@@ -165,7 +165,7 @@ namespace LinqToDB.SqlQuery
 
 			if (!selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited)
 			{
-				if (_disableOrderBy || selectQuery.Select.IsDistinct || 
+				if (_disableOrderBy || 
 				    selectQuery.Select.Columns.Count > 0 && selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression))
 				    )
 				{
@@ -1019,7 +1019,9 @@ namespace LinqToDB.SqlQuery
 				// parent has other tables/sub-queries
 				|| selectQuery.From.Tables.Count > 1
 				|| selectQuery.From.Tables.Any(static t => t.Joins.Count > 0)))
+			{
 				return false;
+			}
 
 			if (_currentSetOperator?.SelectQuery == selectQuery || selectQuery.HasSetOperators)
 			{
