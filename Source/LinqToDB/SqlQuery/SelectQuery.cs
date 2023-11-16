@@ -80,6 +80,7 @@ namespace LinqToDB.SqlQuery
 		public bool           IsSimple         => IsSimpleOrSet && !HasSetOperators;
 		public bool           IsSimpleOrSet    => !Select.HasModifier && Where.IsEmpty && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
 		public bool           IsSimpleButWhere => !HasSetOperators && !Select.HasModifier && GroupBy.IsEmpty && Having.IsEmpty && OrderBy.IsEmpty && From.Tables.Count == 1 && From.Tables[0].Joins.Count == 0;
+		public bool           IsLimited        => Select.SkipValue != null || Select.TakeValue != null;
 		public bool           IsParameterDependent { get; set; }
 
 		/// <summary>

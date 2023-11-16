@@ -26,6 +26,7 @@ namespace LinqToDB.SqlQuery
 		SqlSetOperator? _currentSetOperator;
 		SelectQuery?    _applySelect;
 		SelectQuery?    _inSubquery;
+		bool            _disableOrderBy;
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -69,6 +70,7 @@ namespace LinqToDB.SqlQuery
 			_parentSelect      = default!;
 			_applySelect       = default!;
 			_version           = default;
+			_disableOrderBy    = default;
 		}
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
@@ -108,10 +110,25 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			var saveParent = _parentSelect;
+			var saveParent         = _parentSelect;
+			var saveDisableOrderBy = _disableOrderBy;
+
+			if (selectQuery.HasSetOperators)
+			{
+				var setOperator = selectQuery.SetOperators[0];
+				if (setOperator.Operation == SetOperation.Union     || 
+				    setOperator.Operation == SetOperation.Except    || 
+				    setOperator.Operation == SetOperation.Intersect || 
+				    setOperator.Operation == SetOperation.IntersectAll)
+				{
+					_disableOrderBy = true;
+				}
+			}
 
 			_parentSelect = selectQuery;
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
+
+			_disableOrderBy = saveDisableOrderBy;
 
 			if (_correcting == null)
 			{
@@ -146,114 +163,14 @@ namespace LinqToDB.SqlQuery
 		{
 			var isModified = false;
 
-			if (!selectQuery.OrderBy.IsEmpty)
+			if (!selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited)
 			{
-				if (selectQuery.Select.Columns.Count > 0 && selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+				if (_disableOrderBy || selectQuery.Select.IsDistinct || 
+				    selectQuery.Select.Columns.Count > 0 && selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression))
+				    )
 				{
 					selectQuery.OrderBy.Items.Clear();
 					isModified = true;
-				}
-			}
-
-			if (selectQuery.OrderBy.Items.Count > 0)
-			{
-				if (selectQuery.HasSetOperators)
-				{
-					//
-					// SELECT *
-					// FROM t1
-					// ORDER BY ..
-					// UNION / INTERSECT
-					// SELECT * FROM t2
-					//
-					var setOperator = selectQuery.SetOperators[0];
-					if (setOperator.Operation == SetOperation.Union || 
-					    setOperator.Operation == SetOperation.Intersect)
-					{
-						isModified = true;
-						selectQuery.OrderBy.Items.Clear();
-					}
-				}
-			
-				if (_currentSetOperator != null)
-				{
-					//
-					// SELECT *
-					// FROM t1
-					// EXCEPT / EXCEPT ALL / INTERSECT / INTERSECT ALL / UNION
-					// SELECT *
-					// FROM t2
-					// ORDER BY ..
-					//
-					if (_currentSetOperator.Operation == SetOperation.Except       || 
-					    _currentSetOperator.Operation == SetOperation.ExceptAll    ||
-					    _currentSetOperator.Operation == SetOperation.Intersect    ||
-					    _currentSetOperator.Operation == SetOperation.IntersectAll ||
-					    _currentSetOperator.Operation == SetOperation.Union)
-					{
-						isModified = true;
-						selectQuery.OrderBy.Items.Clear();
-					}
-				}
-			}
-			
-			if (_currentSetOperator != null)
-			{
-				if (_currentSetOperator.Operation == SetOperation.Except       || 
-				    _currentSetOperator.Operation == SetOperation.ExceptAll    ||
-				    _currentSetOperator.Operation == SetOperation.Intersect    ||
-				    _currentSetOperator.Operation == SetOperation.IntersectAll ||
-				    _currentSetOperator.Operation == SetOperation.Union)
-				{
-					if (selectQuery.From.Tables.Count == 1)
-					{
-						// Force MoveSubQueryUp to optimize subquery
-						//
-						// SELECT *
-						// FROM t1
-						// EXCEPT / EXCEPT ALL / INTERSECT / INTERSECT ALL / UNION
-						// SELECT *
-						// FROM (SELECT * FROM t2 ORDER BY ..)
-						//
-						if (selectQuery.From.Tables[0].Source is SelectQuery subquery)
-						{
-							if (subquery.Select.SkipValue == null && subquery.Select.TakeValue == null &&
-							    !subquery.OrderBy.IsEmpty)
-							{
-								isModified = true;
-								subquery.OrderBy.Items.Clear();
-							}
-						}
-					}
-				}
-			}
-
-
-			if (selectQuery.HasSetOperators)
-			{
-				var setOperator = selectQuery.SetOperators[0];
-				if (setOperator.Operation == SetOperation.Union || 
-				    setOperator.Operation == SetOperation.Intersect)
-				{
-					if (selectQuery.From.Tables.Count == 1)
-					{
-						// Force MoveSubQueryUp to optimize subquery
-						//
-						// SELECT *
-						// FROM (SELECT * FROM t1 ORDER BY ..)
-						// UNION / INTERSECT
-						// SELECT * FROM t2
-						//
-						if (selectQuery.From.Tables[0].Source is SelectQuery subquery)
-						{
-							if (subquery.Select.SkipValue == null && subquery.Select.TakeValue == null &&
-							    !subquery.OrderBy.IsEmpty)
-							{
-								isModified = true;
-								subquery.OrderBy.Items.Clear();
-							}
-						}
-					}
 				}
 			}
 			
@@ -263,10 +180,20 @@ namespace LinqToDB.SqlQuery
 		protected override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
 		{
 			var saveCurrent = _currentSetOperator;
+			var saveDisableOrderBy = _disableOrderBy;
+
 			_currentSetOperator = element;
+			_disableOrderBy = _disableOrderBy                                ||
+			                  element.Operation == SetOperation.Except       ||
+			                  element.Operation == SetOperation.ExceptAll    ||
+			                  element.Operation == SetOperation.Intersect    ||
+			                  element.Operation == SetOperation.IntersectAll ||
+			                  element.Operation == SetOperation.Union;
+
 
 			var newElement = base.VisitSqlSetOperator(element);
 
+			_disableOrderBy     = saveDisableOrderBy;
 			_currentSetOperator = saveCurrent;
 
 			return newElement;
@@ -1634,17 +1561,49 @@ namespace LinqToDB.SqlQuery
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
+			var saveDisableOrderBy = _disableOrderBy;
+			_disableOrderBy = false;
+
 			expression = base.VisitSqlColumnExpression(column, expression);
 
 			expression = QueryHelper.SimplifyColumnExpression(expression);
 
+			_disableOrderBy = saveDisableOrderBy;
+
 			return expression;
+		}
+
+		protected override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
+		{
+			var saveDisableOrderBy = _disableOrderBy;
+			_disableOrderBy = false;
+
+			var newElement = base.VisitSqlWhereClause(element);
+
+			_disableOrderBy = saveDisableOrderBy;
+
+			return newElement;
+		}
+
+		protected override IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
+		{
+			var saveDisableOrderBy = _disableOrderBy;
+			_disableOrderBy = false;
+
+			var newElement = base.VisitSqlGroupByClause(element);
+
+			_disableOrderBy = saveDisableOrderBy;
+
+			return newElement;
 		}
 
 		void OptimizeDistinctOrderBy(SelectQuery selectQuery)
 		{
+			return;
+
 			// algorithm works with whole Query, so skipping sub optimizations
 
+/*
 			if (_level > 0)
 				return;
 
@@ -1656,11 +1615,11 @@ namespace LinqToDB.SqlQuery
 				query.OrderBy.Items.RemoveDuplicates(static o => o.Expression, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
 				// removing sorting for subselects
-				if (QueryHelper.CanRemoveOrderBy(query, _flags, information))
-				{
-					query.OrderBy.Items.Clear();
-					continue;
-				}
+				// if (QueryHelper.CanRemoveOrderBy(query, _flags, information))
+				// {
+				// 	query.OrderBy.Items.Clear();
+				// 	continue;
+				// }
 
 				if (query.Select.IsDistinct)
 				{
@@ -1690,6 +1649,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 			}
+*/
 		}
 
 		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context, out bool byTake)
