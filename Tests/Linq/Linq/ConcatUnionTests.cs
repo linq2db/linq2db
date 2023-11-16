@@ -1441,7 +1441,7 @@ namespace Tests.Linq
 			var query1 = db.Person.Where(p => p.ID == 1).Select(p => new { p.ID, Name = new { p.FirstName, Marker = "id=1" } });
 			var query2 = db.Person.Where(p => p.ID == 2).Select(p => new { p.ID, Name = new { p.FirstName, Marker = "id=2" } });
 
-			var result = query1.Concat(query2).ToArray();
+			var result = query1.Concat(query2).AsEnumerable().OrderBy(x => x.ID).ToArray();
 
 			result.Should().HaveCount(2);
 			result[0].Name.Marker.Should().Be("id=1");
@@ -1633,6 +1633,8 @@ namespace Tests.Linq
 					Gender     = p.Gender,
 				}).Take(2)
 				.Concat(db.Person.LoadWith(p => p.Patient))
+				.OrderBy(x => x.ID)
+				.ThenBy(x => x.Patient != null)
 				.ToArray();
 
 			res.Should().HaveCount(6);

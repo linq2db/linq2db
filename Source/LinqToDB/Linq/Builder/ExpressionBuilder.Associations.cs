@@ -194,7 +194,10 @@ namespace LinqToDB.Linq.Builder
 			if (associationDescriptor.IsList && (prevIsOuter || flags.IsSubquery()) && !flags.IsExtractProjection())
 			{
 				var keys = MakeExpression(forContext, rootContext, flags.SqlFlag().KeyFlag());
-				notNullCheck = ExtractNotNullCheck(keys);
+				if (forContext != null)
+				{
+					notNullCheck = ExtractNotNullCheck(forContext, keys, flags.SqlFlag());
+				}
 			}
 
 			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo,
@@ -241,9 +244,10 @@ namespace LinqToDB.Linq.Builder
 			return associationExpression;
 		}
 
-		Expression? ExtractNotNullCheck(Expression expr)
+		Expression? ExtractNotNullCheck(IBuildContext context, Expression expr, ProjectFlags flags)
 		{
 			SqlPlaceholderExpression? notNull = null;
+
 
 			if (expr is SqlPlaceholderExpression placeholder)
 			{
@@ -252,7 +256,20 @@ namespace LinqToDB.Linq.Builder
 
 			if (notNull == null)
 			{
-				var placeholders = CollectDistinctPlaceholders(expr);
+				List<Expression> expressions = new();
+				if (!CollectNullCompareExpressions(context, expr, expressions) || expressions.Count == 0)
+					return null;
+
+				List<SqlPlaceholderExpression> placeholders = new(expressions.Count);
+
+				foreach (var expression in expressions)
+				{
+					var predicateExpr = ConvertToSqlExpr(context, expression, flags.SqlFlag());
+					if (predicateExpr is SqlPlaceholderExpression current)
+					{
+						placeholders.Add(current);
+					}
+				}
 
 				notNull = placeholders
 					.FirstOrDefault(pl => !pl.Sql.CanBeNullable(NullabilityContext.NonQuery));

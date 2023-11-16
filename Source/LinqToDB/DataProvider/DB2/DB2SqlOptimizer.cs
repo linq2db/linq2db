@@ -27,6 +27,36 @@ namespace LinqToDB.DataProvider.DB2
 			};
 		}
 
+		#region Wrap Parameters
+		private static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		{
+			// for some reason DB2 doesn't use parameter type information (not supported?) is some places, so
+			// we need to wrap parameter into CAST() to add type information explicitly
+			// As it is not clear when type CAST needed, below we should document observations on current behavior.
+			//
+			// When CAST is not needed:
+			// - parameter already in CAST from original query
+			// - parameter used as direct inserted/updated value in insert/update queries (including merge)
+			//
+			// When CAST is needed:
+			// - in select column expression at any position (except nested subquery): select, subquery, merge source
+			// - in composite expression in insert or update setter: insert, update, merge (not always, in some cases it works)
+
+			var visitor = new WrapParametersVisitor(VisitMode.Modify);
+
+			statement = (SqlStatement)visitor.ProcessElement(statement);
+
+			return statement;
+		}
+
+		#endregion
+
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
+		{
+			statement = WrapParameters(statement, context);
+			return base.FinalizeStatement(statement, context, dataOptions);
+		}
+
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
 			return new DB2SqlExpressionConvertVisitor(allowModify);

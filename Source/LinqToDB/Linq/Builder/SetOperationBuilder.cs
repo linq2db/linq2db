@@ -336,7 +336,11 @@ namespace LinqToDB.Linq.Builder
 							MemberInfoComparer.Instance.Equals(a2.MemberInfo, a1.MemberInfo));
 
 						if (found == null)
+						{
+							if (a1.Expression is not SqlPathExpression)
+								return false;
 							resultAssignments.Add(a1);
+						}
 						else if (!TryMergeProjections(a1.Expression, found.Expression, flags, out var mergedAssignment))
 							return false;
 						else
@@ -349,7 +353,11 @@ namespace LinqToDB.Linq.Builder
 							MemberInfoComparer.Instance.Equals(a2.MemberInfo, a1.MemberInfo));
 
 						if (found == null)
+						{
+							if (a2.Expression is not SqlPathExpression)
+								return false;
 							resultAssignments.Add(a2);
+						}
 					}
 
 					if (generic1.Parameters.Count != generic2.Parameters.Count)

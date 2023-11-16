@@ -530,7 +530,7 @@ namespace LinqToDB.SqlProvider
 			if (element.Expr      == "{0}" && element.Parameters.Length == 1 &&
 			    element.CanBeNull == element.Parameters[0].CanBeNullable(_nullabilityContext))
 			{
-				return element.Parameters[0];
+				return SqlNullabilityExpression.ApplyNullability(element.Parameters[0], element.CanBeNull);
 			}
 
 			return element;
@@ -538,12 +538,26 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitIsNullPredicate(SqlPredicate.IsNull predicate)
 		{
+			var newPredicate = base.VisitIsNullPredicate(predicate);
+			if (!ReferenceEquals(newPredicate, predicate))
+				return Visit(newPredicate);
+
 			if (!predicate.Expr1.CanBeNullable(_nullabilityContext))
 			{
 				return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
 			}
 
-			return base.VisitIsNullPredicate(predicate);
+			if (predicate.Expr1.TryEvaluateExpression(_evaluationContext, out var value))
+			{
+				return new SqlPredicate.Expr(new SqlValue(typeof(bool), (value == null) != predicate.IsNot));
+			}
+
+			newPredicate = OptimizeCase(predicate);
+
+			if (!ReferenceEquals(newPredicate, predicate))
+				return Visit(newPredicate);
+
+			return predicate;
 		}
 
 		protected override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
@@ -670,6 +684,27 @@ namespace LinqToDB.SqlProvider
 			}
 
 			throw new InvalidOperationException();
+		}
+
+		ISqlPredicate OptimizeCase(SqlPredicate.IsNull isNull)
+		{
+			if (QueryHelper.UnwrapNullablity(isNull.Expr1) is SqlFunction func && func.Name == "CASE")
+			{
+				var sc = new SqlSearchCondition();
+
+				for (int i = 0; i < func.Parameters.Length; i += 3)
+				{
+					var trueParam  = func.Parameters[i + 1];
+					var falseParam = func.Parameters[i + 2];
+
+					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(trueParam, isNull.IsNot), true));
+					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(falseParam, isNull.IsNot), true));
+				}
+
+				return sc;
+			}
+
+			return isNull;
 		}
 
 		ISqlPredicate OptimizeCase(SqlPredicate.ExprExpr expr)

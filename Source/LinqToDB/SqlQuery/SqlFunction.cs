@@ -75,6 +75,12 @@ namespace LinqToDB.SqlQuery
 			return new SqlFunction(SystemType, name, IsAggregate, IsPure, Precedence, NullabilityType, _canBeNull, Parameters);
 		}
 
+		public SqlFunction WithParameters(ISqlExpression[] parameters)
+		{
+			return new SqlFunction(SystemType, Name, IsAggregate, IsPure, Precedence, NullabilityType, _canBeNull, parameters);
+		}
+
+
 		#region Overrides
 
 		#endregion

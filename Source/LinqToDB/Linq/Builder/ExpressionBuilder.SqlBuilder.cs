@@ -1826,10 +1826,26 @@ namespace LinqToDB.Linq.Builder
 				return Expression.MakeBinary(nodeType, leftExpr, rightExpr);
 			}
 
-			Expression GenerateNullComparison(List<SqlPlaceholderExpression> placeholders, bool isNot)
+			Expression GenerateNullComparison(Expression placeholdersExpression, bool isNot)
 			{
+				List<Expression> expressions = new();
+				if (!CollectNullCompareExpressions(context, placeholdersExpression, expressions) || expressions.Count == 0)
+					return GetOriginalExpression();
+
+				List<SqlPlaceholderExpression> placeholders = new(expressions.Count);
+
+				foreach (var expression in expressions)
+				{
+					var predicateExpr = ConvertToSqlExpr(context, expression, flags.SqlFlag());
+					if (predicateExpr is SqlPlaceholderExpression placeholder)
+					{
+						placeholders.Add(placeholder);
+					}
+				}
+
 				if (placeholders.Count == 0)
 					return GetOriginalExpression();
+
 
 				var nullability = new NullabilityContext(context.SelectQuery);
 
@@ -2097,8 +2113,7 @@ namespace LinqToDB.Linq.Builder
 
 						rightExpr = BuildSqlExpression(context, rightExpr, flags);
 
-						var rightPlaceholders = CollectDistinctPlaceholders(rightExpr);
-						return GenerateNullComparison(rightPlaceholders, isNot);
+						return GenerateNullComparison(rightExpr, isNot);
 					}
 
 					if (r is SqlValue rv && rv.Value == null || right.IsNullValue())
@@ -2121,8 +2136,7 @@ namespace LinqToDB.Linq.Builder
 
 						leftExpr = BuildSqlExpression(context, leftExpr, flags);
 
-						var leftPlaceholders = CollectDistinctPlaceholders(leftExpr);
-						return GenerateNullComparison(leftPlaceholders, isNot);
+						return GenerateNullComparison(leftExpr, isNot);
 					}
 
 					if (rightExpr is SqlGenericConstructorExpression rightGeneric)
@@ -2288,35 +2302,39 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var compareNullsAsValues = CompareNullsAsValues;
-
 				// Force nullability
 				if (QueryHelper.IsNullValue(lOriginal))
 				{
 					rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, true);
+					predicate = new SqlPredicate.IsNull(rOriginal, op == SqlPredicate.Operator.NotEqual);
 				}
 				else if (QueryHelper.IsNullValue(rOriginal))
 				{
 					lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, true);
+					predicate = new SqlPredicate.IsNull(lOriginal, op == SqlPredicate.Operator.NotEqual);
 				}
 
-				if (compareNullsAsValues)
+				if (predicate == null)
 				{
-					if (lOriginal is SqlColumn colLeft)
-						lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.GetContext(colLeft.Parent));
+					var compareNullsAsValues = CompareNullsAsValues;
 
-					if (rOriginal is SqlColumn colRight)
-						rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, NullabilityContext.GetContext(colRight.Parent));
+					if (compareNullsAsValues)
+					{
+						if (lOriginal is SqlColumn colLeft)
+							lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.GetContext(colLeft.Parent));
 
-					lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, nullability);
-					rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, nullability);
+						if (rOriginal is SqlColumn colRight)
+							rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, NullabilityContext.GetContext(colRight.Parent));
+
+						lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, nullability);
+						rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, nullability);
+					}
+
+					predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
+						compareNullsAsValues
+							? true
+							: null);
 				}
-
-				predicate ??= new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-					compareNullsAsValues
-						? true
-						: null);
-
 			}
 
 			return CreatePlaceholder(context, new SqlSearchCondition(new SqlCondition(false, predicate)), GetOriginalExpression());
@@ -2386,6 +2404,55 @@ namespace LinqToDB.Linq.Builder
 			});
 
 			return result;
+		}
+
+		public bool CollectNullCompareExpressions(IBuildContext context, Expression expression, List<Expression> result)
+		{
+			switch (expression.NodeType)
+			{
+				case ExpressionType.Conditional:
+				{
+					var cond = (ConditionalExpression)expression;
+
+					if (!CollectNullCompareExpressions(context, cond.IfTrue, result))
+						return false;
+					if (!CollectNullCompareExpressions(context, cond.IfFalse, result))
+						return false;
+
+					return true;
+				}
+
+				case ExpressionType.Default:
+				{
+					result.Add(expression);
+					return true;
+				}
+			}
+
+			if (expression is SqlPlaceholderExpression or DefaultValueExpression)
+			{
+				result.Add(expression);
+				return true;
+			}
+
+			if (expression is SqlGenericConstructorExpression generic)
+			{
+				foreach (var assignment in generic.Assignments)
+				{
+					if (!CollectNullCompareExpressions(context, assignment.Expression, result))
+						return false;
+				}
+
+				foreach (var parameter in generic.Parameters)
+				{
+					if (!CollectNullCompareExpressions(context, parameter.Expression, result))
+						return false;
+				}
+
+				return true;
+			}
+
+			return false;
 		}
 
 		private static bool IsBooleanConstant(Expression expr, out bool? value)

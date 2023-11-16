@@ -399,5 +399,37 @@ END");
 
 			base.BuildCreateTablePrimaryKey(createTable, pkName, fieldNames);
 		}
+
+		// TODO: Copy of Firebird's BuildParameter, looks like we can move such functionality to SqlProviderFlags
+		protected override void BuildParameter(NullabilityContext nullability, SqlParameter parameter)
+		{
+			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
+			{
+				base.BuildParameter(nullability, parameter);
+				return;
+			}
+
+			if (parameter.NeedsCast)
+			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.Context.ParameterValues);
+
+				// TODO: temporary guard against cast to unknown type (Variant)
+				if (paramValue.DbDataType.DataType   == DataType.Undefined &&
+				    paramValue.DbDataType.SystemType == typeof(object))
+				{
+					base.BuildParameter(nullability, parameter);
+					return;
+				}
+
+				var saveStep = BuildStep;
+				BuildStep = Step.TypedExpression;
+				BuildTypedExpression(nullability, new SqlDataType(paramValue.DbDataType), parameter);
+				BuildStep = saveStep;
+
+				return;
+			}
+
+			base.BuildParameter(nullability, parameter);
+		}
 	}
 }
