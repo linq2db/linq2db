@@ -465,6 +465,14 @@ namespace LinqToDB.SqlProvider
 			if (!NullabilityContext.CanBeNull(predicate.Expr1))
 				return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
 
+			if (QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRow sqlRow)
+			{
+				if (ConvertRowIsNullPredicate(sqlRow, predicate.IsNot, out var rowIsNullFallback))
+				{
+					return Visit(rowIsNullFallback);
+				}
+			}
+
 			return predicate;
 		}
 
@@ -688,8 +696,12 @@ namespace LinqToDB.SqlProvider
 				{
 					if (op is not (SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
-					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
-						return RowIsNullFallback((SqlRow)predicate.Expr1, op == SqlPredicate.Operator.NotEqual);
+
+					if (ConvertRowIsNullPredicate((SqlRow)predicate.Expr2, op is SqlPredicate.Operator.NotEqual, out var rowIsNullFallback))
+					{
+						return rowIsNullFallback;
+					}
+
 					break;
 				}
 
@@ -719,6 +731,18 @@ namespace LinqToDB.SqlProvider
 			return predicate.WithNull == null
 				? predicate
 				: new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, expr2, withNull: null);
+		}
+
+		bool ConvertRowIsNullPredicate(SqlRow sqlRow, bool IsNot, [NotNullWhen(true)] out ISqlPredicate? rowIsNullFallback)
+		{
+			if (SqlProviderFlags != null && !SqlProviderFlags!.RowConstructorSupport.HasFlag(RowFeature.IsNull))
+			{
+				rowIsNullFallback = RowIsNullFallback(sqlRow, IsNot);
+				return true;
+			}
+
+			rowIsNullFallback = null;
+			return false;
 		}
 
 		protected virtual ISqlPredicate ConvertRowInList(SqlPredicate.InList predicate)
