@@ -692,14 +692,27 @@ namespace LinqToDB.SqlProvider
 			{
 				var sc = new SqlSearchCondition();
 
-				for (int i = 0; i < func.Parameters.Length; i += 3)
+				//TODO: I still do not understand why we do not created QueryElement for CASE function
+				if (func.Parameters.Length == 3)
 				{
-					var trueParam  = func.Parameters[i + 1];
-					var falseParam = func.Parameters[i + 2];
+					var trueParam  = func.Parameters[1];
+					var falseParam = func.Parameters[2];
 
 					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(trueParam, isNull.IsNot), true));
 					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(falseParam, isNull.IsNot), true));
 				}
+				else if (func.Parameters.Length == 5)
+				{
+					var trueParam    = func.Parameters[1];
+					var falseParam   = func.Parameters[3];
+					var defaultParam = func.Parameters[4];
+
+					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(trueParam, isNull.IsNot), true));
+					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(falseParam, isNull.IsNot), true));
+					sc.Add(new SqlCondition(false, new SqlPredicate.IsNull(defaultParam, isNull.IsNot), true));
+				}
+				else
+					return isNull;
 
 				return sc;
 			}
