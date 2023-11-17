@@ -22,11 +22,13 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			Version = version;
 
-			SqlProviderFlags.AcceptsTakeAsParameter            = false;
-			SqlProviderFlags.AcceptsTakeAsParameterIfSkip      = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
+			SqlProviderFlags.AcceptsTakeAsParameter                   = false;
+			SqlProviderFlags.AcceptsTakeAsParameterIfSkip             = true;
+			SqlProviderFlags.IsDistinctOrderBySupported               = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported        = true;
+			SqlProviderFlags.IsUpdateFromSupported                    = false;
+			SqlProviderFlags.IsCrossJoinSupported                     = false;
+			SqlProviderFlags.IsRecursiveCTEJoinWithConditionSupported = false;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
 			                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;

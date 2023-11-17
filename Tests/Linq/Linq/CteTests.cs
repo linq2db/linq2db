@@ -1250,7 +1250,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass([CteContextSource(ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void Issue3357_RecordClass([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1270,28 +1270,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var query = db.GetCte<Issue3357RecordClass>(cte =>
-			{
-				return db.Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName))
-				.Concat(
-					from p in cte
-					from r in db.Person
-					where p.FirstName == r.LastName
-					select new Issue3357RecordClass(r.ID, r.FirstName, r.LastName)
-					);
-			});
-
-			AreEqual(
-				Person.Select(p => new Issue3357RecordClass(p.ID, p.FirstName, p.LastName)),
-				query.ToArray());
-		}
-
-		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass([CteContextSource(ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void Issue3357_RecordLikeClass([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1301,27 +1280,6 @@ namespace Tests.Linq
 				.Concat(
 					from p in cte
 					join r in db.Person on p.FirstName equals r.LastName
-					select new Issue3357RecordLike(r.ID, r.FirstName, r.LastName)
-					);
-			});
-
-			AreEqualWithComparer(
-				Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName)),
-				query.ToArray());
-		}
-
-		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var query = db.GetCte<Issue3357RecordLike>(cte =>
-			{
-				return db.Person.Select(p => new Issue3357RecordLike(p.ID, p.FirstName, p.LastName))
-				.Concat(
-					from p in cte
-					from r in db.Person
-					where p.FirstName == r.LastName
 					select new Issue3357RecordLike(r.ID, r.FirstName, r.LastName)
 					);
 			});

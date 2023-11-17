@@ -27,6 +27,7 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?    _applySelect;
 		SelectQuery?    _inSubquery;
 		bool            _disableOrderBy;
+		bool            _isInRecursiveCte;
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -71,6 +72,7 @@ namespace LinqToDB.SqlQuery
 			_applySelect       = default!;
 			_version           = default;
 			_disableOrderBy    = default;
+			_isInRecursiveCte  = false;
 		}
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
@@ -94,7 +96,10 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
-			var saveQuery = _applySelect;
+			var saveQuery          = _applySelect;
+			var saveDisableOrderBy = _disableOrderBy;
+
+			_disableOrderBy = true;
 
 			if (element.JoinType == JoinType.CrossApply || element.JoinType == JoinType.OuterApply)
 				_applySelect = element.Table.Source as SelectQuery;
@@ -103,7 +108,8 @@ namespace LinqToDB.SqlQuery
 
 			var newElement = base.VisitSqlJoinedTable(element);
 
-			_applySelect = saveQuery;
+			_disableOrderBy = saveDisableOrderBy;
+			_applySelect    = saveQuery;
 
 			return newElement;
 		}
@@ -1433,6 +1439,12 @@ namespace LinqToDB.SqlQuery
 					EnsureReferencesCorrected(element.SelectQuery);
 				}
 
+				if (CorrectJoins(element.SelectQuery))
+				{
+					isModified = true;
+					EnsureReferencesCorrected(element.SelectQuery);
+				}
+
 				if (!isModified)
 					break;
 
@@ -1519,6 +1531,34 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return replaced;
+		}
+
+		bool CorrectJoins(SelectQuery selectQuery)
+		{
+			var isModified = false;
+
+			if (!_flags.IsRecursiveCTEJoinWithConditionSupported && _isInRecursiveCte)
+			{
+				for (int i = 0; i < selectQuery.From.Tables.Count; i++)
+				{
+					var ts = selectQuery.From.Tables[i];
+					if (ts.Joins.Count > 0)
+					{
+						var join = ts.Joins[0];
+
+						if (join.JoinType != JoinType.Inner)
+							break;
+
+						isModified = true;
+						selectQuery.From.Tables.Insert(i + 1, join.Table);
+						selectQuery.Where.ConcatSearchCondition(join.Condition);
+						ts.Joins.RemoveAt(0);
+						--i;
+					}
+				}
+			}
+
+			return isModified;
 		}
 
 		bool OptimizeApplies(SelectQuery selectQuery, bool isApplySupported)
@@ -1796,6 +1836,20 @@ namespace LinqToDB.SqlQuery
 
 			return false;
 		}
+
+		protected override IQueryElement VisitCteClause(CteClause element)
+		{
+			var saveIsInRecursiveCte = _isInRecursiveCte;
+			if (element.IsRecursive)
+				_isInRecursiveCte = true;
+
+			var newElement = base.VisitCteClause(element);
+
+			_isInRecursiveCte = saveIsInRecursiveCte;
+
+			return newElement;
+		}
+		
 
 	}
 }

@@ -354,98 +354,106 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 43), DefaultValue(true)]
 		public bool IsSubqueryWithParentReferenceInJoinConditionSupported { get; set; } = true;
 
+		/// <summary>
+		/// Provider supports INNER JOIN with condition inside Recursive CTE, currently not supported only by DB2
+		/// </summary>
+		[DataMember(Order = 44), DefaultValue(true)]
+		public bool IsRecursiveCTEJoinWithConditionSupported { get; set; } = true;
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
 		// https://github.com/linq2db/linq2db/issues/1445
 		public override int GetHashCode()
 		{
-			return IsSybaseBuggyGroupBy                        .GetHashCode()
-				^ IsParameterOrderDependent                    .GetHashCode()
-				^ AcceptsTakeAsParameter                       .GetHashCode()
-				^ AcceptsTakeAsParameterIfSkip                 .GetHashCode()
-				^ IsTakeSupported                              .GetHashCode()
-				^ IsSkipSupported                              .GetHashCode()
-				^ IsSkipSupportedIfTake                        .GetHashCode()
-				^ IsSubQueryTakeSupported                      .GetHashCode()
-				^ IsSubQueryColumnSupported                    .GetHashCode()
-				^ IsSubQueryOrderBySupported                   .GetHashCode()
-				^ IsCountSubQuerySupported                     .GetHashCode()
-				^ IsIdentityParameterRequired                  .GetHashCode()
-				^ IsApplyJoinSupported                         .GetHashCode()
-				^ IsInsertOrUpdateSupported                    .GetHashCode()
-				^ CanCombineParameters                         .GetHashCode()
-				^ MaxInListValuesCount                         .GetHashCode()
-				^ IsUpdateSetTableAliasSupported               .GetHashCode()
-				^ (TakeHintsSupported?                         .GetHashCode() ?? 0)
-				^ IsGroupByColumnRequred                       .GetHashCode()
-				^ IsCrossJoinSupported                         .GetHashCode()
-				^ IsInnerJoinAsCrossSupported                  .GetHashCode()
-				^ IsCommonTableExpressionsSupported            .GetHashCode()
-				^ IsDistinctOrderBySupported                   .GetHashCode()
-				^ IsOrderByAggregateFunctionsSupported         .GetHashCode()
-				^ IsAllSetOperationsSupported                  .GetHashCode()
-				^ IsDistinctSetOperationsSupported             .GetHashCode()
-				^ IsCountDistinctSupported                     .GetHashCode()
-				^ IsUpdateFromSupported                        .GetHashCode()
-				^ DefaultMultiQueryIsolationLevel              .GetHashCode()
-				^ AcceptsOuterExpressionInAggregate            .GetHashCode()
-				^ IsNamingQueryBlockSupported                  .GetHashCode()
-				^ RowConstructorSupport                        .GetHashCode()
-				^ OutputDeleteUseSpecialTable                  .GetHashCode()
-				^ OutputInsertUseSpecialTable                  .GetHashCode()
-				^ OutputUpdateUseSpecialTables                 .GetHashCode()
-				^ DoesNotSupportCorrelatedSubquery             .GetHashCode()
-				^ IsExistsPreferableForContains                .GetHashCode()
-				^ IsProjectionBoolSupported                    .GetHashCode()
-				^ IsRowNumberWithoutOrderBySupported           .GetHashCode()
+			return IsSybaseBuggyGroupBy                                .GetHashCode()
+				^ IsParameterOrderDependent                            .GetHashCode()
+				^ AcceptsTakeAsParameter                               .GetHashCode()
+				^ AcceptsTakeAsParameterIfSkip                         .GetHashCode()
+				^ IsTakeSupported                                      .GetHashCode()
+				^ IsSkipSupported                                      .GetHashCode()
+				^ IsSkipSupportedIfTake                                .GetHashCode()
+				^ IsSubQueryTakeSupported                              .GetHashCode()
+				^ IsSubQueryColumnSupported                            .GetHashCode()
+				^ IsSubQueryOrderBySupported                           .GetHashCode()
+				^ IsCountSubQuerySupported                             .GetHashCode()
+				^ IsIdentityParameterRequired                          .GetHashCode()
+				^ IsApplyJoinSupported                                 .GetHashCode()
+				^ IsInsertOrUpdateSupported                            .GetHashCode()
+				^ CanCombineParameters                                 .GetHashCode()
+				^ MaxInListValuesCount                                 .GetHashCode()
+				^ IsUpdateSetTableAliasSupported                       .GetHashCode()
+				^ (TakeHintsSupported?                                 .GetHashCode() ?? 0)
+				^ IsGroupByColumnRequred                               .GetHashCode()
+				^ IsCrossJoinSupported                                 .GetHashCode()
+				^ IsInnerJoinAsCrossSupported                          .GetHashCode()
+				^ IsCommonTableExpressionsSupported                    .GetHashCode()
+				^ IsDistinctOrderBySupported                           .GetHashCode()
+				^ IsOrderByAggregateFunctionsSupported                 .GetHashCode()
+				^ IsAllSetOperationsSupported                          .GetHashCode()
+				^ IsDistinctSetOperationsSupported                     .GetHashCode()
+				^ IsCountDistinctSupported                             .GetHashCode()
+				^ IsUpdateFromSupported                                .GetHashCode()
+				^ DefaultMultiQueryIsolationLevel                      .GetHashCode()
+				^ AcceptsOuterExpressionInAggregate                    .GetHashCode()
+				^ IsNamingQueryBlockSupported                          .GetHashCode()
+				^ RowConstructorSupport                                .GetHashCode()
+				^ OutputDeleteUseSpecialTable                          .GetHashCode()
+				^ OutputInsertUseSpecialTable                          .GetHashCode()
+				^ OutputUpdateUseSpecialTables                         .GetHashCode()
+				^ DoesNotSupportCorrelatedSubquery                     .GetHashCode()
+				^ IsExistsPreferableForContains                        .GetHashCode()
+				^ IsProjectionBoolSupported                            .GetHashCode()
+				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
+				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
 		public override bool Equals(object? obj)
 		{
 			return obj is SqlProviderFlags other
-				&& IsSybaseBuggyGroupBy                 == other.IsSybaseBuggyGroupBy
-				&& IsParameterOrderDependent            == other.IsParameterOrderDependent
-				&& AcceptsTakeAsParameter               == other.AcceptsTakeAsParameter
-				&& AcceptsTakeAsParameterIfSkip         == other.AcceptsTakeAsParameterIfSkip
-				&& IsTakeSupported                      == other.IsTakeSupported
-				&& IsSkipSupported                      == other.IsSkipSupported
-				&& IsSkipSupportedIfTake                == other.IsSkipSupportedIfTake
-				&& IsSubQueryTakeSupported              == other.IsSubQueryTakeSupported
-				&& IsSubQueryColumnSupported            == other.IsSubQueryColumnSupported
-				&& IsSubQueryOrderBySupported           == other.IsSubQueryOrderBySupported
-				&& IsCountSubQuerySupported             == other.IsCountSubQuerySupported
-				&& IsIdentityParameterRequired          == other.IsIdentityParameterRequired
-				&& IsApplyJoinSupported                 == other.IsApplyJoinSupported
-				&& IsInsertOrUpdateSupported            == other.IsInsertOrUpdateSupported
-				&& CanCombineParameters                 == other.CanCombineParameters
-				&& MaxInListValuesCount                 == other.MaxInListValuesCount
-				&& IsUpdateSetTableAliasSupported       == other.IsUpdateSetTableAliasSupported
-				&& TakeHintsSupported                   == other.TakeHintsSupported
-				&& IsGroupByColumnRequred               == other.IsGroupByColumnRequred
-				&& IsCrossJoinSupported                 == other.IsCrossJoinSupported
-				&& IsInnerJoinAsCrossSupported          == other.IsInnerJoinAsCrossSupported
-				&& IsCommonTableExpressionsSupported    == other.IsCommonTableExpressionsSupported
-				&& IsDistinctOrderBySupported           == other.IsDistinctOrderBySupported
-				&& IsOrderByAggregateFunctionsSupported == other.IsOrderByAggregateFunctionsSupported
-				&& IsAllSetOperationsSupported          == other.IsAllSetOperationsSupported
-				&& IsDistinctSetOperationsSupported     == other.IsDistinctSetOperationsSupported
-				&& IsCountDistinctSupported             == other.IsCountDistinctSupported
-				&& IsUpdateFromSupported                == other.IsUpdateFromSupported
-				&& DefaultMultiQueryIsolationLevel      == other.DefaultMultiQueryIsolationLevel
-				&& AcceptsOuterExpressionInAggregate    == other.AcceptsOuterExpressionInAggregate
-				&& IsNamingQueryBlockSupported          == other.IsNamingQueryBlockSupported
-				&& RowConstructorSupport                == other.RowConstructorSupport
-				&& OutputDeleteUseSpecialTable          == other.OutputDeleteUseSpecialTable
-				&& OutputInsertUseSpecialTable          == other.OutputInsertUseSpecialTable
-				&& OutputUpdateUseSpecialTables         == other.OutputUpdateUseSpecialTables
-				&& DoesNotSupportCorrelatedSubquery     == other.DoesNotSupportCorrelatedSubquery
-				&& IsExistsPreferableForContains        == other.IsExistsPreferableForContains
-				&& IsProjectionBoolSupported            == other.IsProjectionBoolSupported
-				&& IsRowNumberWithoutOrderBySupported   == other.IsRowNumberWithoutOrderBySupported
+				&& IsSybaseBuggyGroupBy                                  == other.IsSybaseBuggyGroupBy
+				&& IsParameterOrderDependent                             == other.IsParameterOrderDependent
+				&& AcceptsTakeAsParameter                                == other.AcceptsTakeAsParameter
+				&& AcceptsTakeAsParameterIfSkip                          == other.AcceptsTakeAsParameterIfSkip
+				&& IsTakeSupported                                       == other.IsTakeSupported
+				&& IsSkipSupported                                       == other.IsSkipSupported
+				&& IsSkipSupportedIfTake                                 == other.IsSkipSupportedIfTake
+				&& IsSubQueryTakeSupported                               == other.IsSubQueryTakeSupported
+				&& IsSubQueryColumnSupported                             == other.IsSubQueryColumnSupported
+				&& IsSubQueryOrderBySupported                            == other.IsSubQueryOrderBySupported
+				&& IsCountSubQuerySupported                              == other.IsCountSubQuerySupported
+				&& IsIdentityParameterRequired                           == other.IsIdentityParameterRequired
+				&& IsApplyJoinSupported                                  == other.IsApplyJoinSupported
+				&& IsInsertOrUpdateSupported                             == other.IsInsertOrUpdateSupported
+				&& CanCombineParameters                                  == other.CanCombineParameters
+				&& MaxInListValuesCount                                  == other.MaxInListValuesCount
+				&& IsUpdateSetTableAliasSupported                        == other.IsUpdateSetTableAliasSupported
+				&& TakeHintsSupported                                    == other.TakeHintsSupported
+				&& IsGroupByColumnRequred                                == other.IsGroupByColumnRequred
+				&& IsCrossJoinSupported                                  == other.IsCrossJoinSupported
+				&& IsInnerJoinAsCrossSupported                           == other.IsInnerJoinAsCrossSupported
+				&& IsCommonTableExpressionsSupported                     == other.IsCommonTableExpressionsSupported
+				&& IsDistinctOrderBySupported                            == other.IsDistinctOrderBySupported
+				&& IsOrderByAggregateFunctionsSupported                  == other.IsOrderByAggregateFunctionsSupported
+				&& IsAllSetOperationsSupported                           == other.IsAllSetOperationsSupported
+				&& IsDistinctSetOperationsSupported                      == other.IsDistinctSetOperationsSupported
+				&& IsCountDistinctSupported                              == other.IsCountDistinctSupported
+				&& IsUpdateFromSupported                                 == other.IsUpdateFromSupported
+				&& DefaultMultiQueryIsolationLevel                       == other.DefaultMultiQueryIsolationLevel
+				&& AcceptsOuterExpressionInAggregate                     == other.AcceptsOuterExpressionInAggregate
+				&& IsNamingQueryBlockSupported                           == other.IsNamingQueryBlockSupported
+				&& RowConstructorSupport                                 == other.RowConstructorSupport
+				&& OutputDeleteUseSpecialTable                           == other.OutputDeleteUseSpecialTable
+				&& OutputInsertUseSpecialTable                           == other.OutputInsertUseSpecialTable
+				&& OutputUpdateUseSpecialTables                          == other.OutputUpdateUseSpecialTables
+				&& DoesNotSupportCorrelatedSubquery                      == other.DoesNotSupportCorrelatedSubquery
+				&& IsExistsPreferableForContains                         == other.IsExistsPreferableForContains
+				&& IsProjectionBoolSupported                             == other.IsProjectionBoolSupported
+				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
+				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count
 				&& (CustomFlags.Count                   == 0
