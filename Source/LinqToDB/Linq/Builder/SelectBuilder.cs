@@ -46,17 +46,6 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.SetAlias(selector.Parameters[0].Name);
 
-			var createSubquery = true;
-
-			if (sequence is SubQueryContext)
-			{
-				if (sequence.SelectQuery.IsSimple)
-					createSubquery = false;
-			}
-
-			if (createSubquery)
-				sequence = new SubQueryContext(sequence);
-
 			var body = selector.Parameters.Count == 1
 				? SequenceHelper.PrepareBody(selector, sequence)
 				: SequenceHelper.PrepareBody(selector, sequence, new CounterContext(sequence));
