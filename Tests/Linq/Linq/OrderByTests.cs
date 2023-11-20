@@ -391,6 +391,8 @@ namespace Tests.Linq
 					orderby pp.ParentID
 					select p;
 
+				TestContext.WriteLine(secondOrder.ToString());
+
 				var selectQuery = secondOrder.GetSelectQuery();
 				Assert.That(selectQuery.OrderBy.Items.Count, Is.EqualTo(2));
 				var field = QueryHelper.GetUnderlyingField(selectQuery.OrderBy.Items[0].Expression);
@@ -415,14 +417,14 @@ namespace Tests.Linq
 					orderby p.ParentID descending 
 					select p;
 
+				TestContext.WriteLine(secondOrder.ToString());
+			
 				var selectQuery = secondOrder.GetSelectQuery();
 				Assert.That(selectQuery.OrderBy.Items.Count, Is.EqualTo(1));
 				Assert.That(selectQuery.OrderBy.Items[0].IsDescending, Is.True);
 				var field = QueryHelper.GetUnderlyingField(selectQuery.OrderBy.Items[0].Expression);
 				Assert.That(field, Is.Not.Null);
 				Assert.That(field!.Name, Is.EqualTo("ParentID"));
-
-				TestContext.WriteLine(secondOrder.ToString());
 			}
 		}
 

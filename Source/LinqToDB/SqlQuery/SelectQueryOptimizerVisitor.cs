@@ -26,8 +26,9 @@ namespace LinqToDB.SqlQuery
 		SqlSetOperator? _currentSetOperator;
 		SelectQuery?    _applySelect;
 		SelectQuery?    _inSubquery;
-		bool            _disableOrderBy;
 		bool            _isInRecursiveCte;
+
+		SqlQueryOrderByOptimizer _orderByOptimizer = new();
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -55,7 +56,18 @@ namespace LinqToDB.SqlQuery
 			_applySelect       = default!;
 			_inSubquery        = default!;
 
-			return ProcessElement(root);
+			var result = root;
+			do
+			{
+				result = ProcessElement(result);
+
+				_orderByOptimizer.OptimizeOrderBy(result);
+				if (!_orderByOptimizer.IsOptimized)
+					break;
+
+			} while (true);
+
+			return result;
 		}
 
 		public override void Cleanup()
@@ -71,8 +83,8 @@ namespace LinqToDB.SqlQuery
 			_parentSelect      = default!;
 			_applySelect       = default!;
 			_version           = default;
-			_disableOrderBy    = default;
 			_isInRecursiveCte  = false;
+			_orderByOptimizer.Cleanup();
 		}
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
@@ -81,25 +93,9 @@ namespace LinqToDB.SqlQuery
 			return base.NotifyReplaced(newElement, oldElement);
 		}
 
-		protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
-		{
-			foreach (var arg in element.Function.Parameters)
-			{
-				if (arg is SelectQuery sq && !sq.OrderBy.IsEmpty && !sq.Select.HasModifier)
-				{
-					sq.OrderBy.Items.Clear();
-				}
-			}
-
-			return base.VisitFuncLikePredicate(element);
-		}
-
 		protected override IQueryElement VisitSqlJoinedTable(SqlJoinedTable element)
 		{
 			var saveQuery          = _applySelect;
-			var saveDisableOrderBy = _disableOrderBy;
-
-			_disableOrderBy = true;
 
 			if (element.JoinType == JoinType.CrossApply || element.JoinType == JoinType.OuterApply)
 				_applySelect = element.Table.Source as SelectQuery;
@@ -108,7 +104,6 @@ namespace LinqToDB.SqlQuery
 
 			var newElement = base.VisitSqlJoinedTable(element);
 
-			_disableOrderBy = saveDisableOrderBy;
 			_applySelect    = saveQuery;
 
 			return newElement;
@@ -117,24 +112,9 @@ namespace LinqToDB.SqlQuery
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveParent         = _parentSelect;
-			var saveDisableOrderBy = _disableOrderBy;
-
-			if (selectQuery.HasSetOperators)
-			{
-				var setOperator = selectQuery.SetOperators[0];
-				if (setOperator.Operation == SetOperation.Union     || 
-				    setOperator.Operation == SetOperation.Except    || 
-				    setOperator.Operation == SetOperation.Intersect || 
-				    setOperator.Operation == SetOperation.IntersectAll)
-				{
-					_disableOrderBy = true;
-				}
-			}
 
 			_parentSelect = selectQuery;
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
-
-			_disableOrderBy = saveDisableOrderBy;
 
 			if (_correcting == null)
 			{
@@ -142,8 +122,42 @@ namespace LinqToDB.SqlQuery
 
 				do
 				{
-					var isModified     = false;
 					var currentVersion = _version;
+					var isModified     = false;
+
+					if (OptimizeSubQueries(selectQuery))
+					{
+						isModified = true;
+					}
+
+					if (MoveOuterJoinsToSubQuery(selectQuery))
+					{
+						isModified = true;
+					}
+
+					if (OptimizeApplies(selectQuery, _flags.IsApplyJoinSupported))
+					{
+						isModified = true;
+						EnsureReferencesCorrected(selectQuery);
+					}
+
+					if (ResolveWeakJoins(selectQuery))
+					{
+						isModified = true;
+						EnsureReferencesCorrected(selectQuery);
+					}
+
+					if (OptimizeJoinSubQueries(selectQuery))
+					{
+						isModified = true;
+						EnsureReferencesCorrected(selectQuery);
+					}
+
+					if (CorrectJoins(selectQuery))
+					{
+						isModified = true;
+						EnsureReferencesCorrected(selectQuery);
+					}
 
 					if (FinalizeAndValidateInternal(selectQuery))
 					{
@@ -157,49 +171,25 @@ namespace LinqToDB.SqlQuery
 					}
 
 					if (!isModified)
+					{
 						break;
+					}
 
 				} while (true);
+
 			}
 
 			return newQuery;
 		}
 
-		bool CorrectOrderBy(SelectQuery selectQuery)
-		{
-			var isModified = false;
-
-			if (!selectQuery.OrderBy.IsEmpty && !selectQuery.IsLimited)
-			{
-				if (_disableOrderBy || 
-				    selectQuery.Select.Columns.Count > 0 && selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression))
-				    )
-				{
-					selectQuery.OrderBy.Items.Clear();
-					isModified = true;
-				}
-			}
-			
-			return isModified;
-		}
-
 		protected override IQueryElement VisitSqlSetOperator(SqlSetOperator element)
 		{
 			var saveCurrent = _currentSetOperator;
-			var saveDisableOrderBy = _disableOrderBy;
 
 			_currentSetOperator = element;
-			_disableOrderBy = _disableOrderBy                                ||
-			                  element.Operation == SetOperation.Except       ||
-			                  element.Operation == SetOperation.ExceptAll    ||
-			                  element.Operation == SetOperation.Intersect    ||
-			                  element.Operation == SetOperation.IntersectAll ||
-			                  element.Operation == SetOperation.Union;
-
 
 			var newElement = base.VisitSqlSetOperator(element);
 
-			_disableOrderBy     = saveDisableOrderBy;
 			_currentSetOperator = saveCurrent;
 
 			return newElement;
@@ -207,9 +197,10 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
 		{
-			var saveCurrent = _currentSetOperator;
-			_currentSetOperator = null;
+			var saveCurrent        = _currentSetOperator;
 
+			_currentSetOperator = null;
+			
 			var newElement = base.VisitSqlTableSource(element);;
 
 			_currentSetOperator = saveCurrent;
@@ -379,12 +370,8 @@ namespace LinqToDB.SqlQuery
 
 			OptimizeUnions(selectQuery);
 
-			if (CorrectOrderBy(selectQuery))
-				isModified = true;
-
 			OptimizeGroupBy(selectQuery);
 			OptimizeDistinct(selectQuery);
-			OptimizeDistinctOrderBy(selectQuery);
 			CorrectColumns(selectQuery);
 
 			return isModified;
@@ -1407,49 +1394,6 @@ namespace LinqToDB.SqlQuery
 			if (_correcting != null)
 				return element;
 
-			do
-			{
-				var isModified = false;
-
-				if (OptimizeSubQueries(element.SelectQuery))
-				{
-					isModified = true;
-				}
-
-				if (MoveOuterJoinsToSubQuery(element.SelectQuery))
-				{
-					isModified = true;
-				}
-
-				if (OptimizeApplies(element.SelectQuery, _flags.IsApplyJoinSupported))
-				{
-					isModified = true;
-					EnsureReferencesCorrected(element.SelectQuery);
-				}
-
-				if (ResolveWeakJoins(element.SelectQuery))
-				{
-					isModified = true;
-					EnsureReferencesCorrected(element.SelectQuery);
-				}
-
-				if (OptimizeJoinSubQueries(element.SelectQuery))
-				{
-					isModified = true;
-					EnsureReferencesCorrected(element.SelectQuery);
-				}
-
-				if (CorrectJoins(element.SelectQuery))
-				{
-					isModified = true;
-					EnsureReferencesCorrected(element.SelectQuery);
-				}
-
-				if (!isModified)
-					break;
-
-			} while (true);
-
 			return element;
 		}
 
@@ -1603,95 +1547,11 @@ namespace LinqToDB.SqlQuery
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
-			var saveDisableOrderBy = _disableOrderBy;
-			_disableOrderBy = false;
-
-			expression = base.VisitSqlColumnExpression(column, expression);
+			expression      = base.VisitSqlColumnExpression(column, expression);
 
 			expression = QueryHelper.SimplifyColumnExpression(expression);
 
-			_disableOrderBy = saveDisableOrderBy;
-
 			return expression;
-		}
-
-		protected override IQueryElement VisitSqlWhereClause(SqlWhereClause element)
-		{
-			var saveDisableOrderBy = _disableOrderBy;
-			_disableOrderBy = false;
-
-			var newElement = base.VisitSqlWhereClause(element);
-
-			_disableOrderBy = saveDisableOrderBy;
-
-			return newElement;
-		}
-
-		protected override IQueryElement VisitSqlGroupByClause(SqlGroupByClause element)
-		{
-			var saveDisableOrderBy = _disableOrderBy;
-			_disableOrderBy = false;
-
-			var newElement = base.VisitSqlGroupByClause(element);
-
-			_disableOrderBy = saveDisableOrderBy;
-
-			return newElement;
-		}
-
-		void OptimizeDistinctOrderBy(SelectQuery selectQuery)
-		{
-			return;
-
-			// algorithm works with whole Query, so skipping sub optimizations
-
-/*
-			if (_level > 0)
-				return;
-
-			var information = new QueryInformation(selectQuery);
-
-			foreach (var query in information.GetQueriesParentFirst())
-			{
-				// removing duplicate order items
-				query.OrderBy.Items.RemoveDuplicates(static o => o.Expression, Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
-
-				// removing sorting for subselects
-				// if (QueryHelper.CanRemoveOrderBy(query, _flags, information))
-				// {
-				// 	query.OrderBy.Items.Clear();
-				// 	continue;
-				// }
-
-				if (query.Select.IsDistinct)
-				{
-					QueryHelper.TryRemoveDistinct(query, information);
-				}
-
-				if (query.Select.IsDistinct && !query.Select.OrderBy.IsEmpty)
-				{
-					// nothing to do - DISTINCT ORDER BY supported
-					if (_flags.IsDistinctOrderBySupported)
-						continue;
-
-					if (_dataOptions.LinqOptions.KeepDistinctOrdered)
-					{
-						// trying to convert to GROUP BY quivalent
-						QueryHelper.TryConvertOrderedDistinctToGroupBy(query, _flags);
-					}
-					else
-					{
-						// removing ordering if no select columns
-						var projection = new HashSet<ISqlExpression>(query.Select.Columns.Select(static c => c.Expression));
-						for (var i = query.OrderBy.Items.Count - 1; i >= 0; i--)
-						{
-							if (!projection.Contains(query.OrderBy.Items[i].Expression))
-								query.OrderBy.Items.RemoveAt(i);
-						}
-					}
-				}
-			}
-*/
 		}
 
 		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context, out bool byTake)
