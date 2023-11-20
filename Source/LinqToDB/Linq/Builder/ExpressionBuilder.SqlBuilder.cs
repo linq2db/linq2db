@@ -2452,6 +2452,9 @@ namespace LinqToDB.Linq.Builder
 				return true;
 			}
 
+			if (expression is SqlEagerLoadExpression)
+				return true;
+
 			return false;
 		}
 
