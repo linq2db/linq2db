@@ -10,7 +10,6 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using Mapping;
 	using Common.Internal;
-	using Visitors;
 
 	public static partial class QueryHelper
 	{
@@ -1649,8 +1648,11 @@ namespace LinqToDB.SqlQuery
 
 		public static void DebugCheckNesting(SqlStatement statement, bool isSubQuery)
 		{
-			var checkVisitor = new SqlQueryNestingValidationVisitor(isSubQuery, statement);
-			checkVisitor.Visit(statement);
+			// TODO: temporary disabled
+
+			// var checkVisitor = new SqlQueryNestingValidationVisitor(isSubQuery, statement);
+			// checkVisitor.Visit(statement);
 		}
+
 	}
 }

@@ -14,11 +14,7 @@ namespace LinqToDB.Linq.Builder
 			if (buildInfo.Expression is not ContextRefExpression contextRef)
 				return false;
 
-			using var query = ExpressionBuilder.QueryPool.Allocate();
-			var ctx = contextRef.BuildContext.GetContext(buildInfo.Expression,
-				new BuildInfo(buildInfo, buildInfo.Expression, query.Value));
-
-			return ctx != null;
+			return true;
 		}
 
 		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)

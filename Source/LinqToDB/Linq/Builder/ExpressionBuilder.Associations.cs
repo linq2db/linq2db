@@ -215,8 +215,6 @@ namespace LinqToDB.Linq.Builder
 					IsAssociation = true
 				};
 
-				using var _ = AllocateScope(forContext, true);
-
 				var sequence = BuildSequence(buildInfo);
 
 				sequence.SetAlias(associationDescriptor.GenerateAlias());

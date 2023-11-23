@@ -59,8 +59,6 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.IsAsyncExtension(MethodNamesAsync))
 				--argumentCount;
 
-			using var _ = builder.AllocateScope(buildInfo.Parent);
-
 			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, argument));
 			if (sequence == null)
 				return null;

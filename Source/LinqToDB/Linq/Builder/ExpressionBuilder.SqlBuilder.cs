@@ -164,8 +164,6 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags)
 		{
-			using var _ = AllocateScope(context);
-
 			var info = new BuildInfo(context, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
@@ -2018,6 +2016,12 @@ namespace LinqToDB.Linq.Builder
 			ISqlExpression? r = null;
 
 			var nullability = NullabilityContext.GetContext(context.SelectQuery);
+
+			if (left.ToString()
+			    .Contains("Scope[S:53](Scope[S:43](Ref(TableContext[ID:30](43)(T: 44)::ComplexParent).ParentID))"))
+			{
+
+			}
 
 			var keysFlag         = (flags & ~ProjectFlags.ForExtension) | ProjectFlags.Keys;
 			var columnDescriptor = SuggestColumnDescriptor(context, left, right, keysFlag);
@@ -4433,56 +4437,6 @@ namespace LinqToDB.Linq.Builder
 			return createExpression;
 		}
 
-
-		internal Stack<SelectQuery> _scopes = new ();
-
-		public readonly struct NeedScope : IDisposable
-		{
-			readonly ExpressionBuilder  _builder;
-			readonly SelectQuery?       _selectQuery;
-			readonly bool               _newStack;
-			readonly Stack<SelectQuery> _savedScope;
-
-			internal NeedScope(ExpressionBuilder builder, SelectQuery? selectQuery, bool newStack)
-			{
-				_builder     = builder;
-				_selectQuery = selectQuery;
-				_newStack    = newStack;
-
-				_savedScope = _builder._scopes;
-
-				if (newStack)
-					_builder._scopes = new Stack<SelectQuery>();
-
-				if (_selectQuery != null)
-					_builder._scopes.Push(_selectQuery);
-			}
-
-			public void Dispose()
-			{
-				if (!_newStack)
-				{
-					if (_selectQuery != null)
-						_builder._scopes.Pop();
-				}
-				else
-				{
-					_builder._scopes = _savedScope;
-				}
-			}
-		}
-
-		public NeedScope AllocateScope(IBuildContext? context, bool newStack = true)
-		{
-			return new NeedScope(this, context?.SelectQuery, newStack);
-		}
-
-		public NeedScope AllocateScope(SelectQuery? selectQuery, bool newStack = true)
-		{
-			return new NeedScope(this, selectQuery, newStack);
-		}
-
-
 		Dictionary<SqlCacheKey, Expression>                  _expressionCache    = new(SqlCacheKey.SqlCacheKeyComparer);
 		Dictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache = new(ColumnCacheKey.ColumnCacheKeyComparer);
 
@@ -4595,12 +4549,6 @@ namespace LinqToDB.Linq.Builder
 			expression = null;
 
 			ContextRefExpression? rootContext = null;
-
-			/*if (!flags.IsTest() && flags.IsExpression() && path is MethodCallExpression tmc && tmc.Method.Name == nameof(Enumerable.FirstOrDefault))
-			{
-
-			}
-			*/
 
 			if (path is MemberExpression memberExpression && memberExpression.Expression != null)
 			{

@@ -191,18 +191,6 @@ namespace LinqToDB.Linq.Builder
 
 			var corrected = UpdateNestingInternal(upToQuery, expression, parentInfo.Value);
 
-			if (_scopes.Count > 0)
-			{
-				foreach (var scope in _scopes)
-				{
-					using var localInfo = ParentInfoPool.Allocate();
-					if (!localInfo.Value.GetParentQuery(scope, upToQuery, out _))
-					{
-						corrected = UpdateNestingInternal(scope, corrected, localInfo.Value);
-					}
-				}
-			}
-
 			return corrected;
 		}
 

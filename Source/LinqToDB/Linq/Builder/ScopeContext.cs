@@ -27,8 +27,6 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			using var _ = Builder.AllocateScope(UpTo);
-
 			var correctedPath = SequenceHelper.CorrectExpression(path, this, Context);
 			var newExpr       = Builder.MakeExpression(Context, correctedPath, flags);
 

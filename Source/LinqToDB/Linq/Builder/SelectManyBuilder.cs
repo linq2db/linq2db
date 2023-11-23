@@ -43,40 +43,35 @@ namespace LinqToDB.Linq.Builder
 			Expression     resultExpression;
 			Expression     projected;
 
-			using (builder.AllocateScope(buildInfo.Parent))
-			using (builder.AllocateScope(sequence, false))
+			// GroupJoin handling
+			expr = builder.UpdateNesting(sequence, expr);
+
+			var collectionSelectQuery = new SelectQuery();
+			collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
 			{
-				// GroupJoin handling
-				expr = builder.UpdateNesting(sequence, expr);
+				CreateSubQuery    = true,
+				SourceCardinality = SourceCardinality.OneOrMany
+			};
 
-				var collectionSelectQuery = new SelectQuery();
-				collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
-				{
-					CreateSubQuery    = true,
-					SourceCardinality = SourceCardinality.OneOrMany
-				};
+			collection = builder.TryBuildSequence(collectionInfo);
 
-				collection = builder.TryBuildSequence(collectionInfo);
+			if (collection == null)
+				return null;
 
-				if (collection == null)
-					return null;
-
-				// DefaultIfEmptyContext wil handle correctly projecting NULL objects
-				//
-				if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
-				{
-					sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
-				}
-
-				projected = builder.BuildSqlExpression(collection,
-					new ContextRefExpression(collection.ElementType, collection), buildInfo.GetFlags(),
-					buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
-
-				collection = new SubQueryContext(collection);
-
-				projected = builder.UpdateNesting(collection, projected);
-
+			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
+			//
+			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
+			{
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
 			}
+
+			projected = builder.BuildSqlExpression(collection,
+				new ContextRefExpression(collection.ElementType, collection), buildInfo.GetFlags(),
+				buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+
+			collection = new SubQueryContext(collection);
+
+			projected = builder.UpdateNesting(collection, projected);
 
 			if (resultSelector == null)
 			{

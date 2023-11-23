@@ -28,7 +28,8 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?    _inSubquery;
 		bool            _isInRecursiveCte;
 
-		SqlQueryOrderByOptimizer _orderByOptimizer = new();
+		SqlQueryColumnNestingCorrector _columnNestingCorrector = new();
+		SqlQueryOrderByOptimizer       _orderByOptimizer       = new();
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -56,7 +57,11 @@ namespace LinqToDB.SqlQuery
 			_applySelect       = default!;
 			_inSubquery        = default!;
 
-			var result = root;
+			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
+			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
+			//
+			var result = _columnNestingCorrector.CorrectColumnNesting(root);
+
 			do
 			{
 				result = ProcessElement(result);
@@ -84,6 +89,7 @@ namespace LinqToDB.SqlQuery
 			_applySelect       = default!;
 			_version           = default;
 			_isInRecursiveCte  = false;
+			_columnNestingCorrector.Cleanup();
 			_orderByOptimizer.Cleanup();
 		}
 
@@ -111,9 +117,11 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			var saveParent         = _parentSelect;
+			var saveSetOperatorCount = selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0;
+			var saveParent       = _parentSelect;
 
 			_parentSelect = selectQuery;
+
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
 
 			if (_correcting == null)
@@ -176,6 +184,13 @@ namespace LinqToDB.SqlQuery
 					}
 
 				} while (true);
+
+				if (saveSetOperatorCount != (selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0))
+				{
+					// Do it again. Appended new SetOperators. For ensuring how it works check CteTests
+					//
+					newQuery = (SelectQuery)VisitSqlQuery(selectQuery);
+				}
 
 			}
 
