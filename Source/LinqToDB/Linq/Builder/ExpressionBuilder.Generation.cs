@@ -61,6 +61,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				foreach (var column in columns)
 				{
+					if (column.SkipOnEntityFetch)
+						continue;
+
 					Expression me;
 					if (column.MemberName.Contains('.') && !column.MemberInfo.Name.Contains("."))
 					{
@@ -89,6 +92,9 @@ namespace LinqToDB.Linq.Builder
 				var processed = new HashSet<string>();
 				foreach (var column in columns)
 				{
+					if (column.SkipOnEntityFetch)
+						continue;
+
 					if (!column.MemberName.Contains('.'))
 						continue;
 
