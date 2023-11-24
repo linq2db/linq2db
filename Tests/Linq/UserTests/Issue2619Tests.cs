@@ -3,7 +3,6 @@ using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -25,10 +24,7 @@ namespace Tests.UserTests
 
 				sql.Should().NotContain("ORDER");
 
-				Assert.DoesNotThrow (() =>
-				{
-					union.ToList();
-				});
+				FluentActions.Enumerating(() => union).Should().NotThrow();
 			}
 		}
 
@@ -47,10 +43,7 @@ namespace Tests.UserTests
 
 				sql.Should().Contain("ORDER", Exactly.Twice());
 
-				Assert.DoesNotThrow (() =>
-				{
-					union.ToList();
-				});
+				FluentActions.Enumerating(() => union).Should().NotThrow();
 			}
 		}
 
@@ -69,10 +62,7 @@ namespace Tests.UserTests
 
 				sql.Should().Contain("ORDER", Exactly.Twice());
 
-				Assert.DoesNotThrow (() =>
-				{
-					concat.ToList();
-				});
+				FluentActions.Enumerating(() => concat).Should().NotThrow();
 			}
 		}
 
@@ -91,10 +81,7 @@ namespace Tests.UserTests
 
 				sql.Should().Contain("ORDER", Exactly.Twice());
 
-				Assert.DoesNotThrow (() =>
-				{
-					concat.ToList();
-				});
+				FluentActions.Enumerating(() => concat).Should().NotThrow();
 			}
 		}
 
@@ -112,12 +99,9 @@ namespace Tests.UserTests
 
 				var sql = concat.ToString();
 
-				sql.Should().Contain("ORDER", AtLeast.Once());
+				sql.Should().NotContain("ORDER");
 
-				Assert.DoesNotThrow (() =>
-				{
-					concat.ToList();
-				});
+				FluentActions.Enumerating(() => concat).Should().NotThrow();
 			}
 		}
 
@@ -137,10 +121,7 @@ namespace Tests.UserTests
 
 				sql.Should().Contain("ORDER", AtLeast.Once());
 
-				Assert.DoesNotThrow (() =>
-				{
-					except.ToList();
-				});
+				FluentActions.Enumerating(() => except).Should().NotThrow();
 			}
 		}
 
