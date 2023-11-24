@@ -15,8 +15,6 @@ namespace LinqToDB.SqlQuery
 	{
 		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
 			new(() => new SelectQueryOptimizerVisitor(), v => v.Cleanup(), 100);
-		internal static ObjectPool<JoinOptimizerVisitor> JoinsOptimizer =
-			new(() => new JoinOptimizerVisitor(), v => v.Cleanup(), 100);
 
 		sealed class IsDependsOnSourcesContext
 		{
@@ -561,7 +559,7 @@ namespace LinqToDB.SqlQuery
 			return whereClause;
 		}
 
-		public static bool IsEqualTables(SqlTable? table1, SqlTable? table2)
+		public static bool IsEqualTables([NotNullWhen(true)] SqlTable? table1, [NotNullWhen(true)] SqlTable? table2)
 		{
 			if (table1 == null || table2 == null)
 				return false;

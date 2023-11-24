@@ -2055,7 +2055,7 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Transform:
 				{
-					var expr1 = (ISqlExpression)Visit(predicate.Expr1);
+					var expr1  = (ISqlExpression)Visit(predicate.Expr1);
 					var values = VisitElements(predicate.Values, VisitMode.Transform);
 
 					if (ShouldReplace(predicate)                 ||
@@ -2852,7 +2852,7 @@ namespace LinqToDB.SqlQuery
 					{
 						var newExtension = new SqlQueryExtension()
 						{
-							Arguments     = current,
+							Arguments     = current != extension.Arguments ? current : new(extension.Arguments),
 							BuilderType   = extension.BuilderType,
 							Configuration = extension.Configuration,
 							Scope         = extension.Scope

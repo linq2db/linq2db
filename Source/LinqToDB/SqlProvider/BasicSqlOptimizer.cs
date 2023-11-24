@@ -64,18 +64,20 @@ namespace LinqToDB.SqlProvider
 			QueryHelper.DebugCheckNesting(statement, false);
 #endif
 
-//statement.EnsureFindTables();
+			//statement.EnsureFindTables();
 
 			//statement.EnsureFindTables();
 
-			// if (dataOptions.LinqOptions.OptimizeJoins)
-			// {
-			// 	using var joinsVisitor = QueryHelper.JoinsOptimizer.Allocate();
-			// 	joinsVisitor.Value.OptimizeJoins(statement, evaluationContext);
-			//
-			// 	// Do it again after JOIN Optimization
-			// 	FinalizeCte(statement);
-			// }
+			// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
+			JoinsOptimizer.UnnestJoins(statement);
+
+			if (dataOptions.LinqOptions.OptimizeJoins)
+			{
+				statement = new JoinsOptimizer().Optimize(statement, evaluationContext);
+
+				// Do it again after JOIN Optimization
+				FinalizeCte(statement);
+			}
 
 			statement = FinalizeInsert(statement);
 			statement = FinalizeSelect(statement);

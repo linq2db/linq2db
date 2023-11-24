@@ -75,8 +75,26 @@ namespace LinqToDB.SqlQuery
 			if (Cardinality != SourceCardinality.Unknown)
 				writer.Append(" (" + Cardinality + ") ");
 
+			if (Table.Joins.Count > 0)
+			{
+				writer
+					.Append("(")
+					.AppendLine();
+				writer.Indent();
+			}
+
 			writer
-				.AppendElement(Table)
+				.AppendElement(Table);
+
+			if (Table.Joins.Count > 0)
+			{
+				writer.UnIndent();
+				writer
+					.AppendLine()
+					.Append(") ");
+			}
+
+			writer
 				.Append(" ON ");
 
 			var localWriter = writer.WithInnerSource(Table.Source);

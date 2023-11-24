@@ -8,6 +8,7 @@
 		<!--https://github.com/dotnet/fsharp/issues/12315-->
 		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
 		<NoWarn>$(NoWarn);NU1507</NoWarn>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

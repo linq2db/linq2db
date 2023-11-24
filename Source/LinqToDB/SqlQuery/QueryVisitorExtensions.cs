@@ -17,6 +17,7 @@ namespace LinqToDB.SqlQuery
 		static class PoolHolder<TContext>
 		{
 			public static readonly ObjectPool<SqlQueryFindVisitor<TContext>>        FindPool        = new(() => new SqlQueryFindVisitor<TContext>(),         v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryFindExceptVisitor<TContext>>  FindExceptPool  = new(() => new SqlQueryFindExceptVisitor<TContext>(),   v => v.Cleanup(), 100);
 			public static readonly ObjectPool<SqlQueryActionVisitor<TContext>>      ActionPool      = new(() => new SqlQueryActionVisitor<TContext>(),       v => v.Cleanup(), 100);
 			public static readonly ObjectPool<SqlQueryParentFirstVisitor<TContext>> ParentFirstPool = new(() => new SqlQueryParentFirstVisitor<TContext>(),  v => v.Cleanup(), 100);
 			public static readonly ObjectPool<SqlQueryCloneVisitor<TContext>>       ClonePool       = new(() => new SqlQueryCloneVisitor<TContext>(),        v => v.Cleanup(), 100);
@@ -104,6 +105,17 @@ namespace LinqToDB.SqlQuery
 
 			using var findVisitor = PoolHolder<QueryElementType>.FindPool.Allocate();
 			return findVisitor.Value.Find(type, element, static (type, e) => e.ElementType == type);
+		}
+		#endregion
+
+		#region FindExcept
+		public static IQueryElement? FindExcept<TContext>(this IQueryElement? element, TContext context, IQueryElement skip, Func<TContext, IQueryElement, bool> find)
+		{
+			if (element == null)
+				return null;
+
+			using var findVisitor = PoolHolder<TContext>.FindExceptPool.Allocate();
+			return findVisitor.Value.Find(context, element, skip, find);
 		}
 		#endregion
 

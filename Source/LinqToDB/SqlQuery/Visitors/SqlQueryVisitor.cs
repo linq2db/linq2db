@@ -79,6 +79,9 @@ namespace LinqToDB.SqlQuery.Visitors
 		{
 		}
 
+		/// <summary>
+		/// Resets visitor to initial state.
+		/// </summary>
 		public virtual void Cleanup()
 		{
 			_replacements = null;
@@ -194,19 +197,12 @@ namespace LinqToDB.SqlQuery.Visitors
 		/// </summary>
 		protected bool GetReplacement(IQueryElement element, [NotNullWhen(true)] out IQueryElement? replacement)
 		{
-			if (_replacements?.TryGetValue(element, out var current) == true)
-			{
-				if (_replacements.TryGetValue(current, out var currentReplacement))
-				{
-					throw new InvalidOperationException($"Visitor replaced already replaced element {current}");
-				}
-
-				replacement = current;
-				return true;
-			}
-
 			replacement = null;
-			return false;
+
+			while (_replacements?.TryGetValue(element, out var current) == true)
+				replacement = element = current;
+
+			return replacement != null;
 		}
 
 		/// <summary>
