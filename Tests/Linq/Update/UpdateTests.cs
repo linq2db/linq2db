@@ -307,13 +307,6 @@ namespace Tests.xUpdate
 			[DataSources(
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
-				ProviderName.SqlCe,
-				ProviderName.DB2,
-				TestProvName.AllFirebird,
-				TestProvName.AllOracle,
-				TestProvName.AllMySql,
-				TestProvName.AllSQLite,
-				ProviderName.Access,
 				TestProvName.AllSapHana)]
 			string context)
 		{

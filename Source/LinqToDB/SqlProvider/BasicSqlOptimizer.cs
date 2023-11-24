@@ -863,13 +863,6 @@ namespace LinqToDB.SqlProvider
 			if (query.Select.HasModifier || !query.GroupBy.IsEmpty)
 				return false;
 
-			var elementsToIgnore = new List<IQueryElement> { query.Select, query.Where };
-			elementsToIgnore.AddRange(QueryHelper.EnumerateJoins(query).Where(j => j.Table.Source == table));
-			elementsToIgnore.AddRange(query.From.Tables.Select(t => t.Source));
-
-			if (QueryHelper.IsDependsOnSource(query, table, elementsToIgnore))
-				return false;
-
 			for (int i = 0; i < query.From.Tables.Count; i++)
 			{
 				var ts = query.From.Tables[i];
@@ -896,6 +889,9 @@ namespace LinqToDB.SqlProvider
 						var join = ts.Joins[j];
 						if (join.Table.Source == table)
 						{
+							if (ts.Joins.Skip(j + 1).Any(sj => QueryHelper.IsDependsOnSource(sj, table)))
+								return false;
+
 							source = join.Table;
 
 							ts.Joins.RemoveAt(j);
