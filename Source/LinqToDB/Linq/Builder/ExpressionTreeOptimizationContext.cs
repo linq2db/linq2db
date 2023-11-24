@@ -624,12 +624,6 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
-				if (typeof(IDataContext).IsSameOrParentOf(node.Type))
-				{
-					CanBeCompiledFlag = false;
-					return node;
-				}
-
 				if (node.Expression != null && typeof(IDataContext).IsSameOrParentOf(node.Expression.Type) && typeof(IQueryable<>).IsSameOrParentOf(node.Type))
 				{
 					CanBeCompiledFlag = false;

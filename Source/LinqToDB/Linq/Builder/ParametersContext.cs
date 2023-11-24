@@ -506,12 +506,6 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (e is SqlQueryRootExpression root)
 						{
-							// DataContext creates DataConnection which is not compatible with QueryRunner and parameter evaluation.
-							// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
-							// So for now decided to throw exception.
-							if (!typeof(DataConnection).IsSameOrParentOf(context.GetType()))
-								throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
-
 							var newExpr = (Expression)ExpressionConstants.DataContextParam;
 							if (newExpr.Type != e.Type)
 								newExpr = Expression.Convert(newExpr, e.Type);

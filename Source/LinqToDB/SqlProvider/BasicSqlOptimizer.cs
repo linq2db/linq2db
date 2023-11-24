@@ -69,7 +69,7 @@ namespace LinqToDB.SqlProvider
 			//statement.EnsureFindTables();
 
 			// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
-			JoinsOptimizer.UnnestJoins(statement);
+			//JoinsOptimizer.UnnestJoins(statement);
 
 			if (dataOptions.LinqOptions.OptimizeJoins)
 			{

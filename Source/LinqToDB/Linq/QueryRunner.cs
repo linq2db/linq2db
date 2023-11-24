@@ -418,7 +418,7 @@ namespace LinqToDB.Linq
 
 			public IEnumerator<T> GetEnumerator()
 			{
-				using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
+				using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expression, _parameters, _preambles);
 				using var dr     = runner.ExecuteReader();
 
 				var dataReader = dr.DataReader!;
@@ -466,8 +466,8 @@ namespace LinqToDB.Linq
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
 #pragma warning disable CA2007
-				await using var runner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _parameters, _preambles);
-				await using var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expression, _parameters, _preambles);
+				await using var dr     = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 #pragma warning restore CA2007
 
 				var dataReader = dr.DataReader!;
@@ -575,7 +575,7 @@ namespace LinqToDB.Linq
 			{
 				if (_queryRunner == null)
 				{
-					_queryRunner = _dataContext.GetQueryRunner(_query, _queryNumber, _expression, _ps, _preambles);
+					_queryRunner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expression, _ps, _preambles);
 					_dataReader  = await _queryRunner.ExecuteReaderAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					var skip = _skipAction?.Invoke(_query, _expression, _dataContext, _ps) ?? 0;
@@ -744,7 +744,7 @@ namespace LinqToDB.Linq
 			object?[]?     ps,
 			object?[]?     preambles)
 		{
-			using var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
 			using var dr     = runner.ExecuteReader();
 
 			var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader!) ?? dr.DataReader!;
@@ -769,7 +769,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
 #if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
@@ -818,7 +818,7 @@ namespace LinqToDB.Linq
 
 		static object? ScalarQuery(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles))
+			using (var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles))
 				return runner.ExecuteScalar();
 		}
 
@@ -830,7 +830,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
 #if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
@@ -858,7 +858,7 @@ namespace LinqToDB.Linq
 
 		static int NonQueryQuery(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles))
+			using (var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles))
 				return runner.ExecuteNonQuery();
 		}
 
@@ -870,7 +870,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
+			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
 #if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
@@ -898,7 +898,7 @@ namespace LinqToDB.Linq
 
 		static int NonQueryQuery2(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles))
+			using (var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles))
 			{
 				var n = runner.ExecuteNonQuery();
 
@@ -919,7 +919,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
+			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles);
 #if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
@@ -956,7 +956,7 @@ namespace LinqToDB.Linq
 
 		static int QueryQuery2(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles))
+			using (var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles))
 			{
 				var n = runner.ExecuteScalar();
 
@@ -977,7 +977,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
+			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles);
 #if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
 #else
@@ -1001,7 +1001,7 @@ namespace LinqToDB.Linq
 
 		public static string GetSqlText(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using (var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles))
+			using (var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles))
 				return runner.GetSqlText();
 		}
 

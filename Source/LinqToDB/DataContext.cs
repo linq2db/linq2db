@@ -510,9 +510,9 @@ namespace LinqToDB
 			return dct;
 		}
 
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
-			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, queryNumber, expression, parameters, preambles));
+			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expression, parameters, preambles));
 		}
 
 		sealed class QueryRunner : IQueryRunner

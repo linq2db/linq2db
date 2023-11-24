@@ -19,16 +19,16 @@ namespace LinqToDB.Remote
 
 	public abstract partial class RemoteDataContextBase
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContex, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
 			ThrowOnDisposed();
-			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
+			return new QueryRunner(query, queryNumber, this, parametersContex, expression, parameters, preambles);
 		}
 
 		sealed class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
-				: base(query, queryNumber, dataContext, expression, parameters, preambles)
+			public QueryRunner(Query query, int queryNumber, RemoteDataContextBase dataContext, IDataContext parametersContext, Expression expression, object?[]? parameters, object?[]? preambles)
+				: base(query, queryNumber, dataContext, parametersContext, expression, parameters, preambles)
 			{
 				_dataContext = dataContext;
 			}

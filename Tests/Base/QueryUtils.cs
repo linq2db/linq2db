@@ -22,7 +22,7 @@ namespace Tests
 
 		private static void InitParameters<T>(IExpressionQuery eq, Query<T> info, Expression expression)
 		{
-			eq.DataContext.GetQueryRunner(info, 0, expression, null, null).GetSqlText();
+			eq.DataContext.GetQueryRunner(info, eq.DataContext, 0, expression, null, null).GetSqlText();
 		}
 
 		public static SelectQuery GetSelectQuery<T>(this IQueryable<T> query)

@@ -458,13 +458,26 @@ namespace LinqToDB.Linq.Builder.Visitors
 					return Visit(converted);
 			}
 
+			if (typeof(IDataContext).IsSameOrParentOf(node.Type))
+			{
+				if (_dataContext.GetType().IsSameOrParentOf(node.Type))
+				{
+					var dc = EvaluateExpression(node) as IDataContext;
+					if ((dc?.MappingSchema as IConfigurationID)?.ConfigurationID ==
+					    ((IConfigurationID)_dataContext.MappingSchema).ConfigurationID)
+					{
+						return new SqlQueryRootExpression(MappingSchema, node.Type);
+					}
+				}
+			}
+
 			return base.VisitMember(node);
 		}
 
 		bool IsCompilable(Expression expression)
 		{
 			using var visitor = _isCompilableVisitorPool.Allocate();
-			return visitor.Value.isCompilable(expression, _optimizationContext);
+			return visitor.Value.IsCompilable(expression, _optimizationContext);
 		}
 
 		interface IConvertHelper
@@ -570,19 +583,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 			}
 
 			return null;
-		}
-
-		static Expression ReplaceInvocationWithLambdaBody(InvocationExpression node, LambdaExpression lambda)
-		{
-			var newBody = lambda.Body;
-			if (node.Arguments.Count > 0)
-			{
-				var map = new Dictionary<Expression, Expression>();
-
-				newBody = lambda.GetBody(node.Arguments);
-			}
-
-			return newBody;
 		}
 
 		protected override Expression VisitInvocation(InvocationExpression node)
@@ -784,7 +784,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 				}
 			}
 
-			public bool isCompilable(Expression  expression,
+			public bool IsCompilable(Expression  expression,
 				ExpressionTreeOptimizationContext optimizationContext)
 			{
 				Cleanup();

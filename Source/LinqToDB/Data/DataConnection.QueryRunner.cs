@@ -19,23 +19,26 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query,      IDataContext parametersContext, int queryNumber,
+			Expression                                 expression, object?[]?   parameters,        object?[]? preambles)
 		{
 			CheckAndThrowOnDisposed();
-			return new QueryRunner(query, queryNumber, this, expression, parameters, preambles);
+			return new QueryRunner(query, queryNumber, this, parametersContext, expression, parameters, preambles);
 		}
 
 		internal sealed class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, Expression expression, object?[]? parameters, object?[]? preambles)
-				: base(query, queryNumber, dataConnection, expression, parameters, preambles)
+			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, IDataContext parametersContext, Expression expression, object?[]? parameters, object?[]? preambles)
+				: base(query, queryNumber, dataConnection, parametersContext, expression, parameters, preambles)
 			{
-				_dataConnection = dataConnection;
-				_executionScope = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
+				_dataConnection         = dataConnection;
+				_parametersContext = parametersContext;
+				_executionScope         = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
 			}
 
 			readonly IExecutionScope? _executionScope;
 			readonly DataConnection   _dataConnection;
+			readonly IDataContext     _parametersContext;
 			readonly DateTime         _startedOn = DateTime.UtcNow;
 			readonly Stopwatch        _stopwatch = Stopwatch.StartNew();
 
