@@ -27,10 +27,8 @@ namespace LinqToDB.Linq.Builder
 				return context;
 
 			var elementContext = context.GetContext(buildInfo.Expression, buildInfo);
-			if (elementContext != null)
-				return elementContext;
 
-			return context;
+			return elementContext;
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
