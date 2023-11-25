@@ -420,7 +420,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false)] string context)
+		public void InsertFromCrossJoinedSourceQuery2Workaround([MergeDataContextSource(false, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
