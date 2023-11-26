@@ -122,7 +122,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void InnerJoinFalse([NorthwindDataContext] string context)
 		{

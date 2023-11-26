@@ -137,14 +137,14 @@ namespace LinqToDB.DataProvider.Access
 		{
 			switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
 			{
-				case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
+				case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[2]); break;
 				case TypeCode.DateTime :
 					if (IsDateDataType(func.Parameters[0], "Date"))
-						func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
+						func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[2]);
 					else if (IsTimeDataType(func.Parameters[0]))
-						func = new SqlFunction(func.SystemType, "TimeValue", func.Parameters[1]);
+						func = new SqlFunction(func.SystemType, "TimeValue", func.Parameters[2]);
 					else
-						func = new SqlFunction(func.SystemType, "CDate", func.Parameters[1]);
+						func = new SqlFunction(func.SystemType, "CDate", func.Parameters[2]);
 					break;
 
 				default:

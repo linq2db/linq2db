@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider
 	using SqlQuery;
 	using SqlQuery.Visitors;
 
-	class WrapParametersVisitor : SqlQueryVisitor
+	public class WrapParametersVisitor : SqlQueryVisitor
 	{
 		bool _needCast;
 		bool _inModifier;
