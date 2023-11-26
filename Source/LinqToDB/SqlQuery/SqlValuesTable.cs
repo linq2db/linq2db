@@ -78,7 +78,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Used only during build.
 		/// </summary>
-		internal Dictionary<MemberInfo, SqlField>? FieldsLookup { get; }
+		internal Dictionary<MemberInfo, SqlField>? FieldsLookup { get; set; }
 
 		private readonly List<SqlField> _fields = new ();
 

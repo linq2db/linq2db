@@ -396,7 +396,7 @@ namespace LinqToDB.SqlProvider
 				StringBuilder.Append(OpenParens);
 				var row = rows[i];
 
-				for (var j = 0; j < row.Length; j++)
+				for (var j = 0; j < columnTypes.Length; j++)
 				{
 					var value = row[j];
 					if (j > 0)
