@@ -37,6 +37,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsNamingQueryBlockSupported                           = true;
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported                    = false;
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported          = false;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;

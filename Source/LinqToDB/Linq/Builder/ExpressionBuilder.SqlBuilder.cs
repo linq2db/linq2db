@@ -1831,24 +1831,33 @@ namespace LinqToDB.Linq.Builder
 					return GetOriginalExpression();
 
 				List<SqlPlaceholderExpression> placeholders = new(expressions.Count);
+				List<SqlPlaceholderExpression>? notNull      = null;
+
+				var nullability = NullabilityContext.NonQuery;
 
 				foreach (var expression in expressions)
 				{
 					var predicateExpr = ConvertToSqlExpr(context, expression, flags.SqlFlag());
 					if (predicateExpr is SqlPlaceholderExpression placeholder)
 					{
-						placeholders.Add(placeholder);
+						if (!placeholder.Sql.CanBeNullable(nullability))
+						{
+							placeholders.Clear();
+							placeholders.Add(placeholder);
+							notNull = placeholders;
+							break;
+						}
+						else
+						{
+							placeholders.Add(placeholder);
+						}
 					}
 				}
 
 				if (placeholders.Count == 0)
 					return GetOriginalExpression();
 
-
-				var nullability = new NullabilityContext(context.SelectQuery);
-
-				var notNull = placeholders.Where(p => !p.Sql.CanBeNullable(nullability) && p.Sql is not SqlSearchCondition).ToList();
-				if (notNull.Count == 0)
+				if (notNull == null)
 					notNull = placeholders;
 
 				var searchCondition = new SqlSearchCondition();

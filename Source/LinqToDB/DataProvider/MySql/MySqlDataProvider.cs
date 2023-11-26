@@ -27,6 +27,7 @@ namespace LinqToDB.DataProvider.MySql
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
 			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);

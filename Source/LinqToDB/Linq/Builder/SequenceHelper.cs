@@ -10,6 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using LinqToDB.Expressions;
 	using SqlQuery;
+	using DataProvider;
 
 	internal static class SequenceHelper
 	{
@@ -896,49 +897,42 @@ namespace LinqToDB.Linq.Builder
 				//
 				var cloningContext = new CloningContext();
 
-				var clonedParent = cloningContext.CloneElement(parent.SelectQuery);
-				var clonedQuery = cloningContext.CloneElement(context.SelectQuery);
+				var clonedParentContext = cloningContext.CloneContext(parent);
+				var clonedContext       = cloningContext.CloneContext(context);
 
-				// add fake join there is no still reference
-				if (null == parent.SelectQuery.Find(e => e is SelectQuery sc && sc == context.SelectQuery))
+				 cloningContext.UpdateContextParents();
+
+				var expr = clonedContext.MakeExpression(
+					new ContextRefExpression(clonedContext.ElementType, clonedContext), ProjectFlags.SQL);
+
+				expr = parent.Builder.ToColumns(clonedParentContext, expr);
+
+			    // add fake join there is no still reference
+				if (null == clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery))
 				{
-					var fakeJoin = clonedQuery.OuterApply();
-
-					clonedParent.From.Tables[0].Joins.Add(fakeJoin.JoinedTable);
+				 	var fakeJoin = clonedContext.SelectQuery.OuterApply();
+				
+				    clonedParentContext.SelectQuery.From.Tables[0].Joins.Add(fakeJoin.JoinedTable);
 				}
 
 				using var visitor = QueryHelper.SelectOptimizer.Allocate();
 
 				#if DEBUG
 
-				var sqlText = clonedParent.ToDebugString();
+				var sqlText = clonedParentContext.SelectQuery.ToDebugString();
 
 				#endif
 
-				var optimizedQuery = visitor.Value.OptimizeQueries(clonedParent, parent.Builder.DataContext.SqlProviderFlags, false, parent.Builder.DataOptions,
-					new EvaluationContext(), clonedParent, 0);
+				var optimizedQuery = (SelectQuery)visitor.Value.OptimizeQueries(clonedParentContext.SelectQuery, parent.Builder.DataContext.SqlProviderFlags, false, parent.Builder.DataOptions,
+					new EvaluationContext(), clonedParentContext.SelectQuery, 0);
 
-				// No apply joins are allowed
-				if (null != optimizedQuery.Find(e => e is SqlJoinedTable join && (
-					    join.JoinType == JoinType.CrossApply ||
-					    join.JoinType == JoinType.OuterApply)))
+				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, forColumn: false, parent.Builder.DataContext.SqlProviderFlags))
 				{
 					return false;
 				}
 			}
 
 			return true;
-		}
-
-		public static bool HasModifierWithOuter(SelectQuery selectQuery)
-		{
-			foreach (var source in QueryHelper.EnumerateAccessibleSources(selectQuery))
-			{
-				if (source is SelectQuery sc && (sc.Select.HasModifier || !sc.GroupBy.IsEmpty) && QueryHelper.IsDependsOnOuterSources(sc))
-					return true;
-			}
-
-			return false;
 		}
 
 		/// <summary>

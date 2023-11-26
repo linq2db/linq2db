@@ -211,7 +211,7 @@ namespace Tests
 			foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
 			{
 				if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
-					throw new InvalidOperationException("ConnectionString should be provided");
+					throw new InvalidOperationException($"Provider: {provider.Key}. ConnectionString should be provided.");
 
 				TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 

@@ -31,13 +31,13 @@ namespace LinqToDB.DataProvider.Access
 			if (statement.QueryType != QueryType.Select)
 				return statement;
 
-			statement = statement.Convert(static (visitor, e) =>
+			/*statement = statement.Convert(static (visitor, e) =>
 			{
 				if (e is SqlParameter p && p.IsQueryParameter && ReferenceEquals(visitor.ColumnExpression, e))
 					return new SqlExpression(p.Type.SystemType, "CVar({0})", Precedence.Primary, p);
 
 				return e;
-			}, withStack: true);
+			}, withStack: true);*/
 
 			return statement;
 		}

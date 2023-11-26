@@ -42,6 +42,7 @@ namespace LinqToDB.DataProvider
 				IsSkipSupportedIfTake                = false,
 				TakeHintsSupported                   = null,
 				IsSubQueryTakeSupported              = true,
+				IsSubQuerySkipSupported              = true,
 				IsSubQueryColumnSupported            = true,
 				IsSubQueryOrderBySupported           = false,
 				IsCountSubQuerySupported             = true,

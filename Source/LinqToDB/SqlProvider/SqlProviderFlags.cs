@@ -82,68 +82,75 @@ namespace LinqToDB.SqlProvider
 		public bool        IsSubQueryTakeSupported        { get; set; }
 
 		/// <summary>
+		/// Indicates support for skip clause in subquery.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		[DataMember(Order =  10)]
+		public bool        IsSubQuerySkipSupported        { get; set; }
+
+		/// <summary>
 		/// Indicates support for scalar subquery in select list.
 		/// E.g. <c>SELECT (SELECT TOP 1 value FROM some_table) AS MyColumn, ...</c>
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 10)]
+		[DataMember(Order = 11)]
 		public bool        IsSubQueryColumnSupported      { get; set; }
 		/// <summary>
 		/// Indicates support of <c>ORDER BY</c> clause in sub-queries.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 11)]
+		[DataMember(Order = 12)]
 		public bool        IsSubQueryOrderBySupported     { get; set; }
 		/// <summary>
 		/// Indicates that database supports count subquery as scalar in column.
 		/// <code>SELECT (SELECT COUNT(*) FROM some_table) FROM ...</code>
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 12)]
+		[DataMember(Order = 13)]
 		public bool        IsCountSubQuerySupported       { get; set; }
 
 		/// <summary>
 		/// Indicates that provider requires explicit output parameter for insert with identity queries to get identity from database.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 13)]
+		[DataMember(Order = 14)]
 		public bool        IsIdentityParameterRequired    { get; set; }
 		/// <summary>
 		/// Indicates support for OUTER/CROSS APPLY.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 14)]
+		[DataMember(Order = 15)]
 		public bool        IsApplyJoinSupported           { get; set; }
 		/// <summary>
 		/// Indicates support for OUTER/CROSS APPLY supports condition LATERAL JOIN for example.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 15)]
+		[DataMember(Order = 16)]
 		public bool IsApplyJoinSupportsCondition { get; set; }
 		/// <summary>
 		/// Indicates support for single-query insert-or-update operation support.
 		/// Otherwise two separate queries used to emulate operation (update, then insert if nothing found to update).
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 16)]
+		[DataMember(Order = 17)]
 		public bool        IsInsertOrUpdateSupported      { get; set; }
 		/// <summary>
 		/// Indicates that provider could share parameter between statements in multi-statement batch.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 17)]
+		[DataMember(Order = 18)]
 		public bool        CanCombineParameters           { get; set; }
 		/// <summary>
 		/// Specifies limit of number of values in single <c>IN</c> predicate without splitting it into several IN's.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>int.MaxValue</c> (basically means there is no limit).
 		/// </summary>
-		[DataMember(Order = 18)]
+		[DataMember(Order = 19)]
 		public int         MaxInListValuesCount           { get; set; }
 		/// <summary>
 		/// Indicates that SET clause in update statement could use table alias prefix for set columns (lvalue): <c> SET t_alias.field = value</c>.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 19)]
+		[DataMember(Order = 20)]
 		public bool        IsUpdateSetTableAliasSupported { get; set; }
 
 		/// <summary>
@@ -151,35 +158,35 @@ namespace LinqToDB.SqlProvider
 		/// table with special name (e.g. DELETED or OLD). Otherwise fields should be referenced using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 20)]
+		[DataMember(Order = 21)]
 		public bool        OutputDeleteUseSpecialTable    { get; set; }
 		/// <summary>
 		/// If <c>true</c>, added record fields in OUTPUT clause of INSERT statement should be referenced using
 		/// table with special name (e.g. INSERTED or NEW). Otherwise fields should be referenced using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 21)]
+		[DataMember(Order = 22)]
 		public bool        OutputInsertUseSpecialTable    { get; set; }
 		/// <summary>
 		/// If <c>true</c>, OUTPUT clause supports both OLD and NEW data in UPDATE statement using tables with special names.
 		/// Otherwise only current record fields (after update) available using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 22)]
+		[DataMember(Order = 23)]
 		public bool        OutputUpdateUseSpecialTables   { get; set; }
 
 		/// <summary>
 		/// Provider requires that selected subquery column must be used in group by even for constant column.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 23)]
+		[DataMember(Order = 24)]
 		public bool        IsGroupByColumnRequred            { get; set; }
 
 		/// <summary>
 		/// Indicates support for CROSS JOIN.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 24)]
+		[DataMember(Order = 25)]
 		public bool        IsCrossJoinSupported              { get; set; }
 
 		/// <summary>
@@ -187,7 +194,7 @@ namespace LinqToDB.SqlProvider
 		/// Currently has no effect if <see cref="IsCrossJoinSupported"/> enabled but it is recommended to use proper value.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 25)]
+		[DataMember(Order = 26)]
 		public bool IsInnerJoinAsCrossSupported           { get; set; }
 
 		/// <summary>
@@ -195,7 +202,7 @@ namespace LinqToDB.SqlProvider
 		/// If provider does not support CTE, unsuported exception will be thrown when using CTE.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 26)]
+		[DataMember(Order = 27)]
 		public bool IsCommonTableExpressionsSupported     { get; set; }
 
 		/// <summary>
@@ -207,35 +214,35 @@ namespace LinqToDB.SqlProvider
 		/// </list>
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 27)]
+		[DataMember(Order = 28)]
 		public bool IsDistinctOrderBySupported            { get; set; }
 
 		/// <summary>
 		/// Indicates support for aggregate functions in ORDER BY statement.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 28)]
+		[DataMember(Order = 29)]
 		public bool IsOrderByAggregateFunctionsSupported  { get; set; }
 
 		/// <summary>
 		/// Provider supports EXCEPT ALL, INTERSECT ALL set operators. Otherwise they will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 29)]
+		[DataMember(Order = 30)]
 		public bool IsAllSetOperationsSupported           { get; set; }
 
 		/// <summary>
 		/// Provider supports EXCEPT, INTERSECT set operators. Otherwise it will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 30)]
+		[DataMember(Order = 31)]
 		public bool IsDistinctSetOperationsSupported      { get; set; }
 
 		/// <summary>
 		/// Provider supports COUNT(DISTINCT column) function. Otherwise it will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 31)]
+		[DataMember(Order = 32)]
 		public bool IsCountDistinctSupported              { get; set; }
 
 		/// <summary>
@@ -264,7 +271,7 @@ namespace LinqToDB.SqlProvider
 		///</code>
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 32)]
+		[DataMember(Order = 33)]
 		public bool AcceptsOuterExpressionInAggregate { get; set; }
 
 		/// <summary>
@@ -276,7 +283,7 @@ namespace LinqToDB.SqlProvider
 		/// </code>
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 33)]
+		[DataMember(Order = 34)]
 		public bool IsUpdateFromSupported             { get; set; }
 
 		/// <summary>
@@ -286,13 +293,13 @@ namespace LinqToDB.SqlProvider
 		/// </code>
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 34)]
+		[DataMember(Order = 35)]
 		public bool IsNamingQueryBlockSupported       { get; set; }
 
 		/// <summary>
 		/// Indicates that provider supports window functions
 		/// </summary>
-		[DataMember(Order = 35)]
+		[DataMember(Order = 36)]
 		public bool IsWindowFunctionsSupported { get; set; }
 
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
@@ -317,47 +324,53 @@ namespace LinqToDB.SqlProvider
 		/// Used when there is query which needs several additional database requests for completing query (e.g. eager load or client-side GroupBy).
 		/// Default (set by <see cref="DataProviderBase"/>): <see cref="IsolationLevel.RepeatableRead"/>.
 		/// </summary>
-		[DataMember(Order = 36)]
+		[DataMember(Order = 37)]
 		public IsolationLevel DefaultMultiQueryIsolationLevel { get; set; }
 
 		/// <summary>
 		/// Provider support Row Constructor `(1, 2, 3)` in various positions (flags)
 		/// Default (set by <see cref="DataProviderBase"/>): <see cref="RowFeature.None"/>.
 		/// </summary>
-		[DataMember(Order = 37), DefaultValue(RowFeature.None)]
+		[DataMember(Order = 38), DefaultValue(RowFeature.None)]
 		public RowFeature RowConstructorSupport { get; set; }
 
 		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
-		[DataMember(Order = 38)]
+		[DataMember(Order = 39)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
-		[DataMember(Order = 39)]
+		[DataMember(Order = 40)]
 		public bool DoesNotSupportCorrelatedSubquery { get; set; }
 
-		[DataMember(Order = 40)]
+		[DataMember(Order = 41)]
 		public bool IsExistsPreferableForContains   { get; set; }
 
-		[DataMember(Order = 41), DefaultValue(true)]
+		[DataMember(Order = 42), DefaultValue(true)]
 		public bool IsProjectionBoolSupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports ROW_NUMBER OVER () without ORDER BY
 		/// </summary>
-		[DataMember(Order = 42), DefaultValue(true)]
+		[DataMember(Order = 43), DefaultValue(true)]
 		public bool IsRowNumberWithoutOrderBySupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports condition in subquery which references parent table
 		/// </summary>
-		[DataMember(Order = 43), DefaultValue(true)]
+		[DataMember(Order = 44), DefaultValue(true)]
 		public bool IsSubqueryWithParentReferenceInJoinConditionSupported { get; set; } = true;
+
+		/// <summary>
+		/// Provider supports column subqueries which references outer scope when nesting is more than 1
+		/// </summary>
+		[DataMember(Order = 45), DefaultValue(true)]
+		public bool IsColumnSubqueryWithParentReferenceSupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports INNER JOIN with condition inside Recursive CTE, currently not supported only by DB2
 		/// </summary>
-		[DataMember(Order = 44), DefaultValue(true)]
+		[DataMember(Order = 46), DefaultValue(true)]
 		public bool IsRecursiveCTEJoinWithConditionSupported { get; set; } = true;
 
 		#region Equality
@@ -374,6 +387,7 @@ namespace LinqToDB.SqlProvider
 				^ IsSkipSupported                                      .GetHashCode()
 				^ IsSkipSupportedIfTake                                .GetHashCode()
 				^ IsSubQueryTakeSupported                              .GetHashCode()
+				^ IsSubQuerySkipSupported                              .GetHashCode()
 				^ IsSubQueryColumnSupported                            .GetHashCode()
 				^ IsSubQueryOrderBySupported                           .GetHashCode()
 				^ IsCountSubQuerySupported                             .GetHashCode()
@@ -406,6 +420,7 @@ namespace LinqToDB.SqlProvider
 				^ IsProjectionBoolSupported                            .GetHashCode()
 				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
+				^ IsColumnSubqueryWithParentReferenceSupported         .GetHashCode()
 				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
@@ -421,6 +436,7 @@ namespace LinqToDB.SqlProvider
 				&& IsSkipSupported                                       == other.IsSkipSupported
 				&& IsSkipSupportedIfTake                                 == other.IsSkipSupportedIfTake
 				&& IsSubQueryTakeSupported                               == other.IsSubQueryTakeSupported
+				&& IsSubQuerySkipSupported                               == other.IsSubQuerySkipSupported
 				&& IsSubQueryColumnSupported                             == other.IsSubQueryColumnSupported
 				&& IsSubQueryOrderBySupported                            == other.IsSubQueryOrderBySupported
 				&& IsCountSubQuerySupported                              == other.IsCountSubQuerySupported
@@ -453,6 +469,7 @@ namespace LinqToDB.SqlProvider
 				&& IsProjectionBoolSupported                             == other.IsProjectionBoolSupported
 				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
+				&& IsColumnSubqueryWithParentReferenceSupported          == other.IsColumnSubqueryWithParentReferenceSupported
 				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                    == other.CustomFlags.Count

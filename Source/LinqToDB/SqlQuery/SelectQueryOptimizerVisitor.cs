@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.DataProvider;
+
 namespace LinqToDB.SqlQuery
 {
 	using Common;
@@ -62,6 +64,8 @@ namespace LinqToDB.SqlQuery
 			//
 			var result = _columnNestingCorrector.CorrectColumnNesting(root);
 
+			RemoveNotUsedColumns(_columnNestingCorrector.UsedColumns, result);
+
 			do
 			{
 				result = ProcessElement(result);
@@ -73,6 +77,25 @@ namespace LinqToDB.SqlQuery
 			} while (true);
 
 			return result;
+		}
+
+		static void RemoveNotUsedColumns(IReadOnlyList<SqlColumn> usedColumns, IQueryElement element)
+		{
+			element.Visit(usedColumns, static (uc, e) =>
+			{
+				if (e is SqlSelectClause select)
+				{
+					for (var i = select.Columns.Count - 1; i >= 0; i--)
+					{
+						var column = select.Columns[i];
+						if (!uc.Contains(column))
+						{
+							if (select.Columns.Count > 1 && !QueryHelper.IsAggregationOrWindowFunction(column.Expression))
+								select.Columns.RemoveAt(i);
+						}
+					}
+				}
+			});
 		}
 
 		public override void Cleanup()
@@ -89,6 +112,7 @@ namespace LinqToDB.SqlQuery
 			_applySelect       = default!;
 			_version           = default;
 			_isInRecursiveCte  = false;
+
 			_columnNestingCorrector.Cleanup();
 			_orderByOptimizer.Cleanup();
 		}
@@ -137,7 +161,7 @@ namespace LinqToDB.SqlQuery
 					{
 						isModified = true;
 					}
-
+					
 					if (MoveOuterJoinsToSubQuery(selectQuery))
 					{
 						isModified = true;
@@ -690,6 +714,9 @@ namespace LinqToDB.SqlQuery
 
 				if (skipValue != null || takeValue != null || sql.Select.IsDistinct)
 				{
+					if (!_flags.IsWindowFunctionsSupported)
+						return optimized;
+
 					var parameters = new List<ISqlExpression>();
 
 					var found   = new HashSet<ISqlExpression>();
@@ -1569,19 +1596,16 @@ namespace LinqToDB.SqlQuery
 			return expression;
 		}
 
-		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context, out bool byTake)
+		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context)
 		{
 			if (selectQuery.Select.TakeValue != null &&
 			    selectQuery.Select.TakeValue.TryEvaluateExpression(context, out var takeValue))
 			{
-				byTake = true;
 				if (takeValue is int intValue)
 				{
 					return intValue == 1;
 				}
 			}
-
-			byTake = false;
 
 			if (selectQuery.Select.Columns.Count == 1)
 			{
@@ -1660,34 +1684,63 @@ namespace LinqToDB.SqlQuery
 							evaluationContext ??= new EvaluationContext();
 
 							if (join.Table.Source is SelectQuery tsQuery &&
-							    tsQuery.Select.Columns.Count == 1        &&
-							    IsLimitedToOneRecord(tsQuery, evaluationContext, out var byTake))
+							    tsQuery.Select.Columns.Count > 0 &&
+							    IsLimitedToOneRecord(tsQuery, evaluationContext))
 							{
-								if (byTake && !_flags.IsSubQueryTakeSupported)
+								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, forColumn: true, _flags))
 									continue;
 
-								// where we can start analyzing that we can move join to subquery
-								var testedColumn = tsQuery.Select.Columns[0];
-
-								if (_flags.IsApplyJoinSupported && !IsUniqueUsage(sq, testedColumn))
+								if (tsQuery.Select.Columns.Count > 1 && (_flags.IsWindowFunctionsSupported || _flags.IsApplyJoinSupported))
 								{
-									QueryHelper.MoveDuplicateUsageToSubQuery(sq);
-									// will be processed in the next step
-									ti = -1;
-									break;
+									// provider can handle this query
+									continue;
 								}
 
-								if (testedColumn.Expression is SqlFunction function)
+								if (!_flags.IsSubqueryWithParentReferenceInJoinConditionSupported)
 								{
-									if (function.IsAggregate)
-									{
-										if (!_flags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
-											continue;
+									// for Oracle we cannot move to subquery
+									if (tsQuery.Select.HasModifier)
+										continue;
+								}
 
-										if (!_flags.IsCountSubQuerySupported)
-											continue;
+								var isValid = true;
+
+								foreach (var testedColumn in tsQuery.Select.Columns)
+								{
+									// where we can start analyzing that we can move join to subquery
+									
+									if (_flags.IsApplyJoinSupported && !IsUniqueUsage(sq, testedColumn))
+									{
+										QueryHelper.MoveDuplicateUsageToSubQuery(sq);
+										// will be processed in the next step
+										ti = -1;
+
+										isValid = false;
+
+										break;
+									}
+
+									if (testedColumn.Expression is SqlFunction function)
+									{
+										if (function.IsAggregate)
+										{
+											if (!_flags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
+											{
+												isValid = false;
+												break;
+											}
+
+											if (!_flags.IsCountSubQuerySupported)
+											{
+												isValid = false;
+												break;
+											}
+										}
 									}
 								}
+
+								if (!isValid)
+									continue;
 
 								// moving whole join to subquery
 
@@ -1696,7 +1749,27 @@ namespace LinqToDB.SqlQuery
 
 								// replacing column with subquery
 
-								NotifyReplaced(tsQuery, testedColumn);
+								for (var index = tsQuery.Select.Columns.Count - 1; index >= 0; index--)
+								{
+									var queryToReplace = tsQuery;
+									var testedColumn   = tsQuery.Select.Columns[index];
+
+									// cloning if there are many columns
+									if (index > 0)
+									{
+										queryToReplace = tsQuery.Clone();
+									}
+
+
+									if (queryToReplace.Select.Columns.Count > 1)
+									{
+										var sourceColumn = queryToReplace.Select.Columns[index];
+										queryToReplace.Select.Columns.Clear();
+										queryToReplace.Select.Columns.Add(sourceColumn);
+									}
+
+									NotifyReplaced(queryToReplace, testedColumn);
+								}
 							}
 						}
 					}

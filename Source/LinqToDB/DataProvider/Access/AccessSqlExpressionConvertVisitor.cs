@@ -135,26 +135,36 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override ISqlExpression ConvertConversion(SqlFunction func)
 		{
+			var expression = func.Parameters[2];
+			var funcName   = string.Empty;
+
 			switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
 			{
-				case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
+				case TypeCode.String   : funcName = "CStr";  break;
+				case TypeCode.Boolean  : funcName = "CBool"; break;
 				case TypeCode.DateTime :
 					if (IsDateDataType(func.Parameters[0], "Date"))
-						func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
+						funcName = "DateValue";
 					else if (IsTimeDataType(func.Parameters[0]))
-						func = new SqlFunction(func.SystemType, "TimeValue", func.Parameters[1]);
+						funcName = "TimeValue";
 					else
-						func = new SqlFunction(func.SystemType, "CDate", func.Parameters[1]);
+						funcName = "CDate";
 					break;
 
 				default:
 					if (func.SystemType == typeof(DateTime))
 						goto case TypeCode.DateTime;
 
-					return func.Parameters[2];
+					return expression;
 			}
 
-			return func;
+			if (!string.IsNullOrEmpty(funcName))
+			{
+				return new SqlFunction(func.SystemType, funcName, expression); 
+			}
+
+			return expression;
 		}
+
 	}
 }

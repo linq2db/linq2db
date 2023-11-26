@@ -77,7 +77,8 @@ namespace LinqToDB.SqlQuery
 
 		}
 
-		QueryNesting?       _parentQuery;
+		QueryNesting?   _parentQuery;
+		List<SqlColumn> _usedColumns = new();
 
 		public SqlQueryColumnNestingCorrector() : base(VisitMode.Modify)
 		{
@@ -86,8 +87,12 @@ namespace LinqToDB.SqlQuery
 		public override void Cleanup()
 		{
 			base.Cleanup();
+
 			_parentQuery = null;
+			_usedColumns.Clear();
 		}
+
+		public IReadOnlyList<SqlColumn> UsedColumns => _usedColumns;
 
 		public IQueryElement CorrectColumnNesting(IQueryElement element)
 		{
@@ -95,7 +100,7 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
-		IQueryElement ProcessNesting(ISqlTableSource elementSource, ISqlExpression element)
+		ISqlExpression ProcessNesting(ISqlTableSource elementSource, ISqlExpression element)
 		{
 			if (_parentQuery == null)
 				return element;
@@ -135,6 +140,11 @@ namespace LinqToDB.SqlQuery
 			if (element.Table != null)
 			{
 				newElement = ProcessNesting(element.Table, element);
+
+				if (!ReferenceEquals(newElement, element))
+				{
+					AppendColumns((ISqlExpression)newElement);
+				}
 			}
 
 			return newElement;
@@ -142,6 +152,11 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
 		{
+			if (!_usedColumns.Contains(element))
+			{
+				_usedColumns.Add(element);
+			}
+
 			var newElement = base.VisitSqlColumnReference(element);
 
 			if (!ReferenceEquals(newElement, element))
@@ -150,14 +165,53 @@ namespace LinqToDB.SqlQuery
 			if (element.Parent != null)
 			{
 				newElement = ProcessNesting(element.Parent, element);
+
+				if (!ReferenceEquals(newElement, element))
+				{
+					AppendColumns((ISqlExpression)newElement);
+				}
 			}
 
 			return newElement;
 		}
 
+		void AppendColumns(ISqlExpression element)
+		{
+			var current = element;
+
+			while (current is SqlColumn clmn)
+			{
+				if (!_usedColumns.Contains(clmn))
+				{
+					_usedColumns.Add(clmn);
+				}
+
+				current = clmn.Expression;
+			}
+		}
+
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var saveQuery = _parentQuery;
+
+			if (_parentQuery == null || selectQuery.HasSetOperators)
+			{
+				foreach (var c in selectQuery.Select.Columns)
+				{
+					AppendColumns(c);
+				}
+			}
+
+			if (selectQuery.HasSetOperators)
+			{
+				foreach (var so in selectQuery.SetOperators)
+				{
+					foreach (var c in so.SelectQuery.Select.Columns)
+					{
+						AppendColumns(c);
+					}
+				}
+			}
 
 			_parentQuery = new QueryNesting(saveQuery, selectQuery);
 

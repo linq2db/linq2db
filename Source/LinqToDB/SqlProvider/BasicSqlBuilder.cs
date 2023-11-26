@@ -2224,7 +2224,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildHavingClause(NullabilityContext nullability, SelectQuery selectQuery)
 		{
-			var condition = ConvertElement(selectQuery.Where.Having.SearchCondition, nullability);
+			var condition = ConvertElement(selectQuery.Having.SearchCondition, nullability);
 			if (condition.Conditions.Count == 0)
 				return;
 

@@ -18,19 +18,21 @@ namespace LinqToDB.DataProvider.Access
 	{
 		public AccessOleDbDataProvider() : base(ProviderName.Access, MappingSchemaInstance, OleDbProviderAdapter.GetInstance())
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter           = false;
-			SqlProviderFlags.IsSkipSupported                  = false;
-			SqlProviderFlags.IsCountSubQuerySupported         = true;
-			SqlProviderFlags.IsInsertOrUpdateSupported        = false;
-			SqlProviderFlags.TakeHintsSupported               = TakeHints.Percent;
-			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsInnerJoinAsCrossSupported      = false;
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
-			SqlProviderFlags.IsParameterOrderDependent        = true;
-			SqlProviderFlags.IsUpdateFromSupported            = false;
-			SqlProviderFlags.IsWindowFunctionsSupported       = false;
-			SqlProviderFlags.DefaultMultiQueryIsolationLevel  = IsolationLevel.Unspecified;
+			SqlProviderFlags.AcceptsTakeAsParameter                       = false;
+			SqlProviderFlags.IsSkipSupported                              = false;
+			SqlProviderFlags.IsCountSubQuerySupported                     = true;
+			SqlProviderFlags.IsInsertOrUpdateSupported                    = false;
+			SqlProviderFlags.IsSubQuerySkipSupported                      = false;
+			SqlProviderFlags.TakeHintsSupported                           = TakeHints.Percent;
+			SqlProviderFlags.IsCrossJoinSupported                         = false;
+			SqlProviderFlags.IsInnerJoinAsCrossSupported                  = false;
+			SqlProviderFlags.IsDistinctOrderBySupported                   = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported             = false;
+			SqlProviderFlags.IsParameterOrderDependent                    = true;
+			SqlProviderFlags.IsUpdateFromSupported                        = false;
+			SqlProviderFlags.IsWindowFunctionsSupported                   = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel              = IsolationLevel.Unspecified;
 
 			SetCharField            ("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("DBTYPE_WCHAR", DataTools.GetCharExpression);
