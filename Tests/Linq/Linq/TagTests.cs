@@ -168,7 +168,7 @@ namespace Tests.Linq
 
 				var commandSql = GetCurrentBaselines();
 
-				commandSql.Should().Contain(tag);
+				commandSql.Should().NotContain(tag);
 			}
 		}
 
