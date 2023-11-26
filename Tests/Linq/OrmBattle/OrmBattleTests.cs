@@ -650,7 +650,6 @@ namespace Tests.OrmBattle
 		}
 
 		[Test]
-		[ActiveIssue("Bad database data", Configuration = TestProvName.AllSQLiteNorthwind)]
 		public void OrderBySelectManyTest([NorthwindDataContext] string context)
 		{
 			Setup(context);
@@ -1438,7 +1437,7 @@ namespace Tests.OrmBattle
 			}
 		}
 
-		[Test, ActiveIssue(573, Details = "'k.CompanyName' cannot be converted to SQL.")]
+		[Test]
 		public void ComplexTest2([NorthwindDataContext] string context)
 		{
 			Setup(context);
