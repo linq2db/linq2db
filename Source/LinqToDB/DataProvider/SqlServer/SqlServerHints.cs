@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public static class TemporalTable
+		internal static class TemporalTable
 		{
 			public const string All         = "ALL";
 			public const string AsOf        = "AS OF";
@@ -980,6 +980,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return table.TemporalTableHint(TemporalTable.All);
 		}
+
 		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> TemporalTableAllImpl<TSource>()
 			where TSource : notnull
 		{
