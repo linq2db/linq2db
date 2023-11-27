@@ -970,6 +970,19 @@ namespace LinqToDB.SqlQuery
 				return IsColumnExpressionValid(parentQuery, subQuery, column, underlying);
 			}
 
+			if (underlying is SqlBinaryExpression binary)
+			{
+				if (QueryHelper.IsConstantFast(binary.Expr1))
+				{
+					return IsColumnExpressionValid(parentQuery, subQuery, column, binary.Expr2);
+				}
+
+				if (QueryHelper.IsConstantFast(binary.Expr2))
+				{
+					return IsColumnExpressionValid(parentQuery, subQuery, column, binary.Expr1);
+				}
+			}
+
 			// check that column has at least one reference
 			//
 
