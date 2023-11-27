@@ -303,7 +303,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MutiplySelect12([DataSources(false)] string context)
+		public void MutiplySelect12([DataSources(false, TestProvName.AllAccess, TestProvName.AllDB2)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

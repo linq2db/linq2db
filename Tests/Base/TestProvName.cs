@@ -210,6 +210,10 @@ namespace Tests
 		public const string AllOracle              = $"{AllOracle11},{AllOracle12Plus}";
 		#endregion
 
+		#region DB2
+		public const string AllDB2 = $"{ProviderName.DB2},{ProviderName.DB2LUW},{ProviderName.DB2zOS}";
+		#endregion
+
 		/// <summary>
 		/// Fake provider, which doesn't execute any real queries. Could be used for tests, that shouldn't be affected
 		/// by real database access.
