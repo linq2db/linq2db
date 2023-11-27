@@ -1030,9 +1030,22 @@ namespace LinqToDB.SqlQuery
 			return found < 2;
 		}
 
+		static bool IsSimpleForNoTablesMove(SelectQuery selectQuery)
+		{
+			var isSimple = selectQuery.Where.IsEmpty
+			               && selectQuery.GroupBy.IsEmpty
+			               && selectQuery.Having.IsEmpty
+			               && selectQuery.OrderBy.IsEmpty && selectQuery.From.Tables.Count == 1
+			               && selectQuery.From.Tables[0].Joins.Count                       == 0;
+			return isSimple;
+		}
+
 		bool MoveSubQueryUp(SelectQuery selectQuery, SqlTableSource tableSource)
 		{
 			if (tableSource.Source is not SelectQuery subQuery)
+				return false;
+
+			if (subQuery.DoNotRemove)
 				return false;
 
 			if (subQuery.From.Tables.Count > 1)
@@ -1040,12 +1053,9 @@ namespace LinqToDB.SqlQuery
 
 			if (subQuery.From.Tables.Count == 0)
 			{
-				if (!selectQuery.IsSimple)
+				if (!IsSimpleForNoTablesMove(selectQuery))
 					return false;
 			}
-
-			if (subQuery.DoNotRemove)
-				return false;
 
 			// // named sub-query cannot be removed
 			if (subQuery.QueryName != null
@@ -1478,18 +1488,24 @@ namespace LinqToDB.SqlQuery
 		{
 			var replaced = false;
 
+			if (selectQuery.SourceID == 26)
+			{
+
+			}
+
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
 				if (MoveSubQueryUp(selectQuery, tableSource))
 				{
-					EnsureReferencesCorrected(selectQuery);
 					replaced = true;
 
-					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0 && selectQuery.IsSimple)
+					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0 && IsSimpleForNoTablesMove(selectQuery))
 					{
 						selectQuery.From.Tables.RemoveAt(i);
 					}
+
+					EnsureReferencesCorrected(selectQuery);
 
 					--i; // repeat again
 				}

@@ -376,7 +376,10 @@ namespace Tests.Linq
 					from c in cg.Distinct()
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsApplyJoinSupported && !db.SqlProviderFlags.IsWindowFunctionsSupported)
+					Assert.Throws<LinqException>(() => AreEqual(exp, act));
+				else
+					AreEqual(exp, act);
 			}
 		}
 	}
