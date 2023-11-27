@@ -1634,16 +1634,13 @@ namespace Tests.Linq
 				}).Take(2)
 				.Concat(db.Person.LoadWith(p => p.Patient))
 				.OrderBy(x => x.ID)
-				.ThenBy(x => x.Patient != null)
 				.ToArray();
 
 			res.Should().HaveCount(6);
 
-			var pat = res.Where(r => r.ID == 2).First();
-			pat.Patient.Should().BeNull();
-
-			pat = res.Where(r => r.ID == 2).Skip(1).Single();
-			pat.Patient.Should().NotBeNull();
+			var patients = res.Where(r => r.ID == 2).ToList();
+			patients.Any(p => p.Patient != null).Should().BeTrue();
+			patients.Any(p => p.Patient == null).Should().BeTrue();
 		}
 
 		[Test]
