@@ -1237,18 +1237,23 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByAggregate3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(
-						from p in Parent
-						group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
-					).ToList().First(g => !g.Key)
-					,
-					(
-						from p in db.Parent
-						group p by p.Children.Average(c => c.ParentID) > 3
-					).ToList().First(g => !g.Key));
+			using var db = GetDataContext(context);
+
+			var query = 
+				from p in db.Parent
+				group p by p.Children.Average(c => c.ParentID) > 3
+				into g
+				orderby g.Key
+				select g.Key;
+
+			var expected =
+				from p in Parent
+				group p by p.Children.Count > 0 && p.Children.Average(c => c.ParentID) > 3
+				into g
+				orderby g.Key
+				select g.Key;
+
+			AreEqual(expected, query);
 		}
 
 		[Test]
