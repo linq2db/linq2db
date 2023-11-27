@@ -124,7 +124,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void Concat5([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void Concat5([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -139,7 +139,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
-		public void Concat501([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void Concat501([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -153,7 +153,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Concat502([DataSources(ProviderName.DB2, TestProvName.AllInformix)] string context)
+		public void Concat502([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1020,7 +1020,6 @@ namespace Tests.Linq
 
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void TestConcatWithParameterProjection([DataSources] string context)
 		{

@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Access
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
+	using Common;
 
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder
 	{
@@ -66,7 +67,7 @@ namespace LinqToDB.DataProvider.Access
 				{
 					if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
 					{
-						if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SqlSearchCondition sc)
+						if (func.Name == "IIF" && func.Parameters.Length == 3 && func.Parameters[0] is SqlSearchCondition sc)
 						{
 							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
 							{
@@ -181,6 +182,32 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildBinaryExpression(nullability, expr);
 		}
 
+		protected override void BuildColumnExpression(NullabilityContext nullability, SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		{
+			if (expr is SqlValue { Value: null } sqlValue)
+			{
+				// NULL value typization. Critical for UNION, UNION ALL queries.
+				//
+				var type = sqlValue.ValueType.SystemType.ToNullableUnderlying();
+
+				object? defaultValue;
+				if (type == typeof(string))
+					defaultValue = "";
+				else
+					defaultValue = DefaultValue.GetValue(type);
+
+				if (defaultValue != null)
+				{
+					StringBuilder.Append("IIF(False, ");
+					BuildValue(new SqlDataType(sqlValue.ValueType), defaultValue);
+					StringBuilder.Append(", NULL)");
+					return;
+				}
+			}
+
+			base.BuildColumnExpression(nullability, selectQuery, expr, alias, ref addAlias);
+		}
+
 		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr)
 		{
 			StringBuilder.Append("IIF(");
@@ -216,7 +243,7 @@ namespace LinqToDB.DataProvider.Access
 
 					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
 
-					func = new SqlFunction(func.SystemType, "Iif", sc, func.Parameters[1], func.Parameters[0]);
+					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0]);
 
 					break;
 
@@ -238,7 +265,7 @@ namespace LinqToDB.DataProvider.Access
 			if (len < 2)
 				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
 
-			return new SqlFunction(systemType, "Iif",
+			return new SqlFunction(systemType, "IIF",
 				parameters[start],
 				parameters[start + 1],
 				len switch
