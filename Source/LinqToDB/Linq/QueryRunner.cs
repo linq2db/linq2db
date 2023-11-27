@@ -365,7 +365,16 @@ namespace LinqToDB.Linq
 
 			if (select.SkipValue != null && !query.SqlProviderFlags.GetIsSkipSupportedFlag(select.TakeValue, select.SkipValue))
 			{
+				var newTakeValue = select.SkipValue;
+				if (select.TakeValue != null)
+				{
+					newTakeValue = new SqlBinaryExpression(typeof(int), newTakeValue, "+", select.TakeValue);
+				}
+
 				var skipValue = select.SkipValue;
+
+				select.TakeValue = newTakeValue;
+				select.SkipValue = null;
 
 				var q = queryFunc;
 
