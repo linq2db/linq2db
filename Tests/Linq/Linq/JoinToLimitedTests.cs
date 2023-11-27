@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Linq;
 
@@ -25,7 +27,10 @@ namespace Tests.Linq
 					from c in cg.DefaultIfEmpty().Take(1)
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -42,7 +47,10 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).DefaultIfEmpty().Take(1)
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -99,7 +107,10 @@ namespace Tests.Linq
 					from c in cg.Take(1).DefaultIfEmpty()
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -118,7 +129,10 @@ namespace Tests.Linq
 					from c in cg.DefaultIfEmpty().Distinct()
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -135,7 +149,10 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).DefaultIfEmpty().Distinct()
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -190,7 +207,10 @@ namespace Tests.Linq
 					from c in cg.Distinct().DefaultIfEmpty()
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -209,7 +229,10 @@ namespace Tests.Linq
 					from c in cg.Take(1)
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -226,7 +249,10 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).Take(1)
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -281,7 +307,10 @@ namespace Tests.Linq
 					from c in cg.Take(1)
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -300,7 +329,10 @@ namespace Tests.Linq
 					from c in cg.Distinct()
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
@@ -317,7 +349,10 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).Distinct()
 					select new { o, c };
 
-				AreEqual(exp, act);
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+				else
+					AreEqual(exp, act);
 			}
 		}
 
