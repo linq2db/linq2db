@@ -613,6 +613,45 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			List<SqlGenericConstructorExpression.Assignment>? newAssignments = null;
+
+			// Handle storage redefining
+			for (var index = 0; index < constructorExpression.Assignments.Count; index++)
+			{
+				var a  = constructorExpression.Assignments[index];
+				var cd = entityDescriptor.FindColumnDescriptor(a.MemberInfo);
+				if (cd != null)
+				{
+					if (cd.StorageInfo != a.MemberInfo)
+					{
+						if (newAssignments == null)
+						{
+							newAssignments = new(constructorExpression.Assignments.Count);
+							newAssignments.AddRange(constructorExpression.Assignments.Take(index));
+						}
+
+						var expression = a.Expression;
+						var memberType = cd.StorageInfo.GetMemberType();
+
+						if (expression.Type != memberType)
+						{
+							if (expression is SqlPlaceholderExpression placeholder)
+								expression = placeholder.WithType(memberType);
+							else
+								expression = Expression.Convert(expression, memberType);
+						}
+
+						var newAssignment = new SqlGenericConstructorExpression.Assignment(cd.StorageInfo, expression, a.IsMandatory, a.IsLoaded);
+						newAssignments.Add(newAssignment);
+					}
+				}
+
+				newAssignments?.Add(a);
+			}
+
+			if (newAssignments != null)
+				constructorExpression = constructorExpression.ReplaceAssignments(newAssignments);
+
 			var constructed = TryConstructObject(MappingSchema, constructorExpression, constructType);
 
 			if (constructed == null)

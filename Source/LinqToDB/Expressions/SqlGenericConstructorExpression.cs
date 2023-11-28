@@ -41,6 +41,14 @@ namespace LinqToDB.Expressions
 				return new Assignment(MemberInfo, expression, IsMandatory, IsLoaded);
 			}
 
+			public Assignment WithMember(MemberInfo member)
+			{
+				if (MemberInfo == member)
+					return this;
+
+				return new Assignment(member, Expression, IsMandatory, IsLoaded);
+			}
+
 			public override string ToString()
 			{
 				return $"{MemberInfo.Name} = {Expression}";
