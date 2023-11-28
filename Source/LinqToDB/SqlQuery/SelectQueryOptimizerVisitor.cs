@@ -1467,14 +1467,8 @@ namespace LinqToDB.SqlQuery
 			if (element.Predicate is SqlSearchCondition sc && sc.Conditions.Count == 1)
 			{
 				var singleCondition = sc.Conditions[0];
-				if (element.IsNot == singleCondition.IsNot)
-				{
-					element.Predicate = singleCondition.Predicate;
-				}
-				else
-				{
-					element = new SqlCondition(true, singleCondition.Predicate, element.IsOr);
-				}
+
+				element = new SqlCondition(element.IsNot != singleCondition.IsNot, singleCondition.Predicate, element.IsOr);
 			}
 
 			if (element is { IsNot: true, Predicate: IInvertibleElement invertible } && invertible.CanInvert())
