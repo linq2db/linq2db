@@ -14,14 +14,15 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("DefaultIfEmpty");
 		}
 
-		static SqlPlaceholderExpression? PrepareNoNullPlaceholder(ExpressionBuilder builder, IBuildContext sequence, IBuildContext forContext, bool allowNullField)
+		static SqlPlaceholderExpression? PrepareNoNullPlaceholder(ExpressionBuilder builder, IBuildContext sequence, IBuildContext forContext, IBuildContext nullabilitySequence, bool allowNullField)
 		{
 			var sequenceRef  = new ContextRefExpression(sequence.ElementType, sequence);
 			var translated   = builder.BuildSqlExpression(sequence, sequenceRef, ProjectFlags.SQL, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(translated);
 
+			var nullability = NullabilityContext.GetContext(nullabilitySequence.SelectQuery);
 			var notNull = placeholders
-				.FirstOrDefault(p => !p.Sql.CanBeNullable(NullabilityContext.NonQuery));
+				.FirstOrDefault(p => !p.Sql.CanBeNullable(nullability));
 
 			if (notNull == null)
 			{
@@ -82,7 +83,7 @@ namespace LinqToDB.Linq.Builder
 					defaultValueContext.SelectQuery.Select.AddNew(new SqlValue(1));
 				}
 
-				var notNull = PrepareNoNullPlaceholder(builder, sequence, subqueryContext, true)!;
+				var notNull = PrepareNoNullPlaceholder(builder, sequence, subqueryContext, sequence, true)!;
 
 				var notNullNullable = notNull.MakeNullable();
 
@@ -108,21 +109,23 @@ namespace LinqToDB.Linq.Builder
 				if (sequence == null)
 					return null;
 
-				return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue, true);
+				return new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, defaultValue, true);
 			}
 		}
 
 		public sealed class DefaultIfEmptyContext : SequenceContextBase
 		{
-			readonly bool _allowNullField;
+			readonly IBuildContext _nullabilitySequence;
+			readonly bool          _allowNullField;
 
 			SqlPlaceholderExpression? _notNullPlaceholder;
 
-			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, Expression? defaultValue, bool allowNullField)
+			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, IBuildContext nullabilitySequence, Expression? defaultValue, bool allowNullField)
 				: base(parent, sequence, null)
 			{
-				_allowNullField = allowNullField;
-				DefaultValue    = defaultValue;
+				_nullabilitySequence = nullabilitySequence;
+				_allowNullField      = allowNullField;
+				DefaultValue         = defaultValue;
 			}
 
 			public Expression? DefaultValue { get; }
@@ -156,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (_notNullPlaceholder == null)
 					{
-						_notNullPlaceholder = PrepareNoNullPlaceholder(Builder, Sequence, Parent ?? this, true)!;
+						_notNullPlaceholder = PrepareNoNullPlaceholder(Builder, Sequence, Parent ?? this, _nullabilitySequence, true)!;
 						if (!_notNullPlaceholder.Type.IsNullable())
 							_notNullPlaceholder = _notNullPlaceholder.MakeNullable();
 					}
@@ -201,7 +204,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (_notNullPlaceholder == null)
 					{
-						_notNullPlaceholder = PrepareNoNullPlaceholder(Builder, Sequence, this, _allowNullField);
+						_notNullPlaceholder = PrepareNoNullPlaceholder(Builder, Sequence, this, _nullabilitySequence, _allowNullField);
 					}
 
 					if (_notNullPlaceholder != null)
@@ -240,7 +243,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new DefaultIfEmptyContext(null, context.CloneContext(Sequence), context.CloneExpression(DefaultValue), _allowNullField);
+				return new DefaultIfEmptyContext(null, context.CloneContext(Sequence), context.CloneContext(_nullabilitySequence), context.CloneExpression(DefaultValue), _allowNullField);
 			}
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)

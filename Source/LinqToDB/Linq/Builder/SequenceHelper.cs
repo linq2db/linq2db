@@ -758,32 +758,6 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
-		public static Expression MoveAllToDefaultIfEmptyContext(Expression expression)
-		{
-			if (expression is ContextRefExpression)
-				return expression;
-
-			var newExpression = expression.Transform((expression), (ctx, e) =>
-			{
-				if (e.NodeType == ExpressionType.Extension)
-				{
-					if (e is ContextRefExpression contextRef)
-					{
-						if (contextRef.BuildContext is DefaultIfEmptyBuilder.DefaultIfEmptyContext)
-						{
-							return e;
-						}
-
-						return contextRef.WithContext(new DefaultIfEmptyBuilder.DefaultIfEmptyContext(null, contextRef.BuildContext, null, false));
-					}
-				}
-
-				return e;
-			});
-
-			return newExpression;
-		}
-
 		public static Expression StampNullability(Expression expression, SelectQuery query)
 		{
 			var nullability = new NullabilityContext(query);

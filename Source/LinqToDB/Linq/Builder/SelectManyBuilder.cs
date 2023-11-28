@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 			//
 			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
 			{
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, null, false);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, collection, null, false);
 			}
 
 			projected = builder.BuildSqlExpression(collection,
