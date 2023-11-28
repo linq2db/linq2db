@@ -19,14 +19,21 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext?   CteInnerQueryContext { get; private set; }
 		public SubQueryContext? SubqueryContext      { get; private set; }
-		public CteClause        CteClause            { get; }
+		public CteClause        CteClause            { get; private set; }
 
 		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
-			: base(builder, cteClause.ObjectType, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
+			: this(builder, cteClause.ObjectType, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
 		{
 			CteInnerQueryContext = cteInnerQueryContext;
 			CteClause            = cteClause;
 			CteExpression        = cteExpression;
+		}
+
+		CteContext(ExpressionBuilder builder, Type objectType, SelectQuery selectQuery)
+			: base(builder, objectType, selectQuery)
+		{
+			CteClause     = default!;
+			CteExpression = default!;
 		}
 
 		Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
@@ -43,9 +50,13 @@ namespace LinqToDB.Linq.Builder
 			if (_isRecursiveCall)
 				return;
 
+			var saveRecursiveBuild = Builder.IsRecursiveBuild;
+
+			Builder.IsRecursiveBuild = true;
+
 			var cteBuildInfo = new BuildInfo((IBuildContext?)null, Expression!, new SelectQuery());
 
-			_isRecursiveCall = true;
+			_isRecursiveCall         = true;
 
 			var cteInnerQueryContext = Builder.BuildSequence(cteBuildInfo);
 
@@ -69,6 +80,8 @@ namespace LinqToDB.Linq.Builder
 
 				PostProcessExpression(all, cteExpr);
 			}
+
+			Builder.IsRecursiveBuild = saveRecursiveBuild;
 		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -175,10 +188,14 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			var newContext = new CteContext(Builder, context.CloneContext(CteInnerQueryContext),
-				context.CloneElement(CteClause), context.CloneExpression(Expression!));
+			var newContext = new CteContext(Builder, ElementType, SelectQuery);
 
-			newContext.SubqueryContext = context.CloneContext(SubqueryContext);
+			context.RegisterCloned(this, newContext);
+
+			newContext.SubqueryContext      = context.CloneContext(SubqueryContext);
+			newContext.CteInnerQueryContext = context.CloneContext(CteInnerQueryContext);
+			newContext.CteClause            = context.CloneElement(CteClause);
+			newContext.CteExpression        = context.CloneExpression(CteExpression);
 
 			return newContext;
 		}

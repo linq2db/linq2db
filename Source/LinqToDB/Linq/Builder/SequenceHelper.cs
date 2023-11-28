@@ -888,6 +888,10 @@ namespace LinqToDB.Linq.Builder
 		/// <returns></returns>
 		public static bool IsSupportedSubqueryForModifier(IBuildContext parent, IBuildContext context)
 		{
+			// No check during recursion. Cloning may fail
+			if (parent.Builder.IsRecursiveBuild)
+				return true;
+
 			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
 			{
 				if (!QueryHelper.IsDependsOnOuterSources(context.SelectQuery))

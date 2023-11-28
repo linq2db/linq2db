@@ -11,25 +11,54 @@ namespace LinqToDB.Linq.Builder
 
 	internal sealed class CteTableContext: BuildContextBase, ITableContext
 	{
-		public override MappingSchema MappingSchema => CteContext.MappingSchema;
+		readonly Type          _objectType;
 
-		public CteContext  CteContext { get; }
-		public SqlCteTable CteTable   { get; }
+		public override  MappingSchema MappingSchema => CteContext.MappingSchema;
 
-		public Type          ObjectType   => CteTable.ObjectType;
+		public CteContext  CteContext { get; set; }
+
+		public SqlCteTable CteTable
+		{
+			get
+			{
+				if (_cteTable == null!)
+				{
+					if (CteContext != null!)
+						_cteTable = new SqlCteTable(CteContext.CteClause, ObjectType);
+					else
+						throw new InvalidOperationException();
+				}
+
+				return _cteTable!;
+			}
+			set => _cteTable = value;
+		}
+
+		public Type          ObjectType   => _objectType;
 		public SqlTable      SqlTable     => CteTable;
 		public LoadWithInfo  LoadWithRoot { get; set; } = new();
 		public MemberInfo[]? LoadWithPath { get; set; }
 
 		public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest)
-			: base(builder, objectType, selectQuery)
+			: this(builder, parent, objectType, selectQuery)
 		{
-			Parent     = parent;
+			_objectType = objectType;
+			Parent      = parent;
+
 			CteContext = cteContext;
-			CteTable   = new SqlCteTable(CteContext.CteClause, objectType);
+			CteTable   = new SqlCteTable(CteContext.CteClause, _objectType);
 
 			if (!isTest)
 				SelectQuery.From.Table(CteTable);
+		}
+
+		CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery)
+			: base(builder, objectType, selectQuery)
+		{
+			_objectType = objectType;
+			Parent      = parent;
+			CteTable    = default!;
+			CteContext  = default!;
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)
@@ -54,6 +83,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		Dictionary<Expression, SqlPlaceholderExpression> _fieldsMap = new (ExpressionEqualityComparer.Instance);
+		SqlCteTable?                                     _cteTable;
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
@@ -151,7 +181,9 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			var newContext = new CteTableContext(Builder, Parent, ObjectType, context.CloneElement(SelectQuery), context.CloneContext(CteContext), false);
+			var newContext = new CteTableContext(Builder, Parent, ObjectType, context.CloneElement(SelectQuery));
+			context.RegisterCloned(this, newContext);
+			newContext.CteContext = context.CloneContext(CteContext);
 			return newContext;
 		}
 

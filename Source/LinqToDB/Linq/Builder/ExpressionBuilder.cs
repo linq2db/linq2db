@@ -217,6 +217,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		/// <summary>
+		/// Used internally to avoid RecursiveCTE build failing
+		/// </summary>
+		internal bool IsRecursiveBuild { get; set; }
+
+		/// <summary>
 		/// Contains information from which expression sequence were built. Used for Eager Loading.
 		/// </summary>
 		Dictionary<IBuildContext, Expression> _sequenceExpressions = new();
