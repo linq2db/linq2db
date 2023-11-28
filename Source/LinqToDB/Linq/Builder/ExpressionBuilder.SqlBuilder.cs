@@ -1857,55 +1857,98 @@ namespace LinqToDB.Linq.Builder
 				return CreatePlaceholder(context, searchCondition, GetOriginalExpression());
 			}
 
-			Expression GenerateObjectComparison(SqlGenericConstructorExpression genericConstructor, Expression paramExpr)
+			Expression GeneratePathComparison(Expression leftOriginal, Expression leftParsed, Expression rightOriginal, Expression rightParsed)
 			{
-				var searchCondition = new SqlSearchCondition();
+				var predicateExpr = GeneratePredicate(leftOriginal, leftParsed, rightOriginal, rightParsed);
+				if (predicateExpr == null)
+					return GetOriginalExpression();
 
-				Expression? errorExpression = null;
-				if (!GenerateObjectComparisonRecursive(searchCondition, genericConstructor, paramExpr, ref errorExpression))
-				{
-					return errorExpression ?? throw new InvalidOperationException();
-				}
+				var converted = ConvertToSqlExpr(context, predicateExpr, flags);
+				if (converted is not SqlPlaceholderExpression)
+					converted = GetOriginalExpression();
 
-				return CreatePlaceholder(context, searchCondition, GetOriginalExpression());
+				return converted;
 			}
 
-			bool GenerateObjectComparisonRecursive(SqlSearchCondition searchCondition, SqlGenericConstructorExpression genericConstructor, Expression paramExpr, ref Expression? errorExpression)
+			Expression? GeneratePredicate(Expression leftOriginal, Expression leftParsed, Expression rightOriginal, Expression rightParsed)
 			{
-				foreach (var assignment in genericConstructor.Assignments)
+				Expression? predicateExpr = null;
+
+				if (leftParsed is SqlGenericConstructorExpression genericLeft)
 				{
-					var accessExpression = Expression.MakeMemberAccess(paramExpr, assignment.MemberInfo);
-
-					if (assignment.Expression is SqlGenericConstructorExpression subGeneric)
-					{
-						if (!GenerateObjectComparisonRecursive(searchCondition, subGeneric, accessExpression,
-								ref errorExpression))
-							return false;
-					}
-					else if (assignment.Expression is SqlPlaceholderExpression placeholder)
-					{
-						var paramSql = ConvertToSql(context, accessExpression,
-							columnDescriptor: QueryHelper.GetColumnDescriptor(placeholder.Sql));
-
-						var predicate =
-							new SqlPredicate.ExprExpr(
-								placeholder.Sql,
-								nodeType == ExpressionType.Equal ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual,
-								paramSql, Configuration.Linq.CompareNullsAsValues ? true : null);
-
-						searchCondition.Conditions.Add(new SqlCondition(false, predicate, nodeType == ExpressionType.NotEqual));
-					}
-					else
-					{
-						errorExpression = accessExpression;
-						return false;
-						/*throw new InvalidOperationException(
-							$"Expression '{assignment.Expression}' cannot be used for comparison.");*/
-					}
-
+					predicateExpr = BuildPredicateExpression(genericLeft, null, rightOriginal);
 				}
 
-				return true;
+				if (predicateExpr != null)
+					return predicateExpr;
+
+				if (rightParsed is SqlGenericConstructorExpression genericRight)
+				{
+					predicateExpr = BuildPredicateExpression(genericRight, null, leftOriginal);
+				}
+
+				if (predicateExpr != null)
+					return predicateExpr;
+
+				if (leftParsed is ConditionalExpression condLeft)
+				{
+					if (condLeft.IfTrue is SqlGenericConstructorExpression genericTrue)
+					{
+						predicateExpr = BuildPredicateExpression(genericTrue, leftOriginal, rightOriginal);
+					}
+					else if (condLeft.IfFalse is SqlGenericConstructorExpression genericFalse)
+					{
+						predicateExpr = BuildPredicateExpression(genericFalse, leftOriginal, rightOriginal);
+					}
+
+					if (predicateExpr == null)
+						predicateExpr = GeneratePredicate(leftOriginal, condLeft.IfTrue, rightOriginal, rightParsed);
+					if (predicateExpr == null)
+						predicateExpr = GeneratePredicate(leftOriginal, condLeft.IfFalse, rightOriginal, rightParsed);
+				}
+
+				if (predicateExpr != null)
+					return predicateExpr;
+
+				if (rightParsed is ConditionalExpression condRight)
+				{
+					if (condRight.IfTrue is SqlGenericConstructorExpression genericTrue)
+					{
+						predicateExpr = BuildPredicateExpression(genericTrue, leftOriginal, rightOriginal);
+					}
+					else if (condRight.IfFalse is SqlGenericConstructorExpression genericFalse)
+					{
+						predicateExpr = BuildPredicateExpression(genericFalse, leftOriginal, rightOriginal);
+					}
+
+					if (predicateExpr == null)
+						predicateExpr = GeneratePredicate(leftOriginal, leftParsed, condRight.IfTrue, rightParsed);
+					if (predicateExpr == null)
+						predicateExpr = GeneratePredicate(leftOriginal, leftParsed, condRight.IfFalse, rightParsed);
+				}
+
+				if (predicateExpr != null)
+					return predicateExpr;
+
+				return predicateExpr;
+			}
+
+			Expression? BuildPredicateExpression(SqlGenericConstructorExpression genericConstructor, Expression? rootLeft, Expression rootRight)
+			{
+				if (genericConstructor.Assignments.Count == 0)
+					return null;
+
+				var operations = genericConstructor.Assignments
+					.Select(a => Expression.Equal(
+						rootLeft == null ? a.Expression : Expression.MakeMemberAccess(rootLeft, a.MemberInfo),
+						Expression.MakeMemberAccess(rootRight, a.MemberInfo))
+					);
+
+				var result = (Expression)operations.Aggregate(Expression.AndAlso);
+				if (nodeType == ExpressionType.NotEqual)
+					result = Expression.Not(result);
+
+				return result;
 			}
 
 			Expression GenerateConstructorComparison(SqlGenericConstructorExpression leftConstructor, SqlGenericConstructorExpression rightConstructor)
@@ -2074,19 +2117,6 @@ namespace LinqToDB.Linq.Builder
 					leftExpr  = ParseGenericConstructor(leftExpr, flags, columnDescriptor, true);
 					rightExpr = ParseGenericConstructor(rightExpr, flags, columnDescriptor, true);
 
-					// Handle case when one of the expressions can be parametrized
-					//
-					if (leftExpr is SqlGenericConstructorExpression leftGenericForParam)
-					{
-						if (rightExpr is not SqlGenericConstructorExpression && CanBeCompiled(rightExpr, false))
-							return GenerateObjectComparison(leftGenericForParam, rightExpr);
-					}
-					else if (rightExpr is SqlGenericConstructorExpression rightGenericForParam)
-					{
-						if (CanBeCompiled(leftExpr, false))
-							return GenerateObjectComparison(rightGenericForParam, leftExpr);
-					}
-
 					if (leftExpr is SqlGenericConstructorExpression leftGenericConstructor &&
 						rightExpr is SqlGenericConstructorExpression rightGenericConstructor)
 					{
@@ -2164,7 +2194,11 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (l == null || r == null)
-						return GetOriginalExpression();
+					{
+						var pathComparison = GeneratePathComparison(left, leftExpr, right, rightExpr);
+
+						return pathComparison;
+					}
 
 					break;
 			}
