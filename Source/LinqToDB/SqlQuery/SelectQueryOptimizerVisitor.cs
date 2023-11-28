@@ -815,8 +815,10 @@ namespace LinqToDB.SqlQuery
 				// add join conditions
 				foreach (var join in sql.From.Tables.SelectMany(t => t.Joins))
 				{
-					if (join.JoinType == JoinType.Inner || join.JoinType == JoinType.Left)
+					if (join.JoinType == JoinType.Inner)
 						whereToIgnore.Add(join.Condition);
+					else
+						break;
 				}
 
 				// we cannot optimize apply because reference to parent sources are used inside the query
