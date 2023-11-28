@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
@@ -65,9 +67,40 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public async Task Take1Async([DataSources] string context, [Values] bool withParameters)
+		{
+			using (new ParameterizeTakeSkip(withParameters))
+			using (var db = GetDataContext(context))
+			{
+				for (var i = 2; i <= 3; i++)
+				{
+					Assert.AreEqual(i, (from ch in db.Child select ch).Take(i).ToList().Count);
+					CheckTakeGlobalParams(db);
+				}
+
+				var currentCacheMissCount = Query<Child>.CacheMissCount;
+
+				for (var i = 2; i <= 3; i++)
+				{
+					Assert.AreEqual(i, (await (from ch in db.Child select ch).Take(i).ToListAsync()).Count);
+					CheckTakeGlobalParams(db);
+				}
+
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(currentCacheMissCount));
+			}
+		}
+
 		static void TakeParam(ITestDataContext dc, int n)
 		{
-			Assert.AreEqual(n, (from ch in dc.Child select ch).Take(() => n).ToList().Count);
+			dc.Child.Take(() => n).ToList().Should().HaveCount(n);
+
+			CheckTakeSkipParameterized(dc);
+		}
+
+		static async Task TakeParamAsync(ITestDataContext dc, int n)
+		{
+			(await dc.Child.Take(() => n).ToListAsync()).Should().HaveCount(n);
 
 			CheckTakeSkipParameterized(dc);
 		}
@@ -81,13 +114,39 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public async Task Take2Async([DataSources] string context, [Values] bool withParameters)
+		{
+			using (new ParameterizeTakeSkip(withParameters))
+			using (var db = GetDataContext(context))
+				await TakeParamAsync(db, 1);
+		}
+
+		[Test]
 		public void Take3([DataSources] string context, [Values] bool withParameters)
 		{
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(3,
-					(from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch).Take(3).ToList().Count);
+				(from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch)
+					.Take(3)
+					.ToList()
+					.Should().HaveCount(3);
+
+				CheckTakeGlobalParams(db);
+			}
+		}
+
+		[Test]
+		public async Task Take3Async([DataSources] string context, [Values] bool withParameters)
+		{
+			using (new ParameterizeTakeSkip(withParameters))
+			using (var db = GetDataContext(context))
+			{
+				(await (from ch in db.Child where ch.ChildID > 3 || ch.ChildID < 4 select ch)
+					.Take(3)
+					.ToListAsync())
+					.Should().HaveCount(3);
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -98,8 +157,26 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(3,
-					(from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch).Take(3).ToList().Count);
+					(from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch)
+						.Take(3)
+						.ToList()
+						.Should().HaveCount(3);
+
+				CheckTakeGlobalParams(db);
+			}
+		}
+
+		[Test]
+		public async Task Take4Async([DataSources] string context, [Values] bool withParameters)
+		{
+			using (new ParameterizeTakeSkip(withParameters))
+			using (var db = GetDataContext(context))
+			{
+				(await (from ch in db.Child where ch.ChildID >= 0 && ch.ChildID <= 100 select ch)
+					.Take(3)
+					.ToListAsync())
+					.Should().HaveCount(3);
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -110,7 +187,26 @@ namespace Tests.Linq
 			using (new ParameterizeTakeSkip(withParameters))
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(3, db.Child.Take(3).ToList().Count);
+				db.Child
+					.Take(3)
+					.ToList()
+					.Should().HaveCount(3);
+
+				CheckTakeGlobalParams(db);
+			}
+		}
+
+		[Test]
+		public async Task Take5Async([DataSources] string context, [Values] bool withParameters)
+		{
+			using (new ParameterizeTakeSkip(withParameters))
+			using (var db = GetDataContext(context))
+			{
+				(await db.Child
+					.Take(3)
+					.ToListAsync())
+					.Should().HaveCount(3);
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1195,6 +1291,43 @@ namespace Tests.Linq
 					.Skip(1)
 					.Skip(2)
 					.ToArray();
+
+				var expected = testData
+					.OrderBy(t => t.Value)
+					.Skip(1)
+					.Skip(2)
+					.ToArray();
+
+				Assert.AreEqual(expected, actual);
+
+				if (db is TestDataConnection cn)
+				{
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("iif"));
+					Assert.False(cn.LastQuery!.ToLowerInvariant().Contains("case"));
+				}
+			}
+		}
+
+		[Test]
+		public async Task MultipleSkip1Async([DataSources] string context)
+		{
+			var testData = new[]
+			{
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "PIPPO" },
+				new TakeSkipClass { Value = "PLUTO" },
+				new TakeSkipClass { Value = "BOLTO" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (var tempTable = db.CreateLocalTable(testData))
+			{
+
+				var actual = await tempTable
+					.OrderBy(t => t.Value)
+					.Skip(1)
+					.Skip(2)
+					.ToArrayAsync();
 
 				var expected = testData
 					.OrderBy(t => t.Value)

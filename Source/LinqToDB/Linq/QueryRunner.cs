@@ -370,6 +370,11 @@ namespace LinqToDB.Linq
 				{
 					newTakeValue = new SqlBinaryExpression(typeof(int), newTakeValue, "+", select.TakeValue);
 				}
+				else
+				{
+					newTakeValue = null;
+				}
+
 
 				var skipValue = select.SkipValue;
 
