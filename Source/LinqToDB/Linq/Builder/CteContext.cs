@@ -178,6 +178,8 @@ namespace LinqToDB.Linq.Builder
 			var newContext = new CteContext(Builder, context.CloneContext(CteInnerQueryContext),
 				context.CloneElement(CteClause), context.CloneExpression(Expression!));
 
+			newContext.SubqueryContext = context.CloneContext(SubqueryContext);
+
 			return newContext;
 		}
 
