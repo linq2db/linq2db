@@ -194,7 +194,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var saveQuery = _parentQuery;
 
-			if (_parentQuery == null || selectQuery.HasSetOperators)
+			if (_parentQuery == null || selectQuery.HasSetOperators || selectQuery.Select.IsDistinct)
 			{
 				foreach (var c in selectQuery.Select.Columns)
 				{
