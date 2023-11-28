@@ -414,7 +414,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var isSameContext = SequenceHelper.IsSameContext(path, this);
 
-				if (isSameContext && (flags.IsRoot() || flags.IsTraverse()))
+				if (isSameContext && (flags.IsRoot() || flags.IsTraverse()) || flags.IsExtractProjection())
 				{
 					return path;
 				}
@@ -424,13 +424,13 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (isSameContext && flags.HasFlag(ProjectFlags.Keys) && GetInterfaceGroupingType().IsSameOrParentOf(path.Type))
+				if (isSameContext && flags.IsKeys() && GetInterfaceGroupingType().IsSameOrParentOf(path.Type))
 				{
 					var result = Builder.MakeExpression(this, _keyRef, flags);
 					return result;
 				}
 
-				if (isSameContext && flags.HasFlag(ProjectFlags.Expression)/* && GetInterfaceGroupingType().IsSameOrParentOf(path.Type)*/)
+				if (isSameContext && flags.IsExpression()/* && GetInterfaceGroupingType().IsSameOrParentOf(path.Type)*/)
 				{
 					if (!_isGroupingGuardDisabled)
 					{
@@ -504,7 +504,7 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (!isSameContext || !flags.HasFlag(ProjectFlags.SQL))
+				if (!isSameContext || !flags.IsSql())
 				{
 					var root = Builder.GetRootContext(this, path, true);
 					if (root != null && typeof(IGrouping<,>).IsSameOrParentOf(root.Type))

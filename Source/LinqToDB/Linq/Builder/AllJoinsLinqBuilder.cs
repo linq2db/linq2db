@@ -70,11 +70,12 @@ namespace LinqToDB.Linq.Builder
 			innerContext = new SubQueryContext(innerContext);
 
 			var selector = methodCall.Arguments[^1].UnwrapLambda();
+			var selectorBody = SequenceHelper.PrepareBody(selector, outerContext, new ScopeContext(innerContext, outerContext));
 
 			outerContext.SetAlias(selector.Parameters[0].Name);
 			innerContext.SetAlias(selector.Parameters[1].Name);
 
-			var joinContext = new JoinContext(buildInfo.Parent, selector, buildInfo.IsSubQuery, outerContext, innerContext)
+			var joinContext = new SelectContext(buildInfo.Parent, builder, null, selectorBody, outerContext.SelectQuery, buildInfo.IsSubQuery)
 #if DEBUG
 			{
 				Debug_MethodCall = methodCall
@@ -119,14 +120,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return joinContext;
-		}
-
-		//TODO: Do we need this?
-		sealed class JoinContext : SelectContext
-		{
-			public JoinContext(IBuildContext? parent, LambdaExpression lambda, bool isSubQuery, IBuildContext outerContext, IBuildContext innerContext) : base(parent, lambda, isSubQuery, outerContext, innerContext)
-			{
-			}
 		}
 	}
 }

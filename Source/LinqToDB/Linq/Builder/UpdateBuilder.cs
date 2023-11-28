@@ -194,7 +194,7 @@ namespace LinqToDB.Linq.Builder
 								// try to find in projection
 								//
 								var sequenceRefExpression = new ContextRefExpression(typeof(object), sequence);
-								var projection = builder.MakeExpression(sequence, sequenceRefExpression, ProjectFlags.Expression);
+								var projection = builder.ExtractProjection(sequence, sequenceRefExpression);
 
 								projection.Visit((builder, sequence, collectedTables, intoTableContext), (ctx, e) =>
 								{
