@@ -99,14 +99,14 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				var children = db.GetTable<Parent1>()
-					.Where(_ => _.ParentID == 1)
-					.SelectMany(_ => _.Children)
+					.Where(p => p.ParentID == 1)
+					.SelectMany(c => c.Children)
 					.ToList();
 
 				Assert.IsNotEmpty(children);
 
-				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child { ChildID = _.ChildID, ParentID = _.ParentID!.Value });
+				var expected = Child.Where(c => c.ParentID == 1);
+				var result = children.Select(c => new Model.Child { ChildID = c.ChildID, ParentID = c.ParentID!.Value });
 
 				AreEqual(expected, result);
 			}
@@ -118,7 +118,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				var children = db.GetTable<Parent1>()
-					.Select(_ => new {_.Children})
+					.Select(p => new {p.Children})
 					.ToList();
 
 				Assert.IsNotEmpty(children);
@@ -131,14 +131,14 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				var children = db.GetTable<Parent2>()
-					.Where(_ => _.ParentID == 1)
-					.SelectMany(_ => _.Children)
+					.Where(p => p.ParentID == 1)
+					.SelectMany(p => p.Children)
 					.ToList();
 
 				Assert.IsNotEmpty(children);
 
-				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = (int)_.ParentID });
+				var expected = Child.Where(p => p.ParentID == 1);
+				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = (int)c.ParentID });
 
 				AreEqual(expected, result);
 			}
@@ -150,7 +150,7 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				var children = db.GetTable<Parent2>()
-					.Select(_ => new {_.Children})
+					.Select(p => new {p.Children})
 					.ToList();
 
 				Assert.IsNotEmpty(children);
@@ -184,14 +184,14 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
 				var children = db.GetTable<Parent3>()
-					.Where(_ => _.ParentID == 1)
-					.SelectMany(_ => _.Children)
+					.Where(p => p.ParentID == 1)
+					.SelectMany(p => p.Children)
 					.ToList();
 
 				Assert.IsNotEmpty(children);
 
-				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID!.RealValue });
+				var expected = Child.Where(c => c.ParentID == 1);
+				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID!.RealValue });
 
 				AreEqual(expected, result);
 			}
@@ -203,14 +203,14 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
 				var children = db.GetTable<Parent4>()
-					.Where(_ => _.ParentID!.RealValue == 1)
-					.SelectMany(_ => _.Children)
+					.Where(p => p.ParentID!.RealValue == 1)
+					.SelectMany(p => p.Children)
 					.ToList();
 
 				Assert.IsNotEmpty(children);
 
-				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID });
+				var expected = Child.Where(c => c.ParentID == 1);
+				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID });
 
 				AreEqual(expected, result);
 			}
@@ -222,14 +222,14 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context, GetMyIntSchema()))
 			{
 				var children = db.GetTable<Parent5>()
-					.Where(_ => _.ParentID!.RealValue == 1)
-					.SelectMany(_ => _.Children)
+					.Where(p => p.ParentID!.RealValue == 1)
+					.SelectMany(p => p.Children)
 					.ToList();
 
 				Assert.IsNotEmpty(children);
 
-				var expected = Child.Where(_ => _.ParentID == 1);
-				var result = children.Select(_ => new Model.Child() { ChildID = _.ChildID, ParentID = _.ParentID!.RealValue });
+				var expected = Child.Where(c => c.ParentID == 1);
+				var result = children.Select(c => new Model.Child() { ChildID = c.ChildID, ParentID = c.ParentID!.RealValue });
 
 				AreEqual(expected, result);
 			}
