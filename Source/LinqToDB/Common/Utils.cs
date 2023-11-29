@@ -156,7 +156,6 @@ namespace LinqToDB.Common
 		}
 
 		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
-			where T: notnull
 		{
 			public static IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
 

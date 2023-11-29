@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using LinqToDB.DataProvider;
-
 namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using Linq.Builder;
+
 	using SqlProvider;
 	using Visitors;
+	using DataProvider;
+	using LinqToDB.Mapping;
 
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
@@ -30,8 +31,9 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?    _inSubquery;
 		bool            _isInRecursiveCte;
 
-		SqlQueryColumnNestingCorrector _columnNestingCorrector = new();
-		SqlQueryOrderByOptimizer       _orderByOptimizer       = new();
+		SqlQueryColumnNestingCorrector _columnNestingCorrector  = new();
+		SqlQueryOrderByOptimizer       _orderByOptimizer        = new();
+		MovingComplexityVisitor        _movingComplexityVisitor = new();
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -115,6 +117,7 @@ namespace LinqToDB.SqlQuery
 
 			_columnNestingCorrector.Cleanup();
 			_orderByOptimizer.Cleanup();
+			_movingComplexityVisitor.Cleanup();
 		}
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
@@ -957,7 +960,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		bool IsColumnExpressionValid(SelectQuery parentQuery, SelectQuery subQuery, SqlColumn column, ISqlExpression columnExpression)
+		bool IsColumnExpressionValid(SelectQuery parentQuery, NullabilityContext nullability, SelectQuery subQuery, SqlColumn column, ISqlExpression columnExpression)
 		{
 			if (columnExpression.ElementType == QueryElementType.Column ||
 			    columnExpression.ElementType == QueryElementType.SqlRawSqlTable ||
@@ -969,26 +972,24 @@ namespace LinqToDB.SqlQuery
 			var underlying = QueryHelper.UnwrapExpression(columnExpression, false);
 			if (!ReferenceEquals(underlying, columnExpression))
 			{
-				return IsColumnExpressionValid(parentQuery, subQuery, column, underlying);
+				return IsColumnExpressionValid(parentQuery, nullability, subQuery, column, underlying);
 			}
 
 			if (underlying is SqlBinaryExpression binary)
 			{
 				if (QueryHelper.IsConstantFast(binary.Expr1))
 				{
-					return IsColumnExpressionValid(parentQuery, subQuery, column, binary.Expr2);
+					return IsColumnExpressionValid(parentQuery, nullability, subQuery, column, binary.Expr2);
 				}
 
 				if (QueryHelper.IsConstantFast(binary.Expr2))
 				{
-					return IsColumnExpressionValid(parentQuery, subQuery, column, binary.Expr1);
+					return IsColumnExpressionValid(parentQuery, nullability, subQuery, column, binary.Expr1);
 				}
 			}
 
 			// check that column has at least one reference
 			//
-
-			int found = 0;
 
 			if (!parentQuery.GroupBy.IsEmpty)
 			{
@@ -1008,7 +1009,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (QueryHelper.IsAggregationOrWindowFunction(column.Expression))
+			if (QueryHelper.IsAggregationOrWindowFunction(columnExpression))
 			{
 				if (!parentQuery.Where.IsEmpty)
 				{
@@ -1023,26 +1024,14 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			parentQuery.VisitParentFirstAll(e =>
-			{
-				if (e.ElementType == QueryElementType.SelectClause && column.Parent != null && ReferenceEquals(column.Parent.Select, e))
-					return false;
+			var allowed = _movingComplexityVisitor.IsAllowedToMove(column, parent: parentQuery,
+				nullability,
+				_evaluationContext,
+				column.Parent,
+				_applySelect == parentQuery ? parentQuery.Where : null
+				);
 
-				if (_applySelect == parentQuery)
-				{
-					if (ReferenceEquals(parentQuery.Where, e))
-						return false;
-				}
-
-				if (ReferenceEquals(e, column))
-				{
-					++found;
-				}
-
-				return found < 2;
-			});
-
-			return found < 2;
+			return allowed;
 		}
 
 		static bool IsSimpleForNoTablesMove(SelectQuery selectQuery)
@@ -1191,12 +1180,14 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (subQuery.Select.Columns.Any(c => !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
+			var nullability = NullabilityContext.GetContext(selectQuery);
+
+			if (subQuery.Select.Columns.Any(c => !IsColumnExpressionValid(selectQuery, nullability, subQuery, c, c.Expression)))
 				return false;
 
 			if (!selectQuery.GroupBy.IsEmpty)
 			{
-				if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
+				if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, nullability, subQuery, c, c.Expression)))
 					return false;
 			}
 
@@ -1409,7 +1400,9 @@ namespace LinqToDB.SqlQuery
 					return false;
 			}
 
-			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
+			var nullability = NullabilityContext.GetContext(selectQuery);
+
+			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, nullability, subQuery, c, c.Expression)))
 				return false;
 
 			// Actual modification starts from this point
@@ -1822,7 +1815,133 @@ namespace LinqToDB.SqlQuery
 
 			return newElement;
 		}
-		
+
+		#region Helpers
+
+		class MovingComplexityVisitor : QueryElementVisitor
+		{
+			ISqlExpression     _expressionToCheck = default!;
+			IQueryElement?[]   _ignore            = default!;
+			NullabilityContext _nullability       = default!;
+			EvaluationContext  _evaluationContext = default!;
+			int                _foundCount;
+			bool               _notAllowedScope;
+			bool               _doNotAllow;
+
+			public bool DoNotAllow
+			{
+				get => _doNotAllow;
+				private set => _doNotAllow = value;
+			}
+
+			public MovingComplexityVisitor() : base(VisitMode.ReadOnly)
+			{
+			}
+
+			public void Cleanup()
+			{
+				_ignore            = default!;
+				_expressionToCheck = default!;
+				_doNotAllow        = default;
+				_nullability       = default!;
+				_evaluationContext = default!;
+				_foundCount        = 0;
+			}
+
+			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, EvaluationContext evaluationContext, params IQueryElement?[] ignore)
+			{
+				_ignore            = ignore;
+				_expressionToCheck = testExpression;
+				_nullability       = nullability;
+				_evaluationContext = evaluationContext;
+				_doNotAllow        = default;
+				_foundCount        = 0;
+
+				Visit(parent);
+
+				return !DoNotAllow;
+			}
+
+			public override IQueryElement? Visit(IQueryElement? element)
+			{
+				if (element == null)
+					return null;
+
+				if (DoNotAllow)
+					return element;
+
+				if (_ignore.Contains(element, Utils.ObjectReferenceEqualityComparer<IQueryElement?>.Default))
+					return element;
+
+				if (ReferenceEquals(element, _expressionToCheck))
+				{
+					if (_notAllowedScope)
+					{
+						DoNotAllow = true;
+						return element;
+					}
+
+					++_foundCount;
+
+					if (_foundCount > 1)
+						DoNotAllow = true;
+
+					return element;
+				}
+
+				return base.Visit(element);
+			}
+
+
+			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+			{
+				var reduced = predicate.Reduce(_nullability, _evaluationContext);
+				if (!ReferenceEquals(reduced, predicate))
+					Visit(reduced);
+				else
+					base.VisitExprExprPredicate(predicate);
+
+				return predicate;
+			}
+
+
+			protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
+			{
+				var reduced = predicate.Reduce(_nullability);
+				if (!ReferenceEquals(reduced, predicate))
+					Visit(reduced);
+				else
+					base.VisitIsTruePredicate(predicate);
+
+				return predicate;
+			}
+
+			readonly struct DoNotAllowScopeStruct : IDisposable
+			{
+				readonly MovingComplexityVisitor _visitor;
+				readonly bool                    _saveValue;
+
+				public DoNotAllowScopeStruct(MovingComplexityVisitor visitor, bool? doNotAllow)
+				{
+					_visitor   = visitor;
+					_saveValue = visitor._notAllowedScope;
+					if (doNotAllow != null)
+						visitor._notAllowedScope = doNotAllow.Value;
+				}
+
+				public void Dispose()
+				{
+					_visitor._notAllowedScope = _saveValue;
+				}
+			}
+
+			DoNotAllowScopeStruct DoNotAllowScope(bool? doNotAllow)
+			{
+				return new DoNotAllowScopeStruct(this, doNotAllow);
+			}
+		}
+
+		#endregion
 
 	}
 }
