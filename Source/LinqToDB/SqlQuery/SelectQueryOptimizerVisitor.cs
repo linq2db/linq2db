@@ -1381,9 +1381,6 @@ namespace LinqToDB.SqlQuery
 
 			if (joinTable.JoinType != JoinType.Inner)
 			{
-				if (!subQuery.IsSimpleButWhere)
-					return false;
-
 				if (!subQuery.Where.IsEmpty)
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)
@@ -1407,6 +1404,9 @@ namespace LinqToDB.SqlQuery
 						return false;
 					}
 				}
+
+				if (!subQuery.Select.Columns.All(c => c.Expression is SqlColumn or SqlField))
+					return false;
 			}
 
 			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression) || !IsColumnExpressionValid(selectQuery, subQuery, c, c.Expression)))
