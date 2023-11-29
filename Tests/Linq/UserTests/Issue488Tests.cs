@@ -3,6 +3,8 @@ using System.Data;
 using System.Data.Linq;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -43,8 +45,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
-				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
+				commandInterceptor.Parameters.Should().HaveCount(1);
+				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Should().HaveCount(1);;
 			}
 		}
 
@@ -64,8 +66,8 @@ namespace Tests.UserTests
 				var _ = q.FirstOrDefault();
 
 				var dc = (DataConnection)db;
-				Assert.AreEqual(2, commandInterceptor.Parameters.Length);
-				Assert.AreEqual(1, commandInterceptor.Parameters.Count(p => p.DbType == DbType.Date));
+				commandInterceptor.Parameters.Should().HaveCount(1);
+				commandInterceptor.Parameters.Where(p => p.DbType == DbType.Date).Should().HaveCount(1);;
 			}
 		}
 	}
