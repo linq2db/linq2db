@@ -384,11 +384,10 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitConstant(ConstantExpression node)
 			{
-				if (_flags.IsExpression() && !IsForcedToConvert(node))
-					return node;
+				if (IsForcedToConvert(node))
+					return TranslateExpression(node);
 
-				using var _ = NeedForce(true);
-				return TranslateExpression(node);
+				return node;
 			}
 
 			protected override Expression VisitUnary(UnaryExpression node)
@@ -644,7 +643,7 @@ namespace LinqToDB.Linq.Builder
 				var saveDisable = _disableParseNew;
 				_disableParseNew = true;
 
-				using var _ = NeedForce(true);
+				using var _ = NeedForce(false);
 
 				var newNode = base.VisitListInit(node);
 
