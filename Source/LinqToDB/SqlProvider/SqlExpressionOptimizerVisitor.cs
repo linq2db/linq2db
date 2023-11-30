@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace LinqToDB.SqlProvider
@@ -26,8 +27,30 @@ namespace LinqToDB.SqlProvider
 			_nullabilityContext = nullabilityContext;
 			_sqlProviderFlags   = sqlProviderFlags;
 			_dataOptions        = dataOptions;
+			IsModified          = false;
 
 			return ProcessElement(element);
+		}
+
+		public bool IsModified { get; private set; }
+
+		[return: NotNullIfNotNull(nameof(element))]
+		public override IQueryElement? Visit(IQueryElement? element)
+		{
+			if (element == null)
+				return element;
+
+			var newElement = base.Visit(element);
+
+			if (!ReferenceEquals(newElement, element))
+				MarkModified();
+
+			return newElement;
+		}
+
+		protected void MarkModified()
+		{
+			IsModified = true;
 		}
 
 		protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
@@ -148,22 +171,26 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
+			var current = element;
 			do
 			{
-				var optimizedCondition = OptimizationHelper.OptimizeCondition(element);
+				var optimizedCondition = OptimizationHelper.OptimizeCondition(current);
 
 				if (optimizedCondition.Predicate.TryEvaluateExpression(_evaluationContext, out var value) && value != null)
 				{
 					return new SqlCondition(optimizedCondition.IsNot, new SqlPredicate.Expr(new SqlValue(value)), optimizedCondition.IsOr);
 				}
 
-				if (ReferenceEquals(optimizedCondition, element))
+				if (ReferenceEquals(optimizedCondition, current))
 				{
 					break;
 				}
 
-				element = optimizedCondition;
+				current = optimizedCondition;
 			} while (true);
+
+			if (!ReferenceEquals(current, element))
+				return Visit(current);
 
 			return element;
 		}

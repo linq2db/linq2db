@@ -11,7 +11,6 @@ namespace LinqToDB.SqlQuery
 	using SqlProvider;
 	using Visitors;
 	using DataProvider;
-	using LinqToDB.Mapping;
 
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
@@ -19,9 +18,8 @@ namespace LinqToDB.SqlQuery
 		DataOptions       _dataOptions       = default!;
 		EvaluationContext _evaluationContext = default!;
 		IQueryElement     _rootElement       = default!;
-		int               _level             = default!;
 		IQueryElement[]   _dependencies      = default!;
-		SelectQuery?      _correcting        = default!;
+		SelectQuery?      _correcting;
 		int               _version;
 		bool              _removeWeakJoins;
 
@@ -31,16 +29,17 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?    _inSubquery;
 		bool            _isInRecursiveCte;
 
-		SqlQueryColumnNestingCorrector _columnNestingCorrector  = new();
-		SqlQueryOrderByOptimizer       _orderByOptimizer        = new();
-		MovingComplexityVisitor        _movingComplexityVisitor = new();
+		SqlQueryColumnNestingCorrector _columnNestingCorrector     = new();
+		SqlQueryOrderByOptimizer       _orderByOptimizer           = new();
+		MovingComplexityVisitor        _movingComplexityVisitor    = new();
+		SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor = new(true);
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
 		}
 
 		public IQueryElement OptimizeQueries(IQueryElement root, SqlProviderFlags flags, bool removeWeakJoins, DataOptions dataOptions,
-			EvaluationContext evaluationContext, IQueryElement rootElement, int level,
+			EvaluationContext evaluationContext, IQueryElement rootElement,
 			params IQueryElement[] dependencies)
 		{
 #if DEBUG
@@ -50,16 +49,15 @@ namespace LinqToDB.SqlQuery
 			}
 #endif
 
-			_flags             = flags;
-			_removeWeakJoins   = removeWeakJoins;
-			_dataOptions       = dataOptions;
-			_evaluationContext = evaluationContext;
-			_rootElement       = rootElement;
-			_level             = level;
-			_dependencies      = dependencies;
-			_parentSelect      = default!;
-			_applySelect       = default!;
-			_inSubquery        = default!;
+			_flags                 = flags;
+			_removeWeakJoins       = removeWeakJoins;
+			_dataOptions           = dataOptions;
+			_evaluationContext     = evaluationContext;
+			_rootElement           = rootElement;
+			_dependencies          = dependencies;
+			_parentSelect          = default!;
+			_applySelect           = default!;
+			_inSubquery            = default!;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
@@ -108,7 +106,6 @@ namespace LinqToDB.SqlQuery
 			_dataOptions       = default!;
 			_evaluationContext = default!;
 			_rootElement       = default!;
-			_level             = default!;
 			_dependencies      = default!;
 			_parentSelect      = default!;
 			_applySelect       = default!;
@@ -118,6 +115,7 @@ namespace LinqToDB.SqlQuery
 			_columnNestingCorrector.Cleanup();
 			_orderByOptimizer.Cleanup();
 			_movingComplexityVisitor.Cleanup();
+			_expressionOptimizerVisitor.Cleanup();
 		}
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
@@ -154,6 +152,20 @@ namespace LinqToDB.SqlQuery
 			if (_correcting == null)
 			{
 				_parentSelect = saveParent;
+
+				if (saveParent == null)
+				{
+#if DEBUG
+					var before = selectQuery.ToDebugString();
+#endif
+					// only once
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _flags, _dataOptions, selectQuery);
+
+					if (_expressionOptimizerVisitor.IsModified)
+					{
+
+					}
+				}
 
 				do
 				{
@@ -1459,19 +1471,6 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlCondition(SqlCondition element)
 		{
-			if (element.Predicate is SqlSearchCondition sc && sc.Conditions.Count == 1)
-			{
-				var singleCondition = sc.Conditions[0];
-
-				element = new SqlCondition(element.IsNot != singleCondition.IsNot, singleCondition.Predicate, element.IsOr);
-			}
-
-			if (element is { IsNot: true, Predicate: IInvertibleElement invertible } && invertible.CanInvert())
-			{
-				element.IsNot     = false;
-				element.Predicate = (ISqlPredicate)invertible.Invert();
-			}
-
 			return base.VisitSqlCondition(element);
 		}
 
@@ -1820,13 +1819,13 @@ namespace LinqToDB.SqlQuery
 
 		class MovingComplexityVisitor : QueryElementVisitor
 		{
-			ISqlExpression     _expressionToCheck = default!;
-			IQueryElement?[]   _ignore            = default!;
-			NullabilityContext _nullability       = default!;
-			EvaluationContext  _evaluationContext = default!;
-			int                _foundCount;
-			bool               _notAllowedScope;
-			bool               _doNotAllow;
+			ISqlExpression       _expressionToCheck = default!;
+			IQueryElement?[]     _ignore            = default!;
+			NullabilityContext   _nullability       = default!;
+			EvaluationContext    _evaluationContext = default!;
+			int                  _foundCount;
+			bool                 _notAllowedScope;
+			bool                 _doNotAllow;
 
 			public bool DoNotAllow
 			{
@@ -1848,7 +1847,8 @@ namespace LinqToDB.SqlQuery
 				_foundCount        = 0;
 			}
 
-			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, EvaluationContext evaluationContext, params IQueryElement?[] ignore)
+			public bool IsAllowedToMove(ISqlExpression testExpression, IQueryElement parent, NullabilityContext nullability, 
+				EvaluationContext evaluationContext, params IQueryElement?[] ignore)
 			{
 				_ignore            = ignore;
 				_expressionToCheck = testExpression;
@@ -1892,7 +1892,6 @@ namespace LinqToDB.SqlQuery
 				return base.Visit(element);
 			}
 
-
 			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 			{
 				var reduced = predicate.Reduce(_nullability, _evaluationContext);
@@ -1903,7 +1902,6 @@ namespace LinqToDB.SqlQuery
 
 				return predicate;
 			}
-
 
 			protected override IQueryElement VisitIsTruePredicate(SqlPredicate.IsTrue predicate)
 			{

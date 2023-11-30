@@ -902,7 +902,7 @@ namespace LinqToDB.Linq.Builder
 				#endif
 
 				var optimizedQuery = (SelectQuery)visitor.Value.OptimizeQueries(clonedParentContext.SelectQuery, parent.Builder.DataContext.SqlProviderFlags, false, parent.Builder.DataOptions,
-					new EvaluationContext(), clonedParentContext.SelectQuery, 0);
+					new EvaluationContext(), clonedParentContext.SelectQuery);
 
 				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, forColumn: false, parent.Builder.DataContext.SqlProviderFlags))
 				{
