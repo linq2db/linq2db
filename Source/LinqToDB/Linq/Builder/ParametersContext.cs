@@ -60,15 +60,16 @@ namespace LinqToDB.Linq.Builder
 		public ParameterAccessor? BuildParameter(
 			Expression         expr,
 			ColumnDescriptor?  columnDescriptor,
-			bool               forceConstant      = false,
-			string?            alias              = null,
-			BuildParameterType buildParameterType = BuildParameterType.Default)
+			bool               forceConstant           = false,
+			bool               doNotCheckCompatibility = false,
+			string?            alias                   = null,
+			BuildParameterType buildParameterType      = BuildParameterType.Default)
 		{
 			string? name = alias;
 
 			var newExpr = ReplaceParameter(expr, columnDescriptor, forceConstant, nm => name = nm);
 
-			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
+			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, doNotCheckCompatibility, buildParameterType);
 			if (newAccessor == null)
 				return null;
 
@@ -129,7 +130,7 @@ namespace LinqToDB.Linq.Builder
 				ValueExpression      = valueAccessor
 			};
 
-			var p = PrepareConvertersAndCreateParameter(newExpr, valueAccessor, null, columnDescriptor,
+			var p = PrepareConvertersAndCreateParameter(newExpr, valueAccessor, null, columnDescriptor, false,
 				buildParameterType);
 #pragma warning disable CS8604 // TODO:WAITFIX
 			AddCurrentSqlParameter(p);
@@ -233,7 +234,7 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
-		ParameterAccessor? PrepareConvertersAndCreateParameter(ValueTypeExpression newExpr, Expression valueExpression, string? name, ColumnDescriptor? columnDescriptor, BuildParameterType buildParameterType)
+		ParameterAccessor? PrepareConvertersAndCreateParameter(ValueTypeExpression newExpr, Expression valueExpression, string? name, ColumnDescriptor? columnDescriptor, bool doNotCheckCompatibility, BuildParameterType buildParameterType)
 		{
 			var originalAccessor = newExpr.ValueExpression;
 			if (buildParameterType != BuildParameterType.InPredicate)
@@ -287,7 +288,10 @@ namespace LinqToDB.Linq.Builder
 						{
 							LambdaExpression? convertExpr = null;
 							if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, valueExpressionType, out convertExpr))
-								return null;
+							{
+								if (!doNotCheckCompatibility)
+									return null;
+							}
 
 							newExpr.ValueExpression = convertExpr != null ?
 								InternalExtensions.ApplyLambdaToExpression(convertExpr, newExpr.ValueExpression) :
@@ -547,7 +551,7 @@ namespace LinqToDB.Linq.Builder
 				vte.DbDataTypeExpression = Expression.Constant(dbDataType);
 			}
 
-			var p = PrepareConvertersAndCreateParameter(vte, expr, member?.Name, columnDescriptor, BuildParameterType.Default);
+			var p = PrepareConvertersAndCreateParameter(vte, expr, member?.Name, columnDescriptor, false, BuildParameterType.Default);
 
 #pragma warning disable CS8620 // TODO:WAITFIX
 			(_parameters ??= new()).Add((expr, columnDescriptor, p));

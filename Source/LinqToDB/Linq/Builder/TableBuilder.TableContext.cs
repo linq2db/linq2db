@@ -120,7 +120,16 @@ namespace LinqToDB.Linq.Builder
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSqlExpr(context.context, a));
+				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, a, _) =>
+				{
+					if (context.builder.CanBeCompiled(a, false))
+					{
+						var param = context.builder.ParametersContext.BuildParameter(a, columnDescriptor: null, forceConstant: true, doNotCheckCompatibility: true);
+						if (param != null)
+							return new SqlPlaceholderExpression(null, param.SqlParameter, a);
+					}
+					return context.builder.ConvertToSqlExpr(context.context, a);
+				});
 
 				Init(true);
 			}
