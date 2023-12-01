@@ -22,3 +22,5 @@ goto:eof
 :fail
 echo "Fail"
 docker logs mssql
+
+reg import tls11_enable.reg
