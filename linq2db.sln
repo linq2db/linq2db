@@ -339,6 +339,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\sqlserver.2022.sh = Build\Azure\scripts\sqlserver.2022.sh
 		Build\Azure\scripts\sqlserver.extras.cmd = Build\Azure\scripts\sqlserver.extras.cmd
 		Build\Azure\scripts\sybase.sh = Build\Azure\scripts\sybase.sh
+		Build\Azure\scripts\tls11_disable.reg = Build\Azure\scripts\tls11_disable.reg
+		Build\Azure\scripts\tls11_enable.reg = Build\Azure\scripts\tls11_enable.reg
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pipelines", "pipelines", "{C937AC8E-2714-4850-A1EA-1710D980DF0B}"
