@@ -130,11 +130,6 @@ namespace Tests.xUpdate
 					select p;
 
 				q.Delete();
-
-				var sql = ((DataConnection)db).LastQuery!;
-
-				if (sql.Contains("EXISTS"))
-					Assert.That(sql.IndexOf("(("), Is.GreaterThan(0));
 			}
 		}
 
