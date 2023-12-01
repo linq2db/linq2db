@@ -116,7 +116,7 @@ namespace LinqToDB.SqlQuery
 			internal set => _setOperators = value;
 		}
 
-		public  bool                  HasSetOperators => _setOperators != null && _setOperators.Count > 0;
+		public bool HasSetOperators => _setOperators != null && _setOperators.Count > 0;
 
 		public void AddUnion(SelectQuery union, bool isAll)
 		{
