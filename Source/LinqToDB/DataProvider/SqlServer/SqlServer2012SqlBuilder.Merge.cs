@@ -11,7 +11,7 @@
 			StringBuilder
 				.Append("MERGE INTO ");
 
-			BuildTableName(nullability, merge.Target, true, false);
+			BuildTableName(merge.Target, true, false);
 
 			StringBuilder.Append(' ');
 
@@ -23,7 +23,7 @@
 					.Append(") ");
 			}
 
-			BuildTableName(nullability, merge.Target, false, true);
+			BuildTableName(merge.Target, false, true);
 			StringBuilder.AppendLine();
 		}
 
@@ -35,7 +35,7 @@
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(nullability, Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition : true);
 			}
 
 			StringBuilder.AppendLine(" THEN DELETE");
@@ -60,14 +60,14 @@
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" AND ");
-				BuildSearchCondition(nullability, Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition : true);
 			}
 
 			StringBuilder.AppendLine(" THEN UPDATE");
 
 			var update = new SqlUpdateClause();
 			update.Items.AddRange(operation.Items);
-			BuildUpdateSet(nullability, null, update);
+			BuildUpdateSet(null, update);
 		}
 
 		protected override void BuildMergeStatement(SqlMergeStatement merge)

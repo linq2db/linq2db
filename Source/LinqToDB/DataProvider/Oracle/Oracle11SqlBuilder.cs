@@ -22,9 +22,10 @@ namespace LinqToDB.DataProvider.Oracle
 			return new Oracle11SqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
-		protected override string GetPhysicalTableName(NullabilityContext nullability, ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
+		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias,
+			bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
-			var name = base.GetPhysicalTableName(nullability, table, alias, ignoreTableExpression, defaultDatabaseName, withoutSuffix: withoutSuffix);
+			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression : ignoreTableExpression, defaultDatabaseName : defaultDatabaseName, withoutSuffix : withoutSuffix);
 
 			if (table.SqlTableType == SqlTableType.Function)
 				return $"TABLE({name})";

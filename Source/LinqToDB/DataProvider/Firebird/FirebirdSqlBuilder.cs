@@ -34,13 +34,13 @@ namespace LinqToDB.DataProvider.Firebird
 			return new FirebirdSqlBuilder(this);
 		}
 
-		protected override void BuildSelectClause(NullabilityContext nullability, SelectQuery selectQuery)
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT").AppendLine();
-				BuildColumns(nullability, selectQuery);
+				BuildColumns(selectQuery);
 				AppendIndent();
 				StringBuilder.Append("FROM rdb$database").AppendLine();
 			}
@@ -48,13 +48,13 @@ namespace LinqToDB.DataProvider.Firebird
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT");
-				BuildSkipFirst(nullability, selectQuery);
+				BuildSkipFirst(selectQuery);
 				StringBuilder.Append(" DISTINCT");
 				StringBuilder.AppendLine();
-				BuildColumns(nullability, selectQuery);
+				BuildColumns(selectQuery);
 			}
 			else
-				base.BuildSelectClause(nullability, selectQuery);
+				base.BuildSelectClause(selectQuery);
 		}
 
 		protected override bool   SkipFirst                     => false;
@@ -66,7 +66,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return "FIRST {0}";
 		}
 
-		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append('\t');
-			BuildExpression(nullability, identityField, false, true);
+			BuildExpression(identityField, false, true);
 		}
 
 		public override ISqlExpression? GetIdentityExpression(SqlTable table)
@@ -208,11 +208,11 @@ namespace LinqToDB.DataProvider.Firebird
 				StringBuilder.Append("NOT NULL");
 		}
 
-		protected override void BuildParameter(NullabilityContext nullability, SqlParameter parameter)
+		protected override void BuildParameter(SqlParameter parameter)
 		{
 			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
 			{
-				base.BuildParameter(nullability, parameter);
+				base.BuildParameter(parameter);
 				return;
 			}
 
@@ -224,19 +224,19 @@ namespace LinqToDB.DataProvider.Firebird
 				if (paramValue.DbDataType.DataType   == DataType.Undefined &&
 				    paramValue.DbDataType.SystemType == typeof(object))
 				{
-					base.BuildParameter(nullability, parameter);
+					base.BuildParameter(parameter);
 					return;
 				}
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;
-				BuildTypedExpression(nullability, new SqlDataType(paramValue.DbDataType), parameter);
+				BuildTypedExpression(new SqlDataType(paramValue.DbDataType), parameter);
 				BuildStep = saveStep;
 
 				return;
 			}
 
-			base.BuildParameter(nullability, parameter);
+			base.BuildParameter(parameter);
 		}
 
 		SqlField? _identityField;
@@ -567,7 +567,8 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
-		protected override string GetPhysicalTableName(NullabilityContext nullability, ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
+		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias,
+			bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
 			// for parameter-less table function skip argument list generation
 			if (table is SqlTable tbl
@@ -585,7 +586,7 @@ namespace LinqToDB.DataProvider.Firebird
 				return sb.Value.ToString();
 			}
 
-			return base.GetPhysicalTableName(nullability, table, alias, ignoreTableExpression, defaultDatabaseName, withoutSuffix: withoutSuffix);
+			return base.GetPhysicalTableName(table, alias, ignoreTableExpression : ignoreTableExpression, defaultDatabaseName : defaultDatabaseName, withoutSuffix : withoutSuffix);
 		}
 	}
 }

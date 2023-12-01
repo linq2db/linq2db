@@ -173,12 +173,12 @@ namespace LinqToDB.DataProvider.SqlCe
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
-		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(nullability, expr);
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
-		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
+		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions is not null)
-				BuildTableExtensions(nullability, StringBuilder, table, alias, " WITH (", ", ", ")");
+				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 	}
 }

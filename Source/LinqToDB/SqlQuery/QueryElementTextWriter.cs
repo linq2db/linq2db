@@ -25,23 +25,6 @@ namespace LinqToDB.SqlQuery
 			Nullability = nullability;
 		}
 
-		QueryElementTextWriter(NullabilityContext nullability, SqlTextWriter writer, HashSet<IQueryElement>? visited)
-		{
-			Nullability = nullability;
-			_writer     = writer;
-			_visited    = visited;
-		}
-
-		public QueryElementTextWriter WithOuterSource(ISqlTableSource outerSource)
-		{
-			return new QueryElementTextWriter(Nullability.WithOuterSource(outerSource), _writer, _visited);
-		}
-
-		public QueryElementTextWriter WithInnerSource(ISqlTableSource innerSource)
-		{
-			return new QueryElementTextWriter(Nullability.WithInnerSource(innerSource), _writer, _visited);
-		}
-
 		public int Length
 		{
 			get => _writer.Length;

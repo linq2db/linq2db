@@ -23,21 +23,21 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 		}
 
-		protected override void BuildSelectClause(NullabilityContext nullability, SelectQuery selectQuery)
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().Append("SELECT");
 				StartStatementQueryExtensions(selectQuery);
 				StringBuilder.AppendLine();
-				BuildColumns(nullability, selectQuery);
+				BuildColumns(selectQuery);
 				AppendIndent().Append("FROM SYS.DUAL").AppendLine();
 			}
 			else
-				base.BuildSelectClause(nullability, selectQuery);
+				base.BuildSelectClause(selectQuery);
 		}
 
-		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
@@ -46,7 +46,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');
-			BuildExpression(nullability, identityField, false, true);
+			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine(" INTO :IDENTITY_PARAMETER");
 		}
 
@@ -67,12 +67,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override bool BuildWhere(NullabilityContext nullability, SelectQuery selectQuery)
+		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(nullability, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
+			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
-				base.BuildWhere(nullability, selectQuery) ||
+				base.BuildWhere(selectQuery) ||
 				!NeedSkip(takeExpr, skipEpr) &&
 				 NeedTake(takeExpr) &&
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;
@@ -208,18 +208,14 @@ namespace LinqToDB.DataProvider.Oracle
 			return sb.Append(value);
 		}
 
-		protected override StringBuilder BuildExpression(
-			NullabilityContext nullability,
-			ISqlExpression     expr,
-			bool               buildTableName,
-			bool               checkParentheses,
-			string?            alias,
-			ref bool           addAlias,
-			bool               throwExceptionIfTableNotFound = true)
+		protected override StringBuilder BuildExpression(ISqlExpression expr,
+			bool                                                        buildTableName,
+			bool                                                        checkParentheses,
+			string?                                                     alias,
+			ref bool                                                    addAlias,
+			bool                                                        throwExceptionIfTableNotFound = true)
 		{
-			return base.BuildExpression(
-				nullability,
-				expr,
+			return base.BuildExpression(expr,
 				buildTableName && Statement.QueryType != QueryType.MultiInsert,
 				checkParentheses,
 				alias,
@@ -227,9 +223,9 @@ namespace LinqToDB.DataProvider.Oracle
 				throwExceptionIfTableNotFound);
 		}
 
-		protected override void BuildExprExprPredicate(NullabilityContext nullability, SqlPredicate.ExprExpr expr)
+		protected override void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
 		{
-			BuildExpression(nullability, GetPrecedence(expr), expr.Expr1);
+			BuildExpression(GetPrecedence(expr), expr.Expr1);
 
 			BuildExprExprPredicateOperator(expr);
 
@@ -243,15 +239,15 @@ namespace LinqToDB.DataProvider.Oracle
 				exprPrecedence = int.MaxValue;
 			}
 
-			BuildExpression(nullability, exprPrecedence, expr.Expr2);
+			BuildExpression(exprPrecedence, expr.Expr2);
 		}
 
-		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr)
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			StringBuilder.Append("DECODE(");
-			BuildExpression(nullability, Precedence.Unknown, expr.Expr1);
+			BuildExpression(Precedence.Unknown, expr.Expr1);
 			StringBuilder.Append(", ");
-			BuildExpression(nullability, Precedence.Unknown, expr.Expr2);
+			BuildExpression(Precedence.Unknown, expr.Expr2);
 			StringBuilder
 				.Append(", 0, 1) = ")
 				.Append(expr.IsNot ? '0' : '1');
@@ -317,7 +313,7 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					StringBuilder
 						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
-					BuildPhysicalTable(nullability, dropTable.Table, null);
+					BuildPhysicalTable(dropTable.Table, null);
 					StringBuilder
 						.AppendLine("';")
 						;
@@ -351,7 +347,7 @@ namespace LinqToDB.DataProvider.Oracle
 					StringBuilder
 						.AppendLine("';")
 						.Append("\tEXECUTE IMMEDIATE 'DROP TABLE ");
-					BuildPhysicalTable(nullability, dropTable.Table, null);
+					BuildPhysicalTable(dropTable.Table, null);
 					StringBuilder
 						.AppendLine("';")
 						;
@@ -391,7 +387,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 						.AppendLine("\tBEGIN")
 						.Append("\t\tEXECUTE IMMEDIATE 'DROP TABLE ");
-					BuildPhysicalTable(nullability, dropTable.Table, null);
+					BuildPhysicalTable(dropTable.Table, null);
 					StringBuilder
 						.AppendLine("';")
 						.AppendLine("\tEXCEPTION")
@@ -467,7 +463,7 @@ END;",
 							.AppendLine()
 							.AppendFormat("BEFORE INSERT ON ");
 
-						BuildPhysicalTable(NullabilityContext.NonQuery, createTable.Table, null);
+						BuildPhysicalTable(createTable.Table, null);
 
 						StringBuilder
 							.AppendLine(" FOR EACH ROW")
@@ -643,7 +639,7 @@ END;",
 		{
 			var nullability = NullabilityContext.NonQuery;
 			BuildMultiInsertClause(statement);
-			BuildSqlBuilder(nullability, (SelectQuery)statement.Source.Source, Indent, skipAlias: false);
+			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias : false);
 		}
 
 		protected void BuildMultiInsertClause(SqlMultiInsertStatement statement)
@@ -657,7 +653,7 @@ END;",
 			if (statement.InsertType == MultiInsertType.Unconditional)
 			{
 				foreach (var insert in statement.Inserts)
-					BuildInsertClause(nullability, statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName : true, addAlias : false);
 			}
 			else
 			{
@@ -666,7 +662,7 @@ END;",
 					if (insert.When != null)
 					{
 						int length = StringBuilder.Append("WHEN ").Length;
-						BuildSearchCondition(nullability, insert.When, wrapCondition: true);
+						BuildSearchCondition(insert.When, wrapCondition : true);
 						// If `when` condition is optimized to always `true`,
 						// then BuildSearchCondition doesn't write anything.
 						if (StringBuilder.Length == length)
@@ -678,7 +674,7 @@ END;",
 						StringBuilder.AppendLine("ELSE");
 					}
 
-					BuildInsertClause(nullability, statement, insert.Insert, "INTO ", appendTableName: true, addAlias: false);
+					BuildInsertClause(statement, insert.Insert, "INTO ", appendTableName : true, addAlias : false);
 				}
 			}
 
@@ -720,15 +716,15 @@ END;",
 			}
 		}
 
-		protected override void FinalizeBuildQuery(NullabilityContext nullability, SqlStatement statement)
+		protected override void FinalizeBuildQuery(SqlStatement statement)
 		{
-			base.FinalizeBuildQuery(nullability, statement);
+			base.FinalizeBuildQuery(statement);
 
 			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
 				if (HintBuilder.Length > 0 && HintBuilder[^1] != ' ')
 					HintBuilder.Append(' ');
-				BuildQueryExtensions(nullability, HintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 			}
 
 			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
@@ -740,10 +736,10 @@ END;",
 			}
 		}
 
-		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
+		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
 			if (HintBuilder is not null && table.SqlQueryExtensions is not null)
-				BuildTableExtensions(nullability, HintBuilder, table, alias, null, " ", null);
+				BuildTableExtensions(HintBuilder, table, alias, null, " ", null);
 		}
 	}
 }

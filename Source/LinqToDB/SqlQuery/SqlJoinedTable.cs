@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
 {
-	using Remote;
-
 	public class SqlJoinedTable : IQueryElement
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
@@ -97,8 +95,7 @@ namespace LinqToDB.SqlQuery
 			writer
 				.Append(" ON ");
 
-			var localWriter = writer.WithInnerSource(Table.Source);
-			localWriter.AppendElement(Condition);
+			writer.AppendElement(Condition);
 
 			writer.RemoveVisited(this);
 

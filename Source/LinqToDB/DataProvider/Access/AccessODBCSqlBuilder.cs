@@ -49,7 +49,8 @@ namespace LinqToDB.DataProvider.Access
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
-		protected override void BuildColumnExpression(NullabilityContext nullability, SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias,
+			ref bool                                               addAlias)
 		{
 			// ODBC provider doesn't support NULL parameter as top-level select column value
 			if (expr is SqlParameter p
@@ -62,7 +63,7 @@ namespace LinqToDB.DataProvider.Access
 				expr = new SqlValue(p.Type, null);
 			}
 
-			base.BuildColumnExpression(nullability, selectQuery, expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 		}
 	}
 }

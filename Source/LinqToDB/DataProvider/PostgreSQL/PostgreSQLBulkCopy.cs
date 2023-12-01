@@ -123,7 +123,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				if (npgsqlType == null)
 				{
 					var sb = new System.Text.StringBuilder();
-					sqlBuilder.BuildTypeName(sb, new SqlQuery.SqlDataType(columnTypes[i]));
+					sqlBuilder.BuildTypeName(sb, new SqlDataType(columnTypes[i]));
 					npgsqlType = _provider.GetNativeType(sb.ToString(), true);
 				}
 

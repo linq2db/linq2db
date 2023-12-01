@@ -24,8 +24,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected override ISqlBuilder CreateSqlBuilder() => new ClickHouseSqlBuilder(this);
 
-		protected override void BuildMergeStatement(SqlMergeStatement merge) => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
-		protected override void BuildParameter     (NullabilityContext nullability, SqlParameter parameter ) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
+		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
 
 		#region Identifiers
 
@@ -296,7 +296,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			_disableTableAliases = old;
 		}
 
-		protected override void BuildDeleteFromClause(NullabilityContext nullability, SqlDeleteStatement deleteStatement)
+		protected override void BuildDeleteFromClause(SqlDeleteStatement deleteStatement)
 		{
 			// explicit guard to avoid situations when query produce valid SQL after aliases stripped
 			if (deleteStatement.SelectQuery.From.Tables.Count != 1
@@ -311,14 +311,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 			AppendIndent();
 
 			var ts = deleteStatement.SelectQuery.From.Tables[0];
-			BuildTableName(nullability, ts, true, false);
+			BuildTableName(ts, true, false);
 
 			Indent--;
 
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildDeleteClause(NullabilityContext nullability, SqlDeleteStatement deleteStatement)
+		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			AppendIndent();
 		}
@@ -350,27 +350,27 @@ namespace LinqToDB.DataProvider.ClickHouse
 			_disableTableAliases = old;
 		}
 
-		protected override void BuildUpdateWhereClause(NullabilityContext nullability, SelectQuery selectQuery)
+		protected override void BuildUpdateWhereClause(SelectQuery selectQuery)
 		{
 			// WHERE clause required for UPDATE query
 			if (selectQuery.Where.IsEmpty)
 				StringBuilder.Append("WHERE 1");
 			else
-				BuildWhereClause(nullability, selectQuery);
+				BuildWhereClause(selectQuery);
 		}
 
-		protected override void BuildUpdateTableName(NullabilityContext nullability, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
 		{
 			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
 			{
-				BuildPhysicalTable(nullability, updateClause.Table, null);
+				BuildPhysicalTable(updateClause.Table, null);
 			}
 			else
 			{
 				if (selectQuery.From.Tables[0].Source is SelectQuery)
 					StringBuilder.Length--;
 
-				BuildTableName(nullability, selectQuery.From.Tables[0], true, false);
+				BuildTableName(selectQuery.From.Tables[0], true, false);
 			}
 		}
 
@@ -380,9 +380,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#region TAKE/SKIP
 
-		protected override void BuildOffsetLimit(NullabilityContext nullability, SelectQuery selectQuery)
+		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(nullability, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			if (takeExpr != null || skipExpr != null)
 			{
@@ -391,12 +391,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 				if (skipExpr != null)
 				{
-					BuildExpression(nullability, skipExpr);
+					BuildExpression(skipExpr);
 					StringBuilder.Append(", ");
 				}
 
 				if (takeExpr != null)
-					BuildExpression(nullability, takeExpr);
+					BuildExpression(takeExpr);
 				else
 					// ulong max
 					StringBuilder.Append("18446744073709551615");
@@ -426,35 +426,35 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
 			BuildStep = Step.Tag; BuildTag(statement);
-			BuildStep = Step.InsertClause; BuildInsertClause(nullability, statement, insertClause, addAlias);
+			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
 				BuildStep = Step.WithClause     ; BuildWithClause     (statement.GetWithClause());
-				BuildStep = Step.SelectClause   ; BuildSelectClause   (nullability, statement.SelectQuery);
-				BuildStep = Step.FromClause     ; BuildFromClause     (nullability, statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause    ; BuildWhereClause    (nullability, statement.SelectQuery);
-				BuildStep = Step.GroupByClause  ; BuildGroupByClause  (nullability, statement.SelectQuery);
-				BuildStep = Step.HavingClause   ; BuildHavingClause   (nullability, statement.SelectQuery);
-				BuildStep = Step.OrderByClause  ; BuildOrderByClause  (nullability, statement.SelectQuery);
-				BuildStep = Step.OffsetLimit    ; BuildOffsetLimit    (nullability, statement.SelectQuery);
-				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(nullability, statement);
+				BuildStep = Step.SelectClause   ; BuildSelectClause   (statement.SelectQuery);
+				BuildStep = Step.FromClause     ; BuildFromClause     (statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause    ; BuildWhereClause    (statement.SelectQuery);
+				BuildStep = Step.GroupByClause  ; BuildGroupByClause  (statement.SelectQuery);
+				BuildStep = Step.HavingClause   ; BuildHavingClause   (statement.SelectQuery);
+				BuildStep = Step.OrderByClause  ; BuildOrderByClause  (statement.SelectQuery);
+				BuildStep = Step.OffsetLimit    ; BuildOffsetLimit    (statement.SelectQuery);
+				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 			}
 
 			if (insertClause.WithIdentity)
-				BuildGetIdentity(nullability, insertClause);
+				BuildGetIdentity(insertClause);
 			else
 			{
 				if (nullability == null)
 					throw new InvalidOperationException();
 
 				BuildStep = Step.Output;
-				BuildOutputSubclause(nullability, statement.GetOutputClause());
+				BuildOutputSubclause(statement.GetOutputClause());
 			}
 		}
 		#endregion
 
-		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(nullability, expr);
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
 		protected override bool IsValuesSyntaxSupported => false;
 
@@ -472,20 +472,21 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 		}
 
-		protected override void BuildColumnExpression(NullabilityContext nullability, SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias,
+			ref bool                                               addAlias)
 		{
-			base.BuildColumnExpression(nullability, selectQuery, expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 
 			// force alias generation on nested queries otherwise column in parent query will have composite name subqueryAlias.columnName
 			// (could have many nesting levels) which we don't support and have no plans to support
 			addAlias = addAlias || Statement.ParentStatement != null;
 		}
 
-		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
+		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions is not null)
 			{
-				BuildTableExtensions(nullability, StringBuilder, table, alias, null, ", ", null,
+				BuildTableExtensions(StringBuilder, table, alias, null, ", ", null,
 					ext =>
 						ext.Scope is Sql.QueryExtensionScope.TableHint or Sql.QueryExtensionScope.TablesInScopeHint &&
 						!(ext.Arguments.TryGetValue("hint", out var hint) && hint is SqlValue(ClickHouseHints.Table.Final)));
@@ -538,10 +539,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return base.BuildJoinType(join, condition);
 		}
 
-		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
+		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(nullability, StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null, Sql.QueryExtensionScope.QueryHint);
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, Environment.NewLine, null, Sql.QueryExtensionScope.QueryHint);
 		}
 
 		HashSet<SqlQueryExtension>? _finalHints;

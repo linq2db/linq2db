@@ -13,26 +13,24 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Context for non-select queries of places where we don't know select query.
 		/// </summary>
-		public static NullabilityContext NonQuery { get; } = new(null, null, null, null);
+		public static NullabilityContext NonQuery { get; } = new(null, null);
 
 		/// <summary>
 		/// Creates nullability context for provided query or empty context if query is <c>null</c>.
 		/// </summary>
 		public static NullabilityContext GetContext(SelectQuery? selectQuery) =>
-			selectQuery == null ? NonQuery : new NullabilityContext(selectQuery, null, null, null);
+			selectQuery == null ? NonQuery : new NullabilityContext(selectQuery, null);
 
 		/// <summary>
 		/// Creates nullability context for provided query.
 		/// </summary>
-		public NullabilityContext(SelectQuery inQuery) : this(inQuery, null, null, null)
+		public NullabilityContext(SelectQuery inQuery) : this(inQuery, null)
 		{
 		}
 
-		NullabilityContext(SelectQuery? inQuery, ISqlTableSource? outerSource, ISqlTableSource? innerSource, NullabilityCache? nullabilityCache)
+		NullabilityContext(SelectQuery? inQuery, NullabilityCache? nullabilityCache)
 		{
 			InQuery           = inQuery;
-			OuterSource       = outerSource;
-			InnerSource       = innerSource;
 			_nullabilityCache = nullabilityCache;
 		}
 
@@ -40,63 +38,14 @@ namespace LinqToDB.SqlQuery
 		/// Current context query.
 		/// </summary>
 		public SelectQuery?     InQuery     { get; }
-		// TODO:WAITFIX: candidate for removal
-		/// <summary>
-		/// Optional table source, for which nullability tracking is disabled in context.
-		/// </summary>
-		public ISqlTableSource? OuterSource { get; }
-		// TODO:WAITFIX: candidate for removal
-		/// <summary>
-		/// Optional table source, for which nullability tracking is disabled in context.
-		/// </summary>
-		public ISqlTableSource? InnerSource { get; }
+
 		[MemberNotNullWhen(false, nameof(InQuery))]
 		public bool             IsEmpty     => InQuery == null;
 
 		NullabilityCache? _nullabilityCache;
 
-		/// <summary>
-		/// Creates derived context with nullability tracking disabled for provided table sources.
-		/// </summary>
-		public NullabilityContext WithOuterInnerSource(ISqlTableSource outerSource, ISqlTableSource innerSource)
-		{
-			if (OuterSource == outerSource && InnerSource == innerSource)
-				return this;
-
-			_nullabilityCache ??= new();
-			return new NullabilityContext(InQuery, outerSource, innerSource, _nullabilityCache);
-		}
-
-		/// <summary>
-		/// Creates derived context with nullability tracking disabled for provided table source.
-		/// </summary>
-		public NullabilityContext WithOuterSource(ISqlTableSource outerSource)
-		{
-			if (OuterSource == outerSource)
-				return this;
-
-			_nullabilityCache ??= new();
-			return new NullabilityContext(InQuery, outerSource, InnerSource, _nullabilityCache);
-		}
-
-		/// <summary>
-		/// Creates derived context with nullability tracking disabled for provided table source.
-		/// </summary>
-		public NullabilityContext WithInnerSource(ISqlTableSource innerSource)
-		{
-			if (InnerSource == innerSource)
-				return this;
-
-			_nullabilityCache ??= new();
-			return new NullabilityContext(InQuery, OuterSource, innerSource, _nullabilityCache);
-		}
-
 		bool? CanBeNullInternal(SelectQuery? query, ISqlTableSource source)
 		{
-			// check if tracking disabled for source
-			if (source == OuterSource || source == InnerSource)
-				return null;
-
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 			if (query == null)
 			{

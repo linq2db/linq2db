@@ -23,15 +23,15 @@ namespace LinqToDB.SqlProvider
 		/// <param name="withoutSuffix">If object name have suffix, which could be detached from main name, this parameter disables suffix generation (enables generation of only main name part).</param>
 		/// <returns><paramref name="sb"/> parameter value.</returns>
 		StringBuilder BuildObjectName               (StringBuilder sb, SqlObjectName name, ConvertType objectType = ConvertType.NameToQueryTable, bool escape = true, TableOptions tableOptions = TableOptions.NotSet, bool withoutSuffix = false);
-		StringBuilder    BuildDataType                 (StringBuilder sb, SqlDataType dataType);
-		string           ConvertInline                 (string value, ConvertType convertType);
-		StringBuilder    Convert                       (StringBuilder sb, string value, ConvertType convertType);
-		ISqlExpression?  GetIdentityExpression         (SqlTable table);
-		StringBuilder    PrintParameters               (IDataContext dataContext, StringBuilder sb, IEnumerable<DbParameter>? parameters);
-		string           ApplyQueryHints               (string sqlText, IReadOnlyCollection<string> queryHints);
-		string           GetReserveSequenceValuesSql   (int count, string sequenceName);
-		string           GetMaxValueSql                (EntityDescriptor entity, ColumnDescriptor column);
-		void             BuildExpression               (NullabilityContext nullability, StringBuilder sb, ISqlExpression expr, bool buildTableName, object? context = null);
+		StringBuilder   BuildDataType                 (StringBuilder    sb,    SqlDataType dataType);
+		string          ConvertInline                 (string           value, ConvertType convertType);
+		StringBuilder   Convert                       (StringBuilder    sb,    string      value, ConvertType convertType);
+		ISqlExpression? GetIdentityExpression         (SqlTable         table);
+		StringBuilder   PrintParameters               (IDataContext     dataContext, StringBuilder               sb, IEnumerable<DbParameter>? parameters);
+		string          ApplyQueryHints               (string           sqlText,     IReadOnlyCollection<string> queryHints);
+		string          GetReserveSequenceValuesSql   (int              count,       string                      sequenceName);
+		string          GetMaxValueSql                (EntityDescriptor entity,      ColumnDescriptor            column);
+		void BuildExpression(StringBuilder sb, ISqlExpression expr, bool buildTableName, object? context = null);
 
 		string                                 Name             { get; }
 		MappingSchema                          MappingSchema    { get; }

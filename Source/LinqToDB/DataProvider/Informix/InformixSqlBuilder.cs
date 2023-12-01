@@ -68,47 +68,47 @@ namespace LinqToDB.DataProvider.Informix
 				.Replace("NULL IS NULL",     "1=1");
 		}
 
-		protected override void BuildSelectClause(NullabilityContext nullability, SelectQuery selectQuery)
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().Append("SELECT").AppendLine();
-				BuildColumns(nullability, selectQuery);
+				BuildColumns(selectQuery);
 				AppendIndent().Append("FROM ").Append(FakeTable).AppendLine();
 			}
 			else if (selectQuery.Select.IsDistinct)
 			{
 				AppendIndent();
 				StringBuilder.Append("SELECT");
-				BuildSkipFirst(nullability, selectQuery);
+				BuildSkipFirst(selectQuery);
 				StringBuilder.Append(" DISTINCT");
 				StringBuilder.AppendLine();
-				BuildColumns(nullability, selectQuery);
+				BuildColumns(selectQuery);
 			}
 			else
-				base.BuildSelectClause(nullability, selectQuery);
+				base.BuildSelectClause(selectQuery);
 		}
 
 		protected override string FirstFormat(SelectQuery selectQuery) => "FIRST {0}";
 		protected override string SkipFormat  => "SKIP {0}";
 
-		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(nullability, expr);
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
-		protected override void BuildLikePredicate(NullabilityContext nullability, SqlPredicate.Like predicate)
+		protected override void BuildLikePredicate(SqlPredicate.Like predicate)
 		{
 			if (predicate.IsNot)
 				StringBuilder.Append("NOT ");
 
 			var precedence = GetPrecedence(predicate);
 
-			BuildExpression(nullability, precedence, predicate.Expr1);
+			BuildExpression(precedence, predicate.Expr1);
 			StringBuilder.Append(" LIKE ");
-			BuildExpression(nullability, precedence, predicate.Expr2);
+			BuildExpression(precedence, predicate.Expr2);
 
 			if (predicate.Escape != null)
 			{
 				StringBuilder.Append(" ESCAPE ");
-				BuildExpression(nullability, precedence, predicate.Escape);
+				BuildExpression(precedence, predicate.Escape);
 			}
 		}
 
@@ -280,11 +280,11 @@ namespace LinqToDB.DataProvider.Informix
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
-		protected override void BuildTypedExpression(NullabilityContext nullability, SqlDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
 		{
-			BuildExpression(nullability, value);
+			BuildExpression(value);
 			StringBuilder.Append("::");
-			BuildDataType(dataType, false, value.CanBeNullable(nullability));
+			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
@@ -324,13 +324,14 @@ namespace LinqToDB.DataProvider.Informix
 			BuildDropTableStatementIfExists(dropTable);
 		}
 
-		protected override void BuildSqlRow(NullabilityContext nullability, SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		protected override void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses,
+			bool                                   throwExceptionIfTableNotFound)
 		{
 			// Informix needs ROW(1,2) syntax instead of BasicSqlBuilder default (1,2)
 			StringBuilder.Append("ROW (");
 			foreach (var value in expr.Values)
 			{
-				BuildExpression(nullability, value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
 				StringBuilder.Append(InlineComma);
 			}
 			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty

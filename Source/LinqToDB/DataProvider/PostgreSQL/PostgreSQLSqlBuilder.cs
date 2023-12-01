@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override bool IsRecursiveCteKeywordRequired => true;
 		protected override bool SupportsNullInColumn          => false;
 
-		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');
-			BuildExpression(nullability, identityField, false, true);
+			BuildExpression(identityField, false, true);
 			StringBuilder.AppendLine();
 		}
 
@@ -225,7 +225,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					StringBuilder.Append(InlineComma);
 				firstKey = false;
 
-				BuildExpression(nullability, expr.Column, false, true);
+				BuildExpression(expr.Column, false, true);
 			}
 
 			if (insertOrUpdate.Update.Items.Count > 0)
@@ -243,9 +243,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					first = false;
 
 					AppendIndent();
-					BuildExpression(nullability, expr.Column, false, true);
+					BuildExpression(expr.Column, false, true);
 					StringBuilder.Append(" = ");
-					BuildExpression(nullability, expr.Expression!, true, true);
+					BuildExpression(expr.Expression!, true, true);
 				}
 
 				Indent--;
@@ -371,7 +371,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
-			BuildPhysicalTable(nullability, table!, null);
+			BuildPhysicalTable(table!, null);
 
 			if (truncateTable.Table!.IdentityFields.Count > 0)
 			{
@@ -442,7 +442,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
 		}
 
-		protected override void BuildSubQueryExtensions(NullabilityContext nullability, SqlStatement statement)
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
@@ -461,11 +461,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(nullability, StringBuilder, statement.SelectQuery.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
 		}
 
-		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
+		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
 			{
@@ -484,7 +484,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(nullability, StringBuilder, statement.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.QueryHint);
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.QueryHint);
 			}
 		}
 

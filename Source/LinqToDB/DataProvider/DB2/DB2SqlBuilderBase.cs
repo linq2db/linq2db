@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.DB2
 			BuildTag(truncateTable);
 			AppendIndent();
 			StringBuilder.Append("TRUNCATE TABLE ");
-			BuildPhysicalTable(nullability, table, null);
+			BuildPhysicalTable(table, null);
 			StringBuilder.Append(" IMMEDIATE");
 			StringBuilder.AppendLine();
 		}
@@ -96,7 +96,7 @@ namespace LinqToDB.DataProvider.DB2
 
 				AppendIndent().AppendLine("SELECT");
 				AppendIndent().Append('\t');
-				BuildExpression(nullability, _identityField, false, true);
+				BuildExpression(_identityField, false, true);
 				sb.AppendLine();
 				AppendIndent().AppendLine("FROM");
 				AppendIndent().AppendLine("\tNEW TABLE");
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.DB2
 				sb.AppendLine("\t)");
 		}
 
-		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			if (Version == DB2Version.zOS)
 			{
@@ -119,16 +119,16 @@ namespace LinqToDB.DataProvider.DB2
 			}
 		}
 
-		protected override void BuildSelectClause(NullabilityContext nullability, SelectQuery selectQuery)
+		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
 			if (selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().AppendLine("SELECT");
-				BuildColumns(nullability, selectQuery);
+				BuildColumns(selectQuery);
 				AppendIndent().AppendLine("FROM SYSIBM.SYSDUMMY1");
 			}
 			else
-				base.BuildSelectClause(nullability, selectQuery);
+				base.BuildSelectClause(selectQuery);
 		}
 
 		protected override string? LimitFormat(SelectQuery selectQuery)
@@ -295,7 +295,7 @@ namespace LinqToDB.DataProvider.DB2
 				AppendIndent().Append(@"BEGIN
 	DECLARE CONTINUE HANDLER FOR SQLSTATE '42704' BEGIN END;
 	EXECUTE IMMEDIATE 'DROP TABLE ");
-				BuildPhysicalTable(nullability, table, null);
+				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine(
 				@"';
 END");
@@ -303,7 +303,7 @@ END");
 			else
 			{
 				AppendIndent().Append("DROP TABLE ");
-				BuildPhysicalTable(nullability, table, null);
+				BuildPhysicalTable(table, null);
 				StringBuilder.AppendLine();
 			}
 		}
@@ -401,11 +401,11 @@ END");
 		}
 
 		// TODO: Copy of Firebird's BuildParameter, looks like we can move such functionality to SqlProviderFlags
-		protected override void BuildParameter(NullabilityContext nullability, SqlParameter parameter)
+		protected override void BuildParameter(SqlParameter parameter)
 		{
 			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
 			{
-				base.BuildParameter(nullability, parameter);
+				base.BuildParameter(parameter);
 				return;
 			}
 
@@ -417,19 +417,19 @@ END");
 				if (paramValue.DbDataType.DataType   == DataType.Undefined &&
 				    paramValue.DbDataType.SystemType == typeof(object))
 				{
-					base.BuildParameter(nullability, parameter);
+					base.BuildParameter(parameter);
 					return;
 				}
 
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;
-				BuildTypedExpression(nullability, new SqlDataType(paramValue.DbDataType), parameter);
+				BuildTypedExpression(new SqlDataType(paramValue.DbDataType), parameter);
 				BuildStep = saveStep;
 
 				return;
 			}
 
-			base.BuildParameter(nullability, parameter);
+			base.BuildParameter(parameter);
 		}
 	}
 }

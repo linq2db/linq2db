@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			base.BuildInsertQuery(statement, insertClause, addAlias);
 		}
 
-		protected override void BuildOutputSubclause(NullabilityContext nullability, SqlStatement statement, SqlInsertClause insertClause)
+		protected override void BuildOutputSubclause(SqlStatement statement, SqlInsertClause insertClause)
 		{
 			if (insertClause.WithIdentity)
 			{
@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			else
 			{
-				BuildOutputSubclause(nullability, statement.GetOutputClause());
+				BuildOutputSubclause(statement.GetOutputClause());
 			}
 		}
 
@@ -85,7 +85,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override string DeletedOutputTable  => "DELETED";
 		protected override string InsertedOutputTable => "INSERTED";
 
-		protected override void BuildGetIdentity(NullabilityContext nullability, SqlInsertClause insertClause)
+		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
 			var identityField = insertClause.Into!.GetIdentityField();
 
@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void BuildDeleteClause(NullabilityContext nullability, SqlDeleteStatement deleteStatement)
+		protected override void BuildDeleteClause(SqlDeleteStatement deleteStatement)
 		{
 			ISqlTableSource? table = null;
 
@@ -122,7 +122,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			AppendIndent()
 				.Append("DELETE");
 
-			BuildSkipFirst(nullability, deleteStatement.SelectQuery);
+			BuildSkipFirst(deleteStatement.SelectQuery);
 
 			StringBuilder.Append(' ');
 
@@ -134,32 +134,33 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			Convert(StringBuilder, alias, ConvertType.NameToQueryTableAlias);
 			StringBuilder.AppendLine();
-			BuildOutputSubclause(nullability, deleteStatement.GetOutputClause());
+			BuildOutputSubclause(deleteStatement.GetOutputClause());
 		}
 
-		protected override void BuildOutputSubclause(NullabilityContext nullability, SqlOutputClause? output)
+		protected override void BuildOutputSubclause(SqlOutputClause? output)
 		{
 			if (BuildStep == Step.Output)
 			{
 				return;
 			}
 
-			base.BuildOutputSubclause(nullability, output);
+			base.BuildOutputSubclause(output);
 		}
 
-		protected override void BuildUpdateClause(NullabilityContext nullability, SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
+			SqlUpdateClause                                    updateClause)
 		{
-			base.BuildUpdateClause(nullability, statement, selectQuery, updateClause);
-			BuildOutputSubclause(nullability, statement.GetOutputClause());
+			base.BuildUpdateClause(statement, selectQuery, updateClause);
+			BuildOutputSubclause(statement.GetOutputClause());
 		}
 
-		protected override void BuildUpdateTableName(NullabilityContext nullability, SelectQuery selectQuery,
-			SqlUpdateClause                                             updateClause)
+		protected override void BuildUpdateTableName(SelectQuery selectQuery,
+			SqlUpdateClause                                      updateClause)
 		{
 			if (updateClause.TableSource != null)
 				Convert(StringBuilder, GetTableAlias(updateClause.TableSource)!, ConvertType.NameToQueryTableAlias);
 			else if (updateClause.Table != null)
-				BuildPhysicalTable(nullability, updateClause.Table, null);
+				BuildPhysicalTable(updateClause.Table, null);
 			else
 				throw new InvalidOperationException();
 		}
@@ -300,13 +301,13 @@ namespace LinqToDB.DataProvider.SqlServer
 						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(nullability, table, alias: null, defaultDatabaseName: defaultDatabaseName);
+				BuildPhysicalTable(table, alias : null, defaultDatabaseName : defaultDatabaseName);
 				StringBuilder.AppendLine("', N'U') IS NOT NULL)");
 				Indent++;
 			}
 
 			AppendIndent().Append("DROP TABLE ");
-			BuildPhysicalTable(nullability, table, alias: null);
+			BuildPhysicalTable(table, alias : null);
 
 			if (dropTable.Table.TableOptions.HasDropIfExists())
 				Indent--;
@@ -404,7 +405,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
-			BuildTableName(nullability, table, true, false);
+			BuildTableName(table, true, false);
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 
@@ -421,7 +422,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						"tempdb" : null;
 
 				StringBuilder.Append("IF (OBJECT_ID(N'");
-				BuildPhysicalTable(nullability, table, null, defaultDatabaseName: defaultDatabaseName);
+				BuildPhysicalTable(table, null, defaultDatabaseName : defaultDatabaseName);
 				StringBuilder.AppendLine("', N'U') IS NULL)");
 				Indent++;
 			}
@@ -439,15 +440,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(nullability, expr);
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
-		protected override void BuildTableExtensions(NullabilityContext nullability, SqlTable table, string alias)
+		protected override void BuildTableExtensions(SqlTable table, string alias)
 		{
 			if (table.SqlQueryExtensions is not null)
-				BuildTableExtensions(nullability, StringBuilder, table, alias, " WITH (", ", ", ")");
+				BuildTableExtensions(StringBuilder, table, alias, " WITH (", ", ", ")");
 		}
 
-		protected override void BuildTableNameExtensions(NullabilityContext nullability, SqlTable table)
+		protected override void BuildTableNameExtensions(SqlTable table)
 		{
 			var ext = table.SqlQueryExtensions?.LastOrDefault(e => e.Scope == Sql.QueryExtensionScope.TableNameHint);
 
@@ -458,7 +459,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				switch (extensionBuilder)
 				{
 					case ISqlQueryExtensionBuilder queryExtensionBuilder:
-						queryExtensionBuilder.Build(nullability, this, StringBuilder, ext);
+						queryExtensionBuilder.Build(NullabilityContext, this, StringBuilder, ext);
 						break;
 					default:
 						throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement the '{typeof(ISqlQueryExtensionBuilder).FullName}' interface.");
@@ -492,10 +493,10 @@ namespace LinqToDB.DataProvider.SqlServer
 			return base.BuildJoinType(join, condition);
 		}
 
-		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
+		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(nullability, StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")", Sql.QueryExtensionScope.QueryHint);
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, "OPTION (", ", ", ")", Sql.QueryExtensionScope.QueryHint);
 		}
 	}
 }

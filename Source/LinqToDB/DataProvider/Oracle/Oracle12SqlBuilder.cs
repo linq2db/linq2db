@@ -34,9 +34,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return true;
 		}
 
-		protected override bool BuildWhere(NullabilityContext nullability, SelectQuery selectQuery)
+		protected override bool BuildWhere(SelectQuery selectQuery)
 		{
-			var condition = ConvertElement(selectQuery.Where.SearchCondition, nullability);
+			var condition = ConvertElement(selectQuery.Where.SearchCondition);
 			return condition.Conditions.Count != 0;
 		}
 

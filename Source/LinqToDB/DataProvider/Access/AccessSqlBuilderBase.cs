@@ -169,7 +169,7 @@ namespace LinqToDB.DataProvider.Access
 			return true;
 		}
 
-		protected override void BuildBinaryExpression(NullabilityContext nullability, SqlBinaryExpression expr)
+		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
 		{
 			switch (expr.Operation[0])
 			{
@@ -179,10 +179,11 @@ namespace LinqToDB.DataProvider.Access
 				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);
 			}
 
-			base.BuildBinaryExpression(nullability, expr);
+			base.BuildBinaryExpression(expr);
 		}
 
-		protected override void BuildColumnExpression(NullabilityContext nullability, SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias,
+			ref bool                                               addAlias)
 		{
 			if (expr is SqlValue { Value: null } sqlValue)
 			{
@@ -205,25 +206,25 @@ namespace LinqToDB.DataProvider.Access
 				}
 			}
 
-			base.BuildColumnExpression(nullability, selectQuery, expr, alias, ref addAlias);
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 		}
 
-		protected override void BuildIsDistinctPredicate(NullabilityContext nullability, SqlPredicate.IsDistinct expr)
+		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			StringBuilder.Append("IIF(");
-			BuildExpression(nullability, Precedence.Comparison, expr.Expr1);
+			BuildExpression(Precedence.Comparison, expr.Expr1);
 			StringBuilder.Append(" = ");
-			BuildExpression(nullability, Precedence.Comparison, expr.Expr2);
+			BuildExpression(Precedence.Comparison, expr.Expr2);
 			StringBuilder.Append(" OR ");
-			BuildExpression(nullability, Precedence.Comparison, expr.Expr1);
+			BuildExpression(Precedence.Comparison, expr.Expr1);
 			StringBuilder.Append(" IS NULL AND ");
-			BuildExpression(nullability, Precedence.Comparison, expr.Expr2);
+			BuildExpression(Precedence.Comparison, expr.Expr2);
 			StringBuilder
 				.Append(" IS NULL, 0, 1) = ")
 				.Append(expr.IsNot ? '0' : '1');
 		}
 
-		protected override void BuildFunction(NullabilityContext nullability, SqlFunction func)
+		protected override void BuildFunction(SqlFunction func)
 		{
 			switch (func.Name)
 			{
@@ -234,7 +235,7 @@ namespace LinqToDB.DataProvider.Access
 						var parms = new ISqlExpression[func.Parameters.Length - 1];
 
 						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-						BuildFunction(nullability, new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
+						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
 							new SqlFunction(func.SystemType, func.Name, parms)));
 						return;
 					}
@@ -255,7 +256,7 @@ namespace LinqToDB.DataProvider.Access
 					break;
 			}
 
-			base.BuildFunction(nullability, func);
+			base.BuildFunction(func);
 		}
 
 		SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
@@ -276,11 +277,12 @@ namespace LinqToDB.DataProvider.Access
 				});
 		}
 
-		protected override void BuildUpdateClause(NullabilityContext nullability, SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
+			SqlUpdateClause                                    updateClause)
 		{
-			base.BuildFromClause(nullability, statement, selectQuery);
+			base.BuildFromClause(statement, selectQuery);
 			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
-			base.BuildUpdateSet(nullability, selectQuery, updateClause);
+			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
 		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
@@ -362,7 +364,7 @@ namespace LinqToDB.DataProvider.Access
 			return sb;
 		}
 
-		protected override void BuildSubQueryExtensions(NullabilityContext nullability, SqlStatement statement)
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
@@ -381,14 +383,14 @@ namespace LinqToDB.DataProvider.Access
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(nullability, StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
 		}
 
-		protected override void BuildQueryExtensions(NullabilityContext nullability, SqlStatement statement)
+		protected override void BuildQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SqlQueryExtensions is not null)
-				BuildQueryExtensions(nullability, StringBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 		}
 
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)

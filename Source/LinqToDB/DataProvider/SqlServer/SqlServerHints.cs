@@ -186,7 +186,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					for (var i = 0; i < count; i++)
 					{
-						sqlBuilder.BuildExpression(nullability, sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[$"columns.{i}"], false);
+						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[$"columns.{i}"], false);
 						stringBuilder.Append(", ");
 					}
 
@@ -872,7 +872,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					b2016.ConvertDateTimeAsLiteral = true;
 
 				if (sqlQueryExtension.Arguments.TryGetValue("dateTime", out var dt))
-					sqlBuilder.BuildExpression(nullability, stringBuilder, dt, true, this);
+					sqlBuilder.BuildExpression(stringBuilder, dt, true, this);
 
 				if (sqlQueryExtension.Arguments.TryGetValue("dateTime2", out dt))
 				{
@@ -883,7 +883,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						case TemporalTable.ContainedIn : stringBuilder.Append(", ");    break;
 					}
 
-					sqlBuilder.BuildExpression(nullability, stringBuilder, dt, true, this);
+					sqlBuilder.BuildExpression(stringBuilder, dt, true, this);
 
 					if (expression == TemporalTable.ContainedIn)
 						stringBuilder.Append(')');

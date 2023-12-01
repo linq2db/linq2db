@@ -12,8 +12,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		// this will allow users to use older dialects with merge at the same time
 		// (e.g. to use non-merge insertorreplace implementation)
 
-		protected override bool IsSqlValuesTableValueTypeRequired(NullabilityContext nullability, SqlValuesTable source,
-			IReadOnlyList<ISqlExpression[]> rows, int row, int column)
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
+			IReadOnlyList<ISqlExpression[]>                                      rows, int row, int column)
 		{
 			return row < 0
 				// if column contains NULL in all rows, pgsql will type is as "text"

@@ -36,7 +36,7 @@
 			}
 
 			StringBuilder.Append("INTO ");
-			BuildTableName(nullability, merge.Target, true, true);
+			BuildTableName(merge.Target, true, true);
 			StringBuilder.AppendLine();
 		}
 
@@ -50,12 +50,12 @@
 			var insertClause = new SqlInsertClause();
 			insertClause.Items.AddRange(operation.Items);
 
-			BuildInsertClause(nullability, new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
+			BuildInsertClause(new SqlInsertOrUpdateStatement(null), insertClause, null, false, false);
 
 			if (operation.Where != null)
 			{
 				StringBuilder.Append(" WHERE ");
-				BuildSearchCondition(nullability, Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition : true);
 			}
 		}
 
@@ -68,7 +68,7 @@
 
 			var update = new SqlUpdateClause();
 			update.Items.AddRange(operation.Items);
-			BuildUpdateSet(nullability, null, update);
+			BuildUpdateSet(null, update);
 
 			if (operation.Where != null)
 			{
@@ -76,7 +76,7 @@
 					.AppendLine("WHERE")
 					.Append('\t');
 
-				BuildSearchCondition(nullability, Precedence.Unknown, operation.Where, wrapCondition: true);
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition : true);
 			}
 		}
 
@@ -89,7 +89,7 @@
 				.AppendLine("DELETE WHERE")
 				.Append('\t');
 
-			BuildSearchCondition(nullability, Precedence.Unknown, operation.WhereDelete!, wrapCondition: true);
+			BuildSearchCondition(Precedence.Unknown, operation.WhereDelete!, wrapCondition : true);
 		}
 	}
 }
