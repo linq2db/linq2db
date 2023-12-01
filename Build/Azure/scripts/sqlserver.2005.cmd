@@ -17,10 +17,10 @@ docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "SELECT @@Version"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
 docker exec mssql sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
 
+reg import tls11_enable.reg
+
 goto:eof
 
 :fail
 echo "Fail"
 docker logs mssql
-
-reg import tls11_enable.reg
