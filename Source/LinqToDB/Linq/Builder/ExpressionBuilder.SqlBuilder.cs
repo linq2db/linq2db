@@ -2056,12 +2056,6 @@ namespace LinqToDB.Linq.Builder
 
 			var nullability = NullabilityContext.GetContext(context.SelectQuery);
 
-			if (left.ToString()
-			    .Contains("Scope[S:53](Scope[S:43](Ref(TableContext[ID:30](43)(T: 44)::ComplexParent).ParentID))"))
-			{
-
-			}
-
 			var keysFlag         = (flags & ~ProjectFlags.ForExtension) | ProjectFlags.Keys;
 			var columnDescriptor = SuggestColumnDescriptor(context, left, right, keysFlag);
 			var leftExpr         = ConvertToSqlExpr(context, left,  keysFlag, columnDescriptor : columnDescriptor);

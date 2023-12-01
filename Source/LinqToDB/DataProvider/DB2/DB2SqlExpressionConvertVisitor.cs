@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System;
+
+namespace LinqToDB.DataProvider.DB2
 {
 	using LinqToDB.Extensions;
 	using LinqToDB.SqlProvider;
@@ -87,18 +89,42 @@
 					return ex;
 			}
 
-			if (toType is SqlDataType type)
+			if (toType is SqlDataType sqlDataType)
 			{
-				if (type.Type.SystemType == typeof(string) && argument.SystemType != typeof(string))
+				if (sqlDataType.Type.SystemType == typeof(string) && argument.SystemType != typeof(string))
 					return new SqlFunction(func.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", argument));
 
-				if (type.Type.Length > 0)
-					return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), argument, new SqlValue(type.Type.Length));
+				if (sqlDataType.Type.Length > 0)
+					return new SqlFunction(func.SystemType, sqlDataType.Type.DataType.ToString(), argument, new SqlValue(sqlDataType.Type.Length));
 
-				if (type.Type.Precision > 0)
-					return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), argument, new SqlValue(type.Type.Precision), new SqlValue(type.Type.Scale ?? 0));
+				if (sqlDataType.Type.Precision > 0)
+					return new SqlFunction(func.SystemType, sqlDataType.Type.DataType.ToString(), argument, new SqlValue(sqlDataType.Type.Precision), new SqlValue(sqlDataType.Type.Scale ?? 0));
 
-				return new SqlFunction(func.SystemType, type.Type.DataType.ToString(), argument);
+				if (QueryHelper.UnwrapNullablity(argument) is SqlParameter param)
+				{
+					if (sqlDataType.Type.Equals(param.Type))
+						return param;
+
+					var paramSystemType = param.Type.SystemType.ToNullableUnderlying();
+
+					switch (sqlDataType.Type.DataType)
+					{
+						case DataType.Int32:
+							if (paramSystemType == typeof(short))
+								return param;
+							break;
+						case DataType.Int64:
+							if (paramSystemType == typeof(short))
+								return param;
+							if (paramSystemType == typeof(int))
+								return param;
+							break;
+
+						//TODO: probably others
+					}
+				}
+
+				return new SqlFunction(func.SystemType, sqlDataType.Type.DataType.ToString(), argument);
 			}
 
 			if (toType is SqlFunction f)
