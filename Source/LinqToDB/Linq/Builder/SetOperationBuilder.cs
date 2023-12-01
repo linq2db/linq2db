@@ -238,9 +238,58 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
+			static Expression MakeCondition(Expression test, Expression ifTrue, Expression ifFalse)
+			{
+				if (ifTrue.Type != ifFalse.Type)
+				{
+					if (ifTrue.Type.IsAssignableFrom(ifFalse.Type))
+						ifFalse = Expression.Convert(ifFalse, ifTrue.Type);
+					else if (ifFalse.Type.IsAssignableFrom(ifTrue.Type))
+						ifTrue = Expression.Convert(ifTrue, ifFalse.Type);
+					else 
+						ifFalse = Expression.Convert(ifFalse, ifTrue.Type);
+				}
+
+				return Expression.Condition(test, ifTrue, ifFalse);
+			}
+
+			bool TryMergeViaNotNullable(Expression projection1, Expression projection2, [NotNullWhen(true)] out Expression? merged)
+			{
+				// Trying to merge using not nullable fields
+				//
+				var (path, isLeft) = GetNotNullableExpressions().FirstOrDefault();
+
+				if (path != null)
+				{
+					var found = path;
+					if (!found.Type.IsNullableType())
+					{
+						found = found.WithType(found.Type.AsNullable());
+					}
+
+					var test = Expression.NotEqual(found, Expression.Default(found.Type));
+					if (isLeft)
+					{
+						merged = MakeCondition(test, projection1, projection2);
+					}
+					else
+					{
+						merged = MakeCondition(test, projection2, projection1);
+					}
+
+					return true;
+				}
+
+				merged = null;
+				return false;
+			}
+
 			Expression MergeProjections(Expression path, Expression projection1, Expression projection2, ProjectFlags flags)
 			{
 				if (TryMergeProjections(projection1, projection2, flags, out var merged))
+					return merged;
+
+				if (TryMergeViaNotNullable(projection1, projection2, out merged))
 					return merged;
 
 				if (_setOperation != SetOperation.UnionAll)
@@ -281,6 +330,30 @@ namespace LinqToDB.Linq.Builder
 					return QueryHelper.IsNullValue(placeholder.Sql);
 
 				return false;
+			}
+
+			IEnumerable<(SqlPathExpression path, bool isLeft)> GetNotNullableExpressions()
+			{
+				var nullability1 = NullabilityContext.GetContext(_sequence1.SelectQuery);
+				var nullability2 = NullabilityContext.GetContext(_sequence2.SelectQuery);
+
+				foreach (var map in _pathMapping)
+				{
+					var (placeholder1, placeholder2) = map.Value;
+					if (placeholder1.Sql is SqlColumn column1 && placeholder2.Sql is SqlColumn column2)
+					{
+						if (!column1.Expression.CanBeNullable(nullability1))
+						{
+							if (QueryHelper.IsNullValue(column2.Expression))
+								yield return (new SqlPathExpression(map.Key, placeholder1.Type), true);
+						}
+						else if (!column2.Expression.CanBeNullable(nullability2))
+						{
+							if (QueryHelper.IsNullValue(column1.Expression))
+								yield return (new SqlPathExpression(map.Key, placeholder2.Type), false);
+						}
+					}
+				}
 			}
 
 			bool TryMergeProjections(Expression projection1, Expression projection2, ProjectFlags flags, [NotNullWhen(true)] out Expression? merged)
@@ -417,6 +490,9 @@ namespace LinqToDB.Linq.Builder
 					merged = projection2;
 					return true;
 				}
+
+				if (TryMergeViaNotNullable(projection1, projection2, out merged))
+					return true;
 
 				return false;
 			}

@@ -95,5 +95,14 @@ namespace LinqToDB.Expressions
 
 			return new SqlPathExpression(path, Type);
 		}
+
+		public SqlPathExpression WithType(Type type)
+		{
+			if (Type == type)
+				return this;
+
+			return new SqlPathExpression(Path, type);
+		}
+
 	}
 }

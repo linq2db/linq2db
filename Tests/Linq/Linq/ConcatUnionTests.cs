@@ -534,10 +534,10 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			AreEqual(
-				(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
+				(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
 				(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() })),
-				(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
-				(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() })));
+				(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
+				(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() })), sort: e => e.OrderBy(x => x.ch == null).ThenBy(x => x.ParentID));
 		}
 
 		[Test]
@@ -559,11 +559,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
+					(from p1 in    Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
 					(from p2 in    Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch })
 					,
-					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Concat(
+					(from p1 in db.Parent select new { ParentID = p1.ParentID,    p = p1,            ch = (Child?)null }).Union(
 					(from p2 in db.Parent select new { ParentID = p2.Value1 ?? 0, p = (Parent?)null, ch = p2.Children.FirstOrDefault() }))
 					.Select(p => new { p.ParentID, p.p, p.ch }));
 		}
@@ -580,26 +580,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ObjectConcatWithNull([DataSources] string context)
+		public void ObjectUnion2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					(from p1 in    Parent where p1.ParentID >  3 select p1).Concat(
+					(from p1 in    Parent where p1.ParentID >  3 select p1).Union(
 					(from p2 in    Parent where p2.ParentID <= 3 select (Parent?)null)),
-					(from p1 in db.Parent where p1.ParentID >  3 select p1).Concat(
+					(from p1 in db.Parent where p1.ParentID >  3 select p1).Union(
 					(from p2 in db.Parent where p2.ParentID <= 3 select (Parent?)null)));
-		}
-
-		[Test]
-		public void ObjectUnionWithNull([DataSources] string context)
-		{
-			using var db = GetDataContext(context);
-
-			var failingQuery = 
-				(from p1 in db.Parent where p1.ParentID > 3 select p1).Union(
-					(from p2 in db.Parent where p2.ParentID <= 3 select (Parent?)null));
-
-			FluentActions.Enumerating(() => failingQuery).Should().Throw<LinqToDBException>();
 		}
 
 		[Test]

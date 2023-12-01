@@ -68,6 +68,9 @@ namespace LinqToDB.Linq.Builder
 					if (null == node.Find(1, (_, e) => e is SqlPlaceholderExpression))
 						return node;
 
+					if (node.NodeType == ExpressionType.Convert && ((UnaryExpression)node).Operand is SqlPlaceholderExpression)
+						return node;
+
 					if (!_visited.Add(node))
 					{
 						var variable = Expression.Variable(node.Type, "v" + _variables.Count);
