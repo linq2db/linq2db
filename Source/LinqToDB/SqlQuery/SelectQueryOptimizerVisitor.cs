@@ -1344,7 +1344,7 @@ namespace LinqToDB.SqlQuery
 				{
 					tableSource.UniqueKeys.AddRange(subQueryTableSource.UniqueKeys);
 				}
-				else if (subQuery.HasUniqueKeys)
+				if (subQuery.HasUniqueKeys)
 				{
 					tableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
 				}
