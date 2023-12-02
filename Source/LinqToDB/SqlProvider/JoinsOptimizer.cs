@@ -101,6 +101,10 @@ namespace LinqToDB.SqlProvider
 			if (join.JoinType is not JoinType.Left)
 				return false;
 
+			// has nested joins
+			if (join.Table.Joins.Count > 0)
+				return false;
+
 			// we cannot make assumptions on non-standard joins
 			if (join.SqlQueryExtensions?.Count > 0)
 				return false;
