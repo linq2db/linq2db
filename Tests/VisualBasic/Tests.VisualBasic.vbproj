@@ -2,7 +2,6 @@
 
 	<PropertyGroup>
 		<DefineConstants>$([System.String]::Copy('$(DefineConstants)').Replace(';',','))</DefineConstants>
-		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -10,7 +10,7 @@
 		<RepositoryType>git</RepositoryType>
 
 		<AppDesignerFolder>Properties</AppDesignerFolder>
-		<LangVersion>11.0</LangVersion>
+		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<WarningLevel>9999</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>

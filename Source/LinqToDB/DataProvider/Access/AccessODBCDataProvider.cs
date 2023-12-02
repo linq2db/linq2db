@@ -34,6 +34,9 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel              = IsolationLevel.Unspecified;
 
+			// TODO: remove after defaults set to false
+			SqlProviderFlags.IsJoinConditionCanReferenceNextJoins = false;
+
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 

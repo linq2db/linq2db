@@ -63,6 +63,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported   = false;
 			SqlProviderFlags.IsSubQueryTakeSupported           = version > SqlServerVersion.v2005;
 
+			// TODO: remove after defaults set to false
+			SqlProviderFlags.IsJoinConditionCanReferenceNextJoins = false;
+
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("char" , DataTools.GetCharExpression);

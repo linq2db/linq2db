@@ -113,11 +113,10 @@ namespace LinqToDB.SqlProvider
 			if (!(join2.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
 				return false;
 
-			// do not allow merging if table used in statement
+			// TODO: do we have test that depend on it?
+			// do not allow merging if table used in statement (currently applied to target table in UPDATE queries)
 			if (statement.IsDependedOn(t))
-				throw new InvalidOperationException("TryMergeSources2:Debug2");
-			//return false;
-
+				return false;
 
 			List<EqualityFields> foundPairs;
 			if (join1 != null)

@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Data;
 	using Mapping;
 	using SqlProvider;
+	using SqlQuery;
 
 	sealed class PostgreSQLBulkCopy : BasicBulkCopy
 	{

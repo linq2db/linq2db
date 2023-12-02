@@ -373,6 +373,13 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 46), DefaultValue(true)]
 		public bool IsRecursiveCTEJoinWithConditionSupported { get; set; } = true;
 
+		/// <summary>
+		/// Provider supports reference to later joined table in join condition.
+		/// When provider doesn't support it, it could prevent join unnesting as it will result in invalid reference to not yet joined table.
+		/// </summary>
+		[DataMember(Order = 47)]
+		public bool IsJoinConditionCanReferenceNextJoins { get; set; }
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -422,6 +429,7 @@ namespace LinqToDB.SqlProvider
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
 				^ IsColumnSubqueryWithParentReferenceSupported         .GetHashCode()
 				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
+				^ IsJoinConditionCanReferenceNextJoins                 .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -471,9 +479,10 @@ namespace LinqToDB.SqlProvider
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
 				&& IsColumnSubqueryWithParentReferenceSupported          == other.IsColumnSubqueryWithParentReferenceSupported
 				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
+				&& IsJoinConditionCanReferenceNextJoins                  == other.IsJoinConditionCanReferenceNextJoins
 				// CustomFlags as List wasn't best idea
-				&& CustomFlags.Count                    == other.CustomFlags.Count
-				&& (CustomFlags.Count                   == 0
+				&& CustomFlags.Count                                     == other.CustomFlags.Count
+				&& (CustomFlags.Count                                    == 0
 					|| CustomFlags.OrderBy(_ => _).SequenceEqual(other.CustomFlags.OrderBy(_ => _)));
 		}
 		#endregion

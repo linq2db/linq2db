@@ -42,9 +42,9 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// Moves nested joins to upper level when outer join type is compatible with first nested join type.
 		/// </summary>
-		public static void UnnestJoins(SqlStatement statement)
+		public static void UnnestJoins(SqlStatement statement, bool ignoreChildReferences)
 		{
-			statement.Visit(static e =>
+			statement.Visit(ignoreChildReferences, static (ignoreChildReferences, e) =>
 			{
 				if (e is SqlTableSource source)
 				{
@@ -64,6 +64,26 @@ namespace LinqToDB.SqlProvider
 							if ((parent.JoinType == JoinType.Inner && (child.JoinType is JoinType.Inner or JoinType.Left or JoinType.CrossApply or JoinType.OuterApply)) ||
 								(parent.JoinType == JoinType.Left && child.JoinType == JoinType.Left))
 							{
+								if (!ignoreChildReferences)
+								{
+									// check that join condition doesn't reference child tables
+									var sources = new HashSet<int>(child.Table.GetTables().Select(t => t.SourceID));
+									var found = parent.Condition.Find(sources, static (sources, e) =>
+									{
+										if (e is ISqlExpression expr
+											&& GetUnderlyingFieldOrColumn(expr) is ISqlExpression field
+											&& sources.Contains(GetFieldSourceID(field)))
+										{
+											return true;
+										}
+
+										return false;
+									});
+
+									if (found != null)
+										continue;
+								}
+
 								// move all nested joins up
 								source.Joins.InsertRange(insertIndex, parent.Table.Joins);
 								parent.Table.Joins.Clear();
