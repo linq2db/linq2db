@@ -24,9 +24,6 @@ namespace LinqToDB.DataProvider.SQLite
 			Type    parameterType,
 			Type    commandType,
 			Type    transactionType,
-			bool    disposeCommandOnError,
-			bool    supportsRowValue,
-			bool    supportsUpdateFrom,
 			bool    supportsDateOnly,
 			Action? clearAllPulls)
 		{
@@ -36,9 +33,6 @@ namespace LinqToDB.DataProvider.SQLite
 			CommandType     = commandType;
 			TransactionType = transactionType;
 
-			DisposeCommandOnError = disposeCommandOnError;
-			SupportsRowValue      = supportsRowValue;
-			SupportsUpdateFrom    = supportsUpdateFrom;
 			SupportsDateOnly      = supportsDateOnly;
 
 			ClearAllPools = clearAllPulls;
@@ -50,16 +44,6 @@ namespace LinqToDB.DataProvider.SQLite
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		/// <summary>
-		/// Enables workaround for https://github.com/aspnet/EntityFrameworkCore/issues/17521
-		/// for Microsoft.Data.Sqlite v3.0.0.
-		/// </summary>
-		internal bool DisposeCommandOnError { get; }
-
-		// ROW VALUE feature introduced in SQLite 3.15.0.
-		internal bool SupportsRowValue { get; }
-		// UPDATE FROM feature introduced in SQLite 3.33.0.
-		internal bool SupportsUpdateFrom { get; }
 		// Classic driver does not store dates correctly
 		internal bool SupportsDateOnly { get; }
 
@@ -76,8 +60,6 @@ namespace LinqToDB.DataProvider.SQLite
 			var parameterType   = assembly.GetType($"{clientNamespace}.{prefix}Parameter"  , true)!;
 			var commandType     = assembly.GetType($"{clientNamespace}.{prefix}Command"    , true)!;
 			var transactionType = assembly.GetType($"{clientNamespace}.{prefix}Transaction", true)!;
-
-			var disposeCommandOnError = connectionType.AssemblyQualifiedName == "Microsoft.Data.Sqlite.SqliteConnection, Microsoft.Data.Sqlite, Version=3.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60";
 
 			var version = assembly.GetName().Version;
 
@@ -100,8 +82,6 @@ namespace LinqToDB.DataProvider.SQLite
 				clearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => SQLiteConnection.ClearAllPools()));
 			}
 
-			var supportsRowValue   = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? RowValueMinVersionMDS   : RowValueMinVersionSDS);
-			var supportsUpdateFrom = version >= (clientNamespace == MicrosoftDataSQLiteClientNamespace ? UpdateFromMinVersionMDS : UpdateFromMinVersionSDS);
 			var supportsDateOnly   = clientNamespace == MicrosoftDataSQLiteClientNamespace && assembly.GetName().Version >= MinDateOnlyAssemblyVersionMDS;
 
 			return new SQLiteProviderAdapter(
@@ -110,19 +90,12 @@ namespace LinqToDB.DataProvider.SQLite
 				parameterType,
 				commandType,
 				transactionType,
-				disposeCommandOnError,
-				supportsRowValue,
-				supportsUpdateFrom,
 				supportsDateOnly,
 				clearAllPools);
 		}
 
 		private static readonly Version ClearPoolsMinVersionMDS       = new (6, 0, 0);
 		private static readonly Version ClearPoolsMinVersionSDS       = new (1, 0, 55);
-		private static readonly Version RowValueMinVersionMDS         = new (2, 0, 0);
-		private static readonly Version RowValueMinVersionSDS         = new (1, 0, 104);
-		private static readonly Version UpdateFromMinVersionMDS       = new (3, 1, 20);
-		private static readonly Version UpdateFromMinVersionSDS       = new (1, 0, 114);
 		private static readonly Version MinDateOnlyAssemblyVersionMDS = new (6, 0, 0);
 
 		public static SQLiteProviderAdapter GetInstance(string name)

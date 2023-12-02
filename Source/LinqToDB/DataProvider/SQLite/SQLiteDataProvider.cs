@@ -17,6 +17,15 @@ namespace LinqToDB.DataProvider.SQLite
 	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
 	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
 
+	/*
+	 * For now we don't have SQLite versioning as SQLite engine usually provided by ADO.NET provider as nuget dependency
+	 * and we should just support some sane number of latest releases:
+	 * System.Data.Sqlite: 1.0.115.5+ [3.37.0, 3.42.0]
+	 * Microsoft.Data.Sqlite: 6.0.0+  [3.35.5, 3.41.2]
+	 * where second version is version, shipped with latest provider release.
+	 * This means we don't support anything lower than SQLite 3.35.5 and could also implement/enable features from newer versions if they doesn't break compatibility
+	 * https://www.sqlite.org/changes.html
+	 */
 	public abstract class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
 		/// <summary>
@@ -39,14 +48,13 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsUpdateFromSupported             = Adapter.SupportsUpdateFrom;
+			SqlProviderFlags.IsCountDistinctSupported          = true; // 3.2.6
+			SqlProviderFlags.IsUpdateFromSupported             = true; // 3.33.0
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
-			if (Adapter.SupportsRowValue)
-			{
-				SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
-				                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
-			}
+			// 3.15.0
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
+			                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 
@@ -176,8 +184,6 @@ namespace LinqToDB.DataProvider.SQLite
 
 			return typeName;
 		}
-
-		public override IExecutionScope? ExecuteScope(DataConnection dataConnection) => Adapter.DisposeCommandOnError ? new DisposeCommandOnExceptionRegion(dataConnection) : null;
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
