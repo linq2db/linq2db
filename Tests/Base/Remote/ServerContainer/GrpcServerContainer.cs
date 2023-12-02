@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Security.Authentication;
+
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
@@ -33,6 +35,8 @@ namespace Tests.Remote.ServerContainer
 		{
 		}
 
+		private static string GetServiceUrl(int port) => $"https://localhost:{port}";
+
 		public ITestDataContext Prepare(
 			MappingSchema? ms,
 			IInterceptor? interceptor,
@@ -49,7 +53,7 @@ namespace Tests.Remote.ServerContainer
 				service.AddInterceptor(interceptor);
 			}
 
-			var url = $"https://localhost:{GetPort()}";
+			var url = GetServiceUrl(GetPort());
 
 			var dx = new TestGrpcDataContext(
 				url,
@@ -109,9 +113,18 @@ namespace Tests.Remote.ServerContainer
 				var host = hb.ConfigureWebHostDefaults(
 				webBuilder =>
 				{
-					webBuilder.UseStartup<Startup>();
+					webBuilder.ConfigureKestrel(serverOptions =>
+					{
+						serverOptions.ConfigureHttpsDefaults(co =>
+						{
+							// enable tls 1.1 for use with sql server 2005 environments
+#pragma warning disable SYSLIB0039
+							co.SslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12 | SslProtocols.Tls13;
+#pragma warning restore SYSLIB0039
+						});
+					}).UseStartup<Startup>();
 
-					var url = $"https://localhost:{port}";
+					var url = GetServiceUrl(port);
 					webBuilder.UseUrls(url);
 				}).Build();
 

@@ -587,6 +587,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{

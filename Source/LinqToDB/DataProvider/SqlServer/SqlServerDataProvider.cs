@@ -370,7 +370,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Binary        : type = SqlDbType.Binary;        break;
 				case DataType.Image         : type = SqlDbType.Image;         break;
 				case DataType.SmallMoney    : type = SqlDbType.SmallMoney;    break;
-				case DataType.Date          : type = SqlDbType.Date;          break;
+				// ArgumentException: The version of SQL Server in use does not support datatype 'date'
+				case DataType.Date          : type = Version == SqlServerVersion.v2005 ? SqlDbType.DateTime : SqlDbType.Date; break;
 				case DataType.Time          : type = SqlDbType.Time;          break;
 				case DataType.SmallDateTime : type = SqlDbType.SmallDateTime; break;
 				case DataType.Timestamp     : type = SqlDbType.Timestamp;     break;
