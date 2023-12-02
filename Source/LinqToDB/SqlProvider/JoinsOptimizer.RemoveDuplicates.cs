@@ -510,10 +510,8 @@ namespace LinqToDB.SqlProvider
 			//TODO: investigate another ways when we can propagate keys up
 			if (join.JoinType == JoinType.Inner && join.Table.HasUniqueKeys)
 			{
-				var newFields = join.Table.UniqueKeys
-						.Select(uk => uk.Select(k => GetNewField(k)).ToArray());
+				var newFields = join.Table.UniqueKeys.Select(uk => uk.Select(k => GetNewField(k)).ToArray());
 				fromTable.UniqueKeys.AddRange(newFields);
-				throw new InvalidOperationException("RemoveSource:Debug");
 			}
 
 			ResetFieldSearchCache(join.Table);
