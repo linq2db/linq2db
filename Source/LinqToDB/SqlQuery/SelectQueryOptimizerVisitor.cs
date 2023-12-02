@@ -1340,9 +1340,13 @@ namespace LinqToDB.SqlQuery
 
 				tableSource.Source = subQueryTableSource.Source;
 
-				if (subQuery.HasUniqueKeys)
+				if (subQueryTableSource.HasUniqueKeys)
 				{
-					subQueryTableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
+					tableSource.UniqueKeys.AddRange(subQueryTableSource.UniqueKeys);
+				}
+				else if (subQuery.HasUniqueKeys)
+				{
+					tableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
 				}
 			}
 
@@ -1455,6 +1459,8 @@ namespace LinqToDB.SqlQuery
 			joinTable.Table.Source = subQueryTableSource.Source;
 			if (joinTable.Table.RawAlias == null && subQueryTableSource.RawAlias != null)
 				joinTable.Table.Alias = subQueryTableSource.RawAlias;
+			if (!joinTable.Table.HasUniqueKeys && subQueryTableSource.HasUniqueKeys)
+				joinTable.Table.UniqueKeys.AddRange(subQueryTableSource.UniqueKeys);
 
 			return true;
 		}
