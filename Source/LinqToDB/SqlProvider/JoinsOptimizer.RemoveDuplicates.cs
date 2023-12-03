@@ -107,8 +107,7 @@ namespace LinqToDB.SqlProvider
 		bool TryMergeSources2(SqlStatement statement, SelectQuery selectQuery, NullabilityContext nullability, SqlTableSource fromTable, SqlTableSource? manySource, SqlJoinedTable? join1, SqlJoinedTable join2, ISqlExpression[][] uniqueKeys)
 		{
 			if (join2.Table.Joins.Count != 0)
-				throw new InvalidOperationException("TryMergeSources2:Debug1");
-			//return false;
+				return false;
 
 			if (!(join2.Table.Source is SqlTable t && t.SqlTableType == SqlTableType.Table))
 				return false;
