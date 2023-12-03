@@ -554,7 +554,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void UpdateRowLiteral(
-			[IncludeDataSources(true, ProviderName.DB2, TestProvName.AllPostgreSQL)] string context)
+			[IncludeDataSources(true, ProviderName.DB2, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
 		{
 			var data = new[]
 			{
@@ -578,11 +578,13 @@ namespace Tests.Linq
 					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 });
 		}
 
+		// TODO: this test should be rewritten to use different table as values source as currently update optimizer removes subquery for most of providers
 		[Test]
 		public void UpdateRowSelect(
 			[IncludeDataSources(true,
 				ProviderName.DB2,
 				TestProvName.AllPostgreSQL95Plus,
+				TestProvName.AllSQLite,
 				TestProvName.AllOracle)] string context)
 		{
 			var data = new[]
@@ -597,13 +599,13 @@ namespace Tests.Linq
 			ints.Where(i => i.One == 10)
 				.Set(i => i.One, i => i.Two * 5)
 				.Set(
-					i => Row(i.Two, i.Three), 
+					i => Row(i.Two, i.Three),
 					i => (from j in ints
 						  where j.One == 1
 						  select Row(i.Two * 10, j.Three * 100))
 						 .Single())
 				.Set(
-					i => Row(i.Four, i.Nil), 
+					i => Row(i.Four, i.Nil),
 					i => db.SelectQuery(() => Row(i.One * i.Four, (int?)600))
 					       .Single())
 				.Update();
