@@ -13,7 +13,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SelectScalarTests : TestBase
 	{
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Parameter1([DataSources] string context)
 		{
@@ -22,7 +21,6 @@ namespace Tests.Linq
 				Assert.AreEqual(p, db.Select(() => p));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public async Task Parameter1Async([DataSources] string context)
 		{
@@ -62,7 +60,6 @@ namespace Tests.Linq
 				Assert.AreEqual(1, db.Select(() => new Person { ID = 1, FirstName = "John" }).ID);
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void StrLen([DataSources] string context)
 		{
@@ -77,7 +74,6 @@ namespace Tests.Linq
 				Assert.AreEqual(int.MaxValue, db.Select(() => int.MaxValue));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Substring([DataSources] string context)
 		{
@@ -86,7 +82,6 @@ namespace Tests.Linq
 				Assert.AreEqual(s.Substring(1), db.Select(() => s.Substring(1)));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Add([DataSources] string context)
 		{

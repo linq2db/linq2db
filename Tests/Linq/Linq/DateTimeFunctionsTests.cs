@@ -1498,7 +1498,7 @@ namespace Tests.Linq
 
 #endregion
 
-		[ActiveIssue("SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.", Configuration = ProviderName.DB2)]
+		[ActiveIssue("SQL0245N  The invocation of routine \"DATE\" is ambiguous. The argument in position \"1\" does not have a best fit.", Configuration = ProviderName.DB2)]
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{
