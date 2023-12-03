@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			SqlProviderFlags.IsSkipSupported                   = false;
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
-			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported         = true; // 3.24.0
 			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;

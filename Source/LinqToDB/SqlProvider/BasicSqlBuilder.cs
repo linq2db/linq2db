@@ -1126,6 +1126,55 @@ namespace LinqToDB.SqlProvider
 			throw new SqlException("InsertOrUpdate query type is not supported by {0} provider.", Name);
 		}
 
+		protected void BuildInsertOrUpdateQueryAsOnConflictUpdateOrNothing(SqlInsertOrUpdateStatement insertOrUpdate)
+		{
+			var nullability = new NullabilityContext(insertOrUpdate.SelectQuery);
+
+			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, true);
+
+			AppendIndent();
+			StringBuilder.Append("ON CONFLICT (");
+
+			var firstKey = true;
+			foreach (var expr in insertOrUpdate.Update.Keys)
+			{
+				if (!firstKey)
+					StringBuilder.Append(InlineComma);
+				firstKey = false;
+
+				BuildExpression(expr.Column, false, true);
+			}
+
+			if (insertOrUpdate.Update.Items.Count > 0)
+			{
+				StringBuilder.AppendLine(") DO UPDATE SET");
+
+				Indent++;
+
+				var first = true;
+
+				foreach (var expr in insertOrUpdate.Update.Items)
+				{
+					if (!first)
+						StringBuilder.AppendLine(Comma);
+					first = false;
+
+					AppendIndent();
+					BuildExpression(expr.Column, false, true);
+					StringBuilder.Append(" = ");
+					BuildExpression(expr.Expression!, true, true);
+				}
+
+				Indent--;
+
+				StringBuilder.AppendLine();
+			}
+			else
+			{
+				StringBuilder.AppendLine(") DO NOTHING");
+			}
+		}
+
 		protected virtual void BuildInsertOrUpdateQueryAsMerge(SqlInsertOrUpdateStatement insertOrUpdate, string? fromDummyTable)
 		{
 			var nullability = new NullabilityContext(insertOrUpdate.SelectQuery);
