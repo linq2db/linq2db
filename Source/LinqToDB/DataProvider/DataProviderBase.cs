@@ -69,7 +69,6 @@ namespace LinqToDB.DataProvider
 				DefaultMultiQueryIsolationLevel      = IsolationLevel.RepeatableRead,
 				RowConstructorSupport                = RowFeature.None,
 				IsWindowFunctionsSupported           = true,
-				IsJoinConditionCanReferenceNextJoins = true, // TODO: temporary se to true to detect provider support
 			};
 
 			SetField<DbDataReader, bool>    ((r,i) => r.GetBoolean (i));

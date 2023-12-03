@@ -41,9 +41,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
 
-			// TODO: remove after defaults set to false
-			SqlProviderFlags.IsJoinConditionCanReferenceNextJoins = false;
-
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
 			                                         RowFeature.Update          | RowFeature.UpdateLiteral |

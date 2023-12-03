@@ -164,10 +164,7 @@ namespace LinqToDB.DataProvider.Access
 
 		#endregion
 
-		protected override bool ParenthesizeJoin(List<SqlJoinedTable> joins)
-		{
-			return true;
-		}
+		protected override bool ParenthesizeJoin(List<SqlJoinedTable> joins) => true;
 
 		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
 		{

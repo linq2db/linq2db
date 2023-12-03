@@ -34,9 +34,6 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.Comparisons | RowFeature.Update |
 			                                         RowFeature.UpdateLiteral | RowFeature.Overlaps | RowFeature.Between;
 
-			// TODO: remove after defaults set to false
-			SqlProviderFlags.IsJoinConditionCanReferenceNextJoins = false;
-
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 

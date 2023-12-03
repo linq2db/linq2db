@@ -57,7 +57,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinSupported => false;
+		public override bool IsNestedJoinParenthesisRequired => true;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
