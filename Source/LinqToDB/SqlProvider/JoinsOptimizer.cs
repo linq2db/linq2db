@@ -65,7 +65,7 @@ namespace LinqToDB.SqlProvider
 								(parent.JoinType == JoinType.Left && child.JoinType == JoinType.Left))
 							{
 								// check that join condition doesn't reference child tables
-								var sources = new HashSet<int>(child.Table.GetTables().Select(t => t.SourceID));
+								var sources = new HashSet<int>(parent.Table.Joins.SelectMany(j => j.Table.GetTables().Select(t => t.SourceID)));
 								var found = parent.Condition.Find(sources, static (sources, e) =>
 								{
 									if (e is ISqlExpression expr
