@@ -59,7 +59,7 @@ namespace LinqToDB.SqlQuery
 
 			public bool IsNot { get; }
 
-			public bool CanInvert() => true;
+			public virtual bool CanInvert() => true;
 
 			public abstract IQueryElement Invert();
 
@@ -625,7 +625,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public override QueryElementType ElementType => QueryElementType.IsTruePredicate;
-
 		}
 
 		// expression IS [ NOT ] NULL

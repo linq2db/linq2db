@@ -1712,6 +1712,10 @@ namespace LinqToDB.Linq.Builder
 			if (SqlExpression.NeedsEqual(ex))
 			{
 				var descriptor = QueryHelper.GetColumnDescriptor(ex);
+
+				if (ex is SqlColumn col)
+					ex = SqlNullabilityExpression.ApplyNullability(ex, NullabilityContext.GetContext(col.Parent));
+
 				var trueValue  = ConvertToSql(context, ExpressionInstances.True, columnDescriptor: descriptor);
 				var falseValue = ConvertToSql(context, ExpressionInstances.False, columnDescriptor: descriptor);
 
