@@ -409,8 +409,13 @@ namespace Tests.DataProvider
 				Test<TimeSpan>(DataType.NChar    , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
 				Test<TimeSpan>(DataType.VarChar  , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
 				Test<TimeSpan>(DataType.NVarChar , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
-				Test<TimeSpan>(DataType.Time     , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
-				Test<TimeSpan>(DataType.Undefined, i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				if (!context.IsAnyOf(TestProvName.AllSqlServer2005))
+				{
+					// 2005: time not supported
+					Test<TimeSpan>(DataType.Time     , i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+					// 2005: no defaults, user should explicitly specify which type he wants to use for TimeSpan mapping
+					Test<TimeSpan>(DataType.Undefined, i, TestData.TimeOfDay, TestData.TimeOfDay.TrimPrecision(i));
+				}
 			}
 
 			// DateTimeOffset

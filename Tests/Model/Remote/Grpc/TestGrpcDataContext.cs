@@ -29,7 +29,7 @@ namespace Tests.Model.Remote.Grpc
 						new HttpClientHandler()
 						{
 							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
-							SslProtocols = SupportedSslProtocols
+							//SslProtocols = SupportedSslProtocols
 						})
 #pragma warning restore CA2000 // Dispose objects before losing scope
 				},

@@ -39,7 +39,8 @@ namespace Tests.Remote.ServerContainer
 		{
 		}
 
-		private static string GetServiceUrl(int port) => $"https://localhost:{port}";
+		// use HTTP for now to workaround TLS configuration issues on machines with TLS 1.1 enabled for SQL Server 2005 testing
+		private static string GetServiceUrl(int port) => $"http://localhost:{port}";
 
 		public ITestDataContext Prepare(
 			MappingSchema? ms,
@@ -121,7 +122,7 @@ namespace Tests.Remote.ServerContainer
 					{
 						serverOptions.ConfigureHttpsDefaults(co =>
 						{
-							co.SslProtocols = TestGrpcDataContext.SupportedSslProtocols;
+							//co.SslProtocols = TestGrpcDataContext.SupportedSslProtocols;
 						});
 					}).UseStartup<Startup>();
 
