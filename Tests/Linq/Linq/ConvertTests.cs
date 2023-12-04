@@ -17,7 +17,6 @@ namespace Tests.Linq
 	[TestFixture]
 	public class ConvertTests : TestBase
 	{
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Test1([DataSources(TestProvName.AllSQLite)] string context)
 		{

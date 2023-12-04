@@ -157,7 +157,7 @@ namespace Tests.xUpdate
 		// TODO: fix
 		// oracle native tests could fail due to bug in provider:
 		// InitialLONGFetchSize option makes it read garbage for String/StringNullable testcases
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestCreateTableColumnType(
 			[DataSources] string context,

@@ -129,7 +129,6 @@ namespace Tests.Linq
 					db.Child.Select(ch => ch.ParentID).Distinct().OrderBy(ch => ch));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DistinctJoin([DataSources] string context)
 		{

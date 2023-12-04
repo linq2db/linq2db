@@ -998,8 +998,7 @@ namespace Tests.Linq
 		}
 
 		[Test, Explicit]
-		public void StackOverflow([IncludeDataSources(
-			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
+		public void StackOverflow([IncludeDataSources(TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
