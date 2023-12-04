@@ -229,6 +229,11 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 				}
 
+				case DataType.Date when value is DateTime dt:
+					if (Version is SqlServerVersion.v2005)
+						value = dt.Date;
+					break;
+
 				case DataType.Date when value is DateTimeOffset dto:
 					value = dto.LocalDateTime.Date;
 					break;

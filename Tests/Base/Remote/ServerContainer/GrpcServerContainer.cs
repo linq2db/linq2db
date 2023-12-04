@@ -9,12 +9,16 @@ using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
 using LinqToDB.Remote.Grpc;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using NUnit.Framework;
+
 using ProtoBuf.Grpc.Server;
+
 using Tests.Model;
 using Tests.Model.Remote.Grpc;
 
@@ -117,10 +121,7 @@ namespace Tests.Remote.ServerContainer
 					{
 						serverOptions.ConfigureHttpsDefaults(co =>
 						{
-							// enable tls 1.1 for use with sql server 2005 environments
-#pragma warning disable SYSLIB0039
-							co.SslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12 | SslProtocols.Tls13;
-#pragma warning restore SYSLIB0039
+							co.SslProtocols = TestGrpcDataContext.SupportedSslProtocols;
 						});
 					}).UseStartup<Startup>();
 

@@ -1,6 +1,7 @@
 ﻿#if !NETFRAMEWORK
 using System;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
 using LinqToDB;
@@ -11,6 +12,11 @@ namespace Tests.Model.Remote.Grpc
 {
 	public class TestGrpcDataContext : GrpcDataContext, ITestDataContext
 	{
+		// enable tls 1.1 for use with sql server 2005 environments on CI where we disable 1.2 and 1.3
+#pragma warning disable SYSLIB0039
+		public static readonly SslProtocols SupportedSslProtocols = SslProtocols.Tls11 | SslProtocols.Tls12 | SslProtocols.Tls13;
+#pragma warning restore SYSLIB0039
+
 		private readonly Action? _onDispose;
 
 		public TestGrpcDataContext(string address, Action? onDispose = null, Func<DataOptions,DataOptions>? optionBuilder = null)
@@ -22,7 +28,8 @@ namespace Tests.Model.Remote.Grpc
 #pragma warning disable CA2000 // Dispose objects before losing scope
 						new HttpClientHandler()
 						{
-							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+							SslProtocols = SupportedSslProtocols
 						})
 #pragma warning restore CA2000 // Dispose objects before losing scope
 				},
