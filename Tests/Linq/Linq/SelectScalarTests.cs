@@ -246,7 +246,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastAndHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -264,9 +263,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// Informix actually can use TOP in subqueries when wrapped into another select: https://stackoverflow.com/a/22656180
-		// Looks like SAP HANA2 support TOP in subqueries. We to introduce HANA provider versions
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCast([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -283,7 +279,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -301,7 +296,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithoutCastAndHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -318,7 +312,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastAndHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -336,7 +329,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -353,7 +345,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -371,7 +362,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithoutCastAndHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{

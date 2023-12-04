@@ -23,7 +23,6 @@ namespace Tests.UserTests
 			return value;
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithFunction([DataSources] string context)
 		{
@@ -42,7 +41,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithCastAndFunction([DataSources] string context)
 		{
@@ -61,7 +59,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithCast([DataSources] string context)
 		{
@@ -80,7 +77,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithValue([DataSources] string context)
 		{
@@ -99,7 +95,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestWithoutValue([DataSources] string context)
 		{
@@ -118,7 +113,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestOrWithValue([DataSources] string context)
 		{
