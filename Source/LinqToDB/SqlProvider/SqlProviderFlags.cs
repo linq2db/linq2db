@@ -373,6 +373,29 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 46), DefaultValue(true)]
 		public bool IsRecursiveCTEJoinWithConditionSupported { get; set; } = true;
 
+		/// <summary>
+		/// Provider supports INNER JOIN inside OUTER JOIN. For example:
+		/// <code>
+		/// LEFT JOIN table1 ON ...
+		///	   INNER JOIN query ON ...
+		/// </code>
+		///
+		/// Otherwise the following query will be left:
+		/// <code>
+		/// LEFT JOIN (
+		///	   SELECT ...
+		///	   FROM table1
+		///	   INNER JOIN query ON ...
+		/// )
+		/// </code>
+		/// Default: <c>true</c>.
+		/// <remarks>
+		/// Currently not supported only by Access.
+		/// </remarks>
+		/// </summary>
+		[DataMember(Order = 47), DefaultValue(true)]
+		public bool IsOuterJoinSupportsInnerJoin { get; set; } = true;
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -422,6 +445,7 @@ namespace LinqToDB.SqlProvider
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
 				^ IsColumnSubqueryWithParentReferenceSupported         .GetHashCode()
 				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
+				^ IsOuterJoinSupportsInnerJoin                         .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -471,6 +495,7 @@ namespace LinqToDB.SqlProvider
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
 				&& IsColumnSubqueryWithParentReferenceSupported          == other.IsColumnSubqueryWithParentReferenceSupported
 				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
+				&& IsOuterJoinSupportsInnerJoin                          == other.IsOuterJoinSupportsInnerJoin
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

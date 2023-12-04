@@ -1412,6 +1412,14 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
+				if (!_flags.IsOuterJoinSupportsInnerJoin)
+				{
+					// Especially for Access. See ComplexTests.Contains3
+					//
+					if (QueryHelper.EnumerateJoins(subQuery).Any(j => j.JoinType == JoinType.Inner))
+						return false;
+				}
+
 				if (!subQuery.Select.Columns.All(c => c.Expression is SqlColumn or SqlField))
 					return false;
 			}
