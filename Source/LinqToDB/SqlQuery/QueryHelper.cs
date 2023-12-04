@@ -315,7 +315,7 @@ namespace LinqToDB.SqlQuery
 			return descriptor.GetDbDataType(true);
 		}
 
-		static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null, bool singleColumnLevel = false)
+		public static void CollectDependencies(IQueryElement root, IEnumerable<ISqlTableSource> sources, HashSet<ISqlExpression> found, IEnumerable<IQueryElement>? ignore = null, bool singleColumnLevel = false)
 		{
 			var hash       = new HashSet<ISqlTableSource>(sources);
 			var hashIgnore = new HashSet<IQueryElement>(ignore ?? Enumerable.Empty<IQueryElement>());

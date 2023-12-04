@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlProvider
 {
-	using LinqToDB.Common;
+	using Common;
 	using SqlQuery;
 
 	// TODO: refactoring in progress
@@ -77,7 +77,10 @@ namespace LinqToDB.SqlProvider
 			OptimizeFilters();
 
 			if (_replaceMap != null)
-				statement = statement.Clone(_replaceMap);
+			{
+				statement.Replace(_replaceMap);
+			}
+
 			else if (_removedSources != null)
 				throw new InvalidOperationException("RemoveDuplicateJoins:Debug");
 

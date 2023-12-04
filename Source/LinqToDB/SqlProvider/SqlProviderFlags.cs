@@ -396,6 +396,32 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 47), DefaultValue(true)]
 		public bool IsOuterJoinSupportsInnerJoin { get; set; } = true;
 
+		/// <summary>
+		/// Indicates that provider supports JOINS in FROM clause which have several tables
+		/// <code>
+		/// SELECT ...
+		/// FROM table1
+		///	   INNER JOIN query ON ...
+		///    , table2
+		/// </code>
+		/// Otherwise the following query will be generated:
+		/// <code>
+		/// SELECT ...
+		/// FROM (
+		///		SELECT ...
+		///		FROM table1, table2
+		/// ) S
+		///	   INNER JOIN query ON ... ,
+		/// FROM table2
+		/// </code>
+		/// Default: <c>true</c>.
+		/// <remarks>
+		/// Currently not supported only by Access.
+		/// </remarks>
+		/// </summary>
+		[DataMember(Order = 48), DefaultValue(true)]
+		public bool IsMultiTablesSupportsJoins { get; set; } = true;
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -446,6 +472,7 @@ namespace LinqToDB.SqlProvider
 				^ IsColumnSubqueryWithParentReferenceSupported         .GetHashCode()
 				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
 				^ IsOuterJoinSupportsInnerJoin                         .GetHashCode()
+				^ IsMultiTablesSupportsJoins                           .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -496,6 +523,7 @@ namespace LinqToDB.SqlProvider
 				&& IsColumnSubqueryWithParentReferenceSupported          == other.IsColumnSubqueryWithParentReferenceSupported
 				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
 				&& IsOuterJoinSupportsInnerJoin                          == other.IsOuterJoinSupportsInnerJoin
+				&& IsMultiTablesSupportsJoins                            == other.IsMultiTablesSupportsJoins
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

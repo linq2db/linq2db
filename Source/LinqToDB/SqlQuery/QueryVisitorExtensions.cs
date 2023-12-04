@@ -9,10 +9,11 @@ namespace LinqToDB.SqlQuery
 
 	public static class QueryVisitorExtensions
 	{
-		internal static readonly ObjectPool<SqlQueryFindVisitor>        FindVisitorPool   = new(() => new SqlQueryFindVisitor(),        v => v.Cleanup(), 100);
-		internal static readonly ObjectPool<SqlQueryActionVisitor>      ActionVisitorPool = new(() => new SqlQueryActionVisitor(),      v => v.Cleanup(), 100);
-		internal static readonly ObjectPool<SqlQueryParentFirstVisitor> ParentVisitorPool = new(() => new SqlQueryParentFirstVisitor(), v => v.Cleanup(), 100);
-		internal static readonly ObjectPool<SqlQueryCloneVisitor>       CloneVisitorPool  = new(() => new SqlQueryCloneVisitor(),       v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryFindVisitor>          FindVisitorPool      = new(() => new SqlQueryFindVisitor(),          v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryActionVisitor>        ActionVisitorPool    = new(() => new SqlQueryActionVisitor(),        v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryParentFirstVisitor>   ParentVisitorPool    = new(() => new SqlQueryParentFirstVisitor(),   v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryCloneVisitor>         CloneVisitorPool     = new(() => new SqlQueryCloneVisitor(),         v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<QueryElementReplacingVisitor> ReplacingVisitorPool = new(() => new QueryElementReplacingVisitor(), v => v.Cleanup(), 100);
 
 		static class PoolHolder<TContext>
 		{
@@ -189,6 +190,19 @@ namespace LinqToDB.SqlQuery
 
 			return (T)cloneVisitor.Value.Clone(element, null);
 		}
+		#endregion
+
+		#region Replace
+
+		public static T Replace<T>(this T element, IDictionary<IQueryElement, IQueryElement> replacements,
+			params IQueryElement[]   toIgnore)
+			where T : class, IQueryElement
+		{
+			using var replacingElementVisitor = ReplacingVisitorPool.Allocate();
+
+			return (T)replacingElementVisitor.Value.Replace(element, replacements, toIgnore);
+		}
+
 		#endregion
 
 		#region Convert

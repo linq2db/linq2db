@@ -206,6 +206,11 @@ namespace LinqToDB.SqlQuery
 						EnsureReferencesCorrected(selectQuery);
 					}
 
+					if (CorrectMultiTables(selectQuery))
+					{
+						isModified = true;
+					}
+
 					if (FinalizeAndValidateInternal(selectQuery))
 					{
 						isModified = true;
@@ -1064,13 +1069,19 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.DoNotRemove)
 				return false;
 
-			if (subQuery.From.Tables.Count > 1)
-				return false;
-
 			if (subQuery.From.Tables.Count == 0)
 			{
 				if (!IsSimpleForNoTablesMove(selectQuery))
 					return false;
+			}
+
+			if (subQuery.From.Tables.Count > 1)
+			{
+				if (!_flags.IsMultiTablesSupportsJoins)
+				{
+					if (QueryHelper.EnumerateJoins(selectQuery).Any())
+						return false;
+				}
 			}
 
 			// // named sub-query cannot be removed
@@ -1329,7 +1340,7 @@ namespace LinqToDB.SqlQuery
 				NotifyReplaced(column.Expression, column);
 			}
 
-			if (subQuery.From.Tables.Count == 1)
+			// First table processing
 			{
 				var subQueryTableSource = subQuery.From.Tables[0];
 
@@ -1347,6 +1358,16 @@ namespace LinqToDB.SqlQuery
 				if (subQuery.HasUniqueKeys)
 				{
 					tableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
+				}
+			}
+
+			if (subQuery.From.Tables.Count > 1)
+			{
+				var idx = selectQuery.From.Tables.IndexOf(tableSource);
+				for (var i = subQuery.From.Tables.Count - 1; i >= 1; i--)
+				{
+					var subQueryTableSource = subQuery.From.Tables[i];
+					selectQuery.From.Tables.Insert(idx + 1, subQueryTableSource);
 				}
 			}
 
@@ -1503,11 +1524,6 @@ namespace LinqToDB.SqlQuery
 		{
 			var replaced = false;
 
-			if (selectQuery.SourceID == 26)
-			{
-
-			}
-
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
@@ -1572,6 +1588,64 @@ namespace LinqToDB.SqlQuery
 						ts.Joins.RemoveAt(0);
 						--i;
 					}
+				}
+			}
+
+			return isModified;
+		}
+
+		SelectQuery MoveMutliTablesToSubquery(SelectQuery selectQuery)
+		{
+			var joins = new List<SqlJoinedTable>(selectQuery.From.Tables.Count);
+			foreach (var t in selectQuery.From.Tables)
+			{
+				joins.AddRange(t.Joins);
+				t.Joins.Clear();
+			}
+
+			var subQuery = new SelectQuery();
+
+			var tables = selectQuery.From.Tables.ToArray();
+			selectQuery.From.Tables.Clear();
+
+			var baseTable = new SqlTableSource(subQuery, "cross");
+			baseTable.Joins.AddRange(joins);
+			selectQuery.Select.From.Tables.Add(baseTable);
+			subQuery.From.Tables.AddRange(tables);
+
+			var sources     = new HashSet<ISqlTableSource>(tables.Select(static t => t.Source));
+			var foundFields = new HashSet<ISqlExpression>();
+
+			QueryHelper.CollectDependencies(_rootElement, sources, foundFields);
+
+			var toReplace = new Dictionary<IQueryElement, IQueryElement>(foundFields.Count);
+			foreach (var expr in foundFields)
+				toReplace.Add(expr, subQuery.Select.AddColumn(expr));
+
+			if (toReplace.Count > 0)
+			{
+				_rootElement.Replace(toReplace, subQuery.Select);
+			}
+
+			subQuery.DoNotRemove = true;
+
+			return subQuery;
+		}
+
+		bool CorrectMultiTables(SelectQuery selectQuery)
+		{
+			if (_flags.IsMultiTablesSupportsJoins)
+				return false;
+
+			var isModified = false;
+
+			if (selectQuery.From.Tables.Count > 1)
+			{
+				if (QueryHelper.EnumerateJoins(selectQuery).Any())
+				{
+					MoveMutliTablesToSubquery(selectQuery);
+
+					isModified = true;
 				}
 			}
 
