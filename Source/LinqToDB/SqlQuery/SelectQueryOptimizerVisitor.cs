@@ -166,6 +166,10 @@ namespace LinqToDB.SqlQuery
 
 					}
 				}
+				else
+				{
+					OptimizeColumns(selectQuery);
+				}
 
 				do
 				{
@@ -732,7 +736,7 @@ namespace LinqToDB.SqlQuery
 				ISqlExpression?       rnExpression = null;
 				List<ISqlExpression>? partitionBy  = null;
 
-				if (skipValue != null || takeValue != null || sql.Select.IsDistinct)
+				if (skipValue != null || takeValue != null)
 				{
 					if (!_flags.IsWindowFunctionsSupported)
 						return optimized;
@@ -1045,7 +1049,8 @@ namespace LinqToDB.SqlQuery
 				nullability,
 				_evaluationContext,
 				column.Parent,
-				_applySelect == parentQuery ? parentQuery.Where : null
+				_applySelect == parentQuery ? parentQuery.Where  : null,
+				_applySelect == parentQuery ? parentQuery.Select : null
 				);
 
 			return allowed;
@@ -1149,14 +1154,18 @@ namespace LinqToDB.SqlQuery
 				{
 					// Columns in parent query should match
 					//
-					if (subQuery.Select.Columns.Count != selectQuery.Select.Columns.Count)
-						return false;
 
 					if (!subQuery.Select.Columns.All(sc =>
 						    selectQuery.Select.Columns.Any(pc => ReferenceEquals(pc.Expression, sc))))
 					{
 						return false;
 					}
+
+					// if (subQuery.Select.Columns.Count != selectQuery.Select.Columns.Count)
+					// {
+					// 	return false;
+					// }
+
 				}
 				else
 				{
@@ -1646,6 +1655,38 @@ namespace LinqToDB.SqlQuery
 					MoveMutliTablesToSubquery(selectQuery);
 
 					isModified = true;
+				}
+			}
+
+			return isModified;
+		}
+
+		bool OptimizeColumns(SelectQuery selectQuery)
+		{
+			if (_parentSelect == null)
+				return false;
+
+			if (selectQuery.HasSetOperators)
+				return false;
+
+			var isModified = false;
+
+			for (var index = 0; index < selectQuery.Select.Columns.Count; index++)
+			{
+				var c = selectQuery.Select.Columns[index];
+				for(var nextIndex = index + 1; nextIndex < selectQuery.Select.Columns.Count; nextIndex++)
+				{
+					var nc = selectQuery.Select.Columns[nextIndex];
+
+					if (ReferenceEquals(c.Expression, nc.Expression))
+					{
+						selectQuery.Select.Columns.RemoveAt(nextIndex);
+						--nextIndex;
+
+						NotifyReplaced(c, nc);
+
+						isModified = true;
+					}
 				}
 			}
 

@@ -2,7 +2,6 @@
 
 using FluentAssertions;
 
-using LinqToDB;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
@@ -129,10 +128,7 @@ namespace Tests.Linq
 					from c in cg.DefaultIfEmpty().Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -149,10 +145,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).DefaultIfEmpty().Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -207,10 +200,7 @@ namespace Tests.Linq
 					from c in cg.Distinct().DefaultIfEmpty()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -329,10 +319,7 @@ namespace Tests.Linq
 					from c in cg.Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -349,10 +336,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -411,10 +395,7 @@ namespace Tests.Linq
 					from c in cg.Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported && !db.SqlProviderFlags.IsWindowFunctionsSupported)
-					Assert.Throws<LinqException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 	}
