@@ -1378,6 +1378,15 @@ namespace LinqToDB.SqlQuery
 					var subQueryTableSource = subQuery.From.Tables[i];
 					selectQuery.From.Tables.Insert(idx + 1, subQueryTableSource);
 				}
+
+				// Move joins to last table
+				//
+				if (tableSource.Joins.Count > 0)
+				{
+					var lastTableSource = subQuery.From.Tables[^1];
+					lastTableSource.Joins.InsertRange(0, tableSource.Joins);
+					tableSource.Joins.Clear();
+				}
 			}
 
 			ApplySubQueryExtensions(selectQuery, subQuery);
@@ -1495,8 +1504,10 @@ namespace LinqToDB.SqlQuery
 			var subQueryTableSource = subQuery.From.Tables[0];
 			joinTable.Table.Joins.AddRange(subQueryTableSource.Joins);
 			joinTable.Table.Source = subQueryTableSource.Source;
+
 			if (joinTable.Table.RawAlias == null && subQueryTableSource.RawAlias != null)
 				joinTable.Table.Alias = subQueryTableSource.RawAlias;
+
 			if (!joinTable.Table.HasUniqueKeys && subQueryTableSource.HasUniqueKeys)
 				joinTable.Table.UniqueKeys.AddRange(subQueryTableSource.UniqueKeys);
 
@@ -1664,6 +1675,9 @@ namespace LinqToDB.SqlQuery
 		bool OptimizeColumns(SelectQuery selectQuery)
 		{
 			if (_parentSelect == null)
+				return false;
+
+			if (_currentSetOperator != null)
 				return false;
 
 			if (selectQuery.HasSetOperators)
