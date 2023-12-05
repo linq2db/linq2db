@@ -1757,7 +1757,7 @@ namespace Tests.xUpdate
 						? "_f3"
 						: "_f");
 
-				if (context.EndsWith("LinqService"))
+				if (context.IsRemote())
 					tableName += "l";
 
 				tableName += "_" + methodName;
@@ -1767,7 +1767,7 @@ namespace Tests.xUpdate
 			{
 				tableName += "_o";
 
-				if (context.EndsWith("LinqService"))
+				if (context.IsRemote())
 					tableName += "l";
 			}
 

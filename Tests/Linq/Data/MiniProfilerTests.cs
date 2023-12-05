@@ -346,7 +346,7 @@ namespace Tests.Data
 			ms.SetConvertExpression<MySqlDataDateTime, string>(value => value.Value.ToBinary().ToString(CultureInfo.InvariantCulture));
 			ms.SetConvertExpression<string, MySqlDataDateTime>(value => new MySqlDataDateTime(DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture))));
 
-			using (var db = GetDataContext(testContext + (isLinq ? ".LinqService" : null), ms))
+			using (var db = GetDataContext(testContext + (isLinq ? LinqServiceSuffix : null), ms))
 			{
 				if (type == ConnectionType.MiniProfiler)
 					db.AddInterceptor(UnwrapProfilerInterceptor.Instance);

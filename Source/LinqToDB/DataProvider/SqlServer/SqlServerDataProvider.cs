@@ -212,20 +212,19 @@ namespace LinqToDB.DataProvider.SqlServer
 					value = dto.LocalDateTime;
 					break;
 
-				case DataType.DateTime2
-						when value is DateTimeOffset dto:
-					value = dto.WithPrecision(dataType.Precision ?? 7).LocalDateTime;
+				case DataType.DateTime2 when value is DateTimeOffset dto:
+					if (Version == SqlServerVersion.v2005)
+						value = dto.LocalDateTime.WithPrecision(dataType.Precision > 3 ? 3 : (dataType.Precision ?? 3));
+					else
+						value = dto.WithPrecision(dataType.Precision ?? 7).LocalDateTime;
 					break;
 
 				case DataType.DateTimeOffset when value is DateTimeOffset dto:
 				{
-					var precision = dataType.Precision ?? 7;
-					if (Version == SqlServerVersion.v2005 && precision > 3)
-					{
-						precision = 3;
-					}
-
-					value = dto.WithPrecision(precision);
+					if (Version == SqlServerVersion.v2005)
+						value = dto.LocalDateTime.WithPrecision(dataType.Precision > 3 ? 3 : (dataType.Precision ?? 3));
+					else
+						value = dto.WithPrecision(dataType.Precision ?? 7);
 					break;
 				}
 

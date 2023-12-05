@@ -121,7 +121,7 @@ namespace Tests.DataProvider
 			{
 				if (_data == null)
 					using (new DisableBaseline("test cache"))
-					using (var db = new DataConnection(context.Replace(".LinqService", "")))
+					using (var db = new DataConnection(context.StripRemote()))
 						_data = db.GetTable<SqlTypes>().ToList();
 
 				foreach (var item in _data)
