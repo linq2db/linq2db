@@ -444,6 +444,107 @@ namespace Tests.Linq
 			AssertQuery(query, new DictionaryEqualityComparer<string, string>());
 		}
 
+		class ByBookTypeResult
+		{
+			public string?       BookType { get; set; }
+			public List<Author>? Authors  { get; set; }
+
+			sealed class BookTypeEqualityComparer : IEqualityComparer<ByBookTypeResult>
+			{
+				public bool Equals(ByBookTypeResult? x, ByBookTypeResult? y)
+				{
+					if (ReferenceEquals(x, y))
+					{
+						return true;
+					}
+
+					if (ReferenceEquals(x, null))
+					{
+						return false;
+					}
+
+					if (ReferenceEquals(y, null))
+					{
+						return false;
+					}
+
+					if (x.GetType()   != y.GetType())
+					{
+						return false;
+					}
+
+					return x.BookType == y.BookType;
+				}
+
+				public int GetHashCode(ByBookTypeResult obj)
+				{
+					return (obj.BookType != null ? obj.BookType.GetHashCode() : 0);
+				}
+			}
+
+			public static IEqualityComparer<ByBookTypeResult> BookTypeComparer { get; } = new BookTypeEqualityComparer();
+		}
+
+		[Test]
+		public void EagerConcatWithSetsDifferentByConstants([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 =
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from b in a.Books.OfType<Roman>()
+				select new ByBookTypeResult
+				{
+					BookType = "Roman", 
+					Authors = b.Authors.ToList()
+				};
+
+			var query2 = 
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from b in a.Books.OfType<Novel>()
+				select new ByBookTypeResult
+				{
+					BookType = "Novel", 
+					Authors = b.Authors.Take(2).ToList()
+				};
+
+			var query = Combine(query1, query2, SetOperation.UnionAll);
+
+			AssertQuery(query, ByBookTypeResult.BookTypeComparer);
+		}
+
+		[Test]
+		public void EagerConcatWithSetsDifferentNullability([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 =
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				select new 
+				{
+					AuthorName = a.AuthorName, 
+					Books = a.Books.ToList()
+				};
+
+			var query2 = 
+				from a in authorTable.LoadWith(a => a.Books).ThenLoad(b => b.Authors)
+				from b in a.Books.OfType<Novel>()
+				select new 
+				{
+					AuthorName = (string?)null, 
+					Books      = a.Books.Take(2).ToList()
+				};
+
+			var query = Combine(query1, query2, SetOperation.UnionAll);
+
+			AssertQuery(query);
+		}
 
 	}
 }

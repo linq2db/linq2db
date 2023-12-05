@@ -7,10 +7,10 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq
 {
 	using Builder;
-	using LinqToDB.Common;
+	using Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
-
+	
 	class CloningContext
 	{
 		Dictionary<IQueryElement, IQueryElement> _queryElements    = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
@@ -171,7 +171,9 @@ namespace LinqToDB.Linq
 
 			_currentlyCloning.Remove(buildContext);
 
-			_buildContexts[buildContext] = newContext;
+			if (!ReferenceEquals(newContext, buildContext))
+				_buildContexts[buildContext] = newContext;
+
 			return newContext;
 		}
 
@@ -196,7 +198,10 @@ namespace LinqToDB.Linq
 
 			newElement = queryElement.Clone(_queryElements);
 
-			_queryElements[queryElement] = newElement;
+			if (!ReferenceEquals(newElement, queryElement))
+				_queryElements[queryElement] = newElement;
+
+
 			return newElement;
 		}
 

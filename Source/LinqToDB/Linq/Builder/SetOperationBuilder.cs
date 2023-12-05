@@ -111,6 +111,9 @@ namespace LinqToDB.Linq.Builder
 			Expression _projection1 = default!;
 			Expression _projection2 = default!;
 
+			Expression? _leftSetPredicate;
+			Expression? _rightSetPredicate;
+
 			Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)> _pathMapping = default!;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -253,30 +256,13 @@ namespace LinqToDB.Linq.Builder
 				return Expression.Condition(test, ifTrue, ifFalse);
 			}
 
-			bool TryMergeViaNotNullable(Expression projection1, Expression projection2, [NotNullWhen(true)] out Expression? merged)
+			bool TryMergeViaDifferencePredicate(Expression projection1, Expression projection2, [NotNullWhen(true)] out Expression? merged)
 			{
-				// Trying to merge using not nullable fields
-				//
-				var (path, isLeft) = GetNotNullableExpressions().FirstOrDefault();
+				var testExpr = GetLeftSetPredicate();
 
-				if (path != null)
+				if (testExpr != null)
 				{
-					var found = path;
-					if (!found.Type.IsNullableType())
-					{
-						found = found.WithType(found.Type.AsNullable());
-					}
-
-					var test = Expression.NotEqual(found, Expression.Default(found.Type));
-					if (isLeft)
-					{
-						merged = MakeCondition(test, projection1, projection2);
-					}
-					else
-					{
-						merged = MakeCondition(test, projection2, projection1);
-					}
-
+					merged = MakeCondition(testExpr, projection1, projection2);
 					return true;
 				}
 
@@ -289,7 +275,7 @@ namespace LinqToDB.Linq.Builder
 				if (TryMergeProjections(projection1, projection2, flags, out var merged))
 					return merged;
 
-				if (TryMergeViaNotNullable(projection1, projection2, out merged))
+				if (TryMergeViaDifferencePredicate(projection1, projection2, out merged))
 					return merged;
 
 				if (_setOperation != SetOperation.UnionAll)
@@ -332,7 +318,45 @@ namespace LinqToDB.Linq.Builder
 				return false;
 			}
 
-			IEnumerable<(SqlPathExpression path, bool isLeft)> GetNotNullableExpressions()
+			Expression? GetDifferencePredicateConstants(bool isLeft)
+			{
+				foreach (var map in _pathMapping)
+				{
+					var (placeholder1, placeholder2) = map.Value;
+					if (placeholder1.Sql is SqlColumn column1 && placeholder2.Sql is SqlColumn column2)
+					{
+						if (column1.Expression is SqlColumn { Expression: SqlValue sqlValue1 } && column2.Expression is SqlColumn { Expression: SqlValue sqlValue2 })
+						{
+							if (!Equals(sqlValue1.Value, sqlValue2.Value))
+							{
+								if (isLeft)
+									return Expression.Equal(new SqlPathExpression(map.Key, placeholder1.Type),
+										Expression.Constant(sqlValue1.Value));
+
+								return Expression.Equal(new SqlPathExpression(map.Key, placeholder2.Type),
+									Expression.Constant(sqlValue2.Value));
+							}
+						}
+					}
+				}
+
+				return null;
+			}
+
+			static Expression MakeNullCondition(SqlPathExpression path, bool isNotNull)
+			{
+				if (!path.Type.IsNullableType())
+				{
+					path = path.WithType(path.Type.AsNullable());
+				}
+
+				if (isNotNull)
+					return Expression.NotEqual(path, Expression.Default(path.Type));
+
+				return Expression.Equal(path, Expression.Default(path.Type));
+			}
+
+			Expression? GetDifferencePredicateViaNotNullable(bool isLeft)
 			{
 				var nullability1 = NullabilityContext.GetContext(_sequence1.SelectQuery);
 				var nullability2 = NullabilityContext.GetContext(_sequence2.SelectQuery);
@@ -345,15 +369,53 @@ namespace LinqToDB.Linq.Builder
 						if (!column1.Expression.CanBeNullable(nullability1))
 						{
 							if (QueryHelper.IsNullValue(column2.Expression))
-								yield return (new SqlPathExpression(map.Key, placeholder1.Type), true);
+							{
+								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder1.Type), isLeft == true);
+							}
+
 						}
 						else if (!column2.Expression.CanBeNullable(nullability2))
 						{
 							if (QueryHelper.IsNullValue(column1.Expression))
-								yield return (new SqlPathExpression(map.Key, placeholder2.Type), false);
+								return MakeNullCondition(new SqlPathExpression(map.Key, placeholder2.Type), isLeft == false);
 						}
 					}
 				}
+
+				return null;
+			}
+
+			Expression? GetLeftSetPredicate()
+			{
+				return _leftSetPredicate ??= GetDifferencePredicate(true);
+			}
+
+			Expression? GetRightSetPredicate()
+			{
+				return _rightSetPredicate ??= GetDifferencePredicate(false);
+			}
+
+			Expression? GetDifferencePredicate(bool isLeft)
+			{
+				var predicate = GetDifferencePredicateConstants(isLeft) ?? GetDifferencePredicateViaNotNullable(isLeft);
+				if (predicate != null)
+				{
+					predicate = RemapPathToPlaceholders(predicate, _pathMapping);
+					return predicate;
+				}
+
+				// Last chance to add anchor field __projection__set_id__
+				//
+				if (_setOperation == SetOperation.UnionAll)
+				{
+					EnsureSetIdFieldCreated();
+
+					var sequenceSetId = isLeft ? _leftSetId!.Value : _rightSetId!.Value;
+
+					return Expression.Equal(_setIdReference!, Expression.Constant(sequenceSetId));
+				}
+
+				return null;
 			}
 
 			bool TryMergeProjections(Expression projection1, Expression projection2, ProjectFlags flags, [NotNullWhen(true)] out Expression? merged)
@@ -491,7 +553,7 @@ namespace LinqToDB.Linq.Builder
 					return true;
 				}
 
-				if (TryMergeViaNotNullable(projection1, projection2, out merged))
+				if (TryMergeViaDifferencePredicate(projection1, projection2, out merged))
 					return true;
 
 				return false;
@@ -602,6 +664,8 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
+				_pathMapping = pathMapping;
+
 				Dictionary<SqlEagerLoadExpression, SqlEagerLoadExpression>? eagerMapping = null;
 				foreach (var e1 in eager1)
 				{
@@ -618,7 +682,9 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var predicate = Expression.Equal(GetSetIdReference(), Expression.Constant(_leftSetId));
+						var predicate = GetLeftSetPredicate();
+						if (predicate == null)
+							throw new InvalidOperationException("No way to distinguish difference between tho different sets.");
 						eagerMapping.Add(e1, e1.AppendPredicate(predicate));
 					}
 				}
@@ -630,7 +696,10 @@ namespace LinqToDB.Linq.Builder
 
 					eagerMapping ??= new(ExpressionEqualityComparer.Instance);
 
-					var predicate = Expression.Equal(GetSetIdReference(), Expression.Constant(_rightSetId));
+					var predicate = GetRightSetPredicate();
+					if (predicate == null)
+						throw new InvalidOperationException("No way to distinguish difference between tho different sets.");
+
 					eagerMapping.Add(e2, e2.AppendPredicate(predicate));
 				}
 
@@ -639,8 +708,6 @@ namespace LinqToDB.Linq.Builder
 					_projection1 = ReplaceEagerExpressions(_projection1, eagerMapping);
 					_projection2 = ReplaceEagerExpressions(_projection2, eagerMapping);
 				}
-
-				_pathMapping  = pathMapping;
 			}
 
 			static Expression ReplaceEagerExpressions(Expression expression, Dictionary<SqlEagerLoadExpression, SqlEagerLoadExpression> raplacements)
@@ -1052,10 +1119,12 @@ namespace LinqToDB.Linq.Builder
 				// for correct updating self-references below
 				context.RegisterCloned(this, cloned);
 
-				cloned._setIdPlaceholder = context.CloneExpression(_setIdPlaceholder);
-				cloned._setIdReference   = context.CloneExpression(_setIdReference);
-				cloned._leftSetId        = _leftSetId;
-				cloned._rightSetId       = _rightSetId;
+				cloned._setIdPlaceholder  = context.CloneExpression(_setIdPlaceholder);
+				cloned._setIdReference    = context.CloneExpression(_setIdReference);
+				cloned._leftSetId         = _leftSetId;
+				cloned._rightSetId        = _rightSetId;
+				cloned._leftSetPredicate  = context.CloneExpression(_leftSetPredicate);
+				cloned._rightSetPredicate = context.CloneExpression(_rightSetPredicate);
 
 				return cloned;
 			}
