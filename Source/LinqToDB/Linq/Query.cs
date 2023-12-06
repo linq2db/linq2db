@@ -20,6 +20,8 @@ namespace LinqToDB.Linq
 	using Common.Logging;
 	using Interceptors;
 	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -88,6 +90,8 @@ namespace LinqToDB.Linq
 		{
 			return _parametrized?.Contains(expr) == true;
 		}
+
+		public Expression? GetExpression() => Expression;
 
 		/// <summary>
 		/// Replaces closure references by constants
@@ -533,10 +537,39 @@ namespace LinqToDB.Linq
 				//
 				query.CleanupParametrized();
 
+#if DEBUG
+				// Checking at least in Debug that we clear ar references correctly
+				//
+				CheckCachedExpression(query.Expression);
+#endif
+
 				_queryCache.TryAdd(dataContext, query, queryFlags, dataOptions);
 			}
 
 			return query;
+		}
+
+		static void CheckCachedExpression(Expression? expression)
+		{
+			if (expression == null)
+				return;
+
+			expression.Visit(1, (_, e) =>
+			{
+				if (e is ConstantExpression constExpr)
+				{
+					if (!constExpr.Type.IsScalar())
+					{
+						if (constExpr.Value != null)
+						{
+							if (constExpr.Value is Array)
+								return;
+
+							throw new InvalidOperationException($"Constant '{e}' is not replaced.");
+						}
+					}
+				}
+			} );
 		}
 
 		internal static Query<T> CreateQuery(ExpressionTreeOptimizationContext optimizationContext, ParametersContext parametersContext, IDataContext dataContext, Expression expr)

@@ -1796,6 +1796,40 @@ namespace Tests.Linq
 			}
 		}
 
+		#region Caching Tests
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
+		public void CachedObjectRefence([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var reference = new Parent() { ParentID = 1001 };
+
+			var query = db.Person
+				.Select(p => new
+				{
+					p,
+					Reference = reference
+				});
+
+			var p1 = query.ToList();
+
+			p1.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
+
+			reference = new Parent() { ParentID = 1002 };
+			var cacheMissCount = Query<Person>.CacheMissCount;
+
+			var p2 = query.ToList();
+
+			p2.All(p => ReferenceEquals(p.Reference, reference)).Should().BeTrue();
+
+			Query<Person>.CacheMissCount.Should().Be(cacheMissCount);
+
+		}
+		
+
+		#endregion
+
 		#region SequentialAccess (#2116)
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2116")]
 		public void SequentialAccessTest([DataSources] string context)

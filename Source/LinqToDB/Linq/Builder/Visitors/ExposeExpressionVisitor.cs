@@ -460,7 +460,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 			if (typeof(IDataContext).IsSameOrParentOf(node.Type))
 			{
-				if (_dataContext.GetType().IsSameOrParentOf(node.Type))
+				if (_dataContext.GetType().IsSameOrParentOf(node.Type) || node.Type.IsSameOrParentOf(_dataContext.GetType()))
 				{
 					var dc = EvaluateExpression(node) as IDataContext;
 					if ((dc?.MappingSchema as IConfigurationID)?.ConfigurationID ==

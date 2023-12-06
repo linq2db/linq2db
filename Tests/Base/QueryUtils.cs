@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
@@ -65,6 +66,17 @@ namespace Tests
 		public static long GetCacheMissCount<T>(this IQueryable<T> _)
 		{
 			return Query<T>.CacheMissCount;
+		}
+
+		public static Expression GetCacheExpression<T>(this IQueryable<T> query)
+		{
+			var expression = query.Expression;
+			var queryInternal =
+				Query<T>.GetQuery(
+					Internals.GetDataContext(query) ??
+					throw new InvalidOperationException("Could not retrieve DataContext."), ref expression, out _);
+
+			return queryInternal.GetExpression()!;
 		}
 
 	}

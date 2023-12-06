@@ -1586,7 +1586,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
-					ExpressionConstants.DataContextParam, Expression.Constant(sql)));
+					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql)));
 		}
 
 #endif
@@ -1678,7 +1678,7 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SelectQuery, dataContext, selector),
-					ExpressionConstants.DataContextParam, Expression.Quote(selector)));
+					SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector)));
 		}
 
 		#endregion
