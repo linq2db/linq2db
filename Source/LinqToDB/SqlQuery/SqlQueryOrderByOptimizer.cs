@@ -1,15 +1,17 @@
 ﻿using System.Linq;
 
 using LinqToDB.Common;
+using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlQuery
 {
 	public class SqlQueryOrderByOptimizer : SqlQueryVisitor
 	{
-		bool            _disableOrderBy;
-		bool            _insideSetOperator;
-		bool            _optimized;
+		SqlProviderFlags _providerFlags = default!;
+		bool             _disableOrderBy;
+		bool             _insideSetOperator;
+		bool             _optimized;
 
 		public bool IsOptimized => _optimized;
 
@@ -24,13 +26,15 @@ namespace LinqToDB.SqlQuery
 			_disableOrderBy    = false;
 			_insideSetOperator = false;
 			_optimized         = false;
+			_providerFlags       = default!;
 		}
 
-		public void OptimizeOrderBy(IQueryElement element)
+		public void OptimizeOrderBy(IQueryElement element, SqlProviderFlags providerFlags)
 		{
 			_disableOrderBy    = false;
 			_optimized         = false;
 			_insideSetOperator = false;
+			_providerFlags     = providerFlags;
 
 			ProcessElement(element);
 		}
@@ -108,12 +112,7 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			if (selectQuery.SourceID == 21)
-			{
-
-			}
-
-			var saveDisableOrderBy    = _disableOrderBy;
+			var saveDisableOrderBy = _disableOrderBy;
 			
 			if (selectQuery.HasSetOperators)
 			{
@@ -211,6 +210,17 @@ namespace LinqToDB.SqlQuery
 			return expression;
 		}
 
+		protected override IQueryElement VisitCteClause(CteClause element)
+		{
+			var saveDisableOrderBy = _disableOrderBy;
 
+			_disableOrderBy = !_providerFlags.IsCTESupportsOrdering;
+
+			var newElement = base.VisitCteClause(element);
+
+			_disableOrderBy = saveDisableOrderBy;
+
+			return newElement;
+		}
 	}
 }

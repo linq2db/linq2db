@@ -122,6 +122,51 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void WithOrderBy([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent
+					.OrderByDescending(p => p.ParentID)
+					.AsCte();
+
+				if (!db.SqlProviderFlags.IsCTESupportsOrdering)
+					FluentActions.Enumerating(() => query).Should().NotThrow();
+				else
+				{
+					var result = query.ToList();
+
+					var expected = Parent
+						.OrderByDescending(p => p.ParentID)
+						.ToList();
+
+					AreSame(expected, result);
+				}
+			}
+		}
+
+		[Test]
+		public void WithLimitedOrderBy([CteContextSource] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Parent
+					.OrderByDescending(p => p.ParentID)
+					.Take(3)
+					.AsCte();
+
+				var result = query.ToList();
+
+				var expected = Parent
+					.OrderByDescending(p => p.ParentID)
+					.Take(3)
+					.ToList();
+
+				AreSame(expected, result);
+			}
+		}
+
 		static IQueryable<TSource> RemoveCte<TSource>(IQueryable<TSource> source)
 		{
 			var newExpr = source.Expression.Transform<object?>(null, static (_, e) =>

@@ -14,7 +14,7 @@ namespace LinqToDB.SqlQuery
 
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
-		SqlProviderFlags  _flags             = default!;
+		SqlProviderFlags  _providerFlags     = default!;
 		DataOptions       _dataOptions       = default!;
 		EvaluationContext _evaluationContext = default!;
 		IQueryElement     _rootElement       = default!;
@@ -38,7 +38,7 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public IQueryElement OptimizeQueries(IQueryElement root, SqlProviderFlags flags, bool removeWeakJoins, DataOptions dataOptions,
+		public IQueryElement OptimizeQueries(IQueryElement root, SqlProviderFlags providerFlags, bool removeWeakJoins, DataOptions dataOptions,
 			EvaluationContext evaluationContext, IQueryElement rootElement,
 			params IQueryElement[] dependencies)
 		{
@@ -49,15 +49,15 @@ namespace LinqToDB.SqlQuery
 			}
 #endif
 
-			_flags                 = flags;
-			_removeWeakJoins       = removeWeakJoins;
-			_dataOptions           = dataOptions;
-			_evaluationContext     = evaluationContext;
-			_rootElement           = rootElement;
-			_dependencies          = dependencies;
-			_parentSelect          = default!;
-			_applySelect           = default!;
-			_inSubquery            = default!;
+			_providerFlags     = providerFlags;
+			_removeWeakJoins   = removeWeakJoins;
+			_dataOptions       = dataOptions;
+			_evaluationContext = evaluationContext;
+			_rootElement       = rootElement;
+			_dependencies      = dependencies;
+			_parentSelect      = default!;
+			_applySelect       = default!;
+			_inSubquery        = default!;
 
 			// OUTER APPLY Queries usually may have wrong nesting in WHERE clause.
 			// Making it consistent in LINQ Translator is bad for performance and it is hard to implement task.
@@ -70,7 +70,7 @@ namespace LinqToDB.SqlQuery
 			{
 				result = ProcessElement(result);
 
-				_orderByOptimizer.OptimizeOrderBy(result);
+				_orderByOptimizer.OptimizeOrderBy(result, _providerFlags);
 				if (!_orderByOptimizer.IsOptimized)
 					break;
 
@@ -105,7 +105,7 @@ namespace LinqToDB.SqlQuery
 		{
 			base.Cleanup();
 
-			_flags             = default!;
+			_providerFlags     = default!;
 			_dataOptions       = default!;
 			_evaluationContext = default!;
 			_rootElement       = default!;
@@ -162,7 +162,7 @@ namespace LinqToDB.SqlQuery
 					var before = selectQuery.ToDebugString();
 #endif
 					// only once
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _flags, _dataOptions, selectQuery);
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _providerFlags, _dataOptions, selectQuery);
 
 					if (_expressionOptimizerVisitor.IsModified)
 					{
@@ -189,7 +189,7 @@ namespace LinqToDB.SqlQuery
 						isModified = true;
 					}
 
-					if (OptimizeApplies(selectQuery, _flags.IsApplyJoinSupported))
+					if (OptimizeApplies(selectQuery, _providerFlags.IsApplyJoinSupported))
 					{
 						isModified = true;
 						EnsureReferencesCorrected(selectQuery);
@@ -717,7 +717,7 @@ namespace LinqToDB.SqlQuery
 				isApplySupported = isApplySupported && (joinTable.JoinType == JoinType.CrossApply ||
 				                                        joinTable.JoinType == JoinType.OuterApply);
 
-				if (isApplySupported && sql.Select.HasModifier && _flags.IsSubQueryTakeSupported)
+				if (isApplySupported && sql.Select.HasModifier && _providerFlags.IsSubQueryTakeSupported)
 					return optimized;
 
 				if (isApplySupported && isAgg)
@@ -741,7 +741,7 @@ namespace LinqToDB.SqlQuery
 
 				if (skipValue != null || takeValue != null)
 				{
-					if (!_flags.IsWindowFunctionsSupported)
+					if (!_providerFlags.IsWindowFunctionsSupported)
 						return optimized;
 
 					var parameters = new List<ISqlExpression>();
@@ -801,7 +801,7 @@ namespace LinqToDB.SqlQuery
 					{
 						if (partitionBy != null)
 							orderByItems.Add(new SqlOrderByItem(partitionBy[0], false));
-						else if (!_flags.IsRowNumberWithoutOrderBySupported)
+						else if (!_providerFlags.IsRowNumberWithoutOrderBySupported)
 						{
 							if (sql.Select.Columns.Count == 0)
 							{
@@ -1085,7 +1085,7 @@ namespace LinqToDB.SqlQuery
 
 			if (subQuery.From.Tables.Count > 1)
 			{
-				if (!_flags.IsMultiTablesSupportsJoins)
+				if (!_providerFlags.IsMultiTablesSupportsJoins)
 				{
 					if (QueryHelper.EnumerateJoins(selectQuery).Any())
 						return false;
@@ -1206,7 +1206,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (!_flags.AcceptsOuterExpressionInAggregate)
+			if (!_providerFlags.AcceptsOuterExpressionInAggregate)
 			{
 				if (QueryHelper.EnumerateJoins(subQuery).Any(j => j.JoinType != JoinType.Inner))
 				{
@@ -1434,14 +1434,14 @@ namespace LinqToDB.SqlQuery
 				{
 					if (joinTable.JoinType == JoinType.OuterApply)
 					{
-						if (_flags.IsApplyJoinSupportsCondition)
+						if (_providerFlags.IsApplyJoinSupportsCondition)
 							moveConditionToQuery = false;
 						else
 							return false;
 					}
 					else if (joinTable.JoinType == JoinType.CrossApply)
 					{
-						if (_flags.IsApplyJoinSupportsCondition)
+						if (_providerFlags.IsApplyJoinSupportsCondition)
 							moveConditionToQuery = false;
 					}
 					else if (joinTable.JoinType == JoinType.Left)
@@ -1454,7 +1454,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				if (!_flags.IsOuterJoinSupportsInnerJoin)
+				if (!_providerFlags.IsOuterJoinSupportsInnerJoin)
 				{
 					// Especially for Access. See ComplexTests.Contains3
 					//
@@ -1593,7 +1593,7 @@ namespace LinqToDB.SqlQuery
 		{
 			var isModified = false;
 
-			if (!_flags.IsRecursiveCTEJoinWithConditionSupported && _isInRecursiveCte)
+			if (!_providerFlags.IsRecursiveCTEJoinWithConditionSupported && _isInRecursiveCte)
 			{
 				for (int i = 0; i < selectQuery.From.Tables.Count; i++)
 				{
@@ -1657,7 +1657,7 @@ namespace LinqToDB.SqlQuery
 
 		bool CorrectMultiTables(SelectQuery selectQuery)
 		{
-			if (_flags.IsMultiTablesSupportsJoins)
+			if (_providerFlags.IsMultiTablesSupportsJoins)
 				return false;
 
 			var isModified = false;
@@ -1731,7 +1731,7 @@ namespace LinqToDB.SqlQuery
 
 		void RemoveEmptyJoins(SelectQuery selectQuery)
 		{
-			if (_flags.IsCrossJoinSupported)
+			if (_providerFlags.IsCrossJoinSupported)
 				return;
 
 			for (var tableIndex = 0; tableIndex < selectQuery.From.Tables.Count; tableIndex++)
@@ -1825,7 +1825,7 @@ namespace LinqToDB.SqlQuery
 
 		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
 		{
-			if (!_flags.IsSubQueryColumnSupported)
+			if (!_providerFlags.IsSubQueryColumnSupported)
 				return false;
 
 			var currentVersion = _version;
@@ -1850,16 +1850,16 @@ namespace LinqToDB.SqlQuery
 							    tsQuery.Select.Columns.Count > 0 &&
 							    IsLimitedToOneRecord(tsQuery, evaluationContext))
 							{
-								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, forColumn: true, _flags))
+								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, forColumn: true, _providerFlags))
 									continue;
 
-								if (tsQuery.Select.Columns.Count > 1 && (_flags.IsWindowFunctionsSupported || _flags.IsApplyJoinSupported))
+								if (tsQuery.Select.Columns.Count > 1 && (_providerFlags.IsWindowFunctionsSupported || _providerFlags.IsApplyJoinSupported))
 								{
 									// provider can handle this query
 									continue;
 								}
 
-								if (!_flags.IsSubqueryWithParentReferenceInJoinConditionSupported)
+								if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
 								{
 									// for Oracle we cannot move to subquery
 									if (tsQuery.Select.HasModifier)
@@ -1872,7 +1872,7 @@ namespace LinqToDB.SqlQuery
 								{
 									// where we can start analyzing that we can move join to subquery
 									
-									if (_flags.IsApplyJoinSupported && !IsUniqueUsage(sq, testedColumn))
+									if (_providerFlags.IsApplyJoinSupported && !IsUniqueUsage(sq, testedColumn))
 									{
 										QueryHelper.MoveDuplicateUsageToSubQuery(sq);
 										// will be processed in the next step
@@ -1887,13 +1887,13 @@ namespace LinqToDB.SqlQuery
 									{
 										if (function.IsAggregate)
 										{
-											if (!_flags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
+											if (!_providerFlags.AcceptsOuterExpressionInAggregate && IsInsideAggregate(sq.Select, testedColumn))
 											{
 												isValid = false;
 												break;
 											}
 
-											if (!_flags.IsCountSubQuerySupported)
+											if (!_providerFlags.IsCountSubQuerySupported)
 											{
 												isValid = false;
 												break;

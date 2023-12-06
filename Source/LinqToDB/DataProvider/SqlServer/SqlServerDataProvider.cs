@@ -51,17 +51,18 @@ namespace LinqToDB.DataProvider.SqlServer
 			Version  = version;
 			Provider = provider;
 
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsCountDistinctSupported          = true;
-			SqlProviderFlags.AcceptsOuterExpressionInAggregate = false;
-			SqlProviderFlags.OutputDeleteUseSpecialTable       = true;
-			SqlProviderFlags.OutputInsertUseSpecialTable       = true;
-			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
-			SqlProviderFlags.IsApplyJoinSupported              = true;
-			SqlProviderFlags.TakeHintsSupported                = TakeHints.Percent | TakeHints.WithTies;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsRowNumberWithoutOrderBySupported   = false;
-			SqlProviderFlags.IsSubQueryTakeSupported           = version > SqlServerVersion.v2005;
+			SqlProviderFlags.IsDistinctOrderBySupported         = false;
+			SqlProviderFlags.IsCountDistinctSupported           = true;
+			SqlProviderFlags.AcceptsOuterExpressionInAggregate  = false;
+			SqlProviderFlags.OutputDeleteUseSpecialTable        = true;
+			SqlProviderFlags.OutputInsertUseSpecialTable        = true;
+			SqlProviderFlags.OutputUpdateUseSpecialTables       = true;
+			SqlProviderFlags.IsApplyJoinSupported               = true;
+			SqlProviderFlags.TakeHintsSupported                 = TakeHints.Percent | TakeHints.WithTies;
+			SqlProviderFlags.IsCommonTableExpressionsSupported  = true;
+			SqlProviderFlags.IsRowNumberWithoutOrderBySupported = false;
+			SqlProviderFlags.IsSubQueryTakeSupported            = version > SqlServerVersion.v2005;
+			SqlProviderFlags.IsCTESupportsOrdering              = false;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));

@@ -422,6 +422,12 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 48), DefaultValue(true)]
 		public bool IsMultiTablesSupportsJoins { get; set; } = true;
 
+		/// <summary>
+		/// Indicates that top level CTE query supports ORDER BY.
+		/// </summary>
+		[DataMember(Order = 49), DefaultValue(true)]
+		public bool IsCTESupportsOrdering { get; set; } = true;
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -473,6 +479,7 @@ namespace LinqToDB.SqlProvider
 				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
 				^ IsOuterJoinSupportsInnerJoin                         .GetHashCode()
 				^ IsMultiTablesSupportsJoins                           .GetHashCode()
+				^ IsCTESupportsOrdering                                .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -524,6 +531,7 @@ namespace LinqToDB.SqlProvider
 				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
 				&& IsOuterJoinSupportsInnerJoin                          == other.IsOuterJoinSupportsInnerJoin
 				&& IsMultiTablesSupportsJoins                            == other.IsMultiTablesSupportsJoins
+				&& IsCTESupportsOrdering                                 == other.IsCTESupportsOrdering
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0
