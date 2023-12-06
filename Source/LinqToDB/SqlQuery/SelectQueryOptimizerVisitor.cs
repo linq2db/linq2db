@@ -1353,6 +1353,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			// First table processing
+			if (subQuery.From.Tables.Count > 0)
 			{
 				var subQueryTableSource = subQuery.From.Tables[0];
 
