@@ -20,11 +20,6 @@ namespace LinqToDB.Reflection
 	/// </summary>
 	public static class Methods
 	{
-		internal static class Query
-		{
-			public static readonly MethodInfo GetIQueryable = MemberHelper.MethodOf<Linq.Query>(a => a.GetIQueryable(default, default!, default));
-		}
-
 		public static class ADONet
 		{
 			public static readonly MethodInfo   IsDBNull         = MemberHelper.MethodOf  <DbDataReader>(r => r.IsDBNull(0));

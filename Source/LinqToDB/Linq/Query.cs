@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
@@ -55,7 +56,7 @@ namespace LinqToDB.Linq
 
 		internal readonly int              ConfigurationID;
 		internal readonly Type             ContextType;
-		internal readonly Expression?      Expression;
+		internal          Expression?      Expression;
 		internal readonly MappingSchema    MappingSchema;
 		internal readonly bool             InlineParameters;
 		internal readonly ISqlOptimizer    SqlOptimizer;
@@ -73,7 +74,6 @@ namespace LinqToDB.Linq
 				Expression!.EqualsTo(expr, dataContext, _parametrized, _queryableMemberAccessorDic);
 		}
 
-		readonly List<QueryableAccessor>                          _queryableAccessorList = new();
 		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
 		private  List<Expression>?                                _parametrized;
 
@@ -89,6 +89,49 @@ namespace LinqToDB.Linq
 			return _parametrized?.Contains(expr) == true;
 		}
 
+		/// <summary>
+		/// Replaces closure references by constants
+		/// </summary>
+		protected void CleanupParametrized()
+		{
+			if (Expression == null || _parametrized == null)
+				return;
+
+			var newParametrized = _parametrized.ToList();
+
+			var result = Expression.Transform((parametrized: _parametrized, newParametrized), static (ctx, e) =>
+			{
+				var idx = ctx.parametrized.IndexOf(e);
+				if (idx >= 0)
+				{
+					var newValue = ctx.newParametrized[idx];
+
+					{
+						var replace = newValue.NodeType != ExpressionType.Constant;
+
+						if (!replace)
+						{
+							if (!newValue.Type.IsValueType && newValue is not ConstantExpression { Value: null })
+								replace = true;
+						}
+
+						if (replace)
+						{
+							newValue                 = Expression.Constant(null, e.Type);
+							ctx.newParametrized[idx] = newValue;
+						}
+
+						return newValue;
+					}
+				}
+
+				return e;
+			});
+
+			_parametrized = newParametrized;
+			Expression = result;
+		}
+
 		internal Expression AddQueryableMemberAccessors<TContext>(TContext context, MemberInfo memberInfo, IDataContext dataContext, Func<TContext, MemberInfo, IDataContext, Expression> qe)
 		{
 			if (_queryableMemberAccessorDic != null && _queryableMemberAccessorDic.TryGetValue(memberInfo, out var e))
@@ -100,20 +143,6 @@ namespace LinqToDB.Linq
 			_queryableMemberAccessorDic.Add(memberInfo, e);
 
 			return e.Expression;
-		}
-
-		internal Expression GetIQueryable(int n, Expression expr, bool force)
-		{
-			var accessor = _queryableAccessorList[n];
-			if (force)
-			{
-				if (accessor.SkipForce)
-					accessor.SkipForce = false;
-				else
-					return (accessor.Queryable = accessor.Accessor(expr)).Expression;
-			}
-
-			return accessor.Queryable.Expression;
 		}
 
 		internal void ClearMemberQueryableInfo()
@@ -500,6 +529,10 @@ namespace LinqToDB.Linq
 
 			if (!query.DoNotCache)
 			{
+				// All non-value type parametrized expression will be transformed to constant. It prevents from caching big reference classes in cache.
+				//
+				query.CleanupParametrized();
+
 				_queryCache.TryAdd(dataContext, query, queryFlags, dataOptions);
 			}
 

@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -29,6 +31,8 @@ namespace Tests.xUpdate
 
 				TestQuery(table, source);
 
+				var cacheMissCount = table.GetCacheMissCount();
+
 				source = new[]
 				{
 					new TestMapping1()
@@ -41,6 +45,8 @@ namespace Tests.xUpdate
 				};
 
 				TestQuery(table, source);
+
+				table.GetCacheMissCount().Should().Be(cacheMissCount);
 
 				source = new[]
 				{
@@ -61,6 +67,8 @@ namespace Tests.xUpdate
 				};
 
 				TestQuery(table, source);
+
+				table.GetCacheMissCount().Should().Be(cacheMissCount);
 			}
 
 			void TestQuery(ITable<TestMapping1> table, TestMapping1[] source)
