@@ -76,6 +76,9 @@ namespace LinqToDB.SqlQuery
 
 			} while (true);
 
+			// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
+			JoinsOptimizer.UnnestJoins(result);
+
 			return result;
 		}
 

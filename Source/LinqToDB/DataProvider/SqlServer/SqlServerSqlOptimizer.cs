@@ -125,14 +125,10 @@ namespace LinqToDB.DataProvider.SqlServer
 					}
 					else
 					{
-						updateStatement = DetachUpdateTableFromUpdateQuery(updateStatement, dataOptions);
-
-						var sqlTableSource = removedTableSource ??
-						                     new SqlTableSource(updateStatement.Update.Table!,
-							                     QueryHelper.SuggestTableSourceAlias(updateStatement.SelectQuery, "u"));
-
-						updateStatement.SelectQuery.From.Tables.Insert(0, sqlTableSource);
+						updateStatement = DetachUpdateTableFromUpdateQuery(updateStatement, dataOptions, moveToJoin: false, addNewSource: true, out var sqlTableSource);
 						updateStatement.Update.TableSource = sqlTableSource;
+
+						OptimizeQueries(updateStatement, updateStatement, dataOptions, new EvaluationContext());
 					}
 				}
 			}

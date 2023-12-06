@@ -42,7 +42,7 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// Moves nested joins to upper level when outer join type is compatible with first nested join type.
 		/// </summary>
-		public static void UnnestJoins(SqlStatement statement)
+		public static void UnnestJoins(IQueryElement statement)
 		{
 			statement.Visit(static e =>
 			{

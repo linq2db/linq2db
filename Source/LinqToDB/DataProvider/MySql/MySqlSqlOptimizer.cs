@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider.MySql
 			if (statement.SelectQuery.Select.SkipValue != null)
 				throw new LinqToDBException("MySql does not support Skip in update query");
 
-			statement = CorrectUpdateTable(statement, dataOptions);
+			statement = CorrectUpdateTable(statement, leaveUpdateTableInQuery: false, dataOptions);
 
 			if (!statement.SelectQuery.OrderBy.IsEmpty)
 				statement.SelectQuery.OrderBy.Items.Clear();

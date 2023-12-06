@@ -45,30 +45,7 @@ namespace LinqToDB.SqlProvider
 
 			var evaluationContext = new EvaluationContext(null);
 
-			using var visitor = QueryHelper.SelectOptimizer.Allocate();
-
-#if DEBUG
-			// ReSharper disable once NotAccessedVariable
-			var sqlText = statement.SqlText;
-
-			QueryHelper.DebugCheckNesting(statement, false);
-#endif
-
-			statement = (SqlStatement)visitor.Value.OptimizeQueries(statement, SqlProviderFlags, true, dataOptions, evaluationContext, statement);
-
-#if DEBUG
-			// ReSharper disable once NotAccessedVariable
-			var newSqlText = statement.SqlText;
-
-			QueryHelper.DebugCheckNesting(statement, false);
-#endif
-
-			//statement.EnsureFindTables();
-
-			//statement.EnsureFindTables();
-
-			// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
-			JoinsOptimizer.UnnestJoins(statement);
+			statement = (SqlStatement)OptimizeQueries(statement, statement, dataOptions, evaluationContext);
 
 			if (dataOptions.LinqOptions.OptimizeJoins)
 			{
@@ -239,7 +216,8 @@ namespace LinqToDB.SqlProvider
 			return current;
 		}
 
-		protected static void ApplyUpdateTableComparison(SelectQuery updateQuery, SqlUpdateClause updateClause, SqlTable inQueryTable, DataOptions dataOptions)
+		protected static void ApplyUpdateTableComparison(SqlSearchCondition searchCondition, SelectQuery updateQuery,
+			SqlUpdateClause updateClause, SqlTable inQueryTable, DataOptions dataOptions)
 		{
 			var compareKeys = inQueryTable.GetKeys(true);
 			var tableKeys   = updateClause.Table!.GetKeys(true);
@@ -248,24 +226,24 @@ namespace LinqToDB.SqlProvider
 
 			if (tableKeys != null && compareKeys != null)
 			{
-				updateQuery.Where.EnsureConjunction();
+				searchCondition = searchCondition.EnsureConjunction();
 				for (var i = 0; i < tableKeys.Count; i++)
 				{
 					var tableKey = tableKeys[i];
 
-					var column = QueryHelper.NeedColumnForExpression(updateQuery, compareKeys[i], false);
-					if (column == null)
-						throw new LinqToDBException(
-							$"Can not create query column for expression '{compareKeys[i]}'.");
-
 					found = true;
-					var compare = QueryHelper.GenerateEquality(tableKey, column, dataOptions.LinqOptions.CompareNullsAsValues);
-					updateQuery.Where.SearchCondition.Conditions.Add(compare);
+					var compare = QueryHelper.GenerateEquality(tableKey, compareKeys[i], dataOptions.LinqOptions.CompareNullsAsValues);
+					searchCondition.Conditions.Add(compare);
 				}
 			}
 
 			if (!found)
 				throw new LinqToDBException("Could not generate update statement.");
+		}
+
+		protected static void ApplyUpdateTableComparison(SelectQuery updateQuery, SqlUpdateClause updateClause, SqlTable inQueryTable, DataOptions dataOptions)
+		{
+			ApplyUpdateTableComparison(updateQuery.Where.SearchCondition, updateQuery, updateClause, inQueryTable, dataOptions);
 		}
 
 		protected virtual SqlUpdateStatement BasicCorrectUpdate(SqlUpdateStatement statement, DataOptions dataOptions, bool wrapForOutput)
@@ -1039,10 +1017,16 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
+			SelectQuery?                              clonedQuery = null;
+			Dictionary<IQueryElement, IQueryElement>? replaceTree = null;
+
 			var needsComparison = !updateStatement.Update.HasComparison;
 
 			if (!needsComparison)
 			{
+				// clone earlier, we need table before remove
+				clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
+
 				// trying to simplify query
 				RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table, out _);
 			}
@@ -1057,12 +1041,11 @@ namespace LinqToDB.SqlProvider
 
 				var newUpdateStatement = new SqlUpdateStatement(sql);
 
-				Dictionary<IQueryElement, IQueryElement>? replaceTree = null;
-
-				var clonedQuery = CloneQuery(updateStatement.SelectQuery, needsComparison ? null : updateStatement.Update.Table, out replaceTree);
+				if (clonedQuery == null)
+					clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
 
 				SqlTable? tableToCompare = null;
-				if (replaceTree.TryGetValue(updateStatement.Update.Table!, out var newTable))
+				if (replaceTree!.TryGetValue(updateStatement.Update.Table!, out var newTable))
 				{
 					tableToCompare = (SqlTable)newTable;
 				}
@@ -1173,12 +1156,14 @@ namespace LinqToDB.SqlProvider
 				newUpdateStatement.With         = updateStatement.With;
 
 				clonedQuery.RemoveNotUnusedColumns();
-				clonedQuery.OptimizeSelectQuery(updateStatement, SqlProviderFlags, dataOptions);
+
 				newUpdateStatement.SelectQuery.Where.Exists(clonedQuery);
 
 				updateStatement.Update.Items.Clear();
 
 				updateStatement = newUpdateStatement;
+
+				OptimizeQueries(updateStatement, updateStatement, dataOptions, new EvaluationContext());
 			}
 
 			var (tableSource, _) = FindTableSource(new Stack<IQueryElement>(), updateStatement.SelectQuery, updateStatement.Update.Table!);
@@ -1208,69 +1193,53 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		class DetachUpdateTableVisitor : SqlQueryVisitor
-		{
-			SqlUpdateStatement? _updateStatement;
-			SqlTable?           _newTable;
-
-			public DetachUpdateTableVisitor(): base(VisitMode.Modify)
-			{
-			}
-
-			protected override IQueryElement VisitSqlTableSource(SqlTableSource element)
-			{
-				if (element.Source == _updateStatement?.Update.Table)
-				{
-					if (_newTable == null)
-					{
-						var objectTree = new Dictionary<IQueryElement, IQueryElement>();
-						_newTable = _updateStatement.Update.Table.Clone(objectTree);
-						AddReplacements(objectTree);
-
-						element.Source =_newTable!;
-					}
-				}
-
-				return base.VisitSqlTableSource(element);
-			}
-
-			protected override IQueryElement VisitSqlUpdateClause(SqlUpdateClause element)
-			{
-				// Do nothing
-				return element;
-			}
-
-			protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
-			{
-				// Do nothing
-				return element;
-			}
-
-			/*
-			public override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
-			{
-				// Do nothing
-				return expression;
-			}
-
-			*/
-			public SqlTable? DetachUpdateTable(SqlUpdateStatement updateStatement)
-			{
-				_newTable        = null;
-				_updateStatement = updateStatement;
-
-				Visit(updateStatement);
-
-				return _newTable;
-			}
-		}
-
-		protected SqlUpdateStatement DetachUpdateTableFromUpdateQuery(SqlUpdateStatement updateStatement, DataOptions dataOptions)
+		protected SqlUpdateStatement DetachUpdateTableFromUpdateQuery(SqlUpdateStatement updateStatement, DataOptions dataOptions, bool moveToJoin, bool addNewSource, out SqlTableSource newSource)
 		{
 			var updateTable = updateStatement.Update.Table;
 			if (updateTable == null)
 				throw new InvalidOperationException();
 
+			CorrectUpdateColumns(updateStatement);
+
+			var replacements = new Dictionary<IQueryElement, IQueryElement>();
+			var clonedTable = updateTable.Clone(replacements);
+			replacements.Remove(updateTable);
+
+			updateStatement.Replace(replacements, updateStatement.SelectQuery.Select, updateStatement.SelectQuery.From);
+
+			newSource = new SqlTableSource(clonedTable, "u");
+
+			if (moveToJoin)
+			{
+				var currentSource = updateStatement.SelectQuery.From.Tables[0];
+				var join          = new SqlJoinedTable(JoinType.Inner, currentSource, false);
+
+				updateStatement.SelectQuery.From.Tables.Clear();
+				updateStatement.SelectQuery.From.Tables.Add(newSource);
+
+				newSource.Joins.Add(join);
+
+				ApplyUpdateTableComparison(join.Condition, updateStatement.SelectQuery, updateStatement.Update,
+					clonedTable, dataOptions);
+			}
+			else
+			{
+				if (addNewSource)
+				{
+					updateStatement.SelectQuery.From.Tables.Insert(0, newSource);
+				}
+
+				ApplyUpdateTableComparison(updateStatement.SelectQuery, updateStatement.Update, clonedTable,
+					dataOptions);
+			}
+
+			updateStatement.Update.Table = clonedTable;
+
+			return updateStatement;
+		}
+
+		static void CorrectUpdateColumns(SqlUpdateStatement updateStatement)
+		{
 			// correct columns
 			foreach (var item in updateStatement.Update.Items)
 			{
@@ -1282,15 +1251,6 @@ namespace LinqToDB.SqlProvider
 					item.Column = field;
 				}
 			}
-
-			var visitor     = new DetachUpdateTableVisitor();
-			var clonedTable = visitor.DetachUpdateTable(updateStatement);
-
-#pragma warning disable CS8604 // TODO:WAITFIX
-			ApplyUpdateTableComparison(updateStatement.SelectQuery, updateStatement.Update, clonedTable, dataOptions);
-#pragma warning restore CS8604
-
-			return updateStatement;
 		}
 
 		protected SqlStatement GetAlternativeUpdatePostgreSqlite(SqlUpdateStatement statement, DataOptions dataOptions)
@@ -1311,12 +1271,16 @@ namespace LinqToDB.SqlProvider
 					hasUpdateTableInQuery = false;
 			}
 
+			CorrectUpdateSetters(statement);
+
 			if (hasUpdateTableInQuery)
 			{
-				statement = DetachUpdateTableFromUpdateQuery(statement, dataOptions);
-			}
+				statement     = DetachUpdateTableFromUpdateQuery(statement, dataOptions, moveToJoin: false, addNewSource: false, out tableSource);
+				tableToUpdate = statement.Update.Table!;
+				tableSource = null;
 
-			CorrectUpdateSetters(statement);
+				OptimizeQueries(statement, statement, dataOptions, new EvaluationContext());
+			}
 
 			statement.Update.Table       = tableToUpdate;
 			statement.Update.TableSource = tableSource;
@@ -1330,9 +1294,10 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		/// <param name="statement">Statement to examine.</param>
 		/// <returns>Corrected statement.</returns>
-		protected SqlUpdateStatement CorrectUpdateTable(SqlUpdateStatement statement, DataOptions dataOptions)
+		protected SqlUpdateStatement CorrectUpdateTable(SqlUpdateStatement statement, bool leaveUpdateTableInQuery, DataOptions dataOptions)
 		{
 			statement = BasicCorrectUpdate(statement, dataOptions, false);
+
 			var tableToUpdate = statement.Update.Table;
 			if (tableToUpdate != null)
 			{
@@ -1346,17 +1311,19 @@ namespace LinqToDB.SqlProvider
 					{
 						if (!RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, out removedTableSource))
 						{
-							statement = DetachUpdateTableFromUpdateQuery(statement, dataOptions);
+							statement = DetachUpdateTableFromUpdateQuery(statement, dataOptions, moveToJoin: false, addNewSource: leaveUpdateTableInQuery, out var newTableSource);
+							statement.Update.TableSource = newTableSource;
 						}
+						else
+						{
+							statement.Update.TableSource = removedTableSource;
+							statement.SelectQuery.From.Tables.Insert(0, removedTableSource!);
+						}
+
+						OptimizeQueries(statement, statement, dataOptions, new EvaluationContext());
 					}
-
-					var ts = removedTableSource ?? new SqlTableSource(tableToUpdate,
-						QueryHelper.SuggestTableSourceAlias(statement.SelectQuery, "u"));
-
-					statement.SelectQuery.From.Tables.Insert(0, ts);
 				}
-
-				statement.Update.TableSource = statement.SelectQuery.From.Tables[0];
+			
 			}
 
 			CorrectUpdateSetters(statement);
@@ -1756,6 +1723,30 @@ namespace LinqToDB.SqlProvider
 				},
 				allowMutation: true,
 				withStack: false);
+		}
+
+		protected IQueryElement OptimizeQueries(IQueryElement startFrom, IQueryElement root, DataOptions dataOptions, EvaluationContext evaluationContext)
+		{
+			using var visitor = QueryHelper.SelectOptimizer.Allocate();
+
+#if DEBUG
+			// ReSharper disable once NotAccessedVariable
+			var sqlText = startFrom.DebugText;
+
+			if (startFrom is SqlStatement statementBefore)
+				QueryHelper.DebugCheckNesting(statementBefore, false);
+#endif
+
+			var result = visitor.Value.OptimizeQueries(startFrom, SqlProviderFlags, true, dataOptions, evaluationContext, root);
+
+#if DEBUG
+			// ReSharper disable once NotAccessedVariable
+			var newSqlText = result.DebugText;
+
+			if (startFrom is SqlStatement statementAfter)
+				QueryHelper.DebugCheckNesting(statementAfter, false);
+#endif
+			return result;
 		}
 
 		/// <summary>

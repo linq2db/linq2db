@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Access
 			if (statement.SelectQuery.Select.HasModifier)
 				throw new LinqToDBException("Access does not support update query limitation");
 
-			statement = CorrectUpdateTable(statement, dataOptions);
+			statement = CorrectUpdateTable(statement, leaveUpdateTableInQuery: true, dataOptions);
 
 			if (!statement.SelectQuery.OrderBy.IsEmpty)
 				statement.SelectQuery.OrderBy.Items.Clear();

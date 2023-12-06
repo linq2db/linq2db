@@ -960,7 +960,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestUpdateTakeOrdered(
 			[DataSources(
-				ProviderName.Access,
+				TestProvName.AllAccess,
 				ProviderName.DB2,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
@@ -1102,12 +1102,9 @@ namespace Tests.xUpdate
 		[Test]
 		public void UpdateIssue319Regression(
 			[DataSources(
-				TestProvName.AllAccess,
 				TestProvName.AllClickHouse,
 				TestProvName.AllInformix,
 				TestProvName.AllFirebird,
-				TestProvName.AllSQLite,
-				TestProvName.AllMySql,
 				TestProvName.AllSybase,
 				TestProvName.AllSapHana)]
 			string context)
