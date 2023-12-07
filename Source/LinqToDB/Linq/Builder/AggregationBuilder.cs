@@ -428,16 +428,23 @@ namespace LinqToDB.Linq.Builder
 				return 0;
 			}
 
+			Expression GenerateNullCheckIfNeeded(Expression expression)
+			{
+				if ((_aggregationType != AggregationType.Sum && _aggregationType != AggregationType.Count) && !expression.Type.IsNullableType())
+				{
+					expression = Expression.Block(
+						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
+							Expression.Equal(expression, Expression.Default(expression.Type)),
+							Expression.Constant(_methodName)),
+						expression);
+				}
+
+				return expression;
+			}
+
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				if ((_aggregationType != AggregationType.Sum && _aggregationType != AggregationType.Count) && !expr.Type.IsNullableType())
-				{
-					expr = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
-							Expression.Equal(expr, Expression.Default(expr.Type)),
-							Expression.Constant(_methodName)),
-						expr);
-				}
+				expr = GenerateNullCheckIfNeeded(expr);
 
 				var mapper = Builder.BuildMapper<object>(SelectQuery, expr);
 
@@ -475,7 +482,12 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				return Placeholder;
+				var result = (Expression)Placeholder;
+
+				if (flags.IsExpression())
+					result = GenerateNullCheckIfNeeded(result);
+
+				return result;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
