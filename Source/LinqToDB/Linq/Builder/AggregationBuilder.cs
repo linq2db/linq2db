@@ -369,6 +369,8 @@ namespace LinqToDB.Linq.Builder
 						if (sqlExpr is not SqlPlaceholderExpression placeholder)
 							return null;
 
+						builder.RegisterExtensionAccessors(methodCall);
+
 						sql = placeholder.Sql;
 					}
 					else

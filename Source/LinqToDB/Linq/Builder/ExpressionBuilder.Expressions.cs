@@ -743,6 +743,12 @@ namespace LinqToDB.Linq.Builder
 				return newNode;
 			}
 
+			Expression ApplyAccessors(Expression expression)
+			{
+				var result = Builder.ParametersContext.ApplyAccessors(expression);
+				return result;
+			}
+
 			bool HandleParametrized(Expression expr, [NotNullWhen(true)] out Expression? transformed)
 			{
 				if (expr is ClosurePlaceholderExpression)
@@ -792,9 +798,7 @@ namespace LinqToDB.Linq.Builder
 
 					// correct expression based on accessors
 
-					var valueAccessor = Builder.ParametersContext.ReplaceParameter(expr, _columnDescriptor, false, s => { });
-
-					var valueExpr = valueAccessor.ValueExpression;
+					var valueExpr = ApplyAccessors(expr);
 
 					if (valueExpr.Type != expr.Type)
 					{

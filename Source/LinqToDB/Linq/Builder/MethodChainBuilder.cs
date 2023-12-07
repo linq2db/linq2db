@@ -136,6 +136,8 @@ namespace LinqToDB.Linq.Builder
 			if (sqlExpression is not SqlPlaceholderExpression placeholder)
 				return null;
 
+			builder.RegisterExtensionAccessors(methodCall);
+
 			var context = new ChainContext(buildInfo.Parent, placeholderSequence, methodCall);
 
 			placeholder = placeholder

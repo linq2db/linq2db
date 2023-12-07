@@ -336,6 +336,26 @@ namespace LinqToDB.Linq.Builder
 			public DbDataType DataType;
 		}
 
+		public Expression ApplyAccessors(Expression expression)
+		{
+			var result = expression.Transform(
+				(1, paramContext : this),
+				static (context, expr) =>
+				{
+					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var accessor, true))
+					{
+						if (accessor.Type != expr.Type)
+							accessor = Expression.Convert(accessor, expr.Type);
+
+						return accessor;
+					}
+
+					return expr;
+				});
+
+			return result;
+		}
+
 		public ValueTypeExpression ReplaceParameter(Expression expression, ColumnDescriptor? columnDescriptor, bool forceConstant, Action<string>? setName)
 		{
 			var result = new ValueTypeExpression

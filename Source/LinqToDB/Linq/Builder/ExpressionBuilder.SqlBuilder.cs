@@ -1417,6 +1417,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (sqlExpression is SqlPlaceholderExpression placeholder)
 			{
+				RegisterExtensionAccessors(mc);
+
 				sqlExpression = placeholder.WithPath(mc);
 			}
 
@@ -2454,6 +2456,7 @@ namespace LinqToDB.Linq.Builder
 					return true;
 				}
 
+				case ExpressionType.Constant:
 				case ExpressionType.Default:
 				{
 					result.Add(expression);

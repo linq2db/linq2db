@@ -370,7 +370,10 @@ namespace LinqToDB.Linq.Builder
 							context.builder.ConvertToExtensionSql(context.context, context.flags, e, descriptor));
 
 					if (transformed is SqlPlaceholderExpression placeholder)
+					{
+						RegisterExtensionAccessors(expr);
 						return placeholder.WithPath(expr);
+					}
 
 					if (attr.ServerSideOnly)
 					{
@@ -382,6 +385,23 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expr;
+		}
+
+		public void RegisterExtensionAccessors(Expression expression)
+		{
+			// Extensions may have instance reference. Try to register them as parametrized to disallow caching objects in Expression Tree
+			//
+			if (expression is MemberExpression { Expression: not null } me)
+			{
+				if (CanBeCompiled(me.Expression, true))
+					ParametersContext.ApplyAccessors(me.Expression);
+			}
+			else if (expression is MethodCallExpression { Object: not null } mc)
+			{
+				if (CanBeCompiled(mc.Object, true))
+					ParametersContext.ApplyAccessors(mc.Object);
+			}
+
 		}
 
 		public Expression FinalizeConstructors(IBuildContext context, Expression inputExpression, bool deduplicate)
@@ -414,6 +434,38 @@ namespace LinqToDB.Linq.Builder
 
 			return expression;
 		}
+
+		/* Some kind of optimization. Remove later
+		Expression SimplifyNullabilityChecks(IBuildContext context, Expression expression)
+		{
+			var nullability = NullabilityContext.GetContext(context.SelectQuery);
+
+			var result = expression.Transform(e =>
+			{
+				if (e.Type == typeof(bool) && e is SqlPlaceholderExpression placeholder)
+				{
+					if (placeholder.Sql is SqlColumn column)
+					{
+						var expr = QueryHelper.UnwrapExpression(column.Expression, true);
+
+						if (expr is SqlSearchCondition sc && sc.Conditions.Count == 1)
+						{
+							var condition = sc.Conditions[0];
+							if (condition.Predicate is SqlPredicate.IsNull isNull)
+							{
+
+							}
+
+						}
+					}
+				}
+
+				return e;
+			});
+
+			return result;
+		}
+		*/
 
 		Expression FinalizeConstructorInternal(IBuildContext context, Expression inputExpression, List<(ParameterExpression variable, Expression assignment)>? variables)
 		{
