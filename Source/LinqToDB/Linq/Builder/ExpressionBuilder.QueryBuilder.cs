@@ -389,19 +389,31 @@ namespace LinqToDB.Linq.Builder
 
 		public void RegisterExtensionAccessors(Expression expression)
 		{
+			void Register(Expression expr)
+			{
+				if (!expr.Type.IsScalar() && CanBeCompiled(expr, true))
+					ParametersContext.ApplyAccessors(expr);
+
+			}
+
 			// Extensions may have instance reference. Try to register them as parametrized to disallow caching objects in Expression Tree
 			//
 			if (expression is MemberExpression { Expression: not null } me)
 			{
-				if (CanBeCompiled(me.Expression, true))
-					ParametersContext.ApplyAccessors(me.Expression);
+				Register(me.Expression);
 			}
-			else if (expression is MethodCallExpression { Object: not null } mc)
+			else if (expression is MethodCallExpression mc)
 			{
-				if (CanBeCompiled(mc.Object, true))
-					ParametersContext.ApplyAccessors(mc.Object);
-			}
+				if (mc.Object != null)
+				{
+					Register(mc.Object);
+				}
 
+				foreach (var arg in mc.Arguments)
+				{
+					Register(arg);
+				}
+			}
 		}
 
 		public Expression FinalizeConstructors(IBuildContext context, Expression inputExpression, bool deduplicate)

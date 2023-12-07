@@ -1962,7 +1962,9 @@ namespace LinqToDB.Linq.Builder
 				var strict = leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.Full ||
 							 rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.Full ||
 							 (leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.New &&
-							  rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.New);
+							  rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.New) ||
+							 (leftConstructor.ConstructType  == SqlGenericConstructorExpression.CreateType.MemberInit &&
+							  rightConstructor.ConstructType == SqlGenericConstructorExpression.CreateType.MemberInit);
 
 				var searchCondition = new SqlSearchCondition();
 				var usedMembers     = new HashSet<MemberInfo>(MemberInfoEqualityComparer.Default);

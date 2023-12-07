@@ -131,6 +131,8 @@ namespace LinqToDB.Linq.Builder
 					return context.builder.ConvertToSqlExpr(context.context, a);
 				});
 
+				builder.RegisterExtensionAccessors(mc);
+
 				Init(true);
 			}
 

@@ -624,10 +624,21 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 		protected override Expression VisitConstant(ConstantExpression node)
 		{
-			if (node.Value is IQueryable queryable/* && !(queryable is ITable)*/)
+			if (node.Value != null)
 			{
-				if (!ExpressionEqualityComparer.Instance.Equals(queryable.Expression, node))
-					return Visit(queryable.Expression);
+				if (node.Value is IQueryable queryable)
+				{
+					if (!ExpressionEqualityComparer.Instance.Equals(queryable.Expression, node))
+						return Visit(queryable.Expression);
+				}
+				else if (node.Value is Sql.IQueryableContainer queryableContainer)
+				{
+					return Visit(queryableContainer.Query.Expression);
+				}
+				/*else if (node.Value is Sql.ISqlExtension)
+				{
+					return Expression.Constant(null, node.Type);
+				}*/
 			}
 
 			return base.VisitConstant(node);
