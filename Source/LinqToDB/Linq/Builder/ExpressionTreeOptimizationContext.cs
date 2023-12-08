@@ -511,7 +511,6 @@ namespace LinqToDB.Linq.Builder
 			if (expr.Type == typeof(Sql.SqlID))
 			{
 				result = true;
-				(_isServerSideOnlyCache ??= new()).Add(expr, result);
 			}
 			else
 			{
