@@ -36,7 +36,7 @@ namespace LinqToDB.Linq.Builder
 			return taskType.GetGenericArguments()[0];
 		}
 
-		static AggregationType GetAggregationType(MethodCallExpression methodCallExpression, out int argumentsCount, out Type returnType)
+		static AggregationType GetAggregationType(MethodCallExpression methodCallExpression, out int argumentsCount, out string functionName, out Type returnType)
 		{
 			AggregationType aggregationType;
 			argumentsCount = methodCallExpression.Arguments.Count;
@@ -48,6 +48,7 @@ namespace LinqToDB.Linq.Builder
 				case "LongCount":
 				{
 					aggregationType = AggregationType.Count;
+					functionName    = "Count";
 					break;
 				}
 				case "LongCountAsync":
@@ -55,6 +56,7 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = typeof(long);
 					aggregationType = AggregationType.Count;
+					functionName    = "Count";
 					break;
 				}
 				case "CountAsync":
@@ -62,11 +64,13 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = typeof(int);
 					aggregationType = AggregationType.Count;
+					functionName    = "Count";
 					break;
 				}
 				case "Min":
 				{
 					aggregationType = AggregationType.Min;
+					functionName    = "Min";
 					break;
 				}
 				case "MinAsync":
@@ -74,11 +78,13 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Min;
+					functionName    = "Min";
 					break;
 				}
 				case "Max":
 				{
 					aggregationType = AggregationType.Max;
+					functionName    = "Max";
 					break;
 				}
 				case "MaxAsync":
@@ -86,11 +92,13 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Max;
+					functionName    = "Max";
 					break;
 				}
 				case "Sum":
 				{
 					aggregationType = AggregationType.Sum;
+					functionName    = "Sum";
 					break;
 				}
 				case "SumAsync":
@@ -98,11 +106,13 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Sum;
+					functionName    = "Sum";
 					break;
 				}
 				case "Average":
 				{
 					aggregationType = AggregationType.Average;
+					functionName    = "Average";
 					break;
 				}
 				case "AverageAsync":
@@ -110,6 +120,7 @@ namespace LinqToDB.Linq.Builder
 					--argumentsCount;
 					returnType      = ExtractTaskType(returnType);
 					aggregationType = AggregationType.Average;
+					functionName    = "Average";
 					break;
 				}
 				default:
@@ -148,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
 
-			var methodName = methodCall.Method.Name.Replace("Async", "");
+			var functionName = methodCall.Method.Name;
 
 			AggregationType aggregationType;
 
@@ -164,7 +175,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				aggregationType = GetAggregationType(methodCall, out argumentsCount, out returnType);
+				aggregationType = GetAggregationType(methodCall, out argumentsCount, out functionName, out returnType);
 			}
 
 			var sequenceArgument = builder.CorrectRoot(null, methodCall.Arguments[0]);
@@ -199,7 +210,7 @@ namespace LinqToDB.Linq.Builder
 						SqlFunction.CreateCount(returnType, sequence.SelectQuery), buildInfo.Expression,
 						convertType : returnType);
 
-					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, methodName, returnType);
+					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, functionName, returnType);
 				}
 				else
 				{
@@ -216,12 +227,12 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, valueExpression, ProjectFlags.SQL);
-					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, methodName, returnType);
+					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, functionName, returnType);
 
 					var sql = sqlPlaceholder.Sql;
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
-						new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true }, buildInfo.Expression, convertType: returnType);
+						new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true }, buildInfo.Expression, convertType: returnType);
 				}
 			}
 			else
@@ -319,7 +330,7 @@ namespace LinqToDB.Linq.Builder
 					valueExpression = new ContextRefExpression(valueType, sequence);
 				}
 
-				context = new AggregationContext(buildInfo.Parent, placeholderSequence, aggregationType, methodName, returnType);
+				context = new AggregationContext(buildInfo.Parent, placeholderSequence, aggregationType, functionName, returnType);
 
 				ISqlExpression sql;
 
@@ -353,7 +364,7 @@ namespace LinqToDB.Linq.Builder
 						sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
 					}
 
-					sql = new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true };
+					sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true };
 				}
 				else
 				{
@@ -378,7 +389,7 @@ namespace LinqToDB.Linq.Builder
 						var sqlPlaceholder =
 							builder.ConvertToSqlPlaceholder(placeholderSequence, valueExpression, buildInfo.GetFlags());
 						sql = sqlPlaceholder.Sql;
-						sql = new SqlFunction(returnType, methodName, true, sql) { CanBeNull = true };
+						sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = true };
 					}
 				}
 
@@ -390,7 +401,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			functionPlaceholder.Alias = methodName;
+			functionPlaceholder.Alias = functionName;
 			context.Placeholder       = functionPlaceholder;
 
 			return context;
