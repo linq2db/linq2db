@@ -187,14 +187,13 @@ namespace Tests.Extensions
 						.ForShareHint()
 						.Union
 						(
-							from p in db.Child
-							select p.Parent
+							from c in db.Child
+							select c.Parent
 						)
 						.Union
 						(
 							from p in db.Parent
 							from c in db.Child.TableID("pp")
-								.AsSubQuery()
 								.AsPostgreSQL()
 								.ForShareHint()
 							select p

@@ -1408,6 +1408,12 @@ namespace LinqToDB.SqlQuery
 			if (joinTable.Table.Source is not SelectQuery subQuery)
 				return false;
 
+			if (subQuery.DoNotRemove)
+				return false;
+
+			if (subQuery.SqlQueryExtensions?.Count > 0)
+				return false;
+
 			if (subQuery.From.Tables.Count != 1)
 				return false;
 
