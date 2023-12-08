@@ -73,6 +73,9 @@ namespace LinqToDB.Linq.Builder
 			if (newAccessor == null)
 				return null;
 
+			// do replacing again for registering parametrized constants
+			ApplyAccessors(expr);
+
 			var found = newAccessor;
 
 			// constants/default(T) must be excluded from parameter deduplication:
@@ -379,7 +382,7 @@ namespace LinqToDB.Linq.Builder
 						&& (context.forceConstant || !expr.Type.IsConstantable(false) || !context.paramContext.CanBeConstant(expr)))
 					{
 						var exprType = expr.Type;
-						if (context.paramContext.GetAccessorExpression(expr, out var val, true))
+						if (context.paramContext.GetAccessorExpression(expr, out var val, false))
 						{
 							var constantValue = ((ConstantExpression)expr).Value;
 
