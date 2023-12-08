@@ -558,9 +558,9 @@ namespace LinqToDB.Linq
 			{
 				if (e is ConstantExpression constExpr)
 				{
-					if (!constExpr.Type.IsScalar())
+					if (!constExpr.Type.IsScalar() && constExpr.Value != null)
 					{
-						if (constExpr.Value != null)
+						if (!constExpr.Value.GetType().IsScalar())
 						{
 							if (constExpr.Value is Array)
 								return;

@@ -790,7 +790,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var c = (ConstantExpression)ex;
 
-					if (c.Value == null || ex.Type.IsConstantable(false))
+					if (c.Value == null || c.Value.GetType().IsConstantable(false))
 						return false;
 
 					return true;
