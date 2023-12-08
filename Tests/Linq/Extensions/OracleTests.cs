@@ -568,7 +568,7 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("\tSELECT /*+ FULL(c_1) NOCACHE(c_1) */").Using(StringComparison.Ordinal));
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FACT(c_2) FIRST_ROWS(10) ALL_ROWS */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FACT(c_2) ALL_ROWS FIRST_ROWS(10) */"));
 		}
 
 		[Test]

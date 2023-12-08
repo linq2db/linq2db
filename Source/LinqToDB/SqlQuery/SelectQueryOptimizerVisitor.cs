@@ -1077,6 +1077,13 @@ namespace LinqToDB.SqlQuery
 			if (subQuery.DoNotRemove)
 				return false;
 
+			// Trying do do not mix query hints
+			if (subQuery.SqlQueryExtensions?.Count > 0)
+			{
+				if (tableSource.Joins.Count > 0 || selectQuery.From.Tables.Count > 1)
+					return false;
+			}
+
 			if (subQuery.From.Tables.Count == 0)
 			{
 				if (!IsSimpleForNoTablesMove(selectQuery))
