@@ -69,7 +69,7 @@ namespace LinqToDB.DataProvider.Access
 					{
 						if (func.Name == "IIF" && func.Parameters.Length == 3 && func.Parameters[0] is SqlSearchCondition sc)
 						{
-							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
+							if (sc.Predicates.Count == 1 && sc.Predicates[0] is SqlPredicate.FuncLike p)
 							{
 								if (p.Function.Name == "EXISTS")
 								{
@@ -81,9 +81,9 @@ namespace LinqToDB.DataProvider.Access
 					}
 					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition sc)
 					{
-						if (sc.Conditions.Count == 1)
+						if (sc.Predicates.Count == 1)
 						{
-							switch (sc.Conditions[0].Predicate)
+							switch (sc.Predicates[0])
 							{
 								case SqlPredicate.FuncLike { Function.Name: "EXISTS" } :
 									BuildAnyAsCount(selectQuery);
@@ -115,10 +115,10 @@ namespace LinqToDB.DataProvider.Access
 				cond  = (SqlSearchCondition)selectQuery.Select.Columns[0].Expression;
 			}
 
-			var exist = ((SqlPredicate.FuncLike)cond.Conditions[0].Predicate).Function;
+			var exist = ((SqlPredicate.FuncLike)cond.Predicates[0]).Function;
 			var query = (SelectQuery)exist.Parameters[0];
 
-			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
+			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Predicates[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
 
 			BuildSql(0, new SqlSelectStatement(query), StringBuilder, OptimizationContext);
 
@@ -138,13 +138,13 @@ namespace LinqToDB.DataProvider.Access
 				cond  = (SqlSearchCondition)selectQuery.Select.Columns[0].Expression;
 			}
 
-			var predicate = (SqlPredicate.InSubQuery)cond.Conditions[0].Predicate;
+			var predicate = (SqlPredicate.InSubQuery)cond.Predicates[0].Predicate;
 			var query     = predicate.SubQuery;
 
-			query.Where.SearchCondition.Conditions.Add(
+			query.Where.SearchCondition.Predicates.Add(
 				new (false, new SqlPredicate.ExprExpr(query.Select.Columns[0].Expression, SqlPredicate.Operator.Equal, predicate.Expr1, true)));
 
-			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
+			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Predicates[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
 
 			BuildSql(0, new SqlSelectStatement(query), StringBuilder, OptimizationContext);
 
@@ -239,7 +239,7 @@ namespace LinqToDB.DataProvider.Access
 
 					var sc = new SqlSearchCondition();
 
-					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
+					sc.Predicates.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
 
 					func = new SqlFunction(func.SystemType, "IIF", sc, func.Parameters[1], func.Parameters[0]);
 

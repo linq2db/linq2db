@@ -29,7 +29,7 @@ namespace LinqToDB.SqlQuery
 
 		public SqlSearchCondition SearchCondition { get; internal set; }
 
-		public bool IsEmpty => SearchCondition.Conditions.Count == 0;
+		public bool IsEmpty => SearchCondition.Predicates.Count == 0;
 
 		protected override SqlSearchCondition Search => SearchCondition;
 
@@ -57,7 +57,7 @@ namespace LinqToDB.SqlQuery
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (Search.Conditions.Count == 0)
+			if (Search.Predicates.Count == 0)
 				return writer;
 
 			writer
@@ -74,7 +74,7 @@ namespace LinqToDB.SqlQuery
 
 		public void Cleanup()
 		{
-			SearchCondition.Conditions.Clear();
+			SearchCondition.Predicates.Clear();
 		}
 	}
 }

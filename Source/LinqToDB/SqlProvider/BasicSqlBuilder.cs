@@ -774,7 +774,7 @@ namespace LinqToDB.SqlProvider
 
 				if (sc != null)
 				{
-					if (sc.Conditions.Count == 0)
+					if (sc.Predicates.Count == 0)
 					{
 						expr = new SqlValue(true);
 					}
@@ -2130,18 +2130,18 @@ namespace LinqToDB.SqlProvider
 			else if (buildOn)
 				StringBuilder.Append(" ON ");
 
-			if (WrapJoinCondition && condition.Conditions.Count > 0)
+			if (WrapJoinCondition && condition.Predicates.Count > 0)
 				StringBuilder.Append('(');
 
 			if (buildOn)
 			{
-				if (condition.Conditions.Count != 0)
+				if (condition.Predicates.Count != 0)
 					BuildSearchCondition(Precedence.Unknown, condition, wrapCondition : false);
 				else
 					StringBuilder.Append("1=1");
 			}
 
-			if (WrapJoinCondition && condition.Conditions.Count > 0)
+			if (WrapJoinCondition && condition.Predicates.Count > 0)
 				StringBuilder.Append(')');
 
 			if (joinCounter > 0)
@@ -2161,7 +2161,7 @@ namespace LinqToDB.SqlProvider
 		{
 			switch (join.JoinType)
 			{
-				case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+				case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Predicates.IsNullOrEmpty() :
 										  StringBuilder.Append("CROSS JOIN ");  return false;
 				case JoinType.Inner     : StringBuilder.Append("INNER JOIN ");  return true;
 				case JoinType.Left      : StringBuilder.Append("LEFT JOIN ");   return true;
@@ -2181,7 +2181,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var condition = ConvertElement(selectQuery.Where.SearchCondition);
 
-			return condition.Conditions.Count > 0;
+			return condition.Predicates.Count > 0;
 		}
 
 		protected virtual void BuildWhereClause(SelectQuery selectQuery)
@@ -2272,7 +2272,7 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildHavingClause(SelectQuery selectQuery)
 		{
 			var condition = ConvertElement(selectQuery.Having.SearchCondition);
-			if (condition.Conditions.Count == 0)
+			if (condition.Predicates.Count == 0)
 				return;
 
 			AppendIndent();
@@ -2435,7 +2435,7 @@ namespace LinqToDB.SqlProvider
 			var len = StringBuilder.Length;
 			var parentPrecedence = condition.Precedence + 1;
 
-			if (condition.Conditions.Count == 0)
+			if (condition.Predicates.Count == 0)
 			{
 				BuildPredicate(parentPrecedence, parentPrecedence,
 					new SqlPredicate.ExprExpr(
@@ -2444,13 +2444,13 @@ namespace LinqToDB.SqlProvider
 						new SqlValue(true), false));
 			}
 
-			foreach (var cond in condition.Conditions)
+			foreach (var cond in condition.Predicates)
 			{
 				if (isOr != null)
 				{
 					StringBuilder.Append(isOr.Value ? " OR" : " AND");
 
-					if (condition.Conditions.Count < 4 && StringBuilder.Length - len < 50 || !wrapCondition)
+					if (condition.Predicates.Count < 4 && StringBuilder.Length - len < 50 || !wrapCondition)
 					{
 						StringBuilder.Append(' ');
 					}

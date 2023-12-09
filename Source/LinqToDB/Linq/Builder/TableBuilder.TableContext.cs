@@ -162,7 +162,7 @@ namespace LinqToDB.Linq.Builder
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 
 					if (predicate.GetType() != typeof(SqlPredicate.Expr))
-						SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
+						SelectQuery.Where.SearchCondition.Predicates.Add(new SqlCondition(false, predicate));
 				}
 			}
 

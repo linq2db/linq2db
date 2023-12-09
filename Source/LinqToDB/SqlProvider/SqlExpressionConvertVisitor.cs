@@ -207,13 +207,13 @@ namespace LinqToDB.SqlProvider
 										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
 										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, null));
 
-									itemCond.Conditions.Add(cond);
+									itemCond.Predicates.Add(cond);
 								}
 
-								sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
+								sc.Predicates.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
 							}
 
-							if (sc.Conditions.Count == 0)
+							if (sc.Predicates.Count == 0)
 								return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
 
 							if (predicate.IsNot)
@@ -253,13 +253,13 @@ namespace LinqToDB.SqlProvider
 									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
 									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, value, null));
 
-								itemCond.Conditions.Add(cond);
+								itemCond.Predicates.Add(cond);
 							}
 
-							sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
+							sc.Predicates.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
 						}
 
-						if (sc.Conditions.Count == 0)
+						if (sc.Predicates.Count == 0)
 							return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
 
 						if (predicate.IsNot)
@@ -758,7 +758,7 @@ namespace LinqToDB.SqlProvider
 				var isOr    = !predicate.IsNot;
 				var rewrite = new SqlSearchCondition();
 				foreach (var item in predicate.Values)
-					rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(left, op, item, withNull: null), isOr));
+					rewrite.Predicates.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(left, op, item, withNull: null), isOr));
 				return rewrite;
 			}
 
@@ -775,7 +775,7 @@ namespace LinqToDB.SqlProvider
 			// (a, b) is null     => a is null     and b is null
 			// (a, b) is not null => a is not null and b is not null
 			foreach (var value in row.Values)
-				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(value, isNot)));
+				rewrite.Predicates.Add(new SqlCondition(false, new SqlPredicate.IsNull(value, isNot)));
 			return rewrite;
 		}
 
@@ -803,7 +803,7 @@ namespace LinqToDB.SqlProvider
 					return new SqlPredicate.ExprExpr(a, nullSafeOp, b, withNull: null);
 				});
 				foreach (var comp in compares)
-					rewrite.Conditions.Add(new SqlCondition(false, comp, isOr));
+					rewrite.Predicates.Add(new SqlCondition(false, comp, isOr));
 
 				return rewrite;
 			}
@@ -820,8 +820,8 @@ namespace LinqToDB.SqlProvider
 				for (int i = 0; i < values1.Length; ++i)
 				{
 					for (int j = 0; j < i; j++)
-						rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], withNull: null), isOr: false));
-					rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], withNull: null), isOr: true));
+						rewrite.Predicates.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], withNull: null), isOr: false));
+					rewrite.Predicates.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], withNull: null), isOr: true));
 				}
 
 				return rewrite;
@@ -926,7 +926,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var sc = new SqlSearchCondition();
 
-				sc.Conditions.Add(
+				sc.Predicates.Add(
 					new SqlCondition(false,
 						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
 							DataOptions.LinqOptions.CompareNullsAsValues ? false : null)));

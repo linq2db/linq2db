@@ -1243,7 +1243,7 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SearchCondition :
 						{
-							Append(((SqlSearchCondition)e).Conditions);
+							Append(((SqlSearchCondition)e).Predicates);
 							break;
 						}
 

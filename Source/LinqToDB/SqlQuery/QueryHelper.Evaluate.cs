@@ -318,20 +318,20 @@ namespace LinqToDB.SqlQuery
 				{
 					var cond     = (SqlSearchCondition)expr;
 
-					if (cond.Conditions.Count == 0)
+					if (cond.Predicates.Count == 0)
 					{
 						result = true;
 						return true;
 					}
 
-					for (var i = 0; i < cond.Conditions.Count; i++)
+					for (var i = 0; i < cond.Predicates.Count; i++)
 					{
-						var condition = cond.Conditions[i];
+						var condition = cond.Predicates[i];
 						if (condition.TryEvaluateExpression(context, out var evaluated))
 						{
 							if (evaluated is bool boolValue)
 							{
-								if (i == cond.Conditions.Count - 1 || condition.IsOr == boolValue)
+								if (i == cond.Predicates.Count - 1 || condition.IsOr == boolValue)
 								{
 									result = boolValue;
 									return true;

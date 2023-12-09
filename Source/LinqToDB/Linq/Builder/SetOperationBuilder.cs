@@ -1161,7 +1161,7 @@ namespace LinqToDB.Linq.Builder
 					var column1 = _sequence1.SelectQuery.Select.Columns[i];
 					var column2 = _sequence2.SelectQuery.Select.Columns[i];
 
-					sc.Conditions.Add(new SqlCondition(false,
+					sc.Predicates.Add(new SqlCondition(false,
 						new SqlPredicate.ExprExpr(column1.Expression, SqlPredicate.Operator.Equal, column2.Expression,
 							Builder.DataOptions.LinqOptions.CompareNullsAsValues)));
 				}

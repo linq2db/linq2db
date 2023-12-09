@@ -496,56 +496,16 @@ namespace LinqToDB.SqlQuery
 
 		public static void ConcatSearchCondition(this SqlWhereClause where, SqlSearchCondition search)
 		{
-			if (search.Conditions.Count == 0)
-				return;
+			var sc = where.EnsureConjunction();
 
-			if (where.IsEmpty)
+			if (search.IsOr)
 			{
-				where.SearchCondition.Conditions.AddRange(search.Conditions);
+				sc.Predicates.Add(search);
 			}
 			else
 			{
-				if (where.SearchCondition.Precedence < Precedence.LogicalConjunction)
-				{
-					var sc1 = new SqlSearchCondition();
-
-					sc1.Conditions.AddRange(where.SearchCondition.Conditions);
-
-					where.SearchCondition.Conditions.Clear();
-					where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
-				}
-
-				if (search.Precedence < Precedence.LogicalConjunction)
-				{
-					var sc2 = new SqlSearchCondition();
-
-					sc2.Conditions.AddRange(search.Conditions);
-
-					where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
-				}
-				else
-					where.SearchCondition.Conditions.AddRange(search.Conditions);
+				sc.Predicates.AddRange(search.Predicates);
 			}
-		}
-
-		/// <summary>
-		/// Ensures that expression is not A OR B but (A OR B)
-		/// Function makes all needed manipulations for that
-		/// </summary>
-		/// <param name="searchCondition"></param>
-		public static SqlSearchCondition EnsureConjunction(this SqlSearchCondition searchCondition)
-		{
-			if (searchCondition.Conditions.Count > 0 && searchCondition.Precedence < Precedence.LogicalConjunction)
-			{
-				var sc1 = new SqlSearchCondition();
-
-				sc1.Conditions.AddRange(searchCondition.Conditions);
-
-				searchCondition.Conditions.Clear();
-				searchCondition.Conditions.Add(new SqlCondition(false, sc1));
-			}
-
-			return searchCondition;
 		}
 
 		/// <summary>
@@ -553,10 +513,14 @@ namespace LinqToDB.SqlQuery
 		/// Function makes all needed manipulations for that
 		/// </summary>
 		/// <param name="whereClause"></param>
-		public static SqlWhereClause EnsureConjunction(this SqlWhereClause whereClause)
+		public static SqlSearchCondition EnsureConjunction(this SqlWhereClause whereClause)
 		{
-			whereClause.SearchCondition.EnsureConjunction();
-			return whereClause;
+			if (whereClause.SearchCondition.IsOr)
+			{
+				var old = whereClause.SearchCondition;
+				whereClause.SearchCondition = new SqlSearchCondition(false, old);
+			}
+			return whereClause.SearchCondition;
 		}
 
 		public static bool IsEqualTables([NotNullWhen(true)] SqlTable? table1, [NotNullWhen(true)] SqlTable? table2)
@@ -1286,32 +1250,6 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public static bool? GetBoolValue(ISqlExpression expression, EvaluationContext context)
-		{
-			if (expression.TryEvaluateExpression(context, out var value))
-			{
-				if (value is bool b)
-					return b;
-			}
-			else if (expression is SqlSearchCondition searchCondition)
-			{
-				if (searchCondition.Conditions.Count == 0)
-					return true;
-				if (searchCondition.Conditions.Count == 1)
-				{
-					var cond = searchCondition.Conditions[0];
-					if (cond.Predicate.ElementType == QueryElementType.ExprPredicate)
-					{
-						var boolValue = GetBoolValue(((SqlPredicate.Expr)cond.Predicate).Expr1, context);
-						if (boolValue.HasValue)
-							return cond.IsNot ? !boolValue : boolValue;
-					}
-				}
-			}
-
-			return null;
-		}
-
 		sealed class NeedParameterInliningContext
 		{
 			public bool HasParameter;
@@ -1442,29 +1380,25 @@ namespace LinqToDB.SqlQuery
 
 		public static SqlSearchCondition CorrectComparisonForJoin(SqlSearchCondition sc)
 		{
-			var newSc = new SqlSearchCondition();
-			for (var index = 0; index < sc.Conditions.Count; index++)
+			var newSc = new SqlSearchCondition(false);
+			for (var index = 0; index < sc.Predicates.Count; index++)
 			{
-				var condition = sc.Conditions[index];
-				if (condition.Predicate is SqlPredicate.ExprExpr exprExpr)
+				var predicate = sc.Predicates[index];
+				if (predicate is SqlPredicate.ExprExpr exprExpr)
 				{
 					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
 						 exprExpr.Operator == SqlPredicate.Operator.NotEqual)
 						&& exprExpr.WithNull != null)
 					{
-						condition = new SqlCondition(condition.IsNot,
-							new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, exprExpr.Expr2, null),
-							condition.IsOr);
+						predicate = new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, exprExpr.Expr2, null);
 					}
 				}
-				else if (condition.Predicate is SqlSearchCondition subSc)
+				else if (predicate is SqlSearchCondition { IsOr: false } subSc)
 				{
-					condition = new SqlCondition(condition.IsNot,
-						CorrectComparisonForJoin(subSc),
-						condition.IsOr);
+					predicate = CorrectComparisonForJoin(subSc);
 				}
 
-				newSc.Conditions.Add(condition);
+				newSc.Predicates.Add(predicate);
 			}
 
 			return newSc;
@@ -1562,6 +1496,9 @@ namespace LinqToDB.SqlQuery
 			// var checkVisitor = new SqlQueryNestingValidationVisitor(isSubQuery, statement);
 			// checkVisitor.Visit(statement);
 		}
+
+		public static ISqlPredicate MakeNot(this ISqlPredicate predicate, bool isNot)
+			=> isNot ? new SqlPredicate.Not(predicate) : predicate;
 
 	}
 }

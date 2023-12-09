@@ -135,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 				if (!source.IsTargetAssociation(targetKeySelector))
 				{
 					var compareSearchCondition = builder.GenerateComparison(source.SourceContextRef.BuildContext, targetKeySelector, sourceKeySelector);
-					searchCondition.Conditions.AddRange(compareSearchCondition.Conditions);
+					searchCondition.Predicates.AddRange(compareSearchCondition.Predicates);
 				}
 				else
 				{
@@ -150,7 +150,7 @@ namespace LinqToDB.Linq.Builder
 
 					var selectQuery = clonedTargetContext.SelectQuery;
 
-					selectQuery.Where.SearchCondition.Conditions.AddRange(compareSearchCondition.Conditions);
+					selectQuery.Where.SearchCondition.Predicates.AddRange(compareSearchCondition.Predicates);
 
 					var targetTable = GetTargetTable(targetContext);
 					if (targetTable == null)
@@ -163,14 +163,14 @@ namespace LinqToDB.Linq.Builder
 
 					var cleanQuery = ReplaceSourceInQuery(selectQuery, clonedTargetTable, targetTable);
 
-					searchCondition.Conditions.Add(new SqlCondition(false,
+					searchCondition.Predicates.Add(new SqlCondition(false,
 						new SqlPredicate.FuncLike(SqlFunction.CreateExists(cleanQuery))));
 				}
 			}
 			else if (!source.IsTargetAssociation(condition))
 			{
 				builder.BuildSearchCondition(source.SourceContextRef.BuildContext, condition, ProjectFlags.SQL,
-					searchCondition.Conditions);
+					searchCondition.Predicates);
 			}
 			else
 			{
@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 				var correctedCondition = condition.Replace(source.TargetPropAccess, clonedContextRef);
 
 				builder.BuildSearchCondition(clonedTargetContext, correctedCondition, ProjectFlags.SQL,
-					clonedTargetContext.SelectQuery.Where.SearchCondition.Conditions);
+					clonedTargetContext.SelectQuery.Where.SearchCondition.Predicates);
 
 				var targetTable = GetTargetTable(targetContext);
 				if (targetTable == null)
@@ -195,7 +195,7 @@ namespace LinqToDB.Linq.Builder
 
 				var cleanQuery = ReplaceSourceInQuery(clonedTargetContext.SelectQuery, clonedTargetTable, targetTable);
 
-				searchCondition.Conditions.Add(new SqlCondition(false,
+				searchCondition.Predicates.Add(new SqlCondition(false,
 					new SqlPredicate.FuncLike(SqlFunction.CreateExists(cleanQuery))));
 			}
 		}

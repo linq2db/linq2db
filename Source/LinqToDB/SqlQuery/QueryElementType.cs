@@ -19,6 +19,7 @@
 		SqlAliasPlaceholder,
 		SqlRow,
 
+		NotPredicate,
 		ExprPredicate,
 		NotExprPredicate,
 		ExprExprPredicate,

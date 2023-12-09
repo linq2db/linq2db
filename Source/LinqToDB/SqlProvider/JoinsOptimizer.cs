@@ -155,7 +155,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		sealed record EqualityFields(SqlCondition Condition, ISqlExpression? LeftField, ISqlExpression RightField);
+		sealed record EqualityFields(ISqlPredicate Condition, ISqlExpression? LeftField, ISqlExpression RightField);
 
 		/// <summary>
 		/// Inspect join condition and return list of field pairs used in equals conditions between <paramref name="leftSource"/> (when specified) and <paramref name="rightJoin"/> tables.
@@ -169,52 +169,32 @@ namespace LinqToDB.SqlProvider
 			{
 				List<EqualityFields>? pairs = null;
 
-				for (var i1 = 0; i1 < rightJoin.Condition.Conditions.Count; i1++)
+				if (!rightJoin.Condition.IsOr)
 				{
-					var c = rightJoin.Condition.Conditions[i1];
-
-					if (c.IsOr)
+					for (var i1 = 0; i1 < rightJoin.Condition.Predicates.Count; i1++)
 					{
-						// OR makes condition unsuitable for analysis (we can analyze both sides, but it overcomplicate things too much)
-						pairs = null;
-						break;
+						var p = rightJoin.Condition.Predicates[i1];
+
+						// ignore all predicates except "x == y"
+						if (p is not SqlPredicate.ExprExpr exprExpr || exprExpr.Operator != SqlPredicate.Operator.Equal)
+							continue;
+
+						// try to extract joined tables fields from predicate
+						var field1 = GetUnderlyingFieldOrColumn(exprExpr.Expr1);
+						var field2 = GetUnderlyingFieldOrColumn(exprExpr.Expr2);
+
+						ISqlExpression? leftField  = null;
+						ISqlExpression? rightField = null;
+
+						if (field1 != null)
+							DetectField(leftSource, rightJoin.Table, GetNewField(field1), ref leftField, ref rightField);
+
+						if (field2 != null)
+							DetectField(leftSource, rightJoin.Table, GetNewField(field2), ref leftField, ref rightField);
+
+						if (rightField != null && (leftSource == null || leftField != null))
+							(pairs ??= new()).Add(new(p, leftField, rightField));
 					}
-
-					// flatten nested condition
-					if (c.Predicate is SqlSearchCondition search && search.Conditions.Count == 1)
-					{
-						c = search.Conditions[0];
-
-						if (c.IsOr)
-						{
-							pairs = null;
-							break;
-						}
-					}
-
-					// ignore all predicates except "x == y"
-					if (c.ElementType != QueryElementType.Condition
-						|| c.Predicate.ElementType != QueryElementType.ExprExprPredicate
-						|| ((SqlPredicate.ExprExpr)c.Predicate).Operator != SqlPredicate.Operator.Equal)
-						continue;
-
-					var predicate = (SqlPredicate.ExprExpr)c.Predicate;
-
-					// try to extract joined tables fields from predicate
-					var field1 = GetUnderlyingFieldOrColumn(predicate.Expr1);
-					var field2 = GetUnderlyingFieldOrColumn(predicate.Expr2);
-
-					ISqlExpression? leftField  = null;
-					ISqlExpression? rightField = null;
-
-					if (field1 != null)
-						DetectField(leftSource, rightJoin.Table, GetNewField(field1), ref leftField, ref rightField);
-
-					if (field2 != null)
-						DetectField(leftSource, rightJoin.Table, GetNewField(field2), ref leftField, ref rightField);
-
-					if (rightField != null && (leftSource == null || leftField != null))
-						(pairs ??= new()).Add(new(c, leftField, rightField));
 				}
 
 				(_equalityPairsCache ??= new()).Add(key, found = pairs);

@@ -50,7 +50,8 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
-			var like = ConvertSearchStringPredicateViaLike(predicate);
+			var like   = ConvertSearchStringPredicateViaLike(predicate);
+			var result = like;
 
 			if (predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext) == true)
 			{
@@ -111,15 +112,14 @@ namespace LinqToDB.DataProvider.Access
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(
-						new SqlCondition(false, like, predicate.IsNot),
-						new SqlCondition(predicate.IsNot, subStrPredicate));
-
-					return result;
+					result = new SqlSearchCondition(false, like, subStrPredicate);
 				}
 			}
 
-			return like;
+			if (predicate.IsNot)
+				return new SqlPredicate.Not(result);
+
+			return result;
 		}
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)

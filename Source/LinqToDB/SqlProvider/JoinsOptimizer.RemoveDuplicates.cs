@@ -136,7 +136,7 @@ namespace LinqToDB.SqlProvider
 				// left join should match exactly
 				if (hasLeftJoin)
 				{
-					if (join1.Condition.Conditions.Count != join2.Condition.Conditions.Count)
+					if (join1.Condition.Predicates.Count != join2.Condition.Predicates.Count)
 						return false;
 
 					if (found1.Count != found2.Count)
@@ -174,7 +174,7 @@ namespace LinqToDB.SqlProvider
 				if (hasLeftJoin)
 				{
 					// for left join each expression should be used
-					if (found2.Count != join1.Condition.Conditions.Count)
+					if (found2.Count != join1.Condition.Predicates.Count)
 						return false;
 
 					// currently no dependencies in search condition allowed for left join
@@ -206,7 +206,7 @@ namespace LinqToDB.SqlProvider
 
 				if (join2.JoinType == JoinType.Left)
 				{
-					if (join2.Condition.Conditions.Count != found.Count)
+					if (join2.Condition.Predicates.Count != found.Count)
 						return false;
 
 					// currently no dependencies in search condition allowed for left join
@@ -238,19 +238,19 @@ namespace LinqToDB.SqlProvider
 				if (uniqueFields.Contains(item.RightField))
 				{
 					// remove unique key conditions
-					join2.Condition.Conditions.Remove(item.Condition);
+					join2.Condition.Predicates.Remove(item.Condition);
 					AddEqualFields(item.LeftField!, item.RightField, fromTable.SourceID);
 				}
 			}
 
-			if (join2.Condition.Conditions.Count > 0)
+			if (join2.Condition.Predicates.Count > 0)
 			{
 				// move rest conditions to first join or Where section
 				AddSearchConditions(
 					join1 == null ? selectQuery.Where.SearchCondition : join1.Condition,
-					join2.Condition.Conditions);
+					join2.Condition.Predicates);
 
-				join2.Condition.Conditions.Clear();
+				join2.Condition.Predicates.Clear();
 			}
 
 			if (join1 != null)
@@ -381,16 +381,16 @@ namespace LinqToDB.SqlProvider
 
 			if (!_additionalFilter.TryGetValue(search, out var value))
 			{
-				if (search.Conditions.Count > 0 && search.Precedence < Precedence.LogicalConjunction)
+				if (search.Predicates.Count > 0 && search.Precedence < Precedence.LogicalConjunction)
 				{
 					value = new SqlSearchCondition();
 					var prev  = new SqlSearchCondition();
 
-					prev.Conditions.AddRange(search.Conditions);
-					search.Conditions.Clear();
+					prev.Predicates.AddRange(search.Predicates);
+					search.Predicates.Clear();
 
-					search.Conditions.Add(new SqlCondition(false, value, false));
-					search.Conditions.Add(new SqlCondition(false, prev, false));
+					search.Predicates.Add(new SqlCondition(false, value, false));
+					search.Predicates.Add(new SqlCondition(false, prev, false));
 				}
 				else
 					value = search;
@@ -398,7 +398,7 @@ namespace LinqToDB.SqlProvider
 				_additionalFilter.Add(search, value);
 			}
 
-			value.Conditions.AddRange(conditions);
+			value.Predicates.AddRange(conditions);
 		}
 
 		private sealed class IsDependedContext
@@ -634,12 +634,12 @@ namespace LinqToDB.SqlProvider
 
 		void CollectEqualFields(SqlJoinedTable join)
 		{
-			if (join.Condition.Conditions.Any(c => c.IsOr))
+			if (join.Condition.Predicates.Any(c => c.IsOr))
 				return;
 
-			for (var i1 = 0; i1 < join.Condition.Conditions.Count; i1++)
+			for (var i1 = 0; i1 < join.Condition.Predicates.Count; i1++)
 			{
-				var c = join.Condition.Conditions[i1];
+				var c = join.Condition.Predicates[i1];
 
 				if (c.ElementType != QueryElementType.Condition
 					|| c.Predicate.ElementType != QueryElementType.ExprExprPredicate

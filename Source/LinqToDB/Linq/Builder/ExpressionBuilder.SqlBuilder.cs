@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 			if (isTest)
 				flags |= ProjectFlags.Test;
 
-			if (!BuildSearchCondition(buildSequnce, expr, flags, sc.Conditions, out var error))
+			if (!BuildSearchCondition(buildSequnce, expr, flags, sc.Predicates, out var error))
 			{
 				if (parent == null && !isTest)
 					throw error.CreateError();
@@ -854,7 +854,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThanOrEqual:
 				{
 					var condition = new SqlSearchCondition();
-					if (!BuildSearchCondition(context, expression, flags, condition.Conditions, out var error))
+					if (!BuildSearchCondition(context, expression, flags, condition.Predicates, out var error))
 						return error.WithType(expression.Type);
 					return CreatePlaceholder(context, condition, expression, alias : alias);
 				}
@@ -1091,8 +1091,8 @@ namespace LinqToDB.Linq.Builder
 						{
 							sc = OptimizationHelper.OptimizeSearchCondition(sc, new EvaluationContext());
 
-							if (sc.Conditions.Count == 1                                 && !sc.Conditions[0].IsNot &&
-								sc.Conditions[0].Predicate is SqlPredicate.IsNull isnull && isnull.IsNot)
+							if (sc.Predicates.Count == 1                                 && !sc.Predicates[0].IsNot &&
+								sc.Predicates[0].Predicate is SqlPredicate.IsNull isnull && isnull.IsNot)
 							{
 								if (QueryHelper.IsNullValue(falseSql.Sql) && trueSql.Sql.Equals(isnull.Expr1))
 									return CreatePlaceholder(context, isnull.Expr1, expression);
@@ -1248,7 +1248,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.TypeIs:
 				{
 					var condition = new SqlSearchCondition();
-					BuildSearchCondition(context, expression, flags, condition.Conditions);
+					BuildSearchCondition(context, expression, flags, condition.Predicates);
 					return CreatePlaceholder(context, condition, expression, alias : alias);
 				}
 
@@ -1857,7 +1857,7 @@ namespace LinqToDB.Linq.Builder
 				foreach (var placeholder in notNull)
 				{
 					var sql = SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true);
-					searchCondition.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(sql, isNot), isNot));
+					searchCondition.Predicates.Add(new SqlCondition(false, new SqlPredicate.IsNull(sql, isNot), isNot));
 				}
 
 				return CreatePlaceholder(context, searchCondition, GetOriginalExpression());
@@ -1998,7 +1998,7 @@ namespace LinqToDB.Linq.Builder
 						continue;
 					}
 
-					searchCondition.Conditions.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
+					searchCondition.Predicates.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
 				}
 
 				foreach (var rightAssignment in rightConstructor.Assignments)
@@ -2022,7 +2022,7 @@ namespace LinqToDB.Linq.Builder
 						continue;
 					}
 
-					searchCondition.Conditions.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
+					searchCondition.Predicates.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
 				}
 
 				if (usedMembers.Count == 0)
@@ -2042,7 +2042,7 @@ namespace LinqToDB.Linq.Builder
 								continue;
 							}
 
-							searchCondition.Conditions.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
+							searchCondition.Predicates.Add(new SqlCondition(false, sc, nodeType == ExpressionType.NotEqual));
 						}
 
 					}
@@ -2127,9 +2127,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (l is SqlValue lv && lv.Value == null || left.IsNullValue())
 					{
-						if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Conditions.Count == 1)
+						if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Predicates.Count == 1)
 						{
-							var condition  = rightSearchCond.Conditions[0];
+							var condition  = rightSearchCond.Predicates[0];
 							var localIsNot = isNot;
 							if (condition.IsNot)
 								localIsNot = !localIsNot;
@@ -2150,9 +2150,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (r is SqlValue rv && rv.Value == null || right.IsNullValue())
 					{
-						if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Conditions.Count == 1)
+						if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Predicates.Count == 1)
 						{
-							var condition  = leftSearchCond.Conditions[0];
+							var condition  = leftSearchCond.Predicates[0];
 							var localIsNot = isNot;
 							if (condition.IsNot)
 								localIsNot = !localIsNot;
@@ -3071,7 +3071,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							foreach (var m in inheritanceMapping.Where(static m => !m.IsDefault))
 							{
-								cond.Conditions.Add(
+								cond.Predicates.Add(
 									new SqlCondition(
 										false,
 											new SqlPredicate.ExprExpr(
@@ -3086,7 +3086,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								if (toType.IsSameOrParentOf(m.Type))
 								{
-									cond.Conditions.Add(
+									cond.Predicates.Add(
 										new SqlCondition(
 											false,
 												new SqlPredicate.ExprExpr(
@@ -3125,7 +3125,7 @@ namespace LinqToDB.Linq.Builder
 
 						foreach (var m in mapping)
 						{
-							cond.Conditions.Add(
+							cond.Predicates.Add(
 								new SqlCondition(
 									false,
 										new SqlPredicate.ExprExpr(
@@ -3272,15 +3272,15 @@ namespace LinqToDB.Linq.Builder
 						var e           = (BinaryExpression)expression;
 						var orCondition = new SqlSearchCondition();
 
-						if (!BuildSearchCondition(context, e.Left, flags, orCondition.Conditions, out var leftError))
+						if (!BuildSearchCondition(context, e.Left, flags, orCondition.Predicates, out var leftError))
 						{
 							error = leftError;
 							return false;
 						}
 
-						orCondition.Conditions[^1].IsOr = true;
+						orCondition.Predicates[^1].IsOr = true;
 
-						if (!BuildSearchCondition(context, e.Right, flags, orCondition.Conditions, out var rightError))
+						if (!BuildSearchCondition(context, e.Right, flags, orCondition.Predicates, out var rightError))
 						{
 							error = rightError;
 							return false;
@@ -3300,7 +3300,7 @@ namespace LinqToDB.Linq.Builder
 						PreferExistsForScalar = true;
 						try
 						{
-							if (!BuildSearchCondition(context, e.Operand, flags, notCondition.Conditions, out error))
+							if (!BuildSearchCondition(context, e.Operand, flags, notCondition.Predicates, out error))
 								return false;
 						}
 						finally

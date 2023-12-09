@@ -1720,22 +1720,22 @@ namespace LinqToDB.SqlQuery
 			{
 				case VisitMode.ReadOnly:
 				{
-					VisitElements(element.Conditions, VisitMode.ReadOnly);
+					VisitElements(element.Predicates, VisitMode.ReadOnly);
 					break;
 				}
 				case VisitMode.Modify:
 				{
-					VisitElements(element.Conditions, VisitMode.Modify);
+					VisitElements(element.Predicates, VisitMode.Modify);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var conditions = VisitElements(element.Conditions, VisitMode.Transform);
+					var conditions = VisitElements(element.Predicates, VisitMode.Transform);
 
-					if (ShouldReplace(element) || element.Conditions != conditions)
+					if (ShouldReplace(element) || element.Predicates != conditions)
 					{
-						return NotifyReplaced(new SqlSearchCondition(element.Conditions != conditions ? conditions : conditions.ToList()), element);
+						return NotifyReplaced(new SqlSearchCondition(element.Predicates != conditions ? conditions : conditions.ToList()), element);
 					}
 
 					break;

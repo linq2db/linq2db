@@ -93,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var conditionExpr = source.PrepareSourceBody(condition);
 				builder.BuildSearchCondition(source, builder.ConvertExpression(conditionExpr), ProjectFlags.SQL,
-					when!.Conditions);
+					when!.Predicates);
 			}
 
 			var setterExpression = source.PrepareSourceBody(setterLambda);

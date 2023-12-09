@@ -30,7 +30,7 @@ namespace LinqToDB.SqlQuery
 
 			T2 Add(ISqlPredicate predicate)
 			{
-				_condition.Search.Conditions.Add(new SqlCondition(_isNot, predicate));
+				_condition.Search.Predicates.Add(new SqlCondition(_isNot, predicate));
 				return _condition.GetNext();
 			}
 
@@ -139,7 +139,7 @@ namespace LinqToDB.SqlQuery
 
 			public T2 Exists(SelectQuery subQuery)
 			{
-				_condition.Search.Conditions.Add(new SqlCondition(true, new SqlPredicate.FuncLike(SqlFunction.CreateExists(subQuery))));
+				_condition.Search.Predicates.Add(new SqlCondition(true, new SqlPredicate.FuncLike(SqlFunction.CreateExists(subQuery))));
 				return _condition.GetNext();
 			}
 		}
@@ -149,7 +149,7 @@ namespace LinqToDB.SqlQuery
 
 		protected T1 SetOr(bool value)
 		{
-			Search.Conditions[Search.Conditions.Count - 1].IsOr = value;
+			Search.Predicates[Search.Predicates.Count - 1].IsOr = value;
 			return (T1)this;
 		}
 
@@ -162,7 +162,7 @@ namespace LinqToDB.SqlQuery
 
 		public T2 Exists(SelectQuery subQuery)
 		{
-			Search.Conditions.Add(new SqlCondition(false, new SqlPredicate.FuncLike(SqlFunction.CreateExists(subQuery))));
+			Search.Predicates.Add(new SqlCondition(false, new SqlPredicate.FuncLike(SqlFunction.CreateExists(subQuery))));
 			return GetNext();
 		}
 	}

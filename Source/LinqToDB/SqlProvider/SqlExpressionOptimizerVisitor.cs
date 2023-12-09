@@ -104,9 +104,9 @@ namespace LinqToDB.SqlProvider
 			{
 				if (predicate.Expr1 is SqlSearchCondition sc)
 				{
-					if (sc.Conditions.Count == 1)
+					if (sc.Predicates.Count == 1)
 					{
-						var cond = sc.Conditions[0];
+						var cond = sc.Predicates[0];
 
 						if (cond.IsNot)
 							return cond.Predicate;
@@ -715,7 +715,7 @@ namespace LinqToDB.SqlProvider
 
 		ISqlPredicate OptimizeCase(SqlPredicate.IsNull isNull)
 		{
-			if (QueryHelper.UnwrapNullablity(isNull.Expr1) is SqlFunction func && func.Name == "CASE")
+			/*if (QueryHelper.UnwrapNullablity(isNull.Expr1) is SqlFunction func && func.Name == "CASE")
 			{
 				var sc = new SqlSearchCondition();
 
@@ -742,7 +742,7 @@ namespace LinqToDB.SqlProvider
 					return isNull;
 
 				return sc;
-			}
+			}*/
 
 			return isNull;
 		}
@@ -766,14 +766,14 @@ namespace LinqToDB.SqlProvider
 			{
 				if (value is int n && func.Parameters.Length == 5)
 				{
-					if (func.Parameters[0] is SqlSearchCondition c1 && c1.Conditions.Count == 1 &&
+					if (func.Parameters[0] is SqlSearchCondition c1 && c1.Predicates.Count == 1 &&
 					    func.Parameters[1].TryEvaluateExpression(_evaluationContext, out var value1) && value1 is int i1 &&
-					    func.Parameters[2] is SqlSearchCondition c2 && c2.Conditions.Count == 1 &&
+					    func.Parameters[2] is SqlSearchCondition c2 && c2.Predicates.Count == 1 &&
 					    func.Parameters[3].TryEvaluateExpression(_evaluationContext, out var value2) && value2 is int i2 &&
 					    func.Parameters[4].TryEvaluateExpression(_evaluationContext, out var value3) && value3 is int i3)
 					{
-						if (c1.Conditions[0].Predicate is SqlPredicate.ExprExpr ee1 &&
-						    c2.Conditions[0].Predicate is SqlPredicate.ExprExpr ee2 &&
+						if (c1.Predicates[0].Predicate is SqlPredicate.ExprExpr ee1 &&
+						    c2.Predicates[0].Predicate is SqlPredicate.ExprExpr ee2 &&
 						    ee1.Expr1.Equals(ee2.Expr1) && ee1.Expr2.Equals(ee2.Expr2))
 						{
 							int e = 0, g = 0, l = 0;
@@ -824,7 +824,7 @@ namespace LinqToDB.SqlProvider
 				}
 				else if (value is bool bv && func.Parameters.Length == 3)
 				{
-					if (func.Parameters[0] is SqlSearchCondition c1 && c1.Conditions.Count == 1 &&
+					if (func.Parameters[0] is SqlSearchCondition c1 && c1.Predicates.Count == 1 &&
 					    func.Parameters[1].TryEvaluateExpression(_evaluationContext, out var v1) && v1 is bool bv1  &&
 					    func.Parameters[2].TryEvaluateExpression(_evaluationContext, out var v2) && v2 is bool bv2)
 					{
@@ -837,14 +837,14 @@ namespace LinqToDB.SqlProvider
 						if (bv == bv2 && expr.Operator == SqlPredicate.Operator.NotEqual ||
 							bv != bv1 && expr.Operator == SqlPredicate.Operator.Equal)
 						{
-							if (c1.Conditions[0].Predicate is SqlPredicate.ExprExpr ee)
+							if (c1.Predicates[0].Predicate is SqlPredicate.ExprExpr ee)
 							{
 								return (ISqlPredicate)ee.Invert();
 							}
 
 							var sc = new SqlSearchCondition();
 
-							sc.Conditions.Add(new SqlCondition(true, c1));
+							sc.Predicates.Add(new SqlCondition(true, c1));
 
 							return sc;
 						}

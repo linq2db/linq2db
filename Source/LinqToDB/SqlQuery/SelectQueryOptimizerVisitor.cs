@@ -854,7 +854,7 @@ namespace LinqToDB.SqlQuery
 
 				var searchCondition = new List<SqlCondition>();
 
-				var conditions = sql.Where.SearchCondition.Conditions;
+				var conditions = sql.Where.SearchCondition.Predicates;
 
 				var toIgnore       = new [] { joinTable };
 				var currentSources = new[] { joinTable.Table.Source };
@@ -945,7 +945,7 @@ namespace LinqToDB.SqlQuery
 				var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
 
 				joinTable.JoinType = newJoinType;
-				joinTable.Condition.Conditions.AddRange(searchCondition);
+				joinTable.Condition.Predicates.AddRange(searchCondition);
 
 				optimized = true;
 			}
@@ -957,7 +957,7 @@ namespace LinqToDB.SqlQuery
 		{
 			if (where1.IsEmpty)
 			{
-				where1.SearchCondition.Conditions.AddRange(where2.SearchCondition.Conditions);
+				where1.SearchCondition.Predicates.AddRange(where2.SearchCondition.Predicates);
 			}
 			else
 			{
@@ -965,22 +965,22 @@ namespace LinqToDB.SqlQuery
 				{
 					var sc1 = new SqlSearchCondition();
 
-					sc1.Conditions.AddRange(where1.SearchCondition.Conditions);
+					sc1.Predicates.AddRange(where1.SearchCondition.Predicates);
 
-					where1.SearchCondition.Conditions.Clear();
-					where1.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
+					where1.SearchCondition.Predicates.Clear();
+					where1.SearchCondition.Predicates.Add(new SqlCondition(false, sc1));
 				}
 
 				if (where2.SearchCondition.Precedence < Precedence.LogicalConjunction)
 				{
 					var sc2 = new SqlSearchCondition();
 
-					sc2.Conditions.AddRange(where2.SearchCondition.Conditions);
+					sc2.Predicates.AddRange(where2.SearchCondition.Predicates);
 
-					where1.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
+					where1.SearchCondition.Predicates.Add(new SqlCondition(false, sc2));
 				}
 				else
-					where1.SearchCondition.Conditions.AddRange(where2.SearchCondition.Conditions);
+					where1.SearchCondition.Predicates.AddRange(where2.SearchCondition.Predicates);
 			}
 		}
 
@@ -1492,11 +1492,11 @@ namespace LinqToDB.SqlQuery
 			{
 				if (moveConditionToQuery)
 				{
-					selectQuery.Where.EnsureConjunction().SearchCondition.Conditions.AddRange(subQuery.Where.SearchCondition.Conditions);
+					selectQuery.Where.EnsureConjunction().SearchCondition.Predicates.AddRange(subQuery.Where.SearchCondition.Predicates);
 				}
 				else
 				{
-					joinTable.Condition.EnsureConjunction().Conditions.AddRange(subQuery.Where.SearchCondition.Conditions);
+					joinTable.Condition.EnsureConjunction().Predicates.AddRange(subQuery.Where.SearchCondition.Predicates);
 				}
 			}
 
@@ -1754,7 +1754,7 @@ namespace LinqToDB.SqlQuery
 				for (var joinIndex = 0; joinIndex < table.Joins.Count; joinIndex++)
 				{
 					var join = table.Joins[joinIndex];
-					if (join.JoinType == JoinType.Inner && join.Condition.Conditions.Count == 0)
+					if (join.JoinType == JoinType.Inner && join.Condition.Predicates.Count == 0)
 					{
 						selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
 						table.Joins.RemoveAt(joinIndex);

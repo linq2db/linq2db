@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					if (isTruePredicate.Expr1 is SelectQuery query && query.Select.Columns.Count == 1)
 					{
 						query.Select.Where.EnsureConjunction();
-						query.Select.Where.SearchCondition.Conditions.Add(new SqlCondition(false,
+						query.Select.Where.SearchCondition.Predicates.Add(new SqlCondition(false,
 							new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
 								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot)));
 						query.Select.Columns.Clear();

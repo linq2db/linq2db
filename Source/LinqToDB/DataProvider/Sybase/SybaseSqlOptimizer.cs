@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.Sybase
 						if (sourceTable.Joins.Skip(i + 1).Any(j => QueryHelper.IsDependsOnSources(j, sources)))
 							break;
 						statement.SelectQuery.From.Tables.Insert(0, join.Table);
-						statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Conditions
+						statement.SelectQuery.Where.SearchCondition.EnsureConjunction().Predicates
 							.Add(new SqlCondition(false, join.Condition));
 
 						sourceTable.Joins.RemoveAt(i);

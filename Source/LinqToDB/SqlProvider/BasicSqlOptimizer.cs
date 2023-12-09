@@ -233,7 +233,7 @@ namespace LinqToDB.SqlProvider
 
 					found = true;
 					var compare = QueryHelper.GenerateEquality(tableKey, compareKeys[i], dataOptions.LinqOptions.CompareNullsAsValues);
-					searchCondition.Conditions.Add(compare);
+					searchCondition.Predicates.Add(compare);
 				}
 			}
 
@@ -309,7 +309,7 @@ namespace LinqToDB.SqlProvider
 
 							var originalColumn = keysColumns[index];
 
-							sc.Conditions.Add(QueryHelper.GenerateEquality((ISqlExpression)newField, originalColumn, dataOptions.LinqOptions.CompareNullsAsValues));
+							sc.Predicates.Add(QueryHelper.GenerateEquality((ISqlExpression)newField, originalColumn, dataOptions.LinqOptions.CompareNullsAsValues));
 						}
 
 						if (!SqlProviderFlags.IsUpdateFromSupported)
@@ -768,16 +768,16 @@ namespace LinqToDB.SqlProvider
 				var tableKeys = table.GetKeys(true);
 				var copyKeys  = copy. GetKeys(true);
 
-				if (deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Any(static c => c.IsOr))
+				if (deleteStatement.SelectQuery.Where.SearchCondition.Predicates.Any(static c => c.IsOr))
 				{
-					var sc1 = new SqlSearchCondition(deleteStatement.SelectQuery.Where.SearchCondition.Conditions);
+					var sc1 = new SqlSearchCondition(deleteStatement.SelectQuery.Where.SearchCondition.Predicates);
 					var sc2 = new SqlSearchCondition();
 
 					if (tableKeys != null && copyKeys != null)
 					{
 						for (var i = 0; i < tableKeys.Count; i++)
 						{
-							sc2.Conditions.Add(new SqlCondition(
+							sc2.Predicates.Add(new SqlCondition(
 								false,
 								new SqlPredicate.ExprExpr(
 									copyKeys[i],
@@ -787,9 +787,9 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();
-					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
-					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
+					deleteStatement.SelectQuery.Where.SearchCondition.Predicates.Clear();
+					deleteStatement.SelectQuery.Where.SearchCondition.Predicates.Add(new SqlCondition(false, sc1));
+					deleteStatement.SelectQuery.Where.SearchCondition.Predicates.Add(new SqlCondition(false, sc2));
 				}
 				else
 				{

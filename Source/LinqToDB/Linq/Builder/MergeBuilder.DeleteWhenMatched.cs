@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 					operation.Where = new SqlSearchCondition();
 
 					builder.BuildSearchCondition(mergeContext.SourceContext, conditionExpression, buildInfo.GetFlags(ProjectFlags.ForceOuterAssociation),
-						operation.Where.Conditions);
+						operation.Where.Predicates);
 				}
 
 				return mergeContext;
