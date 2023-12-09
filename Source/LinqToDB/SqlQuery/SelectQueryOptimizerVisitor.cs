@@ -1837,6 +1837,20 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
+		void MoveDuplicateUsageToSubQuery(SelectQuery query)
+		{
+			var subQuery = new SelectQuery();
+
+			subQuery.DoNotRemove = true;
+
+			subQuery.From.Tables.AddRange(query.From.Tables);
+
+			query.Select.From.Tables.Clear();
+			_ = query.Select.From.Table(subQuery);
+
+			_columnNestingCorrector.CorrectColumnNesting(query);
+		}
+
 		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
 		{
 			if (!_providerFlags.IsSubQueryColumnSupported)
@@ -1886,11 +1900,15 @@ namespace LinqToDB.SqlQuery
 								{
 									// where we can start analyzing that we can move join to subquery
 									
-									if (_providerFlags.IsApplyJoinSupported && !IsUniqueUsage(sq, testedColumn))
+									if (!IsUniqueUsage(sq, testedColumn))
 									{
-										QueryHelper.MoveDuplicateUsageToSubQuery(sq);
-										// will be processed in the next step
-										ti = -1;
+										if (!_providerFlags.IsApplyJoinSupported)
+										{
+											MoveDuplicateUsageToSubQuery(sq);
+											// will be processed in the next step
+											ti = -1;
+
+										}	
 
 										isValid = false;
 
