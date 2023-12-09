@@ -1063,6 +1063,26 @@ namespace LinqToDB.SqlQuery
 				return found;
 			}));
 
+			if (!query.Where.IsEmpty)
+			{
+				CollectDependencies(query.Where, sources, uniqueColumns, singleColumnLevel: true);
+			}
+
+			if (!query.Having.IsEmpty)
+			{
+				CollectDependencies(query.Having, sources, uniqueColumns, singleColumnLevel: true);
+			}
+
+			if (!query.GroupBy.IsEmpty)
+			{
+				CollectDependencies(query.GroupBy, sources, uniqueColumns, singleColumnLevel: true);
+			}
+
+			if (!query.OrderBy.IsEmpty)
+			{
+				CollectDependencies(query.OrderBy, sources, uniqueColumns, singleColumnLevel: true);
+			}
+
 			var subQuery = new SelectQuery();
 
 			subQuery.DoNotRemove = true;
