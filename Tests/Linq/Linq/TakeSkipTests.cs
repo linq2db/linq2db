@@ -1002,7 +1002,6 @@ namespace Tests.Linq
 		}
 
 		// Sybase, Informix: doesn't support TOP/FIRST in subqueries
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void GroupTakeAnyTest([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context, [Values] bool withParameters)
 		{

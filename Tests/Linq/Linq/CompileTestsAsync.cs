@@ -235,7 +235,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyAsync([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -250,7 +249,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AnyPredicateAsync([DataSources] string context)
 		{
@@ -389,7 +387,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task AllAsync([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -404,7 +401,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task ContainsAsync([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

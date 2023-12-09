@@ -26,6 +26,11 @@
 			return statement;
 		}
 
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new ClickHouseSqlExpressionConvertVisitor(allowModify, ProviderOptions);
+		}
+
 		private static SqlStatement DisableParameters(SqlStatement statement)
 		{
 			// We disable parameters completely as parameters support is very poor across providers:

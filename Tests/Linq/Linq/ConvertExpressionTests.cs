@@ -566,7 +566,6 @@ namespace Tests.Linq
 					).Take(10));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void LetTest10([DataSources] string context)
 		{
