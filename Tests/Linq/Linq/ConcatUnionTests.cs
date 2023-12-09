@@ -1115,7 +1115,6 @@ namespace Tests.Linq
 			query.Invoking(q => q.ToArray()).Should().NotThrow();
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void SelectWithBooleanNulls([DataSources] string context)
 		{

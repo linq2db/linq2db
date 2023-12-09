@@ -46,7 +46,6 @@ namespace Tests.UserTests
 			public string ContentType { get; set; } = null!;
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void SelectFullEntityWithSkipColumn([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

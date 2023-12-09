@@ -8,7 +8,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1261Tests : TestBase
 	{
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void TestLinqAll([DataSources] string context)
 		{
