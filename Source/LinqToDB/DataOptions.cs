@@ -8,6 +8,8 @@ namespace LinqToDB
 	using Data;
 	using Data.RetryPolicy;
 
+	using LinqToDB.Remote;
+
 	/// <summary>
 	/// Immutable context configuration object.
 	/// </summary>
@@ -115,6 +117,16 @@ namespace LinqToDB
 			((IApplicable<DataContext>)ConnectionOptions).Apply(dataContext);
 
 			if (_dataContextOptions is IApplicable<DataContext> a)
+				a.Apply(dataContext);
+
+			base.Apply(dataContext);
+		}
+
+		public void Apply(RemoteDataContextBase dataContext)
+		{
+			((IApplicable<RemoteDataContextBase>)ConnectionOptions).Apply(dataContext);
+
+			if (_dataContextOptions is IApplicable<RemoteDataContextBase> a)
 				a.Apply(dataContext);
 
 			base.Apply(dataContext);

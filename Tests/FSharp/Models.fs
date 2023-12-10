@@ -33,6 +33,23 @@ and Patient =
       [<Association(ThisKey = "PersonID", OtherKey = "ID", CanBeNull = false)>]
       Person : Person }
 
+[<Table("Person")>]
+type PersonConflictingNamesRecord =
+    { [<SequenceName(ProviderName.Firebird, "PersonID")>]
+      [<Column("PersonID", Configuration = ProviderName.ClickHouse)>]
+      [<Column("PersonID", IsIdentity = true)>]
+      [<PrimaryKey>]
+      ID : int
+      [<NotNull>]
+      [<Column("FirstName")>]
+      id : string
+      [<NotNull>]
+      [<Column("LastName")>]
+      Id : string
+      [<Nullable>]
+      [<Column("MiddleName")>]
+      iD : string }
+
 type Child =
     { [<PrimaryKey>] ParentID : int
       [<PrimaryKey>] ChildID : int }

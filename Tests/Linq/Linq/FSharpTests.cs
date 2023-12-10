@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using LinqToDB.FSharp;
 
 namespace Tests.Linq
 {
@@ -10,6 +11,13 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				FSharp.WhereTest.LoadSingle(db);
+		}
+
+		[Test]
+		public void RecordParametersMapping([DataSources] string context)
+		{
+			using var db = GetDataContext(context, opt => opt.UseFSharpRecords());
+			FSharp.WhereTest.RecordParametersMapping(db);
 		}
 
 		[Test]
