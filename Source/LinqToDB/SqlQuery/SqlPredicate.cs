@@ -18,10 +18,11 @@ namespace LinqToDB.SqlQuery
 			Overlaps,       // x OVERLAPS y Is the operator used to test Overlaps operator.
 		}
 
-		static readonly TruePredicate _trueInstance = new();
+#if DEBUG
+		static readonly TruePredicate  _trueInstance  = new();
 		static readonly FalsePredicate _falseInstance = new();
 
-		public static TruePredicate  True
+		public static TruePredicate True
 		{
 			get
 			{
@@ -36,6 +37,10 @@ namespace LinqToDB.SqlQuery
 				return _falseInstance;
 			}
 		}
+#else
+		public static readonly TruePredicate True   = new();
+		public static readonly FalsePredicate False = new();
+#endif
 
 		public static ISqlPredicate MakeBool(bool isTrue)
 		{

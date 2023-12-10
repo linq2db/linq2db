@@ -166,9 +166,6 @@ namespace LinqToDB.SqlProvider
 					i++;
 				}
 
-				if (found2 == null)
-					return false;
-
 				if (hasLeftJoin)
 				{
 					// for left join each expression should be used
