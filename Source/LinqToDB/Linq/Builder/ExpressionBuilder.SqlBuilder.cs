@@ -1078,8 +1078,6 @@ namespace LinqToDB.Linq.Builder
 
 						if (testSql.Sql is SqlSearchCondition sc)
 						{
-							sc = OptimizationHelper.OptimizeSearchCondition(sc, new EvaluationContext());
-
 							if (sc.Predicates.Count == 1                       &&
 								sc.Predicates[0] is SqlPredicate.IsNull isnull && 
 								isnull.IsNot)
