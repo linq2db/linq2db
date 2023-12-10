@@ -5,8 +5,10 @@ open System
 open Tests.FSharp.Models
 
 open LinqToDB
+open LinqToDB.Data
 open LinqToDB.Mapping
 open Tests.Tools
+open NUnit.Framework
 
 let private TestOnePerson id firstName persons =
     let list = persons :> Person System.Linq.IQueryable |> Seq.toList
@@ -136,3 +138,17 @@ let LoadSingleCLIMutable (db : IDataContext)  (nullPatient : PatientCLIMutable) 
     NUnitAssert.AreEqual( tester.ID, 2 )
     NUnitAssert.IsNotNull( tester.Patient )
     NUnitAssert.AreEqual( tester.Patient.PersonID, 2 )
+
+let RecordParametersMapping (db : IDataContext) =
+    let persons = db.GetTable<PersonConflictingNamesRecord>()
+    let john = query {
+        for p in persons do
+        where (p.ID = 1)
+        exactlyOne
+    }
+
+    Assert.That(john, Is.Not.Null)
+    Assert.That(john.ID, Is.EqualTo 1)
+    Assert.That(john.id, Is.EqualTo "John")
+    Assert.That(john.Id, Is.EqualTo "Pupkin")
+    Assert.That(john.iD, Is.Null)
