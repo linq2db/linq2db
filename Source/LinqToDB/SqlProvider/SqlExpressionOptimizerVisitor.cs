@@ -89,25 +89,6 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			if (element.Predicates.Count > 1)
-			{
-				var duplicates = element.Predicates
-					.GroupBy(p => p.GetHashCode())
-					.Where(g => g.Count() > 1)
-					.Where(g =>
-					{
-						var first = g.First();
-						return g.Skip(1).All(p => p.Equals(first));
-					})
-					.SelectMany(g => g.Skip(1))
-					.ToList();
-
-				if (duplicates.Count > 0)
-				{
-
-				}
-			}
-
 			if (GetVisitMode(element) == VisitMode.Modify)
 			{
 				for (var i = 0; i < element.Predicates.Count; i++)
