@@ -67,6 +67,7 @@ namespace LinqToDB.SqlQuery
 					result = sqlValue.Value;
 					return true;
 				}
+
 				case QueryElementType.SqlParameter       :
 				{
 					var sqlParameter = (SqlParameter)expr;
@@ -81,6 +82,7 @@ namespace LinqToDB.SqlQuery
 					result = parameterValue.ProviderValue;
 					return true;
 				}
+
 				case QueryElementType.IsNullPredicate:
 				{
 					var isNullPredicate = (SqlPredicate.IsNull)expr;
@@ -89,6 +91,7 @@ namespace LinqToDB.SqlQuery
 					result = isNullPredicate.IsNot == (value != null);
 					return true;
 				}
+
 				case QueryElementType.ExprExprPredicate:
 				{
 					var exprExpr = (SqlPredicate.ExprExpr)expr;
@@ -254,6 +257,7 @@ namespace LinqToDB.SqlQuery
 
 					return true;
 				}
+
 				case QueryElementType.SqlFunction        :
 				{
 					var function = (SqlFunction)expr;
@@ -379,6 +383,7 @@ namespace LinqToDB.SqlQuery
 
 					return false;
 				}
+
 				case QueryElementType.ExprPredicate      :
 				{
 					var predicate = (SqlPredicate.Expr)expr;
@@ -388,24 +393,7 @@ namespace LinqToDB.SqlQuery
 					result = value;
 					return true;
 				}
-				case QueryElementType.Condition          :
-				{
-					var cond = (SqlCondition)expr;
-					if (cond.Predicate.TryEvaluateExpression(context, out var evaluated))
-					{
-						if (evaluated is bool boolValue)
-						{
-							result = cond.IsNot ? !boolValue : boolValue;
-							return true;
-						}
-						else
-						{
-							return false;
-						}
-					}
 
-					return false;
-				}
 				case QueryElementType.SqlNullabilityExpression:
 				{
 					var nullability = (SqlNullabilityExpression)expr;

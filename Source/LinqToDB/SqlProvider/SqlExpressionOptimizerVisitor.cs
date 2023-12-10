@@ -304,38 +304,6 @@ namespace LinqToDB.SqlProvider
 			return predicate;
 		}
 
-		protected override IQueryElement VisitSqlCondition(SqlCondition element)
-		{
-			var newElement = base.VisitSqlCondition(element);
-
-			if (!ReferenceEquals(newElement, element))
-				return Visit(newElement);
-
-			var current = element;
-			do
-			{
-				//var optimizedCondition = OptimizationHelper.OptimizeCondition(current);
-				var optimizedCondition = current;
-
-				if (optimizedCondition.Predicate.TryEvaluateExpression(_evaluationContext, out var value) && value is bool boolValue)
-				{
-					return new SqlCondition(optimizedCondition.IsNot, SqlPredicate.MakeBool(boolValue), optimizedCondition.IsOr);
-				}
-
-				if (ReferenceEquals(optimizedCondition, current))
-				{
-					break;
-				}
-
-				current = optimizedCondition;
-			} while (true);
-
-			if (!ReferenceEquals(current, element))
-				return Visit(current);
-
-			return element;
-		}
-
 		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
 			var newElement = base.VisitNotPredicate(predicate);

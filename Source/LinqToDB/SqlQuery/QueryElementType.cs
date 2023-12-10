@@ -38,7 +38,6 @@
 		SqlQuery,
 			Column,
 			SearchCondition,
-				Condition,
 			TableSource,
 				JoinedTable,
 

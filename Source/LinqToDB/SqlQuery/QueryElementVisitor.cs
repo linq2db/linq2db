@@ -88,7 +88,6 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlQuery                 => VisitSqlQuery                  ((SelectQuery               )element),
 				QueryElementType.Column                   => VisitSqlColumnReference        ((SqlColumn                 )element),
 				QueryElementType.SearchCondition          => VisitSqlSearchCondition        ((SqlSearchCondition        )element),
-				QueryElementType.Condition                => VisitSqlCondition              ((SqlCondition              )element),
 				QueryElementType.TableSource              => VisitSqlTableSource            ((SqlTableSource            )element),
 				QueryElementType.JoinedTable              => VisitSqlJoinedTable            ((SqlJoinedTable            )element),
 				QueryElementType.SelectClause             => VisitSqlSelectClause           ((SqlSelectClause           )element),
@@ -1675,37 +1674,6 @@ namespace LinqToDB.SqlQuery
 					    element.Joins != joins)
 					{
 						return NotifyReplaced(new SqlTableSource(source, element.RawAlias, element.Joins != joins ? joins : joins.ToList(), uk), element);
-					}
-
-					break;
-				}
-				default:
-					throw CreateInvalidVisitModeException();
-			}
-
-			return element;
-		}
-
-		protected virtual IQueryElement VisitSqlCondition(SqlCondition element)
-		{
-			switch (GetVisitMode(element))
-			{
-				case VisitMode.ReadOnly:
-				{
-					Visit(element.Predicate);
-					break;
-				}
-				case VisitMode.Modify:
-				{
-					element.Predicate = (ISqlPredicate)Visit(element.Predicate);
-					break;
-				}
-				case VisitMode.Transform:
-				{
-					var p = (ISqlPredicate)Visit(element.Predicate);
-					if (ShouldReplace(element) || !ReferenceEquals(element.Predicate, p))
-					{
-						return NotifyReplaced(new SqlCondition(element.IsNot, p, element.IsOr), element);
 					}
 
 					break;

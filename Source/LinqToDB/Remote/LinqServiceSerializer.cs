@@ -1267,17 +1267,6 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					case QueryElementType.Condition :
-						{
-							var elem = (SqlCondition)e;
-
-							Append(elem.IsNot);
-							Append(elem.Predicate);
-							Append(elem.IsOr);
-
-							break;
-						}
-
 					case QueryElementType.TableSource :
 						{
 							var elem = (SqlTableSource)e;
