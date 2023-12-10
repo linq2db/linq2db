@@ -74,8 +74,6 @@ namespace LinqToDB.SqlProvider
 				}
 			});
 
-			OptimizeFilters();
-
 			if (_replaceMap != null)
 			{
 				statement.Replace(_replaceMap);
@@ -264,7 +262,7 @@ namespace LinqToDB.SqlProvider
 					{
 						var newField = MapToSource(fromTable, item.LeftField, fromTable.SourceID, null)
 							?? throw new InvalidOperationException();
-						AddSearchConditions(selectQuery.Where.SearchCondition, new[] { new SqlCondition(false, new SqlPredicate.IsNull(newField, true)) });
+						AddSearchConditions(selectQuery.Where.EnsureConjunction(), new[] { new SqlPredicate.IsNull(newField, true) });
 					}
 				}
 			}
@@ -375,7 +373,7 @@ namespace LinqToDB.SqlProvider
 			public readonly HashSet<int>  TestedSources;
 		}
 
-		void AddSearchConditions(SqlSearchCondition search, IEnumerable<SqlCondition> conditions)
+		/*void AddSearchConditions(SqlSearchCondition search, IEnumerable<ISqlPredicate> conditions)
 		{
 			_additionalFilter ??= new ();
 
@@ -399,6 +397,19 @@ namespace LinqToDB.SqlProvider
 			}
 
 			value.Predicates.AddRange(conditions);
+		}*/
+
+		void AddSearchConditions(SqlSearchCondition search, IEnumerable<ISqlPredicate> predicates)
+		{
+			_additionalFilter ??= new ();
+
+			if (!_additionalFilter.TryGetValue(search, out var value))
+			{
+				value = search;
+				_additionalFilter.Add(search, search);
+			}
+
+			value.Predicates.AddRange(predicates);
 		}
 
 		private sealed class IsDependedContext
@@ -634,19 +645,15 @@ namespace LinqToDB.SqlProvider
 
 		void CollectEqualFields(SqlJoinedTable join)
 		{
-			if (join.Condition.Predicates.Any(c => c.IsOr))
+			if (join.Condition.IsOr)
 				return;
 
 			for (var i1 = 0; i1 < join.Condition.Predicates.Count; i1++)
 			{
 				var c = join.Condition.Predicates[i1];
 
-				if (c.ElementType != QueryElementType.Condition
-					|| c.Predicate.ElementType != QueryElementType.ExprExprPredicate
-					|| ((SqlPredicate.ExprExpr)c.Predicate).Operator != SqlPredicate.Operator.Equal)
+				if (c is not SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } predicate)
 					continue;
-
-				var predicate = (SqlPredicate.ExprExpr) c.Predicate;
 
 				var field1 = GetUnderlyingFieldOrColumn(predicate.Expr1);
 

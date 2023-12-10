@@ -2,21 +2,8 @@
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlWhereClause : ClauseBase<SqlWhereClause,SqlWhereClause.Next>, IQueryElement
+	public class SqlWhereClause : ClauseBase<SqlWhereClause>, IQueryElement
 	{
-		public class Next : ClauseBase
-		{
-			internal Next(SqlWhereClause parent) : base(parent.SelectQuery)
-			{
-				_parent = parent;
-			}
-
-			readonly SqlWhereClause _parent;
-
-			public SqlWhereClause Or  => _parent.SetOr(true);
-			public SqlWhereClause And => _parent.SetOr(false);
-		}
-
 		internal SqlWhereClause(SelectQuery selectQuery) : base(selectQuery)
 		{
 			SearchCondition = new SqlSearchCondition();
@@ -30,13 +17,6 @@ namespace LinqToDB.SqlQuery
 		public SqlSearchCondition SearchCondition { get; internal set; }
 
 		public bool IsEmpty => SearchCondition.Predicates.Count == 0;
-
-		protected override SqlSearchCondition Search => SearchCondition;
-
-		protected override Next GetNext()
-		{
-			return new Next(this);
-		}
 
 #if OVERRIDETOSTRING
 
@@ -57,7 +37,7 @@ namespace LinqToDB.SqlQuery
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			if (Search.Predicates.Count == 0)
+			if (SearchCondition.Predicates.Count == 0)
 				return writer;
 
 			writer
@@ -65,7 +45,7 @@ namespace LinqToDB.SqlQuery
 				.AppendLine("WHERE");
 
 			using (writer.WithScope())
-				writer.AppendElement(Search);
+				writer.AppendElement(SearchCondition);
 
 			return writer;
 		}

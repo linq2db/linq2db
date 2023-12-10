@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 					builder.BuildSearchCondition(
 						mergeContext.SourceContext,
 						conditionExpr, ProjectFlags.SQL,
-						operation.Where.Predicates);
+						operation.Where);
 				}
 
 				return mergeContext;

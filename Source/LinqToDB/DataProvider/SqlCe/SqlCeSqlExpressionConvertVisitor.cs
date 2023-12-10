@@ -122,9 +122,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(
-						new SqlCondition(false, like, predicate.IsNot),
-						new SqlCondition(predicate.IsNot, subStrPredicate));
+					var result = new SqlSearchCondition(predicate.IsNot, subStrPredicate.MakeNot(predicate.IsNot));
 
 					return result;
 				}

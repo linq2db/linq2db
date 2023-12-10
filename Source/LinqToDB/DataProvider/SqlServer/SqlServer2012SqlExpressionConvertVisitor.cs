@@ -38,10 +38,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (start == 0 && SqlExpression.NeedsEqual(cond))
 			{
-				cond = new SqlSearchCondition(
-					new SqlCondition(
-						false,
-						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
+				cond = new SqlSearchCondition().AddEqual(cond, new SqlValue(1), false);
 			}
 
 			if (len == 3)

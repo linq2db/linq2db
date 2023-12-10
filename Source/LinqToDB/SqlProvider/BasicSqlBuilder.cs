@@ -2177,16 +2177,22 @@ namespace LinqToDB.SqlProvider
 
 		#region Where Clause
 
-		protected virtual bool BuildWhere(SelectQuery selectQuery)
+		protected virtual bool ShouldBuildWhere(SelectQuery selectQuery)
 		{
 			var condition = ConvertElement(selectQuery.Where.SearchCondition);
 
-			return condition.Predicates.Count > 0;
+			if (condition.Predicates.Count == 0)
+				return false;
+
+			if (condition.Predicates.Count == 1 && condition.Predicates[0].ElementType == QueryElementType.TruePredicate)
+				return false;
+
+			return true;
 		}
 
 		protected virtual void BuildWhereClause(SelectQuery selectQuery)
 		{
-			if (!BuildWhere(selectQuery))
+			if (!ShouldBuildWhere(selectQuery))
 				return;
 
 			AppendIndent();
@@ -2431,9 +2437,8 @@ namespace LinqToDB.SqlProvider
 		{
 			condition = ConvertElement(condition);
 
-			var isOr = (bool?)null;
 			var len = StringBuilder.Length;
-			var parentPrecedence = condition.Precedence + 1;
+			var parentPrecedence = condition.Precedence;
 
 			if (condition.Predicates.Count == 0)
 			{
@@ -2444,11 +2449,13 @@ namespace LinqToDB.SqlProvider
 						new SqlValue(true), false));
 			}
 
-			foreach (var cond in condition.Predicates)
+			var isFirst = true;
+
+			foreach (var predicate in condition.Predicates)
 			{
-				if (isOr != null)
+				if (!isFirst)
 				{
-					StringBuilder.Append(isOr.Value ? " OR" : " AND");
+					StringBuilder.Append(condition.IsOr ? " OR" : " AND");
 
 					if (condition.Predicates.Count < 4 && StringBuilder.Length - len < 50 || !wrapCondition)
 					{
@@ -2461,15 +2468,12 @@ namespace LinqToDB.SqlProvider
 						len = StringBuilder.Length;
 					}
 				}
+				else
+					isFirst = false;
 
-				if (cond.IsNot)
-					StringBuilder.Append("NOT ");
+				var precedence = GetPrecedence(predicate);
 
-				var precedence = GetPrecedence(cond.Predicate);
-
-				BuildPredicate(cond.IsNot ? Precedence.LogicalNegation : parentPrecedence, precedence, cond.Predicate);
-
-				isOr = cond.IsOr;
+				BuildPredicate(parentPrecedence, precedence, predicate);
 			}
 		}
 
@@ -2556,11 +2560,22 @@ namespace LinqToDB.SqlProvider
 								? Precedence.LogicalNegation
 								: GetPrecedence((SqlPredicate.NotExpr)predicate),
 							((SqlPredicate.NotExpr)predicate).Expr1);
+
+						break;
 					}
 
-					break;
+				case QueryElementType.NotPredicate:
+					{
+						var p = (SqlPredicate.Not)predicate;
 
-				case QueryElementType.ExprPredicate:
+						StringBuilder.Append("NOT ");
+
+						BuildPredicate(p.Precedence, GetPrecedence(p.Predicate), p.Predicate);
+
+						break;
+					}
+
+					case QueryElementType.ExprPredicate:
 					{
 						var p = (SqlPredicate.Expr)predicate;
 
@@ -2576,9 +2591,22 @@ namespace LinqToDB.SqlProvider
 						}
 
 						BuildExpression(GetPrecedence(p), p.Expr1);
+
+						break;
 					}
 
-					break;
+					case QueryElementType.TruePredicate:
+					{
+						StringBuilder.Append("1 = 1");
+						break;
+					}
+
+					case QueryElementType.FalsePredicate:
+					{
+						StringBuilder.Append("1 = 0");
+						break;
+					}
+
 				default:
 					throw new InvalidOperationException($"Unexpected predicate type {predicate.ElementType}");
 			}
@@ -2657,7 +2685,7 @@ namespace LinqToDB.SqlProvider
 				switch (prValue)
 				{
 					case null:
-						BuildPredicate(new SqlPredicate.Expr(new SqlValue(false)));
+						BuildPredicate(SqlPredicate.False);
 						return;
 					// Be careful that string is IEnumerable, we don't want to handle x.In(string) here
 					case string:
@@ -2755,7 +2783,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				if (firstValue)
-					BuildPredicate(new SqlPredicate.Expr(new SqlValue(p.IsNot)));
+					BuildPredicate(SqlPredicate.MakeBool(p.IsNot));
 				else
 					StringBuilder.Remove(StringBuilder.Length - 2, 2).Append(')');
 			}
@@ -2824,7 +2852,7 @@ namespace LinqToDB.SqlProvider
 					// Nothing was built, because the values contained only null values, or nothing at all.
 					BuildPredicate(hasNull ?
 						new SqlPredicate.IsNull(p.Expr1, p.IsNot) :
-						new SqlPredicate.Expr(new SqlValue(p.IsNot)));
+						SqlPredicate.MakeBool(p.IsNot));
 				}
 				else
 				{

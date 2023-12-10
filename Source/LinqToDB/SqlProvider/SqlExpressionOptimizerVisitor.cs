@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -88,7 +89,190 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			element = OptimizationHelper.OptimizeSearchCondition(element, _evaluationContext);
+			if (element.Predicates.Count > 1)
+			{
+				var duplicates = element.Predicates
+					.GroupBy(p => p.GetHashCode())
+					.Where(g => g.Count() > 1)
+					.Where(g =>
+					{
+						var first = g.First();
+						return g.Skip(1).All(p => p.Equals(first));
+					})
+					.SelectMany(g => g.Skip(1))
+					.ToList();
+
+				if (duplicates.Count > 0)
+				{
+
+				}
+			}
+
+			if (GetVisitMode(element) == VisitMode.Modify)
+			{
+				for (var i = 0; i < element.Predicates.Count; i++)
+				{
+					var predicate = element.Predicates[i];
+					// unnesting search conditions
+					//
+					if (predicate is SqlSearchCondition sc && (sc.IsOr == element.IsOr || sc.Predicates.Count <= 1))
+					{
+						element.Predicates.RemoveAt(i);
+						element.Predicates.InsertRange(i, sc.Predicates);
+						--i;
+						continue;
+					}
+
+					if (predicate.TryEvaluateExpression(_evaluationContext, out var value) &&
+					    value is bool boolValue)
+					{
+						if (boolValue)
+						{
+							if (element.IsAnd)
+							{
+								// ignore
+								if (element.Predicates.Count == 1 && predicate is SqlPredicate.TruePredicate)
+									break;
+
+								element.Predicates.RemoveAt(i);
+
+								if (element.Predicates.Count == 0)
+									element.Predicates.Add(SqlPredicate.True);
+
+								continue;
+							}
+
+							if (element.Predicates.Count > 1 || predicate is not SqlPredicate.TruePredicate)
+							{
+								element.Predicates.Clear();
+								element.Predicates.Add(SqlPredicate.True);
+								break;
+							}
+						}
+						else
+						{
+							if (element.IsOr)
+							{
+								// ignore
+								if (element.Predicates.Count == 1 && predicate is SqlPredicate.FalsePredicate)
+									break;
+
+								element.Predicates.RemoveAt(i);
+
+								continue;
+							}
+
+							if (element.Predicates.Count > 1 || predicate is not SqlPredicate.FalsePredicate)
+							{
+								element.Predicates.Clear();
+								element.Predicates.Add(SqlPredicate.False);
+								break;
+							}
+						}
+					}
+
+				}
+			}
+			else
+			{
+				List<ISqlPredicate>? newPredicates = null;
+
+				void EnsureCopied(int count)
+				{
+					if (newPredicates == null)
+					{
+						newPredicates = new List<ISqlPredicate>(element.Predicates.Count);
+						newPredicates.AddRange(element.Predicates.Take(count));
+					}
+				}
+
+				void EnsureCleared()
+				{
+					if (newPredicates == null)
+					{
+						newPredicates = new List<ISqlPredicate>();
+					}
+					else
+					{
+						newPredicates.Clear();
+					}
+				}
+
+				for (var i = 0; i < element.Predicates.Count; i++)
+				{
+					var predicate = element.Predicates[i];
+					// unnesting search conditions
+					//
+					if (predicate is SqlSearchCondition sc && (sc.IsOr == element.IsOr || sc.Predicates.Count <= 1))
+					{
+						EnsureCopied(i);
+						newPredicates!.InsertRange(i, sc.Predicates);
+						continue;
+					}
+
+					if (predicate.TryEvaluateExpression(_evaluationContext, out var value) &&
+					    value is bool boolValue)
+					{
+						if (boolValue)
+						{
+							if (element.IsAnd)
+							{
+								if (element.Predicates.Count == 1 && predicate is SqlPredicate.TruePredicate)
+									continue;
+
+								// ignore
+								EnsureCopied(i);
+
+								if (element.Predicates.Count == 1)
+									newPredicates!.Add(SqlPredicate.True);
+
+								continue;
+							}
+
+							if (element.Predicates.Count > 1 || predicate is not SqlPredicate.TruePredicate)
+							{
+								EnsureCleared();
+								newPredicates!.Add(SqlPredicate.True);
+								break;
+							}
+						}
+						else
+						{
+							if (element.IsOr)
+							{
+								if (element.Predicates.Count == 1 && predicate is SqlPredicate.FalsePredicate)
+									continue;
+
+								// ignore
+								EnsureCopied(i);
+
+								if (element.Predicates.Count == 1)
+									newPredicates!.Add(SqlPredicate.False);
+
+								continue;
+							}
+
+							if (element.Predicates.Count > 1 || predicate is not SqlPredicate.FalsePredicate)
+							{
+								EnsureCleared();
+								newPredicates!.Add(SqlPredicate.False);
+								break;
+							}
+						}
+					}
+
+					newPredicates?.Add(predicate);
+				}
+
+				if (newPredicates != null)
+				{
+					newElement = new SqlSearchCondition(element.IsOr, newPredicates);
+					NotifyReplaced(newElement, element);
+
+					return newElement;
+				}
+
+			}
 
 			return element;
 		}
@@ -102,28 +286,7 @@ namespace LinqToDB.SqlProvider
 
 			if (predicate.IsNot)
 			{
-				if (predicate.Expr1 is SqlSearchCondition sc)
-				{
-					if (sc.Predicates.Count == 1)
-					{
-						var cond = sc.Predicates[0];
-
-						if (cond.IsNot)
-							return cond.Predicate;
-
-						if (cond.Predicate is SqlPredicate.ExprExpr ee)
-						{
-							if (ee.Operator == SqlPredicate.Operator.Equal)
-								return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.NotEqual, ee.Expr2,
-									_dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
-
-							if (ee.Operator == SqlPredicate.Operator.NotEqual)
-								return new SqlPredicate.ExprExpr(ee.Expr1, SqlPredicate.Operator.Equal, ee.Expr2,
-									_dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
-						}
-					}
-				}
-				else if (predicate.Expr1 is IInvertibleElement invertible && invertible.CanInvert())
+				if (predicate.Expr1 is IInvertibleElement invertible && invertible.CanInvert())
 				{
 					return invertible.Invert();
 				}
@@ -149,16 +312,12 @@ namespace LinqToDB.SqlProvider
 			// The only remaining case that we'd like to simplify is when one expression is the constant null.
 			if (predicate.Expr1.TryEvaluateExpression(_evaluationContext, out var value1) && value1 == null)
 			{
-				return predicate.Expr2.CanBeNullable(_nullabilityContext)
-					? new SqlPredicate.IsNull(predicate.Expr2, !predicate.IsNot)
-					: new SqlPredicate.Expr(new SqlValue(!predicate.IsNot));
+				return new SqlPredicate.IsNull(predicate.Expr2, !predicate.IsNot);
 			}
 
 			if (predicate.Expr2.TryEvaluateExpression(_evaluationContext, out var value2) && value2 == null)
 			{
-				return predicate.Expr1.CanBeNullable(_nullabilityContext)
-					? new SqlPredicate.IsNull(predicate.Expr1, !predicate.IsNot)
-					: new SqlPredicate.Expr(new SqlValue(!predicate.IsNot));
+				return new SqlPredicate.IsNull(predicate.Expr1, !predicate.IsNot);
 			}
 
 			return predicate;
@@ -174,11 +333,12 @@ namespace LinqToDB.SqlProvider
 			var current = element;
 			do
 			{
-				var optimizedCondition = OptimizationHelper.OptimizeCondition(current);
+				//var optimizedCondition = OptimizationHelper.OptimizeCondition(current);
+				var optimizedCondition = current;
 
-				if (optimizedCondition.Predicate.TryEvaluateExpression(_evaluationContext, out var value) && value != null)
+				if (optimizedCondition.Predicate.TryEvaluateExpression(_evaluationContext, out var value) && value is bool boolValue)
 				{
-					return new SqlCondition(optimizedCondition.IsNot, new SqlPredicate.Expr(new SqlValue(value)), optimizedCondition.IsOr);
+					return new SqlCondition(optimizedCondition.IsNot, SqlPredicate.MakeBool(boolValue), optimizedCondition.IsOr);
 				}
 
 				if (ReferenceEquals(optimizedCondition, current))
@@ -193,6 +353,20 @@ namespace LinqToDB.SqlProvider
 				return Visit(current);
 
 			return element;
+		}
+
+		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
+		{
+			var newElement = base.VisitNotPredicate(predicate);
+			if (!ReferenceEquals(newElement, predicate))
+				return Visit(newElement);
+
+			if (predicate.Predicate is IInvertibleElement invertible && invertible.CanInvert())
+			{
+				return Visit(invertible.Invert());
+			}
+
+			return predicate;
 		}
 
 		protected override IQueryElement VisitSqlBinaryExpression(SqlBinaryExpression element)
@@ -488,7 +662,7 @@ namespace LinqToDB.SqlProvider
 								return new SqlValue(true);
 
 							if (!boolValue1.Value)
-								return new SqlSearchCondition(new SqlCondition(true, new SqlPredicate.Expr(parms[0], parms[0].Precedence)));
+								return new SqlSearchCondition(false, new SqlPredicate.NotExpr(parms[0], true, parms[0].Precedence));
 
 							return parms[0];
 						}
@@ -571,12 +745,12 @@ namespace LinqToDB.SqlProvider
 
 			if (!predicate.Expr1.CanBeNullable(_nullabilityContext))
 			{
-				return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
+				return SqlPredicate.MakeBool(predicate.IsNot);
 			}
 
 			if (predicate.Expr1.TryEvaluateExpression(_evaluationContext, out var value))
 			{
-				return new SqlPredicate.Expr(new SqlValue(typeof(bool), (value == null) != predicate.IsNot));
+				return SqlPredicate.MakeBool((value == null) != predicate.IsNot);
 			}
 
 			newPredicate = OptimizeCase(predicate);
@@ -615,50 +789,34 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (predicate.TryEvaluateExpression(_evaluationContext, out var value) && value is bool)
+			if (predicate.TryEvaluateExpression(_evaluationContext, out var value) && value is bool boolValue)
 			{
-				return new SqlPredicate.Expr(new SqlValue(value));
+				return SqlPredicate.MakeBool(boolValue);
 			}
-
-			/*// Avoiding infinite recursion
-			//
-			if (predicate.Expr1.ElementType == QueryElementType.SqlValue)
-				return predicate;*/
 
 			var expr = predicate;
 
 			if (expr.WithNull == null && (expr.Operator == SqlPredicate.Operator.Equal || expr.Operator == SqlPredicate.Operator.NotEqual))
 			{
-				if (expr.Expr2 is ISqlPredicate)
+				if (expr.Expr2 is ISqlPredicate expr2Predicate)
 				{
 					var boolValue1 = QueryHelper.GetBoolValue(expr.Expr1, _evaluationContext);
 					if (boolValue1 != null)
 					{
-						ISqlPredicate transformed = new SqlPredicate.Expr(expr.Expr2);
-						var           isNot       = boolValue1.Value != (expr.Operator == SqlPredicate.Operator.Equal);
-						if (isNot)
-						{
-							transformed =
-								new SqlPredicate.NotExpr(expr.Expr2, true, Precedence.LogicalNegation);
-						}
+						var isNot = boolValue1.Value != (expr.Operator == SqlPredicate.Operator.Equal);
+						var transformed = expr2Predicate.MakeNot(isNot);
 
 						return transformed;
 					}
 				}
 
-				if (expr.Expr1 is ISqlPredicate)
+				if (expr.Expr1 is ISqlPredicate expr1Predicate)
 				{
 					var boolValue2 = QueryHelper.GetBoolValue(expr.Expr2, _evaluationContext);
 					if (boolValue2 != null)
 					{
-						ISqlPredicate transformed = new SqlPredicate.Expr(expr.Expr1);
-						var           isNot       = boolValue2.Value != (expr.Operator == SqlPredicate.Operator.Equal);
-						if (isNot)
-						{
-							transformed =
-								new SqlPredicate.NotExpr(expr.Expr1, true, Precedence.LogicalNegation);
-						}
-
+						var isNot = boolValue2.Value != (expr.Operator == SqlPredicate.Operator.Equal);
+						var transformed = expr1Predicate.MakeNot(isNot);
 						return transformed;
 					}
 				}
@@ -772,8 +930,8 @@ namespace LinqToDB.SqlProvider
 					    func.Parameters[3].TryEvaluateExpression(_evaluationContext, out var value2) && value2 is int i2 &&
 					    func.Parameters[4].TryEvaluateExpression(_evaluationContext, out var value3) && value3 is int i3)
 					{
-						if (c1.Predicates[0].Predicate is SqlPredicate.ExprExpr ee1 &&
-						    c2.Predicates[0].Predicate is SqlPredicate.ExprExpr ee2 &&
+						if (c1.Predicates[0] is SqlPredicate.ExprExpr ee1 &&
+						    c2.Predicates[0] is SqlPredicate.ExprExpr ee2 &&
 						    ee1.Expr1.Equals(ee2.Expr1) && ee1.Expr2.Equals(ee2.Expr2))
 						{
 							int e = 0, g = 0, l = 0;
@@ -837,14 +995,14 @@ namespace LinqToDB.SqlProvider
 						if (bv == bv2 && expr.Operator == SqlPredicate.Operator.NotEqual ||
 							bv != bv1 && expr.Operator == SqlPredicate.Operator.Equal)
 						{
-							if (c1.Predicates[0].Predicate is SqlPredicate.ExprExpr ee)
+							if (c1.Predicates[0] is SqlPredicate.ExprExpr ee)
 							{
 								return (ISqlPredicate)ee.Invert();
 							}
 
 							var sc = new SqlSearchCondition();
 
-							sc.Predicates.Add(new SqlCondition(true, c1));
+							sc.Predicates.Add(sc.MakeNot(true));
 
 							return sc;
 						}

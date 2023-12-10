@@ -6,7 +6,7 @@ namespace LinqToDB.SqlQuery
 {
 	public class SqlSearchCondition : SqlExpressionBase, ISqlPredicate, IInvertibleElement
 	{
-		public SqlSearchCondition(bool isOr)
+		public SqlSearchCondition(bool isOr = false)
 		{
 			IsOr = isOr;
 		}
@@ -35,7 +35,8 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
-		public bool IsOr { get; set; }
+		public bool IsOr  { get; set; }
+		public bool IsAnd { get => !IsOr; set => IsOr = !value; }
 
 		#region Overrides
 
@@ -46,13 +47,31 @@ namespace LinqToDB.SqlQuery
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
 
-			foreach (IQueryElement c in Predicates)
-				writer.AppendElement(c);
+			if (IsOr)
+				writer.Append('(');
 
-			if (Predicates.Count > 0)
-				writer.Length -= 5;
+			var isFirst = true;
+			foreach (IQueryElement c in Predicates)
+			{
+				if (!isFirst)
+				{
+					if (IsOr)
+						writer.Append(" OR ");
+					else
+						writer.Append(" AND ");
+				}
+				else
+				{
+					isFirst = false;
+				}
+
+				writer.AppendElement(c);
+			}
 
 			writer.RemoveVisited(this);
+
+			if (IsOr)
+				writer.Append(')');
 
 			return writer;
 		}

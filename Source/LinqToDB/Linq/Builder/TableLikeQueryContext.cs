@@ -219,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 						var join = new SqlJoinedTable(JoinType.Left, targetCloned.SelectQuery, null, true);
 						SourceContextRef.BuildContext.SelectQuery.From.Tables[0].Joins.Add(join);
 
-						Builder.BuildSearchCondition(SourceContextRef.BuildContext, predicate, ProjectFlags.SQL, join.Condition.Predicates);
+						Builder.BuildSearchCondition(SourceContextRef.BuildContext, predicate, ProjectFlags.SQL, join.Condition);
 
 						TargetInSourceContextRef =
 							new ContextRefExpression(TargetContextRef.Type, targetCloned, "target");

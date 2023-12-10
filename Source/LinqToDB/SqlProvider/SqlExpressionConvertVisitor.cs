@@ -155,14 +155,14 @@ namespace LinqToDB.SqlProvider
 				return ConvertRowInList(predicate);
 
 			if (predicate.Values.Count == 0)
-				return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
+				return SqlPredicate.MakeBool(predicate.IsNot);
 
 			if (predicate.Values.Count == 1 && predicate.Values[0] is SqlParameter parameter)
 			{
 				var paramValue = parameter.GetParameterValue(EvaluationContext.ParameterValues);
 
 				if (paramValue.ProviderValue == null)
-					return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
+					return SqlPredicate.MakeBool(predicate.IsNot);
 
 				if (paramValue.ProviderValue is IEnumerable items)
 				{
@@ -185,13 +185,13 @@ namespace LinqToDB.SqlProvider
 							}
 
 							if (values.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
+								return SqlPredicate.MakeBool(predicate.IsNot);
 
 							return new SqlPredicate.InList(keys[0], null, predicate.IsNot, values);
 						}
 
 						{
-							var sc = new SqlSearchCondition();
+							var sc = new SqlSearchCondition(true);
 
 							foreach (var item in items)
 							{
@@ -203,23 +203,20 @@ namespace LinqToDB.SqlProvider
 									var cd       = field.ColumnDescriptor;
 									var sqlValue = MappingSchema.GetSqlValueFromObject(cd, item!);
 									//TODO: review
-									var cond = sqlValue.Value == null ?
-										new SqlCondition(false, new SqlPredicate.IsNull  (field, false)) :
-										new SqlCondition(false, new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, null));
+									ISqlPredicate p = sqlValue.Value == null ?
+										new SqlPredicate.IsNull  (field, false) :
+										new SqlPredicate.ExprExpr(field, SqlPredicate.Operator.Equal, sqlValue, null);
 
-									itemCond.Predicates.Add(cond);
+									itemCond.Add(p);
 								}
 
-								sc.Predicates.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
+								sc.Add(itemCond);
 							}
 
 							if (sc.Predicates.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
+								return SqlPredicate.MakeBool(predicate.IsNot);
 
-							if (predicate.IsNot)
-								return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
-
-							return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
+							return sc.MakeNot(predicate.IsNot);
 						}
 					}
 
@@ -234,12 +231,12 @@ namespace LinqToDB.SqlProvider
 								values.Add(expr.GetSqlValue(item!, 0));
 
 							if (values.Count == 0)
-								return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
+								return SqlPredicate.MakeBool(predicate.IsNot);
 
 							return new SqlPredicate.InList(parameters[0].Sql, null, predicate.IsNot, values);
 						}
 
-						var sc = new SqlSearchCondition();
+						var sc = new SqlSearchCondition(true);
 
 						foreach (var item in items)
 						{
@@ -249,23 +246,20 @@ namespace LinqToDB.SqlProvider
 							{
 								var sql   = parameters[i].Sql;
 								var value = expr.GetSqlValue(item!, i);
-								var cond  = value == null ?
-									new SqlCondition(false, new SqlPredicate.IsNull  (sql, false)) :
-									new SqlCondition(false, new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, value, null));
+								ISqlPredicate cond  = value == null ?
+									new SqlPredicate.IsNull  (sql, false) :
+									new SqlPredicate.ExprExpr(sql, SqlPredicate.Operator.Equal, value, null);
 
 								itemCond.Predicates.Add(cond);
 							}
 
-							sc.Predicates.Add(new SqlCondition(false, new SqlPredicate.Expr(itemCond), true));
+							sc.Add(itemCond);
 						}
 
 						if (sc.Predicates.Count == 0)
-							return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
+							return SqlPredicate.MakeBool(predicate.IsNot);
 
-						if (predicate.IsNot)
-							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
-
-						return new SqlPredicate.Expr(sc, Precedence.LogicalDisjunction);
+						return sc.MakeNot(predicate.IsNot);
 					}
 				}
 			}
@@ -464,7 +458,7 @@ namespace LinqToDB.SqlProvider
 				return predicate;
 
 			if (!NullabilityContext.CanBeNull(predicate.Expr1))
-				return new SqlPredicate.Expr(new SqlValue(predicate.IsNot));
+				return SqlPredicate.MakeBool(predicate.IsNot);
 
 			if (QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRow sqlRow)
 			{
@@ -536,9 +530,8 @@ namespace LinqToDB.SqlProvider
 				case "ConvertToCaseCompareTo":
 				{
 					return new SqlFunction(func.SystemType, "CASE",
-						new SqlSearchCondition().Expr(func.Parameters[0]).Greater.Expr(func.Parameters[1])
-							.ToExpr(), new SqlValue(1),
-						new SqlSearchCondition().Expr(func.Parameters[0]).Equal.Expr(func.Parameters[1]).ToExpr(),
+						new SqlSearchCondition().AddGreater(func.Parameters[0], func.Parameters[1], DataOptions.LinqOptions.CompareNullsAsValues), new SqlValue(1),
+						new SqlSearchCondition().AddEqual(func.Parameters[0], func.Parameters[1], DataOptions.LinqOptions.CompareNullsAsValues),
 						new SqlValue(0),
 						new SqlValue(-1)) { CanBeNull = false };
 				}
@@ -589,13 +582,7 @@ namespace LinqToDB.SqlProvider
 
 		public virtual ISqlPredicate ConvertBetweenPredicate(SqlPredicate.Between between)
 		{
-			var newPredicate = !between.IsNot
-				? new SqlSearchCondition(
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.GreaterOrEqual, between.Expr2, withNull: false)),
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.LessOrEqual,    between.Expr3, withNull: false)))
-				: new SqlSearchCondition(
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Less,    between.Expr2, withNull: false), isOr: true),
-					new SqlCondition(false, new SqlPredicate.ExprExpr(between.Expr1, SqlPredicate.Operator.Greater, between.Expr3, withNull: false)));
+			var newPredicate = new SqlSearchCondition().AddGreaterOrEqual(between.Expr1, between.Expr2, false).MakeNot(between.IsNot);
 
 			return newPredicate;
 		}
@@ -756,9 +743,9 @@ namespace LinqToDB.SqlProvider
 				var left    = predicate.Expr1;
 				var op      = predicate.IsNot ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal;
 				var isOr    = !predicate.IsNot;
-				var rewrite = new SqlSearchCondition();
+				var rewrite = new SqlSearchCondition(isOr);
 				foreach (var item in predicate.Values)
-					rewrite.Predicates.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(left, op, item, withNull: null), isOr));
+					rewrite.Predicates.Add(new SqlPredicate.ExprExpr(left, op, item, withNull: null));
 				return rewrite;
 			}
 
@@ -775,19 +762,20 @@ namespace LinqToDB.SqlProvider
 			// (a, b) is null     => a is null     and b is null
 			// (a, b) is not null => a is not null and b is not null
 			foreach (var value in row.Values)
-				rewrite.Predicates.Add(new SqlCondition(false, new SqlPredicate.IsNull(value, isNot)));
+				rewrite.Predicates.Add(new SqlPredicate.IsNull(value, isNot));
 			return rewrite;
 		}
 
 		protected ISqlPredicate RowComparisonFallback(SqlPredicate.Operator op, SqlRow row1, SqlRow row2, EvaluationContext context)
 		{
-			var rewrite = new SqlSearchCondition();
-
 			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
 				// (a1, a2) =  (b1, b2) => a1 =  b1 and a2 = b2
 				// (a1, a2) <> (b1, b2) => a1 <> b1 or  a2 <> b2
 				bool isOr = op == SqlPredicate.Operator.NotEqual;
+
+				var rewrite = new SqlSearchCondition(isOr);
+
 				var compares = row1.Values.Zip(row2.Values, (a, b) =>
 				{
 					// There is a trap here, neither `a` nor `b` should be a constant null value,
@@ -802,14 +790,17 @@ namespace LinqToDB.SqlProvider
 						: op;
 					return new SqlPredicate.ExprExpr(a, nullSafeOp, b, withNull: null);
 				});
+
 				foreach (var comp in compares)
-					rewrite.Predicates.Add(new SqlCondition(false, comp, isOr));
+					rewrite.Predicates.Add(comp);
 
 				return rewrite;
 			}
 
 			if (op is SqlPredicate.Operator.Greater or SqlPredicate.Operator.GreaterOrEqual or SqlPredicate.Operator.Less or SqlPredicate.Operator.LessOrEqual)
 			{
+				var rewrite = new SqlSearchCondition(true);
+
 				// (a1, a2, a3) >  (b1, b2, b3) => a1 > b1 or (a1 = b1 and a2 > b2) or (a1 = b1 and a2 = b2 and a3 >  b3)
 				// (a1, a2, a3) >= (b1, b2, b3) => a1 > b1 or (a1 = b1 and a2 > b2) or (a1 = b1 and a2 = b2 and a3 >= b3)
 				// (a1, a2, a3) <  (b1, b2, b3) => a1 < b1 or (a1 = b1 and a2 < b2) or (a1 = b1 and a2 = b2 and a3 <  b3)
@@ -819,9 +810,12 @@ namespace LinqToDB.SqlProvider
 				var values2 = row2.Values;
 				for (int i = 0; i < values1.Length; ++i)
 				{
+					var sub = new SqlSearchCondition();
 					for (int j = 0; j < i; j++)
-						rewrite.Predicates.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], withNull: null), isOr: false));
-					rewrite.Predicates.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], withNull: null), isOr: true));
+						sub.Add(new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], withNull: null));
+					sub.Add(new SqlPredicate.ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], withNull: null));
+
+					rewrite.Add(sub);
 				}
 
 				return rewrite;
@@ -838,7 +832,7 @@ namespace LinqToDB.SqlProvider
 				rewrite.Conditions.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(row2.Values[0], SqlPredicate.Operator.LessOrEqual, row1.Values[1], withNull: false)));
 				*/
 
-				return rewrite;
+				//return rewrite;
 			}
 
 			throw new LinqException("Unsupported SqlRow operator: " + op);
@@ -926,10 +920,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var sc = new SqlSearchCondition();
 
-				sc.Predicates.Add(
-					new SqlCondition(false,
-						new SqlPredicate.ExprExpr(par, SqlPredicate.Operator.NotEqual, new SqlValue(0),
-							DataOptions.LinqOptions.CompareNullsAsValues ? false : null)));
+				sc.AddNotEqual(par, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues);
 
 				return new SqlFunction(func.SystemType, "CASE", false, true, sc, new SqlValue(true), new SqlValue(false))
 				{

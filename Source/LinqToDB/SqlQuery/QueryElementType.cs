@@ -20,6 +20,8 @@
 		SqlRow,
 
 		NotPredicate,
+		TruePredicate, 
+		FalsePredicate,
 		ExprPredicate,
 		NotExprPredicate,
 		ExprExprPredicate,

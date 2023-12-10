@@ -107,7 +107,7 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildSearchCondition(
 					joinContext,
 					conditionExpr, flags,
-					join.JoinedTable.Condition.Predicates);
+					join.JoinedTable.Condition);
 
 				/*if (joinType == JoinType.Full)
 				{

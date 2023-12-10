@@ -37,20 +37,14 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					if (string1.Length == 0)
 					{
-						var sc = new SqlSearchCondition();
-						sc.Predicates.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
-
-						bool isNotEqual = expr.Operator == SqlPredicate.Operator.NotEqual;
-
 						// Add 'AND [col] IS NOT NULL' when checking Not Equal to Empty String,
 						// else add 'OR [col] IS NULL'
-						sc.Predicates.Add(new(
-							isNot: false,
-							new SqlPredicate.IsNull(expr.Expr2, isNot: isNotEqual),
-							isOr: !isNotEqual)
-						);
 
-						return sc;
+						var sc = new SqlSearchCondition(false,
+							new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null),
+							new SqlPredicate.IsNull(expr.Expr2, true));
+
+						return sc.MakeNot(expr.Operator == SqlPredicate.Operator.NotEqual);
 					}
 				}
 
@@ -59,20 +53,12 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					if (string2.Length == 0)
 					{
-						var sc = new SqlSearchCondition();
-						sc.Predicates.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), true));
-
-						bool isNotEqual = expr.Operator == SqlPredicate.Operator.NotEqual;
-
 						// Add 'AND [col] IS NOT NULL' when checking Not Equal to Empty String,
 						// else add 'OR [col] IS NULL'
-						sc.Predicates.Add(new(
-							isNot: false,
-							new SqlPredicate.IsNull(expr.Expr1, isNot: isNotEqual),
-							isOr: !isNotEqual)
-						);
 
-						return sc;
+						var sc = new SqlSearchCondition(true, new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null), new SqlPredicate.IsNull(expr.Expr1, false));
+
+						return sc.MakeNot(expr.Operator == SqlPredicate.Operator.NotEqual);
 					}
 				}
 			}

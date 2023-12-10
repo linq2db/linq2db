@@ -63,34 +63,6 @@ namespace Tests.UserTests
 				}
 			}
 
-			private void AddConditions(SqlWhereClause where, ISqlTableSource table)
-			{
-				var keys = table.GetKeys(true);
-				if (keys == null)
-					return;
-
-				foreach (var key in keys.OfType<SqlField>())
-				{
-					var maxValue = GetMaxValue(key.Type!.DataType);
-					if (maxValue == null)
-						continue;
-
-					var cond = new SqlSearchCondition();
-
-					cond = cond.Expr(key).IsNull.Or;
-
-					if (maxValue is string)
-						cond.Expr(key).GreaterOrEqual.Expr(new SqlValue(maxValue));
-					else
-						cond.Expr(key).LessOrEqual.Expr(new SqlValue(maxValue));
-
-					where.ConcatSearchCondition(cond);
-
-					// only one field is enough
-					break;
-				}
-			}
-
 			private void AddConditions(SqlStatement statement)
 			{
 				/*statement.WalkQueries(

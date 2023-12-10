@@ -139,9 +139,7 @@ namespace LinqToDB
 					: new SqlPredicate.ExprExpr(left, isNot ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual, right, withNull: null);
 #pragma warning restore CS8602
 
-				builder.ResultExpression = new SqlSearchCondition(
-					new SqlCondition(isNot: false, predicate)
-				);
+				builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -686,24 +684,21 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlExpression(
 							typeof(string),
 							"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
 							str),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true, 
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -715,29 +710,25 @@ namespace LinqToDB
 				var str = builder.GetExpression("str");
 
 				const string whiteSpaces = $"%[^{WHITESPACES}]%";
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.NotExpr(
-						new SqlExpression(
-							typeof(bool),
-							"{0} SIMILAR TO {1}",
-							Precedence.Comparison,
-							SqlFlags.IsPredicate,
-							ParametersNullabilityType.NotNullable,
-							null,
-							str,
-							new SqlValue(typeof(string), whiteSpaces)),
-						true,
-						Precedence.LogicalNegation),
-					true);
+				var predicate = new SqlPredicate.NotExpr(
+					new SqlExpression(
+						typeof(bool),
+						"{0} SIMILAR TO {1}",
+						Precedence.Comparison,
+						SqlFlags.IsPredicate,
+						ParametersNullabilityType.NotNullable,
+						null,
+						str,
+						new SqlValue(typeof(string), whiteSpaces)),
+					true,
+					Precedence.LogicalNegation);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false), predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -749,29 +740,25 @@ namespace LinqToDB
 				var str = builder.GetExpression("str");
 
 				var whiteSpaces = $"[^{WHITESPACES}]";
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.NotExpr(
-						new SqlExpression(
-							typeof(bool),
-							"{0} RLIKE {1}",
-							Precedence.Comparison,
-							SqlFlags.IsPredicate,
-							ParametersNullabilityType.NotNullable,
-							null,
-							str,
-							new SqlValue(typeof(string), whiteSpaces)),
-						true,
-						Precedence.LogicalNegation),
-					true);
+				var condition = new SqlPredicate.NotExpr(
+					new SqlExpression(
+						typeof(bool),
+						"{0} RLIKE {1}",
+						Precedence.Comparison,
+						SqlFlags.IsPredicate,
+						ParametersNullabilityType.NotNullable,
+						null,
+						str,
+						new SqlValue(typeof(string), whiteSpaces)),
+					true,
+					Precedence.LogicalNegation);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false), condition);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, condition);
 			}
 		}
 
@@ -783,22 +770,18 @@ namespace LinqToDB
 				var str = builder.GetExpression("str");
 
 				var whiteSpaces = $"%[^{WHITESPACES}]%";
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.Like(
-						str,
-						true,
-						new SqlValue(typeof(string), whiteSpaces),
-						null),
-					true);
+				var predicate = new SqlPredicate.Like(
+					str,
+					true,
+					new SqlValue(typeof(string), whiteSpaces),
+					null);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false), predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -810,22 +793,19 @@ namespace LinqToDB
 				var str = builder.GetExpression("str");
 
 				var whiteSpaces = $"%[^{WHITESPACES}]%";
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.Like(
-						str,
-						true,
-						new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), whiteSpaces),
-						null),
-					true);
+				var predicate = new SqlPredicate.Like(
+					str,
+					true,
+					new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), whiteSpaces),
+					null);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -836,21 +816,18 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlFunction(typeof(string), "LTRIM", str),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -861,21 +838,18 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlExpression(typeof(string), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -886,18 +860,15 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false),
-					true);
+				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -908,21 +879,18 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -933,21 +901,18 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str");
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 		#endregion

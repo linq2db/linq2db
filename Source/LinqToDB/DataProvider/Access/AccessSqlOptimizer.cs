@@ -20,6 +20,7 @@ namespace LinqToDB.DataProvider.Access
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			statement = CorrectInnerJoins(statement);
+			statement = CorrectExists(statement);
 
 			return statement.QueryType switch
 			{
@@ -107,6 +108,47 @@ namespace LinqToDB.DataProvider.Access
 
 			return statement;
 		}
+
+		SqlStatement CorrectExists(SqlStatement statement)
+		{
+			statement = statement.Convert(1, (_, e) =>
+			{
+				if (e is SelectQuery sq)
+				{
+					if (sq.From.Tables.Count == 0 && sq.Select.Columns.Count == 1)
+					{
+						var column = sq.Select.Columns[0];
+						if (column.Expression is SqlSearchCondition sc && sc.Predicates.Count == 1)
+						{
+							QueryHelper.ExtractPredicate(sc.Predicates[0], out var underlying, out var isNot);
+
+							if (underlying is SqlPredicate.FuncLike { Function.Name: "EXISTS" } funcLike)
+							{
+								var existsQuery = (SelectQuery)funcLike.Function.Parameters[0];
+								existsQuery.Select.Columns.Clear();
+
+								var newSearch = new SqlSearchCondition();
+
+								var countExpr = SqlFunction.CreateCount(typeof(int), existsQuery.From.Tables[0]);
+								if (!isNot)
+									newSearch.AddGreater(countExpr, new SqlValue(0), false);
+								else
+									newSearch.AddEqual(countExpr, new SqlValue(0), false);
+
+								existsQuery.Select.AddColumn(newSearch);
+
+								return existsQuery;
+							}
+						}
+					}
+				}
+
+				return e;
+			});
+
+			return statement;
+		}
+
 
 	}
 }

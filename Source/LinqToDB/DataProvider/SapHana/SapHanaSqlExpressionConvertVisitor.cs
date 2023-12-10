@@ -2,9 +2,9 @@
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using LinqToDB.Extensions;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.SqlQuery;
+	using Extensions;
+	using SqlProvider;
+	using SqlQuery;
 
 	public class SapHanaSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
@@ -28,10 +28,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			if (start == 0 && SqlExpression.NeedsEqual(cond))
 			{
-				cond = new SqlSearchCondition(
-					new SqlCondition(
-						false,
-						new SqlPredicate.ExprExpr(cond, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
+				cond = new SqlSearchCondition(false).AddEqual(cond, new SqlValue(1), false);
 			}
 
 			const string name = "CASE";

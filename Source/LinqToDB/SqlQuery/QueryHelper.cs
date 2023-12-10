@@ -523,6 +523,21 @@ namespace LinqToDB.SqlQuery
 			return whereClause.SearchCondition;
 		}
 
+		/// <summary>
+		/// Ensures that expression is not A OR B but (A OR B)
+		/// Function makes all needed manipulations for that
+		/// </summary>
+		/// <param name="joinedTable"></param>
+		public static SqlSearchCondition EnsureConjunction(this SqlJoinedTable joinedTable)
+		{
+			if (joinedTable.Condition.IsOr)
+			{
+				var old = joinedTable.Condition;
+				joinedTable.Condition = new SqlSearchCondition(false, old);
+			}
+			return joinedTable.Condition;
+		}
+
 		public static bool IsEqualTables([NotNullWhen(true)] SqlTable? table1, [NotNullWhen(true)] SqlTable? table2)
 		{
 			if (table1 == null || table2 == null)
@@ -915,15 +930,6 @@ namespace LinqToDB.SqlQuery
 			}
 
 			return null;
-		}
-
-		public static SqlCondition GenerateEquality(ISqlExpression field1, ISqlExpression field2, bool compareNullsAsValues)
-		{
-			var compare = new SqlCondition(false,
-				new SqlPredicate.ExprExpr(field1, SqlPredicate.Operator.Equal, field2,
-					compareNullsAsValues ? true : null));
-
-			return compare;
 		}
 
 		/// <summary>
@@ -1497,8 +1503,13 @@ namespace LinqToDB.SqlQuery
 			// checkVisitor.Visit(statement);
 		}
 
-		public static ISqlPredicate MakeNot(this ISqlPredicate predicate, bool isNot)
-			=> isNot ? new SqlPredicate.Not(predicate) : predicate;
+		public static bool? GetBoolValue(IQueryElement element, EvaluationContext evaluationContext)
+		{
+			if (element.TryEvaluateExpression(evaluationContext, out var value))
+				return value as bool?;
+
+			return null;
+		}
 
 	}
 }

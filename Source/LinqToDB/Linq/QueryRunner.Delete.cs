@@ -57,7 +57,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].AddParameterAccessor(param);
 
-					deleteStatement.SelectQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
+					deleteStatement.SelectQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, false);
 
 					if (field.CanBeNull)
 						deleteStatement.IsParameterDependent = true;

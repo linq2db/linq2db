@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return true;
 		}
 
-		protected override bool BuildWhere(SelectQuery selectQuery)
+		protected override bool ShouldBuildWhere(SelectQuery selectQuery)
 		{
 			var condition = ConvertElement(selectQuery.Where.SearchCondition);
 			return condition.Predicates.Count != 0;

@@ -163,14 +163,12 @@ namespace LinqToDB.Linq.Builder
 
 					var cleanQuery = ReplaceSourceInQuery(selectQuery, clonedTargetTable, targetTable);
 
-					searchCondition.Predicates.Add(new SqlCondition(false,
-						new SqlPredicate.FuncLike(SqlFunction.CreateExists(cleanQuery))));
+					searchCondition.AddExists(cleanQuery);
 				}
 			}
 			else if (!source.IsTargetAssociation(condition))
 			{
-				builder.BuildSearchCondition(source.SourceContextRef.BuildContext, condition, ProjectFlags.SQL,
-					searchCondition.Predicates);
+				builder.BuildSearchCondition(source.SourceContextRef.BuildContext, condition, ProjectFlags.SQL, searchCondition);
 			}
 			else
 			{
@@ -182,7 +180,7 @@ namespace LinqToDB.Linq.Builder
 				var correctedCondition = condition.Replace(source.TargetPropAccess, clonedContextRef);
 
 				builder.BuildSearchCondition(clonedTargetContext, correctedCondition, ProjectFlags.SQL,
-					clonedTargetContext.SelectQuery.Where.SearchCondition.Predicates);
+					clonedTargetContext.SelectQuery.Where.EnsureConjunction());
 
 				var targetTable = GetTargetTable(targetContext);
 				if (targetTable == null)
@@ -195,8 +193,7 @@ namespace LinqToDB.Linq.Builder
 
 				var cleanQuery = ReplaceSourceInQuery(clonedTargetContext.SelectQuery, clonedTargetTable, targetTable);
 
-				searchCondition.Predicates.Add(new SqlCondition(false,
-					new SqlPredicate.FuncLike(SqlFunction.CreateExists(cleanQuery))));
+				searchCondition.AddExists(cleanQuery);
 			}
 		}
 

@@ -67,12 +67,12 @@ namespace LinqToDB.DataProvider.Oracle
 			return base.GetIdentityExpression(table);
 		}
 
-		protected override bool BuildWhere(SelectQuery selectQuery)
+		protected override bool ShouldBuildWhere(SelectQuery selectQuery)
 		{
 			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipEpr);
 
 			return
-				base.BuildWhere(selectQuery) ||
+				base.ShouldBuildWhere(selectQuery) ||
 				!NeedSkip(takeExpr, skipEpr) &&
 				 NeedTake(takeExpr) &&
 				selectQuery.OrderBy.IsEmpty && selectQuery.Having.IsEmpty;

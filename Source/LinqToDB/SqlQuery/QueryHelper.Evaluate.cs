@@ -175,6 +175,31 @@ namespace LinqToDB.SqlQuery
 
 					return true;
 				}
+
+				case QueryElementType.NotPredicate:
+				{
+					var notPredicate = (SqlPredicate.Not)expr;
+					if (notPredicate.Predicate.TryEvaluateExpression(context, out var value) && value is bool boolValue)
+					{
+						result = !boolValue;
+						return true;
+					}
+
+					return false;
+				}
+
+				case QueryElementType.TruePredicate:
+				{
+					result = true;
+					return true;
+				}
+
+				case QueryElementType.FalsePredicate:
+				{
+					result = false;
+					return true;
+				}
+
 				case QueryElementType.IsTruePredicate:
 				{
 					var isTruePredicate = (SqlPredicate.IsTrue)expr;
@@ -198,6 +223,7 @@ namespace LinqToDB.SqlQuery
 
 					return false;
 				}
+
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)expr;
@@ -316,7 +342,7 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SearchCondition    :
 				{
-					var cond     = (SqlSearchCondition)expr;
+					var cond = (SqlSearchCondition)expr;
 
 					if (cond.Predicates.Count == 0)
 					{
@@ -326,20 +352,27 @@ namespace LinqToDB.SqlQuery
 
 					for (var i = 0; i < cond.Predicates.Count; i++)
 					{
-						var condition = cond.Predicates[i];
-						if (condition.TryEvaluateExpression(context, out var evaluated))
+						var predicate = cond.Predicates[i];
+						if (predicate.TryEvaluateExpression(context, out var evaluated))
 						{
 							if (evaluated is bool boolValue)
 							{
-								if (i == cond.Predicates.Count - 1 || condition.IsOr == boolValue)
+								if (boolValue)
 								{
-									result = boolValue;
-									return true;
+									if (cond.IsOr)
+									{
+										result = true;
+										return true;
+									}
 								}
-							}
-							else if (!condition.IsOr)
-							{
-								return false;
+								else
+								{
+									if (!cond.IsOr)
+									{
+										result = false;
+										return true;
+									}
+								}
 							}
 						}
 					}
@@ -409,6 +442,18 @@ namespace LinqToDB.SqlQuery
 				return boolValue;
 
 			return defaultValue;
+		}
+
+		public static void ExtractPredicate(ISqlPredicate predicate, out ISqlPredicate underlying, out bool isNot)
+		{
+			underlying = predicate;
+			isNot      = false;
+
+			if (predicate is SqlPredicate.Not notPredicate)
+			{
+				underlying = notPredicate.Predicate;
+				isNot      = true;
+			}
 		}
 	}
 }
