@@ -9,9 +9,9 @@ namespace LinqToDB.SqlQuery
 			if (!isNot)
 				return predicate;
 
-			if (predicate is IInvertibleElement invertible && invertible.CanInvert())
+			if (predicate.CanInvert())
 			{
-				return (ISqlPredicate)invertible.Invert();
+				return predicate.Invert();
 			}
 
 			return new SqlPredicate.Not(predicate);

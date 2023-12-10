@@ -1515,17 +1515,6 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		protected override IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
-		{
-			if (predicate is { IsNot: true, Expr1: IInvertibleElement invertible } && invertible.CanInvert())
-			{
-				var newNode = invertible.Invert();
-				return Visit(newNode);
-			}
-
-			return base.VisitNotExprPredicate(predicate);
-		}
-
 		bool OptimizeSubQueries(SelectQuery selectQuery)
 		{
 			var replaced = false;

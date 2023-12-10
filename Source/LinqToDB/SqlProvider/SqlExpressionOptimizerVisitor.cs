@@ -258,24 +258,6 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		protected override IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
-		{
-			var newElement = base.VisitNotExprPredicate(predicate);
-
-			if (!ReferenceEquals(newElement, predicate))
-				return Visit(newElement);
-
-			if (predicate.IsNot)
-			{
-				if (predicate.Expr1 is IInvertibleElement invertible && invertible.CanInvert())
-				{
-					return invertible.Invert();
-				}
-			}
-
-			return predicate;
-		}
-
 		protected override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
 		{
 			var newElement = base.VisitIsDistinctPredicate(predicate);
@@ -310,9 +292,9 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (predicate.Predicate is IInvertibleElement invertible && invertible.CanInvert())
+			if (predicate.Predicate.CanInvert())
 			{
-				return Visit(invertible.Invert());
+				return Visit(predicate.Predicate.Invert());
 			}
 
 			return predicate;

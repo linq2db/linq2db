@@ -58,6 +58,9 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.NotPredicate;
 
+			public override bool          CanInvert() => false;
+			public override ISqlPredicate Invert()    => throw new InvalidOperationException();
+
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				if (other is not Not notPredicate)
@@ -79,7 +82,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public class TruePredicate : SqlPredicate, IInvertibleElement
+		public class TruePredicate : SqlPredicate
 		{
 			public TruePredicate() : base(SqlQuery.Precedence.Primary)
 			{
@@ -100,18 +103,12 @@ namespace LinqToDB.SqlQuery
 				writer.Append("True");
 			}
 
-			public bool CanInvert()
-			{
-				return true;
-			}
-
-			public IQueryElement Invert()
-			{
-				return False;
-			}
+			public override bool CanInvert() => true;
+			public override ISqlPredicate Invert() => False;
+		
 		}
 
-		public class FalsePredicate : SqlPredicate, IInvertibleElement
+		public class FalsePredicate : SqlPredicate
 		{
 			public FalsePredicate() : base(SqlQuery.Precedence.Primary)
 			{
@@ -132,15 +129,8 @@ namespace LinqToDB.SqlQuery
 				writer.Append("False");
 			}
 
-			public bool CanInvert()
-			{
-				return true;
-			}
-
-			public IQueryElement Invert()
-			{
-				return True;
-			}
+			public override bool          CanInvert() => true;
+			public override ISqlPredicate Invert()    => True;
 		}
 
 		public class Expr : SqlPredicate
@@ -159,6 +149,9 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr1 { get; set; }
 
+			public override bool CanInvert() => false;
+			public override ISqlPredicate Invert() => throw new InvalidOperationException();
+
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is Expr expr
@@ -174,7 +167,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public abstract class BaseNotExpr : Expr, IInvertibleElement
+		public abstract class BaseNotExpr : Expr
 		{
 			protected BaseNotExpr(ISqlExpression exp1, bool isNot, int precedence)
 				: base(exp1, precedence)
@@ -184,9 +177,7 @@ namespace LinqToDB.SqlQuery
 
 			public bool IsNot { get; }
 
-			public virtual bool CanInvert() => true;
-
-			public abstract IQueryElement Invert();
+			public override bool CanInvert() => true;
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -210,7 +201,7 @@ namespace LinqToDB.SqlQuery
 			{
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new NotExpr(Expr1, !IsNot, Precedence);
 			}
@@ -220,7 +211,7 @@ namespace LinqToDB.SqlQuery
 
 		// { expression { = | <> | != | > | >= | ! > | < | <= | !< } expression
 		//
-		public class ExprExpr : Expr, IInvertibleElement
+		public class ExprExpr : Expr
 		{
 			public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2, bool? withNull)
 				: base(exp1, SqlQuery.Precedence.Comparison)
@@ -283,12 +274,9 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			public bool CanInvert()
-			{
-				return true;
-			}
+			public override bool CanInvert() => true;
 
-			public IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
@@ -416,7 +404,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new Like(Expr1, !IsNot, Expr2, Escape);
 			}
@@ -474,7 +462,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new SearchString(Expr1, !IsNot, Expr2, Kind, CaseSensitive);
 			}
@@ -531,7 +519,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
+			public override ISqlPredicate Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
 
 			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
 
@@ -566,7 +554,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new Between(Expr1, !IsNot, Expr2, Expr3);
 			}
@@ -636,7 +624,7 @@ namespace LinqToDB.SqlQuery
 				
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new IsTrue(Expr1, TrueValue, FalseValue, !WithNull, !IsNot);
 			}
@@ -653,7 +641,7 @@ namespace LinqToDB.SqlQuery
 			{
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new IsNull(Expr1, !IsNot);
 			}
@@ -696,7 +684,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new InSubQuery(Expr1, !IsNot, SubQuery);
 			}
@@ -770,7 +758,7 @@ namespace LinqToDB.SqlQuery
 				return true;
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new InList(Expr1, !WithNull, !IsNot, Values);
 			}
@@ -818,6 +806,9 @@ namespace LinqToDB.SqlQuery
 				Function = function;
 			}
 
+			public override bool CanInvert() => false;
+			public override ISqlPredicate Invert() => throw new InvalidOperationException();
+
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is FuncLike expr
@@ -841,7 +832,10 @@ namespace LinqToDB.SqlQuery
 
 		public int  Precedence { get; }
 
-		public abstract bool     Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer);
+		public abstract bool CanInvert();
+		public abstract ISqlPredicate Invert();
+
+		public abstract bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer);
 
 		#endregion
 

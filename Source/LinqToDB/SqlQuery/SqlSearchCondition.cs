@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSearchCondition : SqlExpressionBase, ISqlPredicate, IInvertibleElement
+	public class SqlSearchCondition : SqlExpressionBase, ISqlPredicate
 	{
 		public SqlSearchCondition(bool isOr = false)
 		{
@@ -101,7 +101,7 @@ namespace LinqToDB.SqlQuery
 			return Predicates.Count == 1;
 		}
 
-		public IQueryElement Invert()
+		public ISqlPredicate Invert()
 		{
 			if (Predicates.Count == 0)
 			{
