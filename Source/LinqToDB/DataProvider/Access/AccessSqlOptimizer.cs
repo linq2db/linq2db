@@ -20,7 +20,7 @@ namespace LinqToDB.DataProvider.Access
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
 		{
 			statement = CorrectInnerJoins(statement);
-			statement = CorrectExists(statement);
+			statement = CorrectExistsAndIn(statement, dataOptions);
 
 			return statement.QueryType switch
 			{
@@ -109,7 +109,7 @@ namespace LinqToDB.DataProvider.Access
 			return statement;
 		}
 
-		SqlStatement CorrectExists(SqlStatement statement)
+		SqlStatement CorrectExistsAndIn(SqlStatement statement, DataOptions dataOptions)
 		{
 			statement = statement.Convert(1, (_, e) =>
 			{
@@ -131,13 +131,36 @@ namespace LinqToDB.DataProvider.Access
 
 								var countExpr = SqlFunction.CreateCount(typeof(int), existsQuery.From.Tables[0]);
 								if (!isNot)
-									newSearch.AddGreater(countExpr, new SqlValue(0), false);
+									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
 								else
-									newSearch.AddEqual(countExpr, new SqlValue(0), false);
+									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
 
 								existsQuery.Select.AddColumn(newSearch);
 
 								return existsQuery;
+							}
+
+							if (underlying is SqlPredicate.InSubQuery inSubQuery)
+							{
+								var subquery = inSubQuery.SubQuery;
+								subquery.Where.EnsureConjunction()
+									.AddEqual(subquery.Select.Columns[0].Expression, inSubQuery.Expr1, dataOptions.LinqOptions.CompareNullsAsValues);
+
+								subquery.Select.Columns.Clear();
+
+								var newSearch = new SqlSearchCondition();
+								var countExpr = SqlFunction.CreateCount(typeof(int), subquery.From.Tables[0]);
+
+								isNot = isNot != inSubQuery.IsNot;
+
+								if (!isNot)
+									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+								else
+									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+
+								subquery.Select.AddColumn(newSearch);
+
+								return subquery;
 							}
 						}
 					}

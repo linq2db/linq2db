@@ -3323,7 +3323,14 @@ namespace LinqToDB.Linq.Builder
 #pragma warning restore CS8762
 					}
 
-					searchCondition.Add(predicate);
+					if (predicate is SqlSearchCondition sc && (searchCondition.IsOr == sc.IsOr || sc.Predicates.Count <= 1))
+					{
+						searchCondition.Predicates.AddRange(sc.Predicates);
+					}
+					else
+					{
+						searchCondition.Predicates.Add(predicate);
+					}
 
 					break;
 			}

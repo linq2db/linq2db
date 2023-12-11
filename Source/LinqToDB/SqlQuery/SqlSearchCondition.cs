@@ -47,6 +47,10 @@ namespace LinqToDB.SqlQuery
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
 
+			writer.Append("sc=");
+
+			writer.DebugAppendUniqueId(this);
+
 			if (IsOr)
 				writer.Append('(');
 

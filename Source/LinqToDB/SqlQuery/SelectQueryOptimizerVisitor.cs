@@ -154,7 +154,7 @@ namespace LinqToDB.SqlQuery
 
 			if (_correcting == null)
 			{
-				_parentSelect = saveParent;
+				_parentSelect = selectQuery;
 
 				if (saveParent == null)
 				{
@@ -163,17 +163,13 @@ namespace LinqToDB.SqlQuery
 #endif
 					// only once
 					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _providerFlags, _dataOptions, selectQuery);
-
-					if (_expressionOptimizerVisitor.IsModified)
-					{
-
-					}
 				}
 				else
 				{
 					OptimizeColumns(selectQuery);
 				}
 
+				var wasModified = false;
 				do
 				{
 					var currentVersion = _version;
@@ -234,7 +230,18 @@ namespace LinqToDB.SqlQuery
 						break;
 					}
 
+					wasModified = true;
+
 				} while (true);
+
+				if (saveParent == null && wasModified)
+				{
+					// do expression optimization again
+#if DEBUG
+					var before = selectQuery.ToDebugString();
+#endif
+					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), _providerFlags, _dataOptions, selectQuery);
+				}
 
 				if (saveSetOperatorCount != (selectQuery.HasSetOperators ? selectQuery.SetOperators.Count : 0))
 				{
@@ -243,6 +250,7 @@ namespace LinqToDB.SqlQuery
 					newQuery = (SelectQuery)VisitSqlQuery(selectQuery);
 				}
 
+				_parentSelect = saveParent;
 			}
 
 			return newQuery;
@@ -1944,7 +1952,12 @@ namespace LinqToDB.SqlQuery
 			if (element.IsRecursive)
 				_isInRecursiveCte = true;
 
+			var saveParent = _parentSelect;
+			_parentSelect = null;
+			
 			var newElement = base.VisitCteClause(element);
+
+			_parentSelect = saveParent;
 
 			_isInRecursiveCte = saveIsInRecursiveCte;
 
