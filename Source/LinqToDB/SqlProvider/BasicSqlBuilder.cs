@@ -2928,7 +2928,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlField:
 					{
 						var field = (SqlField)expr;
-					SqlObjectName? suffixName = null;
+						SqlObjectName? suffixName = null;
 
 						if (BuildFieldTableAlias(field) && buildTableName && field.Table != null)
 						{
@@ -2993,7 +2993,7 @@ namespace LinqToDB.SqlProvider
 
 						if (suffixName != null)
 							BuildObjectNameSuffix(StringBuilder, suffixName.Value, true);
-				}
+					}
 
 					break;
 

@@ -565,6 +565,26 @@ namespace LinqToDB.SqlProvider
 			return ConvertSqlBinaryExpression(element);
 		}
 
+		protected override IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
+		{
+			var newElement = base.VisitSqlInlinedSqlExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			return element.GetSqlExpression(EvaluationContext);
+		}
+
+		protected override IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
+		{
+			var newElement = base.VisitSqlInlinedToSqlExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			return element.GetSqlExpression(EvaluationContext);
+		}
+
 		protected override IQueryElement VisitBetweenPredicate(SqlPredicate.Between predicate)
 		{
 			var newElement = base.VisitBetweenPredicate(predicate);

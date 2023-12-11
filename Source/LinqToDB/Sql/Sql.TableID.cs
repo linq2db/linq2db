@@ -40,9 +40,8 @@ namespace LinqToDB
 				return (int)Type | (ID.GetHashCode() >> 3);
 			}
 
-			public ISqlExpression ToSql(Expression expression)
+			public ISqlExpression ToSql(object value)
 			{
-				var value = expression.EvaluateExpression();
 				return new SqlValue(typeof(SqlID), value);
 			}
 

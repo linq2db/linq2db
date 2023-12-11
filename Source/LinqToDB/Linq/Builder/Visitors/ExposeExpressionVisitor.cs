@@ -68,16 +68,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 			if (node == null)
 				return null;
 
-			if (node.Type.IsSameOrParentOf(typeof(IToSqlConverter)) && IsCompilable(node))
-			{
-				var converter = EvaluateExpression(node) as IToSqlConverter;
-				if (converter != null)
-				{
-					var constant = Expression.Constant(converter.ToSql(node));
-					return Expression.Convert(constant, typeof(object));
-				}
-			}
-
 			if (node.NodeType != ExpressionType.Quote && typeof(Expression<>).IsSameOrParentOf(node.Type))
 			{
 				if (IsCompilable(node))

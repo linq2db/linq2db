@@ -727,7 +727,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.UnwrapConvert().Type))
 						{
-							sql = EvaluateExpression<ISqlExpression>(newExpr);
+							sql = ConvertToInlinedSqlExpression(newExpr);
 						}
 						else
 						{
@@ -1410,12 +1410,37 @@ namespace LinqToDB.Linq.Builder
 			return sqlExpression;
 		}
 
-		public ISqlExpression ConvertToSqlConvertible(Expression expression)
+		ISqlExpression? ConvertToInlinedSqlExpression(Expression newExpr)
+		{
+			ISqlExpression? innerSql;
+			innerSql = EvaluateExpression<ISqlExpression>(newExpr);
+
+			if (innerSql == null)
+				return null;
+
+			var param = ParametersContext.BuildParameter(newExpr, null, doNotCheckCompatibility : true);
+			if (param == null)
+			{
+				return null;
+			}
+
+			return new SqlInlinedSqlExpression(param.SqlParameter, innerSql);
+		}
+
+		public ISqlExpression? ConvertToSqlConvertible(Expression expression)
 		{
 			if (EvaluateExpression(Expression.Convert(expression, typeof(IToSqlConverter))) is not IToSqlConverter converter)
 				throw new LinqToDBException($"Expression '{expression}' cannot be converted to `IToSqlConverter`");
 
-			return converter.ToSql(expression);
+			var innerExpr = converter.ToSql(converter);
+
+			var param = ParametersContext.BuildParameter(expression, null, doNotCheckCompatibility : true);
+			if (param == null)
+			{
+				return null;
+			}
+
+			return new SqlInlinedToSqlExpression(param.SqlParameter, innerExpr);
 		}
 
 		readonly HashSet<Expression> _convertedPredicates = new ();

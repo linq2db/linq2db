@@ -527,6 +527,14 @@ namespace LinqToDB
 			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
 		}
 
+		class AliasExprBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				builder.ResultExpression = SqlAliasPlaceholder.Instance;
+			}
+		}
+
 		/// <summary>
 		/// Useful for specifying place of alias when using <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> method.
 		/// </summary>
@@ -542,7 +550,8 @@ namespace LinqToDB
 		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA")
 		/// </code>
 		/// </example>
-		public static ISqlExpression AliasExpr() => SqlAliasPlaceholder.Instance;
+		[Extension(builderType: typeof(AliasExprBuilder), ServerSideOnly = true)]
+		public static string AliasExpr() => throw new InvalidOperationException("AliasExpr should not be used outside LINQ Query");
 
 		sealed class ExprBuilder : IExtensionCallBuilder
 		{

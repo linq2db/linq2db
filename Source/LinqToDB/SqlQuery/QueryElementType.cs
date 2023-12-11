@@ -81,6 +81,17 @@
 		Comment,
 
 		SqlExtension,
+
+		/// <summary>
+		/// ISqlExpression used in LINQ query directly
+		/// </summary>
+		SqlInlinedExpression,
+
+		/// <summary>
+		/// IToSqlConverter used in LINQ query directly
+		/// </summary>
+		SqlInlinedToSqlExpression,
+
 		/// <summary>
 		/// Custom query extensions, e.g. hints, applied to specific query fragment.
 		/// Implemented by <see cref="SqlQuery.SqlQueryExtension"/>.

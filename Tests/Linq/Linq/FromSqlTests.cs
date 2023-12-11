@@ -62,7 +62,7 @@ namespace Tests.Linq
 
 			readonly ITable<T> _table;
 
-			public ISqlExpression ToSql(Expression expression)
+			public ISqlExpression ToSql(object value)
 			{
 				return new SqlTable(MappingSchema.Default.GetEntityDescriptor(typeof(T)))
 				{
@@ -86,7 +86,7 @@ namespace Tests.Linq
 
 			readonly string _columnName;
 
-			public ISqlExpression ToSql(Expression expression)
+			public ISqlExpression ToSql(object value)
 			{
 				return new SqlField(_columnName, _columnName);
 			}

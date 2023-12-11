@@ -6,6 +6,6 @@ namespace LinqToDB.Linq.Builder
 
 	public interface IToSqlConverter
 	{
-		ISqlExpression ToSql(Expression expression);
+		ISqlExpression ToSql(object value);
 	}
 }

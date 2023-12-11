@@ -57,72 +57,74 @@ namespace LinqToDB.SqlQuery
 
 			return element.ElementType switch
 			{
-				QueryElementType.SqlField                 => VisitSqlFieldReference         ((SqlField                  )element),
-				QueryElementType.SqlFunction              => VisitSqlFunction               ((SqlFunction               )element),
-				QueryElementType.SqlParameter             => VisitSqlParameter              ((SqlParameter              )element),
-				QueryElementType.SqlExpression            => VisitSqlExpression             ((SqlExpression             )element),
-				QueryElementType.SqlNullabilityExpression => VisitSqlNullabilityExpression  ((SqlNullabilityExpression  )element),
-				QueryElementType.SqlAnchor                => VisitSqlAnchor                 ((SqlAnchor                 )element),
-				QueryElementType.SqlObjectExpression      => VisitSqlObjectExpression       ((SqlObjectExpression       )element),
-				QueryElementType.SqlBinaryExpression      => VisitSqlBinaryExpression       ((SqlBinaryExpression       )element),
-				QueryElementType.SqlValue                 => VisitSqlValue                  ((SqlValue                  )element),
-				QueryElementType.SqlDataType              => VisitSqlDataType               ((SqlDataType               )element),
-				QueryElementType.SqlTable                 => VisitSqlTable                  ((SqlTable                  )element),
-				QueryElementType.SqlAliasPlaceholder      => VisitSqlAliasPlaceholder       ((SqlAliasPlaceholder       )element),
-				QueryElementType.SqlRow                   => VisitSqlRow                    ((SqlRow                    )element),
-				QueryElementType.NotPredicate             => VisitNotPredicate              ((SqlPredicate.Not          )element),
-				QueryElementType.TruePredicate            => VisitTruePredicate             ((SqlPredicate.TruePredicate         )element),
-				QueryElementType.FalsePredicate           => VisitFalsePredicate            ((SqlPredicate.FalsePredicate        )element),
-				QueryElementType.ExprPredicate            => VisitExprPredicate             ((SqlPredicate.Expr         )element),
-				QueryElementType.NotExprPredicate         => VisitNotExprPredicate          ((SqlPredicate.NotExpr      )element),
-				QueryElementType.ExprExprPredicate        => VisitExprExprPredicate         ((SqlPredicate.ExprExpr     )element),
-				QueryElementType.LikePredicate            => VisitLikePredicate             ((SqlPredicate.Like         )element),
-				QueryElementType.SearchStringPredicate    => VisitSearchStringPredicate     ((SqlPredicate.SearchString )element),
-				QueryElementType.BetweenPredicate         => VisitBetweenPredicate          ((SqlPredicate.Between      )element),
-				QueryElementType.IsNullPredicate          => VisitIsNullPredicate           ((SqlPredicate.IsNull       )element),
-				QueryElementType.IsDistinctPredicate      => VisitIsDistinctPredicate       ((SqlPredicate.IsDistinct   )element),
-				QueryElementType.IsTruePredicate          => VisitIsTruePredicate           ((SqlPredicate.IsTrue       )element),
-				QueryElementType.InSubQueryPredicate      => VisitInSubQueryPredicate       ((SqlPredicate.InSubQuery   )element),
-				QueryElementType.InListPredicate          => VisitInListPredicate           ((SqlPredicate.InList       )element),
-				QueryElementType.FuncLikePredicate        => VisitFuncLikePredicate         ((SqlPredicate.FuncLike     )element),
-				QueryElementType.SqlQuery                 => VisitSqlQuery                  ((SelectQuery               )element),
-				QueryElementType.Column                   => VisitSqlColumnReference        ((SqlColumn                 )element),
-				QueryElementType.SearchCondition          => VisitSqlSearchCondition        ((SqlSearchCondition        )element),
-				QueryElementType.TableSource              => VisitSqlTableSource            ((SqlTableSource            )element),
-				QueryElementType.JoinedTable              => VisitSqlJoinedTable            ((SqlJoinedTable            )element),
-				QueryElementType.SelectClause             => VisitSqlSelectClause           ((SqlSelectClause           )element),
-				QueryElementType.InsertClause             => VisitSqlInsertClause           ((SqlInsertClause           )element),
-				QueryElementType.UpdateClause             => VisitSqlUpdateClause           ((SqlUpdateClause           )element),
-				QueryElementType.SetExpression            => VisitSqlSetExpression          ((SqlSetExpression          )element),
-				QueryElementType.FromClause               => VisitSqlFromClause             ((SqlFromClause             )element),
-				QueryElementType.WhereClause              => VisitSqlWhereClause            ((SqlWhereClause            )element),
-				QueryElementType.GroupByClause            => VisitSqlGroupByClause          ((SqlGroupByClause          )element),
-				QueryElementType.OrderByClause            => VisitSqlOrderByClause          ((SqlOrderByClause          )element),
-				QueryElementType.OrderByItem              => VisitSqlOrderByItem            ((SqlOrderByItem            )element),
-				QueryElementType.SetOperator              => VisitSqlSetOperator            ((SqlSetOperator            )element),
-				QueryElementType.WithClause               => VisitSqlWithClause             ((SqlWithClause             )element),
-				QueryElementType.CteClause                => VisitCteClause                 ((CteClause                 )element),
-				QueryElementType.SqlCteTable              => VisitSqlCteTable               ((SqlCteTable               )element),
-				QueryElementType.SqlRawSqlTable           => VisitSqlRawSqlTable            ((SqlRawSqlTable            )element),
-				QueryElementType.SqlValuesTable           => VisitSqlValuesTable            ((SqlValuesTable            )element),
-				QueryElementType.OutputClause             => VisitSqlOutputClause           ((SqlOutputClause           )element),
-				QueryElementType.SelectStatement          => VisitSqlSelectStatement        ((SqlSelectStatement        )element),
-				QueryElementType.InsertStatement          => VisitSqlInsertStatement        ((SqlInsertStatement        )element),
-				QueryElementType.InsertOrUpdateStatement  => VisitSqlInsertOrUpdateStatement((SqlInsertOrUpdateStatement)element),
-				QueryElementType.UpdateStatement          => VisitSqlUpdateStatement        ((SqlUpdateStatement        )element),
-				QueryElementType.DeleteStatement          => VisitSqlDeleteStatement        ((SqlDeleteStatement        )element),
-				QueryElementType.MergeStatement           => VisitSqlMergeStatement         ((SqlMergeStatement         )element),
-				QueryElementType.MultiInsertStatement     => VisitSqlMultiInsertStatement   ((SqlMultiInsertStatement   )element),
-				QueryElementType.ConditionalInsertClause  => VisitSqlConditionalInsertClause((SqlConditionalInsertClause)element),
-				QueryElementType.CreateTableStatement     => VisitSqlCreateTableStatement   ((SqlCreateTableStatement   )element),
-				QueryElementType.DropTableStatement       => VisitSqlDropTableStatement     ((SqlDropTableStatement     )element),
-				QueryElementType.TruncateTableStatement   => VisitSqlTruncateTableStatement ((SqlTruncateTableStatement )element),
-				QueryElementType.SqlTableLikeSource       => VisitSqlTableLikeSource        ((SqlTableLikeSource        )element),
-				QueryElementType.MergeOperationClause     => VisitSqlMergeOperationClause   ((SqlMergeOperationClause   )element),
-				QueryElementType.GroupingSet              => VisitSqlGroupingSet            ((SqlGroupingSet            )element),
-				QueryElementType.Comment                  => VisitSqlComment                ((SqlComment                )element),
-				QueryElementType.SqlExtension             => VisitSqlExtension              ((IQueryExtension           )element),
-				QueryElementType.SqlQueryExtension        => VisitSqlQueryExtension         ((SqlQueryExtension         )element),
+				QueryElementType.SqlField                  => VisitSqlFieldReference         ((SqlField                  )element),
+				QueryElementType.SqlFunction               => VisitSqlFunction               ((SqlFunction               )element),
+				QueryElementType.SqlParameter              => VisitSqlParameter              ((SqlParameter              )element),
+				QueryElementType.SqlExpression             => VisitSqlExpression             ((SqlExpression             )element),
+				QueryElementType.SqlNullabilityExpression  => VisitSqlNullabilityExpression  ((SqlNullabilityExpression  )element),
+				QueryElementType.SqlAnchor                 => VisitSqlAnchor                 ((SqlAnchor                 )element),
+				QueryElementType.SqlObjectExpression       => VisitSqlObjectExpression       ((SqlObjectExpression       )element),
+				QueryElementType.SqlBinaryExpression       => VisitSqlBinaryExpression       ((SqlBinaryExpression       )element),
+				QueryElementType.SqlValue                  => VisitSqlValue                  ((SqlValue                  )element),
+				QueryElementType.SqlDataType               => VisitSqlDataType               ((SqlDataType               )element),
+				QueryElementType.SqlTable                  => VisitSqlTable                  ((SqlTable                  )element),
+				QueryElementType.SqlAliasPlaceholder       => VisitSqlAliasPlaceholder       ((SqlAliasPlaceholder       )element),
+				QueryElementType.SqlRow                    => VisitSqlRow                    ((SqlRow                    )element),
+				QueryElementType.NotPredicate              => VisitNotPredicate              ((SqlPredicate.Not          )element),
+				QueryElementType.TruePredicate             => VisitTruePredicate             ((SqlPredicate.TruePredicate         )element),
+				QueryElementType.FalsePredicate            => VisitFalsePredicate            ((SqlPredicate.FalsePredicate        )element),
+				QueryElementType.ExprPredicate             => VisitExprPredicate             ((SqlPredicate.Expr         )element),
+				QueryElementType.NotExprPredicate          => VisitNotExprPredicate          ((SqlPredicate.NotExpr      )element),
+				QueryElementType.ExprExprPredicate         => VisitExprExprPredicate         ((SqlPredicate.ExprExpr     )element),
+				QueryElementType.LikePredicate             => VisitLikePredicate             ((SqlPredicate.Like         )element),
+				QueryElementType.SearchStringPredicate     => VisitSearchStringPredicate     ((SqlPredicate.SearchString )element),
+				QueryElementType.BetweenPredicate          => VisitBetweenPredicate          ((SqlPredicate.Between      )element),
+				QueryElementType.IsNullPredicate           => VisitIsNullPredicate           ((SqlPredicate.IsNull       )element),
+				QueryElementType.IsDistinctPredicate       => VisitIsDistinctPredicate       ((SqlPredicate.IsDistinct   )element),
+				QueryElementType.IsTruePredicate           => VisitIsTruePredicate           ((SqlPredicate.IsTrue       )element),
+				QueryElementType.InSubQueryPredicate       => VisitInSubQueryPredicate       ((SqlPredicate.InSubQuery   )element),
+				QueryElementType.InListPredicate           => VisitInListPredicate           ((SqlPredicate.InList       )element),
+				QueryElementType.FuncLikePredicate         => VisitFuncLikePredicate         ((SqlPredicate.FuncLike     )element),
+				QueryElementType.SqlQuery                  => VisitSqlQuery                  ((SelectQuery               )element),
+				QueryElementType.Column                    => VisitSqlColumnReference        ((SqlColumn                 )element),
+				QueryElementType.SearchCondition           => VisitSqlSearchCondition        ((SqlSearchCondition        )element),
+				QueryElementType.TableSource               => VisitSqlTableSource            ((SqlTableSource            )element),
+				QueryElementType.JoinedTable               => VisitSqlJoinedTable            ((SqlJoinedTable            )element),
+				QueryElementType.SelectClause              => VisitSqlSelectClause           ((SqlSelectClause           )element),
+				QueryElementType.InsertClause              => VisitSqlInsertClause           ((SqlInsertClause           )element),
+				QueryElementType.UpdateClause              => VisitSqlUpdateClause           ((SqlUpdateClause           )element),
+				QueryElementType.SetExpression             => VisitSqlSetExpression          ((SqlSetExpression          )element),
+				QueryElementType.FromClause                => VisitSqlFromClause             ((SqlFromClause             )element),
+				QueryElementType.WhereClause               => VisitSqlWhereClause            ((SqlWhereClause            )element),
+				QueryElementType.GroupByClause             => VisitSqlGroupByClause          ((SqlGroupByClause          )element),
+				QueryElementType.OrderByClause             => VisitSqlOrderByClause          ((SqlOrderByClause          )element),
+				QueryElementType.OrderByItem               => VisitSqlOrderByItem            ((SqlOrderByItem            )element),
+				QueryElementType.SetOperator               => VisitSqlSetOperator            ((SqlSetOperator            )element),
+				QueryElementType.WithClause                => VisitSqlWithClause             ((SqlWithClause             )element),
+				QueryElementType.CteClause                 => VisitCteClause                 ((CteClause                 )element),
+				QueryElementType.SqlCteTable               => VisitSqlCteTable               ((SqlCteTable               )element),
+				QueryElementType.SqlRawSqlTable            => VisitSqlRawSqlTable            ((SqlRawSqlTable            )element),
+				QueryElementType.SqlValuesTable            => VisitSqlValuesTable            ((SqlValuesTable            )element),
+				QueryElementType.OutputClause              => VisitSqlOutputClause           ((SqlOutputClause           )element),
+				QueryElementType.SelectStatement           => VisitSqlSelectStatement        ((SqlSelectStatement        )element),
+				QueryElementType.InsertStatement           => VisitSqlInsertStatement        ((SqlInsertStatement        )element),
+				QueryElementType.InsertOrUpdateStatement   => VisitSqlInsertOrUpdateStatement((SqlInsertOrUpdateStatement)element),
+				QueryElementType.UpdateStatement           => VisitSqlUpdateStatement        ((SqlUpdateStatement        )element),
+				QueryElementType.DeleteStatement           => VisitSqlDeleteStatement        ((SqlDeleteStatement        )element),
+				QueryElementType.MergeStatement            => VisitSqlMergeStatement         ((SqlMergeStatement         )element),
+				QueryElementType.MultiInsertStatement      => VisitSqlMultiInsertStatement   ((SqlMultiInsertStatement   )element),
+				QueryElementType.ConditionalInsertClause   => VisitSqlConditionalInsertClause((SqlConditionalInsertClause)element),
+				QueryElementType.CreateTableStatement      => VisitSqlCreateTableStatement   ((SqlCreateTableStatement   )element),
+				QueryElementType.DropTableStatement        => VisitSqlDropTableStatement     ((SqlDropTableStatement     )element),
+				QueryElementType.TruncateTableStatement    => VisitSqlTruncateTableStatement ((SqlTruncateTableStatement )element),
+				QueryElementType.SqlTableLikeSource        => VisitSqlTableLikeSource        ((SqlTableLikeSource        )element),
+				QueryElementType.MergeOperationClause      => VisitSqlMergeOperationClause   ((SqlMergeOperationClause   )element),
+				QueryElementType.GroupingSet               => VisitSqlGroupingSet            ((SqlGroupingSet            )element),
+				QueryElementType.Comment                   => VisitSqlComment                ((SqlComment                )element),
+				QueryElementType.SqlExtension              => VisitSqlExtension              ((IQueryExtension           )element),
+				QueryElementType.SqlInlinedExpression      => VisitSqlInlinedSqlExpression   ((SqlInlinedSqlExpression   )element),
+				QueryElementType.SqlInlinedToSqlExpression => VisitSqlInlinedToSqlExpression ((SqlInlinedToSqlExpression )element),
+				QueryElementType.SqlQueryExtension         => VisitSqlQueryExtension         ((SqlQueryExtension         )element),
 
 				_ => throw new InvalidOperationException()
 			};
@@ -204,6 +206,82 @@ namespace LinqToDB.SqlQuery
 		protected virtual ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
 			return (ISqlExpression)Visit(expression);
+		}
+
+		protected virtual IQueryElement VisitSqlInlinedSqlExpression(SqlInlinedSqlExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Parameter);
+					Visit(element.InlinedValue);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					var parameter    = (SqlParameter)Visit(element.Parameter);
+					var inlinedValue = (ISqlExpression)Visit(element.InlinedValue);
+					element.Modify(parameter, inlinedValue);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var parameter    = (SqlParameter)Visit(element.Parameter);
+					var inlinedValue = (ISqlExpression)Visit(element.InlinedValue);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Parameter, parameter) || !ReferenceEquals(element.InlinedValue, inlinedValue))
+					{
+						return NotifyReplaced(new SqlInlinedSqlExpression(parameter, inlinedValue), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected virtual IQueryElement VisitSqlInlinedToSqlExpression(SqlInlinedToSqlExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Parameter);
+					Visit(element.InlinedValue);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					var parameter    = (SqlParameter)Visit(element.Parameter);
+					var inlinedValue = (ISqlExpression)Visit(element.InlinedValue);
+					element.Modify(parameter, inlinedValue);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var parameter    = (SqlParameter)Visit(element.Parameter);
+					var inlinedValue = (ISqlExpression)Visit(element.InlinedValue);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Parameter, parameter) || !ReferenceEquals(element.InlinedValue, inlinedValue))
+					{
+						return NotifyReplaced(new SqlInlinedToSqlExpression(parameter, inlinedValue), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
 		}
 
 		private IQueryElement VisitSqlExtension(IQueryExtension element)

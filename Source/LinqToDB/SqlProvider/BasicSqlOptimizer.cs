@@ -8,10 +8,8 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Expressions;
-	using Linq;
 	using Mapping;
 	using SqlQuery;
-	using SqlQuery.Visitors;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -1507,6 +1505,9 @@ namespace LinqToDB.SqlProvider
 					}
 					break;
 				}
+				case QueryElementType.SqlInlinedExpression:
+				case QueryElementType.SqlInlinedToSqlExpression:
+					return true;
 			}
 
 			return false;
