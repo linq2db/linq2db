@@ -236,7 +236,7 @@ namespace LinqToDB.Expressions
 		public SqlGenericConstructorExpression(MethodCallExpression methodCall) : this()
 		{
 			ConstructorMethod = methodCall.Method;
-			ConstructType     = CreateType.New;
+			ConstructType     = CreateType.MethodCall;
 			ObjectType        = methodCall.Type;
 			Parameters        = GetMethodParameters(methodCall.Method, methodCall.Arguments);
 			Assignments       = Assignment.EmptyCollection;
@@ -380,14 +380,38 @@ namespace LinqToDB.Expressions
 			return result;
 		}
 
+		/// <summary>
+		/// Defines instance creation approach/method.
+		/// </summary>
 		public enum CreateType
 		{
+			/// <summary>
+			/// Default value, defines unknown creation type.
+			/// </summary>
 			Incompatible,
+			/// <summary>
+			/// Defines entity materialization with fields set based on database operation (exclude fields, ignored for INSERT or UPDATE).
+			/// </summary>
 			Auto,
+			/// <summary>
+			/// Defines entity materialization with all fields set.
+			/// </summary>
 			Full,
+			/// <summary>
+			/// Defines entity materialization with only key fields set.
+			/// </summary>
 			Keys,
+			/// <summary>
+			/// Object created using constructor call (<see cref="System.Linq.Expressions.NewExpression"/>).
+			/// </summary>
 			New,
+			/// <summary>
+			/// Object created using combination of constructor call and member init expressions (<see cref="MemberInitExpression"/>).
+			/// </summary>
 			MemberInit,
+			/// <summary>
+			/// Object created as a result of method call (<see cref="MethodCallExpression"/>).
+			/// </summary>
 			MethodCall
 		}
 

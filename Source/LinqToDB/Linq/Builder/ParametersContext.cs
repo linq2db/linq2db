@@ -345,15 +345,21 @@ namespace LinqToDB.Linq.Builder
 				(1, paramContext : this),
 				static (context, expr) =>
 				{
+					// !!! Code should be synched with ReplaceParameter !!!
+					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
+					{
+						return new TransformInfo(expr, true);
+					}
+
 					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var accessor, true))
 					{
 						if (accessor.Type != expr.Type)
 							accessor = Expression.Convert(accessor, expr.Type);
 
-						return accessor;
+						return new TransformInfo(accessor);
 					}
 
-					return expr;
+					return new TransformInfo(expr);
 				});
 
 			return result;
@@ -378,8 +384,12 @@ namespace LinqToDB.Linq.Builder
 				(forceConstant, columnDescriptor, (expression as MemberExpression)?.Member, result, setName, paramContext: this),
 				static (context, expr) =>
 				{
-					if (expr.NodeType == ExpressionType.Constant
-						&& (context.forceConstant || !expr.Type.IsConstantable(false) || !context.paramContext.CanBeConstant(expr)))
+					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
+					{
+						return new TransformInfo(expr, true);
+					}
+
+					if (expr.NodeType == ExpressionType.Constant)
 					{
 						var exprType = expr.Type;
 						if (context.paramContext.GetAccessorExpression(expr, out var val, false))
@@ -427,7 +437,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					return expr;
+					return new TransformInfo(expr);
 				});
 
 			return result;

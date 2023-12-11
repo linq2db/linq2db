@@ -26,6 +26,18 @@
 			return statement;
 		}
 
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions)
+		{
+			var result = base.FinalizeUpdate(statement, dataOptions);
+
+			if (result is SqlUpdateStatement updateStatement)
+			{
+				CorrectUpdateSetters(updateStatement);
+			}
+
+			return result;
+		}
+
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
 			return new ClickHouseSqlExpressionConvertVisitor(allowModify, ProviderOptions);

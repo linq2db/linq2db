@@ -793,6 +793,7 @@ namespace LinqToDB.Linq.Builder
 				case SqlGenericConstructorExpression.CreateType.Auto:
 				case SqlGenericConstructorExpression.CreateType.Keys:
 				case SqlGenericConstructorExpression.CreateType.New:
+				case SqlGenericConstructorExpression.CreateType.MethodCall:
 				{
 					return TryConstructObject(mappingSchema, constructorExpression, constructorExpression.ObjectType);
 				}
