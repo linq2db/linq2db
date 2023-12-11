@@ -73,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 					operation.Where = new SqlSearchCondition();
 
 					builder.BuildSearchCondition(mergeContext.SourceContext, predicateConditionCorrected,
-						ProjectFlags.SQL, operation.Where.Conditions);
+						ProjectFlags.SQL, operation.Where);
 				}
 
 				if (!deletePredicate.IsNullValue())
@@ -84,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 					operation.WhereDelete = new SqlSearchCondition();
 
 					builder.BuildSearchCondition(mergeContext.SourceContext, deleteConditionCorrected,
-						ProjectFlags.SQL, operation.WhereDelete.Conditions);
+						ProjectFlags.SQL, operation.WhereDelete);
 				}
 
 				return mergeContext;

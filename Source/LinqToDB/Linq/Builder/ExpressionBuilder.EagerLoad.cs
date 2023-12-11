@@ -289,7 +289,7 @@ namespace LinqToDB.Linq.Builder
 					if (predicateSql == null)
 						throw error!.CreateError();
 
-					clonedParentContext.SelectQuery.Where.ConcatSearchCondition(new SqlSearchCondition(new SqlCondition(false, predicateSql)));
+					clonedParentContext.SelectQuery.Where.EnsureConjunction().Add(predicateSql);
 				}
 
 				var orderByToApply = CollectOrderBy(correctedSequence);

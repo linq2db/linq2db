@@ -19,6 +19,9 @@
 		SqlAliasPlaceholder,
 		SqlRow,
 
+		NotPredicate,
+		TruePredicate, 
+		FalsePredicate,
 		ExprPredicate,
 		NotExprPredicate,
 		ExprExprPredicate,
@@ -35,7 +38,6 @@
 		SqlQuery,
 			Column,
 			SearchCondition,
-				Condition,
 			TableSource,
 				JoinedTable,
 

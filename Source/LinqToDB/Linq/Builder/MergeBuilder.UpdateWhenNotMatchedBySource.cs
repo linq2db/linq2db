@@ -45,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 
 					operation.Where = new SqlSearchCondition();
 
-					builder.BuildSearchCondition(mergeContext.TargetContext, conditionCorrected, ProjectFlags.SQL, operation.Where.Conditions);
+					builder.BuildSearchCondition(mergeContext.TargetContext, conditionCorrected, ProjectFlags.SQL, operation.Where);
 				}
 
 				return mergeContext;

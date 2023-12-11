@@ -112,13 +112,13 @@ namespace Tests.Linq
 				TestContext.WriteLine(proj1.ToString());
 				var sq1 = proj1.GetSelectQuery();
 				Assert.AreEqual(1, sq1.GetTableSource().Joins.Count);
-				Assert.AreEqual(0, sq1.GetWhere().Conditions.Count);
+				Assert.AreEqual(0, sq1.GetWhere().Predicates.Count);
 
 				var proj2 = q.Select(v => v.OrderDate);
 				TestContext.WriteLine(proj2.ToString());
 				var sq2 = proj2.GetSelectQuery();
 				Assert.AreEqual(1, sq2.GetTableSource().Joins.Count);
-				Assert.AreEqual(0, sq2.GetWhere().Conditions.Count);
+				Assert.AreEqual(0, sq2.GetWhere().Predicates.Count);
 			}
 		}
 
@@ -357,13 +357,13 @@ namespace Tests.Linq
 
 				var sql = q.GetSelectQuery();
 				Assert.AreEqual(1, sql.GetTableSource().Joins.Count);
-				Assert.AreEqual(2, sql.GetTableSource().Joins.First().Condition.Conditions.Count);
-				Assert.AreEqual(0, sql.GetWhere().Conditions.Count);
+				Assert.AreEqual(2, sql.GetTableSource().Joins.First().Condition.Predicates.Count);
+				Assert.AreEqual(0, sql.GetWhere().Predicates.Count);
 
 				var proj1 = q.Select(v => v.OrderID);
 				var sql1 = proj1.GetSelectQuery();
 				Assert.AreEqual(1, sql1.GetTableSource().Joins.Count);
-				Assert.AreEqual(0, sql1.GetWhere().Conditions.Count);
+				Assert.AreEqual(0, sql1.GetWhere().Predicates.Count);
 			}
 		}
 

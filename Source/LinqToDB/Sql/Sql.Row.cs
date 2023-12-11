@@ -82,8 +82,7 @@ namespace LinqToDB
 			{
 #pragma warning disable CS8604 // TODO:WAITFIX
 				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
-				builder.ResultExpression = new SqlSearchCondition(new SqlCondition(false,
-					new SqlPredicate.ExprExpr(args[0], SqlPredicate.Operator.Overlaps, args[1], false)));
+				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.ExprExpr(args[0], SqlPredicate.Operator.Overlaps, args[1], false));
 			}
 		}
 	}

@@ -1149,10 +1149,12 @@ namespace LinqToDB.Linq.Builder
 				if (_setOperation == SetOperation.Except || _setOperation == SetOperation.Intersect)
 					sql.Select.IsDistinct = true;
 
+				sql.Where.EnsureConjunction();
+
 				if (_setOperation == SetOperation.Except || _setOperation == SetOperation.ExceptAll)
-					sql.Where.Not.Exists(except);
+					sql.Where.SearchCondition.AddNotExists(except);
 				else
-					sql.Where.Exists(except);
+					sql.Where.SearchCondition.AddExists(except);
 
 				var sc = new SqlSearchCondition();
 
@@ -1161,14 +1163,12 @@ namespace LinqToDB.Linq.Builder
 					var column1 = _sequence1.SelectQuery.Select.Columns[i];
 					var column2 = _sequence2.SelectQuery.Select.Columns[i];
 
-					sc.Conditions.Add(new SqlCondition(false,
-						new SqlPredicate.ExprExpr(column1.Expression, SqlPredicate.Operator.Equal, column2.Expression,
-							Builder.DataOptions.LinqOptions.CompareNullsAsValues)));
+					sc.AddEqual(column1.Expression, column2.Expression, Builder.DataOptions.LinqOptions.CompareNullsAsValues);
 				}
 
 				_sequence2.SelectQuery.Select.Columns.Clear();
 
-				except.Where.EnsureConjunction().ConcatSearchCondition(sc);
+				except.Where.ConcatSearchCondition(sc);
 
 				sequence.SelectQuery.SetOperators.Clear();
 

@@ -8,33 +8,8 @@ namespace LinqToDB.SqlQuery
 	{
 		#region Join
 
-		public class Join : ConditionBase<Join,Join.Next>
+		public class Join
 		{
-			public class Next
-			{
-				internal Next(Join parent)
-				{
-					_parent = parent;
-				}
-
-				readonly Join _parent;
-
-				public Join Or  => _parent.SetOr(true);
-				public Join And => _parent.SetOr(false);
-
-				public static implicit operator Join(Next next)
-				{
-					return next._parent;
-				}
-			}
-
-			protected override SqlSearchCondition Search => JoinedTable.Condition;
-
-			protected override Next GetNext()
-			{
-				return new Next(this);
-			}
-
 			internal Join(JoinType joinType, ISqlTableSource table, string? alias, bool isWeak, ICollection<Join>? joins)
 			{
 				JoinedTable = new SqlJoinedTable(joinType, table, alias, isWeak);

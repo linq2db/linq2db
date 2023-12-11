@@ -70,6 +70,9 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlTable                 => VisitSqlTable                  ((SqlTable                  )element),
 				QueryElementType.SqlAliasPlaceholder      => VisitSqlAliasPlaceholder       ((SqlAliasPlaceholder       )element),
 				QueryElementType.SqlRow                   => VisitSqlRow                    ((SqlRow                    )element),
+				QueryElementType.NotPredicate             => VisitNotPredicate              ((SqlPredicate.Not          )element),
+				QueryElementType.TruePredicate            => VisitTruePredicate             ((SqlPredicate.TruePredicate         )element),
+				QueryElementType.FalsePredicate           => VisitFalsePredicate            ((SqlPredicate.FalsePredicate        )element),
 				QueryElementType.ExprPredicate            => VisitExprPredicate             ((SqlPredicate.Expr         )element),
 				QueryElementType.NotExprPredicate         => VisitNotExprPredicate          ((SqlPredicate.NotExpr      )element),
 				QueryElementType.ExprExprPredicate        => VisitExprExprPredicate         ((SqlPredicate.ExprExpr     )element),
@@ -85,7 +88,6 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlQuery                 => VisitSqlQuery                  ((SelectQuery               )element),
 				QueryElementType.Column                   => VisitSqlColumnReference        ((SqlColumn                 )element),
 				QueryElementType.SearchCondition          => VisitSqlSearchCondition        ((SqlSearchCondition        )element),
-				QueryElementType.Condition                => VisitSqlCondition              ((SqlCondition              )element),
 				QueryElementType.TableSource              => VisitSqlTableSource            ((SqlTableSource            )element),
 				QueryElementType.JoinedTable              => VisitSqlJoinedTable            ((SqlJoinedTable            )element),
 				QueryElementType.SelectClause             => VisitSqlSelectClause           ((SqlSelectClause           )element),
@@ -1683,59 +1685,28 @@ namespace LinqToDB.SqlQuery
 			return element;
 		}
 
-		protected virtual IQueryElement VisitSqlCondition(SqlCondition element)
-		{
-			switch (GetVisitMode(element))
-			{
-				case VisitMode.ReadOnly:
-				{
-					Visit(element.Predicate);
-					break;
-				}
-				case VisitMode.Modify:
-				{
-					element.Predicate = (ISqlPredicate)Visit(element.Predicate);
-					break;
-				}
-				case VisitMode.Transform:
-				{
-					var p = (ISqlPredicate)Visit(element.Predicate);
-					if (ShouldReplace(element) || !ReferenceEquals(element.Predicate, p))
-					{
-						return NotifyReplaced(new SqlCondition(element.IsNot, p, element.IsOr), element);
-					}
-
-					break;
-				}
-				default:
-					throw CreateInvalidVisitModeException();
-			}
-
-			return element;
-		}
-
 		protected virtual IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
 			switch (GetVisitMode(element))
 			{
 				case VisitMode.ReadOnly:
 				{
-					VisitElements(element.Conditions, VisitMode.ReadOnly);
+					VisitElements(element.Predicates, VisitMode.ReadOnly);
 					break;
 				}
 				case VisitMode.Modify:
 				{
-					VisitElements(element.Conditions, VisitMode.Modify);
+					VisitElements(element.Predicates, VisitMode.Modify);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var conditions = VisitElements(element.Conditions, VisitMode.Transform);
+					var predicates = VisitElements(element.Predicates, VisitMode.Transform);
 
-					if (ShouldReplace(element) || element.Conditions != conditions)
+					if (ShouldReplace(element) || element.Predicates != predicates)
 					{
-						return NotifyReplaced(new SqlSearchCondition(element.Conditions != conditions ? conditions : conditions.ToList()), element);
+						return NotifyReplaced(new SqlSearchCondition(element.IsOr, element.Predicates != predicates ? predicates : predicates.ToList()), element);
 					}
 
 					break;
@@ -2491,6 +2462,38 @@ namespace LinqToDB.SqlQuery
 
 			return element;
 		}
+
+		protected virtual IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
+		{
+			switch (GetVisitMode(predicate))
+			{
+				case VisitMode.ReadOnly:
+					Visit(predicate.Predicate);
+					break;
+				case VisitMode.Modify:
+					predicate.Modify((ISqlPredicate)Visit(predicate.Predicate));
+					break;
+				case VisitMode.Transform:
+				{
+					var p = (ISqlPredicate)Visit(predicate.Predicate);
+
+					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Predicate, p))
+					{
+						return NotifyReplaced(new SqlPredicate.Not(p), predicate);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return predicate;
+		}
+
+		protected virtual IQueryElement VisitTruePredicate(SqlPredicate.TruePredicate predicate) => predicate;
+
+		protected virtual IQueryElement VisitFalsePredicate(SqlPredicate.FalsePredicate predicate) => predicate;
 
 		protected virtual IQueryElement VisitSqlAliasPlaceholder(SqlAliasPlaceholder element) => element;
 

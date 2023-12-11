@@ -84,7 +84,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			if (subStrPredicate != null)
-				return new SqlSearchCondition(new SqlCondition(predicate.IsNot, subStrPredicate));
+			{
+				return subStrPredicate.MakeNot(predicate.IsNot);
+			}
 
 			return base.ConvertSearchStringPredicate(predicate);
 		}

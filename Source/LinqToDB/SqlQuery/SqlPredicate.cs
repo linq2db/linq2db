@@ -18,6 +18,121 @@ namespace LinqToDB.SqlQuery
 			Overlaps,       // x OVERLAPS y Is the operator used to test Overlaps operator.
 		}
 
+#if DEBUG
+		static readonly TruePredicate  _trueInstance  = new();
+		static readonly FalsePredicate _falseInstance = new();
+
+		public static TruePredicate True
+		{
+			get
+			{
+				return _trueInstance;
+			}
+		}
+
+		public static FalsePredicate False
+		{
+			get
+			{
+				return _falseInstance;
+			}
+		}
+#else
+		public static readonly TruePredicate True   = new();
+		public static readonly FalsePredicate False = new();
+#endif
+
+		public static ISqlPredicate MakeBool(bool isTrue)
+		{
+			return isTrue ? SqlPredicate.True : SqlPredicate.False;
+		}
+
+		public class Not : SqlPredicate
+		{
+			public Not(ISqlPredicate predicate) : base(SqlQuery.Precedence.LogicalNegation)
+			{
+				Predicate = predicate;
+			}
+
+			public ISqlPredicate Predicate { get; private set; }
+
+			public override QueryElementType ElementType => QueryElementType.NotPredicate;
+
+			public override bool          CanInvert() => false;
+			public override ISqlPredicate Invert()    => throw new InvalidOperationException();
+
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				if (other is not Not notPredicate)
+					return false;
+
+				return notPredicate.Predicate.Equals(notPredicate.Predicate, comparer);
+			}
+
+			public void Modify(ISqlPredicate predicate)
+			{
+				Predicate = predicate;
+			}
+
+			protected override void WritePredicate(QueryElementTextWriter writer)
+			{
+				writer.Append("NOT (");
+				writer.Append(Predicate);
+				writer.Append(')');
+			}
+		}
+
+		public class TruePredicate : SqlPredicate
+		{
+			public TruePredicate() : base(SqlQuery.Precedence.Primary)
+			{
+			}
+
+			public override QueryElementType ElementType => QueryElementType.TruePredicate;
+
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				if (other is not TruePredicate)
+					return false;
+
+				return true;
+			}
+
+			protected override void WritePredicate(QueryElementTextWriter writer)
+			{
+				writer.Append("True");
+			}
+
+			public override bool CanInvert() => true;
+			public override ISqlPredicate Invert() => False;
+		
+		}
+
+		public class FalsePredicate : SqlPredicate
+		{
+			public FalsePredicate() : base(SqlQuery.Precedence.Primary)
+			{
+			}
+
+			public override QueryElementType ElementType => QueryElementType.FalsePredicate;
+
+			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+			{
+				if (other is not TruePredicate)
+					return false;
+
+				return true;
+			}
+
+			protected override void WritePredicate(QueryElementTextWriter writer)
+			{
+				writer.Append("False");
+			}
+
+			public override bool          CanInvert() => true;
+			public override ISqlPredicate Invert()    => True;
+		}
+
 		public class Expr : SqlPredicate
 		{
 			public Expr(ISqlExpression exp1, int precedence)
@@ -34,6 +149,9 @@ namespace LinqToDB.SqlQuery
 
 			public ISqlExpression Expr1 { get; set; }
 
+			public override bool CanInvert() => false;
+			public override ISqlPredicate Invert() => throw new InvalidOperationException();
+
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is Expr expr
@@ -49,7 +167,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public abstract class BaseNotExpr : Expr, IInvertibleElement
+		public abstract class BaseNotExpr : Expr
 		{
 			protected BaseNotExpr(ISqlExpression exp1, bool isNot, int precedence)
 				: base(exp1, precedence)
@@ -59,9 +177,7 @@ namespace LinqToDB.SqlQuery
 
 			public bool IsNot { get; }
 
-			public virtual bool CanInvert() => true;
-
-			public abstract IQueryElement Invert();
+			public override bool CanInvert() => true;
 
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
@@ -85,7 +201,7 @@ namespace LinqToDB.SqlQuery
 			{
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new NotExpr(Expr1, !IsNot, Precedence);
 			}
@@ -95,7 +211,7 @@ namespace LinqToDB.SqlQuery
 
 		// { expression { = | <> | != | > | >= | ! > | < | <= | !< } expression
 		//
-		public class ExprExpr : Expr, IInvertibleElement
+		public class ExprExpr : Expr
 		{
 			public ExprExpr(ISqlExpression exp1, Operator op, ISqlExpression exp2, bool? withNull)
 				: base(exp1, SqlQuery.Precedence.Comparison)
@@ -158,42 +274,20 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			public bool CanInvert()
-			{
-				return true;
-			}
+			public override bool CanInvert() => true;
 
-			public IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
 
-			static ISqlExpression ReduceNullabilityExpression(ISqlExpression expression, NullabilityContext nullability)
-			{
-				if (expression is SqlBinaryExpression binary)
-				{
-					var left  = binary.Expr1.CanBeNullable(nullability);
-					var right = binary.Expr2.CanBeNullable(nullability);
-
-					if (left == right)
-						return expression;
-
-					if (left)
-						return ReduceNullabilityExpression(binary.Expr1, nullability);
-					if (right)
-						return ReduceNullabilityExpression(binary.Expr2, nullability);
-				}
-				else if (expression is SqlFunction func)
-				{
-					if (func.Name == PseudoFunctions.CONVERT)
-						return ReduceNullabilityExpression(func.Parameters[0], nullability);
-				}
-
-				return expression;
-			}
-
 			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context)
 			{
+				ISqlPredicate MakeWithoutNulls()
+				{
+					return new ExprExpr(Expr1, Operator, Expr2, null);
+				}
+
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
 					if (Expr1.TryEvaluateExpression(context, out var value1))
@@ -211,158 +305,68 @@ namespace LinqToDB.SqlQuery
 				if (WithNull == null)
 					return this;
 
-				var canBeNull_1 = nullability.CanBeNull(Expr1);
-				var canBeNull_2 = nullability.CanBeNull(Expr2);
+				if (!nullability.CanBeNull(Expr1) && !nullability.CanBeNull(Expr2))
+					return MakeWithoutNulls();
 
-				var isInverted = !WithNull.Value;
-
-				var predicate = new ExprExpr(Expr1, Operator, Expr2, null);
-
-				if (!canBeNull_1 && !canBeNull_2)
-					return predicate;
-
-				SqlSearchCondition? search = null;
-
-				var expr1Reduced = ReduceNullabilityExpression(Expr1, nullability);
-				var expr2Reduced = ReduceNullabilityExpression(Expr2, nullability);
-
-				if (Expr1.CanBeEvaluated(context))
+				if (WithNull.Value)
 				{
-					if (!Expr2.CanBeEvaluated(context))
+					if (Operator == Operator.Greater || Operator == Operator.Less)
+						return this;
+
+					if (Operator == Operator.NotEqual)
 					{
-						if (canBeNull_2)
-						{
-							if (isInverted)
-							{
-								if (Operator != Operator.Equal)
-								{
-									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-								}
-							}
-							else if (Operator == Operator.NotEqual)
-							{
-								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-							}
-						}
+						var search = new SqlSearchCondition(true)
+							.Add(MakeWithoutNulls())
+							.AddAnd(sc => sc
+								.Add(new IsNull(Expr1, false))
+								.Add(new IsNull(Expr2, true)))
+							.AddAnd(sc => sc
+								.Add(new IsNull(Expr1, true))
+								.Add(new IsNull(Expr2, false))
+							);
+					
+						return search;
 					}
-				}
-				else if (Expr2.CanBeEvaluated(context))
-				{
-					if (canBeNull_1)
+					else
 					{
-						if (isInverted)
-						{
-							if (Operator != Operator.Equal)
-							{
-								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
-							}
-						}
-						else if (Operator == Operator.NotEqual)
-						{
-							(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-							search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
-						}
+						var search = new SqlSearchCondition(true)
+							.Add(MakeWithoutNulls())
+							.AddAnd(sc => sc
+								.Add(new IsNull(Expr1, false))
+								.Add(new IsNull(Expr2, false))
+							);
+
+						return search;
 					}
 				}
 				else
 				{
-					if (canBeNull_2)
+					if (Operator == Operator.Equal)
+						return this;
+
+					if (Operator == Operator.NotEqual)
 					{
-						if (canBeNull_1)
-						{
-							if (isInverted)
-							{
-								if (Operator == Operator.Equal)
-								{
-									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
+						var search = new SqlSearchCondition(true)
+							.Add(MakeWithoutNulls())
+							.AddAnd(sc => sc
+								.Add(new IsNull(Expr1, false))
+								.Add(new IsNull(Expr2, true)))
+							.AddAnd(sc => sc
+								.Add(new IsNull(Expr1, true))
+								.Add(new IsNull(Expr2, false)));
 
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, true), true));
-
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, true), false));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-								}
-								else if (Operator == Operator.NotEqual)
-								{
-									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, true), true));
-
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, true), false));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-								}
-								else if (Operator == Operator.LessOrEqual || Operator == Operator.GreaterOrEqual)
-								{
-									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), true));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-								}
-								else
-								{
-									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-								}
-							}
-							else if (Operator == Operator.Equal)
-							{
-								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-							}
-							else if (Operator == Operator.NotEqual)
-							{
-								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, true), true));
-
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, true), false));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-							}
-						}
-						else
-							if (isInverted)
-							{
-								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-							}
+						return search;
 					}
 					else
 					{
-						if (canBeNull_1)
-						{
-							if (isInverted)
-							{
-								(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-								search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
-							}
-							else
-							{
-								if (Operator == Operator.NotEqual)
-								{
-									(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-									search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), true));
-								}
-							}
-						}
-						else
-						{
-							(search = new()).Conditions.Add(new SqlCondition(false, predicate, true));
-							search.Conditions.Add(new SqlCondition(false, new IsNull(expr1Reduced, false), false));
-							search.Conditions.Add(new SqlCondition(false, new IsNull(expr2Reduced, false), false));
-						}
+						var search = new SqlSearchCondition(true)
+							.Add(MakeWithoutNulls())
+							.Add(new IsNull(Expr1, false))
+							.Add(new IsNull(Expr2, false));
+
+						return search;
 					}
 				}
-
-				if (search == null)
-					return predicate;
-
-				return search;
 			}
 
 			public void Deconstruct(out ISqlExpression expr1, out Operator @operator, out ISqlExpression expr2, out bool? withNull)
@@ -400,7 +404,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new Like(Expr1, !IsNot, Expr2, Escape);
 			}
@@ -458,7 +462,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new SearchString(Expr1, !IsNot, Expr2, Kind, CaseSensitive);
 			}
@@ -515,7 +519,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
+			public override ISqlPredicate Invert() => new IsDistinct(Expr1, !IsNot, Expr2);
 
 			public override QueryElementType ElementType => QueryElementType.IsDistinctPredicate;
 
@@ -550,7 +554,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new Between(Expr1, !IsNot, Expr2, Expr3);
 			}
@@ -604,22 +608,23 @@ namespace LinqToDB.SqlQuery
 			{
 				if (Expr1.ElementType == QueryElementType.SearchCondition)
 				{
-					if (!IsNot)
-						return (ISqlPredicate)Expr1;
-					return new SqlSearchCondition(new SqlCondition(true, (ISqlPredicate)Expr1));
+					return ((ISqlPredicate)Expr1).MakeNot(IsNot);
 				}
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
 				if (WithNull == null || !Expr1.ShouldCheckForNull(nullability))
 					return predicate;
 
-				var search = new SqlSearchCondition();
-				search.Conditions.Add(new SqlCondition(false, predicate, WithNull.Value));
-				search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, !WithNull.Value), WithNull.Value));
+				var search = new SqlSearchCondition(WithNull.Value);
+
+				search.Predicates.Add(predicate);
+				search.Predicates.Add(new IsNull(Expr1, !WithNull.Value));
+
 				return search;
+				
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new IsTrue(Expr1, TrueValue, FalseValue, !WithNull, !IsNot);
 			}
@@ -636,7 +641,7 @@ namespace LinqToDB.SqlQuery
 			{
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new IsNull(Expr1, !IsNot);
 			}
@@ -679,7 +684,7 @@ namespace LinqToDB.SqlQuery
 					&& base.Equals(other, comparer);
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new InSubQuery(Expr1, !IsNot, SubQuery);
 			}
@@ -753,7 +758,7 @@ namespace LinqToDB.SqlQuery
 				return true;
 			}
 
-			public override IQueryElement Invert()
+			public override ISqlPredicate Invert()
 			{
 				return new InList(Expr1, !WithNull, !IsNot, Values);
 			}
@@ -801,6 +806,9 @@ namespace LinqToDB.SqlQuery
 				Function = function;
 			}
 
+			public override bool CanInvert() => false;
+			public override ISqlPredicate Invert() => throw new InvalidOperationException();
+
 			public override bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 			{
 				return other is FuncLike expr
@@ -824,7 +832,10 @@ namespace LinqToDB.SqlQuery
 
 		public int  Precedence { get; }
 
-		public abstract bool     Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer);
+		public abstract bool CanInvert();
+		public abstract ISqlPredicate Invert();
+
+		public abstract bool Equals(ISqlPredicate other, Func<ISqlExpression, ISqlExpression, bool> comparer);
 
 		#endregion
 

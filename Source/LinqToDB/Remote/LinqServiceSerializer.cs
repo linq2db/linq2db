@@ -1086,6 +1086,25 @@ namespace LinqToDB.Remote
 							break;
 						}
 
+					case QueryElementType.NotPredicate :
+						{
+							var elem = (SqlPredicate.Not)e;
+
+							Append(elem.Predicate);
+
+							break;
+						}
+
+					case QueryElementType.TruePredicate :
+						{
+							break;
+						}
+
+					case QueryElementType.FalsePredicate :
+						{
+							break;
+						}
+
 					case QueryElementType.ExprExprPredicate :
 						{
 							var elem = (SqlPredicate.ExprExpr)e;
@@ -1243,18 +1262,8 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SearchCondition :
 						{
-							Append(((SqlSearchCondition)e).Conditions);
-							break;
-						}
-
-					case QueryElementType.Condition :
-						{
-							var elem = (SqlCondition)e;
-
-							Append(elem.IsNot);
-							Append(elem.Predicate);
-							Append(elem.IsOr);
-
+							Append(((SqlSearchCondition)e).IsOr);
+							Append(((SqlSearchCondition)e).Predicates);
 							break;
 						}
 
@@ -1983,6 +1992,29 @@ namespace LinqToDB.Remote
 							break;
 						}
 
+					case QueryElementType.NotPredicate :
+						{
+							var predicate = Read<ISqlPredicate>()!;
+
+							obj = new SqlPredicate.Not(predicate);
+
+							break;
+						}
+
+					case QueryElementType.TruePredicate :
+						{
+							obj = SqlPredicate.True;
+
+							break;
+						}
+
+					case QueryElementType.FalsePredicate :
+						{
+							obj = SqlPredicate.False;
+
+							break;
+						}
+
 					case QueryElementType.ExprExprPredicate :
 						{
 							var expr1     = Read<ISqlExpression>()!;
@@ -2151,11 +2183,7 @@ namespace LinqToDB.Remote
 						}
 
 					case QueryElementType.SearchCondition :
-						obj = new SqlSearchCondition(ReadArray<SqlCondition>()!);
-						break;
-
-					case QueryElementType.Condition :
-						obj = new SqlCondition(ReadBool(), Read<ISqlPredicate>()!, ReadBool());
+						obj = new SqlSearchCondition(ReadBool(), ReadArray<ISqlPredicate>()!);
 						break;
 
 					case QueryElementType.TableSource :

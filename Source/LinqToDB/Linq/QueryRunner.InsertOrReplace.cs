@@ -263,8 +263,10 @@ namespace LinqToDB.Linq
 
 			var keys = firstStatement.Update.Keys;
 
+			var wsc = firstStatement.SelectQuery.Where.EnsureConjunction();
+
 			foreach (var key in keys)
-				firstStatement.SelectQuery.Where.Expr(key.Column).Equal.Expr(key.Expression!);
+				wsc.AddEqual(key.Column, key.Expression!, false);
 
 			// TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)

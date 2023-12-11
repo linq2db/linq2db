@@ -32,8 +32,7 @@ namespace LinqToDB.Linq.Builder
 
 					operation.Where = new SqlSearchCondition();
 
-					builder.BuildSearchCondition(mergeContext.SourceContext, conditionExpression, buildInfo.GetFlags(ProjectFlags.ForceOuterAssociation),
-						operation.Where.Conditions);
+					builder.BuildSearchCondition(mergeContext.SourceContext, conditionExpression, buildInfo.GetFlags(ProjectFlags.ForceOuterAssociation), operation.Where);
 				}
 
 				return mergeContext;

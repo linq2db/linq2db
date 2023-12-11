@@ -154,7 +154,7 @@ namespace LinqToDB.DataProvider.Firebird
 					throw new InvalidOperationException($"Unexpected predicate: {predicate.Kind}");
 			}
 
-			return new SqlSearchCondition(new SqlCondition(false, new SqlPredicate.Expr(expr)));
+			return new SqlSearchCondition(false, new SqlPredicate.Expr(expr));
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlFunction func)

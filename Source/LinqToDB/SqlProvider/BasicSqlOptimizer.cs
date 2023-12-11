@@ -226,14 +226,12 @@ namespace LinqToDB.SqlProvider
 
 			if (tableKeys != null && compareKeys != null)
 			{
-				searchCondition = searchCondition.EnsureConjunction();
 				for (var i = 0; i < tableKeys.Count; i++)
 				{
 					var tableKey = tableKeys[i];
 
 					found = true;
-					var compare = QueryHelper.GenerateEquality(tableKey, compareKeys[i], dataOptions.LinqOptions.CompareNullsAsValues);
-					searchCondition.Conditions.Add(compare);
+					searchCondition.AddEqual(tableKey, compareKeys[i], dataOptions.LinqOptions.CompareNullsAsValues);
 				}
 			}
 
@@ -243,7 +241,7 @@ namespace LinqToDB.SqlProvider
 
 		protected static void ApplyUpdateTableComparison(SelectQuery updateQuery, SqlUpdateClause updateClause, SqlTable inQueryTable, DataOptions dataOptions)
 		{
-			ApplyUpdateTableComparison(updateQuery.Where.SearchCondition, updateQuery, updateClause, inQueryTable, dataOptions);
+			ApplyUpdateTableComparison(updateQuery.Where.EnsureConjunction(), updateQuery, updateClause, inQueryTable, dataOptions);
 		}
 
 		protected virtual SqlUpdateStatement BasicCorrectUpdate(SqlUpdateStatement statement, DataOptions dataOptions, bool wrapForOutput)
@@ -309,7 +307,7 @@ namespace LinqToDB.SqlProvider
 
 							var originalColumn = keysColumns[index];
 
-							sc.Conditions.Add(QueryHelper.GenerateEquality((ISqlExpression)newField, originalColumn, dataOptions.LinqOptions.CompareNullsAsValues));
+							sc.AddEqual((ISqlExpression)newField, originalColumn, dataOptions.LinqOptions.CompareNullsAsValues);
 						}
 
 						if (!SqlProviderFlags.IsUpdateFromSupported)
@@ -331,7 +329,7 @@ namespace LinqToDB.SqlProvider
 						}
 						else
 						{
-							statement.SelectQuery.Where.EnsureConjunction().ConcatSearchCondition(sc);
+							statement.SelectQuery.Where.ConcatSearchCondition(sc);
 						}
 
 						for (var index = 0; index < statement.Update.Items.Count; index++)
@@ -768,38 +766,17 @@ namespace LinqToDB.SqlProvider
 				var tableKeys = table.GetKeys(true);
 				var copyKeys  = copy. GetKeys(true);
 
-				if (deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Any(static c => c.IsOr))
-				{
-					var sc1 = new SqlSearchCondition(deleteStatement.SelectQuery.Where.SearchCondition.Conditions);
-					var sc2 = new SqlSearchCondition();
+				var wsc = deleteStatement.SelectQuery.Where.EnsureConjunction();
 
-					if (tableKeys != null && copyKeys != null)
-					{
-						for (var i = 0; i < tableKeys.Count; i++)
-						{
-							sc2.Conditions.Add(new SqlCondition(
-								false,
-								new SqlPredicate.ExprExpr(
-									copyKeys[i],
-									SqlPredicate.Operator.Equal,
-									tableKeys[i],
-									dataOptions.LinqOptions.CompareNullsAsValues ? true : null)));
-						}
-					}
-
-					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Clear();
-					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
-					deleteStatement.SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
-				}
-				else
+				if (copyKeys == null || tableKeys == null)
 				{
-#pragma warning disable CS8602 // TODO:WAITFIX
-					for (var i = 0; i < tableKeys.Count; i++)
-						deleteStatement.SelectQuery.Where.Expr(copyKeys[i]).Equal.Expr(tableKeys[i]);
-#pragma warning restore CS8602
+					throw new LinqToDBException("Could not generate comparison between tables.");
 				}
 
-				newDeleteStatement.SelectQuery.From.Table(copy).Where.Exists(deleteStatement.SelectQuery);
+				for (var i = 0; i < tableKeys.Count; i++)
+					wsc.AddEqual(copyKeys[i], tableKeys[i], false);
+
+				newDeleteStatement.SelectQuery.From.Table(copy).Where.SearchCondition.AddExists(deleteStatement.SelectQuery);
 				newDeleteStatement.With = deleteStatement.With;
 
 				deleteStatement = newDeleteStatement;
@@ -853,7 +830,7 @@ namespace LinqToDB.SqlProvider
 						for (int j = 0; j < ts.Joins.Count; j++)
 						{
 							query.From.Tables.Insert(i + j, ts.Joins[j].Table);
-							query.Where.EnsureConjunction().ConcatSearchCondition(ts.Joins[j].Condition);
+							query.Where.ConcatSearchCondition(ts.Joins[j].Condition);
 						}
 
 						source.Joins.Clear();
@@ -872,7 +849,7 @@ namespace LinqToDB.SqlProvider
 							source = join.Table;
 
 							ts.Joins.RemoveAt(j);
-							query.Where.EnsureConjunction().ConcatSearchCondition(join.Condition);
+							query.Where.ConcatSearchCondition(join.Condition);
 
 							for (int sj = 0; j < join.Table.Joins.Count; j++)
 							{
@@ -1157,7 +1134,7 @@ namespace LinqToDB.SqlProvider
 
 				clonedQuery.RemoveNotUnusedColumns();
 
-				newUpdateStatement.SelectQuery.Where.Exists(clonedQuery);
+				newUpdateStatement.SelectQuery.Where.SearchCondition.AddExists(clonedQuery);
 
 				updateStatement.Update.Items.Clear();
 
@@ -1703,18 +1680,16 @@ namespace LinqToDB.SqlProvider
 
 					if (query.Select.SkipValue != null)
 					{
-						processingQuery.Where.EnsureConjunction().Expr(rowNumberColumn).Greater
-							.Expr(query.Select.SkipValue);
+						processingQuery.Where.EnsureConjunction().AddGreater(rowNumberColumn, query.Select.SkipValue, false);
 
 						if (query.Select.TakeValue != null)
-							processingQuery.Where.Expr(rowNumberColumn).LessOrEqual.Expr(
+							processingQuery.Where.SearchCondition.AddLessOrEqual(rowNumberColumn,
 								new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
-									query.Select.SkipValue, "+", query.Select.TakeValue));
+									query.Select.SkipValue, "+", query.Select.TakeValue), false);
 					}
 					else
 					{
-						processingQuery.Where.EnsureConjunction().Expr(rowNumberColumn).LessOrEqual
-							.Expr(query.Select.TakeValue!);
+						processingQuery.Where.EnsureConjunction().AddLessOrEqual(rowNumberColumn, query.Select.TakeValue!, false);
 					}
 
 					query.Select.SkipValue = null;
@@ -1806,7 +1781,7 @@ namespace LinqToDB.SqlProvider
 
 						q.Select.IsDistinct = false;
 						q.OrderBy.Items.Clear();
-						p.Select.Where.EnsureConjunction().Expr(rnColumn).Equal.Value(1);
+						p.Select.Where.EnsureConjunction().AddEqual(rnColumn, new SqlValue(1), false);
 					}
 					else
 					{

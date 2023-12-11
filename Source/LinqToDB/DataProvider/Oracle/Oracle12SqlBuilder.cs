@@ -34,10 +34,10 @@ namespace LinqToDB.DataProvider.Oracle
 			return true;
 		}
 
-		protected override bool BuildWhere(SelectQuery selectQuery)
+		protected override bool ShouldBuildWhere(SelectQuery selectQuery)
 		{
 			var condition = ConvertElement(selectQuery.Where.SearchCondition);
-			return condition.Conditions.Count != 0;
+			return condition.Predicates.Count != 0;
 		}
 
 		protected override string? LimitFormat(SelectQuery selectQuery)

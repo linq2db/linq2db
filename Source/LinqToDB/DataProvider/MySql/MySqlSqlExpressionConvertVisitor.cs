@@ -123,10 +123,7 @@ namespace LinqToDB.DataProvider.MySql
 
 				if (newPredicate != null)
 				{
-					if (predicate.IsNot)
-					{
-						newPredicate = new SqlSearchCondition(new SqlCondition(true, newPredicate));
-					}
+					newPredicate = newPredicate.MakeNot(predicate.IsNot);
 
 					return newPredicate;
 				}

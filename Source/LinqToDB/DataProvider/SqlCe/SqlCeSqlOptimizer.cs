@@ -149,10 +149,9 @@ namespace LinqToDB.DataProvider.SqlCe
 					var isTruePredicate = (SqlPredicate.IsTrue)e;
 					if (isTruePredicate.Expr1 is SelectQuery query && query.Select.Columns.Count == 1)
 					{
-						query.Select.Where.EnsureConjunction();
-						query.Select.Where.SearchCondition.Conditions.Add(new SqlCondition(false,
+						query.Select.Where.EnsureConjunction().Add(
 							new SqlPredicate.IsTrue(query.Select.Columns[0].Expression, isTruePredicate.TrueValue,
-								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot)));
+								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot));
 						query.Select.Columns.Clear();
 
 						return new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));

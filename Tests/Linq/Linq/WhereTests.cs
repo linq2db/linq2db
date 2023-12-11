@@ -1627,6 +1627,8 @@ namespace Tests.Linq
 
 				var sql = results.ToString()!;
 
+				TestContext.WriteLine(sql);
+
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
 					where c.ParentID == id

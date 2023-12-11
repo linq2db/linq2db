@@ -23,8 +23,8 @@
 		}
 	}
 
-	public abstract class ClauseBase<T1,T2> : ConditionBase<T1,T2>
-		where T1 : ClauseBase<T1,T2>
+	public abstract class ClauseBase<T1>
+		where T1 : ClauseBase<T1>
 	{
 		protected ClauseBase(SelectQuery? selectQuery)
 		{

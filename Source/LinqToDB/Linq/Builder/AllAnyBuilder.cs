@@ -78,11 +78,9 @@ namespace LinqToDB.Linq.Builder
 				if (_innerSql != null)
 					return _innerSql;
 
-				var cond = new SqlCondition(
-					_methodCall.Method.Name.StartsWith("All"),
-					new SqlPredicate.FuncLike(SqlFunction.CreateExists(Sequence.SelectQuery)));
-
-				var innerSql = ExpressionBuilder.CreatePlaceholder(Parent?.SelectQuery ?? SelectQuery, new SqlSearchCondition(cond), path, convertType: typeof(bool));
+				var predicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(Sequence.SelectQuery)).MakeNot(_methodCall.Method.Name.StartsWith("All"));
+				
+				var innerSql = ExpressionBuilder.CreatePlaceholder(Parent?.SelectQuery ?? SelectQuery, new SqlSearchCondition(false, predicate), path, convertType: typeof(bool));
 
 				if (flags.IsTest())
 				{

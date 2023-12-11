@@ -852,9 +852,9 @@ namespace LinqToDB.SqlQuery
 				if (QueryHelper.IsDependsOnOuterSources(sql, whereToIgnore))
 					return optimized;
 
-				var searchCondition = new List<SqlCondition>();
+				var searchCondition = new List<ISqlPredicate>();
 
-				var conditions = sql.Where.SearchCondition.Conditions;
+				var conditions = sql.Where.SearchCondition.Predicates;
 
 				var toIgnore       = new [] { joinTable };
 				var currentSources = new[] { joinTable.Table.Source };
@@ -887,27 +887,22 @@ namespace LinqToDB.SqlQuery
 
 					if (skipValue != null)
 					{
-						searchCondition.Add(new SqlCondition(false,
-							new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Greater, skipValue, null)));
+						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Greater, skipValue, null));
 
 						if (takeValue != null)
 						{
-							searchCondition.Add(new SqlCondition(false, new SqlPredicate.ExprExpr(rnColumn,
-								SqlPredicate.Operator.LessOrEqual, new SqlBinaryExpression(skipValue.SystemType!,
-									skipValue, "+", takeValue), null)));
+							searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, new SqlBinaryExpression(skipValue.SystemType!, skipValue, "+", takeValue), null));
 						}
 					}
 					else if (takeValue != null)
 					{
-						searchCondition.Add(new SqlCondition(false,
-							new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null)));
+						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null));
 
 					}
 					else if (sql.Select.IsDistinct)
 					{
 						sql.Select.IsDistinct = false;
-						searchCondition.Add(new SqlCondition(false,
-							new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Equal, new SqlValue(1), null)));
+						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.Equal, new SqlValue(1), null));
 					}
 				}
 
@@ -945,7 +940,7 @@ namespace LinqToDB.SqlQuery
 				var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
 
 				joinTable.JoinType = newJoinType;
-				joinTable.Condition.Conditions.AddRange(searchCondition);
+				joinTable.Condition.Predicates.AddRange(searchCondition);
 
 				optimized = true;
 			}
@@ -955,33 +950,12 @@ namespace LinqToDB.SqlQuery
 
 		static void ConcatSearchCondition(SqlWhereClause where1, SqlWhereClause where2)
 		{
-			if (where1.IsEmpty)
-			{
-				where1.SearchCondition.Conditions.AddRange(where2.SearchCondition.Conditions);
-			}
+			var sc = where1.EnsureConjunction();
+
+			if (!where2.SearchCondition.IsOr)
+				sc.Predicates.AddRange(where2.SearchCondition.Predicates);
 			else
-			{
-				if (where1.SearchCondition.Precedence < Precedence.LogicalConjunction)
-				{
-					var sc1 = new SqlSearchCondition();
-
-					sc1.Conditions.AddRange(where1.SearchCondition.Conditions);
-
-					where1.SearchCondition.Conditions.Clear();
-					where1.SearchCondition.Conditions.Add(new SqlCondition(false, sc1));
-				}
-
-				if (where2.SearchCondition.Precedence < Precedence.LogicalConjunction)
-				{
-					var sc2 = new SqlSearchCondition();
-
-					sc2.Conditions.AddRange(where2.SearchCondition.Conditions);
-
-					where1.SearchCondition.Conditions.Add(new SqlCondition(false, sc2));
-				}
-				else
-					where1.SearchCondition.Conditions.AddRange(where2.SearchCondition.Conditions);
-			}
+				sc.Predicates.Add(where2.SearchCondition);
 		}
 
 		bool IsColumnExpressionValid(SelectQuery parentQuery, NullabilityContext nullability, SelectQuery subQuery, SqlColumn column, ISqlExpression columnExpression)
@@ -1492,11 +1466,11 @@ namespace LinqToDB.SqlQuery
 			{
 				if (moveConditionToQuery)
 				{
-					selectQuery.Where.EnsureConjunction().SearchCondition.Conditions.AddRange(subQuery.Where.SearchCondition.Conditions);
+					selectQuery.Where.EnsureConjunction().Predicates.AddRange(subQuery.Where.SearchCondition.Predicates);
 				}
 				else
 				{
-					joinTable.Condition.EnsureConjunction().Conditions.AddRange(subQuery.Where.SearchCondition.Conditions);
+					joinTable.Condition.Predicates.AddRange(subQuery.Where.SearchCondition.Predicates);
 				}
 			}
 
@@ -1539,22 +1513,6 @@ namespace LinqToDB.SqlQuery
 				return element;
 
 			return element;
-		}
-
-		protected override IQueryElement VisitSqlCondition(SqlCondition element)
-		{
-			return base.VisitSqlCondition(element);
-		}
-
-		protected override IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
-		{
-			if (predicate is { IsNot: true, Expr1: IInvertibleElement invertible } && invertible.CanInvert())
-			{
-				var newNode = invertible.Invert();
-				return Visit(newNode);
-			}
-
-			return base.VisitNotExprPredicate(predicate);
 		}
 
 		bool OptimizeSubQueries(SelectQuery selectQuery)
@@ -1754,7 +1712,7 @@ namespace LinqToDB.SqlQuery
 				for (var joinIndex = 0; joinIndex < table.Joins.Count; joinIndex++)
 				{
 					var join = table.Joins[joinIndex];
-					if (join.JoinType == JoinType.Inner && join.Condition.Conditions.Count == 0)
+					if (join.JoinType == JoinType.Inner && join.Condition.Predicates.Count == 0)
 					{
 						selectQuery.From.Tables.Insert(tableIndex + 1, join.Table);
 						table.Joins.RemoveAt(joinIndex);

@@ -526,7 +526,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 				switch (join.JoinType)
 				{
-					case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
+					case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Predicates.IsNullOrEmpty() :
 					                      StringBuilder.Append($"CROSS {h} JOIN "); return false;
 					case JoinType.Inner : StringBuilder.Append($"INNER {h} JOIN "); return true;
 					case JoinType.Left  : StringBuilder.Append($"LEFT {h} JOIN ");  return true;

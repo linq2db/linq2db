@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 				var testPlaceholders     = ExpressionBuilder.CollectDistinctPlaceholders(testExpr);
 				var sequencePlaceholders = ExpressionBuilder.CollectDistinctPlaceholders(sequenceExpr);
 
-				SqlCondition cond;
+				ISqlPredicate predicate;
 
 				var placeholderQuery = OuterQuery;
 
@@ -157,7 +157,7 @@ namespace LinqToDB.Linq.Builder
 
 					var placeholder = Builder.UpdateNesting(placeholderContext, testPlaceholders[0]);
 
-					cond = new SqlCondition(false, new SqlPredicate.InSubQuery(placeholder.Sql, false, InnerSequence.SelectQuery));
+					predicate = new SqlPredicate.InSubQuery(placeholder.Sql, false, InnerSequence.SelectQuery);
 				}
 				else
 				{
@@ -168,10 +168,10 @@ namespace LinqToDB.Linq.Builder
 					if (sequence == null)
 						return null;
 
-					cond = new SqlCondition(false, new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery)));
+					predicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery));
 				}
 
-				var subQuerySql = new SqlSearchCondition(cond);
+				var subQuerySql = new SqlSearchCondition(false, predicate);
 
 				return ExpressionBuilder.CreatePlaceholder(placeholderQuery, subQuerySql, _methodCall, convertType: typeof(bool));
 			}

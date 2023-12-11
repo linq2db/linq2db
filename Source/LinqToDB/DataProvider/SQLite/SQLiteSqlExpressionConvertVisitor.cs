@@ -90,9 +90,9 @@ namespace LinqToDB.DataProvider.SQLite
 
 				if (subStrPredicate != null)
 				{
-					var result = new SqlSearchCondition(
-						new SqlCondition(false, like, predicate.IsNot),
-						new SqlCondition(predicate.IsNot, subStrPredicate));
+					var result = new SqlSearchCondition(predicate.IsNot,
+						like,
+						subStrPredicate.MakeNot(predicate.IsNot));
 
 					return result;
 				}
