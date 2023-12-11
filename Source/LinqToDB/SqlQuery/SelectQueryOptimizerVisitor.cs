@@ -999,7 +999,7 @@ namespace LinqToDB.SqlQuery
 
 			if (!parentQuery.GroupBy.IsEmpty)
 			{
-				if (null != parentQuery.GroupBy.Find(e => ReferenceEquals(e, column)))
+				if (parentQuery.GroupBy.HasElement(column))
 				{
 					if (QueryHelper.IsConstantFast(columnExpression))
 					{
@@ -1019,13 +1019,35 @@ namespace LinqToDB.SqlQuery
 			{
 				if (!parentQuery.Where.IsEmpty)
 				{
-					if (null != parentQuery.Where.Find(e => ReferenceEquals(e, column)))
-						return false;
+					if (parentQuery.Where.HasElement(column))
+					{
+						if (!subQuery.GroupBy.IsEmpty && parentQuery.Where.SearchCondition.IsAnd && QueryHelper.IsAggregationFunction(columnExpression) && !QueryHelper.IsWindowFunction(columnExpression))
+						{
+							// Trying to handle moving to Having
+							//
+							foreach (var p in parentQuery.Where.SearchCondition.Predicates)
+							{
+								if (p.HasElement(column))
+								{
+									if (p.ElementType != QueryElementType.ExprExprPredicate)
+										return false;
+
+									var exprExpr = (SqlPredicate.ExprExpr)p;
+									if (ReferenceEquals(QueryHelper.UnwrapNullablity(exprExpr.Expr1), column) || ReferenceEquals(QueryHelper.UnwrapNullablity(exprExpr.Expr2), column))
+										continue;
+
+									return false;
+								}
+							}
+						}
+						else
+							return false;
+					}
 				}
 
 				if (!parentQuery.Having.IsEmpty)
 				{
-					if (null != parentQuery.Having.Find(e => ReferenceEquals(e, column)))
+					if (parentQuery.Having.HasElement(column))
 						return false;
 				}
 			}
@@ -1255,10 +1277,12 @@ namespace LinqToDB.SqlQuery
 					return false;
 			}
 
-			if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsWindowFunction(c.Expression)))
 			{
 				if (!selectQuery.IsSimpleOrSet)
+				{
 					return false;
+				}
 			}
 
 			if (selectQuery == _inSubquery && subQuery.Select.HasModifier)
@@ -1299,15 +1323,39 @@ namespace LinqToDB.SqlQuery
 				subQuery.SetOperators.Clear();
 			}
 
-			if (!subQuery.Where.IsEmpty)
-			{
-				ConcatSearchCondition(selectQuery.Where, subQuery.Where);
-			}
-
 			if (!subQuery.GroupBy.IsEmpty)
 			{
 				selectQuery.GroupBy.Items.AddRange(subQuery.GroupBy.Items);
 				selectQuery.GroupBy.GroupingType = subQuery.GroupBy.GroupingType;
+
+				if (!selectQuery.Where.IsEmpty)
+				{
+					var hsc = selectQuery.Having.EnsureConjunction();
+					if (selectQuery.Where.SearchCondition.IsAnd)
+					{
+						foreach (var column in subQuery.Select.Columns)
+						{
+							if (QueryHelper.IsAggregationOrWindowFunction(column.Expression))
+							{
+								for (var i = 0; i < selectQuery.Where.SearchCondition.Predicates.Count; i++)
+								{
+									var p = selectQuery.Where.SearchCondition.Predicates[i];
+									if (p.HasElement(column) && p.ElementType == QueryElementType.ExprExprPredicate)
+									{
+										hsc.Add(p);
+										selectQuery.Where.SearchCondition.Predicates.RemoveAt(i);
+										--i;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			if (!subQuery.Where.IsEmpty)
+			{
+				ConcatSearchCondition(selectQuery.Where, subQuery.Where);
 			}
 
 			if (!subQuery.Having.IsEmpty)

@@ -1159,7 +1159,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		static bool IsWindowFunction(IQueryElement expr)
+		public static bool IsWindowFunction(IQueryElement expr)
 		{
 			if (expr is SqlExpression expression)
 				return (expression.Flags & SqlFlags.IsWindowFunction) != 0;
@@ -1173,6 +1173,19 @@ namespace LinqToDB.SqlQuery
 				return false;
 
 			return ContainsAggregationOrWindowFunctionDeep(expr);
+		}
+
+		public static bool ContainsWindowFunction(IQueryElement expr)
+		{
+			if (expr is SqlColumn)
+				return false;
+
+			return ContainsWindowFunctionDeep(expr);
+		}
+
+		static bool ContainsWindowFunctionDeep(IQueryElement expr)
+		{
+			return null != expr.Find(IsWindowFunction);
 		}
 
 		static bool ContainsAggregationOrWindowFunctionDeep(IQueryElement expr)
@@ -1493,6 +1506,11 @@ namespace LinqToDB.SqlQuery
 		public static bool HasTable(IQueryElement element, int sourceId)
 		{
 			return null != element.Find(e => e is SqlTableSource ts && ts.SourceID == sourceId);
+		}
+
+		public static bool HasElement(this IQueryElement root, IQueryElement element)
+		{
+			return null != root.Find(element, static (tf, e) => ReferenceEquals(tf, e));
 		}
 
 		public static void DebugCheckNesting(SqlStatement statement, bool isSubQuery)
