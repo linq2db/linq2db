@@ -602,7 +602,10 @@ namespace LinqToDB.SqlProvider
 
 		public virtual ISqlPredicate ConvertBetweenPredicate(SqlPredicate.Between between)
 		{
-			var newPredicate = new SqlSearchCondition().AddGreaterOrEqual(between.Expr1, between.Expr2, false).MakeNot(between.IsNot);
+			var newPredicate = new SqlSearchCondition()
+				.AddGreaterOrEqual(between.Expr1, between.Expr2, false)
+				.AddLessOrEqual(between.Expr1, between.Expr3, false)
+				.MakeNot(between.IsNot);
 
 			return newPredicate;
 		}
@@ -828,11 +831,15 @@ namespace LinqToDB.SqlProvider
 				var strictOp = op is SqlPredicate.Operator.Greater or SqlPredicate.Operator.GreaterOrEqual ? SqlPredicate.Operator.Greater : SqlPredicate.Operator.Less;
 				var values1 = row1.Values;
 				var values2 = row2.Values;
+
 				for (int i = 0; i < values1.Length; ++i)
 				{
 					var sub = new SqlSearchCondition();
 					for (int j = 0; j < i; j++)
-						sub.Add(new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], withNull: null));
+					{
+						sub.Add(new SqlPredicate.ExprExpr(values1[j], SqlPredicate.Operator.Equal, values2[j], withNull : null));
+					}
+
 					sub.Add(new SqlPredicate.ExprExpr(values1[i], i == values1.Length - 1 ? op : strictOp, values2[i], withNull: null));
 
 					rewrite.Add(sub);
