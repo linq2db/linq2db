@@ -259,16 +259,7 @@ namespace LinqToDB.SqlQuery
 			{
 				var tableKeys = ((ISqlTableSource)From.Tables[0]).GetKeys(allIfEmpty);
 
-				if (tableKeys == null)
-					return null;
-
-				var q =
-					from key in tableKeys
-					from col in Select.Columns
-					where  col.Expression.Equals(key)
-					select col as ISqlExpression;
-
-				return q.ToList();
+				return tableKeys;
 			}
 
 			return null;

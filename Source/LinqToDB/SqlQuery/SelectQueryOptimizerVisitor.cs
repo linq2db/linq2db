@@ -1787,7 +1787,7 @@ namespace LinqToDB.SqlQuery
 			return expression;
 		}
 
-		static bool IsLimitedToOneRecord(SelectQuery selectQuery, EvaluationContext context)
+		static bool IsLimitedToOneRecord(SelectQuery parentQuery, SelectQuery selectQuery, EvaluationContext context)
 		{
 			if (selectQuery.Select.TakeValue != null &&
 			    selectQuery.Select.TakeValue.TryEvaluateExpression(context, out var takeValue))
@@ -1806,6 +1806,45 @@ namespace LinqToDB.SqlQuery
 
 				if (selectQuery.Select.From.Tables.Count == 0)
 					return true;
+			}
+
+			if (!selectQuery.Where.IsEmpty)
+			{
+				var keys = new List<IList<ISqlExpression>>();
+				QueryHelper.CollectUniqueKeys(selectQuery, true, keys);
+
+				if (keys.Count > 0)
+				{
+					var outerSources = QueryHelper.EnumerateAccessibleSources(parentQuery)
+						.Where(s => s != selectQuery)
+						.ToList();
+
+					var innerSources = QueryHelper.EnumerateAccessibleSources(selectQuery).ToList();
+
+					var toIgnore = new List<ISqlTableSource>() { selectQuery };
+
+					var foundEquality = new List<ISqlExpression>();
+					foreach (var p in selectQuery.Where.SearchCondition.Predicates)
+					{
+						if (p is SqlPredicate.ExprExpr { Operator: SqlPredicate.Operator.Equal } equality)
+						{
+							var left  = QueryHelper.UnwrapNullablity(equality.Expr1);
+							var right = QueryHelper.UnwrapNullablity(equality.Expr2);
+
+							if (!left.Equals(right))
+							{
+								if (QueryHelper.IsDependsOnSources(left, outerSources, toIgnore) && QueryHelper.IsDependsOnSources(right, innerSources))
+									foundEquality.Add(right);
+								else if (QueryHelper.IsDependsOnSources(right, outerSources, toIgnore) && QueryHelper.IsDependsOnSources(left, innerSources))
+									foundEquality.Add(left);
+							}
+						}
+					}
+
+					// all keys should be matched
+					if (keys.Any(kl => kl.All(k => foundEquality.Contains(k))))
+						return true;
+				}
 			}
 
 			return false;
@@ -1865,6 +1904,25 @@ namespace LinqToDB.SqlQuery
 			_columnNestingCorrector.CorrectColumnNesting(query);
 		}
 
+		bool ProviderOuterCanHandleSeveralColumnsQuery(SelectQuery selectQuery)
+		{
+			if (_providerFlags.IsApplyJoinSupported)
+				return true;
+
+			if (_providerFlags.IsWindowFunctionsSupported)
+			{
+				if (!selectQuery.GroupBy.IsEmpty)
+				{
+					return false;
+				}
+
+				// provider can handle this query
+				return true;
+			}
+
+			return false;
+		}
+
 		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery)
 		{
 			if (!_providerFlags.IsSubQueryColumnSupported)
@@ -1888,18 +1946,19 @@ namespace LinqToDB.SqlQuery
 						{
 							evaluationContext ??= new EvaluationContext();
 
-							if (join.Table.Source is SelectQuery tsQuery &&
-							    tsQuery.Select.Columns.Count > 0 &&
-							    IsLimitedToOneRecord(tsQuery, evaluationContext))
+							if (join.Table.Source is SelectQuery tsQuery && tsQuery.Select.Columns.Count > 0)
 							{
-								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, forColumn: true, _providerFlags))
-									continue;
-
-								if (tsQuery.Select.Columns.Count > 1 && (_providerFlags.IsWindowFunctionsSupported || _providerFlags.IsApplyJoinSupported))
+								if (tsQuery.Select.Columns.Count > 1 && ProviderOuterCanHandleSeveralColumnsQuery(tsQuery))
 								{
 									// provider can handle this query
 									continue;
 								}
+
+								if (!IsLimitedToOneRecord(sq, tsQuery, evaluationContext))
+									continue;
+
+								if (!SqlProviderHelper.IsValidQuery(tsQuery, parentQuery: sq, forColumn: true, _providerFlags))
+									continue;
 
 								if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
 								{

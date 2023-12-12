@@ -1230,29 +1230,11 @@ namespace LinqToDB.SqlQuery
 						knownKeys.AddRange(selectQuery.UniqueKeys);
 
 					if (includeDistinct && selectQuery.Select.IsDistinct)
-						knownKeys.Add(selectQuery.Select.Columns.OfType<ISqlExpression>().ToList());
+						knownKeys.Add(selectQuery.Select.Columns.Select(c => c.Expression).ToList());
 
 					if (!selectQuery.Select.GroupBy.IsEmpty)
 					{
-						var columns = new List<ISqlExpression>();
-						foreach (var i in selectQuery.Select.GroupBy.Items)
-						{
-							SqlColumn? c = null;
-							foreach (var col in selectQuery.Select.Columns)
-							{
-								if (col.Expression.Equals(i))
-								{
-									c = col;
-									break;
-								}
-							}
-
-							if (c != null)
-								columns.Add(c);
-						}
-
-						if (columns.Count == selectQuery.Select.GroupBy.Items.Count)
-							knownKeys.Add(columns);
+						knownKeys.Add(selectQuery.Select.GroupBy.Items);
 					}
 
 					if (selectQuery.From.Tables.Count == 1)
