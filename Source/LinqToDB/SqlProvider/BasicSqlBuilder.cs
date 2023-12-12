@@ -2074,17 +2074,18 @@ namespace LinqToDB.SqlProvider
 
 				foreach (var ext in sqlQueryExtensions!)
 				{
-					if (ext.BuilderType != null)
+					var convertedExt = ConvertElement(ext);
+					if (convertedExt.BuilderType != null)
 					{
-						var extensionBuilder = GetExtensionBuilder(ext.BuilderType);
+						var extensionBuilder = GetExtensionBuilder(convertedExt.BuilderType!);
 
 						switch (extensionBuilder)
 						{
 							case ISqlQueryExtensionBuilder queryExtensionBuilder:
-								queryExtensionBuilder.Build(NullabilityContext, this, sb, ext);
+								queryExtensionBuilder.Build(NullabilityContext, this, sb, convertedExt);
 								break;
 							default:
-								throw new LinqToDBException($"Type '{ext.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
+								throw new LinqToDBException($"Type '{convertedExt.BuilderType.FullName}' must implement either '{typeof(ISqlQueryExtensionBuilder).FullName}' or '{typeof(ISqlTableExtensionBuilder).FullName}' interface.");
 						}
 					}
 
