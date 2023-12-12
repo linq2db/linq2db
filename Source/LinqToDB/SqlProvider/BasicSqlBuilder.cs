@@ -2550,21 +2550,6 @@ namespace LinqToDB.SqlProvider
 					BuildSearchCondition(predicate.Precedence, (SqlSearchCondition)predicate, wrapCondition : false);
 					break;
 
-				case QueryElementType.NotExprPredicate:
-					{
-						var p = (SqlPredicate.NotExpr)predicate;
-
-						if (p.IsNot)
-							StringBuilder.Append("NOT ");
-
-						BuildExpression(((SqlPredicate.NotExpr)predicate).IsNot
-								? Precedence.LogicalNegation
-								: GetPrecedence((SqlPredicate.NotExpr)predicate),
-							((SqlPredicate.NotExpr)predicate).Expr1);
-
-						break;
-					}
-
 				case QueryElementType.NotPredicate:
 					{
 						var p = (SqlPredicate.Not)predicate;

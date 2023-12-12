@@ -72,9 +72,7 @@ namespace LinqToDB.SqlProvider
 					    func.Parameters[2] is SqlSearchCondition sc                              &&
 					    func.Parameters[1].TryEvaluateExpression(_evaluationContext, out var v1) && v1 is null)
 					{
-						if (predicate.IsNot)
-							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
-						return sc;
+						return sc.MakeNot(predicate.IsNot);
 					}
 				}
 			}
@@ -593,7 +591,7 @@ namespace LinqToDB.SqlProvider
 								return new SqlValue(true);
 
 							if (!boolValue1.Value)
-								return new SqlSearchCondition(false, new SqlPredicate.NotExpr(parms[0], true, parms[0].Precedence));
+								return new SqlSearchCondition(false, new SqlPredicate.Expr(parms[0]).MakeNot());
 
 							return parms[0];
 						}
@@ -926,16 +924,7 @@ namespace LinqToDB.SqlProvider
 						if (bv == bv2 && expr.Operator == SqlPredicate.Operator.NotEqual ||
 							bv != bv1 && expr.Operator == SqlPredicate.Operator.Equal)
 						{
-							if (c1.Predicates[0] is SqlPredicate.ExprExpr ee)
-							{
-								return (ISqlPredicate)ee.Invert();
-							}
-
-							var sc = new SqlSearchCondition();
-
-							sc.Predicates.Add(sc.MakeNot(true));
-
-							return sc;
+							return c1.Predicates[0].MakeNot();
 						}
 					}
 				}
@@ -948,8 +937,10 @@ namespace LinqToDB.SqlProvider
 						if (Equals(value, v1))
 							return sc;
 
-						if (Equals(value, v2) && !sc.CanBeNull)
-							return new SqlPredicate.NotExpr(sc, true, Precedence.LogicalNegation);
+						if (Equals(value, v2))
+							return sc.MakeNot();
+
+						return SqlPredicate.False;
 					}
 				}
 			}

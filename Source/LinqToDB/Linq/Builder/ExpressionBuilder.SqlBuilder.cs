@@ -3320,7 +3320,7 @@ namespace LinqToDB.Linq.Builder
 							PreferExistsForScalar = save;
 						}
 
-						searchCondition.Add(notCondition.MakeNot(true));
+						searchCondition.Add(notCondition.MakeNot());
 					break;
 				}
 

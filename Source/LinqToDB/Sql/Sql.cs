@@ -710,7 +710,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str");
 
 				const string whiteSpaces = $"%[^{WHITESPACES}]%";
-				var predicate = new SqlPredicate.NotExpr(
+				var predicate = new SqlPredicate.Expr(
 					new SqlExpression(
 						typeof(bool),
 						"{0} SIMILAR TO {1}",
@@ -719,9 +719,8 @@ namespace LinqToDB
 						ParametersNullabilityType.NotNullable,
 						null,
 						str,
-						new SqlValue(typeof(string), whiteSpaces)),
-					true,
-					Precedence.LogicalNegation);
+						new SqlValue(typeof(string), whiteSpaces)))
+					.MakeNot();
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
@@ -740,7 +739,7 @@ namespace LinqToDB
 				var str = builder.GetExpression("str");
 
 				var whiteSpaces = $"[^{WHITESPACES}]";
-				var condition = new SqlPredicate.NotExpr(
+				var condition = new SqlPredicate.Expr(
 					new SqlExpression(
 						typeof(bool),
 						"{0} RLIKE {1}",
@@ -749,9 +748,8 @@ namespace LinqToDB
 						ParametersNullabilityType.NotNullable,
 						null,
 						str,
-						new SqlValue(typeof(string), whiteSpaces)),
-					true,
-					Precedence.LogicalNegation);
+						new SqlValue(typeof(string), whiteSpaces)))
+					.MakeNot();
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))

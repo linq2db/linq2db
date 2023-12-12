@@ -23,7 +23,6 @@
 		TruePredicate, 
 		FalsePredicate,
 		ExprPredicate,
-		NotExprPredicate,
 		ExprExprPredicate,
 		LikePredicate,
 		SearchStringPredicate,

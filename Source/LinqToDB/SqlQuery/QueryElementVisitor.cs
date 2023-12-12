@@ -74,7 +74,6 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.TruePredicate             => VisitTruePredicate             ((SqlPredicate.TruePredicate         )element),
 				QueryElementType.FalsePredicate            => VisitFalsePredicate            ((SqlPredicate.FalsePredicate        )element),
 				QueryElementType.ExprPredicate             => VisitExprPredicate             ((SqlPredicate.Expr         )element),
-				QueryElementType.NotExprPredicate          => VisitNotExprPredicate          ((SqlPredicate.NotExpr      )element),
 				QueryElementType.ExprExprPredicate         => VisitExprExprPredicate         ((SqlPredicate.ExprExpr     )element),
 				QueryElementType.LikePredicate             => VisitLikePredicate             ((SqlPredicate.Like         )element),
 				QueryElementType.SearchStringPredicate     => VisitSearchStringPredicate     ((SqlPredicate.SearchString )element),
@@ -2437,34 +2436,6 @@ namespace LinqToDB.SqlQuery
 					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, expr1) || !ReferenceEquals(predicate.Expr2, expr2))
 					{
 						return NotifyReplaced(new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull), predicate);
-					}
-
-					break;
-				}
-				default:
-					throw CreateInvalidVisitModeException();
-			}
-
-			return predicate;
-		}
-
-		protected virtual IQueryElement VisitNotExprPredicate(SqlPredicate.NotExpr predicate)
-		{
-			switch (GetVisitMode(predicate))
-			{
-				case VisitMode.ReadOnly:
-					Visit(predicate.Expr1);
-					break;
-				case VisitMode.Modify:
-					predicate.Expr1 = (ISqlExpression)Visit(predicate.Expr1);
-					break;
-				case VisitMode.Transform:
-				{
-					var e = (ISqlExpression)Visit(predicate.Expr1);
-
-					if (ShouldReplace(predicate) || !ReferenceEquals(predicate.Expr1, e))
-					{
-						return NotifyReplaced(new SqlPredicate.NotExpr(e, predicate.IsNot, predicate.Precedence), predicate);
 					}
 
 					break;

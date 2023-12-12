@@ -4,6 +4,11 @@ namespace LinqToDB.SqlQuery
 {
 	public static class PredicateExtensions
 	{
+		public static ISqlPredicate MakeNot(this ISqlPredicate predicate)
+		{
+			return predicate.MakeNot(true);
+		}
+
 		public static ISqlPredicate MakeNot(this ISqlPredicate predicate, bool isNot)
 		{
 			if (!isNot)
@@ -63,12 +68,12 @@ namespace LinqToDB.SqlQuery
 	
 		public static SqlSearchCondition AddNotExists(this SqlSearchCondition search, SelectQuery selectQuery)
 		{
-			return search.Add(new SqlPredicate.FuncLike(SqlFunction.CreateExists(selectQuery)).MakeNot(true));
+			return search.Add(new SqlPredicate.FuncLike(SqlFunction.CreateExists(selectQuery)).MakeNot());
 		}
 
 		public static SqlSearchCondition AddNot(this SqlSearchCondition search, ISqlExpression expression)
 		{
-			return search.Add(new SqlPredicate.Expr(expression).MakeNot(true));
+			return search.Add(new SqlPredicate.Expr(expression).MakeNot());
 		}
 	}
 }

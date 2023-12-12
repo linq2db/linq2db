@@ -194,21 +194,6 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public class NotExpr : BaseNotExpr
-		{
-			public NotExpr(ISqlExpression exp1, bool isNot, int precedence)
-				: base(exp1, isNot, precedence)
-			{
-			}
-
-			public override ISqlPredicate Invert()
-			{
-				return new NotExpr(Expr1, !IsNot, Precedence);
-			}
-
-			public override QueryElementType ElementType => QueryElementType.NotExprPredicate;
-		}
-
 		// { expression { = | <> | != | > | >= | ! > | < | <= | !< } expression
 		//
 		public class ExprExpr : Expr
