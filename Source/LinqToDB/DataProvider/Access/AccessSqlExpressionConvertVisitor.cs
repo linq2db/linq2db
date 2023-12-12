@@ -112,12 +112,9 @@ namespace LinqToDB.DataProvider.Access
 
 				if (subStrPredicate != null)
 				{
-					result = new SqlSearchCondition(false, like, subStrPredicate);
+					result = new SqlSearchCondition(predicate.IsNot, like, subStrPredicate.MakeNot(predicate.IsNot));
 				}
 			}
-
-			if (predicate.IsNot)
-				return new SqlPredicate.Not(result);
 
 			return result;
 		}
