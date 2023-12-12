@@ -2338,8 +2338,8 @@ namespace LinqToDB.Linq.Builder
 						var trueValue  = ConvertToSql(context, ExpressionInstances.True,  unwrap: false, columnDescriptor: descriptor);
 						var falseValue = ConvertToSql(context, ExpressionInstances.False, unwrap: false, columnDescriptor: descriptor);
 
-						if (trueValue.ElementType  != QueryElementType.SqlValue ||
-						    falseValue.ElementType != QueryElementType.SqlValue)
+						if (trueValue.ElementType  == QueryElementType.SqlValue &&
+						    falseValue.ElementType == QueryElementType.SqlValue)
 						{
 							var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
 							                    (isNullable || NeedNullCheck(expression))
