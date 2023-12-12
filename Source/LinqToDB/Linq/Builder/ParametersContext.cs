@@ -104,11 +104,11 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 
-					// non member accessors must be excluded from parameter deduplication:
+					// constants/default(T) must be excluded from parameter deduplication:
 					// constant value could change for next query execution which will lead to lost parameter
 					// see CharTrimming test inserts for such example
-					if (expr.NodeType == ExpressionType.MemberAccess && paramExpr.EqualsTo(expr,
-						    OptimizationContext.GetSimpleEqualsToContext(true, null)))
+					if (expr.NodeType != ExpressionType.Constant && expr.NodeType != ExpressionType.Default 
+						&& paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true, null)))
 					{
 						found = accessor;
 						break;
