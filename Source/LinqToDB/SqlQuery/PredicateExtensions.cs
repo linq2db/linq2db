@@ -65,5 +65,10 @@ namespace LinqToDB.SqlQuery
 		{
 			return search.Add(new SqlPredicate.FuncLike(SqlFunction.CreateExists(selectQuery)).MakeNot(true));
 		}
+
+		public static SqlSearchCondition AddNot(this SqlSearchCondition search, ISqlExpression expression)
+		{
+			return search.Add(new SqlPredicate.Expr(expression).MakeNot(true));
+		}
 	}
 }

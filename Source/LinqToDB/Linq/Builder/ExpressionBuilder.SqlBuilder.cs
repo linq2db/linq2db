@@ -2302,18 +2302,25 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (isEquality != null)
 				{
-					bool?           value      = null;
-					ISqlExpression? expression = null;
-					var             isNullable = false;
+					bool?           value;
+					ISqlExpression? expression  = null;
+					var             isNullable  = false;
+
 					if (IsBooleanConstant(left, out value))
 					{
-						isNullable = typeof(bool?) == left.Type || rOriginal.CanBeNullable(nullability);
-						expression = rOriginal;
+						isNullable  = typeof(bool?) == left.Type || rOriginal.CanBeNullable(nullability);
+						if (l.ElementType != QueryElementType.SqlParameter)
+						{
+							expression = rOriginal;
+						}
 					}
 					else if (IsBooleanConstant(right, out value))
 					{
-						isNullable = typeof(bool?) == right.Type || lOriginal.CanBeNullable(nullability);
-						expression = lOriginal;
+						isNullable        = typeof(bool?) == right.Type || lOriginal.CanBeNullable(nullability);
+						if (r.ElementType != QueryElementType.SqlParameter)
+						{
+							expression = lOriginal;
+						}
 					}
 
 					if (value != null
@@ -2331,11 +2338,15 @@ namespace LinqToDB.Linq.Builder
 						var trueValue  = ConvertToSql(context, ExpressionInstances.True,  unwrap: false, columnDescriptor: descriptor);
 						var falseValue = ConvertToSql(context, ExpressionInstances.False, unwrap: false, columnDescriptor: descriptor);
 
-						var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
-											(isNullable || NeedNullCheck(expression))
-							? withNull
-							: (bool?)null;
-						predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+						if (trueValue.ElementType  != QueryElementType.SqlValue ||
+						    falseValue.ElementType != QueryElementType.SqlValue)
+						{
+							var withNullValue = DataOptions.LinqOptions.CompareNullsAsValues &&
+							                    (isNullable || NeedNullCheck(expression))
+								? withNull
+								: (bool?)null;
+							predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
+						}
 					}
 				}
 

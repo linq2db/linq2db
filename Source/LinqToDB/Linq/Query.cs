@@ -491,14 +491,19 @@ namespace LinqToDB.Linq
 
 			var dataOptions = dataContext.Options;
 
-			if (dataOptions.LinqOptions.DisableQueryCache)
-				return CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext), dataContext, expr);
+			var useCache = !dataOptions.LinqOptions.DisableQueryCache;
 
-			var queryFlags = dataContext.GetQueryFlags();
+			QueryFlags queryFlags = QueryFlags.None;
+			Query<T>?  query      = null;
 
-			var query = _queryCache.Find(dataContext, expr, queryFlags, false);
-			if (query != null)
-				return query;
+			if (useCache)
+			{
+				queryFlags = dataContext.GetQueryFlags();
+
+				query = _queryCache.Find(dataContext, expr, queryFlags, false);
+				if (query != null)
+					return query;
+			}
 
 			// Expose expression, call all needed invocations.
 			// After execution there should be no constants which contains IDataContext reference, no constants with ExpressionQueryImpl
@@ -512,7 +517,7 @@ namespace LinqToDB.Linq
 			var isExposed = !ReferenceEquals(exposed, expr);
 
 			expr = exposed;
-			if (isExposed)
+			if (isExposed && useCache)
 			{
 				dependsOnParameters = true;
 
@@ -524,14 +529,17 @@ namespace LinqToDB.Linq
 					return query;
 			}
 
-			// Cache missed, Build query
-			//
-			_queryCache.TriggerCacheMiss();
+			if (useCache)
+			{
+				// Cache missed, Build query
+				//
+				_queryCache.TriggerCacheMiss();
+			}
 
 			query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext),
 				dataContext, expr);
 
-			if (!query.DoNotCache)
+			if (useCache && !query.DoNotCache)
 			{
 				// All non-value type parametrized expression will be transformed to constant. It prevents from caching big reference classes in cache.
 				//
