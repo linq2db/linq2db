@@ -1145,6 +1145,9 @@ namespace LinqToDB.SqlQuery
 			{
 				// Common check for Distincts
 
+				if (!subQuery.GroupBy.Having.IsEmpty)
+					return false;
+
 				if (subQuery.Select.SkipValue    != null || subQuery.Select.TakeValue    != null ||
 				    selectQuery.Select.SkipValue != null || selectQuery.Select.TakeValue != null)
 				{
