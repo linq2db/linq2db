@@ -178,6 +178,7 @@ namespace Tests.UserTests
 			return schema;
 		}
 
+		[Ignore("(sdanyliv): Why event such translations is possible. Decided to do not complicate translator with strange cases.")]
 		[Test]
 		public void Test5([DataSources] string context)
 		{
@@ -197,6 +198,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[Ignore("(sdanyliv): Why event such translations is possible. Decided to do not complicate translator with strange cases.")]
 		[Test]
 		public void Test7([DataSources] string context)
 		{
@@ -216,6 +218,7 @@ namespace Tests.UserTests
 			}
 		}
 
+		[Ignore("(sdanyliv): Why event such translations is possible. Decided to do not complicate translator with strange cases.")]
 		[Test]
 		public void Test9([DataSources] string context)
 		{
