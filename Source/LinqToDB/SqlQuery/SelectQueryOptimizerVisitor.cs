@@ -1941,6 +1941,13 @@ namespace LinqToDB.SqlQuery
 				for (var ti = 0; ti < sq.From.Tables.Count; ti++)
 				{
 					var table = sq.From.Tables[ti];
+
+					if (table.Source is SelectQuery tableQuery)
+					{
+						if (tableQuery.Select.HasModifier)
+							continue;
+					}
+
 					for (int j = table.Joins.Count - 1; j >= 0; j--)
 					{
 						var join = table.Joins[j];
