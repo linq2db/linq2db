@@ -138,6 +138,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			SetConvertExpression<string,SqlXml>(s => new SqlXml(new MemoryStream(Encoding.UTF8.GetBytes(s))));
 
+			AddScalarType(typeof(SqlChars),     SqlChars.   Null, true);
 			AddScalarType(typeof(SqlBinary),    SqlBinary.  Null, true, DataType.VarBinary);
 			AddScalarType(typeof(SqlBinary?),   SqlBinary.  Null, true, DataType.VarBinary);
 			AddScalarType(typeof(SqlBoolean),   SqlBoolean. Null, true, DataType.Boolean);

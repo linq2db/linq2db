@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			// missing:
 			// GetSqlBytes
-			// GetSqlChars
+			SetProviderField<SqlChars   , SqlChars   >(SqlTypes.GetSqlCharsReaderMethod   , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<SqlBinary  , SqlBinary  >(SqlTypes.GetSqlBinaryReaderMethod  , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<SqlBoolean , SqlBoolean >(SqlTypes.GetSqlBooleanReaderMethod , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<SqlByte    , SqlByte    >(SqlTypes.GetSqlByteReaderMethod    , dataReaderType: Adapter.DataReaderType);

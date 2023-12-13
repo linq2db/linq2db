@@ -1804,7 +1804,7 @@ namespace LinqToDB.SqlProvider
 
 				case QueryElementType.SqlRawSqlTable  :
 
-					var rawSqlTable = (SqlRawSqlTable)table;
+					var rawSqlTable = ConvertElement((SqlRawSqlTable)table);
 
 					var appendParentheses = _selectDetector.IsMatch(rawSqlTable.SQL);
 					var multiLine         = appendParentheses || rawSqlTable.SQL.Contains('\n');

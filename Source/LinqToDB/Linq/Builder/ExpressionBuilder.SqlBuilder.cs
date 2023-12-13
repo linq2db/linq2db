@@ -710,7 +710,12 @@ namespace LinqToDB.Linq.Builder
 			newExpr = MakeExpression(context, newExpr, flags);
 			newExpr = ConvertSingleExpression(newExpr, flags.IsExpression());
 
-			if (typeof(IToSqlConverter).IsSameOrParentOf(newExpr.Type))
+			var noConvert = newExpr.UnwrapConvert();
+			if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.Type) || typeof(ISqlExpression).IsSameOrParentOf(noConvert.Type))
+			{
+				sql = ConvertToInlinedSqlExpression(newExpr);
+			}
+			else if (typeof(IToSqlConverter).IsSameOrParentOf(newExpr.Type) || typeof(IToSqlConverter).IsSameOrParentOf(noConvert.Type))
 			{
 				sql = ConvertToSqlConvertible(newExpr);
 			}
@@ -725,19 +730,12 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (CanBeCompiled(newExpr, flags.IsExpression()))
 					{
-						if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.UnwrapConvert().Type))
-						{
-							sql = ConvertToInlinedSqlExpression(newExpr);
-						}
-						else
-						{
-							if (flags.IsKeys())
-								newExpr = ParseGenericConstructor(newExpr, flags, columnDescriptor);
+						if (flags.IsKeys())
+							newExpr = ParseGenericConstructor(newExpr, flags, columnDescriptor);
 
-							if (newExpr is not SqlGenericConstructorExpression)
-							{
-								sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias)?.SqlParameter;
-							}
+						if (newExpr is not SqlGenericConstructorExpression)
+						{
+							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias)?.SqlParameter;
 						}
 					}
 				}

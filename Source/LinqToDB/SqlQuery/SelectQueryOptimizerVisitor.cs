@@ -1985,17 +1985,16 @@ namespace LinqToDB.SqlQuery
 									
 									if (!IsUniqueUsage(sq, testedColumn))
 									{
-										if (!_providerFlags.IsApplyJoinSupported)
+										if (_providerFlags.IsApplyJoinSupported)
 										{
 											MoveDuplicateUsageToSubQuery(sq);
 											// will be processed in the next step
 											ti = -1;
 
+											isValid = false;
+
+											break;
 										}	
-
-										isValid = false;
-
-										break;
 									}
 
 									if (testedColumn.Expression is SqlFunction function)

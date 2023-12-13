@@ -573,6 +573,11 @@ namespace LinqToDB.Linq
 							if (constExpr.Value is Array)
 								return;
 
+#if !NET45
+							if (constExpr.Value is FormattableString)
+								return;
+#endif
+
 							throw new InvalidOperationException($"Constant '{e}' is not replaced.");
 						}
 					}
