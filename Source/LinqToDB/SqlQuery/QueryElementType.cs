@@ -96,5 +96,9 @@
 		/// Implemented by <see cref="SqlQuery.SqlQueryExtension"/>.
 		/// </summary>
 		SqlQueryExtension,
+
+		SqlCondition,
+		SqlCase,
+		SqlSimpleCase,
 	}
 }

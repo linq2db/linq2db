@@ -124,6 +124,7 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlInlinedExpression      => VisitSqlInlinedSqlExpression   ((SqlInlinedSqlExpression   )element),
 				QueryElementType.SqlInlinedToSqlExpression => VisitSqlInlinedToSqlExpression ((SqlInlinedToSqlExpression )element),
 				QueryElementType.SqlQueryExtension         => VisitSqlQueryExtension         ((SqlQueryExtension         )element),
+				QueryElementType.SqlCondition            => VisitSqlConditional            ((SqlConditionExpression         )element),
 
 				_ => throw new InvalidOperationException()
 			};
@@ -2928,6 +2929,52 @@ namespace LinqToDB.SqlQuery
 
 			return extension;
 		}
+
+		protected virtual IQueryElement VisitSqlConditional(SqlConditionExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Predicate);
+					Visit(element.TrueValue);
+					Visit(element.FalseValue);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(
+						(ISqlPredicate)Visit(element.Predicate),
+						(ISqlExpression)Visit(element.TrueValue),
+						(ISqlExpression)Visit(element.FalseValue)
+					);
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var predicate  = (ISqlPredicate)Visit(element.Predicate);
+					var trueValue  = (ISqlExpression)Visit(element.TrueValue);
+					var falseValue = (ISqlExpression)Visit(element.FalseValue);
+
+					if (ShouldReplace(element)                         || 
+					    element.Predicate != predicate                 || 
+					    !ReferenceEquals(element.TrueValue, trueValue) || 
+					    !ReferenceEquals(element.FalseValue, falseValue))
+					{
+						return NotifyReplaced(new SqlConditionExpression(predicate, trueValue, falseValue), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
 
 		#endregion
 
