@@ -429,7 +429,13 @@ namespace LinqToDB.Linq.Builder
 				if (valueExpression != null)
 				{
 					if (valueExpression.Unwrap() is LambdaExpression lambda)
+					{
 						valueExpression = lambda.Body;
+					}
+					else if (fieldExpression.Type != valueExpression.Type)
+					{
+						valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
+					}
 
 					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor);
 

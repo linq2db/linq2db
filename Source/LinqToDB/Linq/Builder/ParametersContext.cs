@@ -73,53 +73,60 @@ namespace LinqToDB.Linq.Builder
 			if (newAccessor == null)
 				return null;
 
-			// do replacing again for registering parametrized constants
-			ApplyAccessors(expr);
-
-			var found = newAccessor;
-
-			if (_parameters != null && !ReferenceEquals(newExpr.ValueExpression, expr))
+			if (!ReferenceEquals(newExpr.ValueExpression, expr))
 			{
-				foreach (var (paramExpr, column, accessor) in _parameters)
-				{
-					// build
-					if (!accessor.SqlParameter.Type.Equals(newAccessor.SqlParameter.Type))
-						continue;
+				// do replacing again for registering parametrized constants
+				var applied = ApplyAccessors(expr);
 
-					// we cannot merge parameters if they have defined ValueConverter
-					if (column != null && columnDescriptor != null)
+				// accessor is immutable, ww should not find duplicate
+				if (!ReferenceEquals(applied, expr))
+				{
+					var found = newAccessor;
+
+					if (_parameters != null)
 					{
-						if (!ReferenceEquals(column, columnDescriptor))
+						foreach (var (paramExpr, column, accessor) in _parameters)
 						{
-							if (column.ValueConverter != null || columnDescriptor.ValueConverter != null)
+							// build
+							if (!accessor.SqlParameter.Type.Equals(newAccessor.SqlParameter.Type))
 								continue;
+
+							// we cannot merge parameters if they have defined ValueConverter
+							if (column != null && columnDescriptor != null)
+							{
+								if (!ReferenceEquals(column, columnDescriptor))
+								{
+									if (column.ValueConverter != null || columnDescriptor.ValueConverter != null)
+										continue;
+								}
+							}
+							else if (!ReferenceEquals(column, columnDescriptor))
+								continue;
+
+							if (ReferenceEquals(paramExpr, expr))
+							{
+								found = accessor;
+								break;
+							}
+
+							// constants/default(T) must be excluded from parameter deduplication:
+							// constant value could change for next query execution which will lead to lost parameter
+							// see CharTrimming test inserts for such example
+							if (expr.NodeType != ExpressionType.Constant && expr.NodeType != ExpressionType.Default 
+							                                             && paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true, null)))
+							{
+								found = accessor;
+								break;
+							}
 						}
 					}
-					else if (!ReferenceEquals(column, columnDescriptor))
-						continue;
 
-					if (ReferenceEquals(paramExpr, expr))
-					{
-						found = accessor;
-						break;
-					}
-
-					// constants/default(T) must be excluded from parameter deduplication:
-					// constant value could change for next query execution which will lead to lost parameter
-					// see CharTrimming test inserts for such example
-					if (expr.NodeType != ExpressionType.Constant && expr.NodeType != ExpressionType.Default 
-						&& paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true, null)))
-					{
-						found = accessor;
-						break;
-					}
+					// We already have registered parameter for the same expression
+					//
+					if (!ReferenceEquals(found, newAccessor))
+						return found;
 				}
 			}
-
-			// We already have registered parameter for the same expression
-			//
-			if (!ReferenceEquals(found, newAccessor))
-				return found;
 
 			(_parameters ??= new()).Add((expr, columnDescriptor, newAccessor));
 			AddCurrentSqlParameter(newAccessor);
@@ -249,30 +256,38 @@ namespace LinqToDB.Linq.Builder
 			var originalAccessor = newExpr.ValueExpression;
 			if (buildParameterType != BuildParameterType.InPredicate)
 			{
-				var valueExpressionType = newExpr.ValueExpression.Type;
 				if (!newExpr.IsDataParameter)
 				{
 					if (columnDescriptor != null && originalAccessor is not BinaryExpression)
 					{
 						newExpr.DataType = columnDescriptor.GetDbDataType(true)
-							.WithSystemType(valueExpressionType);
+							.WithSystemType(newExpr.ValueExpression.Type);
 
-						if (valueExpressionType != columnDescriptor.MemberType)
+						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
 						{
-							newExpr.ValueExpression = newExpr.ValueExpression.UnwrapConvert()!;
-							valueExpressionType     = newExpr.ValueExpression.Type;
-
 							var memberType = columnDescriptor.MemberType;
+							var noConvert  = newExpr.ValueExpression.UnwrapConvert();
+							if (noConvert.Type != typeof(object))
+								newExpr.ValueExpression = noConvert;
+							else if (newExpr.ValueExpression.Type != valueExpression.Type)
+								newExpr.ValueExpression = Expression.Convert(noConvert, valueExpression.Type);
 
-							if (valueExpressionType != memberType)
+							if (newExpr.ValueExpression.Type != memberType)
 							{
-								if (!valueExpressionType.IsNullable() || valueExpressionType.ToNullableUnderlying() != memberType)
+								if (memberType.IsValueType ||
+								    !memberType.IsSameOrParentOf(newExpr.ValueExpression.Type))
 								{
-									var convertLambda = MappingSchema.GenerateSafeConvert(valueExpressionType,
-										memberType);
-									newExpr.ValueExpression =
-										InternalExtensions.ApplyLambdaToExpression(convertLambda,
-											newExpr.ValueExpression);
+									var convertLambda = MappingSchema.GetConvertExpression(newExpr.ValueExpression.Type, memberType, checkNull: true, createDefault: false);
+									if (convertLambda != null)
+									{
+										newExpr.ValueExpression = InternalExtensions.ApplyLambdaToExpression(convertLambda, newExpr.ValueExpression);
+									}
+								}
+
+								if (newExpr.ValueExpression.Type.IsNullable() && newExpr.ValueExpression.Type.ToNullableUnderlying() != memberType)
+								{
+									var convertLambda = MappingSchema.GenerateSafeConvert(newExpr.ValueExpression.Type, memberType);
+									newExpr.ValueExpression = InternalExtensions.ApplyLambdaToExpression(convertLambda, newExpr.ValueExpression);
 								}
 							}
 						}
@@ -294,10 +309,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						// Try GetConvertExpression<.., DataParameter>() first.
 						//
-						if (valueExpressionType != typeof(DataParameter))
+						if (newExpr.ValueExpression.Type != typeof(DataParameter))
 						{
 							LambdaExpression? convertExpr = null;
-							if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, valueExpressionType, out convertExpr))
+							if (buildParameterType == BuildParameterType.Default && !HasDbMapping(MappingSchema, newExpr.ValueExpression.Type, out convertExpr))
 							{
 								if (!doNotCheckCompatibility)
 									return null;
