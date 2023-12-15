@@ -39,6 +39,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Wcf", "..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj", "{4899DD08-E70C-4EAF-84F4-44D6EA80C567}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Metrics", "Metrics", "{F97CFE3B-CAF6-468C-8ECB-BEBAF7738D28}"
+	ProjectSection(SolutionItems) = preProject
+		Metrics\README.md = Metrics\README.md
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tools", "Metrics\Tools\Tools.csproj", "{8E19CD88-696F-42F0-8DAF-69D4FE502758}"
 EndProject

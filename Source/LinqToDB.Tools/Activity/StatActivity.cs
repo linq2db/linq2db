@@ -5,14 +5,9 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Tools.Activity
 {
-	sealed class StatActivity : IStatActivity
+	sealed class StatActivity(string name) : IStatActivity
 	{
-		public StatActivity(string name)
-		{
-			Name = name;
-		}
-
-		public string     Name    { get; }
+		public string Name { get; } = name;
 
 		private long     _elapsedTicks;
 		private TimeSpan _elapsed;
@@ -25,7 +20,7 @@ namespace LinqToDB.Tools.Activity
 		{
 			Interlocked.Increment(ref _callCount);
 
-			return Environment.OSVersion.Platform != PlatformID.Unix ? (IActivity)new Watcher(this) : new WatcherLowRes(this);
+			return Environment.OSVersion.Platform != PlatformID.Unix ? new Watcher(this) : new WatcherLowRes(this);
 		}
 
 		void Stop(Stopwatch stopwatch)
@@ -41,7 +36,7 @@ namespace LinqToDB.Tools.Activity
 #pragma warning restore CA2002 // Do not lock on objects with weak identity
 		}
 
-		sealed class Watcher : IActivity
+		sealed class Watcher : ActivityBase
 		{
 			readonly StatActivity _metric;
 			readonly Stopwatch    _stopwatch = new();
@@ -52,56 +47,21 @@ namespace LinqToDB.Tools.Activity
 				_metric = metric;
 			}
 
-			public void Dispose()
+			public override void Dispose()
 			{
 				_stopwatch.Stop();
 				_metric.Stop(_stopwatch);
 			}
-
-#if NATIVE_ASYNC
-			public ValueTask DisposeAsync()
-			{
-				Dispose();
-				return default;
-			}
-#else
-			public Task DisposeAsync()
-			{
-				Dispose();
-				return Task.FromResult(false);
-			}
-#endif
 		}
 
-		sealed class WatcherLowRes : IActivity
+		sealed class WatcherLowRes(StatActivity metric) : ActivityBase
 		{
-			readonly StatActivity _metric;
-			readonly DateTime     _time;
+			readonly DateTime _time = DateTime.Now;
 
-			public WatcherLowRes(StatActivity metric)
+			public override void Dispose()
 			{
-				_time   = DateTime.Now;;
-				_metric = metric;
+				metric.Stop(DateTime.Now - _time);
 			}
-
-			public void Dispose()
-			{
-				_metric.Stop(DateTime.Now - _time);
-			}
-
-#if NATIVE_ASYNC
-			public ValueTask DisposeAsync()
-			{
-				Dispose();
-				return default;
-			}
-#else
-			public Task DisposeAsync()
-			{
-				Dispose();
-				return Task.FromResult(false);
-			}
-#endif
 		}
 	}
 }

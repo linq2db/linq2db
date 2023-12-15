@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Tools.Activity
 {
-	public class ActivityHierarchy : IActivity
+	public class ActivityHierarchy : ActivityBase
 	{
 		readonly ActivityID              _activityID;
 		readonly string                  _name;
 		readonly Action<string>          _pushReport;
 		readonly ActivityHierarchy?      _parent;
-		readonly List<ActivityHierarchy> _children = new();
+		readonly List<ActivityHierarchy> _children = [];
 
 		int _count = 1;
 
@@ -19,9 +18,10 @@ namespace LinqToDB.Tools.Activity
 		{
 			_activityID = activityID;
 			_pushReport = pushReport;
-			_parent     = _current;
-			_current    = this;
+			_parent     = Current;
 			_name       = ActivityStatistics.GetStat(activityID).Name.TrimStart();
+
+			Current = this;
 
 			if (_parent != null)
 			{
@@ -46,15 +46,15 @@ namespace LinqToDB.Tools.Activity
 
 		static readonly System.Threading.AsyncLocal<ActivityHierarchy?> _currentImpl = new ();
 
-		static ActivityHierarchy? _current
+		static ActivityHierarchy? Current
 		{
 			get => _currentImpl.Value;
 			set => _currentImpl.Value = value;
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
-			_current = _parent;
+			Current = _parent;
 
 			if (_parent == null)
 			{
@@ -80,19 +80,5 @@ namespace LinqToDB.Tools.Activity
 				}
 			}
 		}
-
-#if NATIVE_ASYNC
-		public ValueTask DisposeAsync()
-		{
-			Dispose();
-			return default;
-		}
-#else
-		public Task DisposeAsync()
-		{
-			Dispose();
-			return Task.FromResult(false);
-		}
-#endif
 	}
 }

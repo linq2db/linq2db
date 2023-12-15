@@ -48,22 +48,16 @@ namespace OpenTelemetryExample
 			Sample              = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
 		};
 
-		sealed class LinqToDBActivity : IActivity
+		sealed class LinqToDBActivity : ActivityBase
 		{
 			Activity? _activity;
 
-			public void Dispose()
+			public override void Dispose()
 			{
 				_activity!.Dispose();
 				_activity = null;
 
 				_activityPool.Return(this);
-			}
-
-			public ValueTask DisposeAsync()
-			{
-				Dispose();
-				return ValueTask.CompletedTask;
 			}
 
 			static readonly ObjectPool<LinqToDBActivity> _activityPool =

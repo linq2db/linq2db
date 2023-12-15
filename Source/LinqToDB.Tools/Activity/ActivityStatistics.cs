@@ -7,8 +7,8 @@ namespace LinqToDB.Tools.Activity
 	{
 		static ActivityStatistics()
 		{
-			All = new IStatActivity[]
-			{
+			All =
+			[
 				QueryProviderExecuteT               = new("IQueryProvider.Execute<T>"),
 				QueryProviderExecute                = new("IQueryProvider.Execute"),
 				QueryProviderGetEnumeratorT         = new("IQueryProvider.GetEnumerator<T>"),
@@ -151,7 +151,7 @@ namespace LinqToDB.Tools.Activity
 				GetSqlText                          = new("  GetSqlText"),
 
 				null!
-			};
+			];
 
 			All[^1] = Total = new ("Total",
 				new []

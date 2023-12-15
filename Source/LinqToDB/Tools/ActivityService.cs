@@ -2,8 +2,14 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB.Tools
 {
+	/// <summary>
+	/// Provides API to register factory methods that return an Activity object or <c>null</c> for provided <see cref="ActivityID"/> event.
+	/// </summary>
+	[PublicAPI]
 	public static class ActivityService
 	{
 		internal static Func<ActivityID,IActivity?> Start { [MethodImpl(MethodImplOptions.AggressiveInlining)] get; private set; } = static _ => null;
@@ -26,18 +32,11 @@ namespace LinqToDB.Tools
 		}
 
 #if NATIVE_ASYNC
-		class AsyncDisposableWrapper : IAsyncDisposable
+		sealed class AsyncDisposableWrapper(ConfiguredAsyncDisposable configured) : IAsyncDisposable
 		{
-			readonly ConfiguredAsyncDisposable _configured;
-
-			public AsyncDisposableWrapper(ConfiguredAsyncDisposable configured)
-			{
-				_configured = configured;
-			}
-
 			public async ValueTask DisposeAsync()
 			{
-				await _configured.DisposeAsync();
+				await configured.DisposeAsync();
 			}
 		}
 
@@ -77,31 +76,18 @@ namespace LinqToDB.Tools
 			}
 		}
 
-		class MultiActivity : IActivity
+		sealed class MultiActivity(IActivity?[] activities) : ActivityBase
 		{
-			readonly IActivity?[] _activities;
-
-			public MultiActivity(IActivity?[] activities)
+			public override void Dispose()
 			{
-				_activities = activities;
-			}
-
-			public void Dispose()
-			{
-				foreach (var activity in _activities)
+				foreach (var activity in activities)
 					activity?.Dispose();
 			}
 
-#if !NATIVE_ASYNC
-			public virtual Task DisposeAsync()
+#if NATIVE_ASYNC
+			public override async ValueTask DisposeAsync()
 			{
-				Dispose();
-				return TaskEx.CompletedTask;
-			}
-#else
-			public async ValueTask DisposeAsync()
-			{
-				foreach (var activity in _activities)
+				foreach (var activity in activities)
 					if (activity is not null)
 						await activity.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
