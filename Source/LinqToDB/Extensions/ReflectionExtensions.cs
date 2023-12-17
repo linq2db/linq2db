@@ -870,6 +870,7 @@ namespace LinqToDB.Extensions
 				MemberTypes.Field       => ((FieldInfo)memberInfo).FieldType,
 				MemberTypes.Method      => ((MethodInfo)memberInfo).ReturnType,
 				MemberTypes.Constructor => memberInfo.DeclaringType!,
+				MemberTypes.Custom		=> ((MemberChainInfo)memberInfo).ReturnType,
 				_                       => throw new InvalidOperationException(),
 			};
 		}

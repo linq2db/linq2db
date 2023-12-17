@@ -209,13 +209,13 @@ namespace LinqToDB.Mapping
 				if (aa != null)
 				{
 					_associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, 
-						member.MemberInfo, 
-						aa.GetThisKeys(), 
+						TypeAccessor.Type,
+						member.MemberInfo,
+						aa.GetThisKeys(),
 						aa.GetOtherKeys(),
-						aa.ExpressionPredicate, 
-						aa.Predicate, 
-						aa.QueryExpressionMethod, 
+						aa.ExpressionPredicate,
+						aa.Predicate,
+						aa.QueryExpressionMethod,
 						aa.QueryExpression,
 						aa.Storage,
 						aa.AssociationSetterExpressionMethod,
@@ -274,6 +274,27 @@ namespace LinqToDB.Mapping
 					_calculatedMembers ??= new List<MemberAccessor>();
 					_calculatedMembers.Add(member);
 				}
+			}
+
+			var cattrs = MappingSchema.GetAttributes<CompositeAssociationAttribute>(TypeAccessor.Type);
+			foreach (var cat in cattrs)
+			{
+				var meminfo = (cat.CurrentExpression as LambdaExpression)?.Body.GetMemberChainInfo()
+						?? throw new InvalidOperationException($"Empty {nameof(cat.CurrentExpression)} in {nameof(CompositeAssociationAttribute)} for {nameof(TypeAccessor.Type)}");
+				_associations.Add(new AssociationDescriptor(
+					TypeAccessor.Type,
+					meminfo,
+					cat.GetThisKeys(),
+					cat.GetOtherKeys(),
+					cat.ExpressionPredicate,
+					cat.Predicate,
+					cat.QueryExpressionMethod,
+					cat.QueryExpression,
+					cat.Storage,
+					cat.AssociationSetterExpressionMethod,
+					cat.AssociationSetterExpression,
+					cat.ConfiguredCanBeNull,
+					cat.AliasName));
 			}
 
 			var typeColumnAttrs = MappingSchema.GetAttributes<ColumnAttribute>(TypeAccessor.Type);

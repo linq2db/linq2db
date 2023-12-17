@@ -3,6 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq
 {
 	public class AccessorMember
@@ -20,18 +22,25 @@ namespace LinqToDB.Linq
 
 		public AccessorMember(Expression expression)
 		{
+			Expression? subquery= null;
 			if (expression is MethodCallExpression mc)
 			{
 				MemberInfo = mc.Method;
-				Arguments  = mc.Arguments;
+				Arguments = mc.Arguments;
+				subquery = mc.Object;
 			}
 			else if (expression is MemberExpression ma)
 			{
 				MemberInfo = ma.Member;
+				subquery = ma.Expression;
 			}
 			else
 			{
 				throw new InvalidOperationException($"Expression '{expression}' cannot be used in association.");
+			}
+			if (subquery is MethodCallExpression || subquery is MemberExpression)
+			{
+				MemberInfo = expression.GetMemberChainInfo();
 			}
 		}
 
