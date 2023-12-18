@@ -12,14 +12,30 @@ namespace LinqToDB.Expressions
 	static class EqualsToVisitor
 	{
 		internal static bool EqualsTo(
-			this Expression                                           expr1,
-			Expression                                                expr2,
-			IDataContext                                              dataContext,
-			List<Expression>?                                         parametrizedExpressions,
-			IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
-			bool                                                      compareConstantValues = false)
+			this Expression                                                                                                                      expr1,
+			Expression                                                                                                                           expr2,
+			IDataContext                                                                                                                         dataContext,
+			List<Expression>?                                                                                                                    parametrizedExpressions,
+			List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates,
+			IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>?                                                                            queryableMemberAccessorDic,
+			bool                                                                                                                                 compareConstantValues = false)
 		{
-			return EqualsTo(expr1, expr2, PrepareEqualsInfo(dataContext, parametrizedExpressions, queryableMemberAccessorDic, compareConstantValues));
+			var result = EqualsTo(expr1, expr2, PrepareEqualsInfo(dataContext, parametrizedExpressions, queryableMemberAccessorDic, compareConstantValues));
+
+			if (result && parametersDuplicates != null)
+			{
+				foreach (var (main, substituted) in parametersDuplicates)
+				{
+					var value1 = main(expr2, dataContext, null);
+					var value2 = substituted(expr2, dataContext, null);
+					result = ReferenceEquals(value1, value2);
+
+					if (!result)
+						break;
+				}
+			}
+
+			return result;
 		}
 
 		/// <summary>
@@ -36,8 +52,7 @@ namespace LinqToDB.Expressions
 
 		internal sealed class EqualsToInfo
 		{
-			public EqualsToInfo(
-				IDataContext                                              dataContext,
+			public EqualsToInfo(IDataContext                              dataContext,
 				List<Expression>?                                         parametrizedExpressions,
 				IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
 				bool                                                      compareConstantValues)

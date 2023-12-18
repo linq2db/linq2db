@@ -1565,5 +1565,33 @@ namespace Tests.Linq
 						  && (c.MiddleName != null ? c.MiddleName.Trim().ToLower() : string.Empty) == (data.MiddleName != null ? data.MiddleName.Trim().ToLower() : string.Empty)
 						  select c).ToList();
 		}
+
+
+		int GetId(int id, int increment)
+		{
+			return id + increment;
+		}
+
+		/// <summary>
+		/// Tests that we do not have cache hit for similar parameters
+		/// </summary>
+		/// <param name="context"></param>
+		[Test]
+		public void Caching([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+
+				var query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
+				AssertQuery(query1);
+
+				id = 2;
+
+				var query2  = db.Parent.Where(x => x.ParentID == GetId(id, 1) || x.ParentID == GetId(id, 0));
+				AssertQuery(query2);
+			}
+		}
+
 	}
 }

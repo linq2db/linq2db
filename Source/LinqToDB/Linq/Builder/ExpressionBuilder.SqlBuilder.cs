@@ -593,9 +593,10 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<SqlCacheKey, Expression> _cachedSql        = new(SqlCacheKey.SqlCacheKeyComparer);
 
-		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, bool forExtension = false)
+		public SqlPlaceholderExpression ConvertToSqlPlaceholder(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, bool forExtension = false, bool forceParameter = false)
 		{
-			var expr = ConvertToSqlExpr(context, expression, flags, unwrap, columnDescriptor, isPureExpression : isPureExpression);
+			var expr = ConvertToSqlExpr(context, expression, flags, unwrap, columnDescriptor,
+				isPureExpression : isPureExpression, forceParameter : forceParameter);
 
 			if (expr is not SqlPlaceholderExpression placeholder)
 			{
@@ -608,9 +609,11 @@ namespace LinqToDB.Linq.Builder
 			return placeholder;
 		}
 
-		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, bool forExtension = false)
+		public ISqlExpression ConvertToSql(IBuildContext? context, Expression expression, ProjectFlags flags = ProjectFlags.SQL, bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, bool forExtension = false, bool forceParameter = false)
 		{
-			var placeholder = ConvertToSqlPlaceholder(context, expression, flags, unwrap: unwrap, columnDescriptor: columnDescriptor, isPureExpression: isPureExpression, forExtension: forExtension);
+			var placeholder = ConvertToSqlPlaceholder(context, expression, flags, unwrap : unwrap,
+				columnDescriptor : columnDescriptor, isPureExpression : isPureExpression, forExtension : forExtension,
+				forceParameter : forceParameter);
 
 			return placeholder.Sql;
 		}
@@ -629,42 +632,6 @@ namespace LinqToDB.Linq.Builder
 			return placeholder;
 		}
 
-		public bool TryGetAlreadyTranslated(IBuildContext? context, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out Expression? translated)
-		{
-			var cacheFlags = ProjectFlags.SQL;
-
-			var cacheKey = new SqlCacheKey(expression, null, columnDescriptor, context?.SelectQuery, cacheFlags);
-
-			if (_cachedSql.TryGetValue(cacheKey, out translated))
-			{
-				return true;
-			}
-
-			if (columnDescriptor == null)
-			{
-				var keysWithDescriptor = _cachedSql.Keys.Select(k =>
-					new SqlCacheKey(expression, null, k.ColumnDescriptor, context?.SelectQuery, cacheFlags));
-
-				foreach (var key in keysWithDescriptor)
-				{
-					if (_cachedSql.TryGetValue(key, out translated))
-					{
-						return true;
-					}
-				}
-			}
-
-			var xx = _cachedSql.Keys.ElementAtOrDefault(4);
-
-			if (xx.Expression != null)
-			{
-				var cachedHash = SqlCacheKey.SqlCacheKeyComparer.GetHashCode(xx);
-				var keyHas     = SqlCacheKey.SqlCacheKeyComparer.GetHashCode(cacheKey);
-			}
-
-			return false;
-		}
-
 		/// <summary>
 		/// Converts to Expression which may contain SQL or convert error.
 		/// </summary>
@@ -678,7 +645,7 @@ namespace LinqToDB.Linq.Builder
 		/// <returns></returns>
 		public Expression ConvertToSqlExpr(IBuildContext? context, Expression expression,
 			ProjectFlags flags = ProjectFlags.SQL,
-			bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false,
+			bool unwrap = false, ColumnDescriptor? columnDescriptor = null, bool isPureExpression = false, bool forceParameter = false,
 			string? alias = null)
 		{
 			if (expression is SqlPlaceholderExpression)
@@ -713,7 +680,22 @@ namespace LinqToDB.Linq.Builder
 			var noConvert = newExpr.UnwrapConvert();
 			if (typeof(ISqlExpression).IsSameOrParentOf(newExpr.Type) || typeof(ISqlExpression).IsSameOrParentOf(noConvert.Type))
 			{
-				sql = ConvertToInlinedSqlExpression(newExpr);
+				var valid = true;
+				if (newExpr is MethodCallExpression mc)
+				{
+					var type = mc.Object?.Type ?? mc.Method.DeclaringType;
+					if (type != null && MappingSchema.HasAttribute<Sql.ExpressionAttribute>(type, mc.Method))
+						valid = false;
+				}
+				else if (newExpr is MemberExpression me)
+				{
+					var type = me.Expression?.Type ?? me.Member.DeclaringType;
+					if (type != null && MappingSchema.HasAttribute<Sql.ExpressionAttribute>(type, me.Member))
+						valid = false;
+				}
+
+				if (valid)
+					sql = ConvertToInlinedSqlExpression(newExpr);
 			}
 			else if (typeof(IToSqlConverter).IsSameOrParentOf(newExpr.Type) || typeof(IToSqlConverter).IsSameOrParentOf(noConvert.Type))
 			{
@@ -724,7 +706,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!PreferServerSide(newExpr, false))
 				{
-					if (columnDescriptor?.ValueConverter == null && CanBeConstant(newExpr))
+					if (columnDescriptor?.ValueConverter == null && CanBeConstant(newExpr) && !forceParameter)
 					{
 						sql = BuildConstant(newExpr, columnDescriptor);
 					}
@@ -735,7 +717,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (newExpr is not SqlGenericConstructorExpression)
 						{
-							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias)?.SqlParameter;
+							sql = ParametersContext.BuildParameter(newExpr, columnDescriptor, alias : alias, forceNew: forceParameter)?.SqlParameter;
 						}
 					}
 				}
@@ -1269,13 +1251,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (!flags.IsExpression() && ParseGenericConstructor(expression, flags, columnDescriptor, true) is SqlGenericConstructorExpression transformed)
 					{
-						return ConvertToSqlExpr(context, transformed, flags, unwrap, columnDescriptor, isPureExpression, alias);
+						return ConvertToSqlExpr(context, transformed, flags, unwrap, columnDescriptor, isPureExpression : isPureExpression, alias : alias);
 					}
 
 					var converted = ConvertSingleExpression(expression, flags.IsExpression());
 					if (!ReferenceEquals(converted, expression))
 					{
-						return ConvertToSqlExpr(context, converted, flags, unwrap, columnDescriptor, isPureExpression, alias);
+						return ConvertToSqlExpr(context, converted, flags, unwrap, columnDescriptor, isPureExpression : isPureExpression, alias : alias);
 					}
 
 					break;
@@ -1291,7 +1273,7 @@ namespace LinqToDB.Linq.Builder
 							} || m != ConvertBuilder.DefaultConverter;
 
 					var ps = new ISqlExpression[switchExpression.Cases.Count * 2 + (d? 1 : 0)];
-					var svExpr = ConvertToSqlExpr(context, switchExpression.SwitchValue, flags, unwrap, columnDescriptor, isPureExpression, alias);
+					var svExpr = ConvertToSqlExpr(context, switchExpression.SwitchValue, flags, unwrap, columnDescriptor, isPureExpression, alias : alias);
 					if (svExpr is not SqlPlaceholderExpression svPlaceholder)
 						return SqlErrorExpression.EnsureError(svExpr, switchExpression.Type);
 					var sv = svPlaceholder.Sql;
@@ -1301,7 +1283,7 @@ namespace LinqToDB.Linq.Builder
 						var sc = new SqlSearchCondition(true);
 						foreach (var testValue in switchExpression.Cases[i].TestValues)
 						{
-							var testValueExpr = ConvertToSqlExpr(context, testValue, flags, unwrap, columnDescriptor, isPureExpression, alias);
+							var testValueExpr = ConvertToSqlExpr(context, testValue, flags, unwrap, columnDescriptor, isPureExpression, alias : alias);
 							if (testValueExpr is not SqlPlaceholderExpression testPlaceholder)
 								return SqlErrorExpression.EnsureError(testValueExpr, switchExpression.Type);
 
@@ -1513,7 +1495,7 @@ namespace LinqToDB.Linq.Builder
 			sqlValue = MappingSchema.GetSqlValue(expr.Type, value);
 
 			_constants.Add(key, sqlValue);
-
+			
 			return sqlValue;
 		}
 

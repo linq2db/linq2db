@@ -392,7 +392,7 @@ namespace LinqToDB.Linq.Builder
 			void Register(Expression expr)
 			{
 				if (!expr.Type.IsScalar() && CanBeCompiled(expr, true))
-					ParametersContext.ApplyAccessors(expr);
+					ParametersContext.ApplyAccessors(expr, true);
 
 			}
 

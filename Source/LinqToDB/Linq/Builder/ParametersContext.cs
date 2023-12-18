@@ -16,8 +16,11 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class ParametersContext
 	{
-		public ParametersContext(Expression parametersExpression, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
+		readonly object?[]? _parameterValues;
+
+		public ParametersContext(Expression parametersExpression, object?[]? parameterValues, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
 		{
+			_parameterValues     = parameterValues;
 			ParametersExpression = parametersExpression;
 			OptimizationContext  = optimizationContext;
 			DataContext          = dataContext;
@@ -44,6 +47,15 @@ namespace LinqToDB.Linq.Builder
 
 		internal List<(Expression Expression, ColumnDescriptor? Column, ParameterAccessor Accessor)>? _parameters;
 
+		internal List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? _parametersDuplicateCheck;
+
+		internal void RegisterDuplicateParameter(Expression expression, Func<Expression, IDataContext?, object?[]?, object?> mainAccessor, Func<Expression, IDataContext?, object?[]?, object?> substitutedAccessor)
+		{
+			_parametersDuplicateCheck ??= new();
+
+			_parametersDuplicateCheck.Add((mainAccessor, substitutedAccessor));
+		}
+
 		internal void AddCurrentSqlParameter(ParameterAccessor parameterAccessor)
 		{
 			var idx = CurrentSqlParameters.Count;
@@ -62,6 +74,7 @@ namespace LinqToDB.Linq.Builder
 			ColumnDescriptor?  columnDescriptor,
 			bool               forceConstant           = false,
 			bool               doNotCheckCompatibility = false,
+			bool               forceNew                = false,
 			string?            alias                   = null,
 			BuildParameterType buildParameterType      = BuildParameterType.Default)
 		{
@@ -73,13 +86,16 @@ namespace LinqToDB.Linq.Builder
 			if (newAccessor == null)
 				return null;
 
-			if (!ReferenceEquals(newExpr.ValueExpression, expr))
-			{
-				// do replacing again for registering parametrized constants
-				var applied = ApplyAccessors(expr);
+			// do replacing again for registering parametrized constants
+			ApplyAccessors(expr, true);
 
-				// accessor is immutable, ww should not find duplicate
-				if (!ReferenceEquals(applied, expr))
+			if (!forceNew && !ReferenceEquals(newExpr.ValueExpression, expr))
+			{
+				// check that expression is not just compilable expression
+				var hasAccessors = HasAccessors(expr);
+
+				// we can find duplicates in this case
+				if (hasAccessors)
 				{
 					var found = newAccessor;
 
@@ -109,11 +125,7 @@ namespace LinqToDB.Linq.Builder
 								break;
 							}
 
-							// constants/default(T) must be excluded from parameter deduplication:
-							// constant value could change for next query execution which will lead to lost parameter
-							// see CharTrimming test inserts for such example
-							if (expr.NodeType != ExpressionType.Constant && expr.NodeType != ExpressionType.Default 
-							                                             && paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true, null)))
+							if (paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true, null)))
 							{
 								found = accessor;
 								break;
@@ -124,7 +136,11 @@ namespace LinqToDB.Linq.Builder
 					// We already have registered parameter for the same expression
 					//
 					if (!ReferenceEquals(found, newAccessor))
+					{
+						// registers duplicate parameter check for expression cache
+						RegisterDuplicateParameter(expr, found.ValueAccessor, newAccessor.ValueAccessor);
 						return found;
+					}
 				}
 			}
 
@@ -277,6 +293,8 @@ namespace LinqToDB.Linq.Builder
 								newExpr.ValueExpression = noConvert;
 							else if (newExpr.ValueExpression.Type != valueExpression.Type)
 								newExpr.ValueExpression = Expression.Convert(noConvert, valueExpression.Type);
+							else if (newExpr.ValueExpression.Type == typeof(object))
+								newExpr.ValueExpression = Expression.Convert(noConvert, memberType);
 
 							if (newExpr.ValueExpression.Type != memberType)
 							{
@@ -367,10 +385,10 @@ namespace LinqToDB.Linq.Builder
 			public DbDataType DataType;
 		}
 
-		public Expression ApplyAccessors(Expression expression)
+		public Expression ApplyAccessors(Expression expression, bool register)
 		{
 			var result = expression.Transform(
-				(1, paramContext : this),
+				(1, paramContext : this, register),
 				static (context, expr) =>
 				{
 					// !!! Code should be synched with ReplaceParameter !!!
@@ -379,7 +397,7 @@ namespace LinqToDB.Linq.Builder
 						return new TransformInfo(expr, true);
 					}
 
-					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var accessor, true))
+					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var accessor, context.register))
 					{
 						if (accessor.Type != expr.Type)
 							accessor = Expression.Convert(accessor, expr.Type);
@@ -388,6 +406,30 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					return new TransformInfo(expr);
+				});
+
+			return result;
+		}
+
+		public bool HasAccessors(Expression expression)
+		{
+			var result = false;
+			expression.Transform(
+				(1, paramContext : this),
+				(context, expr) =>
+				{
+					// !!! Code should be synched with ReplaceParameter !!!
+					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
+					{
+						return new TransformInfo(expr, true);
+					}
+
+					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var _, false))
+					{
+						result = true;
+					}
+
+					return new TransformInfo(expr, result);
 				});
 
 			return result;
@@ -626,12 +668,10 @@ namespace LinqToDB.Linq.Builder
 
 		List<Expression>? _parametrized;
 
-		public List<Expression>? GetParametrized() => _parametrized;
+		public List<Expression>?                   GetParametrized()  => _parametrized;
 
-		public void MarkAsParameter(ConstantExpression expression)
-		{
-			AddAsParametrized(expression);
-		}
+		public List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? GetParameterDuplicates() 
+			=> _parametersDuplicateCheck;
 
 		public bool CanBeConstant(Expression expr)
 		{

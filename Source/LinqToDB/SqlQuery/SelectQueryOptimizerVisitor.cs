@@ -1178,11 +1178,10 @@ namespace LinqToDB.SqlQuery
 						return false;
 					}
 
-					// if (subQuery.Select.Columns.Count != selectQuery.Select.Columns.Count)
-					// {
-					// 	return false;
-					// }
-
+					if (selectQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
+					{
+						return false;
+					}
 				}
 				else
 				{
@@ -1942,16 +1941,10 @@ namespace LinqToDB.SqlQuery
 				{
 					var table = sq.From.Tables[ti];
 
-					if (table.Source is SelectQuery tableQuery)
-					{
-						if (tableQuery.Select.HasModifier)
-							continue;
-					}
-
 					for (int j = table.Joins.Count - 1; j >= 0; j--)
 					{
 						var join = table.Joins[j];
-						if (join.JoinType == JoinType.OuterApply || join.JoinType == JoinType.CrossApply ||
+						if (join.JoinType == JoinType.OuterApply ||
 						    join.JoinType == JoinType.Left)
 						{
 							evaluationContext ??= new EvaluationContext();

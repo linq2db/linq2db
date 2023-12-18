@@ -745,7 +745,7 @@ namespace LinqToDB.Linq.Builder
 
 			Expression ApplyAccessors(Expression expression)
 			{
-				var result = Builder.ParametersContext.ApplyAccessors(expression);
+				var result = Builder.ParametersContext.ApplyAccessors(expression, true);
 				return result;
 			}
 

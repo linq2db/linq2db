@@ -198,6 +198,7 @@ namespace LinqToDB.Linq.Builder
 
 			_query.SetPreambles(preambles);
 			_query.SetParametrized(_parametersContext.GetParametrized());
+			_query.SetParametersDuplicates(_parametersContext.GetParameterDuplicates());
 
 			return (Query<T>)_query;
 		}
@@ -546,48 +547,7 @@ namespace LinqToDB.Linq.Builder
 
 		public object? EvaluateExpression(Expression? expression)
 		{
-			if (expression == null)
-				return null;
-
-			// Shortcut for constants
-			if (expression.NodeType == ExpressionType.Constant)
-				return ((ConstantExpression)expression).Value;
-
-			var expr = expression.Transform(e =>
-			{
-				if (e is SqlQueryRootExpression root)
-				{
-					if (((IConfigurationID)root.MappingSchema).ConfigurationID ==
-					    ((IConfigurationID)DataContext.MappingSchema).ConfigurationID)
-					{
-						return Expression.Constant(DataContext, e.Type);
-					}
-				}
-				else if (e.NodeType == ExpressionType.ArrayIndex)
-				{
-					if (ParameterValues != null)
-					{
-						var arrayIndexExpr = (BinaryExpression)e;
-
-						var index = EvaluateExpression(arrayIndexExpr.Right) as int?;
-						if (index != null)
-						{
-							return Expression.Constant(ParameterValues[index.Value]);
-						}
-					}
-				}
-				else if (e.NodeType == ExpressionType.Parameter)
-				{
-					if (e == ExpressionConstants.DataContextParam)
-					{
-						return Expression.Constant(DataContext, e.Type);
-					}
-				}
-
-				return e;
-			});
-
-			return expr.EvaluateExpression();
+			return EvaluationHelper.EvaluateExpression(expression, DataContext, ParameterValues);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

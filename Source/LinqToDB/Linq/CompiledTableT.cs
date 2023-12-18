@@ -42,7 +42,7 @@ namespace LinqToDB.Linq
 
 					var query               = new Query<T>(ctx.dataContext, exposed);
 
-					var parametersContext = new ParametersContext(exposed, optimizationContext, ctx.dataContext);
+					var parametersContext = new ParametersContext(exposed, ctx.parameterValues, optimizationContext, ctx.dataContext);
 
 					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
 						.Build<T>();

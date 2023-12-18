@@ -459,11 +459,7 @@ namespace LinqToDB.Linq.Builder
 				var extractExp = SequenceHelper.PrepareBody(extract, insertContext.Into);
 				var updateExpr = update;
 
-				if (updateExpr is ConstantExpression constantExpr)
-				{
-					builder.ParametersContext.MarkAsParameter(constantExpr);
-				}
-				else if (updateExpr is LambdaExpression updateLambda)
+				if (updateExpr is LambdaExpression updateLambda)
 				{
 					updateExpr = SequenceHelper.PrepareBody(updateLambda, sequence);
 				}

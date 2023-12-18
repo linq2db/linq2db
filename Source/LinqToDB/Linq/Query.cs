@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -73,11 +74,13 @@ namespace LinqToDB.Linq
 				InlineParameters        == dataContext.InlineParameters                                                 &&
 				ContextType             == dataContext.GetType()                                                        &&
 				IsEntityServiceProvided == dataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} } &&
-				Expression!.EqualsTo(expr, dataContext, _parametrized, _queryableMemberAccessorDic);
+				Expression!.EqualsTo(expr, dataContext, _parametrized, _parametersDuplicates, _queryableMemberAccessorDic);
 		}
 
-		private  Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
-		private  List<Expression>?                                _parametrized;
+		Dictionary<MemberInfo, QueryableMemberAccessor>? _queryableMemberAccessorDic;
+		List<Expression>?                                _parametrized;
+
+		List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? _parametersDuplicates;
 
 		internal bool IsFastCacheable => _queryableMemberAccessorDic == null;
 
@@ -86,6 +89,11 @@ namespace LinqToDB.Linq
 			_parametrized = parametrized;
 		}
 
+		internal void SetParametersDuplicates(List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates)
+		{
+			_parametersDuplicates = parametersDuplicates;
+		}		
+		
 		public bool IsParametrized(Expression expr)
 		{
 			return _parametrized?.Contains(expr) == true;
@@ -96,7 +104,7 @@ namespace LinqToDB.Linq
 		/// <summary>
 		/// Replaces closure references by constants
 		/// </summary>
-		protected void CleanupParametrized()
+		protected void PrepareForCaching()
 		{
 			if (Expression == null || _parametrized == null)
 				return;
@@ -125,15 +133,15 @@ namespace LinqToDB.Linq
 							ctx.newParametrized[idx] = newValue;
 						}
 
-						return newValue;
+						return new TransformInfo(newValue);
 					}
 				}
 
-				return e;
+				return new TransformInfo(e);
 			});
 
-			_parametrized = newParametrized;
-			Expression = result;
+			_parametrized  = newParametrized;
+			Expression     = result;
 		}
 
 		internal Expression AddQueryableMemberAccessors<TContext>(TContext context, MemberInfo memberInfo, IDataContext dataContext, Func<TContext, MemberInfo, IDataContext, Expression> qe)
@@ -249,6 +257,7 @@ namespace LinqToDB.Linq
 		}
 
 		#endregion
+
 	}
 
 	public class Query<T> : Query
@@ -348,7 +357,7 @@ namespace LinqToDB.Linq
 			/// <summary>
 			/// Adds query to cache if it is not cached already.
 			/// </summary>
-			public void TryAdd(IDataContext dataContext, Query<T> query, QueryFlags queryFlags, DataOptions dataOptions)
+			public void TryAdd(IDataContext dataContext, Query<T> query, Expression queryExpression, QueryFlags queryFlags, DataOptions dataOptions)
 			{
 				// because Add is less frequent operation than Find, it is fine to have put bigger locks here
 				QueryCacheEntry[] cache;
@@ -361,7 +370,7 @@ namespace LinqToDB.Linq
 				}
 
 				for (var i = 0; i < cache.Length; i++)
-					if (cache[i].Compare(dataContext, query.Expression!, queryFlags))
+					if (cache[i].Compare(dataContext, queryExpression, queryFlags))
 						// already added by another thread
 						return;
 
@@ -536,14 +545,14 @@ namespace LinqToDB.Linq
 				_queryCache.TriggerCacheMiss();
 			}
 
-			query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext),
+			query = CreateQuery(optimizationContext, new ParametersContext(expr, null, optimizationContext, dataContext),
 				dataContext, expr);
 
 			if (useCache && !query.DoNotCache)
 			{
 				// All non-value type parametrized expression will be transformed to constant. It prevents from caching big reference classes in cache.
 				//
-				query.CleanupParametrized();
+				query.PrepareForCaching();
 
 #if DEBUG
 				// Checking at least in Debug that we clear ar references correctly
@@ -551,7 +560,7 @@ namespace LinqToDB.Linq
 				CheckCachedExpression(query.Expression);
 #endif
 
-				_queryCache.TryAdd(dataContext, query, queryFlags, dataOptions);
+				_queryCache.TryAdd(dataContext, query, expr, queryFlags, dataOptions);
 			}
 
 			return query;

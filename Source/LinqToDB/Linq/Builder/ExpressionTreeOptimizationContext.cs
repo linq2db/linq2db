@@ -45,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 			if (compareConstantValues)
 			{
 				if (_equalsToContextTrue == null)
-					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, compareConstantValues: compareConstantValues);
+					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, null, compareConstantValues: compareConstantValues);
 				else
 					_equalsToContextTrue.Reset();
 				return _equalsToContextTrue;
@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				if (_equalsToContextFalse == null)
-					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, compareConstantValues: compareConstantValues);
+					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, parametrized, null, compareConstantValues: compareConstantValues);
 				else
 					_equalsToContextFalse.Reset();
 				return _equalsToContextFalse;

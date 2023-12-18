@@ -397,7 +397,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			ISqlExpression GetFieldExpression(Expression fieldExpr, bool isPureExpression)
 			{
-				var sql = builder.ConvertToSql(fieldsContext, fieldExpr, isPureExpression: isPureExpression);
+				var sql = builder.ConvertToSql(fieldsContext, fieldExpr, isPureExpression : isPureExpression);
 				return sql;
 			}
 
@@ -437,7 +437,7 @@ namespace LinqToDB.Linq.Builder
 						valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
 					}
 
-					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor);
+					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor, forceParameter : true);
 
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					{
@@ -823,11 +823,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var updateExpr = update;
 
-					if (updateExpr is ConstantExpression constExpr)
-					{
-						builder.ParametersContext.MarkAsParameter(constExpr);
-					}
-					else if (updateExpr.Unwrap() is LambdaExpression lambda)
+					if (updateExpr.Unwrap() is LambdaExpression lambda)
 					{
 						updateExpr = SequenceHelper.PrepareBody(lambda, sequence);
 					}
