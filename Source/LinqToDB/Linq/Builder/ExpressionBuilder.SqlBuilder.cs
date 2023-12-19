@@ -2896,7 +2896,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				expr = placeholder.Sql;
 			}
-			else if (builtExpr is SqlGenericConstructorExpression constructor)
+			else if (SequenceHelper.UnwrapDefaultIfEmpty(builtExpr) is SqlGenericConstructorExpression constructor)
 			{
 				var objParam = Expression.Parameter(typeof(object));
 

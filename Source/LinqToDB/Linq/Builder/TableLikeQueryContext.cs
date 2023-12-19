@@ -327,7 +327,7 @@ namespace LinqToDB.Linq.Builder
 				SqlPlaceholderExpression? placeholder = null;
 				if (sqlExpr is SqlPlaceholderExpression fieldPlaceholder)
 					placeholder = fieldPlaceholder;
-				else if (sqlExpr is SqlGenericConstructorExpression generic)
+				else if (SequenceHelper.UnwrapDefaultIfEmpty(sqlExpr) is SqlGenericConstructorExpression generic)
 				{
 					if (generic.Assignments.Count != 1)
 						throw new InvalidOperationException();
