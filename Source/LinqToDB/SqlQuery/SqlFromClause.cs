@@ -181,8 +181,10 @@ namespace LinqToDB.SqlQuery
 
 		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
+			/*
 			if (writer.Length > 10240)
 				return writer;
+				*/
 
 			writer
 				.Append("FROM ");
