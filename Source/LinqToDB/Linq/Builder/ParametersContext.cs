@@ -313,6 +313,11 @@ namespace LinqToDB.Linq.Builder
 									var convertLambda = MappingSchema.GenerateSafeConvert(newExpr.ValueExpression.Type, memberType);
 									newExpr.ValueExpression = InternalExtensions.ApplyLambdaToExpression(convertLambda, newExpr.ValueExpression);
 								}
+
+								if (newExpr.ValueExpression.Type != memberType)
+								{
+									newExpr.ValueExpression = Expression.Convert(newExpr.ValueExpression, memberType);
+								}
 							}
 						}
 
