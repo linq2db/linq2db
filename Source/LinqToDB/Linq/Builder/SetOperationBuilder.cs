@@ -434,8 +434,8 @@ namespace LinqToDB.Linq.Builder
 					return true;
 				}
 
-				if (projection1 is SqlGenericConstructorExpression generic1 &&
-				    projection2 is SqlGenericConstructorExpression generic2)
+				if (SequenceHelper.UnwrapDefaultIfEmpty(projection1) is SqlGenericConstructorExpression generic1 &&
+				    SequenceHelper.UnwrapDefaultIfEmpty(projection2) is SqlGenericConstructorExpression generic2)
 				{
 					if (generic1.ConstructType == SqlGenericConstructorExpression.CreateType.Full)
 					{
@@ -1081,7 +1081,8 @@ namespace LinqToDB.Linq.Builder
 				var current = correctedPath;
 				do
 				{
-					var projected = Builder.BuildSqlExpression(context, current, ProjectFlags.Expression, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+					var projected = Builder.BuildSqlExpression(context, current, ProjectFlags.Expression,
+						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
 
 					projected = Builder.ExtractProjection(context, projected);
 

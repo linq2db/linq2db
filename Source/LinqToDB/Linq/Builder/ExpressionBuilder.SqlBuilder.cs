@@ -2110,8 +2110,8 @@ namespace LinqToDB.Linq.Builder
 					leftExpr  = ParseGenericConstructor(leftExpr, flags, columnDescriptor, true);
 					rightExpr = ParseGenericConstructor(rightExpr, flags, columnDescriptor, true);
 
-					if (leftExpr is SqlGenericConstructorExpression leftGenericConstructor &&
-						rightExpr is SqlGenericConstructorExpression rightGenericConstructor)
+					if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGenericConstructor &&
+					    SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGenericConstructor)
 					{
 						return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
 					}
@@ -2158,7 +2158,7 @@ namespace LinqToDB.Linq.Builder
 						return GenerateNullComparison(leftExpr, isNot);
 					}
 
-					if (rightExpr is SqlGenericConstructorExpression rightGeneric)
+					if (SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGeneric)
 					{
 						if (l != null)
 						{
@@ -2170,7 +2170,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (leftExpr is SqlGenericConstructorExpression leftGeneric)
+					if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGeneric)
 					{
 						if (r != null)
 						{
@@ -2184,7 +2184,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (l == null || r == null)
 					{
-						var pathComparison = GeneratePathComparison(left, leftExpr, right, rightExpr);
+						var pathComparison = GeneratePathComparison(left, SequenceHelper.UnwrapDefaultIfEmpty(leftExpr), right, SequenceHelper.UnwrapDefaultIfEmpty(rightExpr));
 
 						return pathComparison;
 					}
@@ -2479,6 +2479,17 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return true;
+			}
+
+			if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+			{
+				if (defaultIfEmptyExpression.NotNullExpressions.Count > 0)
+				{
+					result.Add(defaultIfEmptyExpression.NotNullExpressions[0]);
+					return true;
+				}
+
+				return false;
 			}
 
 			if (expression is SqlEagerLoadExpression)
@@ -3959,6 +3970,11 @@ namespace LinqToDB.Linq.Builder
 					if (body is SqlPlaceholderExpression placeholder)
 					{
 						return placeholder;
+					}
+
+					if (body is SqlDefaultIfEmptyExpression)
+					{
+						
 					}
 
 					if (member != null)

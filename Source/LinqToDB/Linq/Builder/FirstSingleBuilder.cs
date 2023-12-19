@@ -116,7 +116,7 @@ namespace LinqToDB.Linq.Builder
 
 			var canBeWeak = false;
 
-			if (methodCall.Method.Name.Contains("OrDefault"))
+			if (buildInfo.Parent != null && methodCall.Method.Name.Contains("OrDefault"))
 			{
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, allowNullField: true);
 				canBeWeak = true;

@@ -280,6 +280,11 @@ namespace LinqToDB.Expressions
 						return Find(paramAccess.Constructor);
 					}
 
+					if (expr is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+					{
+						return Find(defaultIfEmptyExpression.InnerExpression);
+					}
+
 					if (expr.CanReduce)
 						return Find(expr.Reduce());
 

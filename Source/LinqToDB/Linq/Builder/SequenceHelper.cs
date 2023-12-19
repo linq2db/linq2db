@@ -971,6 +971,13 @@ namespace LinqToDB.Linq.Builder
 			return UnwrapSubqueryContext(context) is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
 		}
 
+		public static Expression UnwrapDefaultIfEmpty(Expression expression)
+		{
+			if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+				return UnwrapDefaultIfEmpty(defaultIfEmptyExpression.InnerExpression);
+			return expression;
+		}
+
 		public static LambdaExpression? GetArgumentLambda(MethodCallExpression methodCall, string argumentName)
 		{
 			var idx = Array.FindIndex(methodCall.Method.GetParameters(), a => a.Name == argumentName);

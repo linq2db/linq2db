@@ -851,6 +851,30 @@ namespace LinqToDB.Linq.Builder
 
 				return node.Update(test, ifTrue, ifFalse);
 			}
+
+			public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
+			{
+				var innerExpression = Visit(node.InnerExpression);
+
+				if (_flags.IsExpression())
+				{
+					var notNullExpr = node.NotNullExpressions.First();
+
+					if (notNullExpr.Type.IsValueType && !notNullExpr.Type.IsNullable())
+					{
+						notNullExpr = Expression.Convert(notNullExpr, notNullExpr.Type.AsNullable());
+					}
+
+					var notNullExpression = Expression.NotEqual(notNullExpr, Expression.Constant(null, notNullExpr.Type));
+					var defaultValue      = new DefaultValueExpression(MappingSchema, innerExpression.Type);
+
+					var condition = Expression.Condition(notNullExpression, innerExpression, defaultValue);
+
+					return Visit(condition);
+				}
+
+				return node.Update(innerExpression, node.NotNullExpressions);
+			}
 		}
 
 		[Flags]
@@ -858,7 +882,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			None = 0,
 			ForceAssignments = 0x1,
-			IgnoreNullComparison = 0x2
+			IgnoreNullComparison = 0x2,
 		}
 
 		public Expression BuildSqlExpression(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null, BuildFlags buildFlags = BuildFlags.None)

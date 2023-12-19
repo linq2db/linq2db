@@ -9,168 +9,20 @@ namespace LinqToDB.Expressions
 {
 	using Extensions;
 	using Reflection;
-	using SqlQuery;
 	using Linq.Builder;
 
 	internal class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
 	{
-		public class Assignment
-		{
-			public static ReadOnlyCollection<Assignment> EmptyCollection = new (new List<Assignment>());
+		public Expression?      NewExpression     { get; private set; }
+		public ConstructorInfo? Constructor       { get; private set; }
+		public MethodInfo?      ConstructorMethod { get; private set; }
+		public Expression?      ConstructionRoot  { get; private set; }
+		public CreateType       ConstructType     { get; private set; }
+		public Type             ObjectType        { get; private set; }
+		public IBuildContext?   BuildContext      { get; private set; }
 
-			public Assignment(MemberInfo memberInfo, Expression expression, bool isMandatory, bool isLoaded)
-			{
-				if (!memberInfo.GetMemberType().IsAssignableFrom(expression.Type))
-					throw new InvalidOperationException($"Member '{memberInfo.Name}:{memberInfo.GetMemberType().Name}' cannot accept Expression Type '{expression.Type}'.");
-
-				MemberInfo  = memberInfo;
-				Expression  = expression;
-				IsMandatory = isMandatory;
-				IsLoaded    = isLoaded;
-			}
-
-			public MemberInfo MemberInfo  { get;  }
-			public Expression Expression  { get; }
-			public bool       IsMandatory { get; }
-			public bool       IsLoaded    { get; }
-
-			public Assignment WithExpression(Expression expression)
-			{
-				if (expression == Expression)
-					return this;
-				return new Assignment(MemberInfo, expression, IsMandatory, IsLoaded);
-			}
-
-			public Assignment WithMember(MemberInfo member)
-			{
-				if (MemberInfo == member)
-					return this;
-
-				return new Assignment(member, Expression, IsMandatory, IsLoaded);
-			}
-
-			public override string ToString()
-			{
-				return $"{MemberInfo.Name} = {Expression}";
-			}
-
-			sealed class AssignmentEqualityComparer : IEqualityComparer<Assignment>
-			{
-				public bool Equals(Assignment? x, Assignment? y)
-				{
-					if (ReferenceEquals(x, y))
-					{
-						return true;
-					}
-
-					if (ReferenceEquals(x, null))
-					{
-						return false;
-					}
-
-					if (ReferenceEquals(y, null))
-					{
-						return false;
-					}
-
-					if (x.GetType() != y.GetType())
-					{
-						return false;
-					}
-
-					return x.MemberInfo.Equals(y.MemberInfo) &&
-					       x.IsMandatory == y.IsMandatory    && x.IsLoaded == y.IsLoaded &&
-					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
-				}
-
-				public int GetHashCode(Assignment obj)
-				{
-					unchecked
-					{
-						var hashCode = obj.MemberInfo.GetHashCode();
-						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = (hashCode * 397) ^ obj.IsMandatory.GetHashCode();
-						hashCode = (hashCode * 397) ^ obj.IsLoaded.GetHashCode();
-						return hashCode;
-					}
-				}
-			}
-
-			public static IEqualityComparer<Assignment> AssignmentComparer { get; } = new AssignmentEqualityComparer();
-		}
-
-		public new class Parameter
-		{
-			public static ReadOnlyCollection<Parameter> EmptyCollection = new (new List<Parameter>());
-
-			public Parameter(Expression expression, ParameterInfo parameterInfo, MemberInfo? memberInfo)
-			{
-				MemberInfo    = memberInfo;
-				Expression    = expression;
-				ParameterInfo = parameterInfo;
-			}
-
-			public MemberInfo?   MemberInfo    { get; }
-			public Expression    Expression    { get; }
-			public ParameterInfo ParameterInfo { get; }
-			public Type          ParameterType => ParameterInfo.ParameterType;
-
-			public Parameter WithExpression(Expression expression)
-			{
-				if (ReferenceEquals(expression, Expression))
-					return this;
-				return new Parameter(expression, ParameterInfo, MemberInfo);
-			}
-
-			public override string ToString()
-			{
-				if (MemberInfo == null)
-					return $"{Expression}";
-				return $"{MemberInfo.Name}={Expression}";
-			}
-
-			sealed class MemberInfoExpressionParamTypeEqualityComparer : IEqualityComparer<Parameter>
-			{
-				public bool Equals(Parameter? x, Parameter? y)
-				{
-					if (ReferenceEquals(x, y))
-					{
-						return true;
-					}
-
-					if (ReferenceEquals(x, null))
-					{
-						return false;
-					}
-
-					if (ReferenceEquals(y, null))
-					{
-						return false;
-					}
-
-					if (x.GetType() != y.GetType())
-					{
-						return false;
-					}
-
-					return Equals(x.MemberInfo, y.MemberInfo) && x.ParameterInfo.Equals(y.ParameterInfo) &&
-					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
-				}
-
-				public int GetHashCode(Parameter obj)
-				{
-					unchecked
-					{
-						var hashCode = (obj.MemberInfo != null ? obj.MemberInfo.GetHashCode() : 0);
-						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
-						hashCode = (hashCode * 397) ^ obj.ParameterInfo.GetHashCode();
-						return hashCode;
-					}
-				}
-			}
-
-			public static IEqualityComparer<Parameter> ParameterComparer { get; } = new MemberInfoExpressionParamTypeEqualityComparer();
-		}
+		public ReadOnlyCollection<Parameter>  Parameters  { get; private set; }
+		public ReadOnlyCollection<Assignment> Assignments { get; private set; }
 
 		SqlGenericConstructorExpression()
 		{
@@ -343,17 +195,6 @@ namespace LinqToDB.Expressions
 
 			return items;
 		}
-
-		public Expression?      NewExpression     { get; private set; }
-		public ConstructorInfo? Constructor       { get; private set; }
-		public MethodInfo?      ConstructorMethod { get; private set; }
-		public Expression?      ConstructionRoot  { get; private set; }
-		public CreateType       ConstructType     { get; private set; }
-		public Type             ObjectType        { get; private set; }
-		public IBuildContext?   BuildContext      { get; private set; }
-
-		public ReadOnlyCollection<Parameter>  Parameters  { get; private set; }
-		public ReadOnlyCollection<Assignment> Assignments { get; private set; }
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      => ObjectType;
@@ -605,6 +446,168 @@ namespace LinqToDB.Expressions
 				return baseVisitor.VisitSqlGenericConstructorExpression(this);
 			return base.Accept(visitor);
 		}
+
+		#region Sub classes
+
+		public class Assignment
+		{
+			public static ReadOnlyCollection<Assignment> EmptyCollection = new (new List<Assignment>());
+
+			public Assignment(MemberInfo memberInfo, Expression expression, bool isMandatory, bool isLoaded)
+			{
+				if (!memberInfo.GetMemberType().IsAssignableFrom(expression.Type))
+					throw new InvalidOperationException($"Member '{memberInfo.Name}:{memberInfo.GetMemberType().Name}' cannot accept Expression Type '{expression.Type}'.");
+
+				MemberInfo  = memberInfo;
+				Expression  = expression;
+				IsMandatory = isMandatory;
+				IsLoaded    = isLoaded;
+			}
+
+			public MemberInfo MemberInfo  { get;  }
+			public Expression Expression  { get; }
+			public bool       IsMandatory { get; }
+			public bool       IsLoaded    { get; }
+
+			public Assignment WithExpression(Expression expression)
+			{
+				if (expression == Expression)
+					return this;
+				return new Assignment(MemberInfo, expression, IsMandatory, IsLoaded);
+			}
+
+			public Assignment WithMember(MemberInfo member)
+			{
+				if (MemberInfo == member)
+					return this;
+
+				return new Assignment(member, Expression, IsMandatory, IsLoaded);
+			}
+
+			public override string ToString()
+			{
+				return $"{MemberInfo.Name} = {Expression}";
+			}
+
+			sealed class AssignmentEqualityComparer : IEqualityComparer<Assignment>
+			{
+				public bool Equals(Assignment? x, Assignment? y)
+				{
+					if (ReferenceEquals(x, y))
+					{
+						return true;
+					}
+
+					if (ReferenceEquals(x, null))
+					{
+						return false;
+					}
+
+					if (ReferenceEquals(y, null))
+					{
+						return false;
+					}
+
+					if (x.GetType() != y.GetType())
+					{
+						return false;
+					}
+
+					return x.MemberInfo.Equals(y.MemberInfo) &&
+					       x.IsMandatory == y.IsMandatory    && x.IsLoaded == y.IsLoaded &&
+					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
+				}
+
+				public int GetHashCode(Assignment obj)
+				{
+					unchecked
+					{
+						var hashCode = obj.MemberInfo.GetHashCode();
+						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
+						hashCode = (hashCode * 397) ^ obj.IsMandatory.GetHashCode();
+						hashCode = (hashCode * 397) ^ obj.IsLoaded.GetHashCode();
+						return hashCode;
+					}
+				}
+			}
+
+			public static IEqualityComparer<Assignment> AssignmentComparer { get; } = new AssignmentEqualityComparer();
+		}
+
+		public new class Parameter
+		{
+			public static ReadOnlyCollection<Parameter> EmptyCollection = new (new List<Parameter>());
+
+			public Parameter(Expression expression, ParameterInfo parameterInfo, MemberInfo? memberInfo)
+			{
+				MemberInfo    = memberInfo;
+				Expression    = expression;
+				ParameterInfo = parameterInfo;
+			}
+
+			public MemberInfo?   MemberInfo    { get; }
+			public Expression    Expression    { get; }
+			public ParameterInfo ParameterInfo { get; }
+			public Type          ParameterType => ParameterInfo.ParameterType;
+
+			public Parameter WithExpression(Expression expression)
+			{
+				if (ReferenceEquals(expression, Expression))
+					return this;
+				return new Parameter(expression, ParameterInfo, MemberInfo);
+			}
+
+			public override string ToString()
+			{
+				if (MemberInfo == null)
+					return $"{Expression}";
+				return $"{MemberInfo.Name}={Expression}";
+			}
+
+			sealed class MemberInfoExpressionParamTypeEqualityComparer : IEqualityComparer<Parameter>
+			{
+				public bool Equals(Parameter? x, Parameter? y)
+				{
+					if (ReferenceEquals(x, y))
+					{
+						return true;
+					}
+
+					if (ReferenceEquals(x, null))
+					{
+						return false;
+					}
+
+					if (ReferenceEquals(y, null))
+					{
+						return false;
+					}
+
+					if (x.GetType() != y.GetType())
+					{
+						return false;
+					}
+
+					return Equals(x.MemberInfo, y.MemberInfo) && x.ParameterInfo.Equals(y.ParameterInfo) &&
+					       ExpressionEqualityComparer.Instance.Equals(x.Expression, y.Expression);
+				}
+
+				public int GetHashCode(Parameter obj)
+				{
+					unchecked
+					{
+						var hashCode = (obj.MemberInfo != null ? obj.MemberInfo.GetHashCode() : 0);
+						hashCode = (hashCode * 397) ^ ExpressionEqualityComparer.Instance.GetHashCode(obj.Expression);
+						hashCode = (hashCode * 397) ^ obj.ParameterInfo.GetHashCode();
+						return hashCode;
+					}
+				}
+			}
+
+			public static IEqualityComparer<Parameter> ParameterComparer { get; } = new MemberInfoExpressionParamTypeEqualityComparer();
+		}
+
+		#endregion
 
 	}
 }

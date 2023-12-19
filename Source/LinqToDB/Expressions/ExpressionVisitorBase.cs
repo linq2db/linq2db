@@ -110,6 +110,11 @@ namespace LinqToDB.Expressions
 			return node.Update(Visit(node.ClosureExpression));
 		}
 
+		public virtual Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
+		{
+			return node.Update(Visit(node.InnerExpression), VisitAndConvert(node.NotNullExpressions, nameof(VisitSqlDefaultIfEmptyExpression)));
+		}
+
 		public virtual Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
 		{
 			return node;

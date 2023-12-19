@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -38,6 +41,47 @@ namespace LinqToDB.Linq.Builder
 			notNull = builder.UpdateNesting(forContext, notNull);
 
 			return notNull;
+		}
+
+		static SqlPlaceholderExpression? PrepareNoNullPlaceholder(IBuildContext forContext, IReadOnlyCollection<Expression> notNullExpressions)
+		{
+			var first = notNullExpressions.FirstOrDefault();
+			if (first == null)
+				return null;
+
+			var translated = forContext.Builder.BuildSqlExpression(forContext, first, ProjectFlags.SQL, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+
+			if (translated is not SqlPlaceholderExpression placeholder)
+				return null;
+
+			return placeholder;
+		}
+
+		static ReadOnlyCollection<Expression>? PrepareNoNullExpressions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence, bool allowNullField)
+		{
+			var sequenceRef  = new ContextRefExpression(sequence.ElementType, sequence);
+			var translated   = builder.BuildSqlExpression(sequence, sequenceRef, ProjectFlags.SQL, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(translated);
+
+			var nullability = NullabilityContext.GetContext(nullabilitySequence.SelectQuery);
+			var notNull = placeholders
+				.Where(p => !p.Sql.CanBeNullable(nullability))
+				.Cast<Expression>()
+				.ToList();
+
+			if (notNull.Count == 0)
+			{
+				if (!allowNullField)
+					return null;
+
+				notNull = new()
+				{
+					SequenceHelper.CreateSpecialProperty(new ContextRefExpression(notNullHandlerSequence.ElementType, notNullHandlerSequence), typeof(int?),
+						DefaultIfEmptyContext.NotNullPropName)
+				};
+			}
+
+			return notNull.AsReadOnly();
 		}
 
 		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -118,7 +162,8 @@ namespace LinqToDB.Linq.Builder
 			readonly IBuildContext _nullabilitySequence;
 			readonly bool          _allowNullField;
 
-			SqlPlaceholderExpression? _notNullPlaceholder;
+			SqlPlaceholderExpression?       _notNullPlaceholder;
+			ReadOnlyCollection<Expression>? _notNullExpressions;
 
 			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, IBuildContext nullabilitySequence, Expression? defaultValue, bool allowNullField)
 				: base(parent, sequence, null)
@@ -159,7 +204,10 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (_notNullPlaceholder == null)
 					{
-						_notNullPlaceholder = PrepareNoNullPlaceholder(Builder, Sequence, Parent ?? this, _nullabilitySequence, true)!;
+						if (_notNullExpressions == null)
+							_notNullExpressions = PrepareNoNullExpressions(Builder, this, Sequence, _nullabilitySequence, true);
+
+						_notNullPlaceholder = PrepareNoNullPlaceholder(Parent ?? this, _notNullExpressions!) ?? throw new InvalidOperationException();
 						if (!_notNullPlaceholder.Type.IsNullable())
 							_notNullPlaceholder = _notNullPlaceholder.MakeNullable();
 					}
@@ -184,7 +232,7 @@ namespace LinqToDB.Linq.Builder
 
 				expr = SequenceHelper.CorrectTrackingPath(Builder, expr, path);
 
-				if (!flags.IsKeys() && expr.UnwrapConvert() is not SqlEagerLoadExpression)
+				if (/*!flags.IsKeys() && */expr.UnwrapConvert() is not SqlEagerLoadExpression)
 				{
 					if (expr is SqlPlaceholderExpression placeholder)
 					{
@@ -202,40 +250,16 @@ namespace LinqToDB.Linq.Builder
 						return placeholder;
 					}
 
-					if (_notNullPlaceholder == null)
+					if (_notNullExpressions == null)
 					{
-						_notNullPlaceholder = PrepareNoNullPlaceholder(Builder, Sequence, this, _nullabilitySequence, _allowNullField);
+						_notNullExpressions = PrepareNoNullExpressions(Builder, this, Sequence, _nullabilitySequence, _allowNullField);
 					}
 
-					if (_notNullPlaceholder != null)
+					if (_notNullExpressions?.Count > 0)
 					{
-						Expression notNullField = _notNullPlaceholder;
-
-						if (flags.IsExtractProjection())
-						{
-							notNullField = _notNullPlaceholder.Path;
-							if (notNullField.Type.IsValueType && !notNullField.Type.IsNullable())
-							{
-								notNullField = Expression.Convert(notNullField, notNullField.Type.AsNullable());
-							}
-						}
-						else if (_notNullPlaceholder.Type.IsValueType && !_notNullPlaceholder.Type.IsNullable())
-						{
-							notNullField = _notNullPlaceholder.MakeNullable();
-						}
-
-						var defaultValue = new DefaultValueExpression(MappingSchema, expr.Type);
-
-						var notNullExpression = Expression.NotEqual(notNullField, Expression.Constant(null, notNullField.Type));
-
-						if (flags.IsExtractProjection())
-						{
-							expr = newPath;
-						}
-
-						expr = Expression.Condition(notNullExpression, expr, defaultValue);
+						expr = new SqlDefaultIfEmptyExpression(expr, _notNullExpressions);
+						return expr;
 					}
-
 				}
 
 				return expr;

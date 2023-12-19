@@ -57,28 +57,35 @@ namespace LinqToDB.Linq.Builder
 				if (node == null)
 					return null;
 
+				/*
 				if (node.NodeType == ExpressionType.Parameter || node.NodeType == ExpressionType.Call || node.NodeType == ExpressionType.MemberAccess ||
 				    node.NodeType == ExpressionType.Assign || node.NodeType == ExpressionType.Constant || node.NodeType == ExpressionType.Default)
 				{
 					return node;
 				}
+				*/
 
 				if (_replacement.node == null)
 				{
+					/*
 					if (null == node.Find(1, (_, e) => e is SqlPlaceholderExpression))
 						return node;
 
 					if (node.NodeType == ExpressionType.Convert && ((UnaryExpression)node).Operand is SqlPlaceholderExpression)
 						return node;
+						*/
 
-					if (!_visited.Add(node))
+					if (node is SqlGenericConstructorExpression)
 					{
-						var variable = Expression.Variable(node.Type, "v" + _variables.Count);
+						if (!_visited.Add(node))
+						{
+							var variable = Expression.Variable(node.Type, "v" + _variables.Count);
 
-						_replacement = (node, variable);
+							_replacement = (node, variable);
 
-						_variables.Add((variable, node));
-						return variable;
+							_variables.Add((variable, node));
+							return variable;
+						}
 					}
 				}
 				else
@@ -119,6 +126,7 @@ namespace LinqToDB.Linq.Builder
 			Expression[]        previousKeys)
 		{
 			// convert all missed references
+			
 			var postProcessed = FinalizeConstructors(context, expression, true);
 
 			// process eager loading queries

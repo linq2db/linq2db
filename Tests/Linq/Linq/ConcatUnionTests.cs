@@ -100,12 +100,12 @@ namespace Tests.Linq
 
 			AreEqual(
 				(from c in    Child where c.ParentID == 1 select c).Concat(
-					(from c in    Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 }).
-					Where(c => c.ChildID != 1032))
+				(from c in    Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 })
+				.Where(c => c.ChildID != 1032))
 				,
 				(from c in db.Child where c.ParentID == 1 select c).Concat(
-					(from c in db.Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 })).
-				Where(c => c.ChildID != 1032));
+				(from c in db.Child where c.ParentID == 3 select new Child { ParentID = c.ParentID, ChildID = c.ChildID + 1000 }))
+				.Where(c => c.ChildID != 1032));
 		}
 
 		[Test]
