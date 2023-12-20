@@ -40,6 +40,11 @@ docker logs hana2
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'preprocessor'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
 
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'global.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'resource_tracking'"'"','"'"'enable_tracking'"'"') = '"'"'off'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'global.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'resource_tracking'"'"','"'"'memory_tracking'"'"') = '"'"'off'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'global.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'resource_tracking'"'"','"'"'sr_enable_tracking'"'"') = '"'"'off'"'"' WITH RECONFIGURE'
+~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'global.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'resource_tracking'"'"','"'"'sr_memory_tracking'"'"') = '"'"'off'"'"' WITH RECONFIGURE'
+
 cat <<-EOJSON > HanaDataProviders.json
 {
     "BASE.Azure": {
