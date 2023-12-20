@@ -118,6 +118,8 @@ namespace LinqToDB.Linq.Builder
 	{
 		static ObjectPool<BuildVisitor> _buildVisitorPool = new(() => new BuildVisitor(), v => v.Cleanup(), 100);
 
+		static ObjectPool<FinalizeExpressionVisitor> _finalizeVisitorPool = new(() => new FinalizeExpressionVisitor(), v => v.Cleanup(), 100);
+
 		sealed class BuildVisitor : ExpressionVisitorBase
 		{
 			ProjectFlags      _flags;
@@ -433,6 +435,11 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitBinary(BinaryExpression node)
 			{
+				if (node.NodeType == ExpressionType.Assign)
+				{
+					return base.VisitBinary(node);
+				}
+
 				var doNotForce = !IsForcedToConvert(node) && _flags.IsExpression();
 				if (doNotForce)
 				{
@@ -531,7 +538,8 @@ namespace LinqToDB.Linq.Builder
 							return Visit(updatedNode);
 
 					}
-					return node;
+
+					return base.VisitBinary(node);
 				}
 
 				return Visit(newNode);

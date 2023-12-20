@@ -228,7 +228,7 @@ namespace LinqToDB.Linq.Builder
 			Update
 		}
 
-		public SqlGenericConstructorExpression BuildFullEntityExpression(IBuildContext context, Expression refExpression, Type entityType, ProjectFlags flags)
+		public SqlGenericConstructorExpression BuildFullEntityExpression(IBuildContext? context, Expression refExpression, Type entityType, ProjectFlags flags)
 		{
 			entityType = GetTypeForInstantiation(entityType);
 
@@ -241,7 +241,7 @@ namespace LinqToDB.Linq.Builder
 			return generic;
 		}
 
-		public SqlGenericConstructorExpression BuildEntityExpression(IBuildContext context, Expression refExpression, Type entityType, IReadOnlyCollection<MemberInfo> members)
+		public SqlGenericConstructorExpression BuildEntityExpression(IBuildContext? context, Expression refExpression, Type entityType, IReadOnlyCollection<MemberInfo> members)
 		{
 			entityType = GetTypeForInstantiation(entityType);
 
@@ -485,7 +485,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public Expression ConstructFullEntity(IBuildContext context,
+		public Expression ConstructFullEntity(IBuildContext? context,
 			SqlGenericConstructorExpression constructorExpression, ProjectFlags flags, bool checkInheritance = true)
 		{
 			var constructed = TryConstructFullEntity(context, constructorExpression, constructorExpression.ObjectType, flags, checkInheritance);
@@ -507,11 +507,14 @@ namespace LinqToDB.Linq.Builder
 			return me.Expression;
 		}
 
-		public Expression? TryConstructFullEntity(IBuildContext context, SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance = true)
+		public Expression? TryConstructFullEntity(IBuildContext? context, SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance = true)
 		{
 			var entityType           = constructorExpression.ObjectType;
 			var entityDescriptor     = MappingSchema.GetEntityDescriptor(entityType);
-			var rootReference        = constructorExpression.ConstructionRoot ?? new ContextRefExpression(entityType, context);
+			var rootReference        = constructorExpression.ConstructionRoot ?? (context != null ? new ContextRefExpression(entityType, context) : null);
+
+			if (rootReference == null)
+				return null;
 
 			rootReference = SequenceHelper.EnsureType(rootReference, entityType);
 
@@ -768,8 +771,11 @@ namespace LinqToDB.Linq.Builder
 			return null;
 		}
 
-		public Expression Construct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression,
-			IBuildContext                         context,       ProjectFlags                    flags)
+		public Expression Construct(
+			MappingSchema                   mappingSchema, 
+			SqlGenericConstructorExpression constructorExpression,
+			IBuildContext?                  context,       
+			ProjectFlags                    flags)
 		{
 			var constructed = TryConstruct(mappingSchema, constructorExpression, context, flags);
 			if (constructed == null)
@@ -781,7 +787,7 @@ namespace LinqToDB.Linq.Builder
 			return constructed;
 		}
 
-		public Expression? TryConstruct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression, IBuildContext context,  ProjectFlags flags)
+		public Expression? TryConstruct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression, IBuildContext? context,  ProjectFlags flags)
 		{
 			switch (constructorExpression.ConstructType)
 			{

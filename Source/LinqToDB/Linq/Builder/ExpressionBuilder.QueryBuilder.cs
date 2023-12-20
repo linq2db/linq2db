@@ -19,83 +19,16 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region BuildExpression
 
-		class DeduplicateVisitor : ExpressionVisitorBase
+		class FinalizeExpressionVisitor : ExpressionVisitorBase
 		{
-			List<(ParameterExpression variable, Expression assingment)> _variables = default!;
-			(Expression? node, ParameterExpression? variable)           _replacement;
-			HashSet<Expression>                                         _visited    = default!;
-			List<Expression>                                            _duplicates = default!;
+			HashSet<Expression>?                                                           _visited;
+			HashSet<Expression>?                                                           _duplicates;
+			Dictionary<Expression, Expression>?                                            _constructed;
+			Dictionary<Expression, (ParameterExpression variable, Expression assignment)>? _constructedAssignments;
 
-			public Expression Deduplicate(Expression expression, List<(ParameterExpression variable, Expression assingment)> variables)
-			{
-				_variables = variables;
-
-				_duplicates ??= new();
-				_duplicates.Clear();
-
-				var result = expression;
-				do
-				{
-					_replacement = default;
-					_visited     = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
-
-					result = Visit(result);
-
-					if (_replacement.node == null)
-						break;
-
-					// perform full replacement
-					result = Visit(result);
-				} while (true);
-
-				return result;
-			}
-
-			[return: NotNullIfNotNull(nameof(node))]
-			public override Expression? Visit(Expression? node)
-			{
-				if (node == null)
-					return null;
-
-				/*
-				if (node.NodeType == ExpressionType.Parameter || node.NodeType == ExpressionType.Call || node.NodeType == ExpressionType.MemberAccess ||
-				    node.NodeType == ExpressionType.Assign || node.NodeType == ExpressionType.Constant || node.NodeType == ExpressionType.Default)
-				{
-					return node;
-				}
-				*/
-
-				if (_replacement.node == null)
-				{
-					/*
-					if (null == node.Find(1, (_, e) => e is SqlPlaceholderExpression))
-						return node;
-
-					if (node.NodeType == ExpressionType.Convert && ((UnaryExpression)node).Operand is SqlPlaceholderExpression)
-						return node;
-						*/
-
-					if (node is SqlGenericConstructorExpression)
-					{
-						if (!_visited.Add(node))
-						{
-							var variable = Expression.Variable(node.Type, "v" + _variables.Count);
-
-							_replacement = (node, variable);
-
-							_variables.Add((variable, node));
-							return variable;
-						}
-					}
-				}
-				else
-				{
-					if ( ExpressionEqualityComparer.Instance.Equals(node, _replacement.node))
-						return _replacement.variable!;
-				}
-
-				return base.Visit(node);
-			}
+			ExpressionGenerator _generator = default!;
+			IBuildContext       _context   = default!;
+			bool                _constructRun;
 
 			internal override Expression VisitSqlReaderIsNullExpression(SqlReaderIsNullExpression node)
 			{
@@ -106,15 +39,109 @@ namespace LinqToDB.Linq.Builder
 			{
 				return node;
 			}
-		}
 
-		Expression Deduplicate(List<(ParameterExpression variable, Expression assingment)> variables,
-			Expression expression)
-		{
-			var visitor = new DeduplicateVisitor();
+			internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+			{
+				if (!_constructRun)
+				{
+					_visited ??= new(ExpressionEqualityComparer.Instance);
+					if (!_visited.Add(node))
+					{
+						_duplicates ??= new(ExpressionEqualityComparer.Instance);
+						_duplicates.Add(node);
+					}
+					else
+					{
+						var local = ConstructObject(node);
+						local = TranslateExpression(local);
 
-			var deduplicated = visitor.Deduplicate(expression, variables);
-			return deduplicated;
+						// collecting recursively
+						var collect = Visit(local);
+					}
+
+					return node;
+				}
+
+				_constructed ??= new(ExpressionEqualityComparer.Instance);
+				if (!_constructed.TryGetValue(node, out var constructed))
+				{
+					constructed = ConstructObject(node);
+					constructed = TranslateExpression(constructed);
+					constructed = Visit(constructed);
+
+					_constructed.Add(node, constructed);
+				}
+
+				if (_duplicates != null && _duplicates.Contains(node))
+				{
+					_constructedAssignments ??= new(ExpressionEqualityComparer.Instance);
+					if (!_constructedAssignments.TryGetValue(node, out var assignmentPair))
+					{
+						var variable = _generator.AssignToVariable(Expression.Default(node.Type));
+						var assign   = Expression.Assign(variable, Expression.Coalesce(variable, constructed));
+						assignmentPair = (variable, assign);
+						_constructedAssignments.Add(node, assignmentPair);
+					}
+
+					return assignmentPair.assignment;
+				}
+
+				return constructed;
+			}
+
+			Expression TranslateExpression(Expression local)
+			{
+				return _context.Builder.BuildSqlExpression(_context, local, ProjectFlags.Expression);
+			}
+
+			Expression ConstructObject(SqlGenericConstructorExpression node)
+			{
+				//TODO: MappingSchema!
+				return _context.Builder.Construct(_context.Builder.MappingSchema, node, _context, ProjectFlags.Expression);
+			}
+
+			public Expression Finalize(Expression expression, IBuildContext context, ExpressionGenerator generator)
+			{
+				_visited                = new HashSet<Expression>(ExpressionEqualityComparer.Instance);
+				_duplicates             = default;
+				_constructed            = default;
+				_constructedAssignments = default;
+				_generator              = generator;
+				_context                = context;
+
+				var result = expression;
+				while (true)
+				{
+					_visited.Clear();
+
+					_constructRun = false;
+					Visit(result);
+
+					_constructRun = true;
+					var current = result;
+					result = Visit(current);
+
+					result = TranslateExpression(result);
+
+					if (ReferenceEquals(current, result))
+						break;
+				}
+
+				return result;
+			}
+
+			public override void Cleanup()
+			{
+				base.Cleanup();
+
+				_visited   = default!;
+				_generator = default!;
+				_context   = default!;
+
+				_duplicates             = default;
+				_constructed            = default;
+				_constructedAssignments = default;
+			}
 		}
 
 		Expression FinalizeProjection<T>(
@@ -426,94 +453,16 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression FinalizeConstructors(IBuildContext context, Expression inputExpression, bool deduplicate)
 		{
-			List<(ParameterExpression variable, Expression assignment)>? variables = null;
+			using var finalizeVisitor = _finalizeVisitorPool.Allocate();
+			var generator       = new ExpressionGenerator();
 
-			if (deduplicate)
-				variables = new();
+			// Runs SqlGenericConstructorExpression deduplication and generating actual initializers
+			var expression = finalizeVisitor.Value.Finalize(inputExpression, context, generator);
 
-			var expression = FinalizeConstructorInternal(context, inputExpression, variables);
+			generator.AddExpression(expression);
 
-			if (variables?.Count > 0)
-			{
-				var expressionGenerator = new ExpressionGenerator();
-
-				for (var index = 0; index < variables.Count; index++)
-				{
-					var (variable, assignment) = variables[index];
-
-					assignment = FinalizeConstructorInternal(context, assignment, null);
-
-					expressionGenerator.AddVariable(variable);
-					expressionGenerator.Assign(variable, assignment);
-				}
-
-				expressionGenerator.AddExpression(expression);
-				var built = expressionGenerator.Build();
-				expression = built;
-			}
-
-			return expression;
-		}
-
-		/* Some kind of optimization. Remove later
-		Expression SimplifyNullabilityChecks(IBuildContext context, Expression expression)
-		{
-			var nullability = NullabilityContext.GetContext(context.SelectQuery);
-
-			var result = expression.Transform(e =>
-			{
-				if (e.Type == typeof(bool) && e is SqlPlaceholderExpression placeholder)
-				{
-					if (placeholder.Sql is SqlColumn column)
-					{
-						var expr = QueryHelper.UnwrapExpression(column.Expression, true);
-
-						if (expr is SqlSearchCondition sc && sc.Conditions.Count == 1)
-						{
-							var condition = sc.Conditions[0];
-							if (condition.Predicate is SqlPredicate.IsNull isNull)
-							{
-
-							}
-
-						}
-					}
-				}
-
-				return e;
-			});
-
+			var result = generator.Build();
 			return result;
-		}
-		*/
-
-		Expression FinalizeConstructorInternal(IBuildContext context, Expression inputExpression, List<(ParameterExpression variable, Expression assignment)>? variables)
-		{
-			var expression = BuildSqlExpression(context, inputExpression, ProjectFlags.Expression);
-
-			expression = OptimizationContext.OptimizeExpressionTree(expression, true);
-
-			if (variables != null)
-				expression = Deduplicate(variables, expression);
-
-			var reconstructed = expression.Transform((builder : this, context), (ctx, e) =>
-			{
-				if (e is SqlGenericConstructorExpression generic)
-				{
-					var construct = ctx.builder.Construct(ctx.builder.MappingSchema, generic, ctx.context,
-						ProjectFlags.Expression);
-					return new TransformInfo(construct, false, true);
-				}
-
-				return new TransformInfo(e);
-			});
-
-			if (!ReferenceEquals(reconstructed, expression))
-			{
-				reconstructed = FinalizeConstructorInternal(context, reconstructed, variables);
-			}
-
-			return reconstructed;
 		}
 
 		sealed class SubQueryContextInfo
