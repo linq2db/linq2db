@@ -8,8 +8,6 @@ namespace LinqToDB.Expressions
 {
 	using Extensions;
 	using Common;
-	using Common.Internal;
-	using Reflection;
 
 	/// <summary>
 	/// Internal API.
@@ -39,6 +37,12 @@ namespace LinqToDB.Expressions
 				case ExpressionType.MemberAccess:
 				{
 					var member = (MemberExpression) expr;
+
+					if (member.Member.MemberType != MemberTypes.Field &&
+					    member.Member.MemberType != MemberTypes.Property)
+					{
+						return false;
+					}
 
 					return IsSimpleEvaluatable(member.Expression);
 				}
@@ -70,8 +74,8 @@ namespace LinqToDB.Expressions
 				{
 					var member = (MemberExpression) expr;
 
-					if (member.Member.IsFieldEx())
-						return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpressionInternal());
+					if (member.Member is FieldInfo fieldInfo)
+						return fieldInfo.GetValue(member.Expression.EvaluateExpressionInternal());
 
 					if (member.Member is PropertyInfo propertyInfo)
 					{
