@@ -1238,12 +1238,16 @@ namespace LinqToDB.SqlProvider
 			var tableToUpdate = statement.Update.Table!;
 			var tableSource   = statement.Update.TableSource;
 
+			var isModified            = false;
 			var hasUpdateTableInQuery = QueryHelper.HasTableInQuery(statement.SelectQuery, tableToUpdate);
 
 			if (hasUpdateTableInQuery)
 			{
 				if (RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, out _))
+				{
+					isModified            = true;
 					hasUpdateTableInQuery = false;
+				}
 			}
 
 			CorrectUpdateSetters(statement);
@@ -1254,8 +1258,11 @@ namespace LinqToDB.SqlProvider
 				tableToUpdate = statement.Update.Table!;
 				tableSource = null;
 
-				OptimizeQueries(statement, statement, dataOptions, new EvaluationContext());
+				isModified = true;
 			}
+
+			if (isModified)
+				OptimizeQueries(statement, statement, dataOptions, new EvaluationContext());
 
 			statement.Update.Table       = tableToUpdate;
 			statement.Update.TableSource = tableSource;

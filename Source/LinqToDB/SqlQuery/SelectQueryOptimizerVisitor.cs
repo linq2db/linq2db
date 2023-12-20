@@ -1595,6 +1595,27 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
+
+			// Removing subqueries which has no tables
+
+			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
+			{
+				var tableSource = selectQuery.From.Tables[i];
+				if (tableSource.Joins.Count == 0 && tableSource.Source is SelectQuery { From.Tables.Count: 0, Where.IsEmpty: true } subQuery)
+				{
+					replaced = true;
+
+					foreach (var c in subQuery.Select.Columns)
+					{
+						NotifyReplaced(c.Expression, c);
+					}
+
+					selectQuery.From.Tables.RemoveAt(i);
+
+					--i; // repeat again
+				}
+			}
+
 			return replaced;
 		}
 
