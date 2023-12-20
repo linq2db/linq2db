@@ -27,3 +27,4 @@ REM create linked server for FQN names testing
 REM free some memory (diserver ~300mb, webdispatcher ~500m), so we can run tests
 %hdbsql% -n localhost:39017 -u SYSTEM -p Passw0rd "ALTER SYSTEM ALTER CONFIGURATION ('daemon.ini','host','hxehost') UNSET ('diserver','instances') WITH RECONFIGURE"
 %hdbsql% -n localhost:39017 -u SYSTEM -p Passw0rd "ALTER SYSTEM ALTER CONFIGURATION ('daemon.ini','host','hxehost') SET ('webdispatcher','instances') = '0' WITH RECONFIGURE"
+%hdbsql% -n localhost:39017 -u SYSTEM -p Passw0rd "ALTER SYSTEM ALTER CONFIGURATION ('daemon.ini','host','hxehost') SET ('preprocessor','instances') = '0' WITH RECONFIGURE"
