@@ -434,8 +434,9 @@ namespace Tests.DataProvider
 				if (context.IsAnyOf(TestProvName.AllSqlServer2005))
 				{
 					Test<DateTimeOffset>(DataType.DateTime2, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
-					Test<DateTimeOffset>(DataType.DateTimeOffset, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
-					Test<DateTimeOffset>(DataType.Undefined, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
+					// not supported by sql2005 and we don't provide fallback
+					//Test<DateTimeOffset>(DataType.DateTimeOffset, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
+					//Test<DateTimeOffset>(DataType.Undefined, i, TestData.DateTimeOffset, TestData.DateTimeOffset.TrimPrecision(Math.Min(3, i)));
 				}
 				else
 				{
