@@ -414,7 +414,17 @@ namespace LinqToDB.Linq.Builder
 			{
 				var isSameContext = SequenceHelper.IsSameContext(path, this);
 
-				if (isSameContext && (flags.IsRoot() || flags.IsTraverse()) || flags.IsExtractProjection())
+				if (isSameContext)
+				{
+					if (flags.IsExtractProjection())
+					{
+						if (path.Type == ElementType)
+							return MakeSubQueryExpression(path);
+						return path;
+					}
+				}
+
+				if (isSameContext && (flags.IsRoot() || flags.IsTraverse()))
 				{
 					return path;
 				}
