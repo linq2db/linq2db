@@ -36,12 +36,14 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence == null)
-				return null;
+			if (sequenceResult.BuildContext == null)
+				return sequenceResult;
+
+			var sequence = sequenceResult.BuildContext;
 
 			var wrapped = false;
 
@@ -63,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 				var sqlExpr = builder.BuildSqlExpression(sequence, body, ProjectFlags.SQL);
 
 				if (!SequenceHelper.IsSqlReady(sqlExpr))
-					return null;
+					return BuildSequenceResult.Error(methodCall);
 
 				placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
 
@@ -111,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 				sequence.SelectQuery.OrderBy.Expr(expr.Sql, methodCall.Method.Name.EndsWith("Descending"));
 			}
 
-			return sequence;
+			return BuildSequenceResult.FromContext(sequence);
 		}
 	}
 }

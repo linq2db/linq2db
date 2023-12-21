@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 			return Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema).Length > 0;
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var methodParams = methodCall.Method.GetParameters();
 			var list         = new List<SqlQueryExtensionData>
@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;
 						else
-							return null;
+							return BuildSequenceResult.Error(methodCall);
 					}
 					else if (data.Expression is LambdaExpression le)
 					{
@@ -96,7 +96,7 @@ namespace LinqToDB.Linq.Builder
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;
 						else
-							return null;
+							return BuildSequenceResult.Error(methodCall);
 					}
 					else
 					{
@@ -105,7 +105,7 @@ namespace LinqToDB.Linq.Builder
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;
 						else
-							return null;
+							return BuildSequenceResult.Error(methodCall);
 					}
 				}
 			}
@@ -153,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 
 			builder.TablesInScope = prevTablesInScope;
 
-			return joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence;
+			return BuildSequenceResult.FromContext(joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence);
 		}
 
 		public sealed class JoinHintContext : PassThroughContext

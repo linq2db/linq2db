@@ -1584,7 +1584,7 @@ namespace LinqToDB.SqlQuery
 				{
 					replaced = true;
 
-					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0 && IsSimpleForNoTablesMove(selectQuery))
+					if (tableSource.Source is SelectQuery sc && sc.From.Tables.Count == 0)
 					{
 						selectQuery.From.Tables.RemoveAt(i);
 					}

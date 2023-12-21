@@ -16,11 +16,12 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsSameGenericMethod(_supportedMethods);
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			if (sequence == null)
-				return null;
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (buildResult.BuildContext == null)
+				return buildResult;
+			var sequence = buildResult.BuildContext;
 
 			var sql      = sequence.SelectQuery;
 			if (sql.Select.TakeValue != null || sql.Select.SkipValue != null)
@@ -47,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 				sqlExpr = builder.UpdateNesting(outerSubqueryContext, sqlExpr);
 			}
 
-			return new DistinctContext(outerSubqueryContext);
+			return BuildSequenceResult.FromContext(new DistinctContext(outerSubqueryContext));
 		}
 
 		class DistinctContext : PassThroughContext

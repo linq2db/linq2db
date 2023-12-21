@@ -17,18 +17,21 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var contextRef = (ContextRefExpression)buildInfo.Expression;
 
 			var context = contextRef.BuildContext;
 
 			if (!buildInfo.CreateSubQuery)
-				return context;
+				return BuildSequenceResult.FromContext(context);
 
 			var elementContext = context.GetContext(buildInfo.Expression, buildInfo);
 
-			return elementContext;
+			if (elementContext != null)
+				return BuildSequenceResult.FromContext(elementContext);
+
+			return BuildSequenceResult.NotSupported();
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)

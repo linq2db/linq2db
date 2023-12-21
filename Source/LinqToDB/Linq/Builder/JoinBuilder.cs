@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], buildInfo.SelectQuery));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
@@ -94,13 +94,13 @@ namespace LinqToDB.Linq.Builder
 
 			var body = SequenceHelper.PrepareBody(selector, outerContext, new ScopeContext(innerContext, outerContext));
 
-			return new SelectContext(buildInfo.Parent, builder, null, body, outerContext.SelectQuery, buildInfo.IsSubQuery)
+			return BuildSequenceResult.FromContext(new SelectContext(buildInfo.Parent, builder, null, body, outerContext.SelectQuery, buildInfo.IsSubQuery)
 #if DEBUG
 				{
 					Debug_MethodCall = methodCall
 				}
 #endif
-				;
+				);
 		}
 
 	}

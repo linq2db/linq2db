@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("InsertOrUpdate");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -95,7 +95,7 @@ namespace LinqToDB.Linq.Builder
 					keysExpressions, insertOrUpdateStatement.Update.Keys, false);
 			}
 
-			return new InsertOrUpdateContext(builder, sequence, insertOrUpdateStatement);
+			return BuildSequenceResult.FromContext(new InsertOrUpdateContext(builder, sequence, insertOrUpdateStatement));
 		}
 
 		#endregion

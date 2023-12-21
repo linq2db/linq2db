@@ -43,7 +43,7 @@ namespace LinqToDB.Linq.Builder
 			updateContext.LastBuildInfo = buildInfo;
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var updateType = methodCall.Method.Name switch
 			{
@@ -120,7 +120,7 @@ namespace LinqToDB.Linq.Builder
 							enforceHaving: false, isTest: buildInfo.IsTest, isAggregationTest: buildInfo.AggregationTest);
 
 						if (sequence == null)
-							return null;
+							return BuildSequenceResult.Error(methodCall);
 
 						setterExpr = methodCall.Arguments[2].Unwrap();
 					}
@@ -260,7 +260,7 @@ namespace LinqToDB.Linq.Builder
 				throw new LinqToDBException("Update query has no setters defined.");
 
 			if (updateType == UpdateTypeEnum.Update)
-				return updateContext;
+				return BuildSequenceResult.FromContext(updateContext);
 
 			if (updateContext.TargetTable == null)
 				throw new InvalidOperationException();
@@ -278,7 +278,7 @@ namespace LinqToDB.Linq.Builder
 				updateContext.DeletedContext   = deletedContext;
 				updateContext.InsertedContext  = insertedContext;
 
-				return updateContext;
+				return BuildSequenceResult.FromContext(updateContext);
 			}
 			else // updateType == UpdateType.UpdateOutputInto
 			{
@@ -314,7 +314,7 @@ namespace LinqToDB.Linq.Builder
 
 				updateStatement.Output.OutputTable = destinationContext.SqlTable;
 
-				return updateContext;
+				return BuildSequenceResult.FromContext(updateContext);
 			}
 		}
 
@@ -791,7 +791,8 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsQueryable(nameof(LinqExtensions.Set));
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,
+				MethodCallExpression                                                 methodCall, BuildInfo buildInfo)
 			{
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -831,7 +832,7 @@ namespace LinqToDB.Linq.Builder
 					ParseSet(builder, sequence, extractExpr, extractExpr, updateExpr, updateContext.SetExpressions);
 				}
 
-				return updateContext;
+				return BuildSequenceResult.FromContext(updateContext);
 			}
 		}
 

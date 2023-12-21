@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		static IBuildContext BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo, bool isScalar)
+		static BuildSequenceResult BuildRawSqlTable(ExpressionBuilder builder, BuildInfo buildInfo, bool isScalar)
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 			for (var i = 0; i < arguments.Count; i++)
 				sqlArguments[i] = builder.ConvertToSql(context, arguments[i]);
 
-			return new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments);
+			return BuildSequenceResult.FromContext(new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments));
 		}
 
 		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IReadOnlyList<Expression> arguments)

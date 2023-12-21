@@ -17,12 +17,14 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("GroupJoin");
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var outerExpression = methodCall.Arguments[0];
-			var outerContext = builder.TryBuildSequence(new BuildInfo(buildInfo, outerExpression, buildInfo.SelectQuery));
-			if (outerContext == null)
-				return null;
+			var outerContextResult = builder.TryBuildSequence(new BuildInfo(buildInfo, outerExpression, buildInfo.SelectQuery));
+			if (outerContextResult.BuildContext == null)
+				return outerContextResult;
+
+			var outerContext = outerContextResult.BuildContext;
 
 			var innerExpression = methodCall.Arguments[1].Unwrap();
 
@@ -42,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 
 			var context = new SelectContext(buildInfo.Parent, resultExpression, outerContext, buildInfo.IsSubQuery);
 
-			return context;
+			return BuildSequenceResult.FromContext(context);
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
@@ -97,9 +99,9 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
-				var expr = GetGroupJoinCall();
-				var sequence = Builder.TryBuildSequence(new BuildInfo(buildInfo.Parent, expr, new SelectQuery()));
-				return sequence;
+				var expr        = GetGroupJoinCall();
+				var buildResult = Builder.TryBuildSequence(new BuildInfo(buildInfo.Parent, expr, new SelectQuery()));
+				return buildResult.BuildContext;
 			}
 
 			public override SqlStatement GetResultStatement()

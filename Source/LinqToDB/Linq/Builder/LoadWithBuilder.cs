@@ -52,12 +52,12 @@ namespace LinqToDB.Linq.Builder
 			return lastPath;
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-
-			if (sequence == null)
-				return null;
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (buildResult.BuildContext == null)
+				return buildResult;
+			var sequence = buildResult.BuildContext;
 
 			ITableContext? table = null;
 
@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 				table = SequenceHelper.GetTableOrCteContext(sequence);
 
 				if (table == null)
-					return sequence;
+					return BuildSequenceResult.Error(methodCall);
 
 				var loadWith     = methodCall.Arguments[1].EvaluateExpression<LoadWithInfo>();
 				var loadWithPath = methodCall.Arguments[2].EvaluateExpression<MemberInfo[]>();
@@ -165,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 			var loadWithSequence = sequence as LoadWithContext ?? new LoadWithContext(sequence, table);
 			loadWithSequence.LastLoadWithInfo = lastLoadWith;
 
-			return loadWithSequence;
+			return BuildSequenceResult.FromContext(loadWithSequence);
 		}
 
 		static (ITableContext? context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, ITableContext? parentContext, Expression expression, Expression? stopExpression)

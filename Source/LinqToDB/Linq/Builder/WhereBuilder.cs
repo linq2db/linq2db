@@ -13,13 +13,15 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(MethodNames);
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var isHaving  = methodCall.Method.Name == "Having";
-			var sequence  = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var sequenceResult  = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence == null)
-				return null;
+			if (sequenceResult.BuildContext == null)
+				return sequenceResult;
+
+			var sequence = sequenceResult.BuildContext;
 
 			var condition = methodCall.Arguments[1].UnwrapLambda();
 
@@ -34,11 +36,11 @@ namespace LinqToDB.Linq.Builder
 				checkForSubQuery: !isHaving, enforceHaving: isHaving, isTest: buildInfo.IsTest, isAggregationTest: buildInfo.AggregationTest);
 
 			if (result == null)
-				return null;
+				return BuildSequenceResult.Error(methodCall);
 
 			result.SetAlias(condition.Parameters[0].Name);
 
-			return result;
+			return BuildSequenceResult.FromContext(result);
 		}
 	}
 }

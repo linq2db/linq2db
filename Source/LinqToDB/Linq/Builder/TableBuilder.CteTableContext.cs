@@ -9,7 +9,7 @@ namespace LinqToDB.Linq.Builder
 
 	partial class TableBuilder
 	{
-		static IBuildContext BuildCteContext(ExpressionBuilder builder, BuildInfo buildInfo)
+		static BuildSequenceResult BuildCteContext(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var methodCall = (MethodCallExpression)buildInfo.Expression;
 
@@ -29,10 +29,10 @@ namespace LinqToDB.Linq.Builder
 			var elementType = methodCall.Method.GetGenericArguments()[0];
 			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
 
-			return cteTableContext;
+			return BuildSequenceResult.FromContext(cteTableContext);
 		}
 
-		static CteTableContext BuildRecursiveCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
+		static BuildSequenceResult BuildRecursiveCteContextTable(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var methodCallExpression = ((MethodCallExpression)buildInfo.Expression);
 			var elementType          = methodCallExpression.Method.GetGenericArguments()[0];
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 
 			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
 
-			return cteTableContext;
+			return BuildSequenceResult.FromContext(cteTableContext);
 		}
 	}
 }

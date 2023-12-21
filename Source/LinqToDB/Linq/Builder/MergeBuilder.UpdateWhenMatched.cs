@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsSameGenericMethod(UpdateWhenMatchedAndMethodInfo);
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				// UpdateWhenMatchedAnd<TTarget, TSource>(merge, searchCondition, setter)
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
@@ -72,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 					// skip empty Update operation with implicit setter
 					// per https://github.com/linq2db/linq2db/issues/2843
 					if (operation.Items.Count == 0)
-						return mergeContext;
+						return BuildSequenceResult.FromContext(mergeContext);
 				}
 
 				statement.Operations.Add(operation);
@@ -89,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 						conditionPrepared, ProjectFlags.SQL, operation.Where);
 				}
 
-				return mergeContext;
+				return BuildSequenceResult.FromContext(mergeContext);
 			}
 		}
 	}

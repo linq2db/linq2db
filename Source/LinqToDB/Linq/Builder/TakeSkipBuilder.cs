@@ -15,12 +15,14 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(MethodNames);
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence == null)
-				return null;
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
 
 			var arg      = methodCall.Arguments[1].Unwrap();
 
@@ -62,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 				builder.BuildSkip(sequence, expr);
 			}
 
-			return new TakeSkipContext(sequence);
+			return BuildSequenceResult.FromContext(new TakeSkipContext(sequence));
 		}
 
 		class TakeSkipContext : PassThroughContext

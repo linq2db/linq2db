@@ -15,10 +15,10 @@ namespace LinqToDB.Linq.Builder
 				&& call.Method.Name == "GetContext";
 		}
 
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var call = (MethodCallExpression)buildInfo.Expression;
-			return new Context(builder.BuildSequence(new BuildInfo(buildInfo, call.Arguments[0])));
+			return BuildSequenceResult.FromContext(new Context(builder.BuildSequence(new BuildInfo(buildInfo, call.Arguments[0]))));
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)

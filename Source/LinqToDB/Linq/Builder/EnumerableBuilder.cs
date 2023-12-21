@@ -66,14 +66,14 @@ namespace LinqToDB.Linq.Builder
 
 		}
 
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
 
 			var enumerableContext = new EnumerableContext(builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
 
-			return enumerableContext;
+			return BuildSequenceResult.FromContext(enumerableContext);
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)

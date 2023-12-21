@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsSameGenericMethod(_supportedMethods);
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				// Merge(ITable<TTarget> target, string hint)
 
@@ -45,7 +45,7 @@ namespace LinqToDB.Linq.Builder
 
 				target.SetAlias(merge.Target.Alias!);
 
-				return new MergeContext(merge, target);
+				return BuildSequenceResult.FromContext(new MergeContext(merge, target));
 			}
 		}
 	}

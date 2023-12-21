@@ -15,12 +15,14 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("OfType");
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence == null)
-				return null;
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
 
 			if (sequence is TableBuilder.TableContext table
 				&& table.InheritanceMapping.Count > 0)
@@ -37,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 							sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
 					}
 
-					return new OfTypeContext(sequence, objectType);
+					return BuildSequenceResult.FromContext(new OfTypeContext(sequence, objectType));
 				}
 			}
 			else
@@ -61,13 +63,13 @@ namespace LinqToDB.Linq.Builder
 								sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
 							}
 
-							return new OfTypeContext(sequence, toType);
+							return BuildSequenceResult.FromContext(new OfTypeContext(sequence, toType));
 						}
 					}
 				}
 			}
 
-			return sequence;
+			return BuildSequenceResult.FromContext(sequence);
 		}
 
 		static ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)

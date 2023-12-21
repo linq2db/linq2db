@@ -11,13 +11,13 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("Cast");
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			if (sequence == null)
-				return null;
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (buildResult.BuildContext == null)
+				return buildResult;
 
-			return new CastContext(sequence, methodCall);
+			return BuildSequenceResult.FromContext(new CastContext(buildResult.BuildContext, methodCall));
 		}
 
 		sealed class CastContext : PassThroughContext

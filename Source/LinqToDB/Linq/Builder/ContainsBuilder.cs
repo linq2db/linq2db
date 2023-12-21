@@ -28,17 +28,17 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var innerQuery = new SelectQuery();
 
-			var sequence   = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery));
-			if (sequence == null)
-				return null;
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], innerQuery));
+			if (buildResult.BuildContext == null)
+				return buildResult;
 
-			sequence = new SubQueryContext(sequence);
+			var sequence = new SubQueryContext(buildResult.BuildContext);
 
-			return new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence);
+			return BuildSequenceResult.FromContext(new ContainsContext(buildInfo.Parent, methodCall, buildInfo.SelectQuery, sequence));
 		}
 
 		public static bool IsConstant(MethodCallExpression methodCall)

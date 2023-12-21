@@ -116,17 +116,17 @@ namespace LinqToDB.Linq.Builder
 			return dataContext.GetTable<T>().Expression;
 		}
 
-		static IBuildContext ApplyQueryFilters(ExpressionBuilder builder, MappingSchema mappingSchema,
+		static BuildSequenceResult ApplyQueryFilters(ExpressionBuilder builder, MappingSchema mappingSchema,
 			BuildInfo buildInfo, MemberInfo? memberInfo, TableContext tableContext)
 		{
 			var entityType = tableContext.ObjectType;
 			if (builder.IsFilterDisabled(entityType))
-				return tableContext;
+				return BuildSequenceResult.FromContext(tableContext);
 
 			var ed = mappingSchema.GetEntityDescriptor(entityType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var filterFunc = ed.QueryFilterFunc;
 			if (filterFunc == null)
-				return tableContext;
+				return BuildSequenceResult.FromContext(tableContext);
 
 			var refExpression = new ContextRefExpression(typeof(IQueryable<>).MakeGenericType(entityType), tableContext);
 
@@ -139,7 +139,7 @@ namespace LinqToDB.Linq.Builder
 			Expression sequenceExpr = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), refExpression, filterLambda);
 
 			var context   = builder.BuildSequence(new BuildInfo(buildInfo, sequenceExpr));
-			return context;
+			return BuildSequenceResult.FromContext(context);
 		}
 
 		static MappingSchema GetRootMappingSchema(ExpressionBuilder builder, Expression expression)
@@ -160,13 +160,13 @@ namespace LinqToDB.Linq.Builder
 			throw new LinqException($"Could not retrieve DataContext information from expression '{expression}'");
 		}
 
-		public IBuildContext? BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			var type = FindBuildContext(builder, buildInfo, out var parentContext);
 
 			switch (type)
 			{
-				case BuildContextType.None                   : return null;
+				case BuildContextType.None                   : return BuildSequenceResult.NotSupported();
 				case BuildContextType.GetTableMethod         :
 				{
 					var mc = (MethodCallExpression)buildInfo.Expression;
@@ -187,8 +187,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var mappingSchema = builder.MappingSchema;
 
-					return new TableContext(builder, mappingSchema, buildInfo);
-				};
+					return BuildSequenceResult.FromContext(new TableContext(builder, mappingSchema, buildInfo));
+				}
 				case BuildContextType.TableFromExpression :
 				{
 					var mappingSchema = builder.MappingSchema;
@@ -197,8 +197,8 @@ namespace LinqToDB.Linq.Builder
 
 					var bodyMethod = mc.Arguments[1].UnwrapLambda().Body;
 
-					return new TableContext(builder, mappingSchema, new BuildInfo(buildInfo, bodyMethod));
-				};
+					return BuildSequenceResult.FromContext(new TableContext(builder, mappingSchema, new BuildInfo(buildInfo, bodyMethod)));
+				}
 				case BuildContextType.AsCteMethod            : return BuildCteContext     (builder, buildInfo);
 				case BuildContextType.GetCteMethod           : return BuildRecursiveCteContextTable (builder, buildInfo);
 				case BuildContextType.FromSqlMethod          : return BuildRawSqlTable(builder, buildInfo, false);

@@ -154,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
@@ -203,7 +203,7 @@ namespace LinqToDB.Linq.Builder
 							buildInfo.IsAggregation);
 
 						if (sequence == null)
-							return null;
+							return BuildSequenceResult.Error(methodCall);
 					}
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
@@ -246,11 +246,13 @@ namespace LinqToDB.Linq.Builder
 				var placeholderSelect   = parentContext.SelectQuery;
 
 				using var testQuery = ExpressionBuilder.QueryPool.Allocate();
-				var testSequence = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, testQuery.Value)
+				var testSequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, testQuery.Value)
 					{ AggregationTest = true, IsAggregation = true, IsTest = true });
 
-				if (testSequence == null)
-					return null;
+				if (testSequenceResult.BuildContext == null)
+					return testSequenceResult;
+
+				var testSequence = testSequenceResult.BuildContext;
 
 				// It means that as root we have used fake context
 				var testSelectQuery = testSequence.SelectQuery;
@@ -276,12 +278,14 @@ namespace LinqToDB.Linq.Builder
 
 					if (valid)
 					{
-						sequence = builder.TryBuildSequence(
+						var sequenceResult = builder.TryBuildSequence(
 							new BuildInfo(buildInfo, sequenceArgument)
 								{ CreateSubQuery = false, IsAggregation = true });
 
-						if (sequence == null)
-							return null;
+						if (sequenceResult.BuildContext == null)
+							return sequenceResult;
+
+						sequence = sequenceResult.BuildContext;
 
 						var sequenceRef = new ContextRefExpression(sequence.ElementType, sequence);
 
@@ -300,11 +304,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (sequence is null)
 				{
-					sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
+					var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
 
-					if (sequence == null)
-						return null;
+					if (sequenceResult.BuildContext == null)
+						return sequenceResult;
 
+					sequence = sequenceResult.BuildContext;
 					sequence = new SubQueryContext(sequence);
 
 					placeholderSequence ??= sequence;
@@ -378,7 +383,7 @@ namespace LinqToDB.Linq.Builder
 							static (ctx, e, descriptor) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor));
 
 						if (sqlExpr is not SqlPlaceholderExpression placeholder)
-							return null;
+							return BuildSequenceResult.Error(methodCall);
 
 						builder.RegisterExtensionAccessors(methodCall);
 
@@ -404,7 +409,7 @@ namespace LinqToDB.Linq.Builder
 			functionPlaceholder.Alias = functionName;
 			context.Placeholder       = functionPlaceholder;
 
-			return context;
+			return BuildSequenceResult.FromContext(context);
 		}
 
 		sealed class AggregationContext : SequenceContextBase

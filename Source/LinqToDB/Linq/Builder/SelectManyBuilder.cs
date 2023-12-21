@@ -14,13 +14,15 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("SelectMany");
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var genericArguments = methodCall.Method.GetGenericArguments();
 
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			if (sequence == null)
-				return null;
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
 
 			var collectionSelector = SequenceHelper.GetArgumentLambda(methodCall, "collectionSelector") ??
 			                         SequenceHelper.GetArgumentLambda(methodCall, "selector");
@@ -38,25 +40,24 @@ namespace LinqToDB.Linq.Builder
 
 			var expr = SequenceHelper.PrepareBody(collectionSelector, sequence).Unwrap();
 
-			BuildInfo      collectionInfo;
-			IBuildContext? collection;
 			Expression     resultExpression;
-			Expression     projected;
 
 			// GroupJoin handling
 			expr = builder.UpdateNesting(sequence, expr);
 
 			var collectionSelectQuery = new SelectQuery();
-			collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
+			var collectionInfo = new BuildInfo(sequence, expr, collectionSelectQuery)
 			{
 				CreateSubQuery    = true,
 				SourceCardinality = SourceCardinality.OneOrMany
 			};
 
-			collection = builder.TryBuildSequence(collectionInfo);
+			var collectionResult = builder.TryBuildSequence(collectionInfo);
 
-			if (collection == null)
-				return null;
+			if (collectionResult.BuildContext == null)
+				return collectionResult;
+
+			var collection = collectionResult.BuildContext;
 
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//
@@ -65,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, collection, null, false);
 			}
 
-			projected = builder.BuildSqlExpression(collection,
+			var projected = builder.BuildSqlExpression(collection,
 				new ContextRefExpression(collection.ElementType, collection), buildInfo.GetFlags(),
 				buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
 
@@ -116,9 +117,9 @@ namespace LinqToDB.Linq.Builder
 			sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
 			if (buildInfo.Parent == null && !SequenceHelper.IsSupportedSubqueryForModifier(sequence, collection))
-				return null;
+				return BuildSequenceResult.Error(collectionSelector);
 
-			return context;
+			return BuildSequenceResult.FromContext(context);
 		}
 	}
 }

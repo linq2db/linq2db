@@ -149,22 +149,25 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
-		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags)
+		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags, out bool isSequence)
 		{
 			var info = new BuildInfo(context, expr, new SelectQuery())
 			{
 				CreateSubQuery = true,
 			};
 
-			var ctx = TryBuildSequence(info);
+			var buildResult = TryBuildSequence(info);
 
-			if (ctx != null)
+			isSequence = buildResult.ErrorExpression != null;
+
+			if (buildResult.BuildContext != null)
 			{
-				if (!SequenceHelper.IsSupportedSubqueryForModifier(context, ctx))
+				isSequence = true;
+				if (!SequenceHelper.IsSupportedSubqueryForModifier(context, buildResult.BuildContext))
 					return null;
 			}
 
-			return ctx;
+			return buildResult.BuildContext;
 		}
 
 		#endregion
@@ -4659,7 +4662,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (root is MethodCallExpression mce && mce.IsQueryable() && currentContext != null)
 				{
-					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags);
+					var subqueryExpression = TryGetSubQueryExpression(currentContext, root, null, flags, out var isSequence);
 					if (subqueryExpression != null)
 					{
 						root = subqueryExpression;
@@ -4668,6 +4671,12 @@ namespace LinqToDB.Linq.Builder
 							root = SqlAdjustTypeExpression.AdjustType(root, root.Type, MappingSchema);
 						}
 					}
+					else if (isSequence)
+					{
+						// Failed to build sequence. Do not continue.
+						return memberExpression;
+					}
+					
 				}
 
 				var newPath = memberExpression;
@@ -4845,7 +4854,7 @@ namespace LinqToDB.Linq.Builder
 						var ctx = rootContext?.BuildContext ?? currentContext;
 						if (ctx != null)
 						{
-							var subqueryExpression = TryGetSubQueryExpression(ctx, path, null, flags);
+							var subqueryExpression = TryGetSubQueryExpression(ctx, path, null, flags, out var isSequence);
 							if (subqueryExpression != null)
 							{
 								expression = MakeExpression(ctx, subqueryExpression, flags);
@@ -4854,6 +4863,10 @@ namespace LinqToDB.Linq.Builder
 									expression = SqlAdjustTypeExpression.AdjustType(expression, path.Type, MappingSchema);
 								}
 
+								handled = true;
+							}
+							else if (isSequence)
+							{
 								handled = true;
 							}
 						}

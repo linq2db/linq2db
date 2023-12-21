@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("Truncate");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 			if (arg.Type == typeof(bool))
 				reset = (bool)builder.EvaluateExpression(arg)!;
 
-			return new TruncateContext(sequence, new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset });
+			return BuildSequenceResult.FromContext(new TruncateContext(sequence, new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset }));
 		}
 
 		#endregion

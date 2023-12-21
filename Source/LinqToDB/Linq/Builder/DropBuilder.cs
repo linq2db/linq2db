@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("Drop");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.SqlTable.Set(ifExists, TableOptions.DropIfExists);
 
-			return new DropContext(buildInfo.Parent, sequence, new SqlDropTableStatement(sequence.SqlTable));
+			return BuildSequenceResult.FromContext(new DropContext(buildInfo.Parent, sequence, new SqlDropTableStatement(sequence.SqlTable)));
 		}
 
 		#endregion

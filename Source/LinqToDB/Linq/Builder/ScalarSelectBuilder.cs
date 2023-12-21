@@ -18,9 +18,9 @@ namespace LinqToDB.Linq.Builder
 				((LambdaExpression)buildInfo.Expression).Parameters.Count == 0;
 		}
 
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return new ScalarSelectContext(builder, buildInfo.Expression.UnwrapLambda().Body, buildInfo.SelectQuery);
+			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder, buildInfo.Expression.UnwrapLambda().Body, buildInfo.SelectQuery));
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)

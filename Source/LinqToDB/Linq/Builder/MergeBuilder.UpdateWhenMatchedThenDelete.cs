@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsSameGenericMethod(UpdateWhenMatchedAndThenDeleteMethodInfo);
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				// UpdateWhenMatchedAndThenDelete(merge, searchCondition, setter, deleteCondition)
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 						ProjectFlags.SQL, operation.WhereDelete);
 				}
 
-				return mergeContext;
+				return BuildSequenceResult.FromContext(mergeContext);
 			}
 		}
 	}

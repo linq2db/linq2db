@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsSameGenericMethod(UsingTargetMethodInfo);
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 				mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
 				mergeContext.Merge.Source = source.Source;
 
-				return mergeContext;
+				return BuildSequenceResult.FromContext(mergeContext);
 			}
 		}
 	}

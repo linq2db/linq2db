@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 				methodCall.IsQueryable("CrossJoin" ) && methodCall.Arguments.Count == 3;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var outerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var innerContext = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
@@ -119,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 				outerContext.SelectQuery.From.Table(innerContext.SelectQuery);
 			}
 
-			return joinContext;
+			return BuildSequenceResult.FromContext(joinContext);
 		}
 	}
 }

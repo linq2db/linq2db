@@ -12,11 +12,12 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("HasUniqueKey");
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			if (sequence == null)
-				return null;
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (buildResult.BuildContext == null)
+				return buildResult;
+			var sequence = buildResult.BuildContext;
 
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 
@@ -27,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 
 			sequence.SelectQuery.UniqueKeys.Add(placeholders.Select(p => p.Sql).ToArray());
 
-			return new SubQueryContext(sequence);
+			return BuildSequenceResult.FromContext(new SubQueryContext(sequence));
 		}
 	}
 }

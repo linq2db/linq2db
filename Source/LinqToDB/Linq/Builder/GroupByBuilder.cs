@@ -100,14 +100,15 @@ namespace LinqToDB.Linq.Builder
 
 		 */
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequenceExpr    = methodCall.Arguments[0];
 			var groupingKind    = GroupingType.Default;
 
-			var dataSequence = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpr));
-			if (dataSequence == null)
-				return null;
+			var dataSequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceExpr));
+			if (dataSequenceResult.BuildContext == null)
+				return dataSequenceResult;
+			var dataSequence = dataSequenceResult.BuildContext;
 
 			var dataSubquery     = new SubQueryContext(dataSequence);
 			var groupingSubquery = new SubQueryContext(dataSubquery);
@@ -180,10 +181,10 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var result  = new SelectContext(buildInfo.Parent, newBody, groupBy, false);
-				return result;
+				return BuildSequenceResult.FromContext(result);
 			}
 
-			return groupBy;
+			return BuildSequenceResult.FromContext(groupBy);
 		}
 
 		/// <summary>
@@ -602,9 +603,9 @@ namespace LinqToDB.Linq.Builder
 
 				expr = Builder.UpdateNesting(parentContext, expr);
 
-				var ctx = Builder.TryBuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false, CreateSubQuery = false});
+				var buildResult = Builder.TryBuildSequence(new BuildInfo(buildInfo, expr) { IsAggregation = false, CreateSubQuery = false});
 
-				return ctx;
+				return buildResult.BuildContext;
 			}
 
 			internal class Grouping<TKey,TElement> : IGrouping<TKey,TElement>

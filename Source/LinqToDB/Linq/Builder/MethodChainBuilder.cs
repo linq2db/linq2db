@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
 
@@ -75,9 +75,10 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
-				if (sequence == null)
-					return null;
+				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, root) { CreateSubQuery = true });
+				if (buildResult.BuildContext == null)
+					return buildResult;
+				sequence = buildResult.BuildContext;
 			}
 
 			var buildSequence        = sequence;
@@ -134,7 +135,7 @@ namespace LinqToDB.Linq.Builder
 				});
 
 			if (sqlExpression is not SqlPlaceholderExpression placeholder)
-				return null;
+				return BuildSequenceResult.Error(methodCall);
 
 			builder.RegisterExtensionAccessors(methodCall);
 
@@ -152,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 			
 			context.Placeholder = placeholder;
 
-			return context;
+			return BuildSequenceResult.FromContext(context);
 		}
 
 		internal sealed class ChainContext : SequenceContextBase

@@ -217,9 +217,9 @@ namespace LinqToDB.Linq.Builder
 				return this;
 
 			var expr    = Body;
-			var context = Builder.TryBuildSequence(new BuildInfo(buildInfo, expr));
+			var buildResult = Builder.TryBuildSequence(new BuildInfo(buildInfo, expr));
 
-			return context;
+			return buildResult.BuildContext;
 		}
 	}
 }

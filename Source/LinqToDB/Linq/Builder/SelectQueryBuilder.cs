@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsSameGenericMethod(DataExtensions.SelectQueryMethodInfo);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = new SelectContext(buildInfo.Parent,
 				builder,
@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Builder
 			var translated = builder.BuildSqlExpression(subquery, new ContextRefExpression(subquery.ElementType, subquery),
 				ProjectFlags.SQL, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
 
-			return subquery;
+			return BuildSequenceResult.FromContext(subquery);
 		}
 
 		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)

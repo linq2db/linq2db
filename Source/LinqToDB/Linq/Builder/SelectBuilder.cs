@@ -32,13 +32,15 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var selector = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var selector    = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			if (sequence == null)
-				return null;
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
 
 			// finalizing context
 			_ = builder.MakeExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence),
@@ -55,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 			context.Debug_MethodCall = methodCall;
 			Debug.WriteLine("BuildMethodCall Select:\n" + context.SelectQuery);
 #endif
-			return context;
+			return BuildSequenceResult.FromContext(context);
 		}
 
 		#endregion

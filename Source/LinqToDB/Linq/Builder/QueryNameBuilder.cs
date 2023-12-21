@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(new[] { nameof(LinqExtensions.QueryName) });
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence    = builder.BuildSequence(new(buildInfo, methodCall.Arguments[0]));
 			var elementType = methodCall.Arguments[0].Type.GetGenericArguments()[0];
@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 				sequence = new SubQueryContext(sequence);
 			}
 
-			return sequence;
+			return BuildSequenceResult.FromContext(sequence);
 		}
 	}
 }

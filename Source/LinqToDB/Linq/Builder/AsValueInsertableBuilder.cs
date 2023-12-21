@@ -12,7 +12,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("AsValueInsertable");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 				InsertBuilder.InsertContext.InsertTypeEnum.Insert, new SqlInsertStatement(sequence.SelectQuery), null);
 			insertContext.RequiresSetters = true;
 
-			return insertContext;
+			return BuildSequenceResult.FromContext(insertContext);
 		}
 	}
 }

@@ -18,11 +18,13 @@ namespace LinqToDB.Linq.Builder
 				methodCall.IsAsyncExtension(MethodNamesAsync);
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { /*CopyTable = true,*/ CreateSubQuery = true, SelectQuery = new SelectQuery()});
-			if (sequence == null)
-				return null;
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) { /*CopyTable = true,*/ CreateSubQuery = true, SelectQuery = new SelectQuery()});
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
 
 			var isAsync = methodCall.Method.DeclaringType == typeof(AsyncExtensions);
 
@@ -44,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 					isTest: buildInfo.IsTest, buildInfo.AggregationTest);
 
 				if (sequence == null)
-					return null;
+					return BuildSequenceResult.Error(methodCall);
 
 				sequence.SetAlias(condition.Parameters[0].Name);
 			}
@@ -53,7 +55,7 @@ namespace LinqToDB.Linq.Builder
 			_ = builder.MakeExpression(sequence, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence),
 				ProjectFlags.ExtractProjection);
 
-			return new AllAnyContext(buildInfo.Parent, buildInfo.SelectQuery, methodCall, sequence);
+			return BuildSequenceResult.FromContext(new AllAnyContext(buildInfo.Parent, buildInfo.SelectQuery, methodCall, sequence));
 		}
 
 		sealed class AllAnyContext : SequenceContextBase

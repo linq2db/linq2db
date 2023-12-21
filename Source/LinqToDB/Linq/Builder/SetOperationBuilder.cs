@@ -23,14 +23,18 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable(MethodNames);
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence1 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			if (sequence1 == null)
-				return null;
-			var sequence2 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
-			if (sequence2 == null)
-				return null;
+			var buildResult1 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (buildResult1.BuildContext == null)
+				return buildResult1;
+
+			var buildResult2 = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+			if (buildResult2.BuildContext == null)
+				return buildResult2;
+
+			var sequence1 = buildResult1.BuildContext;
+			var sequence2 = buildResult2.BuildContext;
 
 			SetOperation setOperation;
 			switch (methodCall.Method.Name)
@@ -71,10 +75,10 @@ namespace LinqToDB.Linq.Builder
 
 			if (needsEmulation)
 			{
-				return setContext.Emulate();
+				return BuildSequenceResult.FromContext(setContext.Emulate());
 			}
 
-			return setContext;
+			return BuildSequenceResult.FromContext(setContext);
 		}
 
 		#endregion

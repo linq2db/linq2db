@@ -283,7 +283,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public IBuildContext? TryBuildSequence(BuildInfo buildInfo)
+		public BuildSequenceResult TryBuildSequence(BuildInfo buildInfo)
 		{
 			var originalExpression = buildInfo.Expression;
 
@@ -298,37 +298,40 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (builder.CanBuild(this, buildInfo))
 				{
-					var sequence = builder.BuildSequence(this, buildInfo);
+					var result = builder.BuildSequence(this, buildInfo);
 
 					lock (builder)
 						builder.BuildCounter++;
 
 					_reorder = _reorder || n < builder.BuildCounter;
 
-					if (sequence != null)
+					if (result.BuildContext != null)
 					{
 #if DEBUG
 						if (!buildInfo.IsTest)
-							QueryHelper.DebugCheckNesting(sequence.GetResultStatement(), buildInfo.IsSubQuery);
+							QueryHelper.DebugCheckNesting(result.BuildContext.GetResultStatement(), buildInfo.IsSubQuery);
 #endif
-						RegisterSequenceExpression(sequence, originalExpression);
+						RegisterSequenceExpression(result.BuildContext, originalExpression);
 					}
 
-					return sequence;
+					return result;
 				}
 
 				n = builder.BuildCounter;
 			}
 
-			return null;
+			return new BuildSequenceResult(originalExpression);
 		}
 
 		public IBuildContext BuildSequence(BuildInfo buildInfo)
 		{
-			var sequence = TryBuildSequence(buildInfo);
-			if (sequence == null)
-				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", SqlErrorExpression.PrepareExpression(buildInfo.Expression));
-			return sequence;
+			var buildResult = TryBuildSequence(buildInfo);
+			if (buildResult.BuildContext == null)
+			{
+				var errorExpr = buildResult.ErrorExpression ?? buildInfo.Expression;
+				throw new LinqException("Sequence '{0}' cannot be converted to SQL.", SqlErrorExpression.PrepareExpression(errorExpr));
+			}
+			return buildResult.BuildContext;
 		}
 
 		public ISequenceBuilder? GetBuilder(BuildInfo buildInfo, bool throwIfNotFound = true)

@@ -84,22 +84,24 @@ namespace LinqToDB.Linq.Builder
 			return notNull.AsReadOnly();
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
 
 			// Generating LEFT JOIN from one record resultset
 			if (buildInfo.SourceCardinality.HasFlag(SourceCardinality.Zero))
 			{
-				var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
-				if (sequence == null)
-					return null;
+				var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
+				if (sequenceResult.BuildContext == null)
+					return sequenceResult;
+
+				var sequence = sequenceResult.BuildContext;
 
 				if (buildInfo.IsSubQuery)
 				{
 					// At lease Oracle and MySql cannot handle such subquery
 					if (!SequenceHelper.IsSupportedSubqueryNesting(sequence))
-						return null;
+						return BuildSequenceResult.Error(methodCall);
 				}
 
 				defaultValue ??= Expression.Default(methodCall.Method.GetGenericArguments()[0]);
@@ -145,15 +147,16 @@ namespace LinqToDB.Linq.Builder
 				var resultSelectContext =
 					new SelectContext(buildInfo.Parent, bodyValue, subqueryContext, buildInfo.IsSubQuery);
 
-				return new SubQueryContext(resultSelectContext);
+				return BuildSequenceResult.FromContext(new SubQueryContext(resultSelectContext));
 			}
 			else
 			{
-				var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-				if (sequence == null)
-					return null;
+				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+				if (buildResult.BuildContext == null)
+					return buildResult;
+				var sequence = buildResult.BuildContext;
 
-				return new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, defaultValue, true);
+				return BuildSequenceResult.FromContext(new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, defaultValue, true));
 			}
 		}
 

@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -227,7 +227,7 @@ namespace LinqToDB.Linq.Builder
 
 			insertStatement.Insert.WithIdentity = insertType == InsertContext.InsertTypeEnum.InsertWithIdentity;
 
-			return insertContext;
+			return BuildSequenceResult.FromContext(insertContext);
 		}
 
 		#endregion
@@ -397,7 +397,8 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsQueryable("Into");
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,
+				MethodCallExpression                                                 methodCall, BuildInfo buildInfo)
 			{
 				var source = methodCall.Arguments[0].Unwrap();
 				var into   = methodCall.Arguments[1].Unwrap();
@@ -428,7 +429,7 @@ namespace LinqToDB.Linq.Builder
 				insertContext.Into = destinationSequence;
 				insertContext.LastBuildInfo = buildInfo;
 
-				return insertContext;
+				return BuildSequenceResult.FromContext(insertContext);
 			}
 		}
 
@@ -443,7 +444,8 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsQueryable("Value");
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,
+				MethodCallExpression                                                 methodCall, BuildInfo buildInfo)
 			{
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 				var extract  = methodCall.Arguments[1].UnwrapLambda();
@@ -467,7 +469,7 @@ namespace LinqToDB.Linq.Builder
 				UpdateBuilder.ParseSet(contextRef, extractExp, updateExpr, insertContext.SetExpressions);
 				insertContext.LastBuildInfo = buildInfo;
 
-				return insertContext;
+				return BuildSequenceResult.FromContext(insertContext);
 			}
 		}
 

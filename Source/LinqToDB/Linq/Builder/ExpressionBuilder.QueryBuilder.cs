@@ -469,6 +469,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			public Expression     SequenceExpression = null!;
 			public IBuildContext? Context;
+			public bool           IsSequence;
 		}
 
 		public Expression CorrectRoot(IBuildContext? currentContext, Expression expr)
@@ -527,7 +528,7 @@ namespace LinqToDB.Linq.Builder
 
 		SubQueryContextInfo GetSubQueryContext(IBuildContext inContext, ref IBuildContext context, Expression expr, ProjectFlags flags)
 		{
-			context = inContext;
+			context   = inContext;
 			var testExpression = CorrectRoot(context, expr);
 
 			var shouldCache = flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsRoot();
@@ -550,9 +551,9 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var correctedForBuild = testExpression;
-			var ctx               = GetSubQuery(context, correctedForBuild, flags);
+			var ctx               = GetSubQuery(context, correctedForBuild, flags, out var isSequence);
 
-			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx };
+			var info = new SubQueryContextInfo { SequenceExpression = testExpression, Context = ctx, IsSequence = isSequence };
 
 			if (shouldCache)
 			{
@@ -576,8 +577,10 @@ namespace LinqToDB.Linq.Builder
 			return context is FirstSingleBuilder.FirstSingleContext;
 		}
 
-		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, ProjectFlags flags)
+		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, ProjectFlags flags, out bool isSequence)
 		{
+			isSequence = false;
+
 			if (flags.IsTraverse())
 				return null;
 
@@ -606,6 +609,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var info = GetSubQueryContext(context, ref context, unwrapped, flags);
+			isSequence = info.IsSequence;
 
 			if (info.Context == null)
 				return null;

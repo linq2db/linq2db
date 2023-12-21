@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 			};
 		}
 
-		protected override IBuildContext? BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var argument = methodCall.Arguments[0];
 			var argumentCount = methodCall.Arguments.Count;
@@ -59,9 +59,11 @@ namespace LinqToDB.Linq.Builder
 			if (methodCall.IsAsyncExtension(MethodNamesAsync))
 				--argumentCount;
 
-			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, argument));
-			if (sequence == null)
-				return null;
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument));
+			if (buildResult.BuildContext == null)
+				return BuildSequenceResult.Error(methodCall);
+
+			var sequence = buildResult.BuildContext;
 
 			if (argumentCount > 1)
 			{
@@ -70,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 					isAggregationTest : buildInfo.AggregationTest);
 
 				if (sequence == null)
-					return null;
+					return BuildSequenceResult.Error(methodCall);
 			}
 
 			sequence = new SubQueryContext(sequence);
@@ -122,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 				canBeWeak = true;
 			}
 
-			return new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest);
+			return BuildSequenceResult.FromContext(new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest));
 		}
 
 		public sealed class FirstSingleContext : SequenceContextBase

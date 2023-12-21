@@ -29,11 +29,11 @@ namespace LinqToDB.Linq.Builder
 			{ Methods.InsertFirst, BuildInsertFirst },
 		};
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var genericMethod = methodCall.Method.GetGenericMethodDefinition();
 			return _methodBuilders.TryGetValue(genericMethod, out var build)
-				? build(builder, methodCall, buildInfo)
+				? BuildSequenceResult.FromContext(build(builder, methodCall, buildInfo))
 				: throw new InvalidOperationException("Unknown method " + methodCall.Method.Name);
 		}
 
