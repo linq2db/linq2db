@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker run -h hxehost -d --name hana2 -p 39017:39017 saplabs/hanaexpress:2.00.072.00.20231123.1 --agree-to-sap-license --passwords-url file:///hana/password.json
+docker run -h hxehost -d --name hana2 -p 39017:39017 -m 4294967296 saplabs/hanaexpress:2.00.072.00.20231123.1 --agree-to-sap-license --passwords-url file:///hana/password.json
 #echo Generate password file
 cat <<-EOJSON > hana_password.json
 {"master_password": "Passw0rd"}
@@ -39,11 +39,6 @@ docker logs hana2
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') UNSET ('"'"'diserver'"'"','"'"'instances'"'"') WITH RECONFIGURE'
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'webdispatcher'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
 ~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'daemon.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'preprocessor'"'"','"'"'instances'"'"') = '"'"'0'"'"' WITH RECONFIGURE'
-
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'global.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'resource_tracking'"'"','"'"'enable_tracking'"'"') = '"'"'off'"'"' WITH RECONFIGURE'
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'global.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'resource_tracking'"'"','"'"'memory_tracking'"'"') = '"'"'off'"'"' WITH RECONFIGURE'
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'global.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'resource_tracking'"'"','"'"'sr_enable_tracking'"'"') = '"'"'off'"'"' WITH RECONFIGURE'
-~/linq2db_ci/providers/saphana/linux/HDBSQL/hdbsql -n localhost:39017 -u SYSTEM -p Passw0rd 'ALTER SYSTEM ALTER CONFIGURATION ('"'"'global.ini'"'"','"'"'host'"'"','"'"'hxehost'"'"') SET ('"'"'resource_tracking'"'"','"'"'sr_memory_tracking'"'"') = '"'"'off'"'"' WITH RECONFIGURE'
 
 cat <<-EOJSON > HanaDataProviders.json
 {
