@@ -25,7 +25,10 @@ namespace Tests.Linq
 		{
 			Test1(context);
 
-			using (var db = GetDataContext(context + ".LinqService"))
+			if (DisableRemoteContext)
+				Assert.Inconclusive("Remote context disabled");
+
+			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = await db.Parent.ToArrayAsync();
 				Assert.That(list.Length, Is.Not.EqualTo(0));
@@ -35,7 +38,10 @@ namespace Tests.Linq
 		[Test]
 		public void Test1([DataSources(false)] string context)
 		{
-			using (var db = GetDataContext(context + ".LinqService"))
+			if (DisableRemoteContext)
+				Assert.Inconclusive("Remote context disabled");
+
+			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = db.Parent.ToArrayAsync().Result;
 				Assert.That(list.Length, Is.Not.EqualTo(0));
@@ -50,7 +56,10 @@ namespace Tests.Linq
 
 		async Task TestForEachImpl(string context)
 		{
-			using (var db = GetDataContext(context + ".LinqService"))
+			if (DisableRemoteContext)
+				Assert.Inconclusive("Remote context disabled");
+
+			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = new List<Parent>();
 

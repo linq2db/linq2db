@@ -1638,7 +1638,7 @@ namespace Tests.Linq
 					true);
 
 				// remote context doesn't have access to final SQL
-				if (!context.EndsWith(".LinqService"))
+				if (!context.IsRemote())
 					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}
@@ -1664,7 +1664,7 @@ namespace Tests.Linq
 					true);
 
 				// remote context doesn't have access to final SQL
-				if (!context.EndsWith(".LinqService"))
+				if (!context.IsRemote())
 					Assert.AreEqual(flag == null ? 0 : 1, Regex.Matches(sql, " AND ").Count);
 			}
 		}

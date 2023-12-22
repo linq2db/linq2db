@@ -215,22 +215,26 @@ namespace LinqToDB.DataProvider.SqlServer
 					value = dto.LocalDateTime;
 					break;
 
-				case DataType.DateTime2
-						when value is DateTimeOffset dto:
-					value = dto.WithPrecision(dataType.Precision ?? 7).LocalDateTime;
+				case DataType.DateTime2 when value is DateTimeOffset dto:
+					if (Version == SqlServerVersion.v2005)
+						value = dto.LocalDateTime.WithPrecision(dataType.Precision > 3 ? 3 : (dataType.Precision ?? 3));
+					else
+						value = dto.WithPrecision(dataType.Precision ?? 7).LocalDateTime;
 					break;
 
 				case DataType.DateTimeOffset when value is DateTimeOffset dto:
 				{
-					var precision = dataType.Precision ?? 7;
-					if (Version == SqlServerVersion.v2005 && precision > 3)
-					{
-						precision = 3;
-					}
-
-					value = dto.WithPrecision(precision);
+					if (Version == SqlServerVersion.v2005)
+						value = dto.LocalDateTime.WithPrecision(dataType.Precision > 3 ? 3 : (dataType.Precision ?? 3));
+					else
+						value = dto.WithPrecision(dataType.Precision ?? 7);
 					break;
 				}
+
+				case DataType.Date when value is DateTime dt:
+					if (Version is SqlServerVersion.v2005)
+						value = dt.Date;
+					break;
 
 				case DataType.Date when value is DateTimeOffset dto:
 					value = dto.LocalDateTime.Date;
@@ -373,7 +377,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.Binary        : type = SqlDbType.Binary;        break;
 				case DataType.Image         : type = SqlDbType.Image;         break;
 				case DataType.SmallMoney    : type = SqlDbType.SmallMoney;    break;
-				case DataType.Date          : type = SqlDbType.Date;          break;
+				// ArgumentException: The version of SQL Server in use does not support datatype 'date'
+				case DataType.Date          : type = Version == SqlServerVersion.v2005 ? SqlDbType.DateTime : SqlDbType.Date; break;
 				case DataType.Time          : type = SqlDbType.Time;          break;
 				case DataType.SmallDateTime : type = SqlDbType.SmallDateTime; break;
 				case DataType.Timestamp     : type = SqlDbType.Timestamp;     break;
