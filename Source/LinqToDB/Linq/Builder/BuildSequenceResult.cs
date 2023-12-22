@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	struct BuildSequenceResult
+	readonly struct BuildSequenceResult
 	{
 		public BuildSequenceResult(IBuildContext? buildContext)
 		{
