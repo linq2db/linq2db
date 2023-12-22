@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 
@@ -29,10 +30,11 @@ namespace LinqToDB.SqlQuery
 		SelectQuery?    _inSubquery;
 		bool            _isInRecursiveCte;
 
-		SqlQueryColumnNestingCorrector _columnNestingCorrector     = new();
-		SqlQueryOrderByOptimizer       _orderByOptimizer           = new();
-		MovingComplexityVisitor        _movingComplexityVisitor    = new();
-		SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor = new(true);
+		SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
+		SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
+		MovingComplexityVisitor        _movingComplexityVisitor     = new();
+		SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
+		MovingOuterPredicateVisitor    _movingOuterPredicateVisitor = new();
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify)
 		{
@@ -119,6 +121,7 @@ namespace LinqToDB.SqlQuery
 			_orderByOptimizer.Cleanup();
 			_movingComplexityVisitor.Cleanup();
 			_expressionOptimizerVisitor.Cleanup();
+			_movingOuterPredicateVisitor.Cleanup();
 		}
 
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
@@ -918,31 +921,11 @@ namespace LinqToDB.SqlQuery
 
 				for (int i = 0; i < searchCondition.Count; i++)
 				{
-					var cond = searchCondition[i];
-					var newCond = cond.Convert((sql, toCheck, toIgnore, isAgg), static (visitor, e) =>
-					{
-						if (e.ElementType == QueryElementType.Column || e.ElementType == QueryElementType.SqlField)
-						{
-							if (QueryHelper.IsDependsOnSources(e, visitor.Context.toCheck))
-							{
-								if (e is not SqlColumn clm || clm.Parent != visitor.Context.sql)
-								{
-									var newExpr = visitor.Context.sql.Select.AddColumn((ISqlExpression)e);
+					var predicate = searchCondition[i];
 
-									if (visitor.Context.isAgg)
-									{
-										visitor.Context.sql.Select.GroupBy.Items.Add((ISqlExpression)e);
-									}
+					var newPredicate = _movingOuterPredicateVisitor.CorrectReferences(sql, toCheck, predicate);
 
-									return newExpr;
-								}
-							}
-						}
-
-						return e;
-					});
-
-					searchCondition[i] = newCond;
+					searchCondition[i] = newPredicate;
 				}
 
 				var newJoinType = ConvertApplyJoinType(joinTable.JoinType);
@@ -2211,6 +2194,57 @@ namespace LinqToDB.SqlQuery
 			DoNotAllowScopeStruct DoNotAllowScope(bool? doNotAllow)
 			{
 				return new DoNotAllowScopeStruct(this, doNotAllow);
+			}
+		}
+
+		class MovingOuterPredicateVisitor : QueryElementVisitor
+		{
+			SelectQuery                          _forQuery       = default!;
+			ISqlPredicate                        _predicate      = default!;
+			IReadOnlyCollection<ISqlTableSource> _currentSources = default!;
+
+			public MovingOuterPredicateVisitor() : base(VisitMode.Transform)
+			{
+			}
+
+			public ISqlPredicate CorrectReferences(SelectQuery forQuery, IReadOnlyCollection<ISqlTableSource> currentSources, ISqlPredicate predicate)
+			{
+				_forQuery       = forQuery;
+				_predicate      = predicate;
+				_currentSources = currentSources;
+
+				return (ISqlPredicate)Visit(predicate);
+			}
+
+			public void Cleanup()
+			{
+				_forQuery       = default!;
+				_predicate      = default!;
+				_currentSources = default!;
+			}
+
+			[return: NotNullIfNotNull(nameof(element))]
+			public override IQueryElement? Visit(IQueryElement? element)
+			{
+				if (ReferenceEquals(element, _predicate))
+					return base.Visit(element);
+
+				if (element is ISqlExpression sqlExpr)
+				{
+					if (QueryHelper.IsDependsOnSources(sqlExpr, _currentSources) && !QueryHelper.IsDependsOnOuterSources(sqlExpr, currentSources : _currentSources))
+					{
+						if (sqlExpr is SqlColumn column && column.Parent == _forQuery)
+							return sqlExpr;
+
+						var withoutNullabilityCheck = QueryHelper.UnwrapNullablity(sqlExpr);
+						var newColumn               = _forQuery.Select.AddColumn(withoutNullabilityCheck);
+						return newColumn;
+					}
+
+					return element;
+				}
+
+				return base.Visit(element);
 			}
 		}
 
