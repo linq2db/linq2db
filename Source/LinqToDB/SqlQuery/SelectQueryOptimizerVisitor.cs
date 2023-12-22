@@ -310,10 +310,67 @@ namespace LinqToDB.SqlQuery
 			return newElement;
 		}
 
-		void OptimizeUnions(SelectQuery selectQuery)
+		bool OptimizeUnions(SelectQuery selectQuery)
 		{
+			var isModified = false;
+
+			if (selectQuery.From.Tables.Count == 1 &&
+			    selectQuery.From.Tables[0].Source is SelectQuery { HasSetOperators: true } mainSubquery)
+			{
+				var isOk = true;
+
+				if (!selectQuery.HasSetOperators)
+				{
+					isOk = selectQuery.OrderBy.IsEmpty && selectQuery.Where.IsEmpty && selectQuery.GroupBy.IsEmpty && !selectQuery.Select.HasModifier;
+					if (isOk)
+					{
+						if (_currentSetOperator != null)
+						{
+							isOk = _currentSetOperator.Operation == mainSubquery.SetOperators[0].Operation;
+						}
+					}
+				}
+
+				if (isOk && mainSubquery.Select.Columns.Count == selectQuery.Select.Columns.Count)
+				{
+					var newIndexes = new Dictionary<ISqlExpression, int>(Utils
+						.ObjectReferenceEqualityComparer<ISqlExpression>
+						.Default);
+
+					for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+					{
+						var scol = selectQuery.Select.Columns[i];
+
+						if (!newIndexes.ContainsKey(scol.Expression))
+							newIndexes[scol.Expression] = i;
+					}
+
+					var operation = selectQuery.HasSetOperators ? selectQuery.SetOperators[0].Operation : mainSubquery.SetOperators[0].Operation;
+
+					if (mainSubquery.SetOperators.All(so => so.Operation == operation))
+					{
+						if (CheckSetColumns(newIndexes, mainSubquery, operation))
+						{
+							UpdateSetIndexes(newIndexes, mainSubquery, operation);
+							selectQuery.SetOperators.InsertRange(0, mainSubquery.SetOperators);
+							mainSubquery.SetOperators.Clear();
+
+							selectQuery.From.Tables[0].Source = mainSubquery;
+
+							for (var i = 0; i < selectQuery.Select.Columns.Count; i++)
+							{
+								var c = selectQuery.Select.Columns[i];
+								c.Expression = mainSubquery.Select.Columns[i];
+							}
+
+							isModified = true;
+						}
+					}
+				}
+			}
+
 			if (!selectQuery.HasSetOperators)
-				return;
+				return isModified;
 
 			for (var index = 0; index < selectQuery.SetOperators.Count; index++)
 			{
@@ -353,9 +410,13 @@ namespace LinqToDB.SqlQuery
 						selectQuery.SetOperators.InsertRange(index + 1, subQuery.SetOperators);
 						subQuery.SetOperators.Clear();
 						--index;
+
+						isModified = true;
 					}
 				}
 			}
+
+			return isModified;
 		}
 
 		static void UpdateSetIndexes(Dictionary<ISqlExpression, int> newIndexes, SelectQuery setQuery, SetOperation setOperation)
@@ -445,7 +506,8 @@ namespace LinqToDB.SqlQuery
 
 			RemoveEmptyJoins(selectQuery);
 
-			OptimizeUnions(selectQuery);
+			if (OptimizeUnions(selectQuery))
+				isModified = true;
 
 			OptimizeGroupBy(selectQuery);
 			OptimizeDistinct(selectQuery);
@@ -1569,7 +1631,7 @@ namespace LinqToDB.SqlQuery
 			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
 			{
 				var tableSource = selectQuery.From.Tables[i];
-				if (tableSource.Joins.Count == 0 && tableSource.Source is SelectQuery { From.Tables.Count: 0, Where.IsEmpty: true } subQuery)
+				if (tableSource.Joins.Count == 0 && tableSource.Source is SelectQuery { From.Tables.Count: 0, Where.IsEmpty: true, HasSetOperators: false } subQuery)
 				{
 					if (selectQuery.From.Tables.Count == 1)
 					{
