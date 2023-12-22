@@ -125,11 +125,6 @@ namespace LinqToDB.SqlQuery
 
 		public bool CanBeNull => false;
 
-		public override bool Equals(ISqlExpression? other)
-		{
-			return other != null && Equals(other, (e1, e2) => e1.Equals(e2));
-		}
-
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return other is ISqlPredicate otherPredicate

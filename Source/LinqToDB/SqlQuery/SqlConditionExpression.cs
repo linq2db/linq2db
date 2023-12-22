@@ -33,11 +33,6 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public override bool Equals(ISqlExpression? other)
-		{
-			throw new NotImplementedException();
-		}
-
 		public override bool Equals(ISqlExpression  other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			throw new NotImplementedException();

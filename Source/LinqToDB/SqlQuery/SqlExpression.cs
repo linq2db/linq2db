@@ -56,15 +56,6 @@ namespace LinqToDB.SqlQuery
 		public bool             IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
 		public bool             IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 
-		#region IEquatable<ISqlExpression> Members
-
-		public override bool Equals(ISqlExpression? other)
-		{
-			return Equals(other, DefaultComparer);
-		}
-
-		#endregion
-
 		#region ISqlExpression Members
 
 		public override bool CanBeNullable(NullabilityContext nullability)

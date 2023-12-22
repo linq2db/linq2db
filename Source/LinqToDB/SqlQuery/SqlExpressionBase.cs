@@ -4,7 +4,16 @@ namespace LinqToDB.SqlQuery
 {
 	public abstract class SqlExpressionBase : QueryElement, ISqlExpression
 	{
-		public abstract bool  Equals(ISqlExpression? other);
+		public virtual bool Equals(ISqlExpression? other)
+		{
+			if (ReferenceEquals(this, other))
+				return true;
+
+			if (ReferenceEquals(other, null))
+				return false;
+
+			return Equals(other, SqlExpression.DefaultComparer);
+		}
 
 		public abstract bool  Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer);
 		public abstract bool  CanBeNullable(NullabilityContext nullability);

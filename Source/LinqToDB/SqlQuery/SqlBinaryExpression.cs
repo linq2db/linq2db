@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 
 namespace LinqToDB.SqlQuery
 {
-	[Serializable, DebuggerDisplay("SQL = {" + nameof(SqlText) + "}")]
-	public class SqlBinaryExpression : ISqlExpression
+	public class SqlBinaryExpression : SqlExpressionBase
 	{
 		public SqlBinaryExpression(Type systemType, ISqlExpression expr1, string operation, ISqlExpression expr2, int precedence)
 		{
@@ -46,32 +44,10 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public Type           SystemType { get; }
-		public int            Precedence { get; }
+		public override QueryElementType ElementType => QueryElementType.SqlBinaryExpression;
 
-		#region Overrides
-
-		public string SqlText => ToString()!;
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return Equals(other, SqlExpression.DefaultComparer);
-		}
-
-		#endregion
+		public override Type SystemType { get; }
+		public override int  Precedence { get; }
 
 		int?                   _hashCode;
 
@@ -94,9 +70,9 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNullable(NullabilityContext nullability) => Expr1.CanBeNullable(nullability) || Expr2.CanBeNullable(nullability);
+		public override bool CanBeNullable(NullabilityContext nullability) => Expr1.CanBeNullable(nullability) || Expr2.CanBeNullable(nullability);
 
-		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -114,14 +90,10 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SqlBinaryExpression;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
+				//.DebugAppendUniqueId(this)
 				.AppendElement(Expr1)
 				.Append(' ')
 				.Append(Operation)

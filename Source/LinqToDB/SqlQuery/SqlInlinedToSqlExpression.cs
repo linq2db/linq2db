@@ -38,14 +38,6 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public override bool Equals(ISqlExpression? other)
-		{
-			if (other == null) 
-				return false;
-
-			return Equals(other, (e1, e2) => e1.Equals(e2));
-		}
-
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (other is not SqlInlinedToSqlExpression otherInlined)

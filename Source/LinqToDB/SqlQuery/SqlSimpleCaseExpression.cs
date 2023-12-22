@@ -86,14 +86,6 @@ namespace LinqToDB.SqlQuery
 			return writer;
 		}
 
-		public override bool Equals(ISqlExpression? other)
-		{
-			if (other is not SqlSimpleCaseExpression caseOther)
-				return false;
-
-			return Equals(caseOther, (e1, e2) => e1.Equals(e2));
-		}
-
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (other is not SqlSimpleCaseExpression caseOther)

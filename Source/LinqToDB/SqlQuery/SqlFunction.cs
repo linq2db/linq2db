@@ -85,15 +85,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region IEquatable<ISqlExpression> Members
-
-		public override bool Equals(ISqlExpression? other)
-		{
-			return Equals(other, SqlExpression.DefaultComparer);
-		}
-
-		#endregion
-
 		#region ISqlExpression Members
 
 		public override bool CanBeNullable(NullabilityContext nullability)

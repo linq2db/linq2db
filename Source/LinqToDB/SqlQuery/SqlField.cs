@@ -122,15 +122,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region IEquatable<ISqlExpression> Members
-
-		public override bool Equals(ISqlExpression? other)
-		{
-			return this == other;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
 		public override QueryElementType ElementType => QueryElementType.SqlField;
