@@ -121,8 +121,8 @@ namespace LinqToDB.Linq.Builder
 
 							if (ReferenceEquals(paramExpr, expr))
 							{
-								found = accessor;
-								break;
+								// Its is the same already created parameter
+								return accessor;
 							}
 
 							if (paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true, null)))

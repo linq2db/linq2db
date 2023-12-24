@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -48,25 +50,33 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Distinct5([DataSources] string context)
+		public void Distinct5([DataSources(TestProvName.AllInformix)] string context, [Values(0, 1)] int iteration, [Values(2, 3)] int id)
 		{
-			var id = 2;
+			using var db = GetDataContext(context);
 
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p in    Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = id + 1 }).Distinct(),
-					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = id + 1 }).Distinct());
+			var query = (from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = id + 1 }).Distinct();
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			AssertQuery(query);
+
+			if (iteration > 0)
+				query.GetCacheMissCount().Should().Be(cacheMissCount);
 		}
 
 		[Test]
-		public void Distinct6([DataSources(TestProvName.AllInformix)] string context)
+		public void Distinct6([DataSources(TestProvName.AllInformix)] string context, [Values(0, 1)] int iteration, [Values(2, 3)] int id)
 		{
-			var id = 2;
+			using var db = GetDataContext(context);
 
-			using (var db = GetDataContext(context))
-				AreEqual(
-					(from p in    Parent select new Parent { ParentID = p.Value1 ?? p.ParentID + id % 2, Value1 = id + 1 }).Distinct(),
-					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID + id % 2, Value1 = id + 1 }).Distinct());
+			var query = (from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID + id % 2, Value1 = id + 1 }).Distinct();
+
+			var cacheMissCount = query.GetCacheMissCount();
+
+			AssertQuery(query);
+
+			if (iteration > 0)
+				query.GetCacheMissCount().Should().Be(cacheMissCount);
 		}
 
 		[Test]
