@@ -1849,8 +1849,13 @@ namespace LinqToDB.Linq.Builder
 				var searchCondition = new SqlSearchCondition(isNot);
 				foreach (var placeholder in notNull)
 				{
-					var sql = SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true);
-					searchCondition.Predicates.Add(new SqlPredicate.IsNull(sql, isNot));
+					if (placeholder.Sql is ISqlPredicate predicate)
+						searchCondition.Predicates.Add(predicate.MakeNot(!isNot));
+					else
+					{
+						var sql = SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true);
+						searchCondition.Predicates.Add(new SqlPredicate.IsNull(sql, isNot));
+					}
 				}
 
 				return CreatePlaceholder(context, searchCondition, GetOriginalExpression());
@@ -2462,13 +2467,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
-				if (defaultIfEmptyExpression.NotNullExpressions.Count > 0)
-				{
-					result.Add(defaultIfEmptyExpression.NotNullExpressions[0]);
-					return true;
-				}
-
-				return false;
+				result.Add(defaultIfEmptyExpression.NotNullCondition);
+				return true;
 			}
 
 			if (expression is SqlEagerLoadExpression)

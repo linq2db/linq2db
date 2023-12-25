@@ -428,6 +428,21 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 49), DefaultValue(true)]
 		public bool IsCTESupportsOrdering { get; set; } = true;
 
+		/// <summary>
+		/// Indicates that provider has bug in LEFT join translator.
+		/// In the following example <b>can_be_null</b> is always not null, which is wrong.
+		/// <code>
+		/// SELECT
+		///		can_be_null
+		/// FROM Some
+		/// LEFT JOIN 1 as can_be_null, * FROM Other
+		///		ON ...
+		/// </code>
+		/// As workaround translator is trying to check for nullability all projected fields.
+		/// </summary>
+		[DataMember(Order =  50)]
+		public bool IsAccessBuggyLeftJoinConstantNullability { get; set; }
+
 		#region Equality
 		// equality support currently needed for remote context to avoid incorrect use of cached dependent types
 		// with different flags
@@ -480,6 +495,7 @@ namespace LinqToDB.SqlProvider
 				^ IsOuterJoinSupportsInnerJoin                         .GetHashCode()
 				^ IsMultiTablesSupportsJoins                           .GetHashCode()
 				^ IsCTESupportsOrdering                                .GetHashCode()
+				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -532,6 +548,7 @@ namespace LinqToDB.SqlProvider
 				&& IsOuterJoinSupportsInnerJoin                          == other.IsOuterJoinSupportsInnerJoin
 				&& IsMultiTablesSupportsJoins                            == other.IsMultiTablesSupportsJoins
 				&& IsCTESupportsOrdering                                 == other.IsCTESupportsOrdering
+				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

@@ -35,6 +35,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel              = IsolationLevel.Unspecified;
 			SqlProviderFlags.IsOuterJoinSupportsInnerJoin                 = false;
 			SqlProviderFlags.IsMultiTablesSupportsJoins                   = false;
+			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability     = true;
 
 			SetCharField            ("DBTYPE_WCHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("DBTYPE_WCHAR", DataTools.GetCharExpression);

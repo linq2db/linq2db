@@ -239,13 +239,10 @@ namespace LinqToDB.Expressions
 
 			if (expr is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
-				var inner = Transform(defaultIfEmptyExpression.InnerExpression);
-				var items = Transform(defaultIfEmptyExpression.NotNullExpressions);
+				var inner   = Transform(defaultIfEmptyExpression.InnerExpression);
+				var notNull = Transform(defaultIfEmptyExpression.NotNullCondition);
 
-				return defaultIfEmptyExpression.Update(inner,
-					ReferenceEquals(items, defaultIfEmptyExpression.NotNullExpressions)
-						? defaultIfEmptyExpression.NotNullExpressions
-						: items.ToList().AsReadOnly());
+				return defaultIfEmptyExpression.Update(inner, notNull);
 			}
 
 			return expr;

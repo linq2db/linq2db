@@ -35,6 +35,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel              = IsolationLevel.Unspecified;
 			SqlProviderFlags.IsOuterJoinSupportsInnerJoin                 = false;
 			SqlProviderFlags.IsMultiTablesSupportsJoins                   = false;
+			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability     = true;
 
 			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
