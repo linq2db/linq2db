@@ -507,6 +507,16 @@ namespace LinqToDB.Linq.Builder
 			return me.Expression;
 		}
 
+
+		static MethodInfo _throwErrorMethodInf = MemberHelper.MethodOfGeneric(() => ThrowError<int>(null, typeof(object)));
+
+		static T ThrowError<T>(object? code, Type onType)
+		{
+			throw new LinqException(
+				"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
+				code, onType);
+		}
+
 		public Expression? TryConstructFullEntity(IBuildContext? context, SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance = true)
 		{
 			var entityType           = constructorExpression.ObjectType;
@@ -549,21 +559,22 @@ namespace LinqToDB.Linq.Builder
 							throw new LinqToDBException("Could not get discriminator DeclaringType.");
 						}
 
-						var generator    = new ExpressionGenerator();
+						var access = GetMemberExpression(constructorExpression, firstMapping.Discriminator.MemberInfo);
+						var codeExpr = Expression.Convert(access, typeof(object));
 
+						var generator    = new ExpressionGenerator();
+#if true
+						generator.AddExpression(Expression.Call(_throwErrorMethodInf.MakeGenericMethod(entityType), codeExpr, Expression.Constant(onType, typeof(Type))));
+#else
+						//TODO: probably remove. Other part work with NETFRAMEWEORK also.
 						Expression<Func<object, Type, Exception>> throwExpr = (code, et) =>
 							new LinqException(
 								"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
 								code, et);
 
-						//var access = Expression.MakeMemberAccess(EnsureType(rootReference, onType), firstMapping.Discriminator.MemberInfo);
-						var access = GetMemberExpression(constructorExpression, firstMapping.Discriminator.MemberInfo);
-
-						var codeExpr = Expression.Convert(access, typeof(object));
-
 						generator.Throw(throwExpr.GetBody(codeExpr, Expression.Constant(onType, typeof(Type))));
 						generator.AddExpression(new DefaultValueExpression(MappingSchema, entityType));
-
+#endif
 						defaultExpression = generator.Build();
 					}
 

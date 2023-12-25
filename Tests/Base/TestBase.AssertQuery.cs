@@ -84,8 +84,8 @@ namespace Tests
 					if (CanBeNull(newNode.Object))
 					{
 						var checkedObs = Visit(newNode.Object);
-						var resultNode = Expression.Condition(Expression.Equal(checkedObs, Expression.Default(newNode.Object.Type)),
-							Expression.Default(newNode.Type), newNode);
+						var resultNode = Expression.Condition(Expression.Equal(checkedObs, Expression.Constant(null, newNode.Object.Type)),
+							Expression.Constant(null, newNode.Type), newNode);
 
 						return resultNode;
 					}
@@ -96,8 +96,8 @@ namespace Tests
 					{
 						var checkedFirst = Visit(node.Arguments[0]);
 						var resultNode = Expression.Condition(
-							Expression.Equal(checkedFirst, Expression.Default(newNode.Arguments[0].Type)),
-							Expression.Default(newNode.Type), newNode);
+							Expression.Equal(checkedFirst, Expression.Constant(null, newNode.Arguments[0].Type)),
+							Expression.Constant(DefaultValue.GetValue(newNode.Type), newNode.Type), newNode);
 
 						return resultNode;
 					}
@@ -111,8 +111,8 @@ namespace Tests
 				if (node.Expression != null && CanBeNull(node.Expression))
 				{
 					var checkedExoression = Visit(node.Expression);
-					return Expression.Condition(Expression.Equal(checkedExoression, Expression.Default(node.Expression.Type)),
-						Expression.Default(node.Type), node);
+					return Expression.Condition(Expression.Equal(checkedExoression, Expression.Constant(null, checkedExoression.Type)),
+						Expression.Constant(DefaultValue.GetValue(node.Type), node.Type), node);
 				}
 
 				return base.VisitMember(node);
