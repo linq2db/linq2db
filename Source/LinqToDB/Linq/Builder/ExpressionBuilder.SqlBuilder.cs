@@ -2161,30 +2161,6 @@ namespace LinqToDB.Linq.Builder
 						return GenerateNullComparison(leftExpr, isNot);
 					}
 
-					if (SequenceHelper.UnwrapDefaultIfEmpty(rightExpr) is SqlGenericConstructorExpression rightGeneric)
-					{
-						if (l != null)
-						{
-							var placeholders = CollectPlaceholders(rightExpr);
-							if (placeholders.Count == 1)
-							{
-								r = placeholders[0].Sql;
-							}
-						}
-					}
-
-					if (SequenceHelper.UnwrapDefaultIfEmpty(leftExpr) is SqlGenericConstructorExpression leftGeneric)
-					{
-						if (r != null)
-						{
-							var placeholders = CollectPlaceholders(leftExpr);
-							if (placeholders.Count == 1)
-							{
-								l = placeholders[0].Sql;
-							}
-						}
-					}
-
 					if (l == null || r == null)
 					{
 						var pathComparison = GeneratePathComparison(left, SequenceHelper.UnwrapDefaultIfEmpty(leftExpr), right, SequenceHelper.UnwrapDefaultIfEmpty(rightExpr));
