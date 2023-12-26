@@ -75,7 +75,7 @@ namespace LinqToDB.Expressions
 
 		public static Exception CreateError(Expression? expression)
 		{
-			return new LinqException($"'{PrepareExpression(expression)}' cannot be converted to SQL.");
+			return new LinqException($"'{PrepareExpressionString(expression)}' cannot be converted to SQL.");
 		}
 
 		public static void ThrowError(Expression expression)
@@ -83,8 +83,16 @@ namespace LinqToDB.Expressions
 			throw CreateError(expression);
 		}
 
+		public static string PrepareExpressionString(Expression? expression)
+		{
+			var printer  = new ExpressionPrinter();
+			var prepared = PrepareExpression(expression);
+			var str      = prepared == null ? "null" : printer.PrintExpression(prepared);
+			return str;
+		}
+
 		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? PrepareExpression(Expression? expression)
+		static Expression? PrepareExpression(Expression? expression)
 		{
 			var transformed = expression.Transform(e =>
 			{

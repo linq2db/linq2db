@@ -117,7 +117,7 @@ namespace LinqToDB.Linq.Builder
 			sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
 			if (buildInfo.Parent == null && !SequenceHelper.IsSupportedSubqueryForModifier(sequence, collection))
-				return BuildSequenceResult.Error(collectionSelector);
+				return BuildSequenceResult.Error(methodCall);
 
 			return BuildSequenceResult.FromContext(context);
 		}

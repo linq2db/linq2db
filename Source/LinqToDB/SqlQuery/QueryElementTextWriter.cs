@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
 	public class QueryElementTextWriter
@@ -63,19 +65,19 @@ namespace LinqToDB.SqlQuery
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public SqlTextWriter.IndentScope WithScope()
 		{
-			return _writer.WithScope();
+			return _writer.Indent();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int Indent()
 		{
-			return _writer.Indent();
+			return _writer.IncrementIndent();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public int UnIndent()
 		{
-			return _writer.UnIndent();
+			return _writer.DecrementIndent();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]

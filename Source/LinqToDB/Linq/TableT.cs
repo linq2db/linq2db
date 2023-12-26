@@ -22,6 +22,14 @@ namespace LinqToDB.Linq
 			InitTable(dataContext, expression, null);
 		}
 
+		internal Table(IDataContext dataContext, Table<T> basedOn)
+		{
+			Init(dataContext, basedOn.Expression);
+			_tableOptions = basedOn.TableOptions;
+			_tableID = basedOn.TableID;
+			_name = basedOn._name;
+		}
+
 		internal Table(IDataContext dataContext, EntityDescriptor? tableDescriptor)
 		{
 			var expression = typeof(T).IsScalar()
@@ -164,71 +172,41 @@ namespace LinqToDB.Linq
 
 		public ITable<T> ChangeServerName(string? serverName)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				TableName    = TableName,
-				SchemaName   = SchemaName,
-				DatabaseName = DatabaseName,
-				Expression   = Expression,
-				ServerName   = serverName,
-				TableOptions = TableOptions,
-				TableID      = TableID,
+				ServerName = serverName
 			};
 		}
 
 		public ITable<T> ChangeDatabaseName(string? databaseName)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				TableName    = TableName,
-				SchemaName   = SchemaName,
-				ServerName   = ServerName,
-				Expression   = Expression,
-				DatabaseName = databaseName,
-				TableOptions = TableOptions,
-				TableID      = TableID,
+				DatabaseName = databaseName
 			};
 		}
 
 		public ITable<T> ChangeSchemaName(string? schemaName)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				TableName    = TableName,
-				ServerName   = ServerName,
-				DatabaseName = DatabaseName,
-				Expression   = Expression,
-				SchemaName   = schemaName,
-				TableOptions = TableOptions,
-				TableID      = TableID,
+				SchemaName = schemaName
 			};
 		}
 
 		public ITable<T> ChangeTableName(string tableName)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				SchemaName   = SchemaName,
-				ServerName   = ServerName,
-				DatabaseName = DatabaseName,
-				Expression   = Expression,
-				TableName    = tableName,
-				TableOptions = TableOptions,
-				TableID      = TableID,
+				TableName = tableName
 			};
 		}
 
 		public ITable<T> ChangeTableOptions(TableOptions options)
 		{
-			return new Table<T>(DataContext)
+			return new Table<T>(DataContext, this)
 			{
-				SchemaName   = SchemaName,
-				ServerName   = ServerName,
-				DatabaseName = DatabaseName,
-				Expression   = Expression,
-				TableName    = TableName,
-				TableOptions = options,
-				TableID      = TableID,
+				TableOptions = options
 			};
 		}
 

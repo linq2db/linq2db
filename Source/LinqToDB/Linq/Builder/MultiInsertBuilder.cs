@@ -79,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 			var statement = multiInsertContext.MultiInsertStatement;
 			var into      = builder.BuildSequence(new BuildInfo(buildInfo, table, new SelectQuery()));
 
-			var intoTable = SequenceHelper.GetTableContext(into) ?? throw new LinqToDBException($"Cannot get table context from {SqlErrorExpression.PrepareExpression(query)}");
+			var intoTable = SequenceHelper.GetTableContext(into) ?? throw new LinqToDBException($"Cannot get table context from {SqlErrorExpression.PrepareExpressionString(query)}");
 
 			var when          = condition != null ? new SqlSearchCondition() : null;
 			var insert        = new SqlInsertClause

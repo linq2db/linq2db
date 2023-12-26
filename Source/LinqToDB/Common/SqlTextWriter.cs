@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace LinqToDB.SqlQuery
+namespace LinqToDB.Common
 {
 	public class SqlTextWriter
 	{
@@ -13,12 +13,12 @@ namespace LinqToDB.SqlQuery
 			public IndentScope(SqlTextWriter writer)
 			{
 				_writer = writer;
-				writer.Indent();
+				writer.IncrementIndent();
 			}
 
 			public void Dispose()
 			{
-				_writer.UnIndent();
+				_writer.DecrementIndent();
 			}
 		}
 
@@ -59,19 +59,19 @@ namespace LinqToDB.SqlQuery
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public IndentScope WithScope()
+		public IndentScope Indent()
 		{
 			return new IndentScope(this);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int Indent()
+		public int IncrementIndent()
 		{
 			return ++_indentValue;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public int UnIndent()
+		public int DecrementIndent()
 		{
 			return --_indentValue;
 		}
@@ -294,6 +294,12 @@ namespace LinqToDB.SqlQuery
 		{
 			StringBuilder.Replace(oldValue, newValue, startIndex, count);
 			return this;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Clear()
+		{
+			StringBuilder.Clear();
 		}
 
 	}
