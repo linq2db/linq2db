@@ -97,7 +97,8 @@
 		/// </summary>
 		SqlQueryExtension,
 
-		SqlCondition,
+		SqlCoalesce,
+		SqlConditional,
 		SqlCase,
 		SqlSimpleCase,
 	}

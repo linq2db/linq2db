@@ -17,7 +17,7 @@ namespace LinqToDB.SqlQuery
 
 		public override int                    Precedence  => SqlQuery.Precedence.LogicalDisjunction;
 		public override Type?                  SystemType  => TrueValue.SystemType;
-		public override QueryElementType       ElementType => QueryElementType.SqlCondition;
+		public override QueryElementType       ElementType => QueryElementType.SqlConditional;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{

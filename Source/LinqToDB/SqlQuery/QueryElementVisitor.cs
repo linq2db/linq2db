@@ -124,7 +124,8 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlInlinedExpression      => VisitSqlInlinedSqlExpression   ((SqlInlinedSqlExpression   )element),
 				QueryElementType.SqlInlinedToSqlExpression => VisitSqlInlinedToSqlExpression ((SqlInlinedToSqlExpression )element),
 				QueryElementType.SqlQueryExtension         => VisitSqlQueryExtension         ((SqlQueryExtension         )element),
-				QueryElementType.SqlCondition            => VisitSqlConditional            ((SqlConditionExpression         )element),
+				QueryElementType.SqlConditional            => VisitSqlConditionalExpression  ((SqlConditionExpression    )element),
+				QueryElementType.SqlCoalesce               => VisitSqlCoalesceExpression     ((SqlCoalesceExpression     )element),
 
 				_ => throw new InvalidOperationException()
 			};
@@ -2930,7 +2931,7 @@ namespace LinqToDB.SqlQuery
 			return extension;
 		}
 
-		protected virtual IQueryElement VisitSqlConditional(SqlConditionExpression element)
+		protected virtual IQueryElement VisitSqlConditionalExpression(SqlConditionExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -2964,6 +2965,41 @@ namespace LinqToDB.SqlQuery
 					    !ReferenceEquals(element.FalseValue, falseValue))
 					{
 						return NotifyReplaced(new SqlConditionExpression(predicate, trueValue, falseValue), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected virtual IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element.Expressions, VisitMode.ReadOnly);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(VisitElements(element.Expressions, VisitMode.Modify));
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var expressions = VisitElements(element.Expressions, VisitMode.Transform);
+
+					if (ShouldReplace(element)                             || 
+					    !ReferenceEquals(element.Expressions, expressions))
+					{
+						return NotifyReplaced(new SqlCoalesceExpression(element.Expressions != expressions ? expressions : expressions.ToArray()), element);
 					}
 
 					break;
