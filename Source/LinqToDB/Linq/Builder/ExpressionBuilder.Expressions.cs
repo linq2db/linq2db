@@ -866,14 +866,15 @@ namespace LinqToDB.Linq.Builder
 
 				if (_flags.IsExpression())
 				{
-					var notNullExpr  = node.NotNullCondition;
+					var testCondition = node.NotNullExpressions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
 					var defaultValue = new DefaultValueExpression(MappingSchema, innerExpression.Type);
-					var condition    = Expression.Condition(notNullExpr, innerExpression, defaultValue);
+
+					var condition = Expression.Condition(testCondition, innerExpression, defaultValue);
 
 					return Visit(condition);
 				}
 
-				return node.Update(innerExpression, node.NotNullCondition);
+				return node.Update(innerExpression, node.NotNullExpressions);
 			}
 		}
 

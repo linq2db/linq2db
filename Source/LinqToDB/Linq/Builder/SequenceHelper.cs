@@ -247,36 +247,19 @@ namespace LinqToDB.Linq.Builder
 					return placeholder.WithTrackingPath(newExpr);
 				}
 
-				/*
-				if (placeholder.Path is MemberExpression me && me.Member.DeclaringType != null)
-				{
-					var toPathConverted = EnsureType(toPath, me.Member.DeclaringType);
-					var newExpr         = (Expression)Expression.MakeMemberAccess(toPathConverted, me.Member);
-
-					return placeholder.WithTrackingPath(newExpr);
-				}
-				*/
-
-				/*if (placeholder.TrackingPath != null && !placeholder.Type.IsAssignableFrom(toPath.Type) &&
-				    !toPath.Type.IsValueType)
-				{
-					if (placeholder.TrackingPath is MemberExpression memberExpression)
-					{
-						toPath = Expression.MakeMemberAccess(toPath, memberExpression.Member);
-						return placeholder.WithTrackingPath(toPath);
-					}
-				}*/
-
 				return placeholder.WithTrackingPath(toPath);
 			}
 
-			/*
-			if (expression == except)
-				return expression;
+			if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+			{
+				var newExpr = defaultIfEmptyExpression.Update(
+					CorrectTrackingPath(builder, defaultIfEmptyExpression.InnerExpression, toPath),
+					defaultIfEmptyExpression.NotNullExpressions.Select(n => CorrectTrackingPath(builder, n, toPath))
+						.ToList().AsReadOnly()
+				);
 
-			var transformed = expression.Transform(toPath, (t, e) => CorrectTrackingPath(e, e, t));
-			return transformed;
-			*/
+				return newExpr;
+			}
 
 			if (expression is ConstantExpression)
 				return expression;
@@ -1000,6 +983,20 @@ namespace LinqToDB.Linq.Builder
 
 			return null;
 		}
+
+		public static Expression MakeNotNullCondition(Expression expr)
+		{
+			if (expr.Type.IsValueType && !expr.Type.IsNullable())
+			{
+				if (expr is SqlPlaceholderExpression placeholder)
+					expr = placeholder.WithSql(SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true)).MakeNullable();
+				else
+					expr = Expression.Convert(expr, expr.Type.AsNullable());
+			}
+
+			return Expression.NotEqual(expr, Expression.Default(expr.Type));
+		}
+
 
 		#region Special fields helpers
 

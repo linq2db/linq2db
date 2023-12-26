@@ -1849,13 +1849,8 @@ namespace LinqToDB.Linq.Builder
 				var searchCondition = new SqlSearchCondition(isNot);
 				foreach (var placeholder in notNull)
 				{
-					if (placeholder.Sql is ISqlPredicate predicate)
-						searchCondition.Predicates.Add(predicate.MakeNot(!isNot));
-					else
-					{
-						var sql = SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true);
-						searchCondition.Predicates.Add(new SqlPredicate.IsNull(sql, isNot));
-					}
+					var sql = SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true);
+					searchCondition.Predicates.Add(new SqlPredicate.IsNull(sql, isNot));
 				}
 
 				return CreatePlaceholder(context, searchCondition, GetOriginalExpression());
@@ -2086,14 +2081,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (rightExpr is SqlErrorExpression rightError)
 				return rightError.WithType(typeof(bool));
-
-			/*
-			if (leftExpr is not SqlPlaceholderExpression && leftExpr is not SqlGenericConstructorExpression)
-				return GetOriginalExpression();
-
-			if (rightExpr is not SqlPlaceholderExpression && rightExpr is not SqlGenericConstructorExpression)
-				return GetOriginalExpression();
-				*/
 
 			if (leftExpr is SqlPlaceholderExpression placeholderLeft)
 			{
@@ -2467,7 +2454,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
-				result.Add(defaultIfEmptyExpression.NotNullCondition);
+				result.AddRange(defaultIfEmptyExpression.NotNullExpressions);
 				return true;
 			}
 

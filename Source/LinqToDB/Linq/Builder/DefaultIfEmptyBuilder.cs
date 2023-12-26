@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -15,20 +16,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("DefaultIfEmpty");
 		}
 
-		static Expression MakeNotNullCondition(Expression expr)
-		{
-			if (expr.Type.IsValueType && !expr.Type.IsNullable())
-			{
-				if (expr is SqlPlaceholderExpression placeholder)
-					expr = placeholder.WithSql(SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true)).MakeNullable();
-				else
-					expr = Expression.Convert(expr, expr.Type.AsNullable());
-			}
-
-			return Expression.NotEqual(expr, Expression.Default(expr.Type));
-		}
-
-		static Expression? PrepareNoNullCondition(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence, bool allowNullField)
+		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence, bool allowNullField)
 		{
 			var sequenceRef  = new ContextRefExpression(sequence.ElementType, sequence);
 			var translated   = builder.BuildSqlExpression(sequence, sequenceRef, ProjectFlags.SQL, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
@@ -52,21 +40,21 @@ namespace LinqToDB.Linq.Builder
 					if (placeholders.Count == 0)
 						return null;
 
-					var combined = placeholders.Select(MakeNotNullCondition).Aggregate(Expression.AndAlso);
-
-					return combined;
+					notNull = placeholders.Cast<Expression>().ToList();
+				}
+				else
+				{
+					notNull.Add(SequenceHelper.CreateSpecialProperty(new ContextRefExpression(notNullHandlerSequence.ElementType, notNullHandlerSequence), typeof(int?),
+						DefaultIfEmptyContext.NotNullPropName));
 				}
 
-				notNull = new()
-				{
-					SequenceHelper.CreateSpecialProperty(new ContextRefExpression(notNullHandlerSequence.ElementType, notNullHandlerSequence), typeof(int?),
-						DefaultIfEmptyContext.NotNullPropName)
-				};
+			}
+			else if (notNull.Count > 0)
+			{
+				notNull.RemoveRange(1, notNull.Count - 1);
 			}
 
-			var notNullCondition = notNull.Select(MakeNotNullCondition).First();
-
-			return notNullCondition;
+			return notNull.AsReadOnly();
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -114,9 +102,9 @@ namespace LinqToDB.Linq.Builder
 					defaultValueContext.SelectQuery.Select.AddNew(new SqlValue(1));
 				}
 
-				var notNullCondition = PrepareNoNullCondition(builder, sequence, sequence, subqueryContext, true);
+				var notNullConditions = PrepareNoNullConditions(builder, sequence, sequence, subqueryContext, true);
 
-				if (notNullCondition == null)
+				if (notNullConditions == null)
 					return BuildSequenceResult.Error(methodCall);
 
 				var sequenceRef = new ContextRefExpression(sequence.ElementType, sequence);
@@ -126,7 +114,8 @@ namespace LinqToDB.Linq.Builder
 					defaultRefExpr = Expression.Convert(defaultRefExpr, sequenceRef.Type);
 				}
 
-				var bodyValue = Expression.Condition(notNullCondition, sequenceRef, defaultRefExpr);
+				var condition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+				var bodyValue = Expression.Condition(condition, sequenceRef, defaultRefExpr);
 
 				var resultSelectContext =
 					new SelectContext(buildInfo.Parent, bodyValue, subqueryContext, buildInfo.IsSubQuery);
@@ -149,7 +138,7 @@ namespace LinqToDB.Linq.Builder
 			readonly IBuildContext _nullabilitySequence;
 			readonly bool          _allowNullField;
 
-			Expression? _notNullCondition;
+			ReadOnlyCollection<Expression>? _notNullConditions;
 
 			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, IBuildContext nullabilitySequence, Expression? defaultValue, bool allowNullField)
 				: base(parent, sequence, null)
@@ -188,12 +177,14 @@ namespace LinqToDB.Linq.Builder
 
 				if (DefaultValue != null)
 				{
-					if (_notNullCondition == null)
-						_notNullCondition = PrepareNoNullCondition(Builder, this, Sequence, _nullabilitySequence, true) ?? throw new InvalidOperationException();;
+					if (_notNullConditions == null)
+						_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, true) ?? throw new InvalidOperationException();;
 
 					var sequenceRef = new ContextRefExpression(ElementType, Sequence);
 
-					var body = Expression.Condition(_notNullCondition, sequenceRef, DefaultValue);
+					var testCondition = _notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+
+					var body = Expression.Condition(testCondition, sequenceRef, DefaultValue);
 
 					var projectedDefault = Builder.Project(Sequence, newPath, null, -1, flags, body, true);
 					return projectedDefault;
@@ -226,14 +217,14 @@ namespace LinqToDB.Linq.Builder
 						return placeholder;
 					}
 
-					if (_notNullCondition == null)
+					if (_notNullConditions == null)
 					{
-						_notNullCondition = PrepareNoNullCondition(Builder, this, Sequence, _nullabilitySequence, _allowNullField);
+						_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, _allowNullField);
 					}
 
-					if (_notNullCondition != null)
+					if (_notNullConditions != null)
 					{
-						expr = new SqlDefaultIfEmptyExpression(expr, _notNullCondition);
+						expr = new SqlDefaultIfEmptyExpression(expr, _notNullConditions);
 						return expr;
 					}
 				}

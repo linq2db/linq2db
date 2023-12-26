@@ -1,17 +1,19 @@
 ﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
 	public class SqlDefaultIfEmptyExpression : Expression
 	{
-		public Expression InnerExpression    { get; }
-		public Expression NotNullCondition { get; }
+		public Expression                     InnerExpression    { get; }
+		public ReadOnlyCollection<Expression> NotNullExpressions { get; }
 
-		public SqlDefaultIfEmptyExpression(Expression innerExpression, Expression notNullCondition)
+		public SqlDefaultIfEmptyExpression(Expression innerExpression, ReadOnlyCollection<Expression> notNullExpressions)
 		{
 			InnerExpression    = innerExpression;
-			NotNullCondition = notNullCondition;
+			NotNullExpressions = notNullExpressions;
 		}
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
@@ -20,15 +22,15 @@ namespace LinqToDB.Expressions
 
 		public override Expression Reduce() => InnerExpression;
 
-		public SqlDefaultIfEmptyExpression Update(Expression innerExpression, Expression notNullCondition)
+		public SqlDefaultIfEmptyExpression Update(Expression innerExpression, ReadOnlyCollection<Expression> notNullExpressions)
 		{
 			if (ReferenceEquals(InnerExpression, innerExpression) && 
-			    ReferenceEquals(NotNullCondition, notNullCondition))
+			    (ReferenceEquals(NotNullExpressions, notNullExpressions) || NotNullExpressions.SequenceEqual(notNullExpressions, ExpressionEqualityComparer.Instance)))
 			{
 				return this;
 			}
 
-			return new SqlDefaultIfEmptyExpression(innerExpression, notNullCondition);
+			return new SqlDefaultIfEmptyExpression(innerExpression, notNullExpressions);
 		}
 
 		protected override Expression Accept(ExpressionVisitor visitor)
@@ -40,7 +42,7 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
-			return $"DFT({InnerExpression})[{NotNullCondition}]";
+			return $"DFT({InnerExpression})";
 		}
 	}
 }
