@@ -85,7 +85,7 @@ namespace Tests
 					{
 						var checkedObs = Visit(newNode.Object);
 						var resultNode = Expression.Condition(Expression.Equal(checkedObs, Expression.Constant(null, newNode.Object.Type)),
-							Expression.Constant(null, newNode.Type), newNode);
+							Expression.Constant(DefaultValue.GetValue(newNode.Type), newNode.Type), newNode);
 
 						return resultNode;
 					}
