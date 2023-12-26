@@ -55,10 +55,16 @@ namespace LinqToDB.SqlQuery.Visitors
 		public bool IsValidSubQuery(SelectQuery selectQuery)
 		{
 			if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
-				return false;
+			{
+				if (!_providerFlags.IsWindowFunctionsSupported)
+					return false;
+			}
 
 			if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
-				return false;
+			{
+				if (!_providerFlags.IsWindowFunctionsSupported)
+					return false;
+			}
 
 			return true;
 		}
