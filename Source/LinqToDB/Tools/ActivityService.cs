@@ -85,12 +85,14 @@ namespace LinqToDB.Tools
 			}
 
 #if NATIVE_ASYNC
+#pragma warning disable CA2215
 			public override async ValueTask DisposeAsync()
 			{
 				foreach (var activity in activities)
 					if (activity is not null)
 						await activity.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
+#pragma warning restore CA2215
 #endif
 		}
 	}
