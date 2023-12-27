@@ -56,14 +56,12 @@ namespace LinqToDB.SqlQuery.Visitors
 		{
 			if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 			{
-				if (!_providerFlags.IsWindowFunctionsSupported)
-					return false;
+				return false;
 			}
 
 			if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
 			{
-				if (!_providerFlags.IsWindowFunctionsSupported)
-					return false;
+				return false;
 			}
 
 			return true;

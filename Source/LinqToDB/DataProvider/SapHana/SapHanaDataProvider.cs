@@ -23,8 +23,6 @@ namespace LinqToDB.DataProvider.SapHana
 			//when expression returns more than 1 row
 			//mark this as supported, it's better to throw exception
 			//instead of replace with left join, in which case returns incorrect data
-			SqlProviderFlags.IsSubQueryTakeSupported           = true;
-			SqlProviderFlags.IsSubQuerySkipSupported           = true;
 			SqlProviderFlags.IsSubQueryColumnSupported         = true;
 			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryTakeSupported           = false;
