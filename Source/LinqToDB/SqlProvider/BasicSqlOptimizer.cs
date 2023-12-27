@@ -997,6 +997,8 @@ namespace LinqToDB.SqlProvider
 
 			var needsComparison = !updateStatement.Update.HasComparison;
 
+			needsComparison = false;
+
 			if (!needsComparison)
 			{
 				// clone earlier, we need table before remove

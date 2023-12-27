@@ -70,8 +70,7 @@ namespace LinqToDB.Linq.Builder
 			if (_recursiveMap.Count > 0)
 			{
 				var subQueryExpr = new ContextRefExpression(SubqueryContext.ElementType, SubqueryContext);
-				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments |
-				                 ExpressionBuilder.BuildFlags.IgnoreNullComparison;
+				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments;
 
 				var all = Builder.BuildSqlExpression(SubqueryContext, subQueryExpr, ProjectFlags.SQL,
 					buildFlags : buildFlags);
@@ -124,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				_isRecursiveCall = true;
 
-				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments | ExpressionBuilder.BuildFlags.IgnoreNullComparison;
+				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments;
 				correctedPath = Builder.BuildSqlExpression(SubqueryContext, correctedPath, flags.SqlFlag(), buildFlags: buildFlags);
 
 				_isRecursiveCall = false;

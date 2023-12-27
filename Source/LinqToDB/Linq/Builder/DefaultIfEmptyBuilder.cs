@@ -102,20 +102,19 @@ namespace LinqToDB.Linq.Builder
 					defaultValueContext.SelectQuery.Select.AddNew(new SqlValue(1));
 				}
 
-				var notNullConditions = PrepareNoNullConditions(builder, sequence, sequence, subqueryContext, true);
+				var defaultIfEmptyContext = new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, true);
 
-				if (notNullConditions == null)
-					return BuildSequenceResult.Error(methodCall);
+				var notNullConditions = defaultIfEmptyContext.GetNotNullConditions();
 
-				var sequenceRef = new ContextRefExpression(sequence.ElementType, sequence);
+				var defaultIfEmptyRef = new ContextRefExpression(defaultIfEmptyContext.ElementType, defaultIfEmptyContext);
 				var defaultRefExpr = (Expression)defaultRef;
-				if (defaultRefExpr.Type != sequenceRef.Type)
+				if (defaultRefExpr.Type != defaultIfEmptyRef.Type)
 				{
-					defaultRefExpr = Expression.Convert(defaultRefExpr, sequenceRef.Type);
+					defaultRefExpr = Expression.Convert(defaultRefExpr, defaultIfEmptyRef.Type);
 				}
 
 				var condition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
-				var bodyValue = Expression.Condition(condition, sequenceRef, defaultRefExpr);
+				var bodyValue = Expression.Condition(condition, defaultIfEmptyRef, defaultRefExpr);
 
 				var resultSelectContext =
 					new SelectContext(buildInfo.Parent, bodyValue, subqueryContext, buildInfo.IsSubQuery);
@@ -152,6 +151,13 @@ namespace LinqToDB.Linq.Builder
 
 			public const string NotNullPropName = "not_null";
 
+			public ReadOnlyCollection<Expression> GetNotNullConditions()
+			{
+				if (_notNullConditions == null)
+					_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, true) ?? throw new InvalidOperationException();
+				return _notNullConditions;
+			}
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) && (flags.IsRoot() || flags.IsAssociationRoot()))
@@ -177,12 +183,11 @@ namespace LinqToDB.Linq.Builder
 
 				if (DefaultValue != null)
 				{
-					if (_notNullConditions == null)
-						_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, true) ?? throw new InvalidOperationException();;
+					var notNullConditions = GetNotNullConditions();
 
 					var sequenceRef = new ContextRefExpression(ElementType, Sequence);
 
-					var testCondition = _notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+					var testCondition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
 
 					var body = Expression.Condition(testCondition, sequenceRef, DefaultValue);
 

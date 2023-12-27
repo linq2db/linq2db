@@ -864,7 +864,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var innerExpression = Visit(node.InnerExpression);
 
-				if (_flags.IsExpression())
+				if (_flags.IsExpression() && _buildFlags.HasFlag(BuildFlags.ForceDefaultIfEmpty))
 				{
 					var testCondition = node.NotNullExpressions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
 					var defaultValue = new DefaultValueExpression(MappingSchema, innerExpression.Type);
@@ -883,7 +883,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			None = 0,
 			ForceAssignments = 0x1,
-			IgnoreNullComparison = 0x2,
+			ForceDefaultIfEmpty = 0x2,
 		}
 
 		public Expression BuildSqlExpression(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null, BuildFlags buildFlags = BuildFlags.None)

@@ -1543,7 +1543,7 @@ namespace LinqToDB.SqlQuery
 						return false;
 				}
 
-				if (!subQuery.Select.Columns.All(c => c.Expression is SqlColumn or SqlField))
+				if (!subQuery.Select.Columns.All(c => c.Expression is SqlColumn or SqlField or SqlTable))
 					return false;
 			}
 
@@ -1674,6 +1674,34 @@ namespace LinqToDB.SqlQuery
 					{
 						if (JoinMoveSubQueryUp(selectQuery, join))
 							replaced = true;
+					}
+				}
+			}
+
+			for (var i = 0; i < selectQuery.From.Tables.Count; i++)
+			{
+				var tableSource = selectQuery.From.Tables[i];
+
+				if (tableSource.Joins.Count > 0)
+				{
+					for (var index = 0; index < tableSource.Joins.Count; index++)
+					{
+						var join = tableSource.Joins[index];
+						if (join.JoinType == JoinType.Inner && join.Table.Source is SelectQuery joinQuery)
+						{
+							if (joinQuery.From.Tables.Count == 0)
+							{
+								replaced = true;
+
+								foreach (var c in joinQuery.Select.Columns)
+								{
+									NotifyReplaced(c.Expression, c);
+								}
+
+								tableSource.Joins.RemoveAt(index);
+								--index;
+							}
+						}
 					}
 				}
 			}

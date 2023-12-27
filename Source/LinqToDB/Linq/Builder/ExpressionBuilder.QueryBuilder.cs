@@ -91,7 +91,7 @@ namespace LinqToDB.Linq.Builder
 
 			Expression TranslateExpression(Expression local)
 			{
-				return _context.Builder.BuildSqlExpression(_context, local, ProjectFlags.Expression);
+				return _context.Builder.BuildSqlExpression(_context, local, ProjectFlags.Expression, buildFlags: BuildFlags.ForceDefaultIfEmpty);
 			}
 
 			Expression ConstructObject(SqlGenericConstructorExpression node)

@@ -920,6 +920,17 @@ namespace LinqToDB.Linq.Builder
 					return node;
 				}
 
+				public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
+				{
+					_stack.Push(Expression.Constant("default_if_empty"));
+
+					var newNode = base.VisitSqlDefaultIfEmptyExpression(node);
+
+					_stack.Pop();
+
+					return newNode;
+				}
+
 				protected override MemberAssignment VisitMemberAssignment(MemberAssignment node)
 				{
 					_stack.Push(Expression.Constant(node.BindingType));
@@ -1086,7 +1097,7 @@ namespace LinqToDB.Linq.Builder
 				do
 				{
 					var projected = Builder.BuildSqlExpression(context, current, ProjectFlags.Expression,
-						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments | ExpressionBuilder.BuildFlags.ForceDefaultIfEmpty);
 
 					projected = Builder.ExtractProjection(context, projected);
 

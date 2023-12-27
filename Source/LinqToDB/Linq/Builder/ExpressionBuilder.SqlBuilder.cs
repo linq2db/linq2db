@@ -3929,6 +3929,11 @@ namespace LinqToDB.Linq.Builder
 				body = RemoveNullPropagation(body, flags.HasFlag(ProjectFlags.Keys));
 			}
 
+			if (body is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+			{
+				body = defaultIfEmptyExpression.InnerExpression;
+			}
+
 			switch (body.NodeType)
 			{
 				case ExpressionType.Extension:
@@ -3936,11 +3941,6 @@ namespace LinqToDB.Linq.Builder
 					if (body is SqlPlaceholderExpression placeholder)
 					{
 						return placeholder;
-					}
-
-					if (body is SqlDefaultIfEmptyExpression)
-					{
-						
 					}
 
 					if (member != null)
