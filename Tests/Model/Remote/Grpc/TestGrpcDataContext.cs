@@ -1,6 +1,9 @@
 ﻿#if !NETFRAMEWORK
 using System;
+using System.Net;
 using System.Net.Http;
+using System.Security.Authentication;
+using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Net.Client;
 using LinqToDB;
@@ -13,7 +16,7 @@ namespace Tests.Model.Remote.Grpc
 	{
 		private readonly Action? _onDispose;
 
-		public TestGrpcDataContext(string address, Action? onDispose = null, Func<DataOptions,DataOptions>? optionBuilder = null)
+		public TestGrpcDataContext(string address, Action? onDispose = null, Func<DataOptions, DataOptions>? optionBuilder = null)
 			: base(
 				address,
 				new GrpcChannelOptions
@@ -22,8 +25,8 @@ namespace Tests.Model.Remote.Grpc
 #pragma warning disable CA2000 // Dispose objects before losing scope
 						new HttpClientHandler()
 						{
-							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-						})
+							ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator,
+						}),
 #pragma warning restore CA2000 // Dispose objects before losing scope
 				},
 				optionBuilder)

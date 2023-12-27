@@ -148,7 +148,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.IsRemote())
 				return;
 
 			using var db = GetDataContext(context);
@@ -179,7 +179,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.IsRemote())
 				return;
 
 			using var db = GetDataContext(context);
