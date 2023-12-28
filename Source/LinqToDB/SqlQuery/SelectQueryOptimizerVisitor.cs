@@ -1299,6 +1299,9 @@ namespace LinqToDB.SqlQuery
 
 			if (subQuery.HasSetOperators)
 			{
+				if (selectQuery.HasSetOperators)
+					return false;
+
 				if (selectQuery.Select.Columns.Count != subQuery.Select.Columns.Count)
 				{
 					if (subQuery.SetOperators.Any(so => so.Operation != SetOperation.UnionAll))
@@ -1314,9 +1317,6 @@ namespace LinqToDB.SqlQuery
 					return false;
 
 				if (!subQuery.SetOperators.All(so => so.Operation == operation))
-					return false;
-
-				if (selectQuery.HasSetOperators && !selectQuery.SetOperators.All(so => so.Operation == operation))
 					return false;
 			}
 
