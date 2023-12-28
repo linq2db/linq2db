@@ -1176,6 +1176,12 @@ namespace LinqToDB.SqlQuery
 			if (!subQuery.GroupBy.IsEmpty && !selectQuery.GroupBy.IsEmpty)
 				return false;
 
+			// Do not allow moving search condition 
+			if (!subQuery.GroupBy.IsEmpty && !selectQuery.Where.IsEmpty)
+			{
+				return false;
+			}
+
 			if (selectQuery.Select.IsDistinct)
 			{
 				// Common check for Distincts
