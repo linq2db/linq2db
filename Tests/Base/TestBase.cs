@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 
 using LinqToDB;
@@ -12,10 +12,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
@@ -28,6 +25,12 @@ using Tests.Remote.ServerContainer;
 
 namespace Tests
 {
+	using System.Data.Common;
+	using System.Text.Json;
+	using System.Text.Json.Serialization;
+	using System.Threading;
+	using System.Xml;
+
 	using Model;
 	using Tools;
 
@@ -1467,6 +1470,112 @@ namespace Tests
 
 			return options;
 		}
+
+		public virtual void DumpObject(object? obj)
+		{
+			if (obj == null)
+				return;
+
+			TestContext.WriteLine(JsonSerializer.Serialize(obj, new JsonSerializerOptions { WriteIndented = true }));
+		}
+
+		[SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+		public void ConcurrentRunner<TParam, TResult>(DataConnection dc, string context, int threadsPerParam, Func<DataConnection, TParam, TResult> queryFunc,
+			Action<TResult, TParam> checkAction, params TParam[] parameters)
+		{
+			var threadCount = threadsPerParam * parameters.Length;
+			if (threadCount <= 0)
+				throw new InvalidOperationException();
+
+			// maximum Provider pool count
+			const int poolCount = 10;
+
+			using var semaphore = new Semaphore(0, poolCount);
+
+			var threads = new Thread[threadCount];
+			var results = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];
+
+			for (var i = 0; i < threadCount; i++)
+			{
+				var param = parameters[i % parameters.Length];
+				var n = i;
+				threads[i] = new Thread(() =>
+				{
+					semaphore.WaitOne();
+					try
+					{
+						try
+						{
+							using (var threadDb = (DataConnection)GetDataContext(context))
+							{
+								var commandInterceptor = new SaveCommandInterceptor();
+								threadDb.AddInterceptor(commandInterceptor);
+
+								var result = queryFunc(threadDb, param);
+								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)null);
+							}
+						}
+						catch (Exception e)
+						{
+							results[n] = Tuple.Create(param, default(TResult), "", (DbParameter[]?)null, e)!;
+						}
+
+					}
+					finally
+					{
+						semaphore.Release();
+					}
+				});
+			}
+
+			for (int i = 0; i < threads.Length; i++)
+			{
+				threads[i].Start();
+			}
+
+			semaphore.Release(poolCount);
+
+			for (int i = 0; i < threads.Length; i++)
+			{
+				threads[i].Join();
+			}
+
+			for (int i = 0; i < threads.Length; i++)
+			{
+				var result = results[i];
+				if (result.Item5 != null)
+				{
+					TestContext.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
+					throw result.Item5;
+				}
+				try
+				{
+					checkAction(result.Item2, result.Item1);
+				}
+				catch
+				{
+					var testResult = queryFunc(dc, result!.Item1);
+
+					TestContext.WriteLine($"Failed query ({result.Item1}):\n");
+					if (result.Item4 != null)
+					{
+						var sb = new StringBuilder();
+						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
+						TestContext.WriteLine(sb);
+					}
+					TestContext.WriteLine();
+					TestContext.WriteLine(result.Item3);
+
+					DumpObject(result.Item2);
+
+					DumpObject(testResult);
+
+
+					throw;
+				}
+			}
+		}
+
 	}
 
 	static class DataCache<T>
