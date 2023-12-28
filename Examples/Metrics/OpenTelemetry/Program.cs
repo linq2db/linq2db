@@ -3,11 +3,9 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
-
-using Microsoft.Extensions.ObjectPool;
 
 using OpenTelemetry;
 using OpenTelemetry.Resources;
@@ -27,10 +25,12 @@ namespace OpenTelemetryExample
 
 			ActivitySource.AddActivityListener(_activityListener);
 
+			// Register the factory method that creates LinqToDBActivity instances.
+			//
 			ActivityService.AddFactory(LinqToDBActivity.Create);
 
 			{
-				await using var db = SQLiteTools.CreateDataConnection("Data Source=Northwind.MS.sqlite", ProviderName.SQLiteMS);
+				await using var db = new DataConnection(new DataOptions().UseSQLiteMicrosoft("Data Source=Northwind.MS.sqlite"));
 
 				await db.CreateTableAsync<Customer>(tableOptions:TableOptions.CheckExistence);
 
@@ -48,33 +48,34 @@ namespace OpenTelemetryExample
 			Sample              = (ref ActivityCreationOptions<ActivityContext> _) => ActivitySamplingResult.AllData
 		};
 
-		sealed class LinqToDBActivity : ActivityBase
+		// This class is used to collect LinqToDB telemetry data.
+		//
+		sealed class LinqToDBActivity : IActivity
 		{
-			Activity? _activity;
+			readonly Activity _activity;
 
-			public override void Dispose()
+			LinqToDBActivity(Activity activity)
 			{
-				_activity!.Dispose();
-				_activity = null;
-
-				_activityPool.Return(this);
+				_activity = activity;
 			}
 
-			static readonly ObjectPool<LinqToDBActivity> _activityPool =
-				new DefaultObjectPool<LinqToDBActivity>(new DefaultPooledObjectPolicy<LinqToDBActivity>(), 100);
+			public void Dispose()
+			{
+				_activity.Dispose();
+			}
 
+			public ValueTask DisposeAsync()
+			{
+				Dispose();
+				return default;
+			}
+
+			// This method is called by the ActivityService to create an instance of the LinqToDBActivity class.
+			//
 			public static IActivity? Create(ActivityID id)
 			{
 				var a = _activitySource.StartActivity(id.ToString());
-
-				if (a == null)
-					return null;
-
-				var l2db = _activityPool.Get();
-
-				l2db._activity = a;
-
-				return l2db;
+				return a == null ? null : new LinqToDBActivity(a);
 			}
 		}
 
