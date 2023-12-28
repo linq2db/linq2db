@@ -1685,7 +1685,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.PostgreSQL    , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SQLite        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Access        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Access        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilderNoTrimCharacters))]
 		[Sql.Extension(ProviderName.MySql         , "TRIM(TRAILING {1} FROM {0})", ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(TrailingRTrimCharactersBuilder))]
 		public static string? TrimRight(string? str, params char[] trimChars)
 		{
