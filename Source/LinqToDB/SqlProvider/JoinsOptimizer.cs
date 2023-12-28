@@ -152,6 +152,12 @@ namespace LinqToDB.SqlProvider
 				if (uniqueKeys[i].All(foundFields.Contains))
 					return true;
 
+			var unwrapped = new HashSet<ISqlExpression>(foundFields.Select(f => f is SqlColumn c ? c.Expression : f));
+
+			for (var i = 0; i < uniqueKeys.Length; i++)
+				if (uniqueKeys[i].All(unwrapped.Contains))
+					return true;
+
 			return false;
 		}
 
