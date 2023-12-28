@@ -325,5 +325,21 @@ namespace Tests
 			: base(new SqlProviderFlags())
 		{
 		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		{
+			switch (statement.QueryType)
+			{
+				case QueryType.Update :
+				{
+					CorrectUpdateSetters((SqlUpdateStatement)statement);
+
+					break;
+				}
+			}
+
+			return statement;
+		}
+
 	}
 }
