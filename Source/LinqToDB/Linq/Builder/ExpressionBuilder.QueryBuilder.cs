@@ -285,6 +285,11 @@ namespace LinqToDB.Linq.Builder
 								if (placeholder.SelectQuery == null)
 									break;
 
+								if (placeholder.Sql is SqlRow)
+								{
+									throw new LinqToDBException("Sql.Row(...) cannot be top level expression.");
+								}
+
 								if (ReferenceEquals(placeholder.SelectQuery, context.rootQuery))
 								{
 									placeholder = context.builder.MakeColumn(null, placeholder);
