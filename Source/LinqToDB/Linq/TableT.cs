@@ -47,6 +47,20 @@ namespace LinqToDB.Linq
 
 		void InitTable(IDataContext dataContext, Expression? expression, EntityDescriptor? tableDescriptor)
 		{
+			if (expression != null && tableDescriptor != null)
+			{
+				if (tableDescriptor.TableOptions != TableOptions.NotSet)
+					expression = ApplyTableOptions(expression, tableDescriptor.TableOptions);
+
+				expression = ApplyTableName(expression, tableDescriptor.Name.Name);
+				if (!string.IsNullOrEmpty(tableDescriptor.Name.Schema))
+					expression = ApplySchemaName(expression, tableDescriptor.Name.Schema);
+				if (!string.IsNullOrEmpty(tableDescriptor.Name.Database))
+					expression = ApplyDatabaseName(expression, tableDescriptor.Name.Database);
+				if (!string.IsNullOrEmpty(tableDescriptor.Name.Server))
+					expression = ApplyServerName(expression, tableDescriptor.Name.Server);
+			}
+
 			Init(dataContext, expression);
 
 			var ed = tableDescriptor ?? dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
@@ -64,6 +78,60 @@ namespace LinqToDB.Linq
 		static MethodInfo? _tableIDMethodInfo;
 		// ReSharper restore StaticMemberInGenericType
 
+		static Expression ApplyTableOptions(Expression expression, TableOptions tableOptions)
+		{
+			expression = Expression.Call(
+				null,
+				_tableOptionsMethodInfo ??= Methods.LinqToDB.Table.TableOptions.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(tableOptions));
+			return expression;
+		}
+
+		static Expression ApplyTableName(Expression expression, string? tableName)
+		{
+			expression = Expression.Call(
+				null,
+				_tableNameMethodInfo ??= Methods.LinqToDB.Table.TableName.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(tableName));
+			return expression;
+		}
+
+		static Expression ApplyDatabaseName(Expression expression, string? databaseName)
+		{
+			expression = Expression.Call(
+				null,
+				_databaseNameMethodInfo ??= Methods.LinqToDB.Table.DatabaseName.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(databaseName));
+			return expression;
+		}
+
+		static Expression ApplySchemaName(Expression expression, string? schemaName)
+		{
+			expression = Expression.Call(
+				null,
+				_schemaNameMethodInfo ??= Methods.LinqToDB.Table.SchemaName.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(schemaName));
+			return expression;
+		}
+
+		static Expression ApplyServerName(Expression expression, string? serverName)
+		{
+			expression = Expression.Call(
+				null,
+				_serverNameMethodInfo ??= Methods.LinqToDB.Table.ServerName.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(serverName));
+			return expression;
+		}
+
+		static Expression ApplyTaleId(Expression expression, string? id)
+		{
+			expression = Expression.Call(
+				null,
+				_tableIDMethodInfo ??= Methods.LinqToDB.Table.TableID.MakeGenericMethod(typeof(T)),
+				expression, Expression.Constant(id, typeof(string)));
+			return expression;
+		}
+
 		private SqlObjectName _name;
 
 		public  string?  ServerName
@@ -73,10 +141,7 @@ namespace LinqToDB.Linq
 			{
 				if (_name.Server != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_serverNameMethodInfo ??= Methods.LinqToDB.Table.ServerName.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplyServerName(Expression, value);
 
 					_name = _name with { Server = value };
 				}
@@ -90,10 +155,7 @@ namespace LinqToDB.Linq
 			{
 				if (_name.Database != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_databaseNameMethodInfo ??= Methods.LinqToDB.Table.DatabaseName.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplyDatabaseName(Expression, value);
 
 					_name = _name with { Database = value };
 				}
@@ -107,10 +169,7 @@ namespace LinqToDB.Linq
 			{
 				if (_name.Schema != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_schemaNameMethodInfo ??= Methods.LinqToDB.Table.SchemaName.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplySchemaName(Expression, value);
 
 					_name = _name with { Schema = value };
 				}
@@ -125,10 +184,7 @@ namespace LinqToDB.Linq
 			{
 				if (_tableOptions != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_tableOptionsMethodInfo ??= Methods.LinqToDB.Table.TableOptions.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplyTableOptions(Expression, value);
 
 					_tableOptions = value;
 				}
@@ -142,10 +198,7 @@ namespace LinqToDB.Linq
 			{
 				if (_name.Name != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_tableNameMethodInfo ??= Methods.LinqToDB.Table.TableName.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value));
+					Expression = ApplyTableName(Expression, value);
 
 					_name = _name with { Name = value };
 				}
@@ -160,10 +213,7 @@ namespace LinqToDB.Linq
 			{
 				if (_tableID != value)
 				{
-					Expression = Expression.Call(
-						null,
-						_tableIDMethodInfo ??= Methods.LinqToDB.Table.TableID.MakeGenericMethod(typeof(T)),
-						Expression, Expression.Constant(value, typeof(string)));
+					Expression = ApplyTaleId(Expression, value);
 
 					_tableID = value;
 				}
