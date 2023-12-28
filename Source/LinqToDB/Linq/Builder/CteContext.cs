@@ -38,7 +38,6 @@ namespace LinqToDB.Linq.Builder
 
 		Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
 		Dictionary<Expression, SqlPlaceholderExpression> _recursiveMap = new (ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, SqlPlaceholderExpression>? _currentRecursiveProcessingMap;
 
 		bool _isRecursiveCall;
 
@@ -143,46 +142,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			correctedPath = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, subqueryPath);
 
-			correctedPath = RemapRecursive(correctedPath);
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(correctedPath);
 
-			var remapped = TableLikeHelpers.RemapToFields(SubqueryContext!, null, CteClause.Fields, _knownMap, _currentRecursiveProcessingMap, correctedPath,
+			var remapped = TableLikeHelpers.RemapToFields(SubqueryContext!, null, CteClause.Fields, _knownMap, _recursiveMap, correctedPath,
 				placeholders);
 			return remapped;
-		}
-
-		Expression RemapRecursive(Expression expression)
-		{
-			if (_recursiveMap.Count == 0)
-				return expression;
-
-			var toProcess = _recursiveMap.ToList();
-
-			_currentRecursiveProcessingMap = _recursiveMap;
-
-			_recursiveMap = new (ExpressionEqualityComparer.Instance);
-
-			var toRemap = toProcess.ToDictionary(e => e.Key,
-				e =>
-				{
-					var converted = MakeExpression(e.Key, ProjectFlags.SQL);
-
-					return converted;
-				}, ExpressionEqualityComparer.Instance);
-
-			/*
-			var transformed = expression.Transform(toRemap, static (map, e) =>
-			{
-				if (map.TryGetValue(e, out var newPlaceholder))
-				{
-					return newPlaceholder;
-				}
-
-				return e;
-			});
-			*/
-
-			return expression;
 		}
 
 		public override IBuildContext Clone(CloningContext context)

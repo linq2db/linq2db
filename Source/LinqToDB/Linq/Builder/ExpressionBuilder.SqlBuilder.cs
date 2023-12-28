@@ -4552,10 +4552,9 @@ namespace LinqToDB.Linq.Builder
 			{
 #if DEBUG
 				DebugCacheHit(currentContext, path, expression, flags);
+#else
 				if (!ExpressionEqualityComparer.Instance.Equals(path, expression))
 					return expression;
-#else
-				return expression;
 #endif
 			}
 
