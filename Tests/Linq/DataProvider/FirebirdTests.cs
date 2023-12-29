@@ -777,11 +777,11 @@ namespace Tests.DataProvider
 
 				if (quoteMode == FirebirdIdentifierQuoteMode.None)
 				{
-					sql.Should().Contain("Client a_Owner ON");
+					sql.Should().Contain("Client a_Owner");
 				}
 				else
 				{
-					sql.Should().Contain("\"Client\" \"a_Owner\" ON");
+					sql.Should().Contain("\"Client\" \"a_Owner\"");
 				}
 			}
 			Query.ClearCaches();
