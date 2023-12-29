@@ -1373,6 +1373,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			// Second attempt probably conversion failed and switched to client side evaluation
+			if (mc.Find(1, (_, e) => e is ClosurePlaceholderExpression) != null)
+				return mc;
+
 			var sqlExpression = attr.GetExpression(
 				(this_: this, context: currentContext, flags),
 				DataContext,

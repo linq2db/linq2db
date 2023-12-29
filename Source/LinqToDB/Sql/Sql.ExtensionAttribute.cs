@@ -393,8 +393,8 @@ namespace LinqToDB
 
 				public T GetValue<T>(int index)
 				{
-					var lambda = System.Linq.Expressions.Expression.Lambda<Func<T>>(Arguments[index]);
-					return lambda.CompileExpression()();
+					var value = (T)Evaluator.Evaluate(Arguments[index])!;
+					return value;
 				}
 
 				public T GetValue<T>(string argName)
@@ -413,8 +413,8 @@ namespace LinqToDB
 
 				public object GetObjectValue(int index)
 				{
-					var lambda = System.Linq.Expressions.Expression.Lambda<Func<object>>(Arguments[index]);
-					return lambda.CompileExpression()();
+					var value = Evaluator.Evaluate(Arguments[index])!;
+					return value;
 				}
 
 				public object GetObjectValue(string argName)
@@ -524,12 +524,6 @@ namespace LinqToDB
 			public ExtensionAttribute(string configuration, Type builderType) : this(configuration, string.Empty)
 			{
 				BuilderType = builderType;
-			}
-
-			static T GetExpressionValue<T>(Expression expr)
-			{
-				var lambda = System.Linq.Expressions.Expression.Lambda<Func<T>>(expr);
-				return lambda.CompileExpression()();
 			}
 
 			public static ExtensionAttribute[] GetExtensionAttributes(Expression expression, MappingSchema mapping, bool forFirstConfiguration = true)
