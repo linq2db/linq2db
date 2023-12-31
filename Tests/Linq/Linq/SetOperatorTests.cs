@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
@@ -186,8 +187,6 @@ namespace Tests.Linq
 			}
 		}
 
-
-
 		private SampleData[] GenerateTestData()
 		{
 			return Enumerable.Range(1, 10)
@@ -199,6 +198,29 @@ namespace Tests.Linq
 					Value3 = i * 1000
 				})
 				.ToArray();
+		}
+
+		[Test]
+		public async Task Issue3132Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = db.Person
+					.Where(x => x.MiddleName != null)
+					.GroupBy(x => x.MiddleName)
+					.Select(grp => new
+					{
+						grp.Key,
+						Count = grp.Count()
+					});
+
+				var unionResult = await query1
+					.UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1)
+					.UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1)
+					.UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1)
+					.UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1)
+					.ToArrayAsync();
+			}
 		}
 	}
 }
