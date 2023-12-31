@@ -431,6 +431,37 @@ namespace LinqToDB
 		}
 
 		/// <summary>
+		/// Adds update field expression to query.
+		/// </summary>
+		/// <typeparam name="TTarget">Updated record type.</typeparam>
+		/// <typeparam name="TSource">Updated record type.</typeparam>
+		/// <typeparam name="TV">Updated field type.</typeparam>
+		/// <param name="merge">Source query with records to update.</param>
+		/// <param name="extract">Updated field selector expression.</param>
+		/// <param name="value">Value, assigned to updated field.</param>
+		/// <returns><see cref="IUpdatable{T}"/> query.</returns>
+		[LinqTunnel]
+		[Pure]
+		public static IMergeable<TTarget, TSource> InsertWhenNotMatched<TTarget, TSource, TV>(
+			                this IMergeableSource<TTarget, TSource> merge,
+			[InstantHandle] Expression<Func<TTarget, TV>> extract,
+			[SkipIfConstant] TV value)
+		{
+			if (merge == null) throw new ArgumentNullException(nameof(merge));
+			if (extract == null) throw new ArgumentNullException(nameof(extract));
+
+			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+
+			var query = mergeQuery.Provider.CreateQuery<TTarget>(
+				Expression.Call(
+					null,
+					InsertWhenNotMatchedTargetValue.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+					mergeQuery.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV))));
+
+			return new MergeQuery<TTarget, TSource>(query);
+		}
+
+		/// <summary>
 		/// Adds new insert operation to merge and returns new merge command with added operation.
 		/// This operation inserts new record to target table using user-defined values for target columns
 		/// for each new record from source that passes filtering with specified predicate, if it wasn't

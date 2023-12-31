@@ -304,6 +304,8 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo OnMethodInfo2                             = MemberHelper.MethodOfGeneric((IMergeableOn<LW1, LW2> q, Expression<Func<LW1, LW2, bool>> p) => q.On(p));
 				public static readonly MethodInfo OnTargetKeyMethodInfo                     = MemberHelper.MethodOfGeneric<IMergeableOn<LW1, LW1>>(q => q.OnTargetKey());
 				public static readonly MethodInfo InsertWhenNotMatchedAndMethodInfo         = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW2, bool>> p, Expression<Func<LW2, LW1>> s) => q.InsertWhenNotMatchedAnd(p, s));
+				public static readonly MethodInfo InsertWhenNotMatchedTargetValue	        = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, LW3>> p, LW3 c) => q.InsertWhenNotMatched(p, c));
+
 				public static readonly MethodInfo UpdateWhenMatchedAndMethodInfo            = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, LW2, bool>> p, Expression<Func<LW1, LW2, LW1>> s) => q.UpdateWhenMatchedAnd(p, s));
 				public static readonly MethodInfo UpdateWhenMatchedAndThenDeleteMethodInfo  = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, LW2, bool>> p, Expression<Func<LW1, LW2, LW1>> s, Expression<Func<LW1, LW2, bool>> d) => q.UpdateWhenMatchedAndThenDelete(p, s, d));
 				public static readonly MethodInfo DeleteWhenMatchedAndMethodInfo            = MemberHelper.MethodOfGeneric((IMergeable<LW1, LW2> q, Expression<Func<LW1, LW2, bool>> p) => q.DeleteWhenMatchedAnd(p));
