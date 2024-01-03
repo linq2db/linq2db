@@ -136,7 +136,7 @@ namespace LinqToDB.Common
 		}
 
 		/// <summary>
-		/// Enables tracing of object materialization activity. It can significantly break performance if tracing consumer performs slow.
+		/// Enables tracing of object materialization activity. It can significantly break performance if tracing consumer performs slow, so it is disabled by default.
 		/// </summary>
 		public static bool TraceMaterializationActivity { get; set; }
 

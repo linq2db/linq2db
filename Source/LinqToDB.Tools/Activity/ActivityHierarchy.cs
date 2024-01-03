@@ -4,6 +4,9 @@ using System.Text;
 
 namespace LinqToDB.Tools.Activity
 {
+	/// <summary>
+	/// Collects LinqToDB call hierarchy information.
+	/// </summary>
 	public class ActivityHierarchy : ActivityBase
 	{
 		readonly ActivityID              _activityID;
@@ -14,6 +17,24 @@ namespace LinqToDB.Tools.Activity
 
 		int _count = 1;
 
+		/// <summary>
+		/// Gets or sets the indent string for the hierarchy report.
+		/// </summary>
+		public string Indent { get; set; } = "  ";
+
+		/// <summary>
+		/// <para>
+		/// Creates a new instance of the <see cref="ActivityHierarchy"/> class.
+		/// Can be used in a factory method for <see cref="ActivityService"/>:
+		/// </para>
+		/// <code>
+		/// ActivityService.AddFactory(activityID =&gt; new ActivityHierarchy(activityID, s =&gt; hierarchyBuilder.AppendLine(s)));
+		/// </code>
+		/// </summary>
+		/// <param name="activityID">One of the <see cref="ActivityID"/> values. </param>
+		/// <param name="pushReport">
+		/// A delegate that is called to provide a report when the root activity is disposed.
+		/// </param>
 		public ActivityHierarchy(ActivityID activityID, Action<string> pushReport)
 		{
 			_activityID = activityID;
@@ -39,9 +60,6 @@ namespace LinqToDB.Tools.Activity
 						_parent._children.Add(this);
 				}
 			}
-			else if (activityID is not (ActivityID.QueryProviderExecuteT or ActivityID.QueryProviderGetEnumeratorT))
-			{
-			}
 		}
 
 		static readonly System.Threading.AsyncLocal<ActivityHierarchy?> _currentImpl = new ();
@@ -52,6 +70,9 @@ namespace LinqToDB.Tools.Activity
 			set => _currentImpl.Value = value;
 		}
 
+		/// <summary>
+		/// Implements Dispose pattern.
+		/// </summary>
 		public override void Dispose()
 		{
 			Current = _parent;
@@ -60,14 +81,14 @@ namespace LinqToDB.Tools.Activity
 			{
 				var sb = new StringBuilder();
 
-				Print(this, 0);
+				Print(this, "");
 
 				_pushReport(sb.ToString());
 
-				void Print(ActivityHierarchy a, int indent)
+				void Print(ActivityHierarchy a, string indent)
 				{
 					sb
-						.Append(' ', indent)
+						.Append(indent)
 						.Append(a._name);
 
 					if (a._count > 1)
@@ -76,7 +97,7 @@ namespace LinqToDB.Tools.Activity
 					sb.AppendLine();
 
 					foreach (var c in a._children)
-						Print(c, indent + 2);
+						Print(c, indent + Indent);
 				}
 			}
 		}

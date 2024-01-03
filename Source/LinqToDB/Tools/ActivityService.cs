@@ -16,7 +16,10 @@ namespace LinqToDB.Tools
 
 		static IActivity? StartImpl(ActivityID activityID)
 		{
-			var factory = _factory!;
+			if (_factory == null)
+				throw new InvalidOperationException();
+
+			var factory = _factory;
 
 			var list = factory.GetInvocationList();
 

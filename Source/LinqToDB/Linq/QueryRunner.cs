@@ -413,9 +413,20 @@ namespace LinqToDB.Linq
 
 			if (dataReader.Read())
 			{
-				var origDataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dataReader) ?? dataReader;
-				var mapperInfo     = mapper.GetMapperInfo(dataContext, runner, origDataReader);
-				var traceMapping   = Configuration.TraceMaterializationActivity;
+				DbDataReader origDataReader;
+
+				if (dataContext.UnwrapDataObjectInterceptor is {} interceptor)
+				{
+					using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+						origDataReader = interceptor.UnwrapDataReader(dataContext, dataReader);
+				}
+				else
+				{
+					origDataReader = dataReader;
+				}
+
+				var mapperInfo   = mapper.GetMapperInfo(dataContext, runner, origDataReader);
+				var traceMapping = Configuration.TraceMaterializationActivity;
 
 				do
 				{
@@ -479,7 +490,18 @@ namespace LinqToDB.Linq
 
 						if (take-- > 0 && await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
-							var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader) ?? dr.DataReader;
+							DbDataReader dataReader;
+
+							if (dataContext.UnwrapDataObjectInterceptor is {} interceptor)
+							{
+								using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+									dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);
+							}
+							else
+							{
+								dataReader = dr.DataReader;
+							}
+
 							var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
 
 							do
@@ -562,7 +584,18 @@ namespace LinqToDB.Linq
 
 				if (_take-- > 0 && await _dataReader!.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 				{
-					var dataReader = _dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(_dataContext, _dataReader.DataReader) ?? _dataReader.DataReader;
+					DbDataReader dataReader;
+
+					if (_dataContext.UnwrapDataObjectInterceptor is {} interceptor)
+					{
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							dataReader = interceptor.UnwrapDataReader(_dataContext, _dataReader.DataReader);
+					}
+					else
+					{
+						dataReader = _dataReader.DataReader;
+					}
+
 					var mapperInfo = _mapper.GetMapperInfo(_dataContext, _queryRunner, dataReader);
 
 					Current = _mapper.Map(_dataContext, _queryRunner, dataReader, ref mapperInfo);
@@ -821,7 +854,18 @@ namespace LinqToDB.Linq
 			using var runner = dataContext.GetQueryRunner(query, 0, expression, ps, preambles);
 			using var dr     = runner.ExecuteReader();
 
-			var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader!) ?? dr.DataReader!;
+			DbDataReader dataReader;
+
+			if (dataContext.UnwrapDataObjectInterceptor is {} interceptor)
+			{
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+					dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader!);
+			}
+			else
+			{
+				dataReader = dr.DataReader!;
+			}
+
 			var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
 
 			if (dr.DataReader!.Read())
@@ -855,7 +899,18 @@ namespace LinqToDB.Linq
 					{
 						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						{
-							var dataReader = dataContext.UnwrapDataObjectInterceptor?.UnwrapDataReader(dataContext, dr.DataReader) ?? dr.DataReader;
+							DbDataReader dataReader;
+
+							if (dataContext.UnwrapDataObjectInterceptor is {} interceptor)
+							{
+								using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+									dataReader = interceptor.UnwrapDataReader(dataContext, dr.DataReader);
+							}
+							else
+							{
+								dataReader = dr.DataReader;
+							}
+
 							var mapperInfo = mapper.GetMapperInfo(dataContext, runner, dataReader);
 							var item       = mapper.Map(dataContext, runner, dataReader, ref mapperInfo);
 
@@ -1029,7 +1084,7 @@ namespace LinqToDB.Linq
 
 		static int QueryQuery2(Query query, IDataContext dataContext, Expression expr, object?[]? parameters, object?[]? preambles)
 		{
-			using var m      = ActivityService.Start(ActivityID.ExecuteScalar2);
+			using var m      = ActivityService.Start(ActivityID.ExecuteScalarAlternative);
 			using var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 			var       n      = runner.ExecuteScalar();
 
@@ -1049,7 +1104,7 @@ namespace LinqToDB.Linq
 			object?[]?        preambles,
 			CancellationToken cancellationToken)
 		{
-			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalar2Async))
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAlternativeAsync))
 			{
 				var runner = dataContext.GetQueryRunner(query, 0, expr, parameters, preambles);
 

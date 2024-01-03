@@ -10,7 +10,7 @@ namespace LinqToDB
 	/// <typeparam name="T">Record mapping type.</typeparam>
 	[PublicAPI]
 	public interface ITable<out T> : IExpressionQuery<T>
-		// TODO: IT: WTF? it should be 'class'.
+		// TODO: IT: Review in v6, it should be 'class'.
 		where T : notnull
 	{
 		string?      ServerName   { get; }

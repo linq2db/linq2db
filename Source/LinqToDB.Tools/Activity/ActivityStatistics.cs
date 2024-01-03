@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace LinqToDB.Tools.Activity
 {
+	/// <summary>
+	/// Collects LinqToDB call statistics.
+	/// </summary>
 	public static class ActivityStatistics
 	{
 		static ActivityStatistics()
@@ -34,12 +37,12 @@ namespace LinqToDB.Tools.Activity
 					ExecuteElementAsync             = new("  Execute Element Async"),
 					ExecuteScalar                   = new("  Execute Scalar"),
 					ExecuteScalarAsync              = new("  Execute Scalar Async"),
-					ExecuteScalar2                  = new("  Execute Scalar 2"),
-					ExecuteScalar2Async             = new("  Execute Scalar 2 Async"),
+					ExecuteScalarAlternative        = new("  Execute Scalar Alternative"),
+					ExecuteScalarAlternativeAsync   = new("  Execute Scalar Alternative Async"),
 					ExecuteNonQuery                 = new("  Execute NonQuery"),
 					ExecuteNonQueryAsync            = new("  Execute NonQuery Async"),
-					ExecuteNonQuery2                = new("  Execute NonQuery 2"),
-					ExecuteNonQuery2Async           = new("  Execute NonQuery 2 Async"),
+					ExecuteNonQueryAlternative      = new("  Execute NonQuery Alternative"),
+					ExecuteNonQueryAlternativeAsync = new("  Execute NonQuery Alternative Async"),
 
 					CommandInfoExecute              = new("  SQL Execute"),
 					CommandInfoExecuteAsync         = new("  SQL ExecuteAsync"),
@@ -70,12 +73,12 @@ namespace LinqToDB.Tools.Activity
 				ExecuteElementAsync,
 				ExecuteScalar,
 				ExecuteScalarAsync,
-				ExecuteScalar2,
-				ExecuteScalar2Async,
+				ExecuteScalarAlternative,
+				ExecuteScalarAlternativeAsync,
 				ExecuteNonQuery,
 				ExecuteNonQueryAsync,
-				ExecuteNonQuery2,
-				ExecuteNonQuery2Async,
+				ExecuteNonQueryAlternative,
+				ExecuteNonQueryAlternativeAsync,
 
 				CreateTable,
 				CreateTableAsync,
@@ -150,6 +153,8 @@ namespace LinqToDB.Tools.Activity
 
 				GetSqlText                          = new("  GetSqlText"),
 
+				// Placeholder for Total, must be last, do not remove or change position!
+				//
 				null!
 			];
 
@@ -191,12 +196,12 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.ExecuteElementAsync             => ExecuteElementAsync,
 				ActivityID.ExecuteScalar                   => ExecuteScalar,
 				ActivityID.ExecuteScalarAsync              => ExecuteScalarAsync,
-				ActivityID.ExecuteScalar2                  => ExecuteScalar2,
-				ActivityID.ExecuteScalar2Async             => ExecuteScalar2Async,
+				ActivityID.ExecuteScalarAlternative        => ExecuteScalarAlternative,
+				ActivityID.ExecuteScalarAlternativeAsync   => ExecuteScalarAlternativeAsync,
 				ActivityID.ExecuteNonQuery                 => ExecuteNonQuery,
 				ActivityID.ExecuteNonQueryAsync            => ExecuteNonQueryAsync,
-				ActivityID.ExecuteNonQuery2                => ExecuteNonQuery2,
-				ActivityID.ExecuteNonQuery2Async           => ExecuteNonQuery2Async,
+				ActivityID.ExecuteNonQuery2                => ExecuteNonQueryAlternative,
+				ActivityID.ExecuteNonQuery2Async           => ExecuteNonQueryAlternativeAsync,
 
 				ActivityID.CreateTable                     => CreateTable,
 				ActivityID.CreateTableAsync                => CreateTableAsync,
@@ -229,8 +234,8 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.TransactionCommitAsync          => TransactionCommitAsync,
 				ActivityID.TransactionRollback             => TransactionRollback,
 				ActivityID.TransactionRollbackAsync        => TransactionRollbackAsync,
-				ActivityID.TransactionDispose              => TransactionCommit,
-				ActivityID.TransactionDisposeAsync         => TransactionCommitAsync,
+				ActivityID.TransactionDispose              => TransactionDispose,
+				ActivityID.TransactionDisposeAsync         => TransactionDisposeAsync,
 				ActivityID.CommandExecuteScalar            => CommandExecuteScalar,
 				ActivityID.CommandExecuteScalarAsync       => CommandExecuteScalarAsync,
 				ActivityID.CommandExecuteReader            => CommandExecuteReader,
@@ -250,11 +255,30 @@ namespace LinqToDB.Tools.Activity
 			};
 		}
 
-		public static IActivity Factory(ActivityID metric)
+		/// <summary>
+		/// <para>
+		/// Creates an instance of the <see cref="IActivity"/> class for the specified metric.
+		/// Can be used in a factory method for <see cref="ActivityService"/>:
+		/// </para>
+		/// <code>
+		/// ActivityService.AddFactory(ActivityStatistics.Factory);
+		/// </code>
+		/// </summary>
+		/// <param name="activityID">One of the <see cref="ActivityID"/> values.</param>
+		/// <returns>
+		/// An instance of the <see cref="IActivity"/> class for the specified metric.
+		/// </returns>
+		public static IActivity Factory(ActivityID activityID)
 		{
-			return GetStat(metric).Start();
+			return GetStat(activityID).Start();
 		}
 
+		/// <summary>
+		/// Returns a report with collected statistics.
+		/// </summary>
+		/// <returns>
+		/// A report with collected statistics.
+		/// </returns>
 		public static string GetReport()
 		{
 			decimal totalTime = Total.Elapsed.Ticks;
@@ -270,22 +294,9 @@ namespace LinqToDB.Tools.Activity
 					1 => m.Elapsed,
 					_ => new TimeSpan(m.Elapsed.Ticks / m.CallCount)
 				},
-				Percent = FixUnixPercentFormat($"{(m.CallCount == 0 ? null : m.Elapsed.Ticks / totalTime),7:P}")
+				Percent = m.CallCount == 0 ? "" : $"{m.Elapsed.Ticks / totalTime * 100,7:0.00}%"
 			})
 			.ToDiagnosticString();
-
-			static string FixUnixPercentFormat(string str)
-			{
-				if (Environment.OSVersion.Platform is PlatformID.Unix)
-				{
-					str = str.Replace(" %", "%");
-
-					if (str.Length == 6)
-						str = ' ' + str;
-				}
-
-				return str;
-			}
 		}
 
 		static StatActivity QueryProviderExecuteT;
@@ -312,12 +323,12 @@ namespace LinqToDB.Tools.Activity
 		static StatActivity ExecuteElementAsync;
 		static StatActivity ExecuteScalar;
 		static StatActivity ExecuteScalarAsync;
-		static StatActivity ExecuteScalar2;
-		static StatActivity ExecuteScalar2Async;
+		static StatActivity ExecuteScalarAlternative;
+		static StatActivity ExecuteScalarAlternativeAsync;
 		static StatActivity ExecuteNonQuery;
 		static StatActivity ExecuteNonQueryAsync;
-		static StatActivity ExecuteNonQuery2;
-		static StatActivity ExecuteNonQuery2Async;
+		static StatActivity ExecuteNonQueryAlternative;
+		static StatActivity ExecuteNonQueryAlternativeAsync;
 
 		static StatActivity CreateTable;
 		static StatActivity CreateTableAsync;

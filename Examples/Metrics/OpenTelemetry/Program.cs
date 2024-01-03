@@ -79,8 +79,6 @@ namespace OpenTelemetryExample
 			}
 		}
 
-#pragma warning disable CA1812
-
 		[Table(Name="Customers")]
 		public sealed class Customer
 		{

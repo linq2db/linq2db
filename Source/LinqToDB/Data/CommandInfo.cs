@@ -330,9 +330,21 @@ namespace LinqToDB.Data
 					if (rd.DataReader!.Read())
 					{
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
-						var isFaulted = false;
+
+						DbDataReader reader;
+
+						if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+						{
+							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+								reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
+						}
+						else
+						{
+							reader = rd.DataReader!;
+						}
+
+						var objectReader = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
+						var isFaulted    = false;
 
 						do
 						{
@@ -441,9 +453,21 @@ namespace LinqToDB.Data
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-						var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-						var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
-						var isFaulted     = false;
+
+						DbDataReader reader;
+
+						if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+						{
+							using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+								reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
+						}
+						else
+						{
+							reader = rd.DataReader!;
+						}
+
+						var objectReader = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
+						var isFaulted    = false;
 
 						do
 						{
@@ -1037,8 +1061,20 @@ namespace LinqToDB.Data
 				if (rd.DataReader!.Read())
 				{
 					var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
-					var reader        = ((IDataContext)DataConnection).UnwrapDataObjectInterceptor?.UnwrapDataReader(DataConnection, rd.DataReader!) ?? rd.DataReader!;
-					var objectReader  = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
+
+					DbDataReader reader;
+
+					if (((IDataContext)DataConnection).UnwrapDataObjectInterceptor is {} interceptor)
+					{
+						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+							reader = interceptor.UnwrapDataReader(DataConnection, rd.DataReader!);
+					}
+					else
+					{
+						reader = rd.DataReader!;
+					}
+
+					var objectReader = GetObjectReader<T>(DataConnection, reader, CommandText, additionalKey);
 
 					try
 					{
