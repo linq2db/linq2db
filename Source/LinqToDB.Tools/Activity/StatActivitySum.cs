@@ -3,11 +3,11 @@ using System.Linq;
 
 namespace LinqToDB.Tools.Activity
 {
-	sealed class StatActivitySum(string name, params StatActivity[] metrics) : IStatActivity
+	sealed class StatActivitySum(string name, params IStatActivity[] metrics) : IStatActivity
 	{
-		public StatActivity[] Metrics   { get; } = metrics;
-		public string         Name      { get; } = name;
-		public TimeSpan       Elapsed   => new(Metrics.Sum(m => m.Elapsed.Ticks));
-		public long           CallCount => Metrics.Sum(m => m.CallCount);
+		public IStatActivity[] Metrics   { get; } = metrics;
+		public string          Name      { get; } = name;
+		public TimeSpan        Elapsed   => new(Metrics.Sum(m => m.Elapsed.Ticks));
+		public long            CallCount => Metrics.Sum(m => m.CallCount);
 	}
 }
