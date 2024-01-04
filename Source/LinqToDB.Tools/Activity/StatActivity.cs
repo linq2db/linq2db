@@ -9,8 +9,7 @@ namespace LinqToDB.Tools.Activity
 		public string Name { get; } = name;
 
 		private long     _elapsedTicks;
-		private TimeSpan _elapsed;
-		public  TimeSpan  Elapsed => _elapsedTicks > 0 ? new(_elapsedTicks) : _elapsed;
+		public  TimeSpan  Elapsed => new(_elapsedTicks);
 
 		private long     _callCount;
 		public  long      CallCount => _callCount;
@@ -27,8 +26,10 @@ namespace LinqToDB.Tools.Activity
 			Interlocked.Add(ref _elapsedTicks, stopwatch.ElapsedTicks);
 		}
 
-		void Stop(TimeSpan time) 
-			=> Interlocked.Add(ref _elapsedTicks, time.Ticks);
+		void Stop(TimeSpan time)
+		{
+			Interlocked.Add(ref _elapsedTicks, time.Ticks);
+		}
 
 		sealed class Watcher : ActivityBase
 		{
