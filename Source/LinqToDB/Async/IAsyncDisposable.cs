@@ -1,7 +1,9 @@
 ﻿#if NATIVE_ASYNC
 global using IAsyncDisposableEx = System.IAsyncDisposable;
+global using AsyncConfigured    = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
 #else
 global using IAsyncDisposableEx = LinqToDB.Async.IAsyncDisposable;
+global using AsyncConfigured    = LinqToDB.Async.IAsyncDisposable;
 
 using System;
 using System.Threading.Tasks;

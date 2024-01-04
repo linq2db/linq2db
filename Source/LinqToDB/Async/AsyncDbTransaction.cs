@@ -45,7 +45,7 @@ namespace LinqToDB.Async
 
 			return CallAwaitUsing(a, Transaction, cancellationToken);
 
-			static async Task CallAwaitUsing(IAsyncDisposable activity, DbTransaction transaction, CancellationToken token)
+			static async Task CallAwaitUsing(AsyncConfigured activity, DbTransaction transaction, CancellationToken token)
 			{
 				await using (activity)
 					await transaction.CommitAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -68,7 +68,7 @@ namespace LinqToDB.Async
 
 			return CallAwaitUsing(a, Transaction, cancellationToken);
 
-			static async Task CallAwaitUsing(IAsyncDisposable activity, DbTransaction transaction, CancellationToken token)
+			static async Task CallAwaitUsing(AsyncConfigured activity, DbTransaction transaction, CancellationToken token)
 			{
 				await using (activity)
 					await transaction.RollbackAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -112,7 +112,7 @@ namespace LinqToDB.Async
 
 				return CallAwaitUsing(a, asyncDisposable);
 
-				static async ValueTask CallAwaitUsing(IAsyncDisposable activity, IAsyncDisposable disposable)
+				static async ValueTask CallAwaitUsing(AsyncConfigured activity, IAsyncDisposable disposable)
 				{
 					await using (activity)
 						await disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

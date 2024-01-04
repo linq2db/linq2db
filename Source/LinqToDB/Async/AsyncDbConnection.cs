@@ -70,7 +70,7 @@ namespace LinqToDB.Async
 
 			return CallAwaitUsing(a, Connection, cancellationToken);
 
-			static async Task CallAwaitUsing(IAsyncDisposableEx activity, DbConnection connection, CancellationToken token)
+			static async Task CallAwaitUsing(AsyncConfigured activity, DbConnection connection, CancellationToken token)
 			{
 				await using (activity)
 					await connection.OpenAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -93,7 +93,7 @@ namespace LinqToDB.Async
 
 			return CallAwaitUsing(a, Connection);
 
-			static async Task CallAwaitUsing(IAsyncDisposable activity, DbConnection connection)
+			static async Task CallAwaitUsing(AsyncConfigured activity, DbConnection connection)
 			{
 				await using (activity)
 					await connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -198,7 +198,7 @@ namespace LinqToDB.Async
 
 				return CallAwaitUsing(a, asyncDisposable);
 
-				static async ValueTask CallAwaitUsing(IAsyncDisposable activity, IAsyncDisposable disposable)
+				static async ValueTask CallAwaitUsing(AsyncConfigured activity, IAsyncDisposable disposable)
 				{
 					await using (activity)
 						await disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

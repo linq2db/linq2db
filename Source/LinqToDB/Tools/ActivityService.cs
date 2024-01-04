@@ -35,22 +35,22 @@ namespace LinqToDB.Tools
 		}
 
 #if NATIVE_ASYNC
-		sealed class AsyncDisposableWrapper(ConfiguredAsyncDisposable configured) : IAsyncDisposable
+		internal sealed class AsyncDisposableWrapper(IActivity activity)
 		{
-			public async ValueTask DisposeAsync()
+			public ConfiguredValueTaskAwaitable DisposeAsync()
 			{
-				await configured.DisposeAsync();
+				return activity.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 
-		internal static IAsyncDisposable? StartAndConfigureAwait(ActivityID activityID)
+		internal static AsyncDisposableWrapper? StartAndConfigureAwait(ActivityID activityID)
 		{
 			var activity = Start(activityID);
 
 			if (activity is null)
 				return null;
 
-			return new AsyncDisposableWrapper(activity.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
+			return new AsyncDisposableWrapper(activity);
 		}
 #else
 		internal static IAsyncDisposableEx? StartAndConfigureAwait(ActivityID activityID)

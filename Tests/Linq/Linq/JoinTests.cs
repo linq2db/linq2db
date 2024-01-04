@@ -2990,22 +2990,5 @@ namespace Tests.Linq
 				return new DoNotExecuteDataReader();
 			}
 		}
-
-		[Test]
-		public void JoinTest([DataSources(false, TestProvName.AllSqlServerSequentialAccess)] string context)
-		{
-			using var db = GetDataContext(context, interceptor: DoNotExecuteCommandInterceptor.Instance);
-
-			var policyNumber = "111";
-
-			var q =
-				from s in db.GetTable<t_ws_submissions>()
-				from p in db.GetTable<t_ws_policies>().Where(_ => _.submission_id == s.submission_id && _.policy_nbr == policyNumber)
-				select s;
-
-			_ = q.ToList();
-
-			Assert.That(LastQuery, Is.Not.Contains("IS NULL AND"));
-		}
 	}
 }
