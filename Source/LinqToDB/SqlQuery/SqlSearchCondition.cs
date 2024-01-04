@@ -35,6 +35,12 @@ namespace LinqToDB.SqlQuery
 			return this;
 		}
 
+		public SqlSearchCondition AddRange(IEnumerable<ISqlPredicate> predicates)
+		{
+			Predicates.AddRange(predicates);
+			return this;
+		}
+
 		public bool IsOr  { get; set; }
 		public bool IsAnd { get => !IsOr; set => IsOr = !value; }
 

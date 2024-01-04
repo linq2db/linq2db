@@ -808,6 +808,64 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
+		bool MoveConditions(SqlTable table, 
+			IReadOnlyCollection<ISqlTableSource> currentSources,
+			SqlSearchCondition       source, 
+			SqlSearchCondition       destination,
+			SqlSearchCondition       common)
+		{
+			if (source.IsOr)
+				return false;
+
+			List<ISqlPredicate>? predicatesForDestination = null;
+			List<ISqlPredicate>? predicatesCommon         = null;
+
+			ISqlTableSource[] tableSources = { (ISqlTableSource)table };
+
+			foreach (var p in source.Predicates)
+			{
+				if (QueryHelper.IsDependsOnOuterSources(p, currentSources : currentSources) &&
+				    QueryHelper.IsDependsOnSources(p, tableSources))
+				{
+					predicatesForDestination ??= new();
+					predicatesForDestination.Add(p);
+				}
+				else
+				{
+					predicatesCommon ??= new();
+					predicatesCommon.Add(p);
+				}
+			}
+
+			if (predicatesForDestination != null)
+			{
+				if (destination.IsOr)
+					return false;
+			}
+
+			if (predicatesCommon != null)
+			{
+				if (common.IsOr)
+					return false;
+			}
+
+			if (predicatesForDestination != null)
+			{
+				destination.AddRange(predicatesForDestination);
+				foreach(var p in predicatesForDestination)
+					source.Predicates.Remove(p);
+			}
+
+			if (predicatesCommon != null)
+			{
+				common.AddRange(predicatesCommon);
+				foreach(var p in predicatesCommon)
+					source.Predicates.Remove(p);
+			}
+
+			return true;
+		}
+
 		protected static bool RemoveUpdateTableIfPossible(SelectQuery query, SqlTable table, out SqlTableSource? source)
 		{
 			source = null;
@@ -997,6 +1055,13 @@ namespace LinqToDB.SqlProvider
 
 			var needsComparison = !updateStatement.Update.HasComparison;
 
+			CorrectUpdateSetters(updateStatement);
+
+			if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
+			{
+				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation : true);
+			}
+			
 			needsComparison = false;
 
 			if (!needsComparison)
@@ -1005,11 +1070,8 @@ namespace LinqToDB.SqlProvider
 				clonedQuery = CloneQuery(updateStatement.SelectQuery, null, out replaceTree);
 
 				// trying to simplify query
-				RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table, out _);
+				RemoveUpdateTableIfPossible(updateStatement.SelectQuery, updateStatement.Update.Table!, out _);
 			}
-
-			if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
-				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
 
 			// It covers subqueries also. Simple subquery will have sourcesCount == 2
 			if (QueryHelper.EnumerateAccessibleTableSources(updateStatement.SelectQuery).Any())
