@@ -259,6 +259,13 @@ namespace LinqToDB.Linq.Builder
 			if (notNullable != testedType)
 				return HasDbMapping(mappingSchema, notNullable, out convertExpr);
 
+			// TODO: Workaround, wee need good TypeMapping approach
+			if (testedType.IsArray)
+			{
+				convertExpr = null;
+				return HasDbMapping(mappingSchema, testedType.GetElementType()!, out _);
+			}
+
 			if (!testedType.IsEnum)
 				return false;
 
