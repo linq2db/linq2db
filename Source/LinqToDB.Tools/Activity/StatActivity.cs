@@ -27,13 +27,8 @@ namespace LinqToDB.Tools.Activity
 			Interlocked.Add(ref _elapsedTicks, stopwatch.ElapsedTicks);
 		}
 
-		void Stop(TimeSpan time)
-		{
-#pragma warning disable CA2002 // Do not lock on objects with weak identity
-			lock (this)
-				_elapsed += time;
-#pragma warning restore CA2002 // Do not lock on objects with weak identity
-		}
+		void Stop(TimeSpan time) 
+			=> Interlocked.Add(ref _elapsedTicks, time.Ticks);
 
 		sealed class Watcher : ActivityBase
 		{
