@@ -42,3 +42,8 @@ Contains database setup scripts for local testing
 Use of Windows-based images is not recommended as they probably will not work due to base image mismatch.
 
 - `sqlserver2022-win.cmd` : Windows script to create or update docker container with SQL Server 2022 (Windows-based) instance
+
+### Windows downloads and installs (for local testing)
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Microsoft® SQL Server® Compact 4.0 SP1](https://www.microsoft.com/en-us/download/details.aspx?id=30709)
