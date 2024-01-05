@@ -22,7 +22,7 @@ namespace LinqToDB.SqlQuery
 			{
 				SqlNullabilityExpression => sqlExpression,
 				SqlSearchCondition => sqlExpression,
-				SqlRow row => new SqlRow(row.Values.Select(v => ApplyNullability(v, nullability)).ToArray()),
+				SqlRowExpression row => new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, nullability)).ToArray()),
 				_ => new SqlNullabilityExpression(sqlExpression, nullability.CanBeNull(sqlExpression))
 			};
 		}
@@ -32,9 +32,9 @@ namespace LinqToDB.SqlQuery
 			if (sqlExpression is SqlSearchCondition)
 				return sqlExpression;
 
-			if (sqlExpression is SqlRow row)
+			if (sqlExpression is SqlRowExpression row)
 			{
-				return new SqlRow(row.Values.Select(v => ApplyNullability(v, canBeNull)).ToArray());
+				return new SqlRowExpression(row.Values.Select(v => ApplyNullability(v, canBeNull)).ToArray());
 			}
 
 			if (sqlExpression is SqlNullabilityExpression nullabilityExpression)

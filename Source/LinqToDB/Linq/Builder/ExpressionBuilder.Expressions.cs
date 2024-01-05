@@ -744,7 +744,8 @@ namespace LinqToDB.Linq.Builder
 				if (Builder.CanBeCompiled(node, true))
 					return node;
 
-				newNode = base.VisitMethodCall(node);
+				if (!_flags.IsSql())
+					newNode = base.VisitMethodCall(node);
 
 				_columnDescriptor = saveDescriptor;
 

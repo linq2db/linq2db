@@ -69,7 +69,7 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlDataType               => VisitSqlDataType               ((SqlDataType               )element),
 				QueryElementType.SqlTable                  => VisitSqlTable                  ((SqlTable                  )element),
 				QueryElementType.SqlAliasPlaceholder       => VisitSqlAliasPlaceholder       ((SqlAliasPlaceholder       )element),
-				QueryElementType.SqlRow                    => VisitSqlRow                    ((SqlRow                    )element),
+				QueryElementType.SqlRow                    => VisitSqlRow                    ((SqlRowExpression          )element),
 				QueryElementType.NotPredicate              => VisitNotPredicate              ((SqlPredicate.Not          )element),
 				QueryElementType.TruePredicate             => VisitTruePredicate             ((SqlPredicate.TruePredicate         )element),
 				QueryElementType.FalsePredicate            => VisitFalsePredicate            ((SqlPredicate.FalsePredicate        )element),
@@ -2481,7 +2481,7 @@ namespace LinqToDB.SqlQuery
 			return predicate;
 		}
 
-		protected virtual IQueryElement VisitSqlRow(SqlRow element)
+		protected virtual IQueryElement VisitSqlRow(SqlRowExpression element)
 		{
 			switch (GetVisitMode(element))
 			{
@@ -2502,7 +2502,7 @@ namespace LinqToDB.SqlQuery
 
 					if (ShouldReplace(element) || element.Values != values)
 					{
-						return NotifyReplaced(new SqlRow(element.Values != values ? values : values.ToArray()), element);
+						return NotifyReplaced(new SqlRowExpression(element.Values != values ? values : values.ToArray()), element);
 					}
 
 					break;

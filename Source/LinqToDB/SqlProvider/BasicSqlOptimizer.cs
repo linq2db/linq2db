@@ -405,7 +405,7 @@ namespace LinqToDB.SqlProvider
 						if (columns.Count > 1)
 							throw new LinqToDBException("SqlRow expression must be the only result in a SELECT");
 
-						var row = (SqlRow)columns[0].Expression;
+						var row = (SqlRowExpression)columns[0].Expression;
 						columns.Clear();
 						foreach (var value in row.Values)
 							selectQuery.Select.AddNew(value);
@@ -1009,7 +1009,7 @@ namespace LinqToDB.SqlProvider
 			Dictionary<IQueryElement, IQueryElement>? innerTree,
 			SelectQuery                               selectQuery)
 		{
-			if (target is SqlRow targetRow && source is SqlRow sourceRow)
+			if (target is SqlRowExpression targetRow && source is SqlRowExpression sourceRow)
 			{
 				if (targetRow.Values.Length != sourceRow.Values.Length)
 					throw new InvalidOperationException("Target and Source SqlRows are different");
@@ -1139,7 +1139,7 @@ namespace LinqToDB.SqlProvider
 							rows.AddRange(GenerateRows(item.Column, item.Expression, replaceTree, innerTree, innerQuery));
 						}
 
-						var sqlRow        = new SqlRow(rows.Select(r => r.Item1).ToArray());
+						var sqlRow        = new SqlRowExpression(rows.Select(r => r.Item1).ToArray());
 						var newUpdateItem = new SqlSetExpression(sqlRow, innerQuery);
 
 						newUpdateStatement.Update.Items.Clear();

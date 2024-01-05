@@ -4,9 +4,9 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlRow : ISqlExpression
+	public class SqlRowExpression : ISqlExpression
 	{
-		public SqlRow(ISqlExpression[] values)
+		public SqlRowExpression(ISqlExpression[] values)
 		{
 			Values = values;
 		}
@@ -30,10 +30,10 @@ namespace LinqToDB.SqlQuery
 		public QueryElementType ElementType => QueryElementType.SqlRow;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
-			=> other is SqlRow row && Values.Zip(row.Values, comparer).All(x => x);
+			=> other is SqlRowExpression row && Values.Zip(row.Values, comparer).All(x => x);
 
 		public bool Equals([AllowNull] ISqlExpression other)
-			=> other is SqlRow row && Values.SequenceEqual(row.Values);
+			=> other is SqlRowExpression row && Values.SequenceEqual(row.Values);
 
 #if OVERRIDETOSTRING
 		public override string ToString()

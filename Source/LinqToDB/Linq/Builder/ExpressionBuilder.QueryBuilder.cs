@@ -285,7 +285,7 @@ namespace LinqToDB.Linq.Builder
 								if (placeholder.SelectQuery == null)
 									break;
 
-								if (placeholder.Sql is SqlRow)
+								if (placeholder.Sql is SqlRowExpression)
 								{
 									throw new LinqToDBException("Sql.Row(...) cannot be top level expression.");
 								}
@@ -603,7 +603,7 @@ namespace LinqToDB.Linq.Builder
 			if (SequenceHelper.IsSpecialProperty(unwrapped, out _, out _))
 				return null;
 
-			if (!flags.IsSubquery() && CanBeCompiled(expr, flags.IsExpression()))
+			if (!flags.IsSubquery() && CanBeCompiled(expr, true))
 				return null;
 
 			if (unwrapped is MemberExpression me)
@@ -621,6 +621,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (!IsSingleElementContext(info.Context) && expr.Type.IsEnumerableType(info.Context.ElementType) && !flags.IsExtractProjection())
 			{
+				if (flags.IsSql())
+					return null;
+
 				var eager = (Expression)new SqlEagerLoadExpression(unwrapped);
 				eager = SqlAdjustTypeExpression.AdjustType(eager, expr.Type, MappingSchema);
 

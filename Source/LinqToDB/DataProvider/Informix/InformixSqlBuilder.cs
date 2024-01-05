@@ -324,7 +324,7 @@ namespace LinqToDB.DataProvider.Informix
 			BuildDropTableStatementIfExists(dropTable);
 		}
 
-		protected override void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses,
+		protected override void BuildSqlRow(SqlRowExpression expr, bool buildTableName, bool checkParentheses,
 			bool                                   throwExceptionIfTableNotFound)
 		{
 			// Informix needs ROW(1,2) syntax instead of BasicSqlBuilder default (1,2)

@@ -1566,7 +1566,7 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlRow:
 						{
-							var elem = (SqlRow)e;
+							var elem = (SqlRowExpression)e;
 
 							Append(elem.Values);
 
@@ -2555,7 +2555,7 @@ namespace LinqToDB.Remote
 					case QueryElementType.SqlRow:
 						{
 							var values = ReadArray<ISqlExpression>()!;
-							obj        = new SqlRow(values);
+							obj        = new SqlRowExpression(values);
 							break;
 						}
 

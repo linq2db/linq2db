@@ -894,7 +894,7 @@ namespace LinqToDB.SqlProvider
 
 				AppendIndent();
 
-				if (expr.Column is SqlRow row)
+				if (expr.Column is SqlRowExpression row)
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Update))
 						throw new LinqToDBException("This provider does not support SqlRow in UPDATE.");
@@ -3139,7 +3139,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.SqlRow:
-					BuildSqlRow((SqlRow) expr, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
+					BuildSqlRow((SqlRowExpression) expr, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
 					break;
 
 				default:
@@ -3322,7 +3322,7 @@ namespace LinqToDB.SqlProvider
 			StringBuilder.Append(')');
 		}
 
-		protected virtual void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		protected virtual void BuildSqlRow(SqlRowExpression expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
 		{
 			StringBuilder.Append('(');
 			foreach (var value in expr.Values)

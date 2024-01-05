@@ -2067,14 +2067,20 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left,  keysFlag, columnDescriptor : columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, keysFlag, columnDescriptor : columnDescriptor);
 
-			if (leftExpr is SqlPlaceholderExpression { Sql: SqlRow } && rightExpr is SqlEagerLoadExpression)
+			//SQLRow case when needs to add Single
+			//
+			if (leftExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } && rightExpr is not SqlPlaceholderExpression)
 			{
-				//SQLRow case
-				//
-
 				var elementType = TypeHelper.GetEnumerableElementType(rightExpr.Type);
 				var singleCall  = Expression.Call(Methods.Enumerable.Single.MakeGenericMethod(elementType), right);
 				rightExpr = ConvertToSqlExpr(context, singleCall, keysFlag, columnDescriptor : columnDescriptor);
+			}
+			else if (rightExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } &&
+			         leftExpr is not SqlPlaceholderExpression)
+			{
+				var elementType = TypeHelper.GetEnumerableElementType(leftExpr.Type);
+				var singleCall  = Expression.Call(Methods.Enumerable.Single.MakeGenericMethod(elementType), left);
+				leftExpr = ConvertToSqlExpr(context, singleCall, keysFlag, columnDescriptor : columnDescriptor);
 			}
 
 			leftExpr  = RemoveNullPropagation(leftExpr, true);

@@ -415,7 +415,7 @@ namespace LinqToDB.Linq.Builder
 						.Select(e => GetFieldExpression(e, false))
 						.ToArray();
 
-					var rowExpression = new SqlRow(row);
+					var rowExpression = new SqlRowExpression(row);
 
 					setExpression = new SqlSetExpression(rowExpression, null);
 				}

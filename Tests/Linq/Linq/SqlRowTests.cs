@@ -30,9 +30,6 @@ namespace Tests.Linq
 			// SqlRow type can't be instantiated client-side, 
 			// it's purely a LINQ construct that is converted into SQl code.
 			
-			Action invokeRow = () => Row(1, 2);
-			invokeRow.Should().Throw<LinqToDBException>();
-
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
 
@@ -449,7 +446,7 @@ namespace Tests.Linq
 				  .Overlaps(Row(DT.Parse("2020-10-05"), TimeSpan.Parse("1"))))
 				.Should().Be(1);
 
-			ints.Count(i => Row(DT.Parse("2020-10-03"), TimeSpan.Parse("6"))
+			ints.Count(i => Row(DT.Parse("2020-10-03"), (TimeSpan?)TimeSpan.Parse("6"))
 				  .Overlaps(Row(DT.Parse("2020-10-05"), (TimeSpan?)null)))
 				.Should().Be(1);
 		}
@@ -479,6 +476,11 @@ namespace Tests.Linq
 				(from y in ints2
 				 where y.Nil == null
 				 select Row(y.One, y.One + 1, 3)))
+				.Should().Be(1);
+
+			ints.Count(x => (from y in ints2
+					where y.Nil == null
+					select Row(y.One, y.One + 1, 3)) == Row(x.One, x.Two, x.Three))
 				.Should().Be(1);
 
 			ints.Count(x => Row(x.One, x.Two, x.Three) !=

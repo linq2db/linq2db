@@ -26,11 +26,11 @@
 		<EmbeddedResource Include="SqlQuery\ReservedWordsOracle.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsFirebird.txt" />
 		<EmbeddedResource Include="SqlQuery\ReservedWordsPostgres.txt" />
+
 		<None Update="DataProvider\ClickHouse\ClickHouseHints.tt">
 		  <LastGenOutput>ClickHouseHints.generated.cs</LastGenOutput>
 		  <Generator>TextTemplatingFileGenerator</Generator>
 		</None>
-
 		<None Update="DataProvider\MySql\MySqlHints.tt">
 			<LastGenOutput>MySqlHints.generated.cs</LastGenOutput>
 			<Generator>TextTemplatingFileGenerator</Generator>
@@ -45,6 +45,16 @@
 			<DependentUpon>MySqlHints.tt</DependentUpon>
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
+		</Compile>
+
+		<None Update="Sql\Sql.Row.tt">
+		  <LastGenOutput>Sql.Row.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<Compile Update="Sql\Sql.Row.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Sql.Row.tt</DependentUpon>
 		</Compile>
 
 		<None Update="DataProvider\PostgreSQL\PostgreSQLHints.tt">

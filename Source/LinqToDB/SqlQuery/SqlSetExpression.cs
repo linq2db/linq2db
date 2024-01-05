@@ -16,7 +16,7 @@ namespace LinqToDB.SqlQuery
 
 		private void ValidateColumnExpression(ISqlExpression column, ISqlExpression? expression)
 		{
-			if (column is SqlRow row)
+			if (column is SqlRowExpression row)
 			{
 				// The length-checks _should_ never failed thanks to C# type-checking.
 				// We do them in case someone attempts to build invalid expressions with unsafe casts or similar.
@@ -29,7 +29,7 @@ namespace LinqToDB.SqlQuery
 					for (int i = 0; i < row.Values.Length; i++)
 						RefineDbParameter(row.Values[i], columns[i].Expression);
 				}
-				else if (expression is SqlRow sqlRow)
+				else if (expression is SqlRowExpression sqlRow)
 				{
 					var values = sqlRow.Values;
 					if (values.Length != row.Values.Length)
