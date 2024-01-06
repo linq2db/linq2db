@@ -1111,11 +1111,11 @@ namespace LinqToDB.Data
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 						try
 						{
-								result = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+							result = GetObjectReader<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
 						}
 						catch (InvalidCastException)
 						{
-								result = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
+							result = GetObjectReader2<T>(DataConnection, rd.DataReader!, CommandText, additionalKey)(rd.DataReader!);
 						}
 					}
 

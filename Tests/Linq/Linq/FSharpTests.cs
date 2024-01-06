@@ -35,6 +35,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void ComplexRecordParametersMapping([DataSources] string context)
+		{
+			using var db = GetDataContext(context/*, opt => opt.UseFSharp()*/);
+			FSharp.WhereTest.ComplexRecordParametersMapping(db);
+		}
+
+		[Test]
+		public void ComplexRecordParametersMappingUsingRecordReaderBuilder([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context/*, opt => opt.UseFSharp()*/);
+			FSharp.WhereTest.ComplexRecordParametersMappingUsingRecordReaderBuilder(db);
+		}
+
+		[Test]
 		public void LoadSinglesWithPatient([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
