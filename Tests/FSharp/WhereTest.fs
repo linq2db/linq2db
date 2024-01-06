@@ -174,7 +174,7 @@ let RecordProjectionColumnsOnly (db : IDataContext) =
     Assert.That(john.ID, Is.EqualTo 1)
     Assert.That(john.id, Is.EqualTo "John")
     Assert.That(john.Id, Is.EqualTo "Pupkin")
-    Assert.That(john.iD, Is.Null)
+    Assert.That(john.iD, Is.EqualTo "ибн Алёша")
 
 let RecordProjectionAll (db : IDataContext) =
     let persons = query {
