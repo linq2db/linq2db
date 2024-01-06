@@ -152,3 +152,51 @@ let RecordParametersMapping (db : IDataContext) =
     Assert.That(john.id, Is.EqualTo "John")
     Assert.That(john.Id, Is.EqualTo "Pupkin")
     Assert.That(john.iD, Is.Null)
+
+let RecordProjectionColumnsOnly (db : IDataContext) =
+    let persons = query {
+        for p in db.GetTable<Person>() do
+        select {
+            ID = p.ID
+            id = p.FirstName
+            Id = p.LastName
+            iD = "ибн Алёша"
+        }
+    }
+
+    let john = query {
+        for p in persons do
+        where (p.ID = 1)
+        exactlyOne
+    }
+
+    Assert.That(john, Is.Not.Null)
+    Assert.That(john.ID, Is.EqualTo 1)
+    Assert.That(john.id, Is.EqualTo "John")
+    Assert.That(john.Id, Is.EqualTo "Pupkin")
+    Assert.That(john.iD, Is.Null)
+
+let RecordProjectionAll (db : IDataContext) =
+    let persons = query {
+        for p in db.GetTable<Person>() do
+        select {
+            ID = p.ID
+            FirstName = p.FirstName
+            LastName = p.LastName
+            MiddleName = "ибн Алёша"
+            Gender = p.Gender
+            Patient = Unchecked.defaultof<PatientCLIMutable>
+        }
+    }
+
+    let john = query {
+        for p in persons do
+        where (p.ID = 1)
+        exactlyOne
+    }
+
+    Assert.That(john, Is.Not.Null)
+    Assert.That(john.ID, Is.EqualTo 1)
+    Assert.That(john.FirstName, Is.EqualTo "John")
+    Assert.That(john.LastName, Is.EqualTo "Pupkin")
+    Assert.That(john.MiddleName, Is.EqualTo "ибн Алёша")
