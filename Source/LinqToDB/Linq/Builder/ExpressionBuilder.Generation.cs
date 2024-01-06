@@ -187,7 +187,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
 				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
-				BuildDefaultSetters(context, entityDescriptor, entityDescriptor.ObjectType, members);
+			}
+
+			if (!flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
+			{
+				BuildDefaultSetters(currentPath.Type, members);
 			}
 
 			var generic = new SqlGenericConstructorExpression(
@@ -288,7 +292,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		void BuildDefaultSetters(IBuildContext context, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
+		void BuildDefaultSetters(Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
 		{
 			var typeAccessor    = TypeAccessor.GetAccessor(objectType);
 			var assignedMembers = new HashSet<MemberInfo>(assignments.Select(a => a.MemberInfo), MemberInfoComparer.Instance);
@@ -302,7 +306,7 @@ namespace LinqToDB.Linq.Builder
 					continue;
 
 				var memberType = member.MemberInfo.GetMemberType();
-				var value      = Expression.Constant(context.MappingSchema.GetDefaultValue(memberType), memberType);
+				var value      = Expression.Constant(MappingSchema.GetDefaultValue(memberType), memberType);
 				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo, value, false, false);
 
 				assignments.Add(assignment);
