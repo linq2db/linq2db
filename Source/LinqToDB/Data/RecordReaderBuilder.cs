@@ -184,15 +184,6 @@ namespace LinqToDB.Data
 		IEnumerable<Expression?> GetExpressions(TypeAccessor typeAccessor, RecordType recordType, List<ColumnInfo> columns)
 		{
 			var members = typeAccessor.Members;
-			if (recordType == RecordType.FSharp)
-			{
-				members = new List<MemberAccessor>();
-				foreach (var member in typeAccessor.Members)
-				{
-					if (-1 != RecordsHelper.GetFSharpRecordMemberSequence(member.MemberInfo))
-						members.Add(member);
-				}
-			}
 
 			foreach (var member in members)
 			{
