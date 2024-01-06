@@ -154,12 +154,6 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (context != null && !flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
-			{
-				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
-				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
-			}
-
 			if (!flags.IsKeys() && level == 0 && context != null && purpose == FullEntityPurpose.Default && context is ITableContext table)
 			{
 				var ed = MappingSchema.GetEntityDescriptor(table.ObjectType,
@@ -187,6 +181,13 @@ namespace LinqToDB.Linq.Builder
 							new SqlGenericConstructorExpression.Assignment(memberInfo, expression, false, true));
 					}
 				}
+			}
+
+			if (context != null && !flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
+			{
+				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
+				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
+				BuildAssociations(context, entityDescriptor, members);
 			}
 
 			var generic = new SqlGenericConstructorExpression(
@@ -282,6 +283,28 @@ namespace LinqToDB.Linq.Builder
 			{
 				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo,
 					Expression.MakeMemberAccess(contextRef, member.MemberInfo), true, false);
+
+				assignments.Add(assignment);
+			}
+		}
+
+		void BuildAssociations(IBuildContext context, EntityDescriptor entityDescriptor, List<SqlGenericConstructorExpression.Assignment> assignments)
+		{
+			HashSet<MemberInfo>? assignedMembers = null;
+
+			foreach (var association in entityDescriptor.Associations)
+			{
+				if (association.MemberInfo.MemberType is not MemberTypes.Property and not MemberTypes.Field)
+					continue;
+
+				assignedMembers ??= new(assignments.Select(a => a.MemberInfo), MemberInfoComparer.Instance);
+
+				if (!assignedMembers.Add(association.MemberInfo))
+					continue;
+
+				var memberType = association.MemberInfo.GetMemberType();
+				var value      = Expression.Constant(context.MappingSchema.GetDefaultValue(memberType), memberType);
+				var assignment = new SqlGenericConstructorExpression.Assignment(association.MemberInfo, value, false, false);
 
 				assignments.Add(assignment);
 			}
@@ -798,9 +821,9 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression Construct(
-			MappingSchema                   mappingSchema, 
+			MappingSchema                   mappingSchema,
 			SqlGenericConstructorExpression constructorExpression,
-			IBuildContext?                  context,       
+			IBuildContext?                  context,
 			ProjectFlags                    flags)
 		{
 			var constructed = TryConstruct(mappingSchema, constructorExpression, context, flags);

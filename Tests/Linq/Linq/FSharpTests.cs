@@ -23,28 +23,28 @@ namespace Tests.Linq
 		[Test]
 		public void RecordProjectionColumnsOnly([DataSources] string context)
 		{
-			using var db = GetDataContext(context/*, opt => opt.UseFSharp()*/);
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
 			FSharp.WhereTest.RecordProjectionColumnsOnly(db);
 		}
 
 		[Test]
 		public void RecordProjectionAll([DataSources] string context)
 		{
-			using var db = GetDataContext(context/*, opt => opt.UseFSharp()*/);
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
 			FSharp.WhereTest.RecordProjectionAll(db);
 		}
 
 		[Test]
 		public void ComplexRecordParametersMapping([DataSources] string context)
 		{
-			using var db = GetDataContext(context/*, opt => opt.UseFSharp()*/);
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
 			FSharp.WhereTest.ComplexRecordParametersMapping(db);
 		}
 
 		[Test]
 		public void ComplexRecordParametersMappingUsingRecordReaderBuilder([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context/*, opt => opt.UseFSharp()*/);
+			using var db = GetDataConnection(context, opt => opt.UseFSharp());
 			FSharp.WhereTest.ComplexRecordParametersMappingUsingRecordReaderBuilder(db);
 		}
 
