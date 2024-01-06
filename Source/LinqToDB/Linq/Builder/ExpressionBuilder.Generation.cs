@@ -187,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
 				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
-				BuildAssociations(context, entityDescriptor, members);
+				BuildDefaultSetters(context, entityDescriptor, entityDescriptor.ObjectType, members);
 			}
 
 			var generic = new SqlGenericConstructorExpression(
@@ -288,23 +288,22 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		void BuildAssociations(IBuildContext context, EntityDescriptor entityDescriptor, List<SqlGenericConstructorExpression.Assignment> assignments)
+		void BuildDefaultSetters(IBuildContext context, EntityDescriptor entityDescriptor, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
 		{
-			HashSet<MemberInfo>? assignedMembers = null;
+			var typeAccessor    = TypeAccessor.GetAccessor(objectType);
+			var assignedMembers = new HashSet<MemberInfo>(assignments.Select(a => a.MemberInfo), MemberInfoComparer.Instance);
 
-			foreach (var association in entityDescriptor.Associations)
+			foreach (var member in typeAccessor.Members)
 			{
-				if (association.MemberInfo.MemberType is not MemberTypes.Property and not MemberTypes.Field)
+				if (member.MemberInfo.MemberType is not MemberTypes.Property and not MemberTypes.Field)
 					continue;
 
-				assignedMembers ??= new(assignments.Select(a => a.MemberInfo), MemberInfoComparer.Instance);
-
-				if (!assignedMembers.Add(association.MemberInfo))
+				if (!assignedMembers.Add(member.MemberInfo))
 					continue;
 
-				var memberType = association.MemberInfo.GetMemberType();
+				var memberType = member.MemberInfo.GetMemberType();
 				var value      = Expression.Constant(context.MappingSchema.GetDefaultValue(memberType), memberType);
-				var assignment = new SqlGenericConstructorExpression.Assignment(association.MemberInfo, value, false, false);
+				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo, value, false, false);
 
 				assignments.Add(assignment);
 			}

@@ -1663,8 +1663,9 @@ namespace LinqToDB.Data
 
 				if (td.InheritanceMapping.Count > 0 || td.HasComplexColumns)
 				{
-					var    readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader, converterExpr);
-					return readerBuilder.BuildReaderFunction<T>();
+					throw new InvalidOperationException("TODO:Detect calling tests");
+					//var    readerBuilder = new RecordReaderBuilder(dataConnection, typeof(T), dataReader, converterExpr);
+					//return readerBuilder.BuildReaderFunction<T>();
 				}
 
 				var names = new string[dataReader.FieldCount];

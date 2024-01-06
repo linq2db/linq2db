@@ -28,6 +28,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void RecordComplexProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			FSharp.WhereTest.RecordComplexProjection(db);
+		}
+
+		[Test]
 		public void RecordProjectionAll([DataSources] string context)
 		{
 			using var db = GetDataContext(context, opt => opt.UseFSharp());

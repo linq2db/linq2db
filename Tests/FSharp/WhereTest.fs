@@ -201,6 +201,32 @@ let RecordProjectionAll (db : IDataContext) =
     Assert.That(john.LastName, Is.EqualTo "Pupkin")
     Assert.That(john.MiddleName, Is.EqualTo "ибн Алёша")
 
+let RecordComplexProjection (db : IDataContext) =
+    let persons = query {
+        for p in db.GetTable<Person>() do
+        select {
+            ID = p.ID
+            Name = {
+                id = p.FirstName
+                Id = p.LastName
+                iD = "ибн Алёша"
+                unused = -1
+            }
+        }
+    }
+
+    let john = query {
+        for p in persons do
+        where (p.ID = 1 && p.Name.unused = -1 && p.Name.id = "John" && p.Name.Id = "Pupkin")
+        exactlyOne
+    }
+
+    Assert.That(john, Is.Not.Null)
+    Assert.That(john.ID, Is.EqualTo 1)
+    Assert.That(john.Name.id, Is.EqualTo "John")
+    Assert.That(john.Name.Id, Is.EqualTo "Pupkin")
+    Assert.That(john.Name.iD, Is.EqualTo "ибн Алёша")
+
 let ComplexRecordParametersMapping (db : IDataContext) =
     let persons = db.GetTable<ComplexPersonRecord>()
     let john = query {
