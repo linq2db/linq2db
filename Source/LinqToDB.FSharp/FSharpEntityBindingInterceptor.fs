@@ -10,10 +10,10 @@ open LinqToDB.Reflection
 
 /// Provides Linq To DB interceptor with F# support implementation.
 [<AllowNullLiteral>]
-type FSharpExpressionInterceptor private () =
-    inherit ExpressionInterceptor()
+type FSharpEntityBindingInterceptor private () =
+    inherit EntityBindingInterceptor()
 
-    static let _instance = FSharpExpressionInterceptor()
+    static let _instance = FSharpEntityBindingInterceptor()
 
     /// Interceptor instance.
     static member Instance

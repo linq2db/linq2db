@@ -11,7 +11,7 @@ namespace LinqToDB.Data
 		IInterceptable<IDataContextInterceptor>,
 		IInterceptable<IEntityServiceInterceptor>,
 		IInterceptable<IUnwrapDataObjectInterceptor>,
-		IInterceptable<IExpressionInterceptor>
+		IInterceptable<IEntityBindingInterceptor>
 	{
 		ICommandInterceptor? _commandInterceptor;
 		ICommandInterceptor? IInterceptable<ICommandInterceptor>.Interceptor
@@ -50,11 +50,11 @@ namespace LinqToDB.Data
 			set => _unwrapDataObjectInterceptor = value;
 		}
 
-		IExpressionInterceptor? _expressionInterceptor;
-		IExpressionInterceptor? IInterceptable<IExpressionInterceptor>.Interceptor
+		IEntityBindingInterceptor? _entityBindingInterceptor;
+		IEntityBindingInterceptor? IInterceptable<IEntityBindingInterceptor>.Interceptor
 		{
-			get => _expressionInterceptor;
-			set => _expressionInterceptor = value;
+			get => _entityBindingInterceptor;
+			set => _entityBindingInterceptor = value;
 		}
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
@@ -72,7 +72,7 @@ namespace LinqToDB.Data
 			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
 			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
 			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
-			((IInterceptable<IExpressionInterceptor>)      this).RemoveInterceptor(interceptor);
+			((IInterceptable<IEntityBindingInterceptor>)   this).RemoveInterceptor(interceptor);
 
 			OnRemoveInterceptor?.Invoke(interceptor);
 		}

@@ -346,7 +346,7 @@ namespace LinqToDB.Linq.Builder
 				var parameterValues = new List<Expression>();
 
 				IReadOnlyDictionary<int, MemberAccessor>? mappings = null;
-				if (DataContext is IInterceptable<IExpressionInterceptor> expressionServices)
+				if (DataContext is IInterceptable<IEntityBindingInterceptor> expressionServices)
 					mappings = expressionServices.Interceptor?.TryMapMembersToConstructor(typeAccessor);
 
 				if (constructorExpression.Parameters.Count == parameters.Length)

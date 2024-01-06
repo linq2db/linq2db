@@ -6,7 +6,7 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Interceptors.Internal
 {
-	sealed class AggregatedExpressionInterceptor : AggregatedInterceptor<IExpressionInterceptor>, IExpressionInterceptor
+	sealed class AggregatedEntityBindingInterceptor : AggregatedInterceptor<IEntityBindingInterceptor>, IEntityBindingInterceptor
 	{
 		public IReadOnlyDictionary<int, MemberAccessor>? TryMapMembersToConstructor(TypeAccessor typeAccessor)
 		{

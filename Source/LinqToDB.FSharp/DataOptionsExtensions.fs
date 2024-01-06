@@ -9,4 +9,4 @@ module Methods =
     /// <remarks>Currently it is limited to record types support, but we plan to add more support in future releases.</remarks>
     [<Extension>]
     let UseFSharp(options : DataOptions) =
-        options.UseInterceptor FSharpExpressionInterceptor.Instance
+        options.UseInterceptor FSharpEntityBindingInterceptor.Instance

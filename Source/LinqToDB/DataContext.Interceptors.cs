@@ -11,7 +11,7 @@ namespace LinqToDB
 		IInterceptable<IDataContextInterceptor>,
 		IInterceptable<IEntityServiceInterceptor>,
 		IInterceptable<IUnwrapDataObjectInterceptor>,
-		IInterceptable<IExpressionInterceptor>
+		IInterceptable<IEntityBindingInterceptor>
 	{
 		AggregatedCommandInterceptor? _commandInterceptor;
 		ICommandInterceptor? IInterceptable<ICommandInterceptor>.Interceptor
@@ -50,11 +50,11 @@ namespace LinqToDB
 			set => _unwrapDataObjectInterceptor = (AggregatedUnwrapDataObjectInterceptor?)value;
 		}
 
-		AggregatedExpressionInterceptor? _expressionInterceptor;
-		IExpressionInterceptor? IInterceptable<IExpressionInterceptor>.Interceptor
+		AggregatedEntityBindingInterceptor? _entityBindingInterceptor;
+		IEntityBindingInterceptor? IInterceptable<IEntityBindingInterceptor>.Interceptor
 		{
-			get => _expressionInterceptor;
-			set => _expressionInterceptor = (AggregatedExpressionInterceptor?)value;
+			get => _entityBindingInterceptor;
+			set => _entityBindingInterceptor = (AggregatedEntityBindingInterceptor?)value;
 		}
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
@@ -75,7 +75,7 @@ namespace LinqToDB
 				case IDataContextInterceptor      dc : Add(ref _dataContextInterceptor,      dc); break;
 				case IEntityServiceInterceptor    es : Add(ref _entityServiceInterceptor,    es); break;
 				case IUnwrapDataObjectInterceptor wr : Add(ref _unwrapDataObjectInterceptor, wr); break;
-				case IExpressionInterceptor       ex : Add(ref _expressionInterceptor,       ex); break;
+				case IEntityBindingInterceptor    ex : Add(ref _entityBindingInterceptor,    ex); break;
 			}
 
 			void Add<TA,TI>(ref TA? aggregator, TI intercept)
@@ -113,7 +113,7 @@ namespace LinqToDB
 			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
 			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
 			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
-			((IInterceptable<IExpressionInterceptor>)      this).RemoveInterceptor(interceptor);
+			((IInterceptable<IEntityBindingInterceptor>)      this).RemoveInterceptor(interceptor);
 		}
 	}
 }

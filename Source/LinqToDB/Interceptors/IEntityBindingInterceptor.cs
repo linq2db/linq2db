@@ -6,7 +6,10 @@ using LinqToDB.Reflection;
 
 namespace LinqToDB.Interceptors.Internal
 {
-	public interface IExpressionInterceptor : IInterceptor
+	/// <summary>
+	/// Internal API.
+	/// </summary>
+	public interface IEntityBindingInterceptor : IInterceptor
 	{
 		/// <summary>
 		/// Method returns map between type member and member initialization parameter index in type constructor.
