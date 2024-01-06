@@ -100,6 +100,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.DB2.Core.nuspec = NuGet\linq2db.DB2.Core.nuspec
 		NuGet\linq2db.DB2.nuspec = NuGet\linq2db.DB2.nuspec
 		NuGet\linq2db.Firebird.nuspec = NuGet\linq2db.Firebird.nuspec
+		NuGet\linq2db.FSharp.nuspec = NuGet\linq2db.FSharp.nuspec
 		NuGet\linq2db.Informix.Core.nuspec = NuGet\linq2db.Informix.Core.nuspec
 		NuGet\linq2db.Informix.nuspec = NuGet\linq2db.Informix.nuspec
 		NuGet\linq2db.MySql.nuspec = NuGet\linq2db.MySql.nuspec
@@ -124,6 +125,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\Pack.bat = NuGet\Pack.bat
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
 		NuGet\README.AspNet.md = NuGet\README.AspNet.md
+		NuGet\README.FSharp.md = NuGet\README.FSharp.md
 		NuGet\README.linq2db.md = NuGet\README.linq2db.md
 		NuGet\README.Remote.Grpc.md = NuGet\README.Remote.Grpc.md
 		NuGet\README.Remote.Wcf.md = NuGet\README.Remote.Wcf.md
@@ -525,7 +527,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net70", "net70", "{1ED95A47
 		Build\Azure\net70\sybase.json = Build\Azure\net70\sybase.json
 	EndProjectSection
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "LinqToDB.FSharp", "Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj", "{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "LinqToDB.FSharp", "Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj", "{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

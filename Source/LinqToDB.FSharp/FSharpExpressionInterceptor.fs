@@ -8,12 +8,14 @@ open System.Collections
 open System.Collections.Generic
 open LinqToDB.Reflection
 
+/// Provides Linq To DB interceptor with F# support implementation.
 [<AllowNullLiteral>]
 type FSharpExpressionInterceptor private () =
     inherit ExpressionInterceptor()
 
     static let _instance = FSharpExpressionInterceptor()
 
+    /// Interceptor instance.
     static member Instance
         with get() = _instance
 

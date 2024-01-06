@@ -16,7 +16,7 @@ namespace Tests.Linq
 		[Test]
 		public void RecordParametersMapping([DataSources] string context)
 		{
-			using var db = GetDataContext(context, opt => opt.UseFSharpRecords());
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
 			FSharp.WhereTest.RecordParametersMapping(db);
 		}
 
