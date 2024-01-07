@@ -166,7 +166,7 @@ let RecordProjectionColumnsOnly (db : IDataContext) =
 
     let john = query {
         for p in persons do
-        where (p.ID = 1)
+        where (p.ID = 1 && p.iD = "ибн Алёша")
         exactlyOne
     }
 
@@ -191,7 +191,7 @@ let RecordProjectionAll (db : IDataContext) =
 
     let john = query {
         for p in persons do
-        where (p.ID = 1)
+        where (p.ID = 1 && p.MiddleName = "ибн Алёша")
         exactlyOne
     }
 
@@ -243,7 +243,7 @@ let ComplexRecordParametersMapping (db : IDataContext) =
     Assert.That(john.Name.iD, Is.Null)
 
 let ComplexRecordParametersMappingUsingRecordReaderBuilder (db : DataConnection) =
-    let john = db.Execute<ComplexPersonRecord>("select PersonID, FirstName, LastName, MiddleName FROM Person WHERE PersonID = 1")
+    let john = db.Execute<ComplexPersonRecord>("select LastName, PersonID, FirstName, MiddleName FROM Person WHERE PersonID = 1")
 
     Assert.That(john, Is.Not.Null)
     Assert.That(john.ID, Is.EqualTo 1)
@@ -251,3 +251,4 @@ let ComplexRecordParametersMappingUsingRecordReaderBuilder (db : DataConnection)
     Assert.That(john.Name.id, Is.EqualTo "John")
     Assert.That(john.Name.Id, Is.EqualTo "Pupkin")
     Assert.That(john.Name.iD, Is.Null)
+    Assert.That(john.Name.unused, Is.EqualTo(0))

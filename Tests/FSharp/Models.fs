@@ -35,9 +35,9 @@ and Patient =
 
 type NameConflictingNamesRecord =
     {
+      iD : string
       id : string
       Id : string
-      iD : string
       unused : int
     }
 

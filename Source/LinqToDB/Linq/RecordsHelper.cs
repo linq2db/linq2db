@@ -26,11 +26,11 @@ namespace LinqToDB.Linq
 		/// <summary>
 		/// Mask for types that instantiated using record-like constructor.
 		/// </summary>
-		CallConstructorOnWrite = /*FSharp | */RecordClass | AnonymousType,
+		CallConstructorOnWrite = RecordClass | AnonymousType,
 		/// <summary>
 		/// Mask for types that instantiated in expressions using record-like constructor.
 		/// </summary>
-		CallConstructorOnRead  = /*FSharp | */RecordClass,
+		CallConstructorOnRead  = RecordClass,
 	}
 
 	internal static class RecordsHelper

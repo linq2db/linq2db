@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using LinqToDB.FSharp;
+using LinqToDB.Data;
 
 namespace Tests.Linq
 {
@@ -25,6 +26,11 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, opt => opt.UseFSharp());
 			FSharp.WhereTest.RecordProjectionColumnsOnly(db);
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WHERE"));
+			}
 		}
 
 		[Test]
@@ -32,6 +38,11 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, opt => opt.UseFSharp());
 			FSharp.WhereTest.RecordComplexProjection(db);
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WHERE"));
+			}
 		}
 
 		[Test]
@@ -39,6 +50,11 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, opt => opt.UseFSharp());
 			FSharp.WhereTest.RecordProjectionAll(db);
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WHERE"));
+			}
 		}
 
 		[Test]

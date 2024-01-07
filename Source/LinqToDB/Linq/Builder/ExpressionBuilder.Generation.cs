@@ -154,6 +154,12 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			if (context != null && !flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
+			{
+				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
+				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
+			}
+
 			if (!flags.IsKeys() && level == 0 && context != null && purpose == FullEntityPurpose.Default && context is ITableContext table)
 			{
 				var ed = MappingSchema.GetEntityDescriptor(table.ObjectType,
@@ -181,12 +187,6 @@ namespace LinqToDB.Linq.Builder
 							new SqlGenericConstructorExpression.Assignment(memberInfo, expression, false, true));
 					}
 				}
-			}
-
-			if (context != null && !flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
-			{
-				var entityDescriptor = MappingSchema.GetEntityDescriptor(currentPath.Type);
-				BuildCalculatedColumns(context, entityDescriptor, entityDescriptor.ObjectType, members);
 			}
 
 			if (!flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)

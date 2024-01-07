@@ -15,6 +15,8 @@ namespace LinqToDB.Data
 	using Common;
 	using Mapping;
 	using Reflection;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Interceptors.Internal;
 
 	sealed class RecordReaderBuilder
 	{
@@ -181,7 +183,7 @@ namespace LinqToDB.Data
 			public Expression Expression = null!;
 		}
 
-		IEnumerable<Expression?> GetExpressions(TypeAccessor typeAccessor, RecordType recordType, List<ColumnInfo> columns)
+		IEnumerable<(Expression expression, MemberAccessor member)?> GetExpressions(TypeAccessor typeAccessor, RecordType recordType, List<ColumnInfo> columns)
 		{
 			var members = typeAccessor.Members;
 
@@ -199,7 +201,7 @@ namespace LinqToDB.Data
 
 				if (column != null)
 				{
-					yield return column.Expression;
+					yield return (column.Expression, member);
 				}
 				else
 				{
@@ -232,6 +234,17 @@ namespace LinqToDB.Data
 
 						if (memberRecordType != RecordType.NotRecord)
 						{
+							IReadOnlyDictionary<int, MemberAccessor>?        mappings   = null;
+							IReadOnlyDictionary<MemberAccessor, Expression>? exprLookup = null;
+
+							if (DataContext is IInterceptable<IEntityBindingInterceptor> expressionServices)
+							{
+								mappings = expressionServices.Interceptor?.TryMapMembersToConstructor(typeAcc);
+								if (mappings != null)
+									exprLookup = exprs.Where(e => e != null).ToDictionary(e => e!.Value.member, e => e!.Value.expression);
+							}
+
+
 							var ctor      = member.Type.GetConstructors().Single();
 							var ctorParms = ctor.GetParameters();
 
@@ -239,12 +252,14 @@ namespace LinqToDB.Data
 							for (var i = 0; i < ctorParms.Length; i++)
 							{
 								var p = ctorParms[i];
-								var e = (exprs.Count > i ? exprs[i] : null)
-									?? Expression.Constant(p.DefaultValue ?? MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType);
+								var e = (exprLookup != null
+									? (mappings!.TryGetValue(i, out var m) && exprLookup.TryGetValue(m, out var expr) ? expr : null)
+									: (exprs.Count > i ? exprs[i]?.expression : null))
+									?? Expression.Constant((p.DefaultValue is DBNull ? null : p.DefaultValue) ?? MappingSchema.GetDefaultValue(p.ParameterType), p.ParameterType);
 								parms.Add(e);
 							}
 
-							yield return Expression.New(ctor, parms);
+							yield return (Expression.New(ctor, parms), member);
 						}
 						else
 						{
@@ -253,13 +268,13 @@ namespace LinqToDB.Data
 							{
 								if (exprs[i] != null)
 								{
-									bindings.Add(Expression.Bind(typeAcc.Members[i].MemberInfo, exprs[i]!));
+									bindings.Add(Expression.Bind(typeAcc.Members[i].MemberInfo, exprs[i]!.Value.expression));
 								}
 							}
 
 							var expr = Expression.MemberInit(Expression.New(member.Type), bindings);
 
-							yield return expr;
+							yield return (expr, member);
 						}
 					}
 				}
@@ -291,7 +306,7 @@ namespace LinqToDB.Data
 			{
 				Expression? e = null;
 				if (enumerator.MoveNext())
-					e = enumerator.Current;
+					e = enumerator.Current?.expression;
 
 				parms[i] = e ?? Expression.Constant(MappingSchema.GetDefaultValue(parameters[i].ParameterType), parameters[i].ParameterType);
 			}
