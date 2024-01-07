@@ -29,7 +29,6 @@ namespace LinqToDB.Data
 		public IDataContext           DataContext   { get; }
 		public MappingSchema          MappingSchema { get; }
 		public Type                   ObjectType    { get; }
-		public Type                   OriginalType  { get; }
 		public DbDataReader           Reader        { get; }
 		public Dictionary<string,int> ReaderIndexes { get; }
 
@@ -40,7 +39,6 @@ namespace LinqToDB.Data
 		{
 			DataContext   = dataContext;
 			MappingSchema = dataContext.MappingSchema;
-			OriginalType  = objectType;
 			ObjectType    = objectType;
 			Reader        = reader;
 			ReaderIndexes = Enumerable.Range(0, reader.FieldCount).ToDictionary(reader.GetName, static i => i, MappingSchema.ColumnNameComparer);

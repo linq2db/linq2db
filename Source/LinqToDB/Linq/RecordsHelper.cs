@@ -17,20 +17,11 @@ namespace LinqToDB.Linq
 		/// <summary>
 		/// Type is C# record class or any other class with constructor parameter mathing properties by name.
 		/// </summary>
-		RecordClass   = 0x02,
+		RecordClass   = 0x01,
 		/// <summary>
 		/// Type is C# or VB.NET anonymous type.
 		/// </summary>
-		AnonymousType = 0x04,
-
-		/// <summary>
-		/// Mask for types that instantiated using record-like constructor.
-		/// </summary>
-		CallConstructorOnWrite = RecordClass | AnonymousType,
-		/// <summary>
-		/// Mask for types that instantiated in expressions using record-like constructor.
-		/// </summary>
-		CallConstructorOnRead  = RecordClass,
+		AnonymousType = 0x02,
 	}
 
 	internal static class RecordsHelper
