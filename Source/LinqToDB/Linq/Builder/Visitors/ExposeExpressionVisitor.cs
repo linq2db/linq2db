@@ -136,6 +136,21 @@ namespace LinqToDB.Linq.Builder.Visitors
 				}
 			}
 
+			if (node.Method.Name == "Invoke" && node.Object is LambdaExpression invokeLambda)
+			{
+				var body = invokeLambda.Body;
+
+				if (node.Arguments.Count == 1)
+					body = body.Replace(invokeLambda.Parameters[0], node.Arguments[0]);
+				else if (node.Arguments.Count > 1)
+				{
+					var dict = invokeLambda.Parameters.Select((p, i) => (p, i)).ToDictionary(p => (Expression)p.p, p => node.Arguments[p.i]);
+					body = body.Replace(dict);
+				}
+
+				return Visit(body);
+			}
+
 			if (node.Method.Name          == nameof(DataExtensions.QueryFromExpression) &&
 			    node.Method.DeclaringType == typeof(DataExtensions))
 			{
