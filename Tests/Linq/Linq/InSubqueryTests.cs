@@ -17,14 +17,29 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			var q =
+			AssertQuery(
+				from c in db.Child
+				where c.ParentID.In(db.Parent.Select(p => p.ParentID))
+				select c);
+
+			if (!preferExists && db is DataConnection && !context.IsAnyOf(TestProvName.AllFirebird) && !context.IsAnyOf(TestProvName.AllInformix))
+				Assert.That(LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
+
+			if (compareNullsAsValues == false)
+				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
+		}
+
+		[Test]
+		public void InTest2([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		{
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
+
+			AssertQuery(
 				from c in db.GrandChild
 				where c.ParentID.In(db.Parent.Select(p => p.Value1))
-				select c;
+				select c);
 
-			_ = q.ToList();
-
-			if (!preferExists && db is DataConnection dc && !context.IsAnyOf(TestProvName.AllFirebird) && !context.IsAnyOf(TestProvName.AllInformix))
+			if (!preferExists && db is DataConnection && !context.IsAnyOf(TestProvName.AllFirebird) && !context.IsAnyOf(TestProvName.AllInformix))
 				Assert.That(LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
 
 			if (compareNullsAsValues == false)

@@ -1290,9 +1290,10 @@ namespace Tests
 
 		public T[] AssertQuery<T>(IQueryable<T> query)
 		{
-			var expr    = query.Expression.Replace(ExpressionConstants.DataContextParam, Expression.Constant(Internals.GetDataContext(query), typeof(IDataContext)));
-			var loaded  = new Dictionary<Type, Expression>();
-			var actual  = query.ToArray();
+			var expr      = query.Expression.Replace(ExpressionConstants.DataContextParam, Expression.Constant(Internals.GetDataContext(query), typeof(IDataContext)));
+			var loaded    = new Dictionary<Type, Expression>();
+			var actual    = query.ToArray();
+			var lastQuery = LastQuery;
 
 			var newExpr = expr.Transform(loaded, static (loaded, e) =>
 			{
@@ -1338,6 +1339,8 @@ namespace Tests
 
 			if (actual.Length > 0 || expected.Length > 0)
 				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
+
+			LastQuery = lastQuery;
 
 			return actual;
 		}
