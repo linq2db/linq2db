@@ -603,6 +603,30 @@ namespace Tests
 
 		protected internal const int MaxPersonID = 4;
 
+
+		void InitPatientPerson()
+		{
+			if (_patient == null || _person == null)
+			{
+				using (new DisableLogging())
+				using (new DisableBaseline("Default Database"))
+				using (var db = new TestDataConnection())
+				{
+					var persons  = db.Person.ToList();
+					var patients = db.Patient.ToList();
+
+					foreach (var p in persons)
+						p.Patient = patients.SingleOrDefault(ps => p.ID == ps.PersonID);
+
+					foreach (var p in patients)
+						p.Person = persons.Single(ps => ps.ID == p.PersonID);
+
+					_patient = patients;
+					_person  = persons;
+				}
+			}
+		}
+
 		private   List<Person>?       _person;
 		protected IEnumerable<Person>  Person
 		{
@@ -610,16 +634,10 @@ namespace Tests
 			{
 				if (_person == null)
 				{
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_person = db.Person.ToList();
-
-					foreach (var p in _person)
-						p.Patient = Patient.SingleOrDefault(ps => p.ID == ps.PersonID);
+					InitPatientPerson();
 				}
 
-				return _person;
+				return _person!;
 			}
 		}
 
@@ -630,16 +648,10 @@ namespace Tests
 			{
 				if (_patient == null)
 				{
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_patient = db.Patient.ToList();
-
-					foreach (var p in _patient)
-						p.Person = Person.Single(ps => ps.ID == p.PersonID);
+					InitPatientPerson();
 				}
 
-				return _patient;
+				return _patient!;
 			}
 		}
 

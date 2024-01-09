@@ -1564,7 +1564,7 @@ namespace LinqToDB.SqlQuery
 						return false;
 				}
 
-				if (!subQuery.Select.Columns.All(c => c.Expression is SqlColumn or SqlField or SqlTable))
+				if (!subQuery.Select.Columns.All(c => c.Expression is SqlColumn or SqlField or SqlTable or SqlBinaryExpression))
 					return false;
 			}
 

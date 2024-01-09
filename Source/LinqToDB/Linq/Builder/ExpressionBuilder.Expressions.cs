@@ -474,6 +474,16 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
+						if (left is SqlGenericConstructorExpression && Builder.IsNullConstant(node.Right))
+						{
+							return Visit(Expression.Constant(node.NodeType == ExpressionType.NotEqual));
+						}
+
+						if (right is SqlGenericConstructorExpression && Builder.IsNullConstant(node.Left))
+						{
+							return Visit(Expression.Constant(node.NodeType == ExpressionType.NotEqual));
+						}
+
 						if (left is ConditionalExpression || left is SqlGenericConstructorExpression &&
 						    Builder.IsNullConstant(node.Right))
 						{
@@ -849,6 +859,11 @@ namespace LinqToDB.Linq.Builder
 
 				var ifTrue  = Visit(node.IfTrue);
 				var ifFalse = Visit(node.IfFalse);
+
+				if (test is ConstantExpression { Value: bool boolValue })
+				{
+					return boolValue ? ifTrue : ifFalse;
+				}
 
 				if (ifTrue is SqlGenericConstructorExpression && ifFalse is SqlPlaceholderExpression)
 					ifFalse = node.IfFalse;
