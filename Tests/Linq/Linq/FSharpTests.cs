@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using LinqToDB.FSharp;
+using LinqToDB.Data;
 
 namespace Tests.Linq
 {
@@ -16,8 +17,60 @@ namespace Tests.Linq
 		[Test]
 		public void RecordParametersMapping([DataSources] string context)
 		{
-			using var db = GetDataContext(context, opt => opt.UseFSharpRecords());
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
 			FSharp.WhereTest.RecordParametersMapping(db);
+		}
+
+		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
+		[Test]
+		public void RecordProjectionColumnsOnly([DataSources] string context)
+		{
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			FSharp.WhereTest.RecordProjectionColumnsOnly(db);
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WHERE"));
+			}
+		}
+
+		[ActiveIssue("F# unnecessary converts sub-query to enumerable leading to client-side filtering")]
+		[Test]
+		public void RecordComplexProjection([DataSources] string context)
+		{
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			FSharp.WhereTest.RecordComplexProjection(db);
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WHERE"));
+			}
+		}
+
+		[Test]
+		public void RecordProjectionAll([DataSources] string context)
+		{
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			FSharp.WhereTest.RecordProjectionAll(db);
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WHERE"));
+			}
+		}
+
+		[Test]
+		public void ComplexRecordParametersMapping([DataSources] string context)
+		{
+			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			FSharp.WhereTest.ComplexRecordParametersMapping(db);
+		}
+
+		[Test]
+		public void ComplexRecordParametersMappingUsingRecordReaderBuilder([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context, opt => opt.UseFSharp());
+			FSharp.WhereTest.ComplexRecordParametersMappingUsingRecordReaderBuilder(db);
 		}
 
 		[Test]

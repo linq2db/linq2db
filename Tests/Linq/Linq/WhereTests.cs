@@ -45,7 +45,6 @@ namespace Tests.Linq
 					select new Person(p.PersonID - 1) { FirstName = p.FirstName });
 		}
 
-		[ActiveIssue("TrimeEnd do not remove \r\n")]
 		[Test]
 		public void DoNotMakeSubQuery([DataSources] string context)
 		{

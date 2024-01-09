@@ -189,6 +189,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			if (!flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
+			{
+				BuildDefaultSetters(currentPath.Type, members);
+			}
+
 			var generic = new SqlGenericConstructorExpression(
 				purpose == FullEntityPurpose.Default
 					? checkForKey
@@ -287,6 +292,27 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		void BuildDefaultSetters(Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
+		{
+			var typeAccessor    = TypeAccessor.GetAccessor(objectType);
+			var assignedMembers = new HashSet<MemberInfo>(assignments.Select(a => a.MemberInfo), MemberInfoComparer.Instance);
+
+			foreach (var member in typeAccessor.Members)
+			{
+				if (member.MemberInfo.MemberType is not MemberTypes.Property and not MemberTypes.Field)
+					continue;
+
+				if (!assignedMembers.Add(member.MemberInfo))
+					continue;
+
+				var memberType = member.MemberInfo.GetMemberType();
+				var value      = Expression.Constant(MappingSchema.GetDefaultValue(memberType), memberType);
+				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo, value, false, false);
+
+				assignments.Add(assignment);
+			}
+		}
+
 		public static int FindIndex<T>(ReadOnlyCollection<T> collection, Func<T, bool> predicate)
 		{
 			for (int i = 0; i < collection.Count; i++)
@@ -346,7 +372,7 @@ namespace LinqToDB.Linq.Builder
 				var parameterValues = new List<Expression>();
 
 				IReadOnlyDictionary<int, MemberAccessor>? mappings = null;
-				if (DataContext is IInterceptable<IExpressionInterceptor> expressionServices)
+				if (DataContext is IInterceptable<IEntityBindingInterceptor> expressionServices)
 					mappings = expressionServices.Interceptor?.TryMapMembersToConstructor(typeAccessor);
 
 				if (constructorExpression.Parameters.Count == parameters.Length)
@@ -798,9 +824,9 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public Expression Construct(
-			MappingSchema                   mappingSchema, 
+			MappingSchema                   mappingSchema,
 			SqlGenericConstructorExpression constructorExpression,
-			IBuildContext?                  context,       
+			IBuildContext?                  context,
 			ProjectFlags                    flags)
 		{
 			var constructed = TryConstruct(mappingSchema, constructorExpression, context, flags);
