@@ -1338,7 +1338,7 @@ namespace LinqToDB.Linq.Builder
 			var sqlArguments = new List<ISqlExpression>();
 			foreach (var a in arguments)
 			{
-				if (!TryConvertToSql(context, flags, a, null, out var sqlExpr, out _))
+				if (!TryConvertToSql(context, a, flags, null, out var sqlExpr, out _))
 					return null;
 
 				sqlArguments.Add(sqlExpr);
@@ -1705,7 +1705,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (!TryConvertToSql(context, flags, expression, null, out var ex, out error))
+			if (!TryConvertToSql(context, expression, flags, null, out var ex, out error))
 				return null;
 
 			if (SqlExpression.NeedsEqual(ex))
@@ -2191,8 +2191,19 @@ namespace LinqToDB.Linq.Builder
 					return CreatePlaceholder(context, new SqlSearchCondition(false, p), GetOriginalExpression());
 			}
 
-			l ??= ConvertToSql(context, left, flags,  unwrap: false, columnDescriptor: columnDescriptor);
-			r ??= ConvertToSql(context, right, flags, unwrap: true,  columnDescriptor: columnDescriptor);
+			if (l is null)
+			{
+				if (!TryConvertToSql(context, left, flags, columnDescriptor : columnDescriptor, out var lConverted, out _))
+					return GetOriginalExpression();
+				l = lConverted;
+			}
+
+			if (r is null)
+			{
+				if (!TryConvertToSql(context, right, flags, columnDescriptor : columnDescriptor, out var rConverted, out _))
+					return GetOriginalExpression();
+				r = rConverted;
+			}
 
 			var lOriginal = l;
 			var rOriginal = r;
@@ -2967,10 +2978,10 @@ namespace LinqToDB.Linq.Builder
 
 			var descriptor = SuggestColumnDescriptor(context, e.Object, e.Arguments[0], flags);
 
-			if (!TryConvertToSql(context, flags, e.Object, columnDescriptor : descriptor, out var o, out _))
+			if (!TryConvertToSql(context, e.Object, flags, columnDescriptor : descriptor, sqlExpression : out var o, error : out _))
 				return null;
 
-			if (!TryConvertToSql(context, flags, e.Arguments[0], columnDescriptor : descriptor, out var a, out _))
+			if (!TryConvertToSql(context, e.Arguments[0], flags, columnDescriptor : descriptor, sqlExpression : out var a, error : out _))
 				return null;
 
 			return new SqlPredicate.SearchString(o, false, a, kind, caseSensitive);

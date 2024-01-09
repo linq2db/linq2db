@@ -927,23 +927,39 @@ namespace LinqToDB.SqlQuery
 
 				var searchCondition = new List<ISqlPredicate>();
 
-				var conditions = sql.Where.SearchCondition.Predicates;
+				var predicates = sql.Where.SearchCondition.Predicates;
 
-				var toIgnore       = new [] { joinTable };
-				var currentSources = new[] { joinTable.Table.Source };
-
-				if (conditions.Count > 0)
+				if (predicates.Count > 0)
 				{
-					for (var i = conditions.Count - 1; i >= 0; i--)
+					List<ISqlPredicate>? toRemove = null;
+					for (var i = predicates.Count - 1; i >= 0; i--)
 					{
-						var condition = conditions[i];
+						var predicate = predicates[i];
 
-						var contains = QueryHelper.IsDependsOnOuterSources(condition, currentSources: accessible);
+						var contains = QueryHelper.IsDependsOnOuterSources(predicate, currentSources: accessible);
 
 						if (contains)
 						{
-							searchCondition.Insert(0, condition);
-							conditions.RemoveAt(i);
+							if (rnExpression != null)
+							{
+								// we can only optimize equals
+								if (predicate is not SqlPredicate.ExprExpr expExpr || expExpr.Operator != SqlPredicate.Operator.Equal)
+								{
+									return optimized;
+								}
+							}
+
+							toRemove ??= new List<ISqlPredicate>();
+							toRemove.Add(predicate);
+						}
+					}
+
+					if (toRemove != null)
+					{
+						foreach (var predicate in toRemove)
+						{
+							searchCondition.Insert(0, predicate);
+							predicates.Remove(predicate);
 						}
 					}
 				}
@@ -952,11 +968,11 @@ namespace LinqToDB.SqlQuery
 				{
 					// processing ROW_NUMBER
 
-					var rnColumn = sql.Select.AddNewColumn(rnExpression);
-					rnColumn.RawAlias = "rn";
-
 					sql.Select.SkipValue = null;
 					sql.Select.TakeValue = null;
+
+					var rnColumn = sql.Select.AddNewColumn(rnExpression);
+					rnColumn.RawAlias = "rn";
 
 					if (skipValue != null)
 					{
@@ -970,7 +986,6 @@ namespace LinqToDB.SqlQuery
 					else if (takeValue != null)
 					{
 						searchCondition.Add(new SqlPredicate.ExprExpr(rnColumn, SqlPredicate.Operator.LessOrEqual, takeValue, null));
-
 					}
 					else if (sql.Select.IsDistinct)
 					{

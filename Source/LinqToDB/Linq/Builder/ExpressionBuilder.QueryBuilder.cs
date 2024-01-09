@@ -317,7 +317,9 @@ namespace LinqToDB.Linq.Builder
 			return withColumns;
 		}
 
-		public bool TryConvertToSql(IBuildContext? context, ProjectFlags flags, Expression expression, ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression, [NotNullWhen(false)] out SqlErrorExpression? error)
+		public bool TryConvertToSql(IBuildContext? context, Expression expression, ProjectFlags flags,
+			ColumnDescriptor? columnDescriptor, [NotNullWhen(true)] out ISqlExpression? sqlExpression,
+			[NotNullWhen(false)] out SqlErrorExpression? error)
 		{
 			flags = flags & ~ProjectFlags.Expression | ProjectFlags.SQL;
 
@@ -582,6 +584,13 @@ namespace LinqToDB.Linq.Builder
 			return context is FirstSingleBuilder.FirstSingleContext;
 		}
 
+		Expression TranslateDetails(IBuildContext context, Expression expr, ProjectFlags flags)
+		{
+			using var visitor = _buildVisitorPool.Allocate();
+			var newExpr = visitor.Value.Build(context, expr, flags, BuildFlags.ForceAssignments | BuildFlags.IgnoreRoot);
+			return newExpr;
+		}
+
 		public Expression? TryGetSubQueryExpression(IBuildContext context, Expression expr, string? alias, ProjectFlags flags, out bool isSequence)
 		{
 			isSequence = false;
@@ -603,8 +612,18 @@ namespace LinqToDB.Linq.Builder
 			if (SequenceHelper.IsSpecialProperty(unwrapped, out _, out _))
 				return null;
 
-			if (!flags.IsSubquery() && CanBeCompiled(expr, true))
-				return null;
+			if (!flags.IsSubquery())
+			{
+				if (CanBeCompiled(unwrapped, true))
+					return null;
+
+				if (unwrapped is MemberInitExpression or NewExpression or NewArrayExpression)
+				{
+					var withDetails = TranslateDetails(context, unwrapped, flags);
+					if (CanBeCompiled(withDetails, true))
+						return null;
+				}
+			}
 
 			if (unwrapped is MemberExpression me)
 			{
@@ -621,9 +640,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (!IsSingleElementContext(info.Context) && expr.Type.IsEnumerableType(info.Context.ElementType) && !flags.IsExtractProjection())
 			{
-				if (flags.IsSql())
-					return null;
-
 				var eager = (Expression)new SqlEagerLoadExpression(unwrapped);
 				eager = SqlAdjustTypeExpression.AdjustType(eager, expr.Type, MappingSchema);
 

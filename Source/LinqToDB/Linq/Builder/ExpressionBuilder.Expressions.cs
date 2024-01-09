@@ -130,6 +130,7 @@ namespace LinqToDB.Linq.Builder
 			string?           _alias;
 			ColumnDescriptor? _columnDescriptor;
 			bool              _disableClosureHandling;
+			Expression?       _root;
 
 			ExpressionBuilder Builder       => _context.Builder;
 			MappingSchema     MappingSchema => _context.MappingSchema;
@@ -139,6 +140,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (node == null)
 					return null;
+
+				if (_buildFlags.HasFlag(BuildFlags.IgnoreRoot))
+				{
+					if (ReferenceEquals(_root, node))
+						return base.Visit(node);
+				}
 
 				if (node is SqlPlaceholderExpression)
 					return node;
@@ -177,11 +184,6 @@ namespace LinqToDB.Linq.Builder
 				if ((node.NodeType == ExpressionType.MemberAccess || node.NodeType == ExpressionType.Conditional) && _flags.IsExtractProjection())
 					return newNode;
 
-				if (_flags.IsExtractProjection())
-				{
-
-				}
-
 				return base.Visit(newNode);
 			}
 
@@ -213,6 +215,7 @@ namespace LinqToDB.Linq.Builder
 				_flags      = flags;
 				_context    = context;
 				_buildFlags = buildFlags;
+				_root       = expression;
 
 				using var _      = NeedForce((buildFlags & BuildFlags.ForceAssignments) != 0);
 				var       result = Visit(expression);
@@ -224,6 +227,7 @@ namespace LinqToDB.Linq.Builder
 				_flags                  = default;
 				_context                = default!;
 				_buildFlags             = default;
+				_root                   = default;
 				_forceSql               = default;
 				_disableParseNew        = default;
 				_alias                  = default;
@@ -885,6 +889,7 @@ namespace LinqToDB.Linq.Builder
 			None = 0,
 			ForceAssignments = 0x1,
 			ForceDefaultIfEmpty = 0x2,
+			IgnoreRoot = 0x4,
 		}
 
 		public Expression BuildSqlExpression(IBuildContext context, Expression expression, ProjectFlags flags, string? alias = null, BuildFlags buildFlags = BuildFlags.None)
