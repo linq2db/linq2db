@@ -6,6 +6,8 @@ namespace LinqToDB
 	using Data;
 	using Interceptors;
 
+	using LinqToDB.Interceptors.Internal;
+
 	/// <summary>
 	/// Contains extensions that add one-time interceptors to connection.
 	/// </summary>
@@ -46,6 +48,7 @@ namespace LinqToDB
 				case IDataContextInterceptor      dc : AddInterceptorImpl(interceptable, dc); break;
 				case IEntityServiceInterceptor    es : AddInterceptorImpl(interceptable, es); break;
 				case IUnwrapDataObjectInterceptor wr : AddInterceptorImpl(interceptable, wr); break;
+				case IExpressionInterceptor       ex : AddInterceptorImpl(interceptable, ex); break;
 			}
 		}
 
@@ -75,6 +78,9 @@ namespace LinqToDB
 					break;
 				case IInterceptable<IUnwrapDataObjectInterceptor> wri when interceptor is IUnwrapDataObjectInterceptor wr:
 					wri.Interceptor = new AggregatedUnwrapDataObjectInterceptor { Interceptors = { wri.Interceptor!, wr } };
+					break;
+				case IInterceptable<IExpressionInterceptor> exi when interceptor is IExpressionInterceptor ex:
+					exi.Interceptor = new AggregatedExpressionInterceptor       { Interceptors = { exi.Interceptor!, ex } };
 					break;
 				default:
 					throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");

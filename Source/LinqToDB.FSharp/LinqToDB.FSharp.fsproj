@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.FSharp</AssemblyName>
+		<RootNamespace>LinqToDB.FSharp</RootNamespace>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.FSharp.xml</DocumentationFile>
+
+		<WarningLevel>5</WarningLevel>
+		<TargetFramework>net7.0</TargetFramework>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="FSharpExpressionInterceptor.fs" />
+		<Compile Include="DataOptionsExtensions.fs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+</Project>

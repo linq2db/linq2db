@@ -17,6 +17,9 @@ namespace LinqToDB.Remote
 	using Expressions;
 	using Extensions;
 	using Interceptors;
+
+	using LinqToDB.Data;
+
 	using Mapping;
 	using SqlProvider;
 
@@ -26,6 +29,8 @@ namespace LinqToDB.Remote
 		protected RemoteDataContextBase(DataOptions options)
 		{
 			Options = options;
+
+			options.Apply(this);
 		}
 
 		[Obsolete("Use ConfigurationString instead.")]
@@ -455,5 +460,26 @@ namespace LinqToDB.Remote
 		}
 #endif
 
+		internal static class ConfigurationApplier
+		{
+			public static void Apply(RemoteDataContextBase dataContext, ConnectionOptions options)
+			{
+				if (options.MappingSchema != null)
+				{
+					dataContext.MappingSchema = options.MappingSchema;
+				}
+				else if (dataContext.Options.LinqOptions.EnableContextSchemaEdit)
+				{
+					dataContext.MappingSchema = new(dataContext.MappingSchema);
+				}
+			}
+
+			public static void Apply(RemoteDataContextBase dataContext, DataContextOptions options)
+			{
+				if (options.Interceptors != null)
+					foreach (var interceptor in options.Interceptors)
+						dataContext.AddInterceptor(interceptor);
+			}
+		}
 	}
 }

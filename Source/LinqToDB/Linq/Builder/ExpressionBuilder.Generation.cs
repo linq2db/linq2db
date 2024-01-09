@@ -13,6 +13,7 @@ namespace LinqToDB.Linq.Builder
 	using Interceptors;
 	using SqlQuery;
 	using LinqToDB.Expressions;
+	using LinqToDB.Interceptors.Internal;
 
 	internal partial class ExpressionBuilder
 	{
@@ -297,11 +298,19 @@ namespace LinqToDB.Linq.Builder
 			return -1;
 		}
 
-		static int MatchParameter(ParameterInfo parameter, ReadOnlyCollection<SqlGenericConstructorExpression.Assignment> members)
+		static int MatchParameter(MemberAccessor? memberAccessor, ParameterInfo parameter, ReadOnlyCollection<SqlGenericConstructorExpression.Assignment> members)
 		{
-			var found = FindIndex(members, x =>
-				x.MemberInfo.GetMemberType() == parameter.ParameterType &&
-				x.MemberInfo.Name            == parameter.Name);
+			var found = -1;
+
+			if (memberAccessor != null)
+				found = FindIndex(members, x => x.MemberInfo == memberAccessor.MemberInfo);
+
+			if (found < 0)
+			{
+				found = FindIndex(members, x =>
+					x.MemberInfo.GetMemberType() == parameter.ParameterType &&
+					x.MemberInfo.Name            == parameter.Name);
+			}
 
 			if (found < 0)
 			{
@@ -336,6 +345,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				var parameterValues = new List<Expression>();
 
+				IReadOnlyDictionary<int, MemberAccessor>? mappings = null;
+				if (DataContext is IInterceptable<IExpressionInterceptor> expressionServices)
+					mappings = expressionServices.Interceptor?.TryMapMembersToConstructor(typeAccessor);
+
 				if (constructorExpression.Parameters.Count == parameters.Length)
 				{
 					for (int i = 0; i < parameters.Length; i++)
@@ -344,16 +357,18 @@ namespace LinqToDB.Linq.Builder
 						var param         = constructorExpression.Parameters[i];
 						parameterValues.Add(param.Expression);
 
-						var idx = MatchParameter(parameterInfo, constructorExpression.Assignments);
+						var idx = MatchParameter(mappings?[i], parameterInfo, constructorExpression.Assignments);
 						if (idx >= 0)
 							loadedColumns.Add(i);
 					}
 				}
 				else
 				{
-					foreach (var parameterInfo in parameters)
+					for (int i = 0; i < parameters.Length; i++)
 					{
-						var idx = MatchParameter(parameterInfo, constructorExpression.Assignments);
+						var parameterInfo = parameters[i];
+
+						var idx = MatchParameter(mappings?[i], parameterInfo, constructorExpression.Assignments);
 
 						if (idx >= 0)
 						{

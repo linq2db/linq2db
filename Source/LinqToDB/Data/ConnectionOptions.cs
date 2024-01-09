@@ -9,6 +9,9 @@ namespace LinqToDB.Data
 	using Common.Internal;
 	using DataProvider;
 	using Interceptors;
+
+	using LinqToDB.Remote;
+
 	using Mapping;
 
 	/// <param name="ConfigurationString">
@@ -65,7 +68,7 @@ namespace LinqToDB.Data
 		ConnectionOptionsConnectionInterceptor?         ConnectionInterceptor     = default,
 		Action<MappingSchema, IEntityChangeDescriptor>? OnEntityDescriptorCreated = default
 	)
-		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
+		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>
 	{
 		public ConnectionOptions() : this((string?)null)
 		{
@@ -129,6 +132,11 @@ namespace LinqToDB.Data
 		void IApplicable<DataContext>.Apply(DataContext obj)
 		{
 			DataContext.ConfigurationApplier.Apply(obj, this);
+		}
+
+		void IApplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj)
+		{
+			RemoteDataContextBase.ConfigurationApplier.Apply(obj, this);
 		}
 
 		#region IEquatable implementation
