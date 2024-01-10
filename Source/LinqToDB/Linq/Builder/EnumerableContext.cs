@@ -216,7 +216,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.HasFlag(ProjectFlags.Root))
+				if (flags.IsRoot() || flags.IsTable())
 					return path;
 
 				if (MappingSchema.IsScalarType(ElementType))
@@ -241,12 +241,12 @@ namespace LinqToDB.Linq.Builder
 						join fm in Table.FieldsLookup on f equals fm.Value
 						select fm.Key;
 
-					result = Builder.BuildEntityExpression(this, path, ElementType, membersOrdered.ToList());
+					result = Builder.BuildEntityExpression(MappingSchema, path, ElementType, membersOrdered.ToList());
 
 				}
 				else
 				{
-					result = Builder.BuildFullEntityExpression(this, path, ElementType, flags);
+					result = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
 				}
 
 				return result;

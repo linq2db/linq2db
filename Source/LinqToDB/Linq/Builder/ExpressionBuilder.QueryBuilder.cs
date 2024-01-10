@@ -96,8 +96,7 @@ namespace LinqToDB.Linq.Builder
 
 			Expression ConstructObject(SqlGenericConstructorExpression node)
 			{
-				//TODO: MappingSchema!
-				return _context.Builder.Construct(_context.Builder.MappingSchema, node, _context, ProjectFlags.Expression);
+				return _context.Builder.Construct(_context.Builder.MappingSchema, node, ProjectFlags.Expression);
 			}
 
 			public Expression Finalize(Expression expression, IBuildContext context, ExpressionGenerator generator)

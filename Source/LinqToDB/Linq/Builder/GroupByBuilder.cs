@@ -476,7 +476,7 @@ namespace LinqToDB.Linq.Builder
 
 					return new SqlGenericConstructorExpression(
 						SqlGenericConstructorExpression.CreateType.Auto,
-						groupingType, null, assignments.AsReadOnly(), path);
+						groupingType, null, assignments.AsReadOnly(), MappingSchema, path);
 				}
 
 				if (path is MemberExpression me)

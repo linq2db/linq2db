@@ -9,6 +9,7 @@ namespace LinqToDB.Expressions
 {
 	using Extensions;
 	using Reflection;
+	using Mapping;
 
 	public class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
 	{
@@ -18,6 +19,7 @@ namespace LinqToDB.Expressions
 		public Expression?      ConstructionRoot  { get; private set; }
 		public CreateType       ConstructType     { get; private set; }
 		public Type             ObjectType        { get; private set; }
+		public MappingSchema?   MappingSchema     { get; private set; }
 
 		public ReadOnlyCollection<Parameter>  Parameters  { get; private set; }
 		public ReadOnlyCollection<Assignment> Assignments { get; private set; }
@@ -29,24 +31,26 @@ namespace LinqToDB.Expressions
 			ObjectType  = null!;
 		}
 
-		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments, Expression? constructionRoot) : this()
+		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments, MappingSchema? mappingSchema, Expression? constructionRoot) : this()
 		{
 			ObjectType       = objectType;
 			ConstructType    = createType;
 			Parameters       = parameters  ?? Parameter.EmptyCollection;
 			Assignments      = assignments ?? Assignment.EmptyCollection;
 			ConstructionRoot = constructionRoot;
+			MappingSchema    = mappingSchema;
 		}
 
 		public SqlGenericConstructorExpression(SqlGenericConstructorExpression basedOn) : this()
 		{
 			ObjectType        = basedOn.ObjectType;
-			ConstructType     = CreateType.Incompatible;
+			ConstructType     = basedOn.ConstructType;
 			Constructor       = basedOn.Constructor;
 			ConstructorMethod = basedOn.ConstructorMethod;
-			Parameters        = Parameter.EmptyCollection;
-			Assignments       = Assignment.EmptyCollection;
+			Parameters        = basedOn.Parameters;
+			Assignments       = basedOn.Assignments;
 			ConstructionRoot  = basedOn.ConstructionRoot;
+			MappingSchema     = basedOn.MappingSchema;
 		}
 
 		public SqlGenericConstructorExpression(Type objectType, ReadOnlyCollection<MemberBinding> bindings) : this()
@@ -276,16 +280,9 @@ namespace LinqToDB.Expressions
 			if (!createNew)
 				return this;
 
-			var result = new SqlGenericConstructorExpression
+			var result = new SqlGenericConstructorExpression(this)
 			{
-				Assignments       = assignment.AsReadOnly(),
-				Parameters        = Parameters,
-				ObjectType        = ObjectType,
-				Constructor       = Constructor,
-				ConstructorMethod = ConstructorMethod,
-				ConstructType     = ConstructType,
-				NewExpression     = NewExpression,
-				ConstructionRoot  = ConstructionRoot
+				Assignments = assignment.AsReadOnly()
 			};
 
 			return result;
@@ -303,16 +300,9 @@ namespace LinqToDB.Expressions
 			if (!createNew)
 				return this;
 
-			var result = new SqlGenericConstructorExpression
+			var result = new SqlGenericConstructorExpression(this)
 			{
-				Parameters        = parameters.AsReadOnly(),
-				Assignments       = Assignments,
-				ObjectType        = ObjectType,
-				Constructor       = Constructor,
-				ConstructorMethod = ConstructorMethod,
-				ConstructType     = ConstructType,
-				NewExpression     = NewExpression,
-				ConstructionRoot  = ConstructionRoot
+				Parameters = parameters.AsReadOnly(), 
 			};
 
 			return result;
@@ -323,16 +313,22 @@ namespace LinqToDB.Expressions
 			if (ConstructionRoot == constructionRoot)
 				return this;
 
-			var result = new SqlGenericConstructorExpression
+			var result = new SqlGenericConstructorExpression(this)
 			{
-				Assignments       = Assignments,
-				Parameters        = Parameters,
-				ObjectType        = ObjectType,
-				Constructor       = Constructor,
-				ConstructorMethod = ConstructorMethod,
-				ConstructType     = ConstructType,
-				NewExpression     = NewExpression,
-				ConstructionRoot  = constructionRoot
+				ConstructionRoot  = constructionRoot,
+			};
+
+			return result;
+		}
+
+		public SqlGenericConstructorExpression WithMappingSchema(MappingSchema? mappingSchema)
+		{
+			if (MappingSchema == mappingSchema)
+				return this;
+
+			var result = new SqlGenericConstructorExpression(this)
+			{
+				MappingSchema = mappingSchema
 			};
 
 			return result;

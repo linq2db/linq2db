@@ -51,7 +51,7 @@ namespace LinqToDB.Linq.Builder
 
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
-				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = mappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				SqlTable         = new SqlTable(EntityDescriptor);
 
 				if (!buildInfo.IsTest || buildInfo.IsSubQuery)
@@ -191,7 +191,7 @@ namespace LinqToDB.Linq.Builder
 						return tablePlaceholder;
 					}
 
-					Expression fullEntity = Builder.BuildFullEntityExpression(this, path, ElementType, flags);
+					Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
 					// Entity can contain calculated columns which should be exposed
 					fullEntity = Builder.ConvertExpressionTree(fullEntity);
 

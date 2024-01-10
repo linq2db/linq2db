@@ -445,7 +445,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (generic2.ConstructType != SqlGenericConstructorExpression.CreateType.Full)
 						{
-							var constructed = Builder.TryConstruct(MappingSchema, generic1, this, flags);
+							var constructed = Builder.TryConstruct(MappingSchema, generic1, flags);
 							if (constructed == null)
 								return false;
 							if (TryMergeProjections(Builder.ParseGenericConstructor(constructed, flags, null), generic2, flags, out merged))
@@ -458,7 +458,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (generic1.ConstructType != SqlGenericConstructorExpression.CreateType.Full)
 						{
-							var constructed = Builder.TryConstruct(MappingSchema, generic2, this, flags);
+							var constructed = Builder.TryConstruct(MappingSchema, generic2, flags);
 							if (constructed == null)
 								return false;
 							if (TryMergeProjections(generic1, Builder.ParseGenericConstructor(constructed, flags, null), flags, out merged))
@@ -523,7 +523,7 @@ namespace LinqToDB.Linq.Builder
 						resultGeneric = resultGeneric.ReplaceParameters(resultParameters);
 					}
 
-					if (Builder.TryConstruct(MappingSchema, resultGeneric, this, flags) == null)
+					if (Builder.TryConstruct(MappingSchema, resultGeneric, flags) == null)
 						return false;
 
 					merged = resultGeneric;

@@ -114,7 +114,7 @@ namespace LinqToDB.Linq.Builder
 				    && EntityType != noConvert.Type
 				    && noConvert is SqlGenericConstructorExpression { ConstructType: SqlGenericConstructorExpression.CreateType.Full })
 				{
-					corrected = Builder.BuildFullEntityExpression(Context, path, EntityType, flags);
+					corrected = Builder.BuildFullEntityExpression(MappingSchema, path, EntityType, flags);
 				}
 
 				return corrected;

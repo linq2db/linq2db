@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Data;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -41,9 +42,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					// build setters like QueryRunner.Insert
 
-					setterExpression = builder.BuildFullEntityExpression(mergeContext.SourceContext.SourcePropAccess,
+					setterExpression = builder.BuildFullEntityExpression(builder.MappingSchema, mergeContext.SourceContext.SourcePropAccess,
 						mergeContext.SourceContext.SourceContextRef.Type, ProjectFlags.SQL,
-						ExpressionBuilder.FullEntityPurpose.Insert);
+						EntityConstructorBase.FullEntityPurpose.Insert);
 				}
 
 				var setterExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();

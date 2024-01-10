@@ -9,6 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using SqlQuery;
 	using Common;
 	using LinqToDB.Expressions;
+	using LinqToDB.Data;
 
 	sealed class InsertBuilder : MethodCallBuilder
 	{
@@ -147,8 +148,7 @@ namespace LinqToDB.Linq.Builder
 						}
 						default:
 						{
-							setterExpr = builder.BuildFullEntityExpression(arg, targetType,
-								ProjectFlags.SQL, ExpressionBuilder.FullEntityPurpose.Insert);
+							setterExpr = builder.BuildFullEntityExpression(sequence.MappingSchema, arg, targetType, ProjectFlags.SQL, EntityConstructorBase.FullEntityPurpose.Insert);
 
 							break;
 						}
