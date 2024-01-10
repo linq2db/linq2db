@@ -40,9 +40,9 @@ namespace LinqToDB.DataProvider.Oracle
 						// Add 'AND [col] IS NOT NULL' when checking Not Equal to Empty String,
 						// else add 'OR [col] IS NULL'
 
-						var sc = new SqlSearchCondition(false,
+						var sc = new SqlSearchCondition(true,
 							new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null),
-							new SqlPredicate.IsNull(expr.Expr2, true));
+							new SqlPredicate.IsNull(expr.Expr2, false));
 
 						return sc.MakeNot(expr.Operator == SqlPredicate.Operator.NotEqual);
 					}
