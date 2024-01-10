@@ -864,7 +864,7 @@ namespace LinqToDB.Linq.Builder
 					return new SqlPathExpression(stack, node.Type);
 				}
 
-				internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+				public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 				{
 					_stack.Push(Expression.Constant("construct"));
 

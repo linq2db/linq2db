@@ -720,7 +720,7 @@ namespace LinqToDB.Linq.Builder
 				return parameter;
 			}
 
-			internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+			public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 			{
 				CanBeCompiledFlag = false;
 				return node;

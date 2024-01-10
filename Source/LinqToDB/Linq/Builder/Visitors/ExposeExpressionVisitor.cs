@@ -939,7 +939,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 				return parameter;
 			}
 
-			internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+			public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 			{
 				CanBeCompiledFlag = false;
 				return node;

@@ -9,9 +9,8 @@ namespace LinqToDB.Expressions
 {
 	using Extensions;
 	using Reflection;
-	using Linq.Builder;
 
-	internal class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
+	public class SqlGenericConstructorExpression : Expression, IEquatable<SqlGenericConstructorExpression>
 	{
 		public Expression?      NewExpression     { get; private set; }
 		public ConstructorInfo? Constructor       { get; private set; }
@@ -19,7 +18,6 @@ namespace LinqToDB.Expressions
 		public Expression?      ConstructionRoot  { get; private set; }
 		public CreateType       ConstructType     { get; private set; }
 		public Type             ObjectType        { get; private set; }
-		public IBuildContext?   BuildContext      { get; private set; }
 
 		public ReadOnlyCollection<Parameter>  Parameters  { get; private set; }
 		public ReadOnlyCollection<Assignment> Assignments { get; private set; }
@@ -31,13 +29,13 @@ namespace LinqToDB.Expressions
 			ObjectType  = null!;
 		}
 
-		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments, IBuildContext? buildContext = null) : this()
+		public SqlGenericConstructorExpression(CreateType createType, Type objectType, ReadOnlyCollection<Parameter>? parameters, ReadOnlyCollection<Assignment>? assignments, Expression? constructionRoot) : this()
 		{
-			ObjectType    = objectType;
-			ConstructType = createType;
-			Parameters    = parameters  ?? Parameter.EmptyCollection;
-			Assignments   = assignments ?? Assignment.EmptyCollection;
-			BuildContext  = buildContext;
+			ObjectType       = objectType;
+			ConstructType    = createType;
+			Parameters       = parameters  ?? Parameter.EmptyCollection;
+			Assignments      = assignments ?? Assignment.EmptyCollection;
+			ConstructionRoot = constructionRoot;
 		}
 
 		public SqlGenericConstructorExpression(SqlGenericConstructorExpression basedOn) : this()
@@ -48,6 +46,7 @@ namespace LinqToDB.Expressions
 			ConstructorMethod = basedOn.ConstructorMethod;
 			Parameters        = Parameter.EmptyCollection;
 			Assignments       = Assignment.EmptyCollection;
+			ConstructionRoot  = basedOn.ConstructionRoot;
 		}
 
 		public SqlGenericConstructorExpression(Type objectType, ReadOnlyCollection<MemberBinding> bindings) : this()
@@ -286,7 +285,6 @@ namespace LinqToDB.Expressions
 				ConstructorMethod = ConstructorMethod,
 				ConstructType     = ConstructType,
 				NewExpression     = NewExpression,
-				BuildContext      = BuildContext,
 				ConstructionRoot  = ConstructionRoot
 			};
 
@@ -314,7 +312,6 @@ namespace LinqToDB.Expressions
 				ConstructorMethod = ConstructorMethod,
 				ConstructType     = ConstructType,
 				NewExpression     = NewExpression,
-				BuildContext      = BuildContext,
 				ConstructionRoot  = ConstructionRoot
 			};
 
@@ -335,7 +332,6 @@ namespace LinqToDB.Expressions
 				ConstructorMethod = ConstructorMethod,
 				ConstructType     = ConstructType,
 				NewExpression     = NewExpression,
-				BuildContext      = BuildContext,
 				ConstructionRoot  = constructionRoot
 			};
 

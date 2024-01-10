@@ -206,9 +206,10 @@ namespace LinqToDB.Linq.Builder
 											ctx.collectedTables.Add(tableCtx);
 										}
 									}
-									else if (e is SqlGenericConstructorExpression constructor)
+									else if (e is SqlGenericConstructorExpression { ConstructionRoot: not null } constructor)
 									{
-										if (constructor.BuildContext is ITableContext tableCtx && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
+										var tableCtx = SequenceHelper.GetTableOrCteContext(builder, constructor.ConstructionRoot);
+										if (tableCtx != null && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
 										{
 											ctx.collectedTables.Add(tableCtx);
 										}

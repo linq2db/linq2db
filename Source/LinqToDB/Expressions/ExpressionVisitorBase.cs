@@ -67,7 +67,7 @@ namespace LinqToDB.Expressions
 			return parameter.WithExpression(Visit(parameter.Expression));
 		}
 
-		internal virtual Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+		public virtual Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 		{
 			var assignments = Visit(node.Assignments, VisitSqlGenericAssignment);
 

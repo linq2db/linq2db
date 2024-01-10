@@ -795,6 +795,15 @@ namespace LinqToDB.Linq.Builder
 			return tableContext;
 		}
 
+		public static TableBuilder.TableContext? GetTableContext(ExpressionBuilder builder, Expression pathExpression)
+		{
+			var rootContext = builder.MakeExpression(null, pathExpression, ProjectFlags.Table) as ContextRefExpression;
+
+			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
+
+			return tableContext;
+		}
+
 		public static TableBuilder.TableContext? GetTableContext(IBuildContext context)
 		{
 			var contextRef = new ContextRefExpression(context.ElementType, context);

@@ -63,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 			return base.VisitContextRefExpression(node);
 		}
 
-		internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+		public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 		{
 			var newNode = base.VisitSqlGenericConstructorExpression(node);
 			return newNode;
@@ -674,7 +674,7 @@ namespace LinqToDB.Linq.Builder
 				return newNode;
 			}
 
-			internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+			public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 			{
 				using var _ = NeedForce((_buildFlags & BuildFlags.ForceAssignments) != 0);
 				return base.VisitSqlGenericConstructorExpression(node);

@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 				return node;
 			}
 
-			internal override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+			public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 			{
 				if (!_constructRun)
 				{

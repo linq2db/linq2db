@@ -189,10 +189,12 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			/*
 			if (!flags.HasFlag(ProjectFlags.Keys) && purpose == FullEntityPurpose.Default)
 			{
 				BuildDefaultSetters(currentPath.Type, members);
 			}
+			*/
 
 			var generic = new SqlGenericConstructorExpression(
 				purpose == FullEntityPurpose.Default
@@ -203,7 +205,7 @@ namespace LinqToDB.Linq.Builder
 				currentPath.Type,
 				null,
 				new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members),
-				context);
+				currentPath);
 
 			return generic;
 		}
@@ -260,7 +262,7 @@ namespace LinqToDB.Linq.Builder
 				assignments.Add(new SqlGenericConstructorExpression.Assignment(member, Expression.MakeMemberAccess(refExpression, member), false, false));
 			}
 
-			var generic = new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto, entityType, null, assignments.AsReadOnly());
+			var generic = new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto, entityType, null, assignments.AsReadOnly(), refExpression);
 
 			return generic;
 		}
@@ -712,9 +714,9 @@ namespace LinqToDB.Linq.Builder
 			if (constructed == null)
 				return null;
 
-			if (constructorExpression.BuildContext != null)
+			if (constructorExpression.ConstructionRoot != null)
 			{
-				var tableContext = SequenceHelper.GetTableContext(constructorExpression.BuildContext);
+				var tableContext = SequenceHelper.GetTableContext(this, constructorExpression.ConstructionRoot);
 				if (tableContext != null)
 					constructed = NotifyEntityCreated(constructed, tableContext.SqlTable);
 			}
@@ -887,7 +889,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return new SqlGenericConstructorExpression(SqlGenericConstructorExpression.CreateType.Auto,
-				constructorExpression.ObjectType, null, newAssignments.AsReadOnly());
+				constructorExpression.ObjectType, null, newAssignments.AsReadOnly(), currentPath);
 		}
 	}
 }
