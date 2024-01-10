@@ -134,10 +134,13 @@ namespace LinqToDB.DataProvider.Oracle
 					// TODO: ValueConverter contract nullability violations
 					if (exp is ConstantExpression constExpr)
 					{
-						if (constExpr.Value is Func<string>)
-							p.ValueConverter = static l => ((Func<string>)l!)();
-						else
-							p.ValueConverter = GetXmlConverter(options, mappingSchema, table)!;
+						if (constExpr.Value is not string)
+						{
+							if (constExpr.Value is Func<string>)
+								p.ValueConverter = static l => ((Func<string>)l!)();
+							else
+								p.ValueConverter = GetXmlConverter(options, mappingSchema, table)!;
+						}
 					}
 					else if (exp is LambdaExpression)
 					{
