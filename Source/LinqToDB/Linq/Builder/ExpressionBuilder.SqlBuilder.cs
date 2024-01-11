@@ -3369,6 +3369,14 @@ namespace LinqToDB.Linq.Builder
 			return expr.UnwrapConvert().IsNullValue();
 		}
 
+		bool IsConstantOrNullValue(Expression expr)
+		{
+			var unwrapped = expr.UnwrapConvert();
+			if (unwrapped is ConstantExpression)
+				return true;
+			return unwrapped.IsNullValue();
+		}
+
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformer;
 		private TransformVisitor<ExpressionBuilder>? _removeNullPropagationTransformerForSearch;
 

@@ -507,6 +507,13 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						node = node.Update(left, node.Conversion, right);
+
+						// Maybe we can relax this condition
+						if (node.Left is SqlPlaceholderExpression  && Builder.IsConstantOrNullValue(node.Right) ||
+						    node.Right is SqlPlaceholderExpression && Builder.IsConstantOrNullValue(node.Left))
+						{
+							return node;
+						}
 					}
 					else if (node.NodeType == ExpressionType.Coalesce)
 					{

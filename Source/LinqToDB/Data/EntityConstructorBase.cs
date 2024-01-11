@@ -91,7 +91,8 @@ namespace LinqToDB.Data
 						//
 						var memberInfo = declaringType.GetMemberEx(column.MemberInfo) ??
 						                 throw new InvalidOperationException();
-						me = Expression.MakeMemberAccess(objExpression, memberInfo);
+
+						me = MakeAssignExpression(objExpression, memberInfo, column);
 
 						members.Add(new SqlGenericConstructorExpression.Assignment(memberInfo, me,
 							column.MemberAccessor.HasSetter, false));
@@ -152,14 +153,14 @@ namespace LinqToDB.Data
 						}
 
 						var newColumns = columns.Where(c => c.MemberName.StartsWith(propPath)).ToList();
-						var newPath    = Expression.MakeMemberAccess(currentPath, memberInfo);
+						var newPath    = MakeAssignExpression(currentPath, memberInfo, column);
 
 						assignExpression = BuildGenericFromMembers(newColumns, flags, newPath, level + 1, purpose);
 					}
 					else
 					{
 						memberInfo       = column.MemberInfo;
-						assignExpression = Expression.MakeMemberAccess(currentPath, memberInfo);
+						assignExpression = MakeAssignExpression(currentPath, memberInfo, column);
 					}
 
 					members.Add(new SqlGenericConstructorExpression.Assignment(memberInfo, assignExpression, column.MemberAccessor.HasSetter, false));
@@ -210,6 +211,24 @@ namespace LinqToDB.Data
 				currentPath);
 
 			return generic;
+		}
+
+		protected virtual Expression MakeAssignExpression(Expression objExpression, MemberInfo memberInfo, ColumnDescriptor column)
+		{
+			var me = Expression.MakeMemberAccess(objExpression, memberInfo);
+			return me;
+		}
+
+		protected virtual Expression MakeIsNullExpression(Expression objExpression, MemberInfo memberInfo, ColumnDescriptor column)
+		{
+			var memberExpr = GetMemberExpression((SqlGenericConstructorExpression)objExpression, memberInfo);
+			if (memberExpr.Type.IsValueType && !memberExpr.Type.IsNullable())
+			{
+				memberExpr = Expression.Convert(memberExpr, memberExpr.Type.AsNullable());
+			}
+
+			var test = Expression.Equal(memberExpr, new DefaultValueExpression(MappingSchema, memberExpr.Type));
+			return test;
 		}
 
 		AssociationDescriptor? GetFieldOrPropAssociationDescriptor(MemberInfo memberInfo, EntityDescriptor entityDescriptor)
@@ -650,13 +669,7 @@ namespace LinqToDB.Data
 
 						if (inheritance.Code == null)
 						{
-							var memberExpr = memberAccess;
-							if (memberExpr.Type.IsValueType && !memberExpr.Type.IsNullable())
-							{
-								memberExpr = Expression.Convert(memberExpr, memberExpr.Type.AsNullable());
-							}
-
-							test = Expression.Equal(memberExpr, new DefaultValueExpression(MappingSchema, memberExpr.Type));
+							test = MakeIsNullExpression(constructorExpression, member, inheritance.Discriminator);
 						}
 						else
 						{

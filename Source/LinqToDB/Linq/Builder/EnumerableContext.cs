@@ -73,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 				var rows  = arrayExpression.Expressions.Select(e => new[] {Builder.ConvertToSql(Parent, e)}).ToList();
 				var contextRef = new ContextRefExpression(ElementType, this);
 				var specialProp = SequenceHelper.CreateSpecialProperty(contextRef, ElementType, "item");
-				var field = new SqlField(Table, "item");
+				var field = new SqlField(Table, "item") { Type = new DbDataType(ElementType)};
 				return new SqlValuesTable(new[] { field }, new[] { specialProp.Member }, rows);
 			}
 
