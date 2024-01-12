@@ -51,12 +51,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			var q =
+			AssertQuery(
 				from c in db.Parent
 				where db.Parent.Select(p => p.Value1).Contains(1)
-				select c;
-
-			_ = q.ToList();
+				select c);
 
 			if (!preferExists && db is DataConnection dc && !context.IsAnyOf(TestProvName.AllFirebird) && !context.IsAnyOf(TestProvName.AllInformix))
 				Assert.That(LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
@@ -70,12 +68,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			var q =
+			AssertQuery(
 				from c in db.Child
 				where c.ParentID.In(db.Parent.Select(p => p.ParentID).Take(100))
-				select c;
-
-			_ = q.ToList();
+				select c);
 
 			if (!preferExists && db is DataConnection dc)
 				Assert.That(LastQuery, Contains.Substring(" IN (").And.Not.Contains("EXISTS("));
@@ -89,12 +85,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			var q =
+			AssertQuery(
 				from c in db.Child
 				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, p.Value1!.Value }))
-				select c;
-
-			_ = q.ToList();
+				select c);
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -105,12 +99,10 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			var q =
+			AssertQuery(
 				from c in db.Child
 				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, p.Value1!.Value }).Take(100))
-				select c;
-
-			_ = q.ToList();
+				select c);
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -135,9 +127,7 @@ namespace Tests.Linq
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
 			var n = 1;
-			var q = from p in db.Parent where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) select p;
-
-			_ = q.ToList();
+			AssertQuery(from p in db.Parent where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) select p);
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -159,9 +149,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 2, 4 }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2, 3 }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+			AssertQuery(t1.Where(t => t.ID.In(t2.Select(p => p.ID))));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -175,9 +163,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { 1, 3 }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { 1, 2 }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))).OrderBy(i => i),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))).OrderBy(i => i));
+			AssertQuery(t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID))).OrderBy(i => i));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -191,9 +177,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => (int?)p.ID))),
-				t1.         Where(t => t.ID.In(t2.         Select(p => (int?)p.ID))));
+			AssertQuery(t1.Where(t => t.ID.In(t2.Select(p => (int?)p.ID))));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -207,9 +191,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2       }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => (int?)p.ID))),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => (int?)p.ID))));
+			AssertQuery(t1.Where(t => t.ID.NotIn(t2.Select(p => (int?)p.ID))));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -223,9 +205,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3 }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] {       1, 2 }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => (int?)p.ID))),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => (int?)p.ID))));
+			AssertQuery(t1.Where(t => t.ID.NotIn(t2.Select(p => (int?)p.ID))));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -239,9 +219,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] {       1, 3       }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => ((int?)t.ID).In(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => ((int?)t.ID).In(t2.         Select(p => p.ID))));
+			AssertQuery(t1.Where(t => ((int?)t.ID).In(t2.Select(p => p.ID))));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -255,13 +233,12 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
 
-			var q1 = t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID)));
-			var q2 = t1.         Where(t => t.ID.In(t2.         Select(p => p.ID)));
+			var q = t1.Where(t => t.ID.In(t2.Select(p => p.ID)));
 
 			if (compareNullsAsValues == false)
-				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
+				Assert.That(q.ToString(), Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
 			else
-				AreEqual(q1, q2);
+				AssertQuery(q);
 		}
 
 		[Test]
@@ -272,9 +249,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2       }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+			AssertQuery(t1.Where(t => t.ID.In(t2.Select(p => p.ID))));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -288,9 +263,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3,      }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => t.ID.In(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.In(t2.         Select(p => p.ID))));
+			AssertQuery(t1.Where(t => t.ID.In(t2.Select(p => p.ID))));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -304,13 +277,12 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6, null }.Select(i => new { ID = i }));
 
-			var q1 = t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID)));
-			var q2 = t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID)));
+			var q = t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID)));
 
 			if (compareNullsAsValues == false)
-				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
+				Assert.That(q.ToString(), Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
 			else
-				AreEqual(q1, q2);
+				AssertQuery(q);
 		}
 
 		[Test]
@@ -321,9 +293,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5       }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6, null }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
+			AssertQuery(t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID))));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
@@ -337,9 +307,7 @@ namespace Tests.Linq
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6       }.Select(i => new { ID = i }));
 
-			AreEqual(
-				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
-				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
+			AssertQuery(t1.Where(t => t.ID.NotIn(t2.Select(p => p.ID))));
 
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));

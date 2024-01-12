@@ -2137,26 +2137,38 @@ namespace LinqToDB.SqlProvider
 			if (optimizationContext.IsOptimized(element, out var newElement))
 				return newElement!;
 
-			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, dataOptions, !withConversion,
-				static (visitor, e) =>
+			newElement = RunOptimization(element, optimizationContext, this, mappingSchema, dataOptions, !withConversion, Optimize);
+
+			static IQueryElement Optimize(ConvertVisitor<RunOptimizationContext> visitor, IQueryElement e)
+			{
+				var ne = e;
+
+				if (ne is ISqlExpression expr1)
+					ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
+
+				if (ne is ISqlPredicate pred1)
 				{
-					var ne = e;
-
-					if (ne is ISqlExpression expr1)
-						ne = visitor.Context.Optimizer.OptimizeExpression(expr1, visitor);
-
-					switch (ne)
+					ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
+				}
+				else if (ne is SqlCondition(var isNot, var predicate, var isOr))
+				{
+					switch (
+						     visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery,
+						             isNot,
+						                    predicate)
 					{
-						case ISqlPredicate pred1:
-							ne = visitor.Context.Optimizer.OptimizePredicate(pred1, visitor.Context.OptimizationContext.Context, visitor.Context.DataOptions);
-							break;
-
-						case SqlCondition(true, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: false}]}) insq, var isOr1) cond]), var isOr)
-							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery:
+						case (true,  true,  SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: false}]}) insq, var isOr1) cond]))
+//						when
+//							visitor.Context.DataOptions.LinqOptions.PreferExistsForScalar is true &&
+//							visitor.Context.DataOptions.LinqOptions.CompareNullsAsValues  is true &&
+							:
 							return new SqlCondition(false, new SqlSearchCondition().Expr(insq.Expr1).IsNull.Or.Add(new (true, insq, isOr1)), isOr);
 
-						case SqlCondition(false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: true} col]} subQuery) insq, _) cond]), var isOr)
-							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+						case (true,  false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, false, {Select.Columns : [{CanBeNull: true} col]} subQuery) insq, _) cond]))
+//						when
+//							visitor.Context.DataOptions.LinqOptions.PreferExistsForScalar is true &&
+//							visitor.Context.DataOptions.LinqOptions.CompareNullsAsValues  is true &&
+							:
 						{
 							var newQuery = subQuery.Convert((subQuery,col.Expression), static (v, e) =>
 							{
@@ -2182,16 +2194,25 @@ namespace LinqToDB.SqlProvider
 									.Expr(insq.Expr1).IsNotNull.And.Add(cond), isOr);
 						}
 
-						case SqlCondition(false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, true, {Select.Columns : [{CanBeNull: false}]}) insq, _) cond]), var isOr)
-							when visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+						case (true,  false, SqlSearchCondition([(false, SqlPredicate.InSubQuery({CanBeNull: true}, true, {Select.Columns : [{CanBeNull: false}]}) insq, _) cond]))
+//						when
+//							visitor.Context.DataOptions.LinqOptions.PreferExistsForScalar is true &&
+//							visitor.Context.DataOptions.LinqOptions.CompareNullsAsValues  is true &&
+							:
 							return new SqlCondition(false, new SqlSearchCondition().Expr(insq.Expr1).IsNull.Or.Add(cond), isOr);
 
-						case SqlCondition(false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, false, {Select.Columns : [{CanBeNull: true} col]} subQuery), var isOr)
-							when !visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+						case (false, false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, false, {Select.Columns : [{CanBeNull: true} col]} subQuery))
+//						when
+//							visitor.Context.DataOptions.LinqOptions.PreferExistsForScalar is true
+//							visitor.Context.DataOptions.LinqOptions.CompareNullsAsValues  is true
+							:
 							return ConvertInSubquery(ex1, false, col, subQuery, isOr);
 
-						case SqlCondition(false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, true, {Select.Columns : [{CanBeNull: false} col]} subQuery), var isOr)
-							when !visitor.Context.Optimizer.SqlProviderFlags.DoesNotSupportCorrelatedSubquery :
+						case (false, false, SqlPredicate.InSubQuery({CanBeNull: true} ex1, true, {Select.Columns : [{CanBeNull: false} col]} subQuery))
+//						when
+//							visitor.Context.DataOptions.LinqOptions.PreferExistsForScalar is true &&
+//							visitor.Context.DataOptions.LinqOptions.CompareNullsAsValues  is true &&
+							:
 							return ConvertInSubquery(ex1, true, col, subQuery, isOr);
 					}
 
@@ -2213,14 +2234,15 @@ namespace LinqToDB.SqlProvider
 
 						return new SqlCondition(isNot, new SqlPredicate.FuncLike(SqlFunction.CreateExists(newQuery)), isOr);
 					}
+				}
 
-					if (!ReferenceEquals(ne, e))
-						return ne;
-
-					ne = visitor.Context.Optimizer.OptimizeQueryElement(visitor, ne);
-
+				if (!ReferenceEquals(ne, e))
 					return ne;
-				});
+
+				ne = visitor.Context.Optimizer.OptimizeQueryElement(visitor, ne);
+
+				return ne;
+			}
 
 			if (withConversion)
 			{
