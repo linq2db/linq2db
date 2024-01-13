@@ -10,7 +10,7 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSingle([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, opt => opt.UseFSharp()))
 				FSharp.WhereTest.LoadSingle(db);
 		}
 
@@ -76,7 +76,7 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSinglesWithPatient([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, opt => opt.UseFSharp()))
 				FSharp.WhereTest.LoadSinglesWithPatient( db);
 		}
 

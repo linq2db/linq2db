@@ -207,7 +207,7 @@ namespace LinqToDB.Data
 					: SqlGenericConstructorExpression.CreateType.Auto,
 				currentPath.Type,
 				null,
-				new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members), MappingSchema, 
+				new ReadOnlyCollection<SqlGenericConstructorExpression.Assignment>(members), MappingSchema,
 				currentPath);
 
 			return generic;
@@ -313,27 +313,6 @@ namespace LinqToDB.Data
 			{
 				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo,
 					Expression.MakeMemberAccess(root, member.MemberInfo), true, false);
-
-				assignments.Add(assignment);
-			}
-		}
-
-		static void BuildDefaultSetters(MappingSchema mappingSchema, Type objectType, List<SqlGenericConstructorExpression.Assignment> assignments)
-		{
-			var typeAccessor    = TypeAccessor.GetAccessor(objectType);
-			var assignedMembers = new HashSet<MemberInfo>(assignments.Select(a => a.MemberInfo), MemberInfoComparer.Instance);
-
-			foreach (var member in typeAccessor.Members)
-			{
-				if (member.MemberInfo.MemberType is not MemberTypes.Property and not MemberTypes.Field)
-					continue;
-
-				if (!assignedMembers.Add(member.MemberInfo))
-					continue;
-
-				var memberType = member.MemberInfo.GetMemberType();
-				var value      = Expression.Constant(mappingSchema.GetDefaultValue(memberType), memberType);
-				var assignment = new SqlGenericConstructorExpression.Assignment(member.MemberInfo, value, false, false);
 
 				assignments.Add(assignment);
 			}
@@ -840,7 +819,7 @@ namespace LinqToDB.Data
 		}
 
 		public Expression Construct(
-			IDataContext                    dataContext, 
+			IDataContext                    dataContext,
 			MappingSchema                   mappingSchema,
 			SqlGenericConstructorExpression constructorExpression,
 			ProjectFlags                    flags)

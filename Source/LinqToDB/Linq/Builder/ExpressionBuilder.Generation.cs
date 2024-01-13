@@ -9,6 +9,8 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using System.Reflection;
 	using static Data.EntityConstructorBase;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Interceptors.Internal;
 
 	internal partial class ExpressionBuilder
 	{
@@ -83,7 +85,10 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression Construct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression, ProjectFlags flags)
 		{
-			mappingSchema      =   constructorExpression.MappingSchema ?? mappingSchema;
+			if (DataContext is IInterceptable<IEntityBindingInterceptor> expressionServices)
+				constructorExpression = expressionServices.Interceptor?.ConvertConstructorExpression(constructorExpression) ?? constructorExpression;
+
+			mappingSchema =   constructorExpression.MappingSchema ?? mappingSchema;
 			_entityConstructor ??= new EntityConstructor(this);
 
 			var constructed = _entityConstructor.Construct(DataContext, mappingSchema, constructorExpression, flags);

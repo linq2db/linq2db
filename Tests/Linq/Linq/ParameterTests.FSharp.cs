@@ -2,6 +2,8 @@
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.FSharp;
+
 using NUnit.Framework;
 
 using Tests.FSharp.Models;
@@ -14,7 +16,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlStringParameter([DataSources(false)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataConnection(context, opt => opt.UseFSharp()))
 			{
 				var p = "John";
 				var person1 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
@@ -32,7 +34,7 @@ namespace Tests.Linq
 		public void ExposeSqlStringParameter([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
-			using (var db = GetDataConnection(context))
+			using (var db = GetDataConnection(context, opt => opt.UseFSharp()))
 			{
 				var p   = "abc";
 				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
