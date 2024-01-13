@@ -74,6 +74,20 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void UnionRecord1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.UnionRecord1(db);
+		}
+
+		[Test]
+		public void UnionRecord2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.WhereTest.UnionRecord2(db);
+		}
+
+		[Test]
 		public void LoadSinglesWithPatient([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

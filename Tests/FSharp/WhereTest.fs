@@ -1,6 +1,7 @@
 ﻿module Tests.FSharp.WhereTest
 
 open System
+open System.Linq
 
 open Tests.FSharp.Models
 
@@ -252,3 +253,34 @@ let ComplexRecordParametersMappingUsingRecordReaderBuilder (db : DataConnection)
     Assert.That(john.Name.Id, Is.EqualTo "Pupkin")
     Assert.That(john.Name.iD, Is.Null)
     Assert.That(john.Name.unused, Is.EqualTo(0))
+
+let UnionRecord1 (db : IDataContext) =
+    let persons = db.GetTable<ComplexPersonRecord>()
+    let query = query {
+        for p in persons do
+        where (p.ID = 1)
+    }
+
+    let john = query.Union(query).ToList().Single()
+
+    Assert.That(john, Is.Not.Null)
+    Assert.That(john.ID, Is.EqualTo 1)
+    Assert.That(john.Name, Is.Not.Null)
+    Assert.That(john.Name.id, Is.EqualTo "John")
+    Assert.That(john.Name.Id, Is.EqualTo "Pupkin")
+    Assert.That(john.Name.iD, Is.Null)
+
+let UnionRecord2 (db : IDataContext) =
+    let persons = db.GetTable<PersonConflictingNamesRecord>()
+    let query = query {
+        for p in persons do
+        where (p.ID = 1)
+    }
+
+    let john = query.Union(query).ToList().Single()
+
+    Assert.That(john, Is.Not.Null)
+    Assert.That(john.ID, Is.EqualTo 1)
+    Assert.That(john.id, Is.EqualTo "John")
+    Assert.That(john.Id, Is.EqualTo "Pupkin")
+    Assert.That(john.iD, Is.Null)
