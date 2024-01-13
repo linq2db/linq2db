@@ -31,6 +31,8 @@ namespace Tests
 	using System.Threading;
 	using System.Xml;
 
+	using LinqToDB.FSharp;
+
 	using Model;
 	using Tools;
 
@@ -411,7 +413,7 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
-			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str, null);
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str, opt => opt.UseFSharp());
 		}
 
 		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
@@ -422,7 +424,7 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
-			return _serverContainer.Prepare(null, null, false, str, dbOptionsBuilder);
+			return _serverContainer.Prepare(null, null, false, str, opt => dbOptionsBuilder(opt).UseFSharp());
 		}
 
 		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
@@ -447,7 +449,7 @@ namespace Tests
 			if (configuration.IsAnyOf(TestProvName.AllMariaDB))
 				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _mariaDBSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _mariaDBSchema));
 
-			options = dbOptionsBuilder(options);
+			options = dbOptionsBuilder(options).UseFSharp();
 
 			var res = new TestDataConnection(options);
 
@@ -503,6 +505,7 @@ namespace Tests
 			if (retryPolicy != null)
 				options = options.UseRetryPolicy(retryPolicy);
 
+			options = options.UseFSharp();
 			return new TestDataConnection(options);
 		}
 
@@ -516,6 +519,7 @@ namespace Tests
 
 			Debug.WriteLine(options.ConnectionOptions.ConfigurationString, "Provider ");
 
+			options = options.UseFSharp();
 			var res = new TestDataConnection(options);
 
 			return res;

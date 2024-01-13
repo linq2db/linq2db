@@ -10,14 +10,14 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSingle([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, opt => opt.UseFSharp()))
+			using (var db = GetDataContext(context))
 				FSharp.WhereTest.LoadSingle(db);
 		}
 
 		[Test]
 		public void RecordParametersMapping([DataSources] string context)
 		{
-			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			using var db = GetDataContext(context);
 			FSharp.WhereTest.RecordParametersMapping(db);
 		}
 
@@ -25,7 +25,7 @@ namespace Tests.Linq
 		[Test]
 		public void RecordProjectionColumnsOnly([DataSources] string context)
 		{
-			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			using var db = GetDataContext(context);
 			FSharp.WhereTest.RecordProjectionColumnsOnly(db);
 
 			if (db is DataConnection dc)
@@ -38,7 +38,7 @@ namespace Tests.Linq
 		[Test]
 		public void RecordComplexProjection([DataSources] string context)
 		{
-			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			using var db = GetDataContext(context);
 			FSharp.WhereTest.RecordComplexProjection(db);
 
 			if (db is DataConnection dc)
@@ -50,7 +50,7 @@ namespace Tests.Linq
 		[Test]
 		public void RecordProjectionAll([DataSources] string context)
 		{
-			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			using var db = GetDataContext(context);
 			FSharp.WhereTest.RecordProjectionAll(db);
 
 			if (db is DataConnection dc)
@@ -62,21 +62,21 @@ namespace Tests.Linq
 		[Test]
 		public void ComplexRecordParametersMapping([DataSources] string context)
 		{
-			using var db = GetDataContext(context, opt => opt.UseFSharp());
+			using var db = GetDataContext(context);
 			FSharp.WhereTest.ComplexRecordParametersMapping(db);
 		}
 
 		[Test]
 		public void ComplexRecordParametersMappingUsingRecordReaderBuilder([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
-			using var db = GetDataConnection(context, opt => opt.UseFSharp());
+			using var db = GetDataConnection(context);
 			FSharp.WhereTest.ComplexRecordParametersMappingUsingRecordReaderBuilder(db);
 		}
 
 		[Test]
 		public void LoadSinglesWithPatient([DataSources] string context)
 		{
-			using (var db = GetDataContext(context, opt => opt.UseFSharp()))
+			using (var db = GetDataContext(context))
 				FSharp.WhereTest.LoadSinglesWithPatient( db);
 		}
 
