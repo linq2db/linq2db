@@ -18,7 +18,7 @@ open LinqToDB.Reflection
 type FSharpEntityBindingInterceptor private () =
     inherit EntityBindingInterceptor()
 
-    static let _cache = ConcurrentDictionary<Type, Dictionary<int, MemberAccessor> option>()
+    static let _cache = ConcurrentDictionary<Type, IReadOnlyDictionary<int, MemberAccessor> option>()
 
     static let _instance = FSharpEntityBindingInterceptor() :> IEntityBindingInterceptor
 
@@ -35,13 +35,11 @@ type FSharpEntityBindingInterceptor private () =
             then false
             else mapping.SourceConstructFlags = SourceConstructFlags.RecordType
 
-    override x.TryMapMembersToConstructor(typeAccessor: TypeAccessor) : IReadOnlyDictionary<int, MemberAccessor> =
+    static member TryMapMembersToConstructor(typeAccessor: TypeAccessor) : IReadOnlyDictionary<int, MemberAccessor> option =
         let found, map = _cache.TryGetValue typeAccessor.Type
         if found
         then
-            match map with
-            | Some m -> m
-            | None -> null
+            map
         else
             if FSharpEntityBindingInterceptor.isRecord typeAccessor.Type
             then
@@ -54,18 +52,15 @@ type FSharpEntityBindingInterceptor private () =
                         if memberAttr.SourceConstructFlags = SourceConstructFlags.Field
                         then mappings.Add(memberAttr.SequenceNumber, m)
                         else ()
-                match _cache.GetOrAdd(typeAccessor.Type, Some mappings) with
-                | Some m -> m
-                | None -> null
-            else null
+                _cache.GetOrAdd(typeAccessor.Type, Some(mappings :> IReadOnlyDictionary<int, MemberAccessor>))
+            else None
 
     override x.ConvertConstructorExpression(expression: SqlGenericConstructorExpression) : SqlGenericConstructorExpression =
         if expression.ConstructType = SqlGenericConstructorExpression.CreateType.Full
         then
-            let map = x.TryMapMembersToConstructor(TypeAccessor.GetAccessor expression.ObjectType)
-            match map with
-            | null -> expression
-            | _ ->
+            match FSharpEntityBindingInterceptor.TryMapMembersToConstructor(TypeAccessor.GetAccessor expression.ObjectType) with
+            | None -> expression
+            | Some map ->
                 let constructors = expression.ObjectType.GetConstructors(BindingFlags.Instance ||| BindingFlags.NonPublic ||| BindingFlags.Public)
                 let ctor = query {
                     for c in constructors do

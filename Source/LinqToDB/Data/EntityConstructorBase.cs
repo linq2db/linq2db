@@ -329,19 +329,13 @@ namespace LinqToDB.Data
 			return -1;
 		}
 
-		static int MatchParameter(MemberAccessor? memberAccessor, ParameterInfo parameter, ReadOnlyCollection<SqlGenericConstructorExpression.Assignment> members)
+		static int MatchParameter(ParameterInfo parameter, ReadOnlyCollection<SqlGenericConstructorExpression.Assignment> members)
 		{
 			var found = -1;
 
-			if (memberAccessor != null)
-				found = FindIndex(members, x => x.MemberInfo == memberAccessor.MemberInfo);
-
-			if (found < 0)
-			{
-				found = FindIndex(members, x =>
-					x.MemberInfo.GetMemberType() == parameter.ParameterType &&
-					x.MemberInfo.Name            == parameter.Name);
-			}
+			found = FindIndex(members, x =>
+				x.MemberInfo.GetMemberType() == parameter.ParameterType &&
+				x.MemberInfo.Name            == parameter.Name);
 
 			if (found < 0)
 			{
@@ -375,10 +369,6 @@ namespace LinqToDB.Data
 			{
 				var parameterValues = new List<Expression>();
 
-				IReadOnlyDictionary<int, MemberAccessor>? mappings = null;
-				if (DataContext is IInterceptable<IEntityBindingInterceptor> expressionServices)
-					mappings = expressionServices.Interceptor?.TryMapMembersToConstructor(typeAccessor);
-
 				if (constructorExpression.Parameters.Count == parameters.Length)
 				{
 					for (int i = 0; i < parameters.Length; i++)
@@ -387,7 +377,7 @@ namespace LinqToDB.Data
 						var param         = constructorExpression.Parameters[i];
 						parameterValues.Add(param.Expression);
 
-						var idx = MatchParameter(mappings?[i], parameterInfo, constructorExpression.Assignments);
+						var idx = MatchParameter(parameterInfo, constructorExpression.Assignments);
 						if (idx >= 0)
 							loadedColumns.Add(i);
 					}
@@ -398,7 +388,7 @@ namespace LinqToDB.Data
 					{
 						var parameterInfo = parameters[i];
 
-						var idx = MatchParameter(mappings?[i], parameterInfo, constructorExpression.Assignments);
+						var idx = MatchParameter(parameterInfo, constructorExpression.Assignments);
 
 						if (idx >= 0)
 						{
@@ -824,6 +814,9 @@ namespace LinqToDB.Data
 			SqlGenericConstructorExpression constructorExpression,
 			ProjectFlags                    flags)
 		{
+			if (DataContext is IInterceptable<IEntityBindingInterceptor> expressionServices)
+				constructorExpression = expressionServices.Interceptor?.ConvertConstructorExpression(constructorExpression) ?? constructorExpression;
+
 			var constructed = TryConstruct(dataContext, mappingSchema, constructorExpression, flags);
 			if (constructed == null)
 			{

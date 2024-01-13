@@ -1,16 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Mapping;
 	using Data;
 	using LinqToDB.Expressions;
-	using System.Reflection;
+	using Mapping;
 	using static Data.EntityConstructorBase;
-	using LinqToDB.Interceptors;
-	using LinqToDB.Interceptors.Internal;
 
 	internal partial class ExpressionBuilder
 	{
@@ -85,9 +83,6 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression Construct(MappingSchema mappingSchema, SqlGenericConstructorExpression constructorExpression, ProjectFlags flags)
 		{
-			if (DataContext is IInterceptable<IEntityBindingInterceptor> expressionServices)
-				constructorExpression = expressionServices.Interceptor?.ConvertConstructorExpression(constructorExpression) ?? constructorExpression;
-
 			mappingSchema =   constructorExpression.MappingSchema ?? mappingSchema;
 			_entityConstructor ??= new EntityConstructor(this);
 
