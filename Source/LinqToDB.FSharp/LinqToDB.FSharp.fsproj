@@ -19,4 +19,8 @@
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+		<PackageReference Include="FSharp.Core" />
+	</ItemGroup>
+
 </Project>
