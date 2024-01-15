@@ -25,6 +25,7 @@
 		<!--build support-->
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="8.0.0-preview.23364.2" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.11.0-beta1.23420.2" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="3.11.0-beta1.23525.2" />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="1.1.1"         />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.3.1"         />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.7.0"         />
