@@ -8,7 +8,7 @@ dotnet_diagnostic.CA1852.severity = none # CA1852: Type can be sealed
 # ReSharper properties
 resharper_space_before_new_parentheses = true
 
-3 nobody asked for this analyzer to trigger in tests...
+# nobody asked for this analyzer to trigger in tests...
 dotnet_public_api_analyzer.require_api_files = false
 dotnet_diagnostic.RS0016.severity = none
 dotnet_diagnostic.RS0026.severity = none
