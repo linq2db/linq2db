@@ -77,7 +77,7 @@ jobs:
         if %errorlevel% neq 0 exit
         copy Tests\DataProviders.json testing\net80x86
         if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\$(netfx_tfm) testing\configs\netfx
+        xcopy /i Build\$(build_configuration)\netfx testing\configs\netfx
         if %errorlevel% neq 0 exit
         xcopy /i Build\$(build_configuration)\net60 testing\configs\net60
         if %errorlevel% neq 0 exit
