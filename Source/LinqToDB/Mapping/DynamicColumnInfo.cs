@@ -95,7 +95,8 @@ namespace LinqToDB.Mapping
 #pragma warning restore RS0030 // Do not used banned APIs
 
 #pragma warning disable RS0030 // Do not used banned APIs
-		public override object[] GetCustomAttributes(Type attributeType, bool inherit) => [];
+		// must return Attibute[] as some runtimes doesn't follow their own contract
+		public override object[] GetCustomAttributes(Type attributeType, bool inherit) => Array.Empty<Attribute>();
 #pragma warning restore RS0030 // Do not used banned APIs
 
 		public override IList<CustomAttributeData> GetCustomAttributesData() => [];
