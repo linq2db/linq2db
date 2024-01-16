@@ -10,9 +10,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-#if !NATIVE_ASYNC
-	using Async;
-#endif
 	using Data;
 	using DataProvider;
 	using Linq;
@@ -424,11 +421,7 @@ namespace LinqToDB
 			((IDataContext)this).Close();
 		}
 
-#if NATIVE_ASYNC
 		async ValueTask IAsyncDisposable.DisposeAsync()
-#else
-		async Task IAsyncDisposable.DisposeAsync()
-#endif
 		{
 			await DisposeAsync(disposing: true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}
@@ -436,18 +429,10 @@ namespace LinqToDB
 		/// <summary>
 		/// Closes underlying connection.
 		/// </summary>
-#if NATIVE_ASYNC
 		protected virtual ValueTask DisposeAsync(bool disposing)
-#else
-		protected virtual Task DisposeAsync(bool disposing)
-#endif
 		{
 			_disposed = true;
-#if NATIVE_ASYNC
 			return new ValueTask(((IDataContext)this).CloseAsync());
-#else
-			return ((IDataContext)this).CloseAsync();
-#endif
 		}
 
 		void IDataContext.Close()
@@ -570,11 +555,7 @@ namespace LinqToDB
 				_dataContext = null;
 			}
 
-#if NATIVE_ASYNC
 			public async ValueTask DisposeAsync()
-#else
-			public async Task DisposeAsync()
-#endif
 			{
 				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				await _dataContext!.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

@@ -9,11 +9,19 @@ namespace LinqToDB.DataProvider.Informix
 
 	sealed class InformixMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATE_FORMAT               = CompositeFormat.Parse("TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')");
+		private static readonly CompositeFormat DATETIME_FORMAT           = CompositeFormat.Parse("TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', '%Y-%m-%d %H:%M:%S')");
+		private static readonly CompositeFormat DATETIME5_EXPLICIT_FORMAT = CompositeFormat.Parse("TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S.%F5')");
+		private static readonly CompositeFormat DATETIME5_FORMAT          = CompositeFormat.Parse("TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S%F5')");
+		private static readonly CompositeFormat INTERVAL5_FORMAT          = CompositeFormat.Parse("INTERVAL({0} {1:00}:{2:00}:{3:00}.{4:00000}) DAY TO FRACTION(5)");
+#else
 		private const string DATE_FORMAT               = "TO_DATE('{0:yyyy-MM-dd}', '%Y-%m-%d')";
 		private const string DATETIME_FORMAT           = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', '%Y-%m-%d %H:%M:%S')";
 		private const string DATETIME5_EXPLICIT_FORMAT = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S.%F5')";
 		private const string DATETIME5_FORMAT          = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss.fffff}', '%Y-%m-%d %H:%M:%S%F5')";
 		private const string INTERVAL5_FORMAT          = "INTERVAL({0} {1:00}:{2:00}:{3:00}.{4:00000}) DAY TO FRACTION(5)";
+#endif
 
 		static readonly char[] _extraEscapes = { '\r', '\n' };
 
@@ -89,7 +97,11 @@ namespace LinqToDB.DataProvider.Informix
 			// datetime literal using TO_DATE function used because it works with all kinds of datetime ranges
 			// without generation of range-specific literals
 			// see Issue1307Tests tests
+#if SUPPORTS_COMPOSITE_FORMAT
+			CompositeFormat format;
+#else
 			string format;
+#endif
 
 			if ((value.Ticks % 10000000) / 100 != 0)
 			{

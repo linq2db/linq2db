@@ -1339,7 +1339,7 @@ namespace Tests.xUpdate
 			[Column(Length = 100)] public string? col5 { get; set; }
 			[Column(Length = 100)] public string? col6 { get; set; }
 
-			public static UpdateFromJoin[] Data = Array<UpdateFromJoin>.Empty;
+			public static UpdateFromJoin[] Data = [];
 		}
 
 		[Table("access_mode")]
@@ -1351,7 +1351,7 @@ namespace Tests.xUpdate
 			[Column]
 			public string? code { get; set; }
 
-			public static AccessMode[] Data = Array<AccessMode>.Empty;
+			public static AccessMode[] Data = [];
 		}
 
 		// https://stackoverflow.com/questions/57115728/

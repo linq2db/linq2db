@@ -70,11 +70,7 @@ namespace LinqToDB.Async
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
-#if NATIVE_ASYNC
 		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
-#else
-		Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken);
-#endif
 
 		/// <summary>
 		/// Starts new transaction asynchronously for current connection with specified isolation level.
@@ -82,10 +78,6 @@ namespace LinqToDB.Async
 		/// <param name="isolationLevel">Transaction isolation level.</param>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Database transaction object.</returns>
-#if NATIVE_ASYNC
 		ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken);
-#else
-		Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken);
-#endif
 	}
 }

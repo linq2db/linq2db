@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -132,7 +133,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns array with names of association key column members.</returns>
 		public static string[] ParseKeys(string? keys)
 		{
-			return keys?.Replace(" ", "").Split(',') ?? Array<string>.Empty;
+			return keys?.Replace(" ", "").Split(',') ?? [];
 		}
 
 		/// <summary>
@@ -144,8 +145,8 @@ namespace LinqToDB.Mapping
 			if (!string.IsNullOrEmpty(AliasName))
 				return AliasName!;
 
-			if (!string.IsNullOrEmpty(Configuration.Sql.AssociationAlias))
-				return string.Format(Configuration.Sql.AssociationAlias, MemberInfo.Name);
+			if (Configuration.Sql.AssociationAliasFormat != null)
+				return string.Format(CultureInfo.InvariantCulture, Configuration.Sql.AssociationAliasFormat, MemberInfo.Name);
 
 			return string.Empty;
 		}
@@ -238,7 +239,7 @@ namespace LinqToDB.Mapping
 					{
 						if (method.GetParameters().Length > 0)
 							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should have no parameters");
-						var value = method.Invoke(null, Array<object>.Empty);
+						var value = method.Invoke(null, []);
 						if (value == null)
 							return null;
 

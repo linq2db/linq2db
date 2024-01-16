@@ -381,27 +381,29 @@ namespace LinqToDB.DataProvider.ClickHouse
 			[Wrapper]
 			public sealed class ClickHouseBulkCopy : TypeWrapper, IDisposable
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
+				private static object[] Wrappers { get; }
+					= new []
 				{
 					// [0]: Dispose
-					(Expression<Action<ClickHouseBulkCopy>>)((ClickHouseBulkCopy this_) => ((IDisposable)this_).Dispose()),
+					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseBulkCopy>>)((ClickHouseBulkCopy this_) => ((IDisposable)this_).Dispose()), true),
 					// [1]: get BatchSize
-					(Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.BatchSize),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.BatchSize), true),
 					// [2]: set BatchSize
-					PropertySetter((ClickHouseBulkCopy this_) => this_.BatchSize),
+					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.BatchSize), true),
 					// [3]: get MaxDegreeOfParallelism
-					(Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, int>>)((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism), true),
 					// [4]: set MaxDegreeOfParallelism
-					PropertySetter((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism),
+					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.MaxDegreeOfParallelism), true),
 					// [5]: get DestinationTableName
-					(Expression<Func<ClickHouseBulkCopy, string?>>)((ClickHouseBulkCopy this_) => this_.DestinationTableName),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, string?>>)((ClickHouseBulkCopy this_) => this_.DestinationTableName), true),
 					// [6]: set DestinationTableName
-					PropertySetter((ClickHouseBulkCopy this_) => this_.DestinationTableName),
+					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.DestinationTableName), true),
 					// [7]: get RowsWritten
-					(Expression<Func<ClickHouseBulkCopy, long>>)((ClickHouseBulkCopy this_) => this_.RowsWritten),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, long>>)((ClickHouseBulkCopy this_) => this_.RowsWritten), true),
 					// [8]: WriteToServerAsync
-					(Expression<Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>>)((ClickHouseBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync(dataReader, cancellationToken)),
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>>)((ClickHouseBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync(dataReader, cancellationToken)), true),
+					// [9]: InitAsync
+					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, Task>>)((ClickHouseBulkCopy this_) => this_.InitAsync()), false),
 				};
 
 				public ClickHouseBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -412,6 +414,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 				void IDisposable.Dispose() => ((Action<ClickHouseBulkCopy>)CompiledWrappers[0])(this);
 
+				public bool HasInitAsync => CompiledWrappers[9] != null;
+				public Task InitAsync() => ((Func<ClickHouseBulkCopy, Task>)CompiledWrappers[9])(this);
 
 				public int BatchSize
 				{
@@ -465,12 +469,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			[Wrapper]
-			public class ClickHouseColumnWriter : TypeWrapper, IDisposable,
-#if NATIVE_ASYNC
-				IAsyncDisposable
-#else
-				Async.IAsyncDisposable
-#endif
+			public class ClickHouseColumnWriter : TypeWrapper, IDisposable, IAsyncDisposable
 			{
 				private static object[] Wrappers { get; }
 					= new object[]
@@ -486,15 +485,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 					// [4]: WriteTableAsync
 					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseColumnWriter, IReadOnlyList<object>, int, CancellationToken, Task>>)((ClickHouseColumnWriter this_, IReadOnlyList<object> columns, int rowCount, CancellationToken cancellationToken) => this_.WriteTableAsync(columns, rowCount, cancellationToken)), true),
 
-#if NATIVE_ASYNC
 					// [5]: DisposeAsync
 					new Tuple<LambdaExpression, bool>
 					((Expression<Func<ClickHouseColumnWriter, ValueTask>>)((ClickHouseColumnWriter this_) => this_.DisposeAsync()), true),
-#else
-					// [5]: DisposeAsync
-					new Tuple<LambdaExpression, bool>
-					((Expression<Func<ClickHouseColumnWriter, Task>>)((ClickHouseColumnWriter this_) => this_.DisposeAsync()), true),
-#endif
 					// [6]: ConfigureColumn
 					new Tuple<LambdaExpression, bool>((Expression<Action<ClickHouseColumnWriter, int, ClickHouseColumnSettings>>)((ClickHouseColumnWriter this_, int ordinal, ClickHouseColumnSettings columnSettings) => this_.ConfigureColumn(ordinal, columnSettings)), true),
 				};
@@ -510,12 +503,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				public Task WriteTableAsync(IReadOnlyList<object> columns, int rowCount, CancellationToken cancellationToken) => ((Func<ClickHouseColumnWriter, IReadOnlyList<object>, int, CancellationToken, Task>)CompiledWrappers[4])(this, columns, rowCount, cancellationToken);
 				public void ConfigureColumn(int ordinal, ClickHouseColumnSettings columnSettings)                             => ((Action<ClickHouseColumnWriter, int, ClickHouseColumnSettings>)CompiledWrappers[6])(this, ordinal, columnSettings);
 
-#if NATIVE_ASYNC
 				public ValueTask DisposeAsync() => ((Func<ClickHouseColumnWriter, ValueTask>)CompiledWrappers[5])(this);
-#else
-				[return: CustomMapper(typeof(ValueTaskToTaskMapper))]
-				public Task DisposeAsync() => ((Func<ClickHouseColumnWriter, Task>)CompiledWrappers[5])(this);
-#endif
 			}
 
 			[Wrapper]

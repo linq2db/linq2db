@@ -32,12 +32,10 @@ namespace LinqToDB.DataProvider.SQLite
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
-#endif
 	}
 }

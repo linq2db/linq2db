@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 
 			var type         = MutableTuple.MTypes[count - 1];
 			var concreteType = type.MakeGenericType(arguments.Select(a => a.Type).ToArray());
-			var constructor  = concreteType.GetConstructor(Array<Type>.Empty) ??
+			var constructor  = concreteType.GetConstructor([]) ??
 							   throw new LinqToDBException($"Can not retrieve default constructor for '{type.Name}'");
 
 			var newExpression  = Expression.New(constructor);
@@ -545,7 +545,7 @@ namespace LinqToDB.Linq.Builder
 				var memberChain = sqlInfo.MemberChain.Length > 0
 					? sqlInfo.MemberChain
 					: noIndexSql.FirstOrDefault(s => sqlInfo.Sql.Equals(s.Sql) && s.MemberChain.Length > 0)
-						?.MemberChain ?? Array<MemberInfo>.Empty;
+						?.MemberChain ?? [];
 
 				if (memberChain.Length == 0 && sqlInfo.Sql.SystemType == forExpr.Type)
 				{
@@ -566,7 +566,7 @@ namespace LinqToDB.Linq.Builder
 				var memberChain = sqlInfo.MemberChain.Length > 0
 					? sqlInfo.MemberChain
 					: noIndexSql.FirstOrDefault(s => sqlInfo.Sql.Equals(s.Sql) && s.MemberChain.Length > 0)
-						?.MemberChain ?? Array<MemberInfo>.Empty;
+						?.MemberChain ?? [];
 
 				if (sqlInfo.Sql.ElementType == QueryElementType.SqlQuery)
 					continue;
@@ -1511,20 +1511,11 @@ namespace LinqToDB.Linq.Builder
 					var enumerable = query.GetIAsyncEnumerable(dc, expr, ps, preambles)!;
 
 					var eagerLoadingContext = new EagerLoadingContext<TD, TKey>();
-#if NATIVE_ASYNC
 
 					await foreach (var d in enumerable.WithCancellation(ct).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
 						eagerLoadingContext.Add(d.Key, d.Detail);
 					}
-#else
-					var details = await enumerable.ToListAsync(ct).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					foreach (var d in details)
-					{
-						eagerLoadingContext.Add(d.Key, d.Detail);
-					}
-#endif
 
 					return eagerLoadingContext;
 				}
@@ -1564,7 +1555,7 @@ namespace LinqToDB.Linq.Builder
 		internal static Expression CreateKDH(Expression key, Expression data)
 		{
 			var genericType   = typeof(KDH<,>).MakeGenericType(key.Type, data.Type);
-			var constructor   = genericType.GetConstructor(Array<Type>.Empty)!;
+			var constructor   = genericType.GetConstructor([])!;
 			var newExpression = Expression.New(constructor);
 
 			var memberInit    = Expression.MemberInit(newExpression,
@@ -1722,7 +1713,7 @@ namespace LinqToDB.Linq.Builder
 									.ToArray();
 
 								var newMemberInit = Expression.MemberInit(
-									Expression.New(newType.GetConstructor(Array<Type>.Empty) ??
+									Expression.New(newType.GetConstructor([]) ??
 												   throw new InvalidOperationException($"Default constructor not found for type {newType}")), newAssignments);
 								return newMemberInit;
 							}

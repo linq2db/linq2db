@@ -658,13 +658,13 @@ namespace LinqToDB.Linq.Builder
 					// ReSharper disable ConditionIsAlwaysTrueOrFalse
 					// ReSharper disable HeuristicUnreachableCode
 					if (expr.Members == null)
-						return Array<SqlInfo>.Empty;
+						return [];
 					// ReSharper restore HeuristicUnreachableCode
 					// ReSharper restore ConditionIsAlwaysTrueOrFalse
 
 					var ed = context.Builder.MappingSchema.GetEntityDescriptor(expr.Type, context.Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 					if (expr.Arguments.Count == 0)
-						return Array<SqlInfo>.Empty;
+						return [];
 					var sqlInfos = new List<SqlInfo>();
 					for (var i = 0; i < expr.Arguments.Count; i++)
 					{
@@ -709,7 +709,7 @@ namespace LinqToDB.Linq.Builder
 						var descriptor = ed.FindColumnDescriptor(mi);
 
 						if (descriptor == null && EagerLoading.IsDetailsMember(context, a.Expression))
-							return Array<SqlInfo>.Empty;
+							return [];
 
 						foreach (var si in ConvertExpressions(context, a.Expression, queryConvertFlag, descriptor))
 							result.Add(si.Clone(mi));

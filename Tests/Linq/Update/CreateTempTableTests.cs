@@ -161,10 +161,6 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
 		{
-#if !NETCOREAPP3_1
-			if (context.IsAnyOf(TestProvName.AllMySqlData))
-				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
-#endif
 			using var cts = new CancellationTokenSource();
 			cts.Cancel();
 			using (var db = GetDataContext(context))
@@ -206,10 +202,6 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
 		{
-#if !NETCOREAPP3_1
-			if (context.IsAnyOf(TestProvName.AllMySqlData))
-				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
-#endif
 			using var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))
 			{

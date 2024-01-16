@@ -18,14 +18,12 @@ namespace Tests
 
 			var context = GetTestContextName(test);
 
-#if NET472
-			var target = "net472";
-#elif NETCOREAPP3_1
-			var target = "core31";
+#if NETFRAMEWORK
+			var target = "netfx";
 #elif NET6_0
 			var target = "net60";
-#elif NET7_0
-			var target = "net70";
+#elif NET8_0
+			var target = "net80";
 #else
 #error "Build Target must be specified here."
 #endif

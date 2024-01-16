@@ -93,7 +93,7 @@ namespace LinqToDB.Metadata
 			return null;
 		}
 
-		public MappingAttribute[] GetAttributes(Type type) => Array<MappingAttribute>.Empty;
+		public MappingAttribute[] GetAttributes(Type type) => [];
 
 		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
@@ -104,12 +104,12 @@ namespace LinqToDB.Metadata
 			MappingAttribute[]? result = null;
 			if (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx())
 			{
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NETFRAMEWORK
 #else
 #endif
 				result = _cache.GetOrAdd(
 					(memberInfo, _sqlMethodAttribute),
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NETFRAMEWORK
 					key =>
 					{
 						var nameGetter = _methodNameGetter;
@@ -167,8 +167,8 @@ namespace LinqToDB.Metadata
 							}
 						}
 
-						return Array<MappingAttribute>.Empty;
-#if NET45 || NET46 || NETSTANDARD2_0
+						return [];
+#if NETFRAMEWORK
 					});
 #else
 					}, _methodNameGetter);
@@ -177,7 +177,7 @@ namespace LinqToDB.Metadata
 
 			var res = _cache.GetOrAdd(
 				(memberInfo, _sqlUserDefinedTypeAttribute),
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NETFRAMEWORK
 				key =>
 				{
 					var nameGetter = _typeNameGetter;
@@ -199,8 +199,8 @@ namespace LinqToDB.Metadata
 						return new MappingAttribute[] { attr };
 					}
 
-					return Array<MappingAttribute>.Empty;
-#if NET45 || NET46 || NETSTANDARD2_0
+					return [];
+#if NETFRAMEWORK
 				});
 #else
 				}, _typeNameGetter);
@@ -212,7 +212,7 @@ namespace LinqToDB.Metadata
 					? result
 					: result.Concat(res).ToArray();
 
-			return result ?? Array<MappingAttribute>.Empty;
+			return result ?? [];
 		}
 
 		private static Attribute? FindAttribute(ICustomAttributeProvider source, Type attributeType)
@@ -227,7 +227,7 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+		public MemberInfo[] GetDynamicColumns(Type type) => [];
 
 		public string GetObjectID() => _objectId;
 	}

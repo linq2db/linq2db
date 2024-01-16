@@ -62,7 +62,6 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -79,7 +78,6 @@ namespace LinqToDB.DataProvider.MySql
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
-#endif
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
@@ -154,11 +152,7 @@ namespace LinqToDB.DataProvider.MySql
 #pragma warning disable CA2000 // Dispose objects before losing scope
 				var rd = new BulkCopyReader<T>(dataConnection, columns, batch);
 #pragma warning restore CA2000 // Dispose objects before losing scope
-#if NATIVE_ASYNC
 				await using var _ = rd.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#else
-				await using var _ = rd;
-#endif
 
 				await TraceActionAsync(
 					dataConnection,
@@ -253,7 +247,6 @@ namespace LinqToDB.DataProvider.MySql
 			return rc;
 		}
 
-#if NATIVE_ASYNC
 		private async Task<BulkCopyRowsCopied> ProviderSpecificCopyInternalAsync<T>(
 			ProviderConnections providerConnections,
 			ITable<T>           table,
@@ -325,7 +318,6 @@ namespace LinqToDB.DataProvider.MySql
 
 			return rc;
 		}
-#endif
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
@@ -339,12 +331,10 @@ namespace LinqToDB.DataProvider.MySql
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
-#endif
 	}
 }

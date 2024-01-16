@@ -21,7 +21,7 @@
 //
 
 {
-	"NET472": {
+	"NETFX": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.Default",
 		"Providers": [
@@ -38,16 +38,6 @@
 		]
 	},
 
-	"CORE31": {
-		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.Default",
-		"Providers": [
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
-	},
-
 	"NET60": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
@@ -58,7 +48,7 @@
 		]
 	},
 
-	"NET70": {
+	"NET80": {
 		"BasedOn": "LocalConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
@@ -68,13 +58,7 @@
 		]
 	},
 
-	"NET472.Azure": {
-		"BasedOn": "AzureConnectionStrings",
-		"DefaultConfiguration": "SQLite.Default",
-		"TraceLevel": "Info"
-	},
-
-	"CORE31.Azure": {
+	"NETFX.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.Default",
 		"TraceLevel": "Info"
@@ -86,7 +70,7 @@
 		"TraceLevel": "Info"
 	},
 
-	"NET70.Azure": {
+	"NET80.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"

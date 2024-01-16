@@ -7,17 +7,17 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.Tools.xml</DocumentationFile>
 		
 		<!--published targets-->
-		<TargetFrameworks>net45;net46;netstandard2.0</TargetFrameworks>
-		<!--add test-only targets separately for better visibility-->
-		<TargetFrameworks>$(TargetFrameworks);net472;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Humanizer.Core" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
-
-		<PackageReference Include="Humanizer.Core" />
 
 		<None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>

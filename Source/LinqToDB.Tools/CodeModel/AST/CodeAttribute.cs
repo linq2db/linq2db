@@ -19,8 +19,8 @@ namespace LinqToDB.CodeModel
 			IEnumerable<CodeNamedParameter>? namedParameters)
 		{
 			Type             = type;
-			_parameters      = new (parameters      ?? Array<ICodeExpression>   .Empty);
-			_namedParameters = new (namedParameters ?? Array<CodeNamedParameter>.Empty);
+			_parameters      = new (parameters      ?? []);
+			_namedParameters = new (namedParameters ?? []);
 		}
 
 		public CodeAttribute(IType type)

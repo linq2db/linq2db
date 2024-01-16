@@ -10,10 +10,7 @@ namespace LinqToDB.Data
 	/// <summary>
 	/// Disposable wrapper over <see cref="DbDataReader"/> instance, which properly disposes associated objects.
 	/// </summary>
-	public class DataReaderWrapper : IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public class DataReaderWrapper : IDisposable, IAsyncDisposable
 	{
 		private          bool            _disposed;
 		private readonly DataConnection? _dataConnection;
@@ -67,7 +64,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 		public async ValueTask DisposeAsync()
 		{
 			if (_disposed)
@@ -94,7 +91,7 @@ namespace LinqToDB.Data
 					await Command.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
-#elif !NETFRAMEWORK
+#else
 		public ValueTask DisposeAsync()
 		{
 			Dispose();

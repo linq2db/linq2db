@@ -41,7 +41,7 @@ namespace LinqToDB.SqlQuery
 				return null;
 
 			if (elements.Length == 0)
-				return Array<T>.Empty;
+				return [];
 
 			var newArr = new T[elements.Length];
 
@@ -265,10 +265,7 @@ namespace LinqToDB.SqlQuery
 						throw new InvalidOperationException("Cte is null");
 
 					// TODO: children Clone called before _objectTree update (original cloning logic)
-					var table = new SqlCteTable(
-							cteTable,
-							Array<SqlField>.Empty,
-							Clone(cteTable.Cte))
+					var table = new SqlCteTable(cteTable, [], Clone(cteTable.Cte))
 					{
 						Alias        = cteTable.Alias,
 						TableName    = cteTable.TableName,
@@ -472,7 +469,7 @@ namespace LinqToDB.SqlQuery
 					var expr = (SqlObjectExpression)(IQueryElement)element;
 					// TODO: children Clone called before _objectTree update (original cloning logic)
 					// TODO: SqlInfo in AST?
-					var newInfoParameters = expr.InfoParameters.Length > 0 ? new SqlInfo[expr.InfoParameters.Length] : Array<SqlInfo>.Empty;
+					var newInfoParameters = expr.InfoParameters.Length > 0 ? new SqlInfo[expr.InfoParameters.Length] : [];
 					for (var i = 0; i < newInfoParameters.Length; i++)
 						newInfoParameters[i] = expr.InfoParameters[i].WithSql(Clone(expr.InfoParameters[i].Sql));
 

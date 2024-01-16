@@ -131,7 +131,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool HasCalculatedMembers => CalculatedMembers != null && CalculatedMembers.Count > 0;
 
-		private InheritanceMapping[] _inheritanceMappings = Array<InheritanceMapping>.Empty;
+		private InheritanceMapping[] _inheritanceMappings = [];
 		/// <summary>
 		/// Gets list of inheritance mapping descriptors for current entity.
 		/// </summary>

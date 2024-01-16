@@ -50,7 +50,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test2([DataSources(TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
-			var harnessIds = Array<int>.Empty;
+			var harnessIds = Array.Empty<int>();
 
 			using (var db = GetDataContext(context))
 				db.GetTable<Parent>()

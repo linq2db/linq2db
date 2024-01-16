@@ -1238,7 +1238,7 @@ namespace Tests.Data
 				context == ProviderName.SapHanaOdbc            ||
 				context == ProviderName.SqlCe                  ||
 				context == ProviderName.Sybase                 ||
-#if !NET472
+#if !NETFRAMEWORK
 				context.IsAnyOf(TestProvName.AllOracleManaged) ||
 				context.IsAnyOf(TestProvName.AllOracleDevart)  ||
 				context.IsAnyOf(ProviderName.SapHanaNative)    ||
@@ -1882,7 +1882,7 @@ namespace Tests.Data
 			}
 		}
 
-#if !NET472
+#if !NETFRAMEWORK
 		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task MARS_SupportedAsync(

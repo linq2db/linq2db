@@ -82,11 +82,7 @@ namespace LinqToDB.Linq
 			var query = GetQuery(ref expression, false, out _);
 
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#if !NATIVE_ASYNC
-			await using var tr = transaction;
-#else
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#endif
 
 			Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -170,11 +166,7 @@ namespace LinqToDB.Linq
 			var query = GetQuery(ref expression, false, out _);
 
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#if !NATIVE_ASYNC
-			await using var tr = transaction;
-#else
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#endif
 
 			Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -192,11 +184,7 @@ namespace LinqToDB.Linq
 				Expression = expression;
 
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#if !NATIVE_ASYNC
-			await using var _ = transaction;
-#else
 			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#endif
 
 			Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
 				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

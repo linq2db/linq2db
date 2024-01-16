@@ -460,7 +460,7 @@ namespace LinqToDB.Expressions
 					var parameters = mi.GetParameters();
 
 					if (parameters.Length == 0)
-						return Array<bool>.Empty;
+						return [];
 
 					var flags = new bool[parameters.Length];
 

@@ -16,8 +16,6 @@ using LinqToDB.SchemaProvider;
 using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
 
-using Microsoft.FSharp.Core;
-
 using NUnit.Framework;
 
 namespace Tests.DataProvider
@@ -365,7 +363,7 @@ namespace Tests.DataProvider
 			public DbConnection CreateConnection(string connectionString) => _baseProvider.CreateConnection(connectionString);
 			public ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions) => _baseProvider.CreateSqlBuilder(mappingSchema, dataOptions);
 			public void DisposeCommand(DbCommand command) => _baseProvider.DisposeCommand(command);
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			public ValueTask DisposeCommandAsync(DbCommand command) => _baseProvider.DisposeCommandAsync(command);
 #endif
 			public IExecutionScope? ExecuteScope(DataConnection dataConnection) => _baseProvider.ExecuteScope(dataConnection);

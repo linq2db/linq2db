@@ -50,7 +50,7 @@ namespace LinqToDB.Common
 			if (!from.IsNullable() || to != from.UnwrapNullableType())
 				return null;
 
-			var mi = from.GetMethod("GetValueOrDefault", BindingFlags.Instance | BindingFlags.Public, null, Array<Type>.Empty, null);
+			var mi = from.GetMethod("GetValueOrDefault", BindingFlags.Instance | BindingFlags.Public, null, [], null);
 
 			if (mi == null)
 				return null;
@@ -192,7 +192,7 @@ namespace LinqToDB.Common
 		{
 			if (to == typeof(string) && !from.IsNullable())
 			{
-				var mi = from.GetMethodEx("ToString", Array<Type>.Empty);
+				var mi = from.GetMethodEx("ToString", []);
 				return mi != null ? Expression.Call(p, mi) : null;
 			}
 

@@ -133,7 +133,7 @@ namespace Tests
 			// Configuration.Linq.GenerateExpressionTest  = true;
 			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 
-#if NET472
+#if NETFRAMEWORK
 			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
 			try
 			{
@@ -159,14 +159,12 @@ namespace Tests
 			var userDataProvidersJson =
 				File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-#if NETCOREAPP3_1
-			var configName = "CORE31";
-#elif NET6_0
+#if NET6_0
 			var configName = "NET60";
-#elif NET7_0
-			var configName = "NET70";
-#elif NET472
-			var configName = "NET472";
+#elif NET8_0
+			var configName = "NET80";
+#elif NETFRAMEWORK
+			var configName = "NETFX";
 #else
 #error Unknown framework
 #endif
@@ -188,8 +186,8 @@ namespace Tests
 			CopyDatabases();
 
 			DisableRemoteContext = testSettings.DisableRemoteContext == true;
-			UserProviders        = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
-			SkipCategories       = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			UserProviders        = new HashSet<string>(testSettings.Providers ?? [], StringComparer.OrdinalIgnoreCase);
+			SkipCategories       = new HashSet<string>(testSettings.Skip      ?? [], StringComparer.OrdinalIgnoreCase);
 
 			var logLevel = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
@@ -206,7 +204,7 @@ namespace Tests
 			TestContext.WriteLine("Connection strings:");
 			TestExternals.Log("Connection strings:");
 
-#if !NET472
+#if !NETFRAMEWORK
 			TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
 			foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
@@ -253,12 +251,12 @@ namespace Tests
 			if (!string.IsNullOrEmpty(DefaultProvider))
 			{
 				DataConnection.DefaultConfiguration = DefaultProvider;
-#if !NET472
+#if !NETFRAMEWORK
 				TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 			}
 
-#if NET472
+#if NETFRAMEWORK
 			LinqToDB.Remote.LinqService.TypeResolver = str =>
 			{
 				return str switch
@@ -370,7 +368,7 @@ namespace Tests
 
 		public static readonly IReadOnlyList<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
-#if NET472
+#if NETFRAMEWORK
 			// test providers with .net framework provider only
 			ProviderName.Sybase,
 			TestProvName.AllOracleNative,

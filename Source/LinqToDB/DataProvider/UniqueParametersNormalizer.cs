@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider
 
 			if (badIdx != -1)
 			{
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
 				// allocate memory on the stack if possible, and prepopulate it with the original string
 				Span<char> newName = name.Length < 500 ? stackalloc char[name.Length] : name.ToCharArray();
 				if (name.Length < 500)
@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider
 
 				if (newNameLength > 0)
 				{
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
 					name = new string(newName.Slice(0, newNameLength));
 #else
 					name = new string(newName, 0, newNameLength);
@@ -83,7 +83,7 @@ namespace LinqToDB.DataProvider
 
 		protected virtual bool IsValidFirstCharacter(char chr)
 		{
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			return char.IsAsciiLetter(chr);
 #else
 			return chr is >= 'a' and <= 'z'
@@ -93,7 +93,7 @@ namespace LinqToDB.DataProvider
 
 		protected virtual bool IsValidCharacter(char chr)
 		{
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			return chr == '_' || char.IsAsciiLetterOrDigit(chr);
 #else
 			return chr == '_'

@@ -27,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 
 				var disableFilters = methodCall.Arguments[0] is not MethodCallExpression mc || mc.Method.Name != nameof(LinqExtensions.AsCte);
 				if (disableFilters)
-					builder.PushDisabledQueryFilters(Array<Type>.Empty);
+					builder.PushDisabledQueryFilters([]);
 
 				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()) { AssociationsAsSubQueries = true });
 

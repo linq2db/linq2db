@@ -1,4 +1,4 @@
-﻿<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\linq2db.Tests.Base.dll" #>
+﻿<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net462\linq2db.Tests.Base.dll" #>
 <#@ import namespace="System"                                                        #>
 <#@ import namespace="System.IO"                                                     #>
 <#@ import namespace="System.Diagnostics"                                            #>
@@ -9,7 +9,7 @@
 	string GetConnectionString(string config)
 	{
 		var settings = Tests.Tools.SettingsReader.Deserialize(
-			"NET472",
+			"NETFX",
 			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\DataProviders.json")),
 			System.IO.File.ReadAllText(Host.ResolvePath(@"..\..\UserDataProviders.json")));
 

@@ -239,18 +239,10 @@ namespace LinqToDB.Data
 
 			InitCommand();
 
-#if !NATIVE_ASYNC
-			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#else
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 			{
-#if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 					while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 						action(objectReader(rd.DataReader!));
 			}
@@ -424,18 +416,10 @@ namespace LinqToDB.Data
 
 			InitCommand();
 
-#if !NATIVE_ASYNC
-			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#else
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 			{
-#if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 				{
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
@@ -584,23 +568,15 @@ namespace LinqToDB.Data
 
 			T result;
 
-#if !NATIVE_ASYNC
-			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#else
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 			{
-#if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
-			{
+				{
 					result = await ReadMultipleResultSetsAsync<T>(rd.DataReader!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 					SetRebindParameters(rd);
-			}
+				}
 			}
 
 			return result;
@@ -756,19 +732,11 @@ namespace LinqToDB.Data
 			{
 			}
 
-#if !NATIVE_ASYNC
-			public Task DisposeAsync() => TaskEx.CompletedTask;
-#else
 			public ValueTask DisposeAsync() => default;
-#endif
 
 			public T Current { get; private set; } = default!;
 
-#if !NATIVE_ASYNC
-			public async Task<bool> MoveNextAsync()
-#else
 			public async ValueTask<bool> MoveNextAsync()
-#endif
 			{
 				if (_isFinished)
 					return false;
@@ -1093,18 +1061,10 @@ namespace LinqToDB.Data
 
 			T result = default!;
 
-#if !NATIVE_ASYNC
-			using (DataConnection.DataProvider.ExecuteScope(DataConnection))
-#else
 			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 			{
-#if NETSTANDARD2_1PLUS
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#endif
 				{
 					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
@@ -1337,15 +1297,8 @@ namespace LinqToDB.Data
 
 				if (parameter.Direction != null) p.Direction =       parameter.Direction.Value;
 				if (parameter.Size      != null) p.Size      =       parameter.Size     .Value;
-#if NET45
-#pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
-				if (parameter.Precision != null) ((IDbDataParameter)p).Precision = (byte)parameter.Precision.Value;
-				if (parameter.Scale     != null) ((IDbDataParameter)p).Scale     = (byte)parameter.Scale    .Value;
-#pragma warning restore RS0030 // API missing from DbParameter in NET 4.5
-#else
 				if (parameter.Precision != null) p.Precision = (byte)parameter.Precision.Value;
 				if (parameter.Scale     != null) p.Scale     = (byte)parameter.Scale    .Value;
-#endif
 
 				// we don't normalize parameter names here as they are passed from user code and it is user's responsibility
 				// to pass correct names. And we cannot add normalization as it will be breaking change for existing users

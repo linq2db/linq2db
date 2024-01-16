@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
@@ -307,7 +308,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(Array<TestMapping1>.Empty)
+					.Using(Array.Empty<TestMapping1>())
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
@@ -399,7 +400,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(Array<TestMapping1>.Empty)
+					.Using(Array.Empty<TestMapping1>())
 					.On((t, s) => t.Id == s.Id && s.Field3 != null)
 					.InsertWhenNotMatched()
 					.Merge();
@@ -1320,7 +1321,7 @@ namespace Tests.xUpdate
 
 				var rows = table
 					.Merge()
-					.Using(Array<TestMapping2>.Empty)
+					.Using(Array.Empty<TestMapping2>())
 					.On((t, s) => t.Id == s.OtherId)
 					.InsertWhenNotMatched(s => new TestMapping1()
 					{

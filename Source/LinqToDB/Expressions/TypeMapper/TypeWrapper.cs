@@ -47,7 +47,7 @@ namespace LinqToDB.Expressions
 		protected TypeWrapper(object instance, Delegate[]? wrappers)
 		{
 			instance_        = instance;
-			CompiledWrappers = wrappers ?? Array<Delegate>.Empty;
+			CompiledWrappers = wrappers ?? [];
 		}
 
 		/// <summary>

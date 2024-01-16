@@ -41,7 +41,7 @@ namespace LinqToDB.DataProvider
 		/// <returns>Initialized command instance.</returns>
 		DbCommand          InitCommand           (DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
 		void               DisposeCommand        (DbCommand command);
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 		ValueTask          DisposeCommandAsync   (DbCommand command);
 #endif
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
@@ -76,14 +76,12 @@ namespace LinqToDB.DataProvider
 			CancellationToken cancellationToken)
 		where T : notnull;
 
-#if NATIVE_ASYNC
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			DataOptions         options,
 			ITable<T>           table,
 			IAsyncEnumerable<T> source,
 			CancellationToken   cancellationToken)
 		where T: notnull;
-#endif
 
 		/// <summary>
 		/// Returns instance of <see cref="IQueryParametersNormalizer"/>, which implements normalization logic for parameters of single query.
