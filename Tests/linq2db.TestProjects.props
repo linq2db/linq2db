@@ -4,7 +4,8 @@
 
 	<PropertyGroup>
 		<!--CS0649: field is never assigned-->
-		<NoWarn>$(NoWarn);CS0649</NoWarn>
+		<!--CS8012: Referenced assembly targets a different processor (for CI builds)-->
+		<NoWarn>$(NoWarn);CS0649;CS8012</NoWarn>
 
 		<SignAssembly>True</SignAssembly>
 		<AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)/../Build/linq2db.snk</AssemblyOriginatorKeyFile>
