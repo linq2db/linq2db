@@ -157,7 +157,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-
 		[Test]
 		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
 		{
@@ -181,10 +180,18 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-					Assert.Fail("Task should have been canceled but was not");
+					if (!context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Task should have been canceled but was not");
+					}
 				}
-				catch (OperationCanceledException) { }
-
+				catch (OperationCanceledException)
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Update test. MySql.Data developers evolved");
+					}
+				}
 
 				var tableExists = true;
 				try
@@ -226,9 +233,18 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-					Assert.Fail("Task should have been canceled but was not");
+					if (!context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Task should have been canceled but was not");
+					}
 				}
-				catch (OperationCanceledException) { }
+				catch (OperationCanceledException)
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("oracle fixed something, update test code");
+					}
+				}
 
 				var tableExists = true;
 				try

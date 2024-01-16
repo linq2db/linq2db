@@ -58,15 +58,16 @@
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.1000.6"           />
 		<PackageVersion Include="MySqlConnector"                                        Version="2.3.4"                />
 		<PackageVersion Include="MySql.Data"                                            Version="8.3.0"                />
-		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="7.0.0.300"            />
-		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="7.0.0.300"            />
-		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="7.0.0.300"            />
+		<!--7.0.0.300 version crashes process at least under ubuntu-->
+		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="7.0.0.200"            />
+		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="7.0.0.200"            />
+		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="7.0.0.200"            />
 		<PackageVersion Include="Npgsql"                                                Version="8.0.1"                />
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="3.1.1"                />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.13.0"              />
-		<!--3.21 provider currently contains bug which leads to test failures with oracle 12+-->
-		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.220"             />-->
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.130"             />
+		<!--3.21 provider branch contains bug which leads to random test failures with oracle 12+ with cursors-->
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.220"             />
+		<!--<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="3.21.130"             />-->
 		<PackageVersion Include="System.Data.Odbc"                                      Version="8.0.0"                />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="8.0.0"                />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.6"                />
