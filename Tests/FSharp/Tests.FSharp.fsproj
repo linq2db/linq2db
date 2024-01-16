@@ -19,6 +19,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
+
+		<PackageReference Include="FSharp.Core" />
 	</ItemGroup>
 
 </Project>
