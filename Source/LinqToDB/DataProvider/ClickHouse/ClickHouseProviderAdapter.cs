@@ -404,6 +404,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>>)((ClickHouseBulkCopy this_, IDataReader dataReader, CancellationToken cancellationToken) => this_.WriteToServerAsync(dataReader, cancellationToken)), true),
 					// [9]: InitAsync
 					new Tuple<LambdaExpression, bool>((Expression<Func<ClickHouseBulkCopy, Task>>)((ClickHouseBulkCopy this_) => this_.InitAsync()), false),
+					// [10]: ColumnNames { set; }
+					new Tuple<LambdaExpression, bool>(PropertySetter((ClickHouseBulkCopy this_) => this_.ColumnNames), false),
 				};
 
 				public ClickHouseBulkCopy(object instance, Delegate[] wrappers) : base(instance, wrappers)
@@ -413,9 +415,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				public ClickHouseBulkCopy(ClickHouseConnection connection) => throw new NotImplementedException();
 
 				void IDisposable.Dispose() => ((Action<ClickHouseBulkCopy>)CompiledWrappers[0])(this);
-
-				public bool HasInitAsync => CompiledWrappers[9] != null;
-				public Task InitAsync() => ((Func<ClickHouseBulkCopy, Task>)CompiledWrappers[9])(this);
 
 				public int BatchSize
 				{
@@ -439,10 +438,18 @@ namespace LinqToDB.DataProvider.ClickHouse
 				{
 					get => ((Func<ClickHouseBulkCopy, long>)CompiledWrappers[7])(this);
 				}
-
 #pragma warning disable RS0030 // API mapping must preserve type
 				public Task WriteToServerAsync(IDataReader dataReader, CancellationToken cancellationToken) => ((Func<ClickHouseBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[8])(this, dataReader, cancellationToken);
 #pragma warning restore RS0030 //  API mapping must preserve type
+
+				// 6.8.0+
+				public bool HasInitAsync => CompiledWrappers[9] != null;
+				public Task InitAsync() => ((Func<ClickHouseBulkCopy, Task>)CompiledWrappers[9])(this);
+				public IReadOnlyCollection<string> ColumnNames
+				{
+					get => throw new InvalidOperationException($"get_ColumnNames is not mapped");
+					set => ((Action<ClickHouseBulkCopy, IReadOnlyCollection<string>>)CompiledWrappers[10])(this, value);
+				}
 			}
 		}
 
