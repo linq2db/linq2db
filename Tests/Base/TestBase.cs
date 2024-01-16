@@ -74,7 +74,7 @@ namespace Tests
 
 		private static string? _baselinesPath;
 
-		protected static string? LastQuery;
+		protected static string? LastQuery { get; set; }
 
 		static TestBase()
 		{
@@ -1216,6 +1216,7 @@ namespace Tests
 			bool allowEmpty = false)
 		{
 			var resultList   = result.  Select(fixSelector).ToList();
+			var lastQuery    = LastQuery;
 			var expectedList = expected.Select(fixSelector).ToList();
 
 			if (sort != null)
@@ -1251,6 +1252,8 @@ namespace Tests
 
 			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
 			Assert.AreEqual(0, exceptResult  , $"Expect Result{Environment.NewLine}{message}");
+
+			LastQuery = lastQuery;
 		}
 
 		protected void AreEqual<T>(IEnumerable<IEnumerable<T>> expected, IEnumerable<IEnumerable<T>> result)
