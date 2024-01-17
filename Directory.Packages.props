@@ -31,7 +31,7 @@
 		<!--data providers-->
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"        />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.6"         />
-		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.1.2"         />
+		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.1.4"         />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.11.0"       />
 		<!--3.21 provider currently contains bug which leads to test failures with oracle 12+-->
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.200"      />
