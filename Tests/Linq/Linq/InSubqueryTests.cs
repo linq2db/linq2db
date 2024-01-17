@@ -86,7 +86,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			AssertTest(db, preferExists, true,
+			AreEqual(
 				from c in Child
 				where c.ParentID.In(Parent.Select(p => p.ParentID).Take(100))
 				select c
@@ -94,6 +94,9 @@ namespace Tests.Linq
 				from c in db.Child
 				where c.ParentID.In(db.Parent.Select(p => p.ParentID).Take(100))
 				select c);
+
+			if (compareNullsAsValues == false)
+				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
 		}
 
 		[Test]
