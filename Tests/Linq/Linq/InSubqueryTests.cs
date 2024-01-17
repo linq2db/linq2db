@@ -37,7 +37,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void InTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
@@ -52,7 +52,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InTest2([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void InTest2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
@@ -67,7 +67,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InConstTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void InConstTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
@@ -82,7 +82,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InWithTakeTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void InWithTakeTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
@@ -97,37 +97,43 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ObjectInTest([DataSources(TestProvName.AllClickHouse)] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void ObjectInTest([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			AssertTest(db, preferExists, true,
+			AreEqual(
 				from c in Child
-				where new { c.ParentID, Value = c.ParentID }.In(Parent.Select(p => new { p.ParentID, p.Value1!.Value }))
+				where new { c.ParentID, Value = c.ParentID }.In(Parent.Select(p => new { p.ParentID, Value = p.Value1 ?? -1 }))
 				select c
 				,
 				from c in db.Child
-				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, p.Value1!.Value }))
+				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, Value = p.Value1 ?? -1 }))
 				select c);
+
+			if (compareNullsAsValues == false)
+				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
 		}
 
 		[Test]
-		public void ObjectInWithTakeTest([DataSources(TestProvName.AllClickHouse)] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void ObjectInWithTakeTest([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
-			AssertTest(db, preferExists, true,
+			AreEqual(
 				from c in Child
-				where new { c.ParentID, Value = c.ParentID }.In(Parent.Select(p => new { p.ParentID, p.Value1!.Value }).Take(100))
+				where new { c.ParentID, Value = c.ParentID }.In(Parent.Select(p => new { p.ParentID, Value = p.Value1 ?? 0 }).Take(100))
 				select c
 				,
 				from c in db.Child
-				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, p.Value1!.Value }).Take(100))
+				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, Value = p.Value1!.Value }).Take(100))
 				select c);
+
+			if (compareNullsAsValues == false)
+				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
 		}
 
 		[Test]
-		public void ContainsTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void ContainsTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
@@ -145,7 +151,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsExprTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void ContainsExprTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
@@ -157,7 +163,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsNullTest([DataSources] string context, [Values(true, false)] bool preferExists)
+		public void ContainsNullTest([DataSources] string context, [Values] bool preferExists)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(preferExists)));
 
@@ -165,7 +171,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NotNull_In_NotNull_Test([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void NotNull_In_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
@@ -178,7 +184,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NotNull_NotIn_NotNull_Test([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void NotNull_NotIn_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
@@ -191,7 +197,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Null_In_NotNull_Test([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void Null_In_NotNull_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
@@ -204,7 +210,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Null_NotIn_NotNull_Test1([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void Null_NotIn_NotNull_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
@@ -217,7 +223,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Null_NotIn_NotNull_Test2([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void Null_NotIn_NotNull_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
@@ -230,7 +236,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NotNull_In_Null_Test([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void NotNull_In_Null_Test([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
@@ -243,7 +249,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Null_In_Null_Test1([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void Null_In_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues)
 				.UseBulkCopyType(BulkCopyType.MultipleRows));
@@ -257,7 +263,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Null_In_Null_Test2([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void Null_In_Null_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
@@ -270,7 +276,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Null_In_Null_Test3([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void Null_In_Null_Test3([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
@@ -283,40 +289,40 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Null_NotIn_Null_Test1([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void Null_NotIn_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6, null }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
+			AssertTest(db, preferExists, compareNullsAsValues,
 				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
 				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
 		}
 
 		[Test]
-		public void Null_NotIn_Null_Test2([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void Null_NotIn_Null_Test2([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
-			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5       }.Select(i => new { ID = i }));
-			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6, null }.Select(i => new { ID = i }));
+			using var t1 = db.CreateLocalTable("test_in_1", ((int?[])[ 1, 3, 4, 5       ]).Select(i => new { ID = i }));
+			using var t2 = db.CreateLocalTable("test_in_2", ((int?[])[ 1, 2, 4, 6, null ]).Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
+			AssertTest(db, preferExists, compareNullsAsValues,
 				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
 				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
 		}
 
 		[Test]
-		public void Null_NotIn_Null_Test3([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
+		public void Null_NotIn_Null_Test3([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNullsAsValues(compareNullsAsValues));
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, 4, 5, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, 4, 6       }.Select(i => new { ID = i }));
 
-			AssertTest(db, preferExists, true,
+			AssertTest(db, preferExists, compareNullsAsValues,
 				t1.ToList().Where(t => t.ID.NotIn(t2.ToList().Select(p => p.ID))),
 				t1.         Where(t => t.ID.NotIn(t2.         Select(p => p.ID))));
 		}
