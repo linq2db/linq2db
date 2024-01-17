@@ -4,7 +4,7 @@
 
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
-	
+
 	IMPORTANT:
 	avoid use of different package versions in tests for different frameworks just for testing purposes if package referenced by source project
 	as it will result in old package consumed by released package and affect users (especially for projects where user has no control
@@ -30,7 +30,7 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.7.0"         />
 		<!--data providers-->
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"        />
-		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.5"         />
+		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.6"         />
 		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.1.1"         />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.11.0"       />
 		<!--3.21 provider currently contains bug which leads to test failures with oracle 12+-->
