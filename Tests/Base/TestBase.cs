@@ -187,8 +187,9 @@ namespace Tests
 
 			CopyDatabases();
 
-			UserProviders  = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
-			SkipCategories = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			DisableRemoteContext = testSettings.DisableRemoteContext == true;
+			UserProviders        = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+			SkipCategories       = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
 
 			var logLevel = testSettings.TraceLevel;
 			var traceLevel = TraceLevel.Info;
@@ -362,6 +363,7 @@ namespace Tests
 		public static          IServerContainer  _serverContainer = new GrpcServerContainer();
 #endif
 
+		public static readonly bool            DisableRemoteContext;
 		public static readonly HashSet<string> UserProviders;
 		public static readonly string?         DefaultProvider;
 		public static readonly HashSet<string> SkipCategories;
@@ -391,7 +393,7 @@ namespace Tests
 			TestProvName.AllClickHouse
 		}.SplitAll()).ToList();
 
-		private const string LinqServiceSuffix = ".LinqService";
+		public const string LinqServiceSuffix = ".LinqService";
 
 		protected ITestDataContext GetDataContext(
 			string         configuration,
@@ -400,29 +402,29 @@ namespace Tests
 			IInterceptor?  interceptor              = null,
 			bool           suppressSequentialAccess = false)
 		{
-			if (!configuration.EndsWith(LinqServiceSuffix))
+			if (!configuration.IsRemote())
 			{
 				return GetDataConnection(configuration, ms, interceptor, suppressSequentialAccess: suppressSequentialAccess);
 			}
 
-			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+			var str = configuration.StripRemote();
 			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str, null);
 		}
 
 		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
 		{
-			if (!configuration.EndsWith(LinqServiceSuffix))
+			if (!configuration.IsRemote())
 			{
 				return GetDataConnection(configuration, dbOptionsBuilder);
 			}
 
-			var str = configuration.Substring(0, configuration.Length - LinqServiceSuffix.Length);
+			var str = configuration.StripRemote();
 			return _serverContainer.Prepare(null, null, false, str, dbOptionsBuilder);
 		}
 
 		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
 		{
-			if (configuration.EndsWith(LinqServiceSuffix))
+			if (configuration.IsRemote())
 			{
 				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 			}
@@ -468,7 +470,7 @@ namespace Tests
 			IRetryPolicy?  retryPolicy              = null,
 			bool           suppressSequentialAccess = false)
 		{
-			if (configuration.EndsWith(".LinqService"))
+			if (configuration.IsRemote())
 			{
 				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 			}
@@ -503,7 +505,7 @@ namespace Tests
 
 		protected TestDataConnection GetDataConnection(DataOptions options)
 		{
-			if (options.ConnectionOptions.ConfigurationString?.EndsWith(".LinqService") == true)
+			if (options.ConnectionOptions.ConfigurationString?.IsRemote() == true)
 				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 
 			if (options.ConnectionOptions.ConfigurationString?.IsAnyOf(TestProvName.AllMariaDB) == true)
@@ -1392,8 +1394,8 @@ namespace Tests
 
 		protected static string GetProviderName(string context, out bool isLinqService)
 		{
-			isLinqService = context.EndsWith(".LinqService");
-			return context.Replace(".LinqService", "");
+			isLinqService = context.IsRemote();
+			return context.StripRemote();
 		}
 
 		[SetUp]
@@ -1535,7 +1537,7 @@ namespace Tests
 		{
 			lock (_dic)
 			{
-				context = context.Replace(".LinqService", "");
+				context = context.StripRemote();
 
 				if (!_dic.TryGetValue(context, out var list))
 				{
