@@ -93,8 +93,8 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see SQLite_2
+          enable_fw_net80: false # see SQLite_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -109,8 +109,8 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net60: false # reduce test time
+          enable_fw_netfx: false # see SQLite_2
+          enable_fw_net60: true
           enable_fw_net80: true
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
@@ -127,8 +127,8 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see SQLiteExtras_2
+          enable_fw_net80: false # see SQLiteExtras_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
@@ -143,7 +143,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see SQLiteExtras_1
           enable_fw_net60: true
           enable_fw_net80: true
           is_experimental: false
@@ -160,8 +160,8 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see Access_MDB_2
+          enable_fw_net80: false # see Access_MDB_2
           is_experimental: false
           x86: true
           extra: --arch x86
@@ -176,7 +176,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see Access_MDB_1
           enable_fw_net60: false # reduce test time
           enable_fw_net80: true
           is_experimental: false
@@ -195,8 +195,8 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see Access_ACE_2
+          enable_fw_net80: false # see Access_ACE_2
           is_experimental: false
           x86: true
           extra: --arch x86
@@ -212,7 +212,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see Access_ACE_1
           enable_fw_net60: false # reduce test time
           enable_fw_net80: true
           is_experimental: false
@@ -440,8 +440,8 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see SqlServer2005_2
+          enable_fw_net80: false # see SqlServer2005_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -455,7 +455,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see SqlServer2005_1
           enable_fw_net60: false # reduce test time
           enable_fw_net80: true
           is_experimental: false
@@ -472,8 +472,8 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see SqlServer2008_2
+          enable_fw_net80: false # see SqlServer2008_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -487,7 +487,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see SqlServer2008_1
           enable_fw_net60: false # reduce test time
           enable_fw_net80: true
           is_experimental: false
@@ -504,8 +504,8 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see SqlServer2012_2
+          enable_fw_net80: false # see SqlServer2012_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -519,7 +519,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see SqlServer2012_1
           enable_fw_net60: false # reduce test time
           enable_fw_net80: true
           is_experimental: false
@@ -536,8 +536,8 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
-          enable_fw_net60: false # reduce test time
-          enable_fw_net80: true
+          enable_fw_net60: false # see SqlServer2014_2
+          enable_fw_net80: false # see SqlServer2014_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -551,7 +551,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see SqlServer2014_1
           enable_fw_net60: false # reduce test time
           enable_fw_net80: true
           is_experimental: false
@@ -589,8 +589,8 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos: true
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see SqlServer2017_2
+          enable_fw_net80: false # see SqlServer2017_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
@@ -609,7 +609,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: true
           enable_os_macos: true
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see SqlServer2017_1
           enable_fw_net60: false # reduce test time
           enable_fw_net80: true
           is_experimental: false
@@ -631,8 +631,8 @@ jobs:
           enable_os_ubuntu: true
           enable_os_macos:  true
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see SqlServer2019_2
+          enable_fw_net80: false # see SqlServer2019_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
@@ -651,7 +651,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: true
           enable_os_macos:  true
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see SqlServer2019_1
           enable_fw_net60: true
           enable_fw_net80: true
           is_experimental: false
@@ -670,8 +670,8 @@ jobs:
           enable_os_ubuntu: false
           enable_os_macos:  false
           enable_fw_netfx: true
-          enable_fw_net60: false
-          enable_fw_net80: true
+          enable_fw_net60: false # see SqlServer2019Extras_2
+          enable_fw_net80: false # see SqlServer2019Extras_2
           is_experimental: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
@@ -686,7 +686,7 @@ jobs:
           enable_os_windows: true
           enable_os_ubuntu: false
           enable_os_macos:  false
-          enable_fw_netfx: false
+          enable_fw_netfx: false # see SqlServer2019Extras_1
           enable_fw_net60: false # reduce test time
           enable_fw_net80: true
           is_experimental: false
