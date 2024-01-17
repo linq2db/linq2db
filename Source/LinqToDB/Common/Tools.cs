@@ -111,12 +111,14 @@ namespace LinqToDB.Common
 				catch {}
 			}
 
+#if !NETSTANDARD2_0
 			try
 			{
 				if (providerFactory != null)
 					return DbProviderFactories.GetFactory(providerFactory).GetType().Assembly;
 			}
 			catch {}
+#endif
 
 			return null;
 		}

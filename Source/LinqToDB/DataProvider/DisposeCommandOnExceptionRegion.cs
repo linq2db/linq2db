@@ -18,7 +18,9 @@ namespace LinqToDB
 		{
 			// https://stackoverflow.com/questions/2830073/
 			if (
+#if !NETSTANDARD2_0
 				Marshal.GetExceptionPointers() != IntPtr.Zero ||
+#endif
 #pragma warning disable CS0618 // GetExceptionCode obsolete
 				Marshal.GetExceptionCode() != 0)
 #pragma warning restore CS0618
@@ -29,7 +31,9 @@ namespace LinqToDB
 		{
 			// https://stackoverflow.com/questions/2830073/
 			if (
+#if !NETSTANDARD2_0
 				Marshal.GetExceptionPointers() != IntPtr.Zero ||
+#endif
 #pragma warning disable CS0618 // GetExceptionCode obsolete
 				Marshal.GetExceptionCode() != 0)
 #pragma warning restore CS0618

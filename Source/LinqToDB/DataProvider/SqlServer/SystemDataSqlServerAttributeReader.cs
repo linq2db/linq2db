@@ -104,12 +104,9 @@ namespace LinqToDB.Metadata
 			MappingAttribute[]? result = null;
 			if (memberInfo.IsMethodEx() || memberInfo.IsPropertyEx())
 			{
-#if NETFRAMEWORK
-#else
-#endif
 				result = _cache.GetOrAdd(
 					(memberInfo, _sqlMethodAttribute),
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD2_0
 					key =>
 					{
 						var nameGetter = _methodNameGetter;
@@ -168,7 +165,7 @@ namespace LinqToDB.Metadata
 						}
 
 						return [];
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD2_0
 					});
 #else
 					}, _methodNameGetter);
@@ -177,7 +174,7 @@ namespace LinqToDB.Metadata
 
 			var res = _cache.GetOrAdd(
 				(memberInfo, _sqlUserDefinedTypeAttribute),
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD2_0
 				key =>
 				{
 					var nameGetter = _typeNameGetter;
@@ -200,7 +197,7 @@ namespace LinqToDB.Metadata
 					}
 
 					return [];
-#if NETFRAMEWORK
+#if NETFRAMEWORK || NETSTANDARD2_0
 				});
 #else
 				}, _typeNameGetter);

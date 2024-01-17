@@ -18,6 +18,10 @@
 				<dependency id="linq2db"                       version="6.0.0"    />
 				<dependency id="Oracle.ManagedDataAccess"      version="21.13.0"  />
 			</group>
+			<group targetFramework="netstandard2.0">
+				<dependency id="linq2db"                       version="6.0.0"    />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="2.19.220" />
+			</group>
 			<group targetFramework="net6.0">
 				<dependency id="linq2db"                       version="6.0.0"    />
 				<dependency id="Oracle.ManagedDataAccess.Core" version="3.21.130" />
