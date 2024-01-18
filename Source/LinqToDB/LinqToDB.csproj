@@ -126,5 +126,10 @@
 		<PackageReference Include="System.ComponentModel.Annotations" />
 		<PackageReference Include="System.Data.DataSetExtensions" />
 	</ItemGroup>
-	
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
+	</ItemGroup>
+
 </Project>
