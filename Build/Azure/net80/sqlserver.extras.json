@@ -1,9 +1,11 @@
 ﻿{
 	"NET80.Azure": {
 		"Providers": [
-			"SqlServer.SA",
+			// disable to shorten test execution time
+			//"SqlServer.SA",
 			"SqlServer.SA.MS",
-			"SqlServer.Contained",
+			// disable to shorten test execution time
+			//"SqlServer.Contained",
 			"SqlServer.Contained.MS"
 		]
 	}
