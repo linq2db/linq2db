@@ -100,7 +100,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ObjectInTest([DataSources(TestProvName.AllClickHouse)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void ObjectInTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
@@ -136,7 +136,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsTest([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
+		public void ContainsTest([DataSources(TestProvName.AllAccess)] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
