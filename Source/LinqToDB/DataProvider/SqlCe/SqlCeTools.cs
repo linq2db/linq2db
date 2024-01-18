@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => SqlCeOptions.Default.BulkCopyType;
-			set => SqlCeOptions.Default = SqlCeOptions.Default with { BulkCopyType = value };
+			set => SqlCeOptions.Default = new SqlCeOptions(SqlCeOptions.Default) { BulkCopyType = value };
 		}
 
 		#endregion

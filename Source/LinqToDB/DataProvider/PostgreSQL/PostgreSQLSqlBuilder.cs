@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode
 		{
 			get => PostgreSQLOptions.Default.IdentifierQuoteMode;
-			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { IdentifierQuoteMode = value };
+			set => PostgreSQLOptions.Default = new PostgreSQLOptions(PostgreSQLOptions.Default) { IdentifierQuoteMode = value };
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)

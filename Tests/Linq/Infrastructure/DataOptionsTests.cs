@@ -22,8 +22,8 @@ namespace Tests.Infrastructure
 		[Test]
 		public void LinqOptionsTest()
 		{
-			var lo1 = LinqToDB.Common.Configuration.Linq.Options with { GuardGrouping = false };
-			var lo2 = lo1 with { GuardGrouping = true };
+			var lo1 = new LinqOptions(LinqToDB.Common.Configuration.Linq.Options) { GuardGrouping = false };
+			var lo2 = new LinqOptions(lo1) { GuardGrouping = true };
 
 			Assert.That(((IConfigurationID)lo1).ConfigurationID, Is.Not.EqualTo(((IConfigurationID)lo2).ConfigurationID));
 		}
@@ -34,7 +34,7 @@ namespace Tests.Infrastructure
 			string? s1 = null;
 
 			{
-				using var db = new TestDataConnection(options => options.WithOptions<QueryTraceOptions>(o => o with
+				using var db = new TestDataConnection(options => options.WithOptions<QueryTraceOptions>(o => new QueryTraceOptions(o)
 				{
 					OnTrace = ti => s1 = ti.SqlText
 				}));
@@ -69,7 +69,7 @@ namespace Tests.Infrastructure
 			using var db1 = new TestDataConnection(db.Options
 				.UseConnection   (db.DataProvider, db.Connection, false)
 				.UseMappingSchema(db.MappingSchema)
-				.WithOptions<QueryTraceOptions>(o => o with
+				.WithOptions<QueryTraceOptions>(o => new QueryTraceOptions(o)
 				{
 					OnTrace = ti => s1 = ti.SqlText
 				}));
@@ -130,7 +130,7 @@ namespace Tests.Infrastructure
 
 			using (var dc = new DataConnection(options))
 			{
-				dc.GetTable<Person>().ToList();
+				_ = dc.GetTable<Person>().ToList();
 
 				Assert.True(syncBeforeCalled);
 				Assert.True(syncAfterCalled);
@@ -269,7 +269,7 @@ namespace Tests.Infrastructure
 		{
 			MappingSchema.ClearCache();
 			var globalTriggered = false;
-			var localTriggrered = false;
+			var localTriggered  = false;
 
 			MappingSchema.EntityDescriptorCreatedCallback = (_, _) =>
 			{
@@ -282,55 +282,55 @@ namespace Tests.Infrastructure
 				// global handler set
 				using (var db = GetDataContext(context))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
 				Assert.True(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.False(localTriggered);
 				globalTriggered = false;
 
 				// local handler set
 				MappingSchema.ClearCache();
 				using (var db = GetDataContext(context, options => options.UseOnEntityDescriptorCreated((_, _) =>
 				{
-					localTriggrered = true;
+					localTriggered = true;
 				})))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
 				Assert.False(globalTriggered);
-				Assert.True(localTriggrered);
-				localTriggrered = false;
+				Assert.True(localTriggered);
+				localTriggered = false;
 
 				// descriptor cached
 				using (var db = GetDataContext(context))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
 				Assert.False(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.False(localTriggered);
 
 				// cache miss
 				using (var db = GetDataContext(context, new MappingSchema("name1")))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
 				Assert.True(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.False(localTriggered);
 				globalTriggered = false;
 
 				// no handlers
 				MappingSchema.EntityDescriptorCreatedCallback = null;
 				using (var db = GetDataContext(context, new MappingSchema("name2")))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
 				Assert.False(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.False(localTriggered);
 			}
 			finally
 			{

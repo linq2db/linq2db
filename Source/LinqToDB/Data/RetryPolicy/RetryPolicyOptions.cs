@@ -37,6 +37,8 @@ namespace LinqToDB.Data.RetryPolicy
 		double                              RandomFactor    = default,
 		double                              ExponentialBase = default,
 		TimeSpan                            Coefficient     = default
+		// If you add another parameter here, don't forget to update
+		// RetryPolicyOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
 		: IOptionSet, IApplicable<DataConnection>
 	{
@@ -44,7 +46,7 @@ namespace LinqToDB.Data.RetryPolicy
 		{
 		}
 
-		RetryPolicyOptions(RetryPolicyOptions original)
+		public RetryPolicyOptions(RetryPolicyOptions original)
 		{
 			RetryPolicy     = original.RetryPolicy;
 			Factory         = original.Factory;

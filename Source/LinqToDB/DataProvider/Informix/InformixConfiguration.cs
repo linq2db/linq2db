@@ -12,8 +12,7 @@ namespace LinqToDB.DataProvider.Informix
 		public static bool ExplicitFractionalSecondsSeparator
 		{
 			get => InformixOptions.Default.ExplicitFractionalSecondsSeparator;
-			set => InformixOptions.Default = InformixOptions.Default with { ExplicitFractionalSecondsSeparator = value };
+			set => InformixOptions.Default = new InformixOptions(InformixOptions.Default) { ExplicitFractionalSecondsSeparator = value };
 		}
-
 	}
 }

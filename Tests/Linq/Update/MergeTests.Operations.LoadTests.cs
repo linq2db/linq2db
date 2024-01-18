@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 				string when context.IsAnyOf (TestProvName.AllOracle)                         => 1000,
 				_                                                                            => 2500,
 			};
-		
+
 			RunTest(context, batchSize);
 		}
 

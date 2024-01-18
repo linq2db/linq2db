@@ -56,7 +56,9 @@ namespace LinqToDB.SqlQuery
 		public SqlTable(EntityDescriptor entityDescriptor, string? physicalName = null)
 			: this(entityDescriptor.ObjectType, (int?)null, new(string.Empty))
 		{
-			TableName    = physicalName != null && entityDescriptor.Name.Name != physicalName ? entityDescriptor.Name with { Name = physicalName } : entityDescriptor.Name;
+			TableName    = physicalName != null && entityDescriptor.Name.Name != physicalName
+				? new SqlObjectName(entityDescriptor.Name) { Name = physicalName }
+				: entityDescriptor.Name;
 			TableOptions = entityDescriptor.TableOptions;
 
 			foreach (var column in entityDescriptor.Columns)

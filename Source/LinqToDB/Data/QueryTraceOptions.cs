@@ -20,6 +20,8 @@ namespace LinqToDB.Data
 		TraceLevel?                         TraceLevel = default,
 		Action<TraceInfo>?                  OnTrace    = default,
 		Action<string?,string?,TraceLevel>? WriteTrace = default
+		// If you add another parameter here, don't forget to update
+		// QueryTraceOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
 		: IOptionSet, IApplicable<DataConnection>
 	{
@@ -27,7 +29,7 @@ namespace LinqToDB.Data
 		{
 		}
 
-		QueryTraceOptions(QueryTraceOptions original)
+		public QueryTraceOptions(QueryTraceOptions original)
 		{
 			TraceLevel = original.TraceLevel;
 			OnTrace    = original.OnTrace;

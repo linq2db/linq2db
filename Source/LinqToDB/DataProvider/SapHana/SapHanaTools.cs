@@ -113,7 +113,7 @@ namespace LinqToDB.DataProvider.SapHana
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => SapHanaOptions.Default.BulkCopyType;
-			set => SapHanaOptions.Default = SapHanaOptions.Default with { BulkCopyType = value };
+			set => SapHanaOptions.Default = new SapHanaOptions(SapHanaOptions.Default) { BulkCopyType = value };
 		}
 	}
 }

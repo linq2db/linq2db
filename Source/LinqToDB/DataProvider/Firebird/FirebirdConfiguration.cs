@@ -14,17 +14,17 @@ namespace LinqToDB.DataProvider.Firebird
 		public static FirebirdIdentifierQuoteMode IdentifierQuoteMode
 		{
 			get => FirebirdOptions.Default.IdentifierQuoteMode;
-			set => FirebirdOptions.Default = FirebirdOptions.Default with { IdentifierQuoteMode = value };
+			set => FirebirdOptions.Default = new FirebirdOptions(FirebirdOptions.Default) { IdentifierQuoteMode = value };
 		}
 
 		/// <summary>
-		/// Specifies that Firebird supports literal encoding. Availiable from version 2.5.
+		/// Specifies that Firebird supports literal encoding. Available from version 2.5.
 		/// </summary>
 		[Obsolete("Use FirebirdOptions.Default.IsLiteralEncodingSupported instead.")]
 		public static bool IsLiteralEncodingSupported
 		{
 			get => FirebirdOptions.Default.IsLiteralEncodingSupported;
-			set => FirebirdOptions.Default = FirebirdOptions.Default with { IsLiteralEncodingSupported = value };
+			set => FirebirdOptions.Default = new FirebirdOptions(FirebirdOptions.Default) { IsLiteralEncodingSupported = value };
 		}
 	}
 }

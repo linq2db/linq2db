@@ -38,7 +38,7 @@ namespace Tests.UserTests
 			using (var db = (DataConnection)GetDataContext(context, mappingSchema))
 			using (db.CreateLocalTable<TestRow>())
 			{
-				var options = GetDefaultBulkCopyOptions(context) with
+				var options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context))
 				{
 					TableName    = TestTableName,
 					SchemaName   = "dbo",

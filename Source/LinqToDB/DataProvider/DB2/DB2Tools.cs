@@ -139,7 +139,7 @@ namespace LinqToDB.DataProvider.DB2
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => DB2Options.Default.BulkCopyType;
-			set => DB2Options.Default = DB2Options.Default with { BulkCopyType = value };
+			set => DB2Options.Default = new DB2Options(DB2Options.Default) { BulkCopyType = value };
 		}
 
 		#endregion

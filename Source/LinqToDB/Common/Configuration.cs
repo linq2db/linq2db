@@ -124,16 +124,16 @@ namespace LinqToDB.Common
 		/// annotations in [Column], [Association], or [Nullable].
 		/// </summary>
 		/// <remarks>Defaults to false.</remarks>
-		public static bool UseNullableTypesMetadata 
-		{ 
+		public static bool UseNullableTypesMetadata
+		{
 			get => _useNullableTypesMetadata;
-			set 
+			set
 			{
-				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.				
+				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.
 				if (value) Mapping.Nullability.EnsureSupport();
 				_useNullableTypesMetadata = value;
 			}
-		}	
+		}
 
 		public static class Data
 		{
@@ -188,7 +188,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.PreloadGroups != value)
-						Options = Options with { PreloadGroups = value };
+						Options = new LinqOptions(Options) { PreloadGroups = value };
 				}
 			}
 
@@ -204,7 +204,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.IgnoreEmptyUpdate != value)
-						Options = Options with { IgnoreEmptyUpdate = value };
+						Options = new LinqOptions(Options) { IgnoreEmptyUpdate = value };
 				}
 			}
 
@@ -222,7 +222,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.GenerateExpressionTest != value)
-						Options = Options with { GenerateExpressionTest = value };
+						Options = new LinqOptions(Options) { GenerateExpressionTest = value };
 				}
 			}
 
@@ -237,7 +237,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.TraceMapperExpression != value)
-						Options = Options with { TraceMapperExpression = value };
+						Options = new LinqOptions(Options) { TraceMapperExpression = value };
 				}
 			}
 
@@ -253,7 +253,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.DoNotClearOrderBys != value)
-						Options = Options with { DoNotClearOrderBys = value };
+						Options = new LinqOptions(Options) { DoNotClearOrderBys = value };
 				}
 			}
 
@@ -271,7 +271,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.OptimizeJoins != value)
-						Options = Options with { OptimizeJoins = value };
+						Options = new LinqOptions(Options) { OptimizeJoins = value };
 				}
 			}
 
@@ -314,7 +314,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.CompareNullsAsValues != value)
-						Options = Options with { CompareNullsAsValues = value };
+						Options = new LinqOptions(Options) { CompareNullsAsValues = value };
 				}
 			}
 
@@ -333,7 +333,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.GuardGrouping != value)
-						Options = Options with { GuardGrouping = value };
+						Options = new LinqOptions(Options) { GuardGrouping = value };
 				}
 			}
 
@@ -358,7 +358,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.DisableQueryCache != value)
-						Options = Options with { DisableQueryCache = value };
+						Options = new LinqOptions(Options) { DisableQueryCache = value };
 				}
 			}
 
@@ -372,7 +372,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.CacheSlidingExpiration != value)
-						Options = Options with { CacheSlidingExpiration = value };
+						Options = new LinqOptions(Options) { CacheSlidingExpiration = value };
 				}
 			}
 
@@ -386,7 +386,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.PreferApply != value)
-						Options = Options with { PreferApply = value };
+						Options = new LinqOptions(Options) { PreferApply = value };
 				}
 			}
 
@@ -402,7 +402,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.KeepDistinctOrdered != value)
-						Options = Options with { KeepDistinctOrdered = value };
+						Options = new LinqOptions(Options) { KeepDistinctOrdered = value };
 				}
 			}
 
@@ -416,7 +416,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.ParameterizeTakeSkip != value)
-						Options = Options with { ParameterizeTakeSkip = value };
+						Options = new LinqOptions(Options) { ParameterizeTakeSkip = value };
 				}
 			}
 
@@ -433,7 +433,7 @@ namespace LinqToDB.Common
 				set
 				{
 					if (Options.EnableContextSchemaEdit != value)
-						Options = Options with { EnableContextSchemaEdit = value };
+						Options = new LinqOptions(Options) { EnableContextSchemaEdit = value };
 				}
 			}
 		}
@@ -511,7 +511,7 @@ namespace LinqToDB.Common
 			public static Func<DataConnection,IRetryPolicy?>? Factory
 			{
 				get => Options.Factory;
-				set => Options = Options with { Factory = value };
+				set => Options = new RetryPolicyOptions(Options) { Factory = value };
 			}
 
 			/// <summary>
@@ -532,7 +532,7 @@ namespace LinqToDB.Common
 			public static int DefaultMaxRetryCount
 			{
 				get => Options.MaxRetryCount;
-				set => Options = Options with { MaxRetryCount = value };
+				set => Options = new RetryPolicyOptions(Options) { MaxRetryCount = value };
 			}
 
 			/// <summary>
@@ -542,7 +542,7 @@ namespace LinqToDB.Common
 			public static TimeSpan DefaultMaxDelay
 			{
 				get => Options.MaxDelay;
-				set => Options = Options with { MaxDelay = value };
+				set => Options = new RetryPolicyOptions(Options) { MaxDelay = value };
 			}
 
 			/// <summary>
@@ -552,7 +552,7 @@ namespace LinqToDB.Common
 			public static double DefaultRandomFactor
 			{
 				get => Options.RandomFactor;
-				set => Options = Options with { RandomFactor = value };
+				set => Options = new RetryPolicyOptions(Options) { RandomFactor = value };
 			}
 
 			/// <summary>
@@ -562,7 +562,7 @@ namespace LinqToDB.Common
 			public static double DefaultExponentialBase
 			{
 				get => Options.ExponentialBase;
-				set => Options = Options with { ExponentialBase = value };
+				set => Options = new RetryPolicyOptions(Options) { ExponentialBase = value };
 			}
 
 			/// <summary>
@@ -572,7 +572,7 @@ namespace LinqToDB.Common
 			public static TimeSpan DefaultCoefficient
 			{
 				get => Options.Coefficient;
-				set => Options = Options with { Coefficient = value };
+				set => Options = new RetryPolicyOptions(Options) { Coefficient = value };
 			}
 		}
 

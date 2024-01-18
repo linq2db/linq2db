@@ -130,15 +130,11 @@ namespace LinqToDB.Scaffold
 				entityColumnsMap.Add(column.Name, columnModel);
 
 				// populate metadata for column
-				columnMetadata.DbType = column.Type;
-				if (!_options.DataModel.GenerateDbType)
-					columnMetadata.DbType = columnMetadata.DbType with { Name = null };
-				if (!_options.DataModel.GenerateLength)
-					columnMetadata.DbType = columnMetadata.DbType with { Length = null };
-				if (!_options.DataModel.GeneratePrecision)
-					columnMetadata.DbType = columnMetadata.DbType with { Precision = null };
-				if (!_options.DataModel.GenerateScale)
-					columnMetadata.DbType = columnMetadata.DbType with { Scale = null };
+				columnMetadata.DbType = new DatabaseType(
+					Name      : _options.DataModel.GenerateDbType    ? column.Type.Name      : null,
+					Length    : _options.DataModel.GenerateLength    ? column.Type.Length    : null,
+					Precision : _options.DataModel.GeneratePrecision ? column.Type.Precision : null,
+					Scale     : _options.DataModel.GenerateScale     ? column.Type.Scale     : null);
 
 				if (_options.DataModel.GenerateDataType)
 					columnMetadata.DataType = typeMapping.DataType;
@@ -203,7 +199,7 @@ namespace LinqToDB.Scaffold
 			var sourceMetadata      = new AssociationMetadata() { CanBeNull = fromOptional   };
 			// back-reference is always optional
 			var targetMetadata      = new AssociationMetadata() { CanBeNull = true           };
-			
+
 			var association         = new AssociationModel(sourceMetadata, targetMetadata, source.Entity, target.Entity, manyToOne)
 			{
 				ForeignKeyName = fk.Name
@@ -295,7 +291,7 @@ namespace LinqToDB.Scaffold
 			ISet<string>         defaultSchemas)
 		{
 			// name generation logic moved to separate class to cover it with unittests
-			
+
 			var name = NameGenerationServices.GenerateAssociationName(
 				(tableName, columnName) => _entities.TryGetValue(tableName, out var table) && table.Entity.Columns.Any(_ => _.Metadata.Name == columnName && _.Metadata.IsPrimaryKey),
 				thisTable,

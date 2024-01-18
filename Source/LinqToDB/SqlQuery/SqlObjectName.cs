@@ -10,6 +10,17 @@
 	/// <param name="Package">Package/module/library name (used with functions and stored procedures).</param>
 	public readonly record struct SqlObjectName(string Name, string? Server = null, string? Database = null, string? Schema = null, string? Package = null)
 	{
+		public SqlObjectName(SqlObjectName original) :
+			this(
+				Name     : original.Name,
+				Server   : original.Server,
+				Database : original.Database,
+				Schema   : original.Schema,
+				Package  : original.Package
+			)
+		{
+		}
+
 		public override string ToString() => $"{Server}{(Server != null ? "." : null)}{Database}{(Database != null ? "." : null)}{Schema}{(Schema != null ? "." : null)}{Package}{(Package != null ? "." : null)}{Name}";
 	}
 }

@@ -928,10 +928,10 @@ namespace LinqToDB.SqlProvider
 					.AppendLine(OutputKeyword);
 
 				if (output.InsertedTable?.SqlTableType == SqlTableType.SystemTable)
-					output.InsertedTable.TableName = output.InsertedTable.TableName with { Name = InsertedOutputTable };
+					output.InsertedTable.TableName = new SqlObjectName(output.InsertedTable.TableName) { Name = InsertedOutputTable };
 
 				if (output.DeletedTable?.SqlTableType == SqlTableType.SystemTable)
-					output.DeletedTable.TableName  = output.DeletedTable.TableName  with { Name = DeletedOutputTable  };
+					output.DeletedTable.TableName  = new SqlObjectName(output.DeletedTable.TableName) { Name = DeletedOutputTable };
 
 				++Indent;
 
@@ -3519,7 +3519,7 @@ namespace LinqToDB.SqlProvider
 
 						var tableName = tbl.TableName;
 						if (tableName.Database == null && defaultDatabaseName != null)
-							tableName = tableName with { Database = defaultDatabaseName };
+							tableName = new SqlObjectName(tableName) { Database = defaultDatabaseName };
 
 						using var sb = Pools.StringBuilder.Allocate();
 

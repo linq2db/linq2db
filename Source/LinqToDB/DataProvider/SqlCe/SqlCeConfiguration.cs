@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		public static bool InlineFunctionParameters
 		{
 			get => SqlCeOptions.Default.InlineFunctionParameters;
-			set => SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = value };
+			set => SqlCeOptions.Default = new SqlCeOptions(SqlCeOptions.Default) { InlineFunctionParameters = value };
 		}
 	}
 }

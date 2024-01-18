@@ -1010,7 +1010,7 @@ namespace Tests.xUpdate
 		{
 			try
 			{
-				SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = false };
+				SqlServerOptions.Default = new SqlServerOptions(SqlServerOptions.Default) { GenerateScopeIdentity = false };
 
 				using (var db = GetDataConnection(context))
 				{
@@ -1020,7 +1020,7 @@ namespace Tests.xUpdate
 			}
 			finally
 			{
-				SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = true };
+				SqlServerOptions.Default = new SqlServerOptions(SqlServerOptions.Default) { GenerateScopeIdentity = true };
 			}
 		}
 
@@ -1032,7 +1032,7 @@ namespace Tests.xUpdate
 			{
 				try
 				{
-					SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = false };
+					SqlServerOptions.Default = new SqlServerOptions(SqlServerOptions.Default) { GenerateScopeIdentity = false };
 
 					for (var i = 0; i < 2; i++)
 					{
@@ -1055,7 +1055,7 @@ namespace Tests.xUpdate
 				}
 				finally
 				{
-					SqlServerOptions.Default = SqlServerOptions.Default with { GenerateScopeIdentity = true };
+					SqlServerOptions.Default = new SqlServerOptions(SqlServerOptions.Default) { GenerateScopeIdentity = true };
 				}
 			}
 		}
@@ -1434,7 +1434,7 @@ namespace Tests.xUpdate
 					var options = new BulkCopyOptions { MaxBatchSize = 1 };
 
 					if (context.IsAnyOf(ProviderName.ClickHouseClient))
-						options = options with { WithoutSession = true };
+						options = new BulkCopyOptions(options) { WithoutSession = true };
 
 					((DataConnection)db).BulkCopy(options, data);
 				}
@@ -1454,7 +1454,7 @@ namespace Tests.xUpdate
 
 				try
 				{
-					var options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 100 };
+					var options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { MaxBatchSize = 100 };
 
 					((DataConnection)db).BulkCopy(options, new[]
 					{

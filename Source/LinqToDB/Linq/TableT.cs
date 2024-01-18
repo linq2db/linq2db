@@ -70,7 +70,7 @@ namespace LinqToDB.Linq
 						_serverNameMethodInfo ??= Methods.LinqToDB.Table.ServerName.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value));
 
-					_name = _name with { Server = value };
+					_name = new SqlObjectName(_name) { Server = value };
 				}
 			}
 		}
@@ -87,7 +87,7 @@ namespace LinqToDB.Linq
 						_databaseNameMethodInfo ??= Methods.LinqToDB.Table.DatabaseName.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value));
 
-					_name = _name with { Database = value };
+					_name = new SqlObjectName(_name) { Database = value };
 				}
 			}
 		}
@@ -104,7 +104,7 @@ namespace LinqToDB.Linq
 						_schemaNameMethodInfo ??= Methods.LinqToDB.Table.SchemaName.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value));
 
-					_name = _name with { Schema = value };
+					_name = new SqlObjectName(_name) { Schema = value };
 				}
 			}
 		}
@@ -139,7 +139,7 @@ namespace LinqToDB.Linq
 						_tableNameMethodInfo ??= Methods.LinqToDB.Table.TableName.MakeGenericMethod(typeof(T)),
 						Expression, Expression.Constant(value));
 
-					_name = _name with { Name = value };
+					_name = new SqlObjectName(_name) { Name = value };
 				}
 			}
 		}

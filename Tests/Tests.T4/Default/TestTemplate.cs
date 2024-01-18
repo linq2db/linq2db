@@ -18,7 +18,7 @@ namespace Default.SqlServer
 		{
 			return _sqlServerDataOptions ??= new DataOptions()
 				.UseConfigurationString(configuration ?? "SqlServerConfig")
-				.WithOptions<BulkCopyOptions>  (o => o with { BulkCopyTimeout = 60 * 100 })
+				.WithOptions<BulkCopyOptions>  (o => new BulkCopyOptions(o) { BulkCopyTimeout = 60 * 100 })
 				;
 		}
 	}

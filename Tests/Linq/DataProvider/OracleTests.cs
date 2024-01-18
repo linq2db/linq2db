@@ -1042,7 +1042,7 @@ namespace Tests.DataProvider
 		{
 			var cs = DataConnection.GetConnectionString(context);
 			var builder = new DataOptions()
-				.UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
+				.UseOracle(cs, o => new OracleOptions(o) { AlternativeBulkCopy = alternativeBulkCopy });
 
 			using (var db = new TestDataConnection(builder))
 			{
@@ -1143,7 +1143,7 @@ namespace Tests.DataProvider
 		async Task BulkCopyLinqTypesAsync(string context, BulkCopyType bulkCopyType, AlternativeBulkCopy alternativeBulkCopy)
 		{
 			var cs      = DataConnection.GetConnectionString(context);
-			var builder = new DataOptions().UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
+			var builder = new DataOptions().UseOracle(cs, o => new OracleOptions(o) { AlternativeBulkCopy = alternativeBulkCopy });
 
 			using (var db = new TestDataConnection(builder))
 			{
@@ -1403,7 +1403,7 @@ namespace Tests.DataProvider
 			};
 
 			var cs      = DataConnection.GetConnectionString(context);
-			var builder = new DataOptions().UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
+			var builder = new DataOptions().UseOracle(cs, o => new OracleOptions(o) { AlternativeBulkCopy = alternativeBulkCopy });
 
 			using (var db = new TestDataConnection(builder))
 			{
@@ -1476,7 +1476,7 @@ namespace Tests.DataProvider
 			};
 
 			var cs      = DataConnection.GetConnectionString(context);
-			var builder = new DataOptions().UseOracle(cs, o => o with { AlternativeBulkCopy = alternativeBulkCopy });
+			var builder = new DataOptions().UseOracle(cs, o => new OracleOptions(o) { AlternativeBulkCopy = alternativeBulkCopy });
 
 			using (var db = new TestDataConnection(builder))
 			{
@@ -3050,14 +3050,14 @@ namespace Tests.DataProvider
 
 				try
 				{
-					OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = true };
+					OracleOptions.Default = new OracleOptions(OracleOptions.Default) { DontEscapeLowercaseIdentifiers = true };
 
 					_ = db.GetTable<TestIdentifiersTable1>().ToList();
 					_ = db.GetTable<TestIdentifiersTable2>().ToList();
 
 					Query.ClearCaches();
 
-					OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = false };
+					OracleOptions.Default = new OracleOptions(OracleOptions.Default) { DontEscapeLowercaseIdentifiers = false };
 
 					// no specific exception type as it differ for managed and native providers
 					Assert.That(() => db.GetTable<TestIdentifiersTable1>().ToList(), Throws.Exception.With.Message.Contains("ORA-00942"));

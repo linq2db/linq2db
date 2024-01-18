@@ -539,13 +539,11 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
 			// for parameter-less table function skip argument list generation
-			if (table is SqlTable tbl
-				&& tbl.SqlTableType == SqlTableType.Function
-				&& (tbl.TableArguments == null || tbl.TableArguments.Length == 0))
+			if (table is SqlTable { SqlTableType: SqlTableType.Function, TableArguments : null or []} tbl)
 			{
 				var tableName = tbl.TableName;
 				if (tableName.Database == null && defaultDatabaseName != null)
-					tableName = tableName with { Database = defaultDatabaseName };
+					tableName = new SqlObjectName(tableName) { Database = defaultDatabaseName };
 
 				using var sb = Pools.StringBuilder.Allocate();
 

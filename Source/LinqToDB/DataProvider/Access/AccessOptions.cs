@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.Access
 	public sealed record AccessOptions
 	(
 		BulkCopyType BulkCopyType = BulkCopyType.MultipleRows
+		// If you add another parameter here, don't forget to update
+		// AccessOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<AccessOptions>(BulkCopyType)
 	{
@@ -22,7 +24,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		AccessOptions(AccessOptions original) : base(original)
+		public AccessOptions(AccessOptions original) : base(original)
 		{
 		}
 

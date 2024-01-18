@@ -47,7 +47,7 @@ namespace Tests.UserTests
 						Id                = TestData.Guid2
 					};
 
-					var options = GetDefaultBulkCopyOptions(context) with
+					var options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context))
 					{
 						CheckConstraints       = true,
 						BulkCopyType           = BulkCopyType.ProviderSpecific,

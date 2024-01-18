@@ -14,7 +14,9 @@ namespace LinqToDB.DataProvider.MySql
 	/// </param>
 	public sealed record MySqlOptions
 	(
-		BulkCopyType         BulkCopyType              = BulkCopyType.MultipleRows
+		BulkCopyType BulkCopyType = BulkCopyType.MultipleRows
+		// If you add another parameter here, don't forget to update
+		// MySqlOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<MySqlOptions>(BulkCopyType)
 	{
@@ -22,7 +24,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		MySqlOptions(MySqlOptions original) : base(original)
+		public MySqlOptions(MySqlOptions original) : base(original)
 		{
 		}
 

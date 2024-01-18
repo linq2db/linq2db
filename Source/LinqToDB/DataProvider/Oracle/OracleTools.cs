@@ -63,7 +63,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public static BulkCopyType  DefaultBulkCopyType
 		{
 			get => OracleOptions.Default.BulkCopyType;
-			set => OracleOptions.Default = OracleOptions.Default with { BulkCopyType = value };
+			set => OracleOptions.Default = new OracleOptions(OracleOptions.Default) { BulkCopyType = value };
 		}
 
 		#endregion
@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public static AlternativeBulkCopy UseAlternativeBulkCopy
 		{
 			get => OracleOptions.Default.AlternativeBulkCopy;
-			set => OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = value };
+			set => OracleOptions.Default = new OracleOptions(OracleOptions.Default) { AlternativeBulkCopy = value };
 		}
 
 		/// <summary>
@@ -88,7 +88,7 @@ namespace LinqToDB.DataProvider.Oracle
 		public static bool DontEscapeLowercaseIdentifiers
 		{
 			get => OracleOptions.Default.DontEscapeLowercaseIdentifiers;
-			set => OracleOptions.Default = OracleOptions.Default with { DontEscapeLowercaseIdentifiers = value };
+			set => OracleOptions.Default = new OracleOptions(OracleOptions.Default) { DontEscapeLowercaseIdentifiers = value };
 		}
 	}
 }

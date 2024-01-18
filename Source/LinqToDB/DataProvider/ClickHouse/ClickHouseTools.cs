@@ -60,7 +60,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => ClickHouseOptions.Default.BulkCopyType;
-			set => ClickHouseOptions.Default = ClickHouseOptions.Default with { BulkCopyType = value };
+			set => ClickHouseOptions.Default = new ClickHouseOptions(ClickHouseOptions.Default) { BulkCopyType = value };
 		}
 	}
 }

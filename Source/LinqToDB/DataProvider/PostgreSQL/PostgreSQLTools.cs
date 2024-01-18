@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static bool NormalizeTimestampData
 		{
 			get => PostgreSQLOptions.Default.NormalizeTimestampData;
-			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { NormalizeTimestampData = value };
+			set => PostgreSQLOptions.Default = new PostgreSQLOptions(PostgreSQLOptions.Default) { NormalizeTimestampData = value };
 		}
 
 		public static IDataProvider GetDataProvider(PostgreSQLVersion version = PostgreSQLVersion.AutoDetect, string? connectionString = null)
@@ -78,7 +78,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => PostgreSQLOptions.Default.BulkCopyType;
-			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { BulkCopyType = value };
+			set => PostgreSQLOptions.Default = new PostgreSQLOptions(PostgreSQLOptions.Default) { BulkCopyType = value };
 		}
 
 		#endregion

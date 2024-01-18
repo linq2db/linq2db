@@ -2214,7 +2214,7 @@ namespace LinqToDB.Data
 			if (dataConnection == null) throw new ArgumentNullException(nameof(dataConnection));
 
 			return dataConnection.DataProvider.BulkCopy(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { MaxBatchSize = maxBatchSize }),
 				dataConnection.GetTable<T>(),
 				source);
 		}
@@ -2274,7 +2274,7 @@ namespace LinqToDB.Data
 			var dataConnection = table.GetDataConnection();
 
 			return table.GetDataProvider().BulkCopy(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize, }),
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { MaxBatchSize = maxBatchSize, }),
 				table,
 				source);
 		}
@@ -2341,7 +2341,7 @@ namespace LinqToDB.Data
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
 			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { MaxBatchSize = maxBatchSize }),
 				dataConnection.GetTable<T>(),
 				source,
 				cancellationToken);
@@ -2410,7 +2410,7 @@ namespace LinqToDB.Data
 			var dataConnection = table.GetDataConnection();
 
 			return table.GetDataProvider().BulkCopyAsync(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize, }),
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { MaxBatchSize = maxBatchSize }),
 				table,
 				source,
 				cancellationToken);
@@ -2482,7 +2482,7 @@ namespace LinqToDB.Data
 			if (source         == null) throw new ArgumentNullException(nameof(source));
 
 			return dataConnection.DataProvider.BulkCopyAsync(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { MaxBatchSize = maxBatchSize }),
 				dataConnection.GetTable<T>(),
 				source,
 				cancellationToken);
@@ -2551,7 +2551,7 @@ namespace LinqToDB.Data
 			var dataConnection = table.GetDataConnection();
 
 			return table.GetDataProvider().BulkCopyAsync(
-				dataConnection.Options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize }),
+				dataConnection.Options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { MaxBatchSize = maxBatchSize }),
 				table,
 				source,
 				cancellationToken);

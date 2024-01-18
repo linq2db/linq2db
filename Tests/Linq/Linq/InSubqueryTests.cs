@@ -15,7 +15,7 @@ namespace Tests.Linq
 		[Test]
 		public void InTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
 		{
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => new LinqOptions(lo) { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
 			var q =
 				from c in db.Child
@@ -34,7 +34,7 @@ namespace Tests.Linq
 		[Test]
 		public void InConstTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
 		{
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => new LinqOptions(lo) { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
 			var q =
 				from c in db.Parent
@@ -53,7 +53,7 @@ namespace Tests.Linq
 		[Test]
 		public void InWithTakeTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
 		{
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => new LinqOptions(lo) { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
 			var q =
 				from c in db.Child
@@ -72,7 +72,7 @@ namespace Tests.Linq
 		[Test]
 		public void ObjectInTest([DataSources(TestProvName.AllClickHouse)] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
 		{
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => new LinqOptions(lo) { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
 			var q =
 				from c in db.Child
@@ -88,7 +88,7 @@ namespace Tests.Linq
 		[Test]
 		public void ObjectInWithTakeTest([DataSources(TestProvName.AllClickHouse)] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
 		{
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => new LinqOptions(lo) { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
 			var q =
 				from c in db.Child
@@ -104,7 +104,7 @@ namespace Tests.Linq
 		[Test]
 		public void ContainsTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
 		{
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => new LinqOptions(lo) { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
 			var res = db.Child.Select(c => c.ParentID).Contains(1);
 
@@ -117,7 +117,7 @@ namespace Tests.Linq
 		[Test]
 		public void ContainsExprTest([DataSources] string context, [Values(true, false)] bool preferExists, [Values(true, false)] bool compareNullsAsValues)
 		{
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
+			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => new LinqOptions(lo) { PreferExistsForScalar = preferExists, CompareNullsAsValues = compareNullsAsValues }));
 
 			var n = 1;
 			var q = from p in db.Parent where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) select p;

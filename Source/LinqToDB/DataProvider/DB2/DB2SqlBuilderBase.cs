@@ -171,7 +171,7 @@ namespace LinqToDB.DataProvider.DB2
 		public static DB2IdentifierQuoteMode IdentifierQuoteMode
 		{
 			get => DB2Options.Default.IdentifierQuoteMode;
-			set => DB2Options.Default = DB2Options.Default with { IdentifierQuoteMode = value };
+			set => DB2Options.Default = new DB2Options(DB2Options.Default) { IdentifierQuoteMode = value };
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)

@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.Firebird
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => FirebirdOptions.Default.BulkCopyType;
-			set => FirebirdOptions.Default = FirebirdOptions.Default with { BulkCopyType = value };
+			set => FirebirdOptions.Default = new FirebirdOptions(FirebirdOptions.Default) { BulkCopyType = value };
 		}
 
 		#endregion

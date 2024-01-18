@@ -137,6 +137,8 @@ namespace LinqToDB.Data
 		int?                        MaxParametersForBatch  = default,
 		int?                        MaxDegreeOfParallelism = default,
 		bool                        WithoutSession         = default
+		// If you add another parameter here, don't forget to update
+		// BulkCopyOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
 		: IOptionSet
 	{
@@ -144,7 +146,7 @@ namespace LinqToDB.Data
 		{
 		}
 
-		BulkCopyOptions(BulkCopyOptions options)
+		public BulkCopyOptions(BulkCopyOptions options)
 		{
 			MaxBatchSize           = options.MaxBatchSize;
 			BulkCopyTimeout        = options.BulkCopyTimeout;
@@ -162,6 +164,8 @@ namespace LinqToDB.Data
 			TableOptions           = options.TableOptions;
 			NotifyAfter            = options.NotifyAfter;
 			RowsCopiedCallback     = options.RowsCopiedCallback;
+			UseParameters          = options.UseParameters;
+			MaxParametersForBatch  = options.MaxParametersForBatch;
 			MaxDegreeOfParallelism = options.MaxDegreeOfParallelism;
 			WithoutSession         = options.WithoutSession;
 		}
@@ -193,6 +197,8 @@ namespace LinqToDB.Data
 						.Add(TableOptions)
 						.Add(NotifyAfter)
 						.Add(RowsCopiedCallback)
+						.Add(UseParameters)
+						.Add(MaxParametersForBatch)
 						.Add(MaxDegreeOfParallelism)
 						.Add(WithoutSession)
 						.CreateID();

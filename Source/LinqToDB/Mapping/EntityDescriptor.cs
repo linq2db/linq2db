@@ -48,25 +48,25 @@ namespace LinqToDB.Mapping
 		string IEntityChangeDescriptor.TableName
 		{
 			get => Name.Name;
-			set => Name = Name with { Name = value };
+			set => Name = new SqlObjectName(Name) { Name = value };
 		}
 
 		string? IEntityChangeDescriptor.SchemaName
 		{
 			get => Name.Schema;
-			set => Name = Name with { Schema = value };
+			set => Name = new SqlObjectName(Name) { Schema = value };
 		}
 
 		string? IEntityChangeDescriptor.DatabaseName
 		{
 			get => Name.Database;
-			set => Name = Name with { Database = value };
+			set => Name = new SqlObjectName(Name) { Database = value };
 		}
 
 		string? IEntityChangeDescriptor.ServerName
 		{
 			get => Name.Server;
-			set => Name = Name with { Server = value };
+			set => Name = new SqlObjectName(Name) { Server = value };
 		}
 
 		/// <summary>

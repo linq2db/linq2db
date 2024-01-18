@@ -262,9 +262,9 @@ namespace LinqToDB.DataProvider.Sybase
 		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Database != null && IsTemporary(name.Name, tableOptions))
-				name = name with { Database = null };
+				name = new SqlObjectName(name) { Database = null };
 
-			name = name with { Name = GetTablePhysicalName(name.Name, tableOptions) };
+			name = new SqlObjectName(name) { Name = GetTablePhysicalName(name.Name, tableOptions) };
 
 			return base.BuildObjectName(sb, name, objectType, escape, tableOptions, withoutSuffix: withoutSuffix);
 		}

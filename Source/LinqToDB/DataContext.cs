@@ -398,8 +398,8 @@ namespace LinqToDB
 			if (forNestedQuery && _dataConnection != null && _dataConnection.IsMarsEnabled)
 			{
 				var options = _dataConnection.TransactionAsync != null
-					? Options.WithOptions<ConnectionOptions>(o => o with { DbTransaction = _dataConnection.TransactionAsync.Transaction  })
-					: Options.WithOptions<ConnectionOptions>(o => o with { DbConnection  = _dataConnection.EnsureConnection().Connection });
+					? Options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DbTransaction = _dataConnection.TransactionAsync.Transaction  })
+					: Options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DbConnection  = _dataConnection.EnsureConnection().Connection });
 
 				dc._dataConnection = CloneDataConnection(_dataConnection, options);
 			}

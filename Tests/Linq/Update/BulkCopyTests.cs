@@ -328,7 +328,7 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+				var options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 				db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 			}
 		}
@@ -341,10 +341,10 @@ namespace Tests.xUpdate
 			using (var db = new DataContext(context))
 			using (var table = db.CreateLocalTable<SimpleBulkCopyTable>())
 			{
-				var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+				var options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 				await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
 
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+				options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 				await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
 			}
 		}
@@ -360,10 +360,10 @@ namespace Tests.xUpdate
 				var options = GetDefaultBulkCopyOptions(context);
 				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-				options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 5 };
+				options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { MaxBatchSize = 5 };
 				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
 
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+				options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 				table.BulkCopy(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
 			}
 		}
@@ -379,19 +379,19 @@ namespace Tests.xUpdate
 				var options = GetDefaultBulkCopyOptions(context);
 				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-				options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 5 };
+				options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { MaxBatchSize = 5 };
 				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 2 } });
 
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+				options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 				await table.BulkCopyAsync(options, new[] { new SimpleBulkCopyTable() { Id = 3 } });
 
 				options = GetDefaultBulkCopyOptions(context);
 				await table.BulkCopyAsync(options, AsyncEnumerableData(10, 1));
 
-				options = GetDefaultBulkCopyOptions(context) with { MaxBatchSize = 5 };
+				options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { MaxBatchSize = 5 };
 				await table.BulkCopyAsync(options, AsyncEnumerableData(20, 1));
 
-				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+				options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 				await table.BulkCopyAsync(options, AsyncEnumerableData(30, 1));
 			}
 		}
@@ -447,7 +447,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataContext(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
 			DataProvider.MySqlTests.EnableNativeBulk(db.GetDataConnection(), context);
@@ -480,7 +480,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataContext(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
 			DataProvider.MySqlTests.EnableNativeBulk(db.GetDataConnection(), context);
@@ -514,7 +514,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataContext(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
 			DataProvider.MySqlTests.EnableNativeBulk(db.GetDataConnection(), context);
@@ -548,7 +548,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataConnection(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
 			DataProvider.MySqlTests.EnableNativeBulk(db, context);
@@ -578,7 +578,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataConnection(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
 			DataProvider.MySqlTests.EnableNativeBulk(db, context);
@@ -609,7 +609,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataConnection(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
 			DataProvider.MySqlTests.EnableNativeBulk(db, context);
@@ -640,7 +640,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataContext(context);
 			using var table = db.CreateLocalTable<IdentitySimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType, KeepIdentity = true };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType, KeepIdentity = true };
 
 			((IDataContext)db).Close();
 			db.CloseAfterUse = true;
@@ -661,7 +661,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataContext(context);
 			using var table = db.CreateLocalTable<IdentitySimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType, KeepIdentity = true };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType, KeepIdentity = true };
 
 			((IDataContext)db).Close();
 			db.CloseAfterUse = true;
@@ -682,7 +682,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataContext(context);
 			using var table = db.CreateLocalTable<IdentitySimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType, KeepIdentity = true };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType, KeepIdentity = true };
 
 			((IDataContext)db).Close();
 			db.CloseAfterUse = true;
@@ -703,7 +703,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataConnection(context);
 			using var table = db.CreateLocalTable<IdentitySimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType, KeepIdentity = true };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType, KeepIdentity = true };
 
 			((IDataContext)db).Close();
 			((IDataContext)db).CloseAfterUse = true;
@@ -723,7 +723,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataConnection(context);
 			using var table = db.CreateLocalTable<IdentitySimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType, KeepIdentity = true };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType, KeepIdentity = true };
 
 			((IDataContext)db).Close();
 			((IDataContext)db).CloseAfterUse = true;
@@ -743,7 +743,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataConnection(context);
 			using var table = db.CreateLocalTable<IdentitySimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType, KeepIdentity = true };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType, KeepIdentity = true };
 
 			((IDataContext)db).Close();
 			((IDataContext)db).CloseAfterUse = true;
@@ -764,7 +764,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataContext(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.MultipleRows };
 
 			((IDataContext)db).Close();
 			db.CloseAfterUse = true;
@@ -786,7 +786,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataContext(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.MultipleRows };
 
 			((IDataContext)db).Close();
 			db.CloseAfterUse = true;
@@ -808,7 +808,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataContext(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.MultipleRows };
 
 			((IDataContext)db).Close();
 			db.CloseAfterUse = true;
@@ -830,7 +830,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataConnection(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.MultipleRows };
 
 			((IDataContext)db).Close();
 			((IDataContext)db).CloseAfterUse = true;
@@ -851,7 +851,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataConnection(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.MultipleRows };
 
 			((IDataContext)db).Close();
 			((IDataContext)db).CloseAfterUse = true;
@@ -872,7 +872,7 @@ namespace Tests.xUpdate
 			var interceptor = new TestDataContextInterceptor();
 			using var db    = new DataConnection(context);
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
-			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			var options     = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.MultipleRows };
 
 			((IDataContext)db).Close();
 			((IDataContext)db).CloseAfterUse = true;
@@ -949,7 +949,7 @@ namespace Tests.xUpdate
 			using (var db = new DataConnection(context, ms))
 			using (var table = db.CreateLocalTable<BaseClass>())
 			{
-				var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+				var options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 				table.BulkCopy(options, data);
 
 				var items = table.OrderBy(_ => _.Id).ToArray();
@@ -1022,7 +1022,7 @@ namespace Tests.xUpdate
 			using (var db = new DataConnection(context))
 			using (var table = db.CreateLocalTable<BaseDefaultDiscriminator>())
 			{
-				var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+				var options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = copyType };
 				table.BulkCopy(options, data);
 
 				var items = table.OrderBy(_ => _.Id).ToArray();

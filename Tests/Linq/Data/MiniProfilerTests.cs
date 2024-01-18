@@ -1739,7 +1739,7 @@ namespace Tests.Data
 					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
 					{
 						long copied  = 0;
-						var  options = GetDefaultBulkCopyOptions(context) with
+						var  options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context))
 							{
 								BulkCopyType       = BulkCopyType.ProviderSpecific,
 								NotifyAfter        = 500,
@@ -1764,7 +1764,7 @@ namespace Tests.Data
 					using (db.CreateLocalTable<ClickHouseBulkCopyTable>())
 					{
 						long copied  = 0;
-						var  options = GetDefaultBulkCopyOptions(context) with
+						var  options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context))
 							{
 								BulkCopyType       = BulkCopyType.ProviderSpecific,
 								NotifyAfter        = 500,

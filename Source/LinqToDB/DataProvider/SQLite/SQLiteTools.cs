@@ -6,7 +6,6 @@ using System.Reflection;
 namespace LinqToDB.DataProvider.SQLite
 {
 	using Common;
-	using Configuration;
 	using Data;
 
 	public static partial class SQLiteTools
@@ -18,7 +17,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static bool AlwaysCheckDbNull
 		{
 			get => SQLiteOptions.Default.AlwaysCheckDbNull;
-			set => SQLiteOptions.Default = SQLiteOptions.Default with { AlwaysCheckDbNull = value };
+			set => SQLiteOptions.Default = new SQLiteOptions(SQLiteOptions.Default) { AlwaysCheckDbNull = value };
 		}
 
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
@@ -176,7 +175,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => SQLiteOptions.Default.BulkCopyType;
-			set => SQLiteOptions.Default = SQLiteOptions.Default with { BulkCopyType = value };
+			set => SQLiteOptions.Default = new SQLiteOptions(SQLiteOptions.Default) { BulkCopyType = value };
 		}
 
 		#endregion

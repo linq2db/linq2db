@@ -64,6 +64,8 @@ namespace LinqToDB.Data
 		Func<ConnectionOptions, IDataProvider>?         DataProviderFactory       = default,
 		ConnectionOptionsConnectionInterceptor?         ConnectionInterceptor     = default,
 		Action<MappingSchema, IEntityChangeDescriptor>? OnEntityDescriptorCreated = default
+		// If you add another parameter here, don't forget to update
+		// ConnectionOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
 		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
@@ -71,7 +73,7 @@ namespace LinqToDB.Data
 		{
 		}
 
-		ConnectionOptions(ConnectionOptions original)
+		public ConnectionOptions(ConnectionOptions original)
 		{
 			ConfigurationString       = original.ConfigurationString;
 			ConnectionString          = original.ConnectionString;

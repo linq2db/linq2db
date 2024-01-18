@@ -32,6 +32,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		BulkCopyType                  BulkCopyType           = BulkCopyType.MultipleRows,
 		bool                          NormalizeTimestampData = true,
 		PostgreSQLIdentifierQuoteMode IdentifierQuoteMode    = PostgreSQLIdentifierQuoteMode.Auto
+		// If you add another parameter here, don't forget to update
+		// PostgreSQLOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<PostgreSQLOptions>(BulkCopyType)
 	{
@@ -39,7 +41,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		PostgreSQLOptions(PostgreSQLOptions original) : base(original)
+		public PostgreSQLOptions(PostgreSQLOptions original) : base(original)
 		{
 			NormalizeTimestampData = original.NormalizeTimestampData;
 			IdentifierQuoteMode    = original.IdentifierQuoteMode;

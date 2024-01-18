@@ -156,7 +156,7 @@ namespace LinqToDB.DataProvider.Access
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => AccessOptions.Default.BulkCopyType;
-			set => AccessOptions.Default = AccessOptions.Default with { BulkCopyType = value };
+			set => AccessOptions.Default = new AccessOptions(AccessOptions.Default) { BulkCopyType = value };
 		}
 
 		#endregion

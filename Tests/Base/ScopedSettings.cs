@@ -75,7 +75,7 @@ namespace Tests
 		public FirebirdQuoteMode(FirebirdIdentifierQuoteMode mode)
 		{
 			_options                = FirebirdOptions.Default;
-			FirebirdOptions.Default = FirebirdOptions.Default with { IdentifierQuoteMode = mode };
+			FirebirdOptions.Default = new FirebirdOptions(FirebirdOptions.Default) { IdentifierQuoteMode = mode };
 		}
 
 		void IDisposable.Dispose()
@@ -308,12 +308,12 @@ namespace Tests
 
 		public OracleAlternativeBulkCopyMode(AlternativeBulkCopy mode)
 		{
-			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = mode };
+			OracleOptions.Default = new OracleOptions(OracleOptions.Default) { AlternativeBulkCopy = mode };
 		}
 
 		void IDisposable.Dispose()
 		{
-			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = _oldValue };
+			OracleOptions.Default = new OracleOptions(OracleOptions.Default) { AlternativeBulkCopy = _oldValue };
 		}
 	}
 

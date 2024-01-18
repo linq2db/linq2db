@@ -33,7 +33,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithPreloadGroups(this LinqOptions options, bool preloadGroups)
 		{
-			return options with { PreloadGroups = preloadGroups };
+			return new LinqOptions(options) { PreloadGroups = preloadGroups };
 		}
 
 		/// <summary>
@@ -44,7 +44,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithIgnoreEmptyUpdate(LinqOptions options, bool ignoreEmptyUpdate)
 		{
-			return options with { IgnoreEmptyUpdate = ignoreEmptyUpdate };
+			return new LinqOptions(options) { IgnoreEmptyUpdate = ignoreEmptyUpdate };
 		}
 
 		/// <summary>
@@ -57,7 +57,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithGenerateExpressionTest(this LinqOptions options, bool generateExpressionTest)
 		{
-			return options with { GenerateExpressionTest = generateExpressionTest };
+			return new LinqOptions(options) { GenerateExpressionTest = generateExpressionTest };
 		}
 
 		/// <summary>
@@ -67,7 +67,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithTraceMapperExpression(this LinqOptions options, bool traceMapperExpression)
 		{
-			return options with { TraceMapperExpression = traceMapperExpression };
+			return new LinqOptions(options) { TraceMapperExpression = traceMapperExpression };
 		}
 
 		/// <summary>
@@ -80,7 +80,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithDoNotClearOrderBys(this LinqOptions options, bool doNotClearOrderBys)
 		{
-			return options with { DoNotClearOrderBys = doNotClearOrderBys };
+			return new LinqOptions(options) { DoNotClearOrderBys = doNotClearOrderBys };
 		}
 
 		/// <summary>
@@ -93,7 +93,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithOptimizeJoins(this LinqOptions options, bool optimizeJoins)
 		{
-			return options with { OptimizeJoins = optimizeJoins };
+			return new LinqOptions(options) { OptimizeJoins = optimizeJoins };
 		}
 
 		/// <summary>
@@ -131,7 +131,7 @@ namespace LinqToDB
 		/// </example>
 		public static LinqOptions WithCompareNullsAsValues(this LinqOptions options, bool compareNullsAsValues)
 		{
-			return options with { CompareNullsAsValues = compareNullsAsValues };
+			return new LinqOptions(options) { CompareNullsAsValues = compareNullsAsValues };
 		}
 
 		/// <summary>
@@ -145,7 +145,7 @@ namespace LinqToDB
 		/// </remarks>
 		public static LinqOptions WithGuardGrouping(this LinqOptions options, bool guardGrouping)
 		{
-			return options with { GuardGrouping = guardGrouping };
+			return new LinqOptions(options) { GuardGrouping = guardGrouping };
 		}
 
 		/// <summary>
@@ -165,7 +165,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithDisableQueryCache(this LinqOptions options, bool disableQueryCache)
 		{
-			return options with { DisableQueryCache = disableQueryCache };
+			return new LinqOptions(options) { DisableQueryCache = disableQueryCache };
 		}
 
 		/// <summary>
@@ -174,7 +174,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithCacheSlidingExpiration(this LinqOptions options, TimeSpan? cacheSlidingExpiration)
 		{
-			return options with { CacheSlidingExpiration = cacheSlidingExpiration };
+			return new LinqOptions(options) { CacheSlidingExpiration = cacheSlidingExpiration };
 		}
 
 		/// <summary>
@@ -183,7 +183,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithPreferApply(this LinqOptions options, bool preferApply)
 		{
-			return options with { PreferApply = preferApply };
+			return new LinqOptions(options) { PreferApply = preferApply };
 		}
 
 		/// <summary>
@@ -194,7 +194,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithKeepDistinctOrdered(this LinqOptions options, bool keepDistinctOrdered)
 		{
-			return options with { KeepDistinctOrdered = keepDistinctOrdered };
+			return new LinqOptions(options) { KeepDistinctOrdered = keepDistinctOrdered };
 		}
 
 		/// <summary>
@@ -203,7 +203,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithParameterizeTakeSkip(this LinqOptions options, bool parameterizeTakeSkip)
 		{
-			return options with { ParameterizeTakeSkip = parameterizeTakeSkip };
+			return new LinqOptions(options) { ParameterizeTakeSkip = parameterizeTakeSkip };
 		}
 
 		/// <summary>
@@ -214,7 +214,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithEnableContextSchemaEdit(this LinqOptions options, bool enableContextSchemaEdit)
 		{
-			return options with { EnableContextSchemaEdit = enableContextSchemaEdit };
+			return new LinqOptions(options) { EnableContextSchemaEdit = enableContextSchemaEdit };
 		}
 
 		/// <summary>
@@ -225,7 +225,7 @@ namespace LinqToDB
 		/// </summary>
 		public static LinqOptions WithPreferExistsForScalar(this LinqOptions options, bool preferExistsForScalar)
 		{
-			return options with { PreferExistsForScalar = preferExistsForScalar };
+			return new LinqOptions(options) { PreferExistsForScalar = preferExistsForScalar };
 		}
 
 		#endregion
@@ -240,7 +240,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UsePreloadGroups(this DataOptions options, bool preloadGroups)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { PreloadGroups = preloadGroups });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { PreloadGroups = preloadGroups });
 		}
 
 		/// <summary>
@@ -251,7 +251,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseIgnoreEmptyUpdate(DataOptions options, bool ignoreEmptyUpdate)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { IgnoreEmptyUpdate = ignoreEmptyUpdate });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { IgnoreEmptyUpdate = ignoreEmptyUpdate });
 		}
 
 		/// <summary>
@@ -264,7 +264,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseGenerateExpressionTest(this DataOptions options, bool generateExpressionTest)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { GenerateExpressionTest = generateExpressionTest });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { GenerateExpressionTest = generateExpressionTest });
 		}
 
 		/// <summary>
@@ -274,7 +274,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseTraceMapperExpression(this DataOptions options, bool traceMapperExpression)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { TraceMapperExpression = traceMapperExpression });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { TraceMapperExpression = traceMapperExpression });
 		}
 
 		/// <summary>
@@ -287,7 +287,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseDoNotClearOrderBys(this DataOptions options, bool doNotClearOrderBys)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { DoNotClearOrderBys = doNotClearOrderBys });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { DoNotClearOrderBys = doNotClearOrderBys });
 		}
 
 		/// <summary>
@@ -300,7 +300,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseOptimizeJoins(this DataOptions options, bool optimizeJoins)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { OptimizeJoins = optimizeJoins });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { OptimizeJoins = optimizeJoins });
 		}
 
 		/// <summary>
@@ -338,7 +338,7 @@ namespace LinqToDB
 		/// </example>
 		public static DataOptions UseCompareNullsAsValues(this DataOptions options, bool compareNullsAsValues)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { CompareNullsAsValues = compareNullsAsValues });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { CompareNullsAsValues = compareNullsAsValues });
 		}
 
 		/// <summary>
@@ -352,12 +352,12 @@ namespace LinqToDB
 		/// </remarks>
 		public static DataOptions UseGuardGrouping(this DataOptions options, bool guardGrouping)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { GuardGrouping = guardGrouping });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { GuardGrouping = guardGrouping });
 		}
 
 		/// <summary>
 		/// Used to disable LINQ expressions caching for queries.
-		/// This cache reduces time, required for query parsing but have several side-effects:
+		/// This cache reduces time, required for query parsing but have several side effects:
 		/// <para />
 		/// - cached LINQ expressions could contain references to external objects as parameters, which could lead to memory leaks if those objects are not used anymore by other code
 		/// <para />
@@ -372,7 +372,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseDisableQueryCache(this DataOptions options, bool disableQueryCache)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { DisableQueryCache = disableQueryCache });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { DisableQueryCache = disableQueryCache });
 		}
 
 		/// <summary>
@@ -381,7 +381,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseCacheSlidingExpiration(this DataOptions options, TimeSpan? cacheSlidingExpiration)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { CacheSlidingExpiration = cacheSlidingExpiration });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { CacheSlidingExpiration = cacheSlidingExpiration });
 		}
 
 		/// <summary>
@@ -390,7 +390,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UsePreferApply(this DataOptions options, bool preferApply)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { PreferApply = preferApply });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { PreferApply = preferApply });
 		}
 
 		/// <summary>
@@ -401,7 +401,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseKeepDistinctOrdered(this DataOptions options, bool keepDistinctOrdered)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { KeepDistinctOrdered = keepDistinctOrdered });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { KeepDistinctOrdered = keepDistinctOrdered });
 		}
 
 		/// <summary>
@@ -410,18 +410,18 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseParameterizeTakeSkip(this DataOptions options, bool parameterizeTakeSkip)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { ParameterizeTakeSkip = parameterizeTakeSkip });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { ParameterizeTakeSkip = parameterizeTakeSkip });
 		}
 
 		/// <summary>
-		/// If <c>true</c>, user could add new mappings to context mapping schems (<see cref="IDataContext.MappingSchema"/>).
+		/// If <c>true</c>, user could add new mappings to context mapping schemas (<see cref="IDataContext.MappingSchema"/>).
 		/// Otherwise <see cref="LinqToDBException"/> will be generated on locked mapping schema edit attempt.
 		/// It is not recommended to enable this option as it has performance implications.
 		/// Proper approach is to create single <see cref="MappingSchema"/> instance once, configure mappings for it and use this <see cref="MappingSchema"/> instance for all context instances.
 		/// </summary>
 		public static DataOptions UseEnableContextSchemaEdit(this DataOptions options, bool enableContextSchemaEdit)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { EnableContextSchemaEdit = enableContextSchemaEdit });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { EnableContextSchemaEdit = enableContextSchemaEdit });
 		}
 
 		/// <summary>
@@ -432,7 +432,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UsePreferExistsForScalar(this DataOptions options, bool preferExistsForScalar)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { PreferExistsForScalar = preferExistsForScalar });
+			return options.WithOptions<LinqOptions>(o => new LinqOptions(o) { PreferExistsForScalar = preferExistsForScalar });
 		}
 
 		#endregion
@@ -444,7 +444,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithConfigurationString(this ConnectionOptions options, string? configurationString)
 		{
-			return options with { ConfigurationString = configurationString };
+			return new ConnectionOptions(options) { ConfigurationString = configurationString };
 		}
 
 		/// <summary>
@@ -452,7 +452,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithConnectionString(this ConnectionOptions options, string? connectionString)
 		{
-			return options with { ConnectionString = connectionString };
+			return new ConnectionOptions(options) { ConnectionString = connectionString };
 		}
 
 		/// <summary>
@@ -460,7 +460,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithDataProvider(this ConnectionOptions options, IDataProvider? dataProvider)
 		{
-			return options with { DataProvider = dataProvider };
+			return new ConnectionOptions(options) { DataProvider = dataProvider };
 		}
 
 		/// <summary>
@@ -468,7 +468,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithProviderName(this ConnectionOptions options, string providerName)
 		{
-			return options with { ProviderName = providerName };
+			return new ConnectionOptions(options) { ProviderName = providerName };
 		}
 
 		/// <summary>
@@ -476,7 +476,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithMappingSchema(this ConnectionOptions options, MappingSchema mappingSchema)
 		{
-			return options with { MappingSchema = mappingSchema };
+			return new ConnectionOptions(options) { MappingSchema = mappingSchema };
 		}
 
 		/// <summary>
@@ -484,7 +484,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithDbConnection(this ConnectionOptions options, DbConnection? connection)
 		{
-			return options with { DbConnection = connection };
+			return new ConnectionOptions(options) { DbConnection = connection };
 		}
 
 		/// <summary>
@@ -492,7 +492,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithDbTransaction(this ConnectionOptions options, DbTransaction transaction)
 		{
-			return options with { DbTransaction = transaction };
+			return new ConnectionOptions(options) { DbTransaction = transaction };
 		}
 
 		/// <summary>
@@ -500,7 +500,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithDisposeConnection(this ConnectionOptions options, bool disposeConnection)
 		{
-			return options with { DisposeConnection = disposeConnection };
+			return new ConnectionOptions(options) { DisposeConnection = disposeConnection };
 		}
 
 		/// <summary>
@@ -508,7 +508,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithConnectionFactory(this ConnectionOptions options, Func<DataOptions, DbConnection> connectionFactory)
 		{
-			return options with { ConnectionFactory = connectionFactory };
+			return new ConnectionOptions(options) { ConnectionFactory = connectionFactory };
 		}
 
 		/// <summary>
@@ -516,7 +516,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithOnEntityDescriptorCreated(this ConnectionOptions options, Action<MappingSchema, IEntityChangeDescriptor> onEntityDescriptorCreated)
 		{
-			return options with { OnEntityDescriptorCreated = onEntityDescriptorCreated };
+			return new ConnectionOptions(options) { OnEntityDescriptorCreated = onEntityDescriptorCreated };
 		}
 
 		/// <summary>
@@ -524,7 +524,7 @@ namespace LinqToDB
 		/// </summary>
 		public static ConnectionOptions WithDataProviderFactory(this ConnectionOptions options, Func<ConnectionOptions, IDataProvider> dataProviderFactory)
 		{
-			return options with { DataProviderFactory = dataProviderFactory };
+			return new ConnectionOptions(options) { DataProviderFactory = dataProviderFactory };
 		}
 
 		/// <summary>
@@ -545,7 +545,7 @@ namespace LinqToDB
 			Action<DbConnection>                         afterConnectionOpening,
 			Func<DbConnection, CancellationToken, Task>? afterConnectionOpeningAsync = null)
 		{
-			return options with { ConnectionInterceptor = new(afterConnectionOpening, afterConnectionOpeningAsync, options.ConnectionInterceptor?.OnConnectionOpened, options.ConnectionInterceptor?.OnConnectionOpenedAsync) };
+			return new ConnectionOptions(options) { ConnectionInterceptor = new(afterConnectionOpening, afterConnectionOpeningAsync, options.ConnectionInterceptor?.OnConnectionOpened, options.ConnectionInterceptor?.OnConnectionOpenedAsync) };
 		}
 
 		/// <summary>
@@ -567,7 +567,7 @@ namespace LinqToDB
 			Action<DbConnection>                         afterConnectionOpened,
 			Func<DbConnection, CancellationToken, Task>? afterConnectionOpenedAsync = null)
 		{
-			return options with { ConnectionInterceptor = new (options.ConnectionInterceptor?.OnConnectionOpening, options.ConnectionInterceptor?.OnConnectionOpeningAsync, afterConnectionOpened, afterConnectionOpenedAsync) };
+			return new ConnectionOptions(options) { ConnectionInterceptor = new(options.ConnectionInterceptor?.OnConnectionOpening, options.ConnectionInterceptor?.OnConnectionOpeningAsync, afterConnectionOpened, afterConnectionOpenedAsync) };
 		}
 
 		#endregion
@@ -579,7 +579,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConnectionString(this DataOptions options, string providerName, string connectionString)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { ProviderName = providerName, ConnectionString = connectionString });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { ProviderName = providerName, ConnectionString = connectionString });
 		}
 
 		/// <summary>
@@ -587,7 +587,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConnectionString(this DataOptions options, IDataProvider dataProvider, string connectionString)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, ConnectionString = connectionString });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DataProvider = dataProvider, ConnectionString = connectionString });
 		}
 
 		/// <summary>
@@ -595,7 +595,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConnectionString(this DataOptions options, string connectionString)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionString = connectionString });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { ConnectionString = connectionString });
 		}
 
 		/// <summary>
@@ -603,7 +603,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConfigurationString(this DataOptions options, string? configurationString)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { ConfigurationString = configurationString });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { ConfigurationString = configurationString });
 		}
 
 		/// <summary>
@@ -612,7 +612,7 @@ namespace LinqToDB
 		public static DataOptions UseConfigurationString(this DataOptions options, string configurationString, MappingSchema mappingSchema)
 		{
 			return options
-				.WithOptions<ConnectionOptions> (o => o with { ConfigurationString = configurationString, MappingSchema = mappingSchema });
+				.WithOptions<ConnectionOptions> (o => new ConnectionOptions(o) { ConfigurationString = configurationString, MappingSchema = mappingSchema });
 		}
 
 		/// <summary>
@@ -620,7 +620,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConfiguration(this DataOptions options, string? configurationString)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { ConfigurationString = configurationString });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { ConfigurationString = configurationString });
 		}
 
 		/// <summary>
@@ -629,7 +629,7 @@ namespace LinqToDB
 		public static DataOptions UseConfiguration(this DataOptions options, string configurationString, MappingSchema mappingSchema)
 		{
 			return options
-				.WithOptions<ConnectionOptions> (o => o with { ConfigurationString = configurationString, MappingSchema = mappingSchema });
+				.WithOptions<ConnectionOptions> (o => new ConnectionOptions(o) { ConfigurationString = configurationString, MappingSchema = mappingSchema });
 		}
 
 		/// <summary>
@@ -637,7 +637,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConnection(this DataOptions options, DbConnection connection)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { DbConnection = connection });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DbConnection = connection });
 		}
 
 		/// <summary>
@@ -645,7 +645,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConnection(this DataOptions options, IDataProvider dataProvider, DbConnection connection)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbConnection = connection });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DataProvider = dataProvider, DbConnection = connection });
 		}
 
 		/// <summary>
@@ -653,7 +653,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConnection(this DataOptions options, IDataProvider dataProvider, DbConnection connection, bool disposeConnection)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbConnection = connection, DisposeConnection = disposeConnection });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DataProvider = dataProvider, DbConnection = connection, DisposeConnection = disposeConnection });
 		}
 
 		/// <summary>
@@ -661,7 +661,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseProvider(this DataOptions options, string providerName)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { ProviderName = providerName });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { ProviderName = providerName });
 		}
 
 		/// <summary>
@@ -669,7 +669,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseDataProvider(this DataOptions options, IDataProvider dataProvider)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DataProvider = dataProvider });
 		}
 
 		/// <summary>
@@ -677,7 +677,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseMappingSchema(this DataOptions options, MappingSchema mappingSchema)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { MappingSchema = mappingSchema });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { MappingSchema = mappingSchema });
 		}
 
 		/// <summary>
@@ -685,7 +685,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConnectionFactory(this DataOptions options, Func<DataOptions, DbConnection> connectionFactory)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionFactory = connectionFactory });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { ConnectionFactory = connectionFactory });
 		}
 
 		/// <summary>
@@ -693,7 +693,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseOnEntityDescriptorCreated(this DataOptions options, Action<MappingSchema, IEntityChangeDescriptor> onEntityDescriptorCreated)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { OnEntityDescriptorCreated = onEntityDescriptorCreated });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { OnEntityDescriptorCreated = onEntityDescriptorCreated });
 		}
 
 		/// <summary>
@@ -701,7 +701,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseConnectionFactory(this DataOptions options, IDataProvider dataProvider, Func<DataOptions, DbConnection> connectionFactory)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, ConnectionFactory = connectionFactory });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DataProvider = dataProvider, ConnectionFactory = connectionFactory });
 		}
 
 		/// <summary>
@@ -709,7 +709,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseDataProviderFactory(this DataOptions options, Func<ConnectionOptions, IDataProvider> dataProviderFactory)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { DataProviderFactory = dataProviderFactory });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DataProviderFactory = dataProviderFactory });
 		}
 
 		/// <summary>
@@ -730,7 +730,7 @@ namespace LinqToDB
 			Action<DbConnection>                         afterConnectionOpening,
 			Func<DbConnection, CancellationToken, Task>? afterConnectionOpeningAsync = null)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionInterceptor = new(afterConnectionOpening, afterConnectionOpeningAsync, options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpened, options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpenedAsync) });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { ConnectionInterceptor = new(afterConnectionOpening, afterConnectionOpeningAsync, options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpened, options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpenedAsync) });
 		}
 
 		/// <summary>
@@ -752,7 +752,7 @@ namespace LinqToDB
 			Action<DbConnection>                         afterConnectionOpened,
 			Func<DbConnection, CancellationToken, Task>? afterConnectionOpenedAsync = null)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { ConnectionInterceptor = new(options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpening, options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpeningAsync, afterConnectionOpened, afterConnectionOpenedAsync) });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { ConnectionInterceptor = new(options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpening, options.ConnectionOptions.ConnectionInterceptor?.OnConnectionOpeningAsync, afterConnectionOpened, afterConnectionOpenedAsync) });
 		}
 
 		/// <summary>
@@ -760,7 +760,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseTransaction(this DataOptions options, IDataProvider dataProvider, DbTransaction transaction)
 		{
-			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbTransaction = transaction });
+			return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o) { DataProvider = dataProvider, DbTransaction = transaction });
 		}
 
 		/// <summary>
@@ -798,7 +798,7 @@ namespace LinqToDB
 					list.AddRange(o.Interceptors);
 				list.AddRange(interceptors);
 
-				return o with { Interceptors = list };
+				return new DataContextOptions(o) { Interceptors = list };
 			});
 		}
 
@@ -833,7 +833,7 @@ namespace LinqToDB
 					list.AddRange(o.Interceptors);
 				list.AddRange(interceptors);
 
-				return o with { Interceptors = list };
+				return new DataContextOptions(o) { Interceptors = list };
 			});
 		}
 
@@ -868,7 +868,7 @@ namespace LinqToDB
 					list.AddRange(o.Interceptors);
 				list.Add(interceptor);
 
-				return o with { Interceptors = list };
+				return new DataContextOptions(o) { Interceptors = list };
 			});
 		}
 
@@ -886,7 +886,7 @@ namespace LinqToDB
 						if (i != interceptor)
 							list.Add(i);
 
-				return o with { Interceptors = list };
+				return new DataContextOptions(o) { Interceptors = list };
 			});
 		}
 
@@ -900,7 +900,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static QueryTraceOptions WithTraceLevel(this QueryTraceOptions options, TraceLevel traceLevel)
 		{
-			return options with { TraceLevel = traceLevel };
+			return new QueryTraceOptions(options) { TraceLevel = traceLevel };
 		}
 
 		/// <summary>
@@ -910,7 +910,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static QueryTraceOptions WithOnTrace(this QueryTraceOptions options, Action<TraceInfo> onTrace)
 		{
-			return options with { OnTrace = onTrace };
+			return new QueryTraceOptions(options) { OnTrace = onTrace };
 		}
 
 		/// <summary>
@@ -920,7 +920,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static QueryTraceOptions WithWriteTrace(this QueryTraceOptions options, Action<string?,string?,TraceLevel> write)
 		{
-			return options with { WriteTrace = write };
+			return new QueryTraceOptions(options) { WriteTrace = write };
 		}
 
 		#endregion
@@ -933,7 +933,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseTraceLevel(this DataOptions options, TraceLevel traceLevel)
 		{
-			return options.WithOptions<QueryTraceOptions>(o => o with { TraceLevel = traceLevel });
+			return options.WithOptions<QueryTraceOptions>(o => new QueryTraceOptions(o) { TraceLevel = traceLevel });
 		}
 
 		/// <summary>
@@ -943,7 +943,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseTracing(this DataOptions options, Action<TraceInfo> onTrace)
 		{
-			return options.WithOptions<QueryTraceOptions>(o => o with { OnTrace = onTrace });
+			return options.WithOptions<QueryTraceOptions>(o => new QueryTraceOptions(o) { OnTrace = onTrace });
 		}
 
 		/// <summary>
@@ -954,7 +954,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseTracing(this DataOptions options, TraceLevel traceLevel, Action<TraceInfo> onTrace)
 		{
-			return options.WithOptions<QueryTraceOptions>(o => o with { OnTrace = onTrace, TraceLevel = traceLevel });
+			return options.WithOptions<QueryTraceOptions>(o => new QueryTraceOptions(o) { OnTrace = onTrace, TraceLevel = traceLevel });
 		}
 
 		/// <summary>
@@ -964,7 +964,7 @@ namespace LinqToDB
 		/// <returns>The builder instance so calls can be chained.</returns>
 		public static DataOptions UseTraceWith(this DataOptions options, Action<string?,string?,TraceLevel> write)
 		{
-			return options.WithOptions<QueryTraceOptions>(o => o with { WriteTrace = write });
+			return options.WithOptions<QueryTraceOptions>(o => new QueryTraceOptions(o) { WriteTrace = write });
 		}
 
 		#endregion
@@ -976,7 +976,7 @@ namespace LinqToDB
 		/// </summary>
 		public static RetryPolicyOptions WithRetryPolicy(this RetryPolicyOptions options, IRetryPolicy retryPolicy)
 		{
-			return options with { RetryPolicy = retryPolicy };
+			return new RetryPolicyOptions(options) { RetryPolicy = retryPolicy };
 		}
 
 		/// <summary>
@@ -986,7 +986,7 @@ namespace LinqToDB
 		/// </summary>
 		public static RetryPolicyOptions WithFactory(this RetryPolicyOptions options, Func<DataConnection,IRetryPolicy?>? factory)
 		{
-			return options with { Factory = factory };
+			return new RetryPolicyOptions(options) { Factory = factory };
 		}
 
 		/// <summary>
@@ -995,7 +995,7 @@ namespace LinqToDB
 		/// </summary>
 		public static RetryPolicyOptions WithMaxRetryCount(this RetryPolicyOptions options, int maxRetryCount)
 		{
-			return options with { MaxRetryCount = maxRetryCount };
+			return new RetryPolicyOptions(options) { MaxRetryCount = maxRetryCount };
 		}
 
 		/// <summary>
@@ -1004,7 +1004,7 @@ namespace LinqToDB
 		/// </summary>
 		public static RetryPolicyOptions WithMaxDelay(this RetryPolicyOptions options, TimeSpan maxDelay)
 		{
-			return options with { MaxDelay = maxDelay };
+			return new RetryPolicyOptions(options) { MaxDelay = maxDelay };
 		}
 
 		/// <summary>
@@ -1013,7 +1013,7 @@ namespace LinqToDB
 		/// </summary>
 		public static RetryPolicyOptions WithRandomFactor(this RetryPolicyOptions options, double randomFactor)
 		{
-			return options with { RandomFactor = randomFactor };
+			return new RetryPolicyOptions(options) { RandomFactor = randomFactor };
 		}
 
 		/// <summary>
@@ -1022,7 +1022,7 @@ namespace LinqToDB
 		/// </summary>
 		public static RetryPolicyOptions WithExponentialBase(this RetryPolicyOptions options, double exponentialBase)
 		{
-			return options with { ExponentialBase = exponentialBase };
+			return new RetryPolicyOptions(options) { ExponentialBase = exponentialBase };
 		}
 
 		/// <summary>
@@ -1031,7 +1031,7 @@ namespace LinqToDB
 		/// </summary>
 		public static RetryPolicyOptions WithCoefficient(this RetryPolicyOptions options, TimeSpan coefficient)
 		{
-			return options with { Coefficient = coefficient };
+			return new RetryPolicyOptions(options) { Coefficient = coefficient };
 		}
 
 		#endregion
@@ -1043,7 +1043,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseRetryPolicy(this DataOptions options, IRetryPolicy retryPolicy)
 		{
-			return options.WithOptions<RetryPolicyOptions>(o => o with { RetryPolicy = retryPolicy });
+			return options.WithOptions<RetryPolicyOptions>(o => new RetryPolicyOptions(o) { RetryPolicy = retryPolicy });
 		}
 
 		/// <summary>
@@ -1051,7 +1051,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseDefaultRetryPolicyFactory(this DataOptions options)
 		{
-			return options.WithOptions<RetryPolicyOptions>(o => o with { Factory = DefaultRetryPolicyFactory.GetRetryPolicy });
+			return options.WithOptions<RetryPolicyOptions>(o => new RetryPolicyOptions(o) { Factory = DefaultRetryPolicyFactory.GetRetryPolicy });
 		}
 
 		/// <summary>
@@ -1061,7 +1061,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseFactory(this DataOptions options, Func<DataConnection,IRetryPolicy?>? factory)
 		{
-			return options.WithOptions<RetryPolicyOptions>(o => o with { Factory = factory });
+			return options.WithOptions<RetryPolicyOptions>(o => new RetryPolicyOptions(o) { Factory = factory });
 		}
 
 		/// <summary>
@@ -1070,7 +1070,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseMaxRetryCount(this DataOptions options, int maxRetryCount)
 		{
-			return options.WithOptions<RetryPolicyOptions>(o => o with { MaxRetryCount = maxRetryCount });
+			return options.WithOptions<RetryPolicyOptions>(o => new RetryPolicyOptions(o) { MaxRetryCount = maxRetryCount });
 		}
 
 		/// <summary>
@@ -1079,7 +1079,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseMaxDelay(this DataOptions options, TimeSpan defaultMaxDelay)
 		{
-			return options.WithOptions<RetryPolicyOptions>(o => o with { MaxDelay = defaultMaxDelay });
+			return options.WithOptions<RetryPolicyOptions>(o => new RetryPolicyOptions(o) { MaxDelay = defaultMaxDelay });
 		}
 
 		/// <summary>
@@ -1088,7 +1088,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseRandomFactor(this DataOptions options, double randomFactor)
 		{
-			return options.WithOptions<RetryPolicyOptions>(o => o with { RandomFactor = randomFactor });
+			return options.WithOptions<RetryPolicyOptions>(o => new RetryPolicyOptions(o) { RandomFactor = randomFactor });
 		}
 
 		/// <summary>
@@ -1097,7 +1097,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseExponentialBase(this DataOptions options, double exponentialBase)
 		{
-			return options.WithOptions<RetryPolicyOptions>(o => o with { ExponentialBase = exponentialBase });
+			return options.WithOptions<RetryPolicyOptions>(o => new RetryPolicyOptions(o) { ExponentialBase = exponentialBase });
 		}
 
 		/// <summary>
@@ -1106,7 +1106,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseCoefficient(this DataOptions options, TimeSpan coefficient)
 		{
-			return options.WithOptions<RetryPolicyOptions>(o => o with { Coefficient = coefficient });
+			return options.WithOptions<RetryPolicyOptions>(o => new RetryPolicyOptions(o) { Coefficient = coefficient });
 		}
 
 		#endregion
@@ -1119,7 +1119,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithMaxBatchSize(this BulkCopyOptions options, int? maxBatchSize)
 		{
-			return options with { MaxBatchSize = maxBatchSize };
+			return new BulkCopyOptions(options) { MaxBatchSize = maxBatchSize };
 		}
 
 		/// <summary>
@@ -1127,7 +1127,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithBulkCopyTimeout(this BulkCopyOptions options, int? bulkCopyTimeout)
 		{
-			return options with { BulkCopyTimeout = bulkCopyTimeout };
+			return new BulkCopyOptions(options) { BulkCopyTimeout = bulkCopyTimeout };
 		}
 
 		/// <summary>
@@ -1135,7 +1135,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithBulkCopyType(this BulkCopyOptions options, BulkCopyType bulkCopyType)
 		{
-			return options with { BulkCopyType = bulkCopyType };
+			return new BulkCopyOptions(options) { BulkCopyType = bulkCopyType };
 		}
 
 		/// <summary>
@@ -1143,7 +1143,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithCheckConstraints(this BulkCopyOptions options, bool? checkConstraints)
 		{
-			return options with { CheckConstraints = checkConstraints };
+			return new BulkCopyOptions(options) { CheckConstraints = checkConstraints };
 		}
 
 		/// <summary>
@@ -1154,7 +1154,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithKeepIdentity(this BulkCopyOptions options, bool? keepIdentity)
 		{
-			return options with { KeepIdentity = keepIdentity };
+			return new BulkCopyOptions(options) { KeepIdentity = keepIdentity };
 		}
 
 		/// <summary>
@@ -1162,7 +1162,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithTableLock(this BulkCopyOptions options, bool? tableLock)
 		{
-			return options with { TableLock = tableLock };
+			return new BulkCopyOptions(options) { TableLock = tableLock };
 		}
 
 		/// <summary>
@@ -1170,7 +1170,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithKeepNulls(this BulkCopyOptions options, bool? keepNulls)
 		{
-			return options with { KeepNulls = keepNulls };
+			return new BulkCopyOptions(options) { KeepNulls = keepNulls };
 		}
 
 		/// <summary>
@@ -1178,7 +1178,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithFireTriggers(this BulkCopyOptions options, bool? fireTriggers)
 		{
-			return options with { FireTriggers = fireTriggers };
+			return new BulkCopyOptions(options) { FireTriggers = fireTriggers };
 		}
 
 		/// <summary>
@@ -1186,7 +1186,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithUseInternalTransaction(this BulkCopyOptions options, bool? useInternalTransaction)
 		{
-			return options with { UseInternalTransaction = useInternalTransaction };
+			return new BulkCopyOptions(options) { UseInternalTransaction = useInternalTransaction };
 		}
 
 		/// <summary>
@@ -1196,7 +1196,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithServerName(this BulkCopyOptions options, string? serverName)
 		{
-			return options with { ServerName = serverName };
+			return new BulkCopyOptions(options) { ServerName = serverName };
 		}
 
 		/// <summary>
@@ -1205,7 +1205,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithDatabaseName(this BulkCopyOptions options, string? databaseName)
 		{
-			return options with { DatabaseName = databaseName };
+			return new BulkCopyOptions(options) { DatabaseName = databaseName };
 		}
 
 		/// <summary>
@@ -1214,7 +1214,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithSchemaName(this BulkCopyOptions options, string? schemaName)
 		{
-			return options with { SchemaName = schemaName };
+			return new BulkCopyOptions(options) { SchemaName = schemaName };
 		}
 
 		/// <summary>
@@ -1222,7 +1222,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithTableName(this BulkCopyOptions options, string? tableName)
 		{
-			return options with { TableName = tableName };
+			return new BulkCopyOptions(options) { TableName = tableName };
 		}
 
 		/// <summary>
@@ -1231,7 +1231,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithTableOptions(this BulkCopyOptions options, TableOptions tableOptions)
 		{
-			return options with { TableOptions = tableOptions };
+			return new BulkCopyOptions(options) { TableOptions = tableOptions };
 		}
 
 		/// <summary>
@@ -1241,7 +1241,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithNotifyAfter(this BulkCopyOptions options, int notifyAfter)
 		{
-			return options with { NotifyAfter = notifyAfter };
+			return new BulkCopyOptions(options) { NotifyAfter = notifyAfter };
 		}
 
 		/// <summary>
@@ -1250,7 +1250,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithRowsCopiedCallback(this BulkCopyOptions options, Action<BulkCopyRowsCopied>? rowsCopiedCallback)
 		{
-			return options with { RowsCopiedCallback = rowsCopiedCallback };
+			return new BulkCopyOptions(options) { RowsCopiedCallback = rowsCopiedCallback };
 		}
 
 		/// <summary>
@@ -1260,7 +1260,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithUseParameters(this BulkCopyOptions options, bool useParameters)
 		{
-			return options with { UseParameters = useParameters };
+			return new BulkCopyOptions(options) { UseParameters = useParameters };
 		}
 
 		/// <summary>
@@ -1268,7 +1268,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithMaxParametersForBatch(this BulkCopyOptions options, int? maxParametersForBatch)
 		{
-			return options with { MaxParametersForBatch = maxParametersForBatch };
+			return new BulkCopyOptions(options) { MaxParametersForBatch = maxParametersForBatch };
 		}
 
 		/// <summary>
@@ -1276,7 +1276,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithMaxDegreeOfParallelism(this BulkCopyOptions options, int? maxDegreeOfParallelism)
 		{
-			return options with { MaxDegreeOfParallelism = maxDegreeOfParallelism };
+			return new BulkCopyOptions(options) { MaxDegreeOfParallelism = maxDegreeOfParallelism };
 		}
 
 		/// <summary>
@@ -1285,7 +1285,7 @@ namespace LinqToDB
 		/// </summary>
 		public static BulkCopyOptions WithWithoutSession(this BulkCopyOptions options, bool withoutSession)
 		{
-			return options with { WithoutSession = withoutSession };
+			return new BulkCopyOptions(options) { WithoutSession = withoutSession };
 		}
 
 		#endregion
@@ -1298,7 +1298,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyMaxBatchSize(this DataOptions options, int? maxBatchSize)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { MaxBatchSize = maxBatchSize });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { MaxBatchSize = maxBatchSize });
 		}
 
 		/// <summary>
@@ -1306,7 +1306,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyTimeout(this DataOptions options, int? bulkCopyTimeout)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { BulkCopyTimeout = bulkCopyTimeout });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { BulkCopyTimeout = bulkCopyTimeout });
 		}
 
 		/// <summary>
@@ -1314,7 +1314,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyType(this DataOptions options, BulkCopyType bulkCopyType)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { BulkCopyType = bulkCopyType });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { BulkCopyType = bulkCopyType });
 		}
 
 		/// <summary>
@@ -1328,7 +1328,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyCheckConstraints(this DataOptions options, bool? checkConstraints)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { CheckConstraints = checkConstraints });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { CheckConstraints = checkConstraints });
 		}
 
 		/// <summary>
@@ -1339,7 +1339,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyKeepIdentity(this DataOptions options, bool? keepIdentity)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { KeepIdentity = keepIdentity });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { KeepIdentity = keepIdentity });
 		}
 
 		/// <summary>
@@ -1354,7 +1354,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyTableLock(this DataOptions options, bool? tableLock)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { TableLock = tableLock });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { TableLock = tableLock });
 		}
 
 		/// <summary>
@@ -1367,7 +1367,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyKeepNulls(this DataOptions options, bool? keepNulls)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { KeepNulls = keepNulls });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { KeepNulls = keepNulls });
 		}
 
 		/// <summary>
@@ -1381,7 +1381,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyFireTriggers(this DataOptions options, bool? fireTriggers)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { FireTriggers = fireTriggers });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { FireTriggers = fireTriggers });
 		}
 
 		/// <summary>
@@ -1395,7 +1395,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyUseInternalTransaction(this DataOptions options, bool? useInternalTransaction)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { UseInternalTransaction = useInternalTransaction });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { UseInternalTransaction = useInternalTransaction });
 		}
 
 		/// <summary>
@@ -1405,7 +1405,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyServerName(this DataOptions options, string? serverName)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { ServerName = serverName });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { ServerName = serverName });
 		}
 
 		/// <summary>
@@ -1414,7 +1414,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyDatabaseName(this DataOptions options, string? databaseName)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { DatabaseName = databaseName });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { DatabaseName = databaseName });
 		}
 
 		/// <summary>
@@ -1423,7 +1423,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopySchemaName(this DataOptions options, string? schemaName)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { SchemaName = schemaName });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { SchemaName = schemaName });
 		}
 
 		/// <summary>
@@ -1431,7 +1431,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyTableName(this DataOptions options, string? tableName)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { TableName = tableName });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { TableName = tableName });
 		}
 
 		/// <summary>
@@ -1440,7 +1440,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyTableOptions(this DataOptions options, TableOptions tableOptions)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { TableOptions = tableOptions });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { TableOptions = tableOptions });
 		}
 
 		/// <summary>
@@ -1450,7 +1450,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyNotifyAfter(this DataOptions options, int notifyAfter)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { NotifyAfter = notifyAfter });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { NotifyAfter = notifyAfter });
 		}
 
 		/// <summary>
@@ -1459,7 +1459,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyRowsCopiedCallback(this DataOptions options, Action<BulkCopyRowsCopied>? rowsCopiedCallback)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { RowsCopiedCallback = rowsCopiedCallback });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { RowsCopiedCallback = rowsCopiedCallback });
 		}
 
 		/// <summary>
@@ -1469,7 +1469,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyUseParameters(this DataOptions options, bool useParameters)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { UseParameters = useParameters });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { UseParameters = useParameters });
 		}
 
 		/// <summary>
@@ -1477,7 +1477,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyMaxParametersForBatch(this DataOptions options, int? maxParametersForBatch)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { MaxParametersForBatch = maxParametersForBatch });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { MaxParametersForBatch = maxParametersForBatch });
 		}
 
 		/// <summary>
@@ -1485,7 +1485,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyMaxDegreeOfParallelism(this DataOptions options, int? maxDegreeOfParallelism)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { MaxDegreeOfParallelism = maxDegreeOfParallelism });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { MaxDegreeOfParallelism = maxDegreeOfParallelism });
 		}
 
 		/// <summary>
@@ -1494,7 +1494,7 @@ namespace LinqToDB
 		/// </summary>
 		public static DataOptions UseBulkCopyWithoutSession(this DataOptions options, bool withoutSession)
 		{
-			return options.WithOptions<BulkCopyOptions>(o => o with { WithoutSession = withoutSession });
+			return options.WithOptions<BulkCopyOptions>(o => new BulkCopyOptions(o) { WithoutSession = withoutSession });
 		}
 
 		#endregion

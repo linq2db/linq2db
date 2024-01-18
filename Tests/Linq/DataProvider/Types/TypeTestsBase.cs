@@ -145,29 +145,29 @@ namespace Tests.DataProvider
 			var options = GetDefaultBulkCopyOptions(context);
 
 			// test bulk copy modes
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.RowByRow };
+			options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.RowByRow };
 			table.Delete();
 			db.BulkCopy(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
 
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.MultipleRows };
 			table.Delete();
 			db.BulkCopy(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
 
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
+			options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.ProviderSpecific };
 			table.Delete();
 			db.BulkCopy(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
 
 			// test async provider-specific bulk copy as it often has own implementation
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
+			options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.ProviderSpecific };
 			await table.DeleteAsync();
 			await db.BulkCopyAsync(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
 
 #if NATIVE_ASYNC
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
+			options = new BulkCopyOptions(GetDefaultBulkCopyOptions(context)) { BulkCopyType = BulkCopyType.ProviderSpecific };
 			await table.DeleteAsync();
 			await db.BulkCopyAsync(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);

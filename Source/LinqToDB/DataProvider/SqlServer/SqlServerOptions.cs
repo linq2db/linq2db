@@ -20,6 +20,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	(
 		BulkCopyType BulkCopyType          = BulkCopyType.ProviderSpecific,
 		bool         GenerateScopeIdentity = true
+		// If you add another parameter here, don't forget to update
+		// SqlServerOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<SqlServerOptions>(BulkCopyType)
 	{
@@ -27,7 +29,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 		}
 
-		SqlServerOptions(SqlServerOptions original) : base(original)
+		public SqlServerOptions(SqlServerOptions original) : base(original)
 		{
 			GenerateScopeIdentity = original.GenerateScopeIdentity;
 		}

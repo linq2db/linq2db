@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		public static bool UseStandardCompatibleAggregates
 		{
 			get => ClickHouseOptions.Default.UseStandardCompatibleAggregates;
-			set => ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = value };
+			set => ClickHouseOptions.Default = new ClickHouseOptions(ClickHouseOptions.Default) { UseStandardCompatibleAggregates = value };
 		}
 	}
 }

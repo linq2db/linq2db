@@ -110,7 +110,7 @@ namespace LinqToDB.DataProvider.Informix
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => InformixOptions.Default.BulkCopyType;
-			set => InformixOptions.Default = InformixOptions.Default with { BulkCopyType = value };
+			set => InformixOptions.Default = new InformixOptions(InformixOptions.Default) { BulkCopyType = value };
 		}
 
 		#endregion

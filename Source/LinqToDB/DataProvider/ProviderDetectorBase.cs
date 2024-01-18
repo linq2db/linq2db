@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider
 				if (TryGetCachedServerVersion(options.ConnectionOptions.ConnectionString, out var version))
 					dialect = version ?? DefaultVersion;
 				else
-					return options.WithOptions<ConnectionOptions>(o => o with
+					return options.WithOptions<ConnectionOptions>(o => new ConnectionOptions(o)
 					{
 						DataProviderFactory = o =>
 						{

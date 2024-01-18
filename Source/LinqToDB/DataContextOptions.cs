@@ -18,6 +18,8 @@ namespace LinqToDB
 	(
 		int?                         CommandTimeout = default,
 		IReadOnlyList<IInterceptor>? Interceptors   = default
+		// If you add another parameter here, don't forget to update
+		// DataContextOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
 		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
 	{
@@ -25,7 +27,7 @@ namespace LinqToDB
 		{
 		}
 
-		DataContextOptions(DataContextOptions original)
+		public DataContextOptions(DataContextOptions original)
 		{
 			CommandTimeout = original.CommandTimeout;
 			Interceptors   = original.Interceptors;

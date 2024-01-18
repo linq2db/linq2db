@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.Sybase
 		public static BulkCopyType DefaultBulkCopyType
 		{
 			get => SybaseOptions.Default.BulkCopyType;
-			set => SybaseOptions.Default = SybaseOptions.Default with { BulkCopyType = value };
+			set => SybaseOptions.Default = new SybaseOptions(SybaseOptions.Default) { BulkCopyType = value };
 		}
 
 		#endregion

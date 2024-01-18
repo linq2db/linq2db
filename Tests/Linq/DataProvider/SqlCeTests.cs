@@ -541,7 +541,7 @@ namespace Tests.DataProvider
 			var defaultValue = SqlCeOptions.Default.InlineFunctionParameters;
 			try
 			{
-				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = inline };
+				SqlCeOptions.Default = new SqlCeOptions(SqlCeOptions.Default) { InlineFunctionParameters = inline };
 
 				using (var db = GetDataConnection(context))
 				{
@@ -554,7 +554,7 @@ namespace Tests.DataProvider
 			}
 			finally
 			{
-				SqlCeOptions.Default = SqlCeOptions.Default with { InlineFunctionParameters = defaultValue };
+				SqlCeOptions.Default = new SqlCeOptions(SqlCeOptions.Default) { InlineFunctionParameters = defaultValue };
 			}
 		}
 
