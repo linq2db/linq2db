@@ -1,0 +1,2 @@
+﻿#nullable enable
+LinqToDB.Data.DataReaderWrapper.DisposeAsync() -> System.Threading.Tasks.ValueTask
