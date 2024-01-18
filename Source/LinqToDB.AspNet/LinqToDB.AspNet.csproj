@@ -21,4 +21,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
 </Project>

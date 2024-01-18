@@ -54,4 +54,8 @@
 		<!--interceptor dependencies resolve-->
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
 </Project>

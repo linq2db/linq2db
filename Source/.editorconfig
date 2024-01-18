@@ -7,3 +7,6 @@ dotnet_diagnostic.ca1829.severity = error # CA1829: Use Length/Count property in
 resharper_csharp_allow_far_alignment = true
 resharper_int_align_switch_sections = true
 
+dotnet_diagnostic.RS0026.severity = none # bad public API optional parameters use
+dotnet_diagnostic.RS0027.severity = none # bad public API optional parameters use
+dotnet_diagnostic.RS0041.severity = none # fake NRT issues
