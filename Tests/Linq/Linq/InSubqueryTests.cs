@@ -18,16 +18,16 @@ namespace Tests.Linq
 		void AssertTest<T>(
 			ITestDataContext db,
 			bool             preferExists,
-			bool             compareNullsAsValues,
+			bool             compareResult,
 			IEnumerable<T>   expected,
 			IQueryable<T>    actual)
 		{
-			if (compareNullsAsValues)
+			if (compareResult)
 				AreEqual(expected, actual);
 			else
 				_ = actual.ToList();
 
-			if (compareNullsAsValues == false)
+			if (compareResult == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
 
 			if ((preferExists || db.SqlProviderFlags.IsExistsPreferableForContains) && !db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
