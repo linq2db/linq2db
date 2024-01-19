@@ -669,19 +669,12 @@ namespace LinqToDB.Linq.Builder
 						_cancellationToken = cancellationToken;
 					}
 
-#if !NATIVE_ASYNC
-					public Task DisposeAsync()
-					{
-						_grouped?.Dispose();
-						return Common.Internal.TaskCache.CompletedTask;
-					}
-#else
 					public ValueTask DisposeAsync()
 					{
 						_grouped?.Dispose();
 						return new ValueTask();
 					}
-#endif
+
 					public IGrouping<TKey, TElement> Current
 					{
 						get
@@ -696,11 +689,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-#if !NATIVE_ASYNC
-					public async Task<bool> MoveNextAsync()
-#else
 					public async ValueTask<bool> MoveNextAsync()
-#endif
 					{
 						_grouped ??= (await _elements.ToListAsync(_cancellationToken)
 								.ConfigureAwait(Configuration.ContinueOnCapturedContext))

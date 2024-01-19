@@ -1080,11 +1080,11 @@ namespace LinqToDB.Linq.Builder.Visitors
 						expr = Expression.Call(
 							mi.DeclaringType!,
 							name,
-							name != attr.MethodName ? Array<Type>.Empty : args);
+							name != attr.MethodName ? [] : args);
 					}
 					else
 					{
-						expr = Expression.Call(mi.DeclaringType!, attr.MethodName!, Array<Type>.Empty);
+						expr = Expression.Call(mi.DeclaringType!, attr.MethodName!, []);
 					}
 
 					var evaluated = (LambdaExpression?)expr.EvaluateExpression();

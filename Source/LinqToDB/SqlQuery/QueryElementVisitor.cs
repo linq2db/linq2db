@@ -2898,7 +2898,7 @@ namespace LinqToDB.SqlQuery
 					{
 						foreach(var m in current)
 						{
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+#if NET6_0_OR_GREATER
 							modified.TryAdd(m.Key, m.Value);
 #else
 							if (!modified.ContainsKey(m.Key))

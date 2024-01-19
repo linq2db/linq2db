@@ -464,7 +464,7 @@ namespace LinqToDB.Linq.Builder
 
 			query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
-			BuildQuery(query, sequence, queryParameter, ref preambles!, Array<Expression>.Empty);
+			BuildQuery(query, sequence, queryParameter, ref preambles!, []);
 
 			var idx      = preambles.Count;
 			var preamble = new DatachedPreamble<T>(query);

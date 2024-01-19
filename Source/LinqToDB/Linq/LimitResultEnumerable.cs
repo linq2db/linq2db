@@ -58,15 +58,6 @@ namespace LinqToDB.Linq
 				_cancellationToken = cancellationToken;
 			}
 
-#if !NATIVE_ASYNC
-			public Task DisposeAsync()
-			{
-				if (_enumerator == null)
-					return TaskCache.CompletedTask;
-
-				return _enumerator.DisposeAsync();
-			}
-#else
 			public ValueTask DisposeAsync()
 			{
 				if (_enumerator == null)
@@ -74,7 +65,7 @@ namespace LinqToDB.Linq
 
 				return _enumerator.DisposeAsync();
 			}
-#endif
+
 			public T Current
 			{
 				get
@@ -86,11 +77,7 @@ namespace LinqToDB.Linq
 				}
 			}
 
-#if !NATIVE_ASYNC
-			public async Task<bool> MoveNextAsync()
-#else
 			public async ValueTask<bool> MoveNextAsync()
-#endif
 			{
 				if (_enumerator == null)
 				{

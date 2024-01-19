@@ -1485,12 +1485,13 @@ namespace Tests
 			return options;
 		}
 
+		private static readonly JsonSerializerOptions _dumpObjectOptions = new JsonSerializerOptions { WriteIndented = true };
 		public virtual void DumpObject(object? obj)
 		{
 			if (obj == null)
 				return;
 
-			TestContext.WriteLine(JsonSerializer.Serialize(obj, new JsonSerializerOptions { WriteIndented = true }));
+			TestContext.WriteLine(JsonSerializer.Serialize(obj, _dumpObjectOptions));
 		}
 
 		[SuppressMessage("ReSharper", "AccessToDisposedClosure")]

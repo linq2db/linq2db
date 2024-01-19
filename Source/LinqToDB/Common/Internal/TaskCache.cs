@@ -13,11 +13,6 @@ namespace LinqToDB.Common.Internal
 		public static readonly Task<int> Zero     = Task.FromResult(0);
 		public static readonly Task<int> MinusOne = Task.FromResult(-1);
 
-#if NET45
-		public static readonly Task CompletedTask = True;
-#else
-		public static readonly Task CompletedTask = Task.CompletedTask;
-#endif
 		public static readonly Task<DataConnectionTransaction?> CompletedTransaction = Task.FromResult<DataConnectionTransaction?>(null);
 	}
 }

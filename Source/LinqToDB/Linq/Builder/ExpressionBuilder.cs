@@ -181,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 			var param = Expression.Parameter(typeof(Query<T>), "info");
 
 			List<Preamble>? preambles = null;
-			BuildQuery((Query<T>)_query, sequence, param, ref preambles, Array<Expression>.Empty);
+			BuildQuery((Query<T>)_query, sequence, param, ref preambles, []);
 
 			foreach (var q in _query.Queries)
 			{

@@ -429,7 +429,7 @@ namespace LinqToDB
 					}, out error);
 
 				if (error != null)
-					return Array<ISqlExpression>.Empty;
+					return [];
 
 				if (!ctx.WriteableValue.found)
 				{

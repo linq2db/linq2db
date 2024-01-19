@@ -166,7 +166,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			_replaced.Add(newElement);
 
 			// adding new replacement instance means incorrect visitor use
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+#if NET6_0_OR_GREATER
 			_replacements.TryAdd(oldElement, newElement);
 #else
 			_replacements[oldElement] = newElement;

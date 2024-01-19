@@ -317,7 +317,7 @@ namespace LinqToDB
 			this Type type,
 			Type[]? types)
 		{
-			types ??= Array<Type>.Empty;
+			types ??= [];
 
 			return type.GetTypeInfo().DeclaredConstructors
 				.SingleOrDefault(
@@ -619,7 +619,7 @@ namespace LinqToDB
 
 		public static ConstantExpression GetDefaultValueConstant(this Type type)
 			=> (ConstantExpression)GenerateDefaultValueConstantMethod
-				.MakeGenericMethod(type).Invoke(null, Array<object>.Empty)!;
+				.MakeGenericMethod(type).Invoke(null, [])!;
 
 		private static readonly MethodInfo GenerateDefaultValueConstantMethod =
 			typeof(SharedTypeExtensions).GetTypeInfo().GetDeclaredMethod(nameof(GenerateDefaultValueConstant))!;

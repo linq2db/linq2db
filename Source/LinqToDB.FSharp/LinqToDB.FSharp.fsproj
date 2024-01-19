@@ -6,7 +6,7 @@
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.FSharp.xml</DocumentationFile>
 
 		<WarningLevel>5</WarningLevel>
-		<TargetFrameworks>net472;netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
@@ -19,7 +19,7 @@
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 		<PackageReference Include="FSharp.Core" />
 	</ItemGroup>
 

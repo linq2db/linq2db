@@ -468,12 +468,6 @@ namespace LinqToDB.Linq
 				return GetEnumerator();
 			}
 
-#if !NATIVE_ASYNC
-			public IAsyncEnumerable<T> GetAsyncEnumerable(CancellationToken cancellationToken = default)
-			{
-				throw new NotImplementedException();
-			}
-#else
 			public async IAsyncEnumerable<T> GetAsyncEnumerable([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
 #pragma warning disable CA2007
@@ -514,7 +508,6 @@ namespace LinqToDB.Linq
 					while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
 				}
 			}
-#endif
 
 			public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 			{

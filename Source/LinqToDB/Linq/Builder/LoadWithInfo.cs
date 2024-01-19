@@ -80,7 +80,7 @@ namespace LinqToDB.Linq.Builder
 			using var sb = Pools.StringBuilder.Allocate();
 			var currentPath = MemberInfo != null
 				? new[] { MemberInfo }
-				: Array<MemberInfo>.Empty;
+				: [];
 
 			foreach (var info in EnumerateChains(currentPath, NextInfos))
 			{

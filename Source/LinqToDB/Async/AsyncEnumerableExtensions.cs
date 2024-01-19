@@ -145,11 +145,7 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-#if !NATIVE_ASYNC
-			await using (enumerator)
-#else
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#endif
 			{
 				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{
@@ -191,11 +187,7 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-#if !NATIVE_ASYNC
-			await using (enumerator)
-#else
 			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
-#endif
 			{
 				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				{

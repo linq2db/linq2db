@@ -498,13 +498,9 @@ namespace LinqToDB.Remote
 		{
 			try
 			{
-#if NATIVE_ASYNC
 #pragma warning disable CA2007
 				await using var db = CreateDataContext(configuration);
 #pragma warning restore CA2007
-#else
-				using var db = CreateDataContext(configuration);
-#endif
 
 				var data    = LinqServiceSerializer.DeserializeStringArray(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, queryData);
 				var queries = data.Select(r => LinqServiceSerializer.Deserialize(SerializationMappingSchema, MappingSchema ?? SerializationMappingSchema, db.Options, r)).ToArray();
@@ -512,13 +508,9 @@ namespace LinqToDB.Remote
 				foreach (var query in queries)
 					ValidateQuery(query);
 
-#if NATIVE_ASYNC
 #pragma warning disable CA2007
 				await using var _ = db.DataProvider.ExecuteScope(db);
 #pragma warning restore CA2007
-#else
-				using var _  = db.DataProvider.ExecuteScope(db);
-#endif
 
 				await db.BeginTransactionAsync(cancellationToken)
 					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
