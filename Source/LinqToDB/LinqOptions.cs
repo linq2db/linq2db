@@ -163,6 +163,8 @@ namespace LinqToDB
 		bool      ParameterizeTakeSkip    = true,
 		bool      EnableContextSchemaEdit = false,
 		bool      PreferExistsForScalar   = default
+		// If you add another parameter here, don't forget to update
+		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
 		: IOptionSet
 	{
