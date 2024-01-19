@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using LinqToDB;
@@ -1741,7 +1740,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		internal static string GetTableName(string context, [CallerMemberName] string? methodName = null)
+		internal static string GetTableName(string context, [System.Runtime.CompilerServices.CallerMemberName] string? methodName = null)
 		{
 			var tableName  = "xxPerson";
 

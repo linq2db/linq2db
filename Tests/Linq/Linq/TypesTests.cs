@@ -46,7 +46,7 @@ namespace Tests.Linq
 		[Test]
 		public void Bool3([DataSources] string context)
 		{
-			var values = Array<int>.Empty;
+			var values = Array.Empty<int>();
 
 			using (var db = GetDataContext(context))
 				AreEqual(

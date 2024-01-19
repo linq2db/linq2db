@@ -42,7 +42,7 @@ namespace LinqToDB.Reflection
 				}
 			}
 
-			var interfaces = !type.IsInterface && !type.IsArray ? type.GetInterfaces() : Array<Type>.Empty;
+			var interfaces = !type.IsInterface && !type.IsArray ? type.GetInterfaces() : [];
 
 			if (interfaces.Length == 0)
 			{

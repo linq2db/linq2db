@@ -45,7 +45,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 			if (connection == null)
-				return Array<ForeignKeyInfo>.Empty;
+				return [];
 
 			// this method (GetOleDbSchemaTable) could crash application hard with AV:
 			// https://github.com/linq2db/linq2db.LINQPad/issues/23

@@ -1,11 +1,7 @@
 ﻿using System;
+using System.Data;
 using System.Data.Common;
 using System.Threading.Tasks;
-#if NATIVE_ASYNC
-using IAsyncDisposable = System.IAsyncDisposable;
-#else
-using IAsyncDisposable = LinqToDB.Async.IAsyncDisposable;
-#endif
 
 namespace LinqToDB.Data
 {
@@ -68,11 +64,8 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NATIVE_ASYNC
+#if NET6_0_OR_GREATER
 		public async ValueTask DisposeAsync()
-#else
-		public async Task DisposeAsync()
-#endif
 		{
 			if (_disposed)
 				return;
@@ -84,11 +77,7 @@ namespace LinqToDB.Data
 				if (_dataConnection is IInterceptable<ICommandInterceptor> interceptable && interceptable.Interceptor != null)
 					await interceptable.Interceptor.BeforeReaderDisposeAsync(new(_dataConnection), Command, DataReader).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-#if NETSTANDARD2_1PLUS
 				await DataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#else
-				DataReader.Dispose();
-#endif
 				DataReader = null;
 			}
 
@@ -97,22 +86,17 @@ namespace LinqToDB.Data
 				OnBeforeCommandDispose?.Invoke(Command);
 
 				if (_dataConnection != null)
-				{
-#if NETSTANDARD2_1PLUS
 					await _dataConnection.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#else
-					_dataConnection.DataProvider.DisposeCommand(Command);
-#endif
-				}
 				else
-				{
-#if NETSTANDARD2_1PLUS
 					await Command.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#else
-					Command.Dispose();
-#endif
-				}
 			}
 		}
+#else
+		public ValueTask DisposeAsync()
+		{
+			Dispose();
+			return new ValueTask(Task.CompletedTask);
+		}
+#endif
 	}
 }

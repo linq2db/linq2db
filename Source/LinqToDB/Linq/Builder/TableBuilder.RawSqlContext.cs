@@ -86,7 +86,6 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var evaluatedSql = formatArg.EvaluateExpression()!;
-#if !NET45
 				if (evaluatedSql is FormattableString formattable)
 				{
 					format     = formattable.Format;
@@ -103,7 +102,6 @@ namespace LinqToDB.Linq.Builder
 					arguments = args;
 				}
 				else
-#endif
 				{
 					var rawSqlString = (RawSqlString)evaluatedSql;
 

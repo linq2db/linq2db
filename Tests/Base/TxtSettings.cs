@@ -11,7 +11,7 @@ namespace Tests
 			public string                  TypeName   { get; set; } = null!;
 			public string?                 Name       { get; set; }
 			public bool                    Default    { get; set; }
-			public IEnumerable<NamedValue> Attributes => Array<NamedValue>.Empty;
+			public IEnumerable<NamedValue> Attributes => [];
 		}
 
 		sealed class ConnectionStringSettings : IConnectionStringSettings

@@ -1508,7 +1508,6 @@ namespace LinqToDB
 			return argumentsExpr;
 		}
 
-#if !NET45
 		/// <summary>
 		///     <para>
 		///         Creates a LINQ query based on an interpolated string representing a SQL query.
@@ -1588,8 +1587,6 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
 					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql)));
 		}
-
-#endif
 
 		/// <summary>
 		///     <para>

@@ -266,7 +266,9 @@ namespace Tests.Linq
 
 				if (values == null)
 				{
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
 					throw new ArgumentNullException("values", "Values for \"In/Any\" operation should not be empty");
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 				}
 
 				using var dataTable = new DataTable("IntTableType");

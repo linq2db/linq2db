@@ -318,8 +318,8 @@ namespace LinqToDB.Linq
 
 				if (isTypeGeneric || isMethodGeneric)
 				{
-					var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArguments() : Array<Type>.Empty;
-					var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()                 : Array<Type>.Empty;
+					var typeGenericArgs   = isTypeGeneric   ? mm.DeclaringType.GetGenericArguments() : [];
+					var methodGenericArgs = isMethodGeneric ? mm.GetGenericArguments()               : [];
 
 					args = typeGenericArgs.SequenceEqual(methodGenericArgs) ?
 						typeGenericArgs : typeGenericArgs.Concat(methodGenericArgs).ToArray();
@@ -618,7 +618,7 @@ namespace LinqToDB.Linq
 			{ M(() => "".Replace    (' ',' ') ), N(() => L<string?,char,char,string?>      ((string? obj,char   p0,char   p1)         => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			{ M(() => "".TrimEnd    ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimRight(obj))) },
 			{ M(() => "".TrimStart  ()        ), N(() => L<string,string?>                 ((string obj)                              =>     TrimLeft (obj))) },
 #endif

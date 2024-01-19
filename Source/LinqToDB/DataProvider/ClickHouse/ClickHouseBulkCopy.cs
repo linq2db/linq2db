@@ -34,13 +34,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
-#endif
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
@@ -51,13 +49,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (_provider.Adapter.OctonicaCreateWriter != null)
 					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, source);
-#if NATIVE_ASYNC
 				if (_provider.Adapter.OctonicaCreateWriterAsync != null)
 					return SafeAwaiter.Run(() => ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, default));
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
 					return SafeAwaiter.Run(() => ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), default));
-#endif
 			}
 
 			return MultipleRowsCopy(table, options, source);
@@ -82,7 +78,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -101,7 +96,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
-#endif
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
@@ -276,11 +270,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var sql = cmd.Value.ToString();
 
 			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if NATIVE_ASYNC
 			await using (bc.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (bc)
-#endif
 			{
 				for (var i = 0; i < columnTypes.Length; i++)
 				{
@@ -356,7 +346,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 		}
 
-#if NATIVE_ASYNC
 		private async Task<BulkCopyRowsCopied> ProviderSpecificOctonicaBulkCopyAsync<T>(
 			ProviderConnections providerConnections,
 			ITable<T> table,
@@ -474,7 +463,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				return rc;
 			}
 		}
-#endif
 
 #endregion
 
@@ -528,6 +516,13 @@ namespace LinqToDB.DataProvider.ClickHouse
 				if (copyOptions.MaxDegreeOfParallelism != null)
 					bc.MaxDegreeOfParallelism = copyOptions.MaxDegreeOfParallelism.Value;
 
+				if (bc.HasInitAsync)
+				{
+					// no escaping?
+					bc.ColumnNames = columns.Select(c => c.ColumnName).ToArray();
+					await bc.InitAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				}
+
 				var rd = createDataReader(columns);
 
 				await TraceActionAsync(
@@ -549,7 +544,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				// actually currently DisposeAsync is not implemented in Client provider and we can call Dispose with same effect
 				if (disposeConnection)
 				{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 					await connection.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 #else
 					connection.Dispose();

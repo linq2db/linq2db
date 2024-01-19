@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Interceptors
 {
-	using Common.Internal;
-
 	public sealed class ConnectionOptionsConnectionInterceptor : ConnectionInterceptor
 	{
 		internal readonly Action<DbConnection>?                        OnConnectionOpening;
@@ -37,7 +35,7 @@ namespace LinqToDB.Interceptors
 				return OnConnectionOpeningAsync(connection, cancellationToken);
 
 			OnConnectionOpening?.Invoke(connection);
-			return TaskCache.CompletedTask;
+			return Task.CompletedTask;
 		}
 
 		public override void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
@@ -51,7 +49,7 @@ namespace LinqToDB.Interceptors
 				return OnConnectionOpenedAsync(connection, cancellationToken);
 
 			OnConnectionOpened?.Invoke(connection);
-			return TaskCache.CompletedTask;
+			return Task.CompletedTask;
 		}
 	}
 }

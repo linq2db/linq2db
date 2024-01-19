@@ -53,7 +53,7 @@ namespace LinqToDB.SqlProvider
 
 		public bool HasParameters() => _actualParameters?.Count > 0;
 
-		public IReadOnlyList<SqlParameter> GetParameters() => _actualParameters ?? (IReadOnlyList<SqlParameter>)Array<SqlParameter>.Empty;
+		public IReadOnlyList<SqlParameter> GetParameters() => _actualParameters ?? (IReadOnlyList<SqlParameter>)[];
 
 		public SqlParameter AddParameter(SqlParameter parameter)
 		{

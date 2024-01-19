@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 			var value    = builder.EvaluateExpression<string>(methodCall.Arguments[1]);
 
 			table.SqlTable.SqlTableType   = SqlTableType.Expression;
-			table.SqlTable.TableArguments = Array<ISqlExpression>.Empty;
+			table.SqlTable.TableArguments = [];
 
 			switch (methodCall.Method.Name)
 			{

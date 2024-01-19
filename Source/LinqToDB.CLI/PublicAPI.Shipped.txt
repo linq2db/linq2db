@@ -1,0 +1,31 @@
+﻿#nullable enable
+abstract LinqToDB.LinqToDBHost.TransformText() -> string!
+LinqToDB.CommandLine.NameFilter
+LinqToDB.CommandLine.NameFilter.AddName(string? schema, string! name) -> bool
+LinqToDB.CommandLine.NameFilter.AddRegularExpression(string? schema, string! regex) -> bool
+LinqToDB.CommandLine.NameFilter.ApplyTo(string? schema, string! name) -> bool
+LinqToDB.CommandLine.NameFilter.NameFilter() -> void
+LinqToDB.CommandLine.StringEnumOption
+LinqToDB.CommandLine.StringEnumOption.<Clone>$() -> LinqToDB.CommandLine.StringEnumOption!
+LinqToDB.CommandLine.StringEnumOption.Deconstruct(out bool Default, out bool T4Default, out string! Value, out string! Help) -> void
+LinqToDB.CommandLine.StringEnumOption.Default.get -> bool
+LinqToDB.CommandLine.StringEnumOption.Default.init -> void
+LinqToDB.CommandLine.StringEnumOption.Equals(LinqToDB.CommandLine.StringEnumOption? other) -> bool
+LinqToDB.CommandLine.StringEnumOption.Help.get -> string!
+LinqToDB.CommandLine.StringEnumOption.Help.init -> void
+LinqToDB.CommandLine.StringEnumOption.StringEnumOption(bool Default, bool T4Default, string! Value, string! Help) -> void
+LinqToDB.CommandLine.StringEnumOption.T4Default.get -> bool
+LinqToDB.CommandLine.StringEnumOption.T4Default.init -> void
+LinqToDB.CommandLine.StringEnumOption.Value.get -> string!
+LinqToDB.CommandLine.StringEnumOption.Value.init -> void
+LinqToDB.LinqToDBHost
+LinqToDB.LinqToDBHost.GenerationEnvironment.get -> string!
+LinqToDB.LinqToDBHost.GenerationEnvironment.set -> void
+LinqToDB.LinqToDBHost.LinqToDBHost() -> void
+LinqToDB.LinqToDBHost.Write(string! code) -> void
+override LinqToDB.CommandLine.StringEnumOption.Equals(object? obj) -> bool
+override LinqToDB.CommandLine.StringEnumOption.GetHashCode() -> int
+override LinqToDB.CommandLine.StringEnumOption.ToString() -> string!
+static LinqToDB.CommandLine.StringEnumOption.operator !=(LinqToDB.CommandLine.StringEnumOption? left, LinqToDB.CommandLine.StringEnumOption? right) -> bool
+static LinqToDB.CommandLine.StringEnumOption.operator ==(LinqToDB.CommandLine.StringEnumOption? left, LinqToDB.CommandLine.StringEnumOption? right) -> bool
+virtual LinqToDB.LinqToDBHost.Initialize() -> void

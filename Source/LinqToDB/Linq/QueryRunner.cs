@@ -13,9 +13,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-#if !NATIVE_ASYNC
-	using Async;
-#endif
 	using Builder;
 	using Common;
 	using Common.Internal.Cache;
@@ -581,11 +578,7 @@ namespace LinqToDB.Linq
 
 			public T Current { get; set; } = default!;
 
-#if !NATIVE_ASYNC
-			public async Task<bool> MoveNextAsync()
-#else
 			public async ValueTask<bool> MoveNextAsync()
-#endif
 			{
 				if (_queryRunner == null)
 				{
@@ -627,11 +620,7 @@ namespace LinqToDB.Linq
 				_dataReader  = null;
 			}
 
-#if !NATIVE_ASYNC
-			public async Task DisposeAsync()
-#else
 			public async ValueTask DisposeAsync()
-#endif
 			{
 				if (_dataReader != null)
 					await _dataReader.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
@@ -771,7 +760,7 @@ namespace LinqToDB.Linq
 				return ret;
 			}
 
-			return Array<T>.Empty.First();
+			return Array.Empty<T>().First();
 		}
 
 		static async Task<T> ExecuteElementAsync<T>(
@@ -784,18 +773,10 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
-#if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
 			{
 				var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if NATIVE_ASYNC
 				await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-				await using (dr)
-#endif
 				{
 					if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
 					{
@@ -808,7 +789,7 @@ namespace LinqToDB.Linq
 						return ret;
 					}
 
-					return Array<T>.Empty.First();
+					return Array.Empty<T>().First();
 				}
 			}
 		}
@@ -845,11 +826,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
-#if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
 				return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
@@ -885,11 +862,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
-#if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
 				return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
 
@@ -934,11 +907,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles);
-#if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
 			{
 				var n = await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
@@ -992,11 +961,7 @@ namespace LinqToDB.Linq
 			CancellationToken cancellationToken)
 		{
 			var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles);
-#if NATIVE_ASYNC
 			await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (runner)
-#endif
 			{
 				var n = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 

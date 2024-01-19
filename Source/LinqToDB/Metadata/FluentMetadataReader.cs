@@ -51,9 +51,9 @@ namespace LinqToDB.Metadata
 		private MappingAttribute[] GetAllAttributes(Type? sourceType, ICustomAttributeProvider attributeProvider)
 		{
 			if (sourceType == null)
-				return _types  .TryGetValue((Type      )attributeProvider, out var typeAttributes  ) ? typeAttributes   : Array<MappingAttribute>.Empty;
+				return _types  .TryGetValue((Type      )attributeProvider, out var typeAttributes  ) ? typeAttributes   : [];
 			else
-				return _members.TryGetValue((MemberInfo)attributeProvider, out var memberAttributes) ? memberAttributes : Array<MappingAttribute>.Empty;
+				return _members.TryGetValue((MemberInfo)attributeProvider, out var memberAttributes) ? memberAttributes : [];
 		}
 
 		public MappingAttribute[] GetAttributes(Type type)
@@ -73,7 +73,7 @@ namespace LinqToDB.Metadata
 			if (_dynamicColumns.TryGetValue(type, out var dynamicColumns))
 					return dynamicColumns;
 
-			return Array<MemberInfo>.Empty;
+			return [];
 		}
 
 		/// <summary>

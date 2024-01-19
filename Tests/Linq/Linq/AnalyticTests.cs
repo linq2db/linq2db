@@ -214,11 +214,6 @@ namespace Tests.Linq
 		public void TestCorrOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-#if NETFRAMEWORK
-			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
-				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
-#endif
-
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -357,11 +352,6 @@ namespace Tests.Linq
 		public void TestCovarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-#if NETFRAMEWORK
-			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
-				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
-#endif
-
 			using (var db = GetDataContext(context))
 			{
 				var q =
@@ -1174,11 +1164,6 @@ namespace Tests.Linq
 		public void TestVarSampOracle([IncludeDataSources(true, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
-#if NETFRAMEWORK
-			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
-				Assert.Inconclusive("MySqlConnector 0.x cannot parse 'nan'");
-#endif
-
 			using (var db = GetDataContext(context))
 			{
 				var q =

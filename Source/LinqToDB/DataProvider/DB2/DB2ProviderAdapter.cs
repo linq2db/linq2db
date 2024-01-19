@@ -25,8 +25,6 @@ namespace LinqToDB.DataProvider.DB2
 		[Obsolete("Unused. Will be removed in v6")]
 		public const string? ClientNamespaceOld  = null;
 #else
-		// note that we try new assembly name (IBM.Data.Db2) which available since net5.0 even for older
-		// TFMs as we don't have .net5.0 linq2db build and netcoreapp3.1 build will be used there
 		public const string  AssemblyName        = "IBM.Data.Db2";
 		public const string  ClientNamespace     = "IBM.Data.Db2";
 		public const string  AssemblyNameOld     = "IBM.Data.DB2.Core";

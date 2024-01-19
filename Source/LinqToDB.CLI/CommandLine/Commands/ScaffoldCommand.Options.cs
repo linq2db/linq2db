@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
@@ -212,7 +215,7 @@ Example of platform-specific providers:
 
 If you choose T4, you can create initial empty template using 'dotnet linq2db template' command. It will generate initial template file with pre-generated extension points which you can modify to implement required customizations.
 Customization using compiled assembly has several requirements:
-- it should be compatible with current runtime, used by 'dotnet linq2db' tool (netcoreapp3.1 by default);
+- it should be compatible with current runtime, used by 'dotnet linq2db' tool;
 - assembly should contain exactly one interceptor class with customization logic. It should be inherited from {nameof(ScaffoldInterceptors)} and has default public constructor;
 - linq2db.Tools version should match tool's version to avoid possible compatibility issues/errors.",
 					null,
@@ -412,8 +415,23 @@ If you don't specify some property, CLI will use default value for current optio
 			/// <summary>
 			/// Naming option example template.
 			/// </summary>
-			private const string NAMING_EXAMPLE_TEMPLATE =
 #pragma warning disable JSON001 // Invalid JSON pattern
+#if SUPPORTS_COMPOSITE_FORMAT
+			private static readonly CompositeFormat NAMING_EXAMPLE_TEMPLATE = CompositeFormat.Parse(
+ @"
+{{
+  ""dataModel"":
+  {{
+    ""{0}"":
+    {{
+      ""case""         : ""pascal_case"",
+      ""pluralization"": ""singular"",
+      ""suffix""       : ""Record""
+    }}
+  }}
+}}");
+#else
+			private const string NAMING_EXAMPLE_TEMPLATE =
  @"
 {{
   ""dataModel"":
@@ -426,6 +444,7 @@ If you don't specify some property, CLI will use default value for current optio
     }}
   }}
 }}";
+#endif
 #pragma warning restore JSON001 // Invalid JSON pattern
 
 			/// <summary>
@@ -1119,7 +1138,7 @@ If you don't specify some property, CLI will use default value for current optio
 					option,
 					help,
 					NAMING_HELP,
-					new[] { string.Format(NAMING_EXAMPLE_TEMPLATE, option) },
+					new[] { string.Format(CultureInfo.InvariantCulture, NAMING_EXAMPLE_TEMPLATE, option) },
 					defaults,
 					t4defaults);
 			}

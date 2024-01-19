@@ -17,7 +17,7 @@ namespace System.Data.Linq
 		{
 			if(value == null)
 			{
-				_bytes = Array<byte>.Empty;
+				_bytes = [];
 			}
 			else
 			{

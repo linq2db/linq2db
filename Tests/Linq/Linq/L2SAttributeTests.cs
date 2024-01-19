@@ -1,4 +1,4 @@
-﻿#if NET472
+﻿#if NETFRAMEWORK
 using System.Data.Linq.Mapping;
 using ColumnAttribute = System.Data.Linq.Mapping.ColumnAttribute;
 using TableAttribute = System.Data.Linq.Mapping.TableAttribute;
@@ -17,7 +17,7 @@ namespace Tests.Linq
 	using LinqToDB.Metadata;
 	using Model;
 
-#if NET472
+#if NETFRAMEWORK
 	[Table(Name = "Person")]
 #else
 	[Table("Person")]
@@ -26,7 +26,7 @@ namespace Tests.Linq
 	{
 		private int _personID;
 
-#if NET472
+#if NETFRAMEWORK
 		[Column(
 			Storage       = "_personID",
 			Name          = "PersonID",
@@ -65,7 +65,7 @@ namespace Tests.Linq
 		{
 			var ms = new LinqToDB.Mapping.MappingSchema();
 			ms.AddMetadataReader(new SystemComponentModelDataAnnotationsSchemaAttributeReader());
-#if NET472
+#if NETFRAMEWORK
 			ms.AddMetadataReader(new SystemDataLinqAttributeReader());
 #endif
 

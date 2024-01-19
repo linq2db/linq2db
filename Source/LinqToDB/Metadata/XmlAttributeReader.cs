@@ -260,7 +260,7 @@ namespace LinqToDB.Metadata
 			if ((_types.TryGetValue(type.FullName!, out var t) || _types.TryGetValue(type.Name, out t)) && t.Attributes.Length > 0)
 				return t.Attributes.Select(a => a.MakeAttribute()).ToArray();
 
-			return Array<MappingAttribute>.Empty;
+			return [];
 		}
 
 		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
@@ -271,11 +271,11 @@ namespace LinqToDB.Metadata
 					return m.Attributes.Select(a => a.MakeAttribute()).ToArray();
 			}
 
-			return Array<MappingAttribute>.Empty;
+			return [];
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+		public MemberInfo[] GetDynamicColumns(Type type) => [];
 
 		public string GetObjectID() => _objectId;
 	}

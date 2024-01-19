@@ -97,10 +97,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 						Expression.Call(
 							dataReaderParameter,
 							Adapter.GetMySqlDecimalReaderMethod,
-							Array<Type>.Empty,
+							[],
 							indexParameter),
 						"ToString",
-						Array<Type>.Empty);
+						[]);
 
 					ReaderExpressions[new ReaderInfo
 					{
@@ -143,13 +143,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var l = Expression.Lambda<Func<string, DbConnection>>(
 				Expression.Convert(
 					Expression.MemberInit(
-						Expression.New(connectionType.GetConstructor(Array<Type>.Empty) ?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)")),
+						Expression.New(connectionType.GetConstructor([]) ?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)")),
 						Expression.Bind(Methods.ADONet.ConnectionString, p)),
 					typeof(DbConnection)),
 				p);
 			return l;
 		}
-
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
 			TableOptions.IsLocalTemporaryStructure |
@@ -264,7 +263,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			DataOptions options, ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -277,7 +275,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				source,
 				cancellationToken);
 		}
-#endif
+
 		#endregion
 
 		private static MappingSchema GetMappingSchema(ClickHouseProvider provider)

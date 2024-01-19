@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Threading;
@@ -7,12 +8,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	using Common.Internal;
-
-	public class DataReaderAsync : IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public class DataReaderAsync : IDisposable, IAsyncDisposable
 	{
 		internal DataReaderWrapper? ReaderWrapper     { get; private set; }
 		public   DbDataReader?      Reader            => ReaderWrapper?.DataReader;
@@ -51,7 +47,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
 		public async ValueTask DisposeAsync()
 		{
 			if (ReaderWrapper != null)
@@ -74,19 +69,6 @@ namespace LinqToDB.Data
 				ReaderWrapper = null;
 			}
 		}
-#elif NATIVE_ASYNC
-		public ValueTask DisposeAsync()
-		{
-			Dispose();
-			return default;
-		}
-#else
-		public Task DisposeAsync()
-		{
-			Dispose();
-			return TaskCache.CompletedTask;
-		}
-#endif
 
 		#region Query with object reader
 

@@ -5,9 +5,13 @@
 		<RootNamespace>LinqToDB.Remote.Wcf</RootNamespace>
 
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.wcf.xml</DocumentationFile>
-		<TargetFrameworks>net45</TargetFrameworks>
+		<TargetFrameworks>net462</TargetFrameworks>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 	</ItemGroup>

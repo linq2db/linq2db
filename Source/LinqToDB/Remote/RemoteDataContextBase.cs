@@ -274,7 +274,7 @@ namespace LinqToDB.Remote
 				{
 					var key = Tuple.Create(SqlProviderType, MappingSchema, SqlOptimizerType, ((IDataContext)this).SqlProviderFlags, Options);
 
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
 					_createSqlProvider = _sqlBuilders.GetOrAdd(
 						key,
 						key =>
@@ -308,7 +308,7 @@ namespace LinqToDB.Remote
 								}))
 							.CompileExpression();
 					}
-#if NET45 || NET46 || NETSTANDARD2_0
+#if NET462 || NETSTANDARD2_0
 					);
 #else
 					, (MappingSchema, GetSqlOptimizer(Options)));
@@ -444,21 +444,12 @@ namespace LinqToDB.Remote
 			((IDataContext)this).Close();
 		}
 
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			Disposed = true;
-
-			return ((IDataContext)this).CloseAsync();
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			Disposed = true;
 
 			return new ValueTask(((IDataContext)this).CloseAsync());
 		}
-#endif
 
 		internal static class ConfigurationApplier
 		{

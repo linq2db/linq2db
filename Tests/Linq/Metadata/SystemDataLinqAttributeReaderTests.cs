@@ -1,4 +1,4 @@
-﻿#if NET472
+﻿#if NETFRAMEWORK
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;

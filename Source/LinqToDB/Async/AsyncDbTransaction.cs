@@ -2,12 +2,11 @@
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Async
 {
-	using Common.Internal;
-
 	/// <summary>
 	/// Basic <see cref="IAsyncDbTransaction"/> implementation with fallback to synchronous operations if corresponding functionality
 	/// missing from <see cref="DbTransaction"/>.
@@ -27,21 +26,21 @@ namespace LinqToDB.Async
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			return Transaction.CommitAsync(cancellationToken);
 #else
 			Commit();
-			return TaskCache.CompletedTask;
+			return Task.CompletedTask;
 #endif
 		}
 
 		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			return Transaction.RollbackAsync(cancellationToken);
 #else
 			Rollback();
-			return TaskCache.CompletedTask;
+			return Task.CompletedTask;
 #endif
 		}
 
@@ -50,13 +49,6 @@ namespace LinqToDB.Async
 		#endregion
 
 		#region IAsyncDisposable
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			Dispose();
-			return TaskCache.CompletedTask;
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (Transaction is IAsyncDisposable asyncDisposable)
@@ -65,7 +57,6 @@ namespace LinqToDB.Async
 			Dispose();
 			return default;
 		}
-#endif
 		#endregion
 	}
 }

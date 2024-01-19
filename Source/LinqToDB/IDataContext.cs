@@ -17,12 +17,7 @@ namespace LinqToDB
 	/// Database connection abstraction interface.
 	/// </summary>
 	[PublicAPI]
-	public interface IDataContext : IConfigurationID, IDisposable
-#if NATIVE_ASYNC
-		, IAsyncDisposable
-#else
-		, Async.IAsyncDisposable
-#endif
+	public interface IDataContext : IConfigurationID, IDisposable, IAsyncDisposable
 	{
 		/// <summary>
 		/// Provider identifier.

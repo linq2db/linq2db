@@ -205,7 +205,7 @@ namespace Tests.Tools
 						}
 					},
 					{
-						"CORE21",
+						"NET80",
 						new TestSettings
 						{
 							Connections = new Dictionary<string,TestConnection>

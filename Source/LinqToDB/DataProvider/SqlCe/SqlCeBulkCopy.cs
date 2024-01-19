@@ -56,7 +56,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return ret;
 		}
 
-#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -81,6 +80,5 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			return ret;
 		}
-#endif
 	}
 }

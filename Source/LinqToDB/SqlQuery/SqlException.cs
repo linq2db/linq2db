@@ -31,10 +31,5 @@ namespace LinqToDB.SqlQuery
 			: base(innerException.Message, innerException)
 		{
 		}
-
-		protected SqlException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
-		{
-		}
 	}
 }

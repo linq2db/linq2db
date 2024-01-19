@@ -156,7 +156,7 @@ namespace LinqToDB.DataProvider
 			command.Dispose();
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 		public virtual ValueTask DisposeCommandAsync(DbCommand command)
 		{
 			ClearCommandParameters(command);
@@ -485,14 +485,12 @@ namespace LinqToDB.DataProvider
 			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public virtual Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			where T: notnull
 		{
 			return new BasicBulkCopy().BulkCopyAsync(options.BulkCopyOptions.BulkCopyType, table, options, source, cancellationToken);
 		}
-#endif
 
 		#endregion
 

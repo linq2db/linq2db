@@ -496,7 +496,6 @@ namespace LinqToDB.DataProvider.SqlServer
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -511,7 +510,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				source,
 				cancellationToken);
 		}
-#endif
+
 		#endregion
 	}
 }

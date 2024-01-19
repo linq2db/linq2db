@@ -68,7 +68,7 @@ namespace LinqToDB
 			SourceKey        = sourceKey;
 			KeyType          = keyType;
 
-			Operations       = operations ?? Array<Operation>.Empty;
+			Operations       = operations ?? [];
 		}
 
 		public IEnumerable<TSource>?                     EnumerableSource { get; }
@@ -104,7 +104,7 @@ namespace LinqToDB
 				TargetKey,
 				SourceKey,
 				KeyType,
-				(Operations ?? Array<Operation>.Empty).Concat(new[] { operation }).ToArray());
+				(Operations ?? []).Concat(new[] { operation }).ToArray());
 		}
 
 		public MergeDefinition<TTarget, TSource> AddOnPredicate(Expression<Func<TTarget, TSource, bool>> matchPredicate)

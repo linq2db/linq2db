@@ -13,9 +13,6 @@ namespace LinqToDB.Remote
 	using DataProvider;
 	using SqlProvider;
 	using SqlQuery;
-#if !NATIVE_ASYNC
-	using Tools;
-#endif
 
 	public abstract partial class RemoteDataContextBase
 	{
@@ -152,15 +149,6 @@ namespace LinqToDB.Remote
 				base.Dispose();
 			}
 
-#if !NATIVE_ASYNC
-			public override async Task DisposeAsync()
-			{
-				if (_client is IDisposable disposable)
-					disposable.Dispose();
-
-				await base.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-#else
 			public override async ValueTask DisposeAsync()
 			{
 				if (_client is IAsyncDisposable asyncDisposable)
@@ -170,7 +158,6 @@ namespace LinqToDB.Remote
 
 				await base.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
-#endif
 
 			public override int ExecuteNonQuery()
 			{
@@ -302,19 +289,11 @@ namespace LinqToDB.Remote
 					DataReader.Dispose();
 				}
 
-#if !NATIVE_ASYNC
-				public Task DisposeAsync()
-				{
-					DataReader.Dispose();
-					return TaskCache.CompletedTask;
-				}
-#else
 				public ValueTask DisposeAsync()
 				{
 					DataReader.Dispose();
 					return default;
 				}
-#endif
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)

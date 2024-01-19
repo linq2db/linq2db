@@ -151,10 +151,9 @@ jobs:
             script_local: ${{ test_config.script_win_local }}
             psscript_local: ${{ test_config.psscript_win_local }}
             extra: ${{ test_config.extra }}
-            netfx: ${{ test_config.enable_fw_net472 }}
-            netcore31: ${{ test_config.enable_fw_netcore31 }}
+            netfx: ${{ test_config.enable_fw_netfx }}
             net60: ${{ test_config.enable_fw_net60 }}
-            net70: ${{ test_config.enable_fw_net70 }}
+            net80: ${{ test_config.enable_fw_net80 }}
             x86: ${{ test_config.x86 }}
 
   steps:
@@ -185,9 +184,8 @@ jobs:
             script_local: ${{ test_config.script_linux_local }}
             docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
-            netcore31: ${{ test_config.enable_fw_netcore31 }}
             net60: ${{ test_config.enable_fw_net60 }}
-            net70: ${{ test_config.enable_fw_net70 }}
+            net80: ${{ test_config.enable_fw_net80 }}
 
   steps:
   - template: test-workflow-linux.yml
@@ -218,9 +216,8 @@ jobs:
             docker: ${{ test_config.install_docker_macos }}
             docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
-            netcore31: ${{ test_config.enable_fw_netcore31 }}
             net60: ${{ test_config.enable_fw_net60 }}
-            net70: ${{ test_config.enable_fw_net70 }}
+            net80: ${{ test_config.enable_fw_net80 }}
 
   steps:
   - template: test-workflow-macos.yml

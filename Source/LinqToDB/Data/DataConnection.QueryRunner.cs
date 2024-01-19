@@ -31,9 +31,9 @@ namespace LinqToDB.Data
 			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, IDataContext parametersContext, Expression expression, object?[]? parameters, object?[]? preambles)
 				: base(query, queryNumber, dataConnection, parametersContext, expression, parameters, preambles)
 			{
-				_dataConnection         = dataConnection;
+				_dataConnection = dataConnection;
 				_parametersContext = parametersContext;
-				_executionScope         = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
+				_executionScope = _dataConnection.DataProvider.ExecuteScope(_dataConnection);
 			}
 
 			readonly IExecutionScope? _executionScope;
@@ -141,18 +141,10 @@ namespace LinqToDB.Data
 				base.Dispose();
 			}
 
-#if !NATIVE_ASYNC
-			public override Task DisposeAsync()
-#else
 			public override async ValueTask DisposeAsync()
-#endif
 			{
 				if (_executionScope != null)
-#if !NATIVE_ASYNC
-					_executionScope.Dispose();
-#else
 					await _executionScope.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#endif
 
 				if (_dataConnection.TraceSwitchConnection.TraceInfo)
 				{
@@ -167,11 +159,7 @@ namespace LinqToDB.Data
 					});
 				}
 
-#if !NATIVE_ASYNC
-				return base.DisposeAsync();
-#else
 				await base.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-#endif
 			}
 
 			private sealed record CommandWithParameters(string Command, IReadOnlyList<SqlParameter> SqlParameters);
@@ -660,24 +648,10 @@ namespace LinqToDB.Data
 					_dataReader.Dispose();
 				}
 
-#if NETSTANDARD2_1PLUS
 				public ValueTask DisposeAsync()
 				{
 					 return _dataReader.DisposeAsync();
 				}
-#elif NATIVE_ASYNC
-				public ValueTask DisposeAsync()
-				{
-					Dispose();
-					return default;
-				}
-#else
-				public Task DisposeAsync()
-				{
-					Dispose();
-					return TaskCache.CompletedTask;
-				}
-#endif
 			}
 
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)

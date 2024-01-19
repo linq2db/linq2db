@@ -73,7 +73,7 @@ namespace LinqToDB.CodeModel
 				// Equals handles both nullable and non-nullable structs
 				// x == y => x.Equals(y)
 				// x != y => !x.Equals(y)
-				ICodeExpression result = new CodeCallExpression(false, expression.Left, WellKnownTypes.System.Object_Equals, Array<IType>.Empty, true, new []{ expression.Right }, null, WellKnownTypes.System.Boolean);
+				ICodeExpression result = new CodeCallExpression(false, expression.Left, WellKnownTypes.System.Object_Equals, Array.Empty<IType>(), true, new []{ expression.Right }, null, WellKnownTypes.System.Boolean);
 				if (expression.Operation == BinaryOperation.NotEqual)
 					result = new CodeUnary(result, UnaryOperation.Not);
 

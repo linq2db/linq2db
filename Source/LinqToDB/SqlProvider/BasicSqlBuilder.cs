@@ -1915,7 +1915,7 @@ namespace LinqToDB.SqlProvider
 				if (i > 0)
 					StringBuilder.Append(InlineComma);
 				var field = valuesTable.Fields[i];
-				if (IsSqlValuesTableValueTypeRequired(valuesTable, Array<ISqlExpression[]>.Empty, -1, i))
+				if (IsSqlValuesTableValueTypeRequired(valuesTable, [], -1, i))
 					BuildTypedExpression(new SqlDataType(field), new SqlValue(field.Type, null));
 				else
 					BuildExpression(new SqlValue(field.Type, null));
@@ -3866,21 +3866,11 @@ namespace LinqToDB.SqlProvider
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Size).Append(')');
 				}
-#if NET45
-#pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
-				else if (((IDbDataParameter)parameter).Precision > 0)
-				{
-					if (t1.IndexOf('(') < 0)
-						sb.Append('(').Append(((IDbDataParameter)parameter).Precision).Append(InlineComma).Append(((IDbDataParameter)parameter).Scale).Append(')');
-				}
-#pragma warning restore RS0030 // API missing from DbParameter in NET 4.5
-#else
 				else if (parameter.Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
 						sb.Append('(').Append(parameter.Precision).Append(InlineComma).Append(parameter.Scale).Append(')');
 				}
-#endif
 				else
 				{
 					switch (parameter.DbType)

@@ -11,8 +11,13 @@ namespace LinqToDB.DataProvider.Access
 
 	sealed class AccessMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATE_FORMAT     = CompositeFormat.Parse("#{0:yyyy-MM-dd}#");
+		private static readonly CompositeFormat DATETIME_FORMAT = CompositeFormat.Parse("#{0:yyyy-MM-dd HH:mm:ss}#");
+#else
 		private const string DATE_FORMAT     = "#{0:yyyy-MM-dd}#";
 		private const string DATETIME_FORMAT = "#{0:yyyy-MM-dd HH:mm:ss}#";
+#endif
 
 		AccessMappingSchema() : base(ProviderName.Access)
 		{

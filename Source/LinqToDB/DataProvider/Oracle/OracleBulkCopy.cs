@@ -137,7 +137,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return Task.FromResult(ProviderSpecificCopy(table, options, source));
 		}
 
-#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -148,7 +147,6 @@ namespace LinqToDB.DataProvider.Oracle
 				return ProviderSpecificCopy(table, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator));
 			}
 		}
-#endif
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
@@ -172,7 +170,6 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -183,7 +180,6 @@ namespace LinqToDB.DataProvider.Oracle
 				default                            : return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 			}
 		}
-#endif
 
 		static void OracleMultipleRowsCopy1Prep(MultipleRowsHelper helper)
 		{
@@ -222,10 +218,8 @@ namespace LinqToDB.DataProvider.Oracle
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken, _maxParameters,_maxSqlLength);
 
-#if NATIVE_ASYNC
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken, _maxParameters,_maxSqlLength);
-#endif
 
 		static List<object> OracleMultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
@@ -322,7 +316,6 @@ namespace LinqToDB.DataProvider.Oracle
 			return helper.RowsCopied;
 		}
 
-#if NATIVE_ASYNC
 		async Task<BulkCopyRowsCopied> OracleMultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var list = OracleMultipleRowsCopy2Prep(helper);
@@ -358,7 +351,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 			return helper.RowsCopied;
 		}
-#endif
 
 		bool Execute(MultipleRowsHelper helper, List<object> list)
 		{
@@ -470,9 +462,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken, _maxParameters, _maxSqlLength);
 
-#if NATIVE_ASYNC
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken, _maxParameters, _maxSqlLength);
-#endif
 	}
 }

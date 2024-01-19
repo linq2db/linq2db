@@ -196,21 +196,8 @@ namespace Tests.DataProvider
 			// as it is requires code, similar to NULL comparison translation code, and there is no
 			// request for support of it from users
 			const bool testNaNComparison = false;
-#if !NET6_0_OR_GREATER
-			// https://github.com/mysql-net/MySqlConnector/issues/1185
-			// fixed in 2.1.11
-			var infinitySupported = !context.IsAnyOf(ProviderName.ClickHouseMySql);
-#else
-			var infinitySupported = true;
-#endif
-
-#if NETFRAMEWORK
-			// NaN parsing fails in 0.x MySqlConnector (fixed somewhere in 1.x)
-			// nullable works only because of another bug: https://github.com/ClickHouse/ClickHouse/issues/39297
-			var nonNullableNaNSupported = !context.IsAnyOf(ProviderName.ClickHouseMySql);
-#else
-			var nonNullableNaNSupported = true;
-#endif
+			var infinitySupported        = true;
+			var nonNullableNaNSupported  = true;
 
 			// Float32
 			await TestType<float, float?>(context, new(typeof(float)), default, default);
@@ -613,14 +600,14 @@ namespace Tests.DataProvider
 			// default
 			await TestType<string, string?>(context, new(typeof(string)), string.Empty, default);
 			await TestType<string, string?>(context, new(typeof(string)), "test ", "test\0");
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), Array<byte>.Empty, default);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), Array.Empty<byte>(), default);
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), new byte[] { 1, 2, 3, 4 }, new byte[] { 1, 2, 3, 4, 0, 0 });
 
 			await TestType<string, string?>(context, new(typeof(string), DataType.NVarChar), string.Empty, default);
 			await TestType<string, string?>(context, new(typeof(string), DataType.NVarChar), "test ", "test\0");
 			await TestType<string, string?>(context, new(typeof(string), DataType.VarChar), string.Empty, default);
 			await TestType<string, string?>(context, new(typeof(string), DataType.VarChar), "test ", "test\0");
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), Array<byte>.Empty, default);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), Array.Empty<byte>(), default);
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 1, 2, 0, 3, 4 }, new byte[] { 1, 2, 3, 0, 4, 0, 0 });
 
 			// various characters handing
@@ -650,7 +637,7 @@ namespace Tests.DataProvider
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar,  null, length: 7), "test ", "test\0", getExpectedValue: v => padValues ? "test \0\0" : v, getExpectedNullableValue: v => padValues ? "test\0\0\0" : "test");
 			await TestType<string, string?>(context, new(typeof(string), DataType.Char,   null, length: 7), string.Empty, default, getExpectedValue: v => padValues ? "\0\0\0\0\0\0\0" : v);
 			await TestType<string, string?>(context, new(typeof(string), DataType.Char,   null, length: 7), "test ", "test\0", getExpectedValue: v => padValues ? "test \0\0" : v, getExpectedNullableValue: v => padValues ? "test\0\0\0" : "test");
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), Array<byte>.Empty, default, getExpectedValue: v => new byte[7]);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), Array.Empty<byte>(), default, getExpectedValue: v => new byte[7]);
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 1, 2, 0, 3, 4 }, new byte[] { 1, 2, 3, 0, 4, 0, 0 }, getExpectedValue: v => { Array.Resize(ref v, 7);return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 
 			// default length (ClickHouseMappingSchema.DEFAULT_FIXED_STRING_LENGTH=100)
@@ -658,7 +645,7 @@ namespace Tests.DataProvider
 			var defaultString = new string('\0', 100);
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar), string.Empty, default, getExpectedValue: _ => defaultString);
 			await TestType<string, string?>(context, new(typeof(string), DataType.Char), string.Empty, default, getExpectedValue: _ => defaultString);
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary), Array<byte>.Empty, default, getExpectedValue: _ => defaultBinary);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary), Array.Empty<byte>(), default, getExpectedValue: _ => defaultBinary);
 
 			// various characters handing
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar, null, length: 7), "\x00", "\x01", getExpectedValue: v => padValues ? "\0\0\0\0\0\0\0" : string.Empty, getExpectedNullableValue: v => padValues ? "\x1\0\0\0\0\0\0" : v);

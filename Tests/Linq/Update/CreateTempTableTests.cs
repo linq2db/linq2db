@@ -157,14 +157,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-
 		[Test]
 		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
 		{
-#if !NETCOREAPP3_1
-			if (context.IsAnyOf(TestProvName.AllMySqlData))
-				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
-#endif
 			using var cts = new CancellationTokenSource();
 			cts.Cancel();
 			using (var db = GetDataContext(context))
@@ -185,10 +180,18 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-					Assert.Fail("Task should have been canceled but was not");
+					if (!context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Task should have been canceled but was not");
+					}
 				}
-				catch (OperationCanceledException) { }
-
+				catch (OperationCanceledException)
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Update test. MySql.Data developers evolved");
+					}
+				}
 
 				var tableExists = true;
 				try
@@ -206,10 +209,6 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
 		{
-#if !NETCOREAPP3_1
-			if (context.IsAnyOf(TestProvName.AllMySqlData))
-				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
-#endif
 			using var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))
 			{
@@ -234,9 +233,18 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-					Assert.Fail("Task should have been canceled but was not");
+					if (!context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Task should have been canceled but was not");
+					}
 				}
-				catch (OperationCanceledException) { }
+				catch (OperationCanceledException)
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("oracle fixed something, update test code");
+					}
+				}
 
 				var tableExists = true;
 				try

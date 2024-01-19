@@ -106,7 +106,7 @@ namespace LinqToDB.SchemaProvider
 			foreach (var dt in GetDataTypes(dataConnection))
 				if (dt.ProviderSpecific)
 				{
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+#if NET6_0_OR_GREATER
 					ProviderSpecificDataTypesDic.TryAdd(dt.TypeName, dt);
 					ProviderSpecificDataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
 #else
@@ -118,7 +118,7 @@ namespace LinqToDB.SchemaProvider
 				}
 				else
 				{
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+#if NET6_0_OR_GREATER
 					DataTypesDic.TryAdd(dt.TypeName, dt);
 					DataTypesByProviderDbTypeDic.TryAdd(dt.ProviderDbType, dt);
 #else
@@ -210,7 +210,7 @@ namespace LinqToDB.SchemaProvider
 
 				#region FK
 
-				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection, tables, options) : Array<ForeignKeyInfo>.Empty;
+				var fks = options.GetForeignKeys ? GetForeignKeys(dataConnection, tables, options) : [];
 
 				foreach (var fk in fks.OrderBy(f => f.Ordinal))
 				{
@@ -275,7 +275,7 @@ namespace LinqToDB.SchemaProvider
 
 				if (procs != null)
 				{
-					var procParams = (IEnumerable<ProcedureParameterInfo>?)GetProcedureParameters(dataConnection, procs, options) ?? Array<ProcedureParameterInfo>.Empty;
+					var procParams = (IEnumerable<ProcedureParameterInfo>?)GetProcedureParameters(dataConnection, procs, options) ?? [];
 
 					procedures =
 					(
@@ -439,7 +439,7 @@ namespace LinqToDB.SchemaProvider
 			{
 				commandText = BuildTableFunctionLoadTableSchemaCommand(procedure, commandText);
 				commandType = CommandType.Text;
-				parameters  = Array<DataParameter>.Empty;
+				parameters  = [];
 			}
 			else
 			{

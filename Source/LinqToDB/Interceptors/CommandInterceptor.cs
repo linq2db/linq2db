@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 namespace LinqToDB.Interceptors
 {
 	using Common;
-	using Common.Internal;
 
 	public abstract class CommandInterceptor : ICommandInterceptor
 	{
@@ -25,6 +24,6 @@ namespace LinqToDB.Interceptors
 		public virtual Task<Option<object?>>      ExecuteScalarAsync      (CommandEventData eventData, DbCommand command, Option<object?> result, CancellationToken cancellationToken) => Task.FromResult(result);
 
 		public virtual void                       BeforeReaderDispose     (CommandEventData eventData, DbCommand? command, DbDataReader dataReader) { }
-		public virtual Task                       BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader) => TaskCache.CompletedTask;
+		public virtual Task                       BeforeReaderDisposeAsync(CommandEventData eventData, DbCommand? command, DbDataReader dataReader) => Task.CompletedTask;
 	}
 }

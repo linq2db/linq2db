@@ -308,10 +308,10 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-					where Array<int>.Empty.Contains(p.ParentID) || p.ParentID == 2
+					where Array.Empty<int>().Contains(p.ParentID) || p.ParentID == 2
 					select p,
 					from p in db.Parent
-					where Array<int>.Empty.Contains(p.ParentID) || p.ParentID == 2
+					where Array.Empty<int>().Contains(p.ParentID) || p.ParentID == 2
 					select p);
 		}
 

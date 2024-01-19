@@ -71,7 +71,6 @@ namespace LinqToDB.DataProvider.DB2
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			if (table.TryGetDataConnection(out var dataConnection))
@@ -98,7 +97,6 @@ namespace LinqToDB.DataProvider.DB2
 
 			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 		}
-#endif
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
@@ -120,7 +118,6 @@ namespace LinqToDB.DataProvider.DB2
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var dataConnection = table.GetDataConnection();
@@ -130,6 +127,5 @@ namespace LinqToDB.DataProvider.DB2
 
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
-#endif
 	}
 }

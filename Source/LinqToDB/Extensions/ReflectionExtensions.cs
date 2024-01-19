@@ -325,10 +325,10 @@ namespace LinqToDB.Extensions
 			{
 				return new InterfaceMapping()
 				{
-					TargetType = type,
-					InterfaceType = interfaceType,
-					TargetMethods = Array<MethodInfo>.Empty,
-					InterfaceMethods = Array<MethodInfo>.Empty
+					TargetType       = type,
+					InterfaceType    = interfaceType,
+					TargetMethods    = [],
+					InterfaceMethods = []
 				};
 			}
 		}
@@ -837,7 +837,7 @@ namespace LinqToDB.Extensions
 			if (type.IsNullableType())
 				return null;
 
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			return RuntimeHelpers.GetUninitializedObject(type);
 #else
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);

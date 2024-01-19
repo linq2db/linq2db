@@ -1233,7 +1233,7 @@ namespace Tests.Data
 			}
 		}
 
-#if !NET472
+#if !NETFRAMEWORK
 		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task MARS_SupportedAsync(
