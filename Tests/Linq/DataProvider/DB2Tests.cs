@@ -20,12 +20,10 @@ using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools.Comparers;
 
-#if NET472
+#if NETFRAMEWORK
 using IBM.Data.DB2;
-#elif NET6_0_OR_GREATER
-using IBM.Data.Db2;
 #else
-using IBM.Data.DB2.Core;
+using IBM.Data.Db2;
 #endif
 
 using IBM.Data.DB2Types;

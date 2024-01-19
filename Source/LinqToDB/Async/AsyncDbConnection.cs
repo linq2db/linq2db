@@ -59,23 +59,19 @@ namespace LinqToDB.Async
 		public virtual void Close     () => Connection.Close();
 		public virtual Task CloseAsync()
 		{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			return Connection.CloseAsync();
 #else
 			Close();
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 #endif
 		}
 
 		public virtual IAsyncDbTransaction BeginTransaction() => AsyncFactory.Create(Connection.BeginTransaction());
 		public virtual IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel) => AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
 
-#if !NATIVE_ASYNC
-			public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
-				=> Task.FromResult(BeginTransaction());
-#elif !NETSTANDARD2_1PLUS
-		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
-			=> new(BeginTransaction());
+#if !NET6_0_OR_GREATER
+		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken) => new (BeginTransaction());
 #else
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{
@@ -85,10 +81,7 @@ namespace LinqToDB.Async
 		}
 #endif
 
-#if !NATIVE_ASYNC
-			public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
-				=> Task.FromResult(BeginTransaction(isolationLevel));
-#elif !NETSTANDARD2_1PLUS
+#if !NET6_0_OR_GREATER
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
 			=> new(BeginTransaction(isolationLevel));
 #else
@@ -105,13 +98,6 @@ namespace LinqToDB.Async
 		#endregion
 
 		#region IAsyncDisposable
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			Dispose();
-			return TaskEx.CompletedTask;
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (Connection is IAsyncDisposable asyncDisposable)
@@ -120,7 +106,6 @@ namespace LinqToDB.Async
 			Dispose();
 			return default;
 		}
-#endif
 		#endregion
 	}
 }

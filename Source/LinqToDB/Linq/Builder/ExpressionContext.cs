@@ -66,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 							}
 							else if (root.IsNullValue())
 							{
-								return Array<SqlInfo>.Empty;
+								return [];
 							}
 							// except null, handled above
 							else if (root.NodeType == ExpressionType.Constant)
@@ -76,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 							else if (root.NodeType == ExpressionType.New)
 							{
 								if (((NewExpression)root).Arguments.Count == 0)
-									return Array<SqlInfo>.Empty;
+									return [];
 							}
 
 							break;

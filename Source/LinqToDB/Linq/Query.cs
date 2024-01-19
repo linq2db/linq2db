@@ -12,9 +12,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-#if !NATIVE_ASYNC
-	using Async;
-#endif
 	using Builder;
 	using Common;
 	using Common.Logging;
@@ -314,10 +311,10 @@ namespace LinqToDB.Linq
 
 			// stores all cached queries
 			// when query added or removed from cache, query and priority arrays recreated
-			QueryCacheEntry[] _cache   = Array<QueryCacheEntry>.Empty;
+			QueryCacheEntry[] _cache = [];
 
 			// stores ordered list of query indexes for Find operation
-			int[]      _indexes = Array<int     >.Empty;
+			int[] _indexes = [];
 
 			// version of cache, increased after each recreation of _cache instance
 			int _version;
@@ -341,8 +338,8 @@ namespace LinqToDB.Linq
 					lock (_syncCache)
 						if (_cache.Length > 0)
 						{
-							_cache   = Array<QueryCacheEntry>.Empty;
-							_indexes = Array<int            >.Empty;
+							_cache   = [];
+							_indexes = [];
 							_version++;
 						}
 			}

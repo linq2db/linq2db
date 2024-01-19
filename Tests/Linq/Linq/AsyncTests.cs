@@ -235,36 +235,41 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CancellableAsyncEnumerableTest([DataSources] string context)
+		public async ValueTask CancellableAsyncEnumerableTest([DataSources] string context)
 		{
-#if NETFRAMEWORK
-			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
-				Assert.Inconclusive("MySqlConnector 0.x handles cancellation token incorrectly. Fixed in 1.x : https://github.com/mysql-net/MySqlConnector/issues/931");
-#endif
-#if !NETCOREAPP3_1
-			if (context.IsAnyOf(TestProvName.AllMySqlData))
-				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
-#endif
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;
 			cts.Cancel();
 			using var db = GetDataContext(context);
 			var resultQuery = db.Parent.AsAsyncEnumerable().WithCancellation(cancellationToken);
-			Assert.ThrowsAsync<OperationCanceledException>(async () =>
+			if (!context.IsAnyOf(TestProvName.AllMySqlData) || context.IsRemote())
 			{
-				try
+				Assert.ThrowsAsync<OperationCanceledException>(async () =>
 				{
-					await foreach (var row in resultQuery)
-					{ }
-				}
-				catch (OperationCanceledException)
-				{
-					// this casts any exception that inherits from OperationCanceledException
-					//   to a OperationCanceledException to pass the assert check above
-					//   (needed for TaskCanceledException)
-					throw new OperationCanceledException();
-				}
-			});
+					try
+					{
+						await foreach (var row in resultQuery)
+						{ }
+					}
+					catch (OperationCanceledException)
+					{
+						// this casts any exception that inherits from OperationCanceledException
+						//   to a OperationCanceledException to pass the assert check above
+						//   (needed for TaskCanceledException)
+						throw new OperationCanceledException();
+					}
+				});
+			}
+			else
+			{
+				// pre-open connection to avoid cancellation triggered by async open (which actually works)
+				db.Parent.ToList();
+				// if it fails:
+				// 1. someone died at oracle office
+				// 2. this code should be removed
+				await foreach (var row in resultQuery)
+				{ }
+			}
 		}
 	}
 }

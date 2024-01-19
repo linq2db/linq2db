@@ -12,8 +12,8 @@ namespace LinqToDB.CodeModel
 		public CodeNew(CodeTypeToken type, IEnumerable<ICodeExpression> parameters, IEnumerable<CodeAssignmentStatement> initializers)
 		{
 			Type          = type;
-			Parameters   = parameters  .ToArray() ?? Array<ICodeExpression>        .Empty;
-			Initializers = initializers.ToArray() ?? Array<CodeAssignmentStatement>.Empty;
+			Parameters   = parameters  .ToArray() ?? [];
+			Initializers = initializers.ToArray() ?? [];
 		}
 
 		public CodeNew(IType type, IEnumerable<ICodeExpression> parameters, IEnumerable<CodeAssignmentStatement> initializers)

@@ -4,10 +4,6 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
 		<WarningLevel>5</WarningLevel>
-		
-		<!--https://github.com/dotnet/fsharp/issues/12315-->
-		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
-		<NoWarn>$(NoWarn);NU1507</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -23,9 +19,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
-	</ItemGroup>
 
-	<ItemGroup>
 		<PackageReference Include="FSharp.Core" />
 	</ItemGroup>
+
 </Project>

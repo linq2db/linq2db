@@ -15,7 +15,7 @@ namespace LinqToDB.Expressions
 
 		Expression ICustomMapper.Map(Expression expression)
 		{
-			return Expression.Call(expression, "AsTask", Array<Type>.Empty);
+			return Expression.Call(expression, "AsTask", []);
 		}
 	}
 
@@ -38,7 +38,7 @@ namespace LinqToDB.Expressions
 				return Expression.Convert(expression, typeof(Task));
 			}
 
-			return Expression.Convert(Expression.Call(expression, "AsTask", Array<Type>.Empty), typeof(Task));
+			return Expression.Convert(Expression.Call(expression, "AsTask", []), typeof(Task));
 		}
 	}
 }

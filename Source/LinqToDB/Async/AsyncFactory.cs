@@ -32,13 +32,9 @@ namespace LinqToDB.Async
 
 		private static readonly ConcurrentDictionary<Type, Func<DbTransaction, IAsyncDbTransaction>> _transactionFactories = new ();
 
-#if !NATIVE_ASYNC
-		private static readonly MethodInfo _transactionWrap      = MemberHelper.MethodOf(() => Wrap<DbTransaction>(default!)).GetGenericMethodDefinition();
-#else
 #pragma warning disable CA2012 // ValueTask instances returned from method calls should be directly awaited...
 		private static readonly MethodInfo _transactionValueWrap = MemberHelper.MethodOf(() => WrapValue<DbTransaction>(default!)).GetGenericMethodDefinition();
 #pragma warning restore CA2012 // ValueTask instances returned from method calls should be directly awaited...
-#endif
 
 		/// <summary>
 		/// Register or replace custom <see cref="IAsyncDbConnection"/> for <typeparamref name="TConnection"/> type.
@@ -99,16 +95,14 @@ namespace LinqToDB.Async
 		private static async Task<IAsyncDbTransaction> Wrap<TTransaction>(Task<TTransaction> transaction)
 			where TTransaction: DbTransaction
 		{
-			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
+			return Create(await transaction.ConfigureAwait(Configuration.ContinueOnCapturedContext));
 		}
 
-#if NATIVE_ASYNC
 		private static async ValueTask<IAsyncDbTransaction> WrapValue<TTransaction>(ValueTask<TTransaction> transaction)
 			where TTransaction : DbTransaction
 		{
-			return Create(await transaction.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext));
+			return Create(await transaction.ConfigureAwait(Configuration.ContinueOnCapturedContext));
 		}
-#endif
 
 		private static Func<DbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)
 		{
@@ -132,19 +126,11 @@ namespace LinqToDB.Async
 			// Availability:
 			// - DbTransaction (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
-#if !NATIVE_ASYNC
-			var disposeAsync  = CreateDelegate<Func<DbTransaction               ,      Task>, DbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
-#else
-			var disposeAsync  = CreateDelegate<Func<DbTransaction               , ValueTask>, DbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true )
-#endif
+			var disposeAsync  = CreateDelegate<Func<DbTransaction               , ValueTask>, DbTransaction>(type, "DisposeAsync" , [], [], [], true , true )
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
-#if !NATIVE_ASYNC
-							 ?? CreateDelegate<Func<DbTransaction               ,      Task>, DbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
-#else
-							 ?? CreateDelegate<Func<DbTransaction               , ValueTask>, DbTransaction>(type, "DisposeAsync" , Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true );
-#endif
+							 ?? CreateDelegate<Func<DbTransaction               , ValueTask>, DbTransaction>(type, "DisposeAsync" , [], [], [], false, true );
 
 			if (commitAsync      != null
 				|| rollbackAsync != null
@@ -163,42 +149,26 @@ namespace LinqToDB.Async
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
-#if !NATIVE_ASYNC
-			var beginTransactionAsync   = CreateTaskTDelegate<Func<DbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      true, false)
-#else
 			var beginTransactionAsync   = CreateTaskTDelegate<Func<DbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, true, true)
-#endif
 			// Task<DbTransaction> BeginTransactionAsync(CancellationToken)
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
 			// - FirebirdSql.Data.FirebirdClient 8+
-#if !NATIVE_ASYNC
-									   ?? CreateTaskTDelegate<Func<DbConnection, CancellationToken           ,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionWrap,      false, false);
-#else
 									   ?? CreateTaskTDelegate<Func<DbConnection, CancellationToken           , ValueTask<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _tokenParams           , _transactionValueWrap, false, true);
-#endif
 
 			// ValueTask<DbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - MySqlConnector 0.57+
 			// - Npgsql 4.1.2+
-#if !NATIVE_ASYNC
-			var beginTransactionIlAsync = CreateTaskTDelegate<Func<DbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      true, false)
-#else
 			var beginTransactionIlAsync = CreateTaskTDelegate<Func<DbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, true, true)
-#endif
 			// Task<DbTransaction> BeginTransactionAsync(IsolationLevel, CancellationToken)
 			// Availability:
 			// - MySql.Data
 			// - MySqlConnector < 0.57
 			// - FirebirdSql.Data.FirebirdClient 8+
-#if !NATIVE_ASYNC
-									   ?? CreateTaskTDelegate<Func<DbConnection, IsolationLevel, CancellationToken,      Task<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionWrap,      false, false);
-#else
 									   ?? CreateTaskTDelegate<Func<DbConnection, IsolationLevel, CancellationToken, ValueTask<IAsyncDbTransaction>>, DbConnection, DbTransaction>(type, "BeginTransactionAsync", _beginTransactionParams, _transactionValueWrap, false, true);
-#endif
 
 			// Task OpenAsync(CancellationToken)
 			// Availability:
@@ -207,7 +177,7 @@ namespace LinqToDB.Async
 
 			// Task CloseAsync(CancellationToken)
 			// Availability:
-			var closeAsync              = CreateDelegate<Func<DbConnection, Task>, DbConnection>(type, "CloseAsync", Array<Type>.Empty,   _tokenParams     , _noTokenParams,    false, false)
+			var closeAsync              = CreateDelegate<Func<DbConnection, Task>, DbConnection>(type, "CloseAsync", [], _tokenParams, _noTokenParams, false, false)
 			// Task CloseAsync()
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
@@ -215,25 +185,17 @@ namespace LinqToDB.Async
 			// - MySqlConnector 0.57+
 			// - npgsql 4.1.0+
 			// - FirebirdSql.Data.FirebirdClient 8+
-									   ?? CreateDelegate<Func<DbConnection, Task>, DbConnection>(type, "CloseAsync", Array<Type>.Empty,   Array<Type>.Empty, Array<Type>.Empty, false, false);
+									   ?? CreateDelegate<Func<DbConnection, Task>, DbConnection>(type, "CloseAsync", [], [], [], false, false);
 
 			// ValueTask DisposeAsync()
 			// Availability:
 			// - (stub) DbConnection (netstandard2.1, netcoreapp3.0)
 			// - Npgsql 4.1.2+
-#if !NATIVE_ASYNC
-			var disposeAsync            = CreateDelegate<Func<DbConnection, Task     >, DbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , false)
-#else
-			var disposeAsync            = CreateDelegate<Func<DbConnection, ValueTask>, DbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, true , true)
-#endif
+			var disposeAsync            = CreateDelegate<Func<DbConnection, ValueTask>, DbConnection>(type, "DisposeAsync", [], [], [], true , true)
 			// Task DisposeAsync()
 			// Availability:
 			// - MySqlConnector 0.57+
-#if !NATIVE_ASYNC
-									   ?? CreateDelegate<Func<DbConnection,      Task>, DbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, false);
-#else
-									   ?? CreateDelegate<Func<DbConnection, ValueTask>, DbConnection>(type, "DisposeAsync", Array<Type>.Empty, Array<Type>.Empty, Array<Type>.Empty, false, true);
-#endif
+									   ?? CreateDelegate<Func<DbConnection, ValueTask>, DbConnection>(type, "DisposeAsync", [], [], [], false, true);
 
 
 			if (beginTransactionAsync      != null
@@ -287,13 +249,11 @@ namespace LinqToDB.Async
 				//convert a ValueTask result to a Task
 				body = ToTask(body);
 			}
-#if NATIVE_ASYNC
 			else if (!returnsValueTask && returnValueTask)
 			{
 				//convert a Task result to a ValueTask
 				body = ToValueTask(body);
 			}
-#endif
 
 			return Expression
 				.Lambda<TDelegate>(
@@ -307,10 +267,9 @@ namespace LinqToDB.Async
 		/// </summary>
 		private static MethodCallExpression ToTask(Expression body)
 		{
-			return Expression.Call(body, "AsTask", Array<Type>.Empty);
+			return Expression.Call(body, "AsTask", []);
 		}
 
-#if NATIVE_ASYNC
 		/// <summary>
 		/// Returns an expression which returns a <see cref="ValueTask"/> from a <see cref="Task"/>.
 		/// </summary>
@@ -348,7 +307,6 @@ namespace LinqToDB.Async
 			// return new ValueTask<TResult>(body);
 			return Expression.New(constructor, body);
 		}
-#endif
 
 		private static TDelegate? CreateTaskTDelegate<TDelegate, TInstance, TTask>(
 			Type       instanceType,
@@ -377,13 +335,11 @@ namespace LinqToDB.Async
 				//convert a ValueTask result to a Task
 				body = ToTask(body);
 			}
-#if NATIVE_ASYNC
 			else if (!returnsValueTask && returnValueTask)
 			{
 				//convert a Task result to a ValueTask
 				body = ToValueTTask(body);
 			}
-#endif
 
 			return Expression
 				.Lambda<TDelegate>(

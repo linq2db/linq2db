@@ -8,10 +8,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Expressions;
 	using Linq;
 	using SqlQuery;
-#if !NET45
 	using Common;
 	using Mapping;
-#endif
 
 	public interface IPostgreSQLExtensions
 	{
@@ -106,7 +104,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region unnest
 
-#if !NET45
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
 		{
@@ -136,7 +133,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, array) => dc.FromSql<Ordinality<T>>($"UNNEST({array}) WITH ORDINALITY {Sql.AliasExpr()}(value, idx)");
 		}
-#endif
 
 		#endregion
 
@@ -353,7 +349,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region generate_series
 
-#if !NET45
 		static Func<IDataContext, int, int, IQueryable<int>>? _generateSeriesIntFunc;
 
 		[ExpressionMethod(nameof(GenerateSeriesIntImpl))]
@@ -394,12 +389,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, start, stop, step) => dc.FromSqlScalar<DateTime>($"GENERATE_SERIES({start}, {stop}, {step})");
 		}
-#endif
 		#endregion
 
 		#region generate_subscripts
 
-#if !NET45
 		[ExpressionMethod(nameof(GenerateSubscriptsImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension)
 		{
@@ -423,7 +416,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, array, dimension, reverse) => dc.FromSqlScalar<int>($"GENERATE_SUBSCRIPTS({array}, {dimension}, {reverse})");
 		}
-#endif
 
 		#endregion
 

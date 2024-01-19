@@ -1,0 +1,9 @@
+﻿{
+	"NETFX.Azure": {
+		"Providers": [
+			// disable to shorten test execution time
+			//"SqlServer.2012",
+			"SqlServer.2012.MS"
+		]
+	}
+}

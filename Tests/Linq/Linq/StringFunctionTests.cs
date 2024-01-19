@@ -1,5 +1,5 @@
 ﻿using System;
-#if NET472
+#if NETFRAMEWORK
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
@@ -255,7 +255,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
 		[Test]
 		public void ContainsConstantWithCase1([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -755,7 +755,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if NET472
+#if NETFRAMEWORK
 		[Test]
 		public void Like11([DataSources] string context)
 		{
@@ -1451,7 +1451,7 @@ namespace Tests.Linq
 			public static readonly CollatedTable TestData = new () { Id = 1, CaseSensitive = "TestString", CaseInsensitive = "TestString" };
 		}
 
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
 		[Test]
 		public void ExplicitOrdinalIgnoreCase_Contains([DataSources] string context)
 		{

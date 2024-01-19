@@ -48,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, LambdaExpression lambda, SelectQuery selectQuery)
 		{
 			Parent      = parent;
-			Sequence    = Array<IBuildContext>.Empty;
+			Sequence    = [];
 			Builder     = builder;
 			Lambda      = lambda;
 			Body        = lambda.Body;
@@ -547,7 +547,7 @@ namespace LinqToDB.Linq.Builder
 									}
 								}
 
-								return list?.ToArray() ?? Array<SqlInfo>.Empty;
+								return list?.ToArray() ?? [];
 							}
 					}
 				}

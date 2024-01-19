@@ -39,7 +39,7 @@ using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
 using Tests.DataProvider;
 using Tests.Model;
-#if NET472
+#if NETFRAMEWORK
 using IBM.Data.Informix;
 #endif
 
@@ -101,7 +101,7 @@ namespace Tests.Data
 		public void TestAccessOleDb([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NET472
+#if NETFRAMEWORK
 			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
 #else
 			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
@@ -128,7 +128,7 @@ namespace Tests.Data
 				Assert.True    (trace.Contains("DECLARE @p LongVarWChar(3)"));
 
 				// TODO: reenable, when issue with OleDb transactions under .net core fixed
-#if NET472
+#if NETFRAMEWORK
 				// assert custom schema table access
 				var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
 				Assert.AreEqual(!unmapped, schema.Tables.Any(t => t.ForeignKeys.Count > 0));
@@ -140,7 +140,7 @@ namespace Tests.Data
 		public void TestAccessODBC([IncludeDataSources(ProviderName.AccessOdbc)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NET472
+#if NETFRAMEWORK
 			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
 #else
 			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
@@ -163,7 +163,7 @@ namespace Tests.Data
 		[Test]
 		public void TestSapHanaOdbc([IncludeDataSources(ProviderName.SapHanaOdbc)] string context, [Values] ConnectionType type)
 		{
-#if NET472
+#if NETFRAMEWORK
 			using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
 #else
 			using (var db = CreateDataConnection(new SapHanaOdbcDataProvider(), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
@@ -430,11 +430,7 @@ namespace Tests.Data
 		public async Task TestMySqlConnector([IncludeDataSources(TestProvName.AllMySqlConnector)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NETFRAMEWORK
-			var connectionTypeName = "MySql.Data.MySqlClient.MySqlConnection, MySqlConnector";
-#else
 			var connectionTypeName = "MySqlConnector.MySqlConnection, MySqlConnector";
-#endif
 			using (var db = CreateDataConnection(new TestMySqlDataProvider(ProviderName.MySqlConnector), context, type, connectionTypeName, ";AllowZeroDateTime=true"))
 			{
 				var trace = string.Empty;
@@ -530,11 +526,7 @@ namespace Tests.Data
 		public void TestDB2([IncludeDataSources(ProviderName.DB2)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-#if NETCOREAPP3_1
-			using (var db = CreateDataConnection(new TestDB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespaceOld}.DB2Connection, {DB2ProviderAdapter.AssemblyNameOld}"))
-#else
 			using (var db = CreateDataConnection(new TestDB2LUWDataProvider(), context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
-#endif
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -619,7 +611,7 @@ namespace Tests.Data
 
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			using (new DisableBaseline("TODO: debug reason for inconsistent bulk copy sql"))
-#if NET472
+#if NETFRAMEWORK
 			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, typeof(SqlConnection)))
 #else
 			using (var db = CreateDataConnection(new SqlServerTests.TestSqlServerDataProvider(providerName, version, SqlServerProvider.SystemDataSqlClient), context, type, "System.Data.SqlClient.SqlConnection, System.Data.SqlClient"))
@@ -1020,7 +1012,7 @@ namespace Tests.Data
 							options,
 							Enumerable.Range(0, 1000).Select(n => new SapHanaTests.AllType() { ID = 2000 + n }));
 
-#if NET472
+#if NETFRAMEWORK
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT ASYNC BULK"));
 #else
 						Assert.AreEqual(!unmapped, trace.Contains("INSERT BULK"));
@@ -1109,7 +1101,7 @@ namespace Tests.Data
 			}
 		}
 
-#if NET472
+#if NETFRAMEWORK
 		[Test]
 		public void TestInformixIFX([IncludeDataSources(ProviderName.Informix)] string context, [Values] ConnectionType type)
 		{
@@ -1201,11 +1193,7 @@ namespace Tests.Data
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
 			var provider = new TestInformixDataProvider(ProviderName.InformixDB2);
-#if NETCOREAPP3_1
-			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespaceOld}.DB2Connection, {DB2ProviderAdapter.AssemblyNameOld}"))
-#else
 			using (var db = CreateDataConnection(provider, context, type, $"{DB2ProviderAdapter.ClientNamespace}.DB2Connection, {DB2ProviderAdapter.AssemblyName}"))
-#endif
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1265,7 +1253,7 @@ namespace Tests.Data
 			}
 		}
 
-#if NET472
+#if NETFRAMEWORK
 		[Test]
 		public void TestOracleNative([IncludeDataSources(TestProvName.AllOracleNative)] string context, [Values] ConnectionType type)
 		{

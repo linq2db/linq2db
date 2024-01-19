@@ -26,21 +26,21 @@ namespace LinqToDB.Async
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			return Transaction.CommitAsync(cancellationToken);
 #else
 			Commit();
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 #endif
 		}
 
 		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			return Transaction.RollbackAsync(cancellationToken);
 #else
 			Rollback();
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 #endif
 		}
 
@@ -49,13 +49,6 @@ namespace LinqToDB.Async
 		#endregion
 
 		#region IAsyncDisposable
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			Dispose();
-			return TaskEx.CompletedTask;
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (Transaction is IAsyncDisposable asyncDisposable)
@@ -64,7 +57,6 @@ namespace LinqToDB.Async
 			Dispose();
 			return default;
 		}
-#endif
 		#endregion
 	}
 }

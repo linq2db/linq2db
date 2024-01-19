@@ -363,9 +363,9 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)), Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Binary   ("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -434,7 +434,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				var testJson = "{\"name\":\"bob\", \"age\":10}";
+				var testJson = /*lang=json,strict*/ "{\"name\":\"bob\", \"age\":10}";
 
 				Assert.That(conn.Execute<string>("SELECT @p", new DataParameter("p", testJson, DataType.Json)), Is.EqualTo(testJson));
 			}
@@ -600,7 +600,7 @@ namespace Tests.DataProvider
 					expectedVersion = "3.42.0";
 					break;
 				case ProviderName.SQLiteMS:
-					expectedVersion = "3.40.1";
+					expectedVersion = "3.41.2";
 					break;
 				default:
 					throw new InvalidOperationException();

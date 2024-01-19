@@ -3822,7 +3822,7 @@ namespace LinqToDB.SqlProvider
 					//}
 
 					if (orderByItems == null || orderByItems.Count == 0)
-						orderByItems = context.supportsEmptyOrderBy ? Array<SqlOrderByItem>.Empty : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
+						orderByItems = context.supportsEmptyOrderBy ? [] : new[] { new SqlOrderByItem(new SqlExpression("SELECT NULL"), false) };
 
 					var orderBy = string.Join(", ",
 						orderByItems.Select(static (oi, i) => oi.IsDescending ? $"{{{i}}} DESC" : $"{{{i}}}"));

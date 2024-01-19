@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -38,7 +39,7 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<Person>()
 					.Merge()
-					.Using(Array<Person>.Empty)
+					.Using(Array.Empty<Person>())
 					.OnTargetKey()
 					.UpdateWhenMatched()
 					.InsertWhenNotMatched()

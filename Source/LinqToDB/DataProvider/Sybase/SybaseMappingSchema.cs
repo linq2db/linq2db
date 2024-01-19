@@ -11,7 +11,11 @@ namespace LinqToDB.DataProvider.Sybase
 
 	sealed class SybaseMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat TIME3_FORMAT = CompositeFormat.Parse("'{0:hh\\:mm\\:ss\\.fff}'");
+#else
 		private const string TIME3_FORMAT= "'{0:hh\\:mm\\:ss\\.fff}'";
+#endif
 
 		SybaseMappingSchema() : base(ProviderName.Sybase)
 		{

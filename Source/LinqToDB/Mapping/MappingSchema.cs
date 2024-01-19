@@ -796,8 +796,8 @@ namespace LinqToDB.Mapping
 
 			if (isFromGeneric || isToGeneric)
 			{
-				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArguments() : Array<Type>.Empty;
-				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArguments() : Array<Type>.Empty;
+				var fromGenericArgs = isFromGeneric ? from.SystemType.GetGenericArguments() : [];
+				var toGenericArgs   = isToGeneric   ? to.SystemType.  GetGenericArguments() : [];
 
 				var args = fromGenericArgs.SequenceEqual(toGenericArgs)
 					? fromGenericArgs
@@ -1054,7 +1054,7 @@ namespace LinqToDB.Mapping
 		private T[] GetAllAttributes<T>(Type type)
 			where T : MappingAttribute
 		{
-			return Schemas[0].MetadataReader?.GetAttributes<T>(type) ?? Array<T>.Empty;
+			return Schemas[0].MetadataReader?.GetAttributes<T>(type) ?? [];
 		}
 
 		/// <summary>
@@ -1067,7 +1067,7 @@ namespace LinqToDB.Mapping
 		private T[] GetAllAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
 		{
-			return Schemas[0].MetadataReader?.GetAttributes<T>(type, memberInfo) ?? Array<T>.Empty;
+			return Schemas[0].MetadataReader?.GetAttributes<T>(type, memberInfo) ?? [];
 		}
 
 		private (MappingAttributesCache cache, MappingAttributesCache firstOnlyCache) CreateAttributeCaches()
@@ -1095,7 +1095,7 @@ namespace LinqToDB.Mapping
 						if (string.IsNullOrEmpty(attribute.Configuration))
 							(list ??= new()).Add(attribute);
 
-					return list == null ? Array<MappingAttribute>.Empty : list.ToArray();
+					return list == null ? [] : list.ToArray();
 				});
 
 			var firstOnlyCache = new MappingAttributesCache(
@@ -1123,7 +1123,7 @@ namespace LinqToDB.Mapping
 						if (string.IsNullOrEmpty(attribute.Configuration))
 							(list ??= new()).Add(attribute);
 
-					return list == null ? Array<MappingAttribute>.Empty : list.ToArray();
+					return list == null ? [] : list.ToArray();
 				});
 
 			return (cache, firstOnlyCache);
@@ -1221,7 +1221,7 @@ namespace LinqToDB.Mapping
 		/// <returns>All dynamic columns defined on given type.</returns>
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
-			return Schemas[0].MetadataReader?.GetDynamicColumns(type) ?? Array<MemberInfo>.Empty;
+			return Schemas[0].MetadataReader?.GetDynamicColumns(type) ?? [];
 		}
 
 		#endregion

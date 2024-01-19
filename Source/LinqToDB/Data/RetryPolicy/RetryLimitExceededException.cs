@@ -13,7 +13,5 @@ namespace LinqToDB.Data.RetryPolicy
 
 		public RetryLimitExceededException(Exception innerException) : base(RetryLimitExceededMessage, innerException)
 		{}
-		protected RetryLimitExceededException(SerializationInfo info, StreamingContext context) : base(info, context)
-		{}
 	}
 }

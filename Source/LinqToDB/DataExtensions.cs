@@ -1461,7 +1461,6 @@ namespace LinqToDB
 
 		#region FromSql
 
-#if !NET45
 		/// <summary>
 		/// Compares two FormattableString parameters
 		/// </summary>
@@ -1588,8 +1587,6 @@ namespace LinqToDB
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
 					ExpressionConstants.DataContextParam, Expression.Constant(sql)));
 		}
-
-#endif
 
 		/// <summary>
 		///     <para>

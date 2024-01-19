@@ -161,7 +161,6 @@ namespace LinqToDB.DataProvider.SapHana
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -174,7 +173,6 @@ namespace LinqToDB.DataProvider.SapHana
 				source,
 				cancellationToken);
 		}
-#endif
 
 		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{

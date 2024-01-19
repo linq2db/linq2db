@@ -750,17 +750,10 @@ namespace LinqToDB
 			_table.DropTable(throwExceptionIfNotExists: false);
 		}
 
-#if NATIVE_ASYNC
 		public virtual ValueTask DisposeAsync()
 		{
 			return new ValueTask(_table.DropTableAsync(throwExceptionIfNotExists: false));
 		}
-#else
-		public virtual Task DisposeAsync()
-		{
-			return _table.DropTableAsync(throwExceptionIfNotExists: false);
-		}
-#endif
 	}
 
 	public static partial class DataExtensions

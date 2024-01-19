@@ -1,5 +1,4 @@
-﻿#if NATIVE_ASYNC
-using System;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace LinqToDB
@@ -17,4 +16,3 @@ namespace LinqToDB
 		}
 	}
 }
-#endif

@@ -12,9 +12,15 @@ namespace LinqToDB.DataProvider.Firebird
 
 	sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATE_FORMAT      = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd}' AS {1})");
+		private static readonly CompositeFormat DATETIME_FORMAT  = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})");
+		private static readonly CompositeFormat TIMESTAMP_FORMAT = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})");
+#else
 		private const string DATE_FORMAT      = "CAST('{0:yyyy-MM-dd}' AS {1})";
 		private const string DATETIME_FORMAT  = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
 		private const string TIMESTAMP_FORMAT = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
+#endif
 
 		FirebirdMappingSchema() : base(ProviderName.Firebird)
 		{

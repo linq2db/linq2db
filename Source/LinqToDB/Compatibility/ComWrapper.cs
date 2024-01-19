@@ -56,7 +56,7 @@ namespace LinqToDB
 
 		public override bool TryGetMember(GetMemberBinder binder, out object? result)
 		{
-			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder, _instance, Array<object?>.Empty);
+			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder, _instance, []);
 
 			return true;
 		}

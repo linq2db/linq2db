@@ -26,9 +26,7 @@ using NUnit.Framework;
 using MySqlDataDateTime      = MySqlData::MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal       = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
-#if NET6_0_OR_GREATER
 using MySqlConnectorDecimal  = MySqlConnector::MySqlConnector.MySqlDecimal;
-#endif
 
 namespace Tests.DataProvider
 {
@@ -109,9 +107,7 @@ namespace Tests.DataProvider
 					}
 					else
 					{
-#if NET6_0_OR_GREATER
 						TestType<MySqlConnectorDecimal?>(conn, "decimalDataType", DataType.Decimal);
-#endif
 						using (new DisableBaseline("Output (datetime format) is culture-/system-dependent"))
 							Assert.That(TestType<MySqlConnectorDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new MySqlConnectorDateTime(2012, 12, 12, 12, 12, 12, 0)));
 					}
@@ -208,7 +204,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if NET6_0_OR_GREATER
 		[Table]
 		public class BigDecimalMySqlConnectorTable
 		{
@@ -295,7 +290,6 @@ namespace Tests.DataProvider
 				Assert.IsNull(records[1].DecimalN);
 			}
 		}
-#endif
 
 		[Test]
 		public void TestDate([IncludeDataSources(TestProvName.AllMySql)] string context)
@@ -389,8 +383,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", arr1)),              Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", arr1)),              Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", null)),              Is.EqualTo(null));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
-				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Image    ("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter { Name = "p", Value = arr1 }),  Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", DataParameter.Create   ("p", new Binary(arr1))),  Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>("SELECT @p", new DataParameter("p", new Binary(arr1))),        Is.EqualTo(arr1));
@@ -1669,7 +1663,7 @@ namespace Tests.DataProvider
 						Bit32            = 0xADFE,
 						Bit10            = 0x003F,
 						Bit64            = 0xDEADBEAF,
-						Json             = "{\"x\": 10}",
+						Json             = /*lang=json,strict*/ "{\"x\": 10}",
 						Guid             = TestData.Guid1
 					};
 

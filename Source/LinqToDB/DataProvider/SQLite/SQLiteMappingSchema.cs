@@ -12,11 +12,20 @@ namespace LinqToDB.DataProvider.SQLite
 	public class SQLiteMappingSchema : LockedMappingSchema
 	{
 		internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATE_FORMAT      = CompositeFormat.Parse("'{0:yyyy-MM-dd}'");
+		private static readonly CompositeFormat DATETIME0_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss}'");
+		private static readonly CompositeFormat DATETIME1_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.f}'");
+		private static readonly CompositeFormat DATETIME2_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.ff}'");
+		private static readonly CompositeFormat DATETIME3_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'");
+#else
 		private  const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
 		private  const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
 		private  const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
 		private  const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
 		private  const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+#endif
+
 
 		SQLiteMappingSchema() : base(ProviderName.SQLite)
 		{
@@ -65,7 +74,11 @@ namespace LinqToDB.DataProvider.SQLite
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
 		{
+#if SUPPORTS_COMPOSITE_FORMAT
+			CompositeFormat format;
+#else
 			string format;
+#endif
 			if (value.Millisecond == 0)
 			{
 				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?

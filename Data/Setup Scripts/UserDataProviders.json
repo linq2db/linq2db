@@ -1,5 +1,5 @@
 ﻿{
-	"NET472" :
+	"NETFX" :
 	{
 		"BasedOn"              : "User.Providers",
 		"DefaultConfiguration" : "SQLite.Default",
@@ -13,16 +13,6 @@
 		]
 	},
 
-	"CORE31" :
-	{
-		"BasedOn"              : "User.Providers",
-		"DefaultConfiguration" : "SQLite.Default",
-		"Providers"            :
-		[
-			"- Access*"
-		]
-	},
-
 	"NET60" :
 	{
 		"BasedOn"              : "User.Providers",
@@ -33,7 +23,7 @@
 		]
 	},
 
-	"NET70" :
+	"NET80" :
 	{
 		"BasedOn" : "NET60"
 	},

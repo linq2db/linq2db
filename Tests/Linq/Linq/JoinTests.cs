@@ -2679,7 +2679,7 @@ namespace Tests.Linq
 			[Association(ThisKey = "InIdMain", OtherKey = "InId", CanBeNull = false)]
 			public StMain Main { get; set; } = null!;
 
-			public static StVersion[] Data = Array<StVersion>.Empty;
+			public static StVersion[] Data = [];
 		}
 
 		[Table("rlStatesTypesAndUserGroups")]
@@ -2688,7 +2688,7 @@ namespace Tests.Linq
 			[Column("inIdState"), PrimaryKey(1)] public int InIdState { get; set; }
 			[Column("inIdType"),  PrimaryKey(2)] public int InIdType { get; set; }
 
-			public static RlStatesTypesAndUserGroup[] Data = Array<RlStatesTypesAndUserGroup>.Empty;
+			public static RlStatesTypesAndUserGroup[] Data = [];
 		}
 
 		[Table("stMain")]
@@ -2697,7 +2697,7 @@ namespace Tests.Linq
 			[Column("inId"), PrimaryKey]  public int InId { get; set; }
 			[Column("inIdType")]          public int InIdType { get; set; }
 
-			public static StMain[] Data = Array<StMain>.Empty;
+			public static StMain[] Data = [];
 		}
 
 		[Test]

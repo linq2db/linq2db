@@ -8,6 +8,7 @@ using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+using System.Collections.Generic;
 
 namespace Tests.DataProvider
 {
@@ -166,12 +167,10 @@ namespace Tests.DataProvider
 			await db.BulkCopyAsync(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
 
-#if NATIVE_ASYNC
 			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
 			await table.DeleteAsync();
 			await db.BulkCopyAsync(options, data);
 			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
-#endif
 		}
 
 		/// <summary>
@@ -223,15 +222,5 @@ namespace Tests.DataProvider
 			if (!skipNullable)
 				Assert.AreEqual(getExpectedNullableValue != null ? getExpectedNullableValue(nullableValue) : nullableValue, record.ColumnNullable);
 		}
-
-#if NATIVE_ASYNC
-		private static async IAsyncEnumerable<T> ToAsyncEnumerable<T>(IEnumerable<T> enumerable)
-		{
-			foreach (var item in enumerable)
-			{
-				yield return await Task.FromResult(item);
-			}
-		}
-#endif
 	}
 }

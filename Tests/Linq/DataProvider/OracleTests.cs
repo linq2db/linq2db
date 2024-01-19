@@ -428,8 +428,8 @@ namespace Tests.DataProvider
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Binary   ("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", arr1)), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Create   ("p", arr1)), Is.EqualTo(arr1));
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
-				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Image    ("p", Array<byte>.Empty)), Is.EqualTo(Array<byte>.Empty));
+				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.VarBinary("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
+				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Image    ("p", Array.Empty<byte>())), Is.EqualTo(Array.Empty<byte>()));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, new DataParameter { Name = "p", Value = arr1 }), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, DataParameter.Create   ("p", new Binary(arr1))), Is.EqualTo(arr1));
 				Assert.That(conn.Execute<byte[]>(PathThroughSql, new DataParameter("p", new Binary(arr1))), Is.EqualTo(arr1));
@@ -471,7 +471,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-#if NET472
+#if NETFRAMEWORK
 
 		[Test]
 		public void TestOracleNativeTypes([IncludeDataSources(TestProvName.AllOracleNative)] string context)
@@ -3211,7 +3211,7 @@ namespace Tests.DataProvider
 				var bfile = pms[24].Output!.Value!;
 				if (isNative)
 				{
-#if NET472
+#if NETFRAMEWORK
 					using (var file = (Oracle.DataAccess.Types.OracleBFile)bfile)
 					{
 						file.OpenFile();

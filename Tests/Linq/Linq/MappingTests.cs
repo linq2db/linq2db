@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-#if NET472
+#if NETFRAMEWORK
 using System.ServiceModel;
 #endif
 

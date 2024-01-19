@@ -32,7 +32,7 @@ namespace LinqToDB.Extensions
 						if (method.GetParameters().Length > 0)
 							throw new LinqToDBException($"Method '{memberName}' for type '{type.Name}' should have no parameters");
 
-						if (method.Invoke(null, Array<object>.Empty) is TExpression expression)
+						if (method.Invoke(null, []) is TExpression expression)
 							return expression;
 
 						throw new LinqToDBException($"Method '{memberName}' for type '{type.Name}' should return expression");

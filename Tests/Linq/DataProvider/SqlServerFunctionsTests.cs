@@ -1203,7 +1203,6 @@ namespace Tests.DataProvider
 			AreEqual(expected, result);
 		}
 
-#if !NET45
 		[Test]
 		public void OpenJson4([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
@@ -1251,7 +1250,6 @@ namespace Tests.DataProvider
 
 			AreEqual(expected, result);
 		}
-#endif
 		#endregion
 
 		#region Mathematical

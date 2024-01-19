@@ -1722,7 +1722,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			throw new InvalidOperationException($"'{nameof(OpenJson)}' is a server side only function.");
 		}
 
-#if !NET45
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OPENJSON-transact-sql">OPENJSON (Transact-SQL)</see></b></para>
 		/// <para>A table-valued function that parses JSON text and returns objects and properties from the JSON input as rows and columns.</para>
@@ -1763,7 +1762,6 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return (dc, json, path) => dc.FromSql<JsonData>($"OPENJSON({json}, {path})");
 		}
-#endif
 
 		#endregion
 

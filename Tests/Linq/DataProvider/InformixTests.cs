@@ -9,7 +9,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.Mapping;
 
-#if NET472
+#if NETFRAMEWORK
 using IBM.Data.Informix;
 #endif
 using NUnit.Framework;
@@ -66,7 +66,7 @@ namespace Tests.DataProvider
 				Assert.That(TestType<byte[]>      (conn, "byteDataType",     DataType.Binary,    skipPass:true), Is.EqualTo(new byte[] { 1, 2 }));
 				Assert.That(TestType<byte[]>      (conn, "byteDataType",     DataType.VarBinary, skipPass:true), Is.EqualTo(new byte[] { 1, 2 }));
 
-#if NET472
+#if NETFRAMEWORK
 				if (context == ProviderName.Informix)
 				{
 					Assert.That(TestType<IfxDateTime?>(conn, "datetimeDataType", DataType.DateTime), Is.EqualTo(new IfxDateTime(new DateTime(2012, 12, 12, 12, 12, 12))));

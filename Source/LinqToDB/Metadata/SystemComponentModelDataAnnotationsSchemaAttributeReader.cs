@@ -46,7 +46,7 @@ namespace LinqToDB.Metadata
 				return new MappingAttribute[] { attr };
 			}
 
-			return Array<MappingAttribute>.Empty;
+			return [];
 		}
 
 		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
@@ -64,11 +64,11 @@ namespace LinqToDB.Metadata
 				return new MappingAttribute[] { attr };
 			}
 
-			return Array<MappingAttribute>.Empty;
+			return [];
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+		public MemberInfo[] GetDynamicColumns(Type type) => [];
 
 		public string GetObjectID() => $".{nameof(SystemComponentModelDataAnnotationsSchemaAttributeReader)}.";
 	}
