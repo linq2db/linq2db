@@ -437,6 +437,7 @@ namespace Tests.Linq
 			// So tests are short because we don't want to test all edge cases of provider implementation.
 			// We simply want to check if valid SQL is generated for all basic support types
 
+#pragma warning disable RS0030 // Do not use banned APIs
 			ints.Count(i => Row(DT.Parse("2020-10-01"), DT.Parse("2020-10-05"))
 				  .Overlaps(Row(DT.Parse("2020-10-03"), DT.Parse("2020-11-09"))))
 				.Should().Be(1);
@@ -452,6 +453,7 @@ namespace Tests.Linq
 			ints.Count(i => Row(DT.Parse("2020-10-03"), TimeSpan.Parse("6"))
 				  .Overlaps(Row(DT.Parse("2020-10-05"), (TimeSpan?)null)))
 				.Should().Be(1);
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		[Test]

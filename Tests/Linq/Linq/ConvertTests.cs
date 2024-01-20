@@ -446,9 +446,11 @@ namespace Tests.Linq
 		public void ToDateTime([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+#pragma warning disable RS0030 // Do not use banned APIs
 				AreEqual(
 					from p in from t in    Types select DateTime.Parse(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p,
 					from p in from t in db.Types select DateTime.Parse(t.DateTimeValue.Year + "-01-01 00:00:00") where p.Day > 0 select p);
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		[Test]
@@ -1455,6 +1457,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<ToStringConvertibleTypes>(ToStringConvertibleTypes.Seed()))
 			{
+#pragma warning disable RS0030 // Do not use banned APIs
 				var sqlConverted = table.Select(x => new
 					{
 						Prop_bool             = Sql.AsSql(x.Prop_bool            .ToString()),
@@ -1489,7 +1492,9 @@ namespace Tests.Linq
 						NullableProp_DateTime = Sql.AsSql(x.NullableProp_DateTime.ToString()),
 					})
 					.First();
+#pragma warning restore RS0030 // Do not use banned APIs
 
+#pragma warning disable RS0030 // Do not use banned APIs
 				var noSqlConverted = table.Select(x => new
 					{
 						Prop_bool             = x.Prop_bool ? "1" : "0",
@@ -1524,6 +1529,7 @@ namespace Tests.Linq
 						NullableProp_DateTime = x.NullableProp_DateTime!.Value.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
 					})
 					.First();
+#pragma warning restore RS0030 // Do not use banned APIs
 
 				sqlConverted.Should().Be(noSqlConverted);
 			}

@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static DateTime ParseDateTime(string value)
 		{
-			if (DateTime.TryParse(value, out var res))
+			if (DateTime.TryParse(value, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var res))
 				return res;
 
 			return DateTime.ParseExact(

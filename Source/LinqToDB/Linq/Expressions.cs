@@ -746,7 +746,9 @@ namespace LinqToDB.Linq
 			{ M(() => bool.    Parse("")), N(() => L<string,bool>    ((string p0) => Sql.ConvertTo<bool>.    From(p0))) },
 			{ M(() => byte.    Parse("")), N(() => L<string,byte>    ((string p0) => Sql.ConvertTo<byte>.    From(p0))) },
 			{ M(() => char.    Parse("")), N(() => L<string,char>    ((string p0) => Sql.ConvertTo<char>.    From(p0))) },
+#pragma warning disable RS0030 // Do not used banned APIs
 			{ M(() => DateTime.Parse("")), N(() => L<string,DateTime>((string p0) => Sql.ConvertTo<DateTime>.From(p0))) },
+#pragma warning restore RS0030 // Do not used banned APIs
 			{ M(() => decimal. Parse("")), N(() => L<string,decimal> ((string p0) => Sql.ConvertTo<decimal>. From(p0))) },
 			{ M(() => double.  Parse("")), N(() => L<string,double>  ((string p0) => Sql.ConvertTo<double>.  From(p0))) },
 			{ M(() => short.   Parse("")), N(() => L<string,short>   ((string p0) => Sql.ConvertTo<short>.   From(p0))) },
@@ -759,7 +761,9 @@ namespace LinqToDB.Linq
 			{ M(() => ulong.   Parse("")), N(() => L<string,ulong>   ((string p0) => Sql.ConvertTo<ulong>.   From(p0))) },
 
 #if NET6_0_OR_GREATER
+#pragma warning disable RS0030 // Do not used banned APIs
 			{ M(() => DateOnly.Parse("")), N(() => L<string,DateOnly>((string p0) => Sql.ConvertTo<DateOnly>.From(p0))) },
+#pragma warning restore RS0030 // Do not used banned APIs
 #endif
 
 			#endregion
@@ -1241,7 +1245,12 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.MakeDateTime(0, 0, 0, 0, 0, 0) ), N(() => L<int?,int?,int?,int?,int?,int?,DateTime?>((y,m,d,h,mm,s) => Sql.Convert(Sql.Types.DateTime2,
 						Sql.ZeroPad(y, 4) + "-" + Sql.ZeroPad(m, 2) + "-" + Sql.ZeroPad(d, 2) + " " +
 						Sql.ZeroPad(h, 2) + ":" + Sql.ZeroPad(mm, 2) + ":" + Sql.ZeroPad(s, 2), 120))) },
-					{ M(() => DateTime.Parse("")), N(() => L<string,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) )) },
+					{
+#pragma warning disable RS0030 // Do not used banned APIs
+						M(() => DateTime.Parse("")),
+#pragma warning restore RS0030 // Do not used banned APIs
+						N(() => L<string,DateTime>(p0 => Sql.ConvertTo<DateTime>.From(p0) ))
+					},
 				}},
 
 				#endregion

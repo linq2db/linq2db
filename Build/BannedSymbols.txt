@@ -85,3 +85,44 @@ M:System.Attribute.IsDefined(System.Reflection.Module,System.Type); Use Attribut
 M:System.Attribute.IsDefined(System.Reflection.Module,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
 M:System.Attribute.IsDefined(System.Reflection.ParameterInfo,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
 M:System.Attribute.IsDefined(System.Reflection.ParameterInfo,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+
+# avoid culture-dependent calls
+M:System.DateTimeOffset.Parse(System.String); use overload with IFormatProvider parameter
+M:System.DateTimeOffset.ToString; use overload with IFormatProvider parameter
+M:System.DateTimeOffset.ToString(System.String); use overload with IFormatProvider parameter
+M:System.DateTimeOffset.TryParse(System.ReadOnlySpan{System.Char},System.DateTimeOffset@); use overload with IFormatProvider parameter
+M:System.DateTimeOffset.TryParse(System.String,System.DateTimeOffset@); use overload with IFormatProvider parameter
+M:System.DateTime.Parse(System.String); use overload with IFormatProvider parameter
+M:System.DateTime.TryParse(System.ReadOnlySpan{System.Char},System.DateTime@); use overload with IFormatProvider parameter
+M:System.DateTime.TryParse(System.String,System.DateTime@); use overload with IFormatProvider parameter
+M:System.DateTime.ToString; use overload with IFormatProvider parameter
+M:System.DateTime.ToString(System.String); use overload with IFormatProvider parameter
+M:System.DateTime.GetDateTimeFormats; use overload with IFormatProvider parameter
+M:System.DateTime.GetDateTimeFormats(System.Char); use overload with IFormatProvider parameter
+M:System.DateOnly.Parse(System.String); use overload with IFormatProvider parameter
+M:System.DateOnly.ParseExact(System.ReadOnlySpan{System.Char},System.String[]); use overload with IFormatProvider parameter
+M:System.DateOnly.ParseExact(System.String,System.String); use overload with IFormatProvider parameter
+M:System.DateOnly.ParseExact(System.String,System.String[]); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParse(System.ReadOnlySpan{System.Char},System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParse(System.String,System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParseExact(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParseExact(System.ReadOnlySpan{System.Char},System.String[],System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParseExact(System.String,System.String,System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParseExact(System.String,System.String[],System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.ToString; use overload with IFormatProvider parameter
+M:System.DateOnly.ToString(System.String); use overload with IFormatProvider parameter
+M:System.TimeSpan.ToString; use overload with IFormatProvider parameter
+M:System.TimeSpan.ToString(System.String); use overload with IFormatProvider parameter
+M:System.TimeSpan.TryParse(System.ReadOnlySpan{System.Char},System.TimeSpan@); use overload with IFormatProvider parameter
+M:System.TimeSpan.TryParse(System.String,System.TimeSpan@); use overload with IFormatProvider parameter
+M:System.TimeSpan.Parse(System.String); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParse(System.ReadOnlySpan{System.Char},System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParse(System.String,System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParseExact(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParseExact(System.ReadOnlySpan{System.Char},System.String[],System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParseExact(System.String,System.String,System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParseExact(System.String,System.String[],System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.Parse(System.String); use overload with IFormatProvider parameter
+M:System.TimeOnly.ParseExact(System.ReadOnlySpan{System.Char},System.String[]); use overload with IFormatProvider parameter
+M:System.TimeOnly.ParseExact(System.String,System.String); use overload with IFormatProvider parameter
+M:System.TimeOnly.ParseExact(System.String,System.String[]); use overload with IFormatProvider parameter

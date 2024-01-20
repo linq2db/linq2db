@@ -197,18 +197,22 @@ namespace Tests.Linq
 		public void Parse1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+#pragma warning disable RS0030 // Do not use banned APIs
 				AreEqual(
 					from d in from t in    Types select DateTime.Parse(Sql.ConvertTo<string>.From(t.DateTimeValue)) where d.Day > 0 select d.Date,
 					from d in from t in db.Types select DateTime.Parse(Sql.ConvertTo<string>.From(t.DateTimeValue)) where d.Day > 0 select d.Date);
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		[Test]
 		public void Parse2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+#pragma warning disable RS0030 // Do not use banned APIs
 				AreEqual(
 					from d in from t in    Types select           DateTime.Parse(t.DateTimeValue.Year + "-02-24 00:00:00")  where d.Day > 0 select d,
 					from d in from t in db.Types select Sql.AsSql(DateTime.Parse(t.DateTimeValue.Year + "-02-24 00:00:00")) where d.Day > 0 select d);
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		#region DatePart

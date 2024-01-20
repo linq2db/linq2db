@@ -1357,9 +1357,9 @@ namespace LinqToDB.Mapping
 				SetConverter<DBNull, object?>(static _ => null);
 
 				// explicitly specify old ToString client-side conversions for some types after we added support for ToString(InvariantCulture) to conversion generators
-				SetConverter<DateTime, string>(static v => v.ToString("yyyy-MM-dd hh:mm:ss"));
+				SetConverter<DateTime, string>(static v => v.ToString("yyyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo));
 #if NET6_0_OR_GREATER
-				SetConverter<DateOnly, string>(static v => v.ToString("yyyy-MM-dd"));
+				SetConverter<DateOnly, string>(static v => v.ToString("yyyy-MM-dd", DateTimeFormatInfo.InvariantInfo));
 #endif
 
 				ValueToSqlConverter.SetDefaults();

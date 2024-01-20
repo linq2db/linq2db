@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using System.Text;
 
 using JetBrains.Annotations;
@@ -61,8 +62,8 @@ namespace LinqToDB.Tools
 						var type   = ta.Members[i].Type.ToNullableUnderlying();
 
 						if      (value == null)            values[i] = "<NULL>";
-						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G");
-						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss");
+						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G", DateTimeFormatInfo.InvariantInfo);
+						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo);
 						else                               values[i] = value.ToString() ?? string.Empty;
 					}
 

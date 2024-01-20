@@ -341,7 +341,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (precision < 0 || precision > 7)
 				throw new InvalidOperationException($"TIME type precision is out-of-bounds: {precision}");
 
-			return value.ToString(TIME_RAW_FORMATS[precision]);
+			return value.ToString(TIME_RAW_FORMATS[precision], DateTimeFormatInfo.InvariantInfo);
 		}
 
 		internal static string ConvertDateTimeOffsetToString(DateTimeOffset value, int precision)
@@ -349,7 +349,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			if (precision < 0 || precision > 7)
 				throw new InvalidOperationException($"DATETIMEOFFSET type precision is out-of-bounds: {precision}");
 
-			return value.ToString(DATETIMEOFFSET_RAW_FORMATS[precision]);
+			return value.ToString(DATETIMEOFFSET_RAW_FORMATS[precision], DateTimeFormatInfo.InvariantInfo);
 		}
 
 		static void ConvertTimeSpanToSql(StringBuilder stringBuilder, SqlDataType sqlDataType, TimeSpan value, bool supportsTime, bool supportsFromParts)

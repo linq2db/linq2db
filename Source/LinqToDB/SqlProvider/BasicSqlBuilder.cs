@@ -7,6 +7,7 @@ using System.Data.Common;
 using System.Data.Linq;
 using System.Data.SqlTypes;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -3795,7 +3796,7 @@ namespace LinqToDB.SqlProvider
 				// ISO8601 format (with Kind-specific offset part)
 				sb
 					.Append('\'')
-					.Append(dt.ToString("o"))
+					.Append(dt.ToString("o", DateTimeFormatInfo.InvariantInfo))
 					.Append('\'');
 			}
 			else if (value is DateTimeOffset dto)
@@ -3803,7 +3804,7 @@ namespace LinqToDB.SqlProvider
 				// ISO8601 format with offset
 				sb
 					.Append('\'')
-					.Append(dto.ToString("o"))
+					.Append(dto.ToString("o", DateTimeFormatInfo.InvariantInfo))
 					.Append('\'');
 			}
 			else if (value is IEnumerable collection)
