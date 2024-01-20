@@ -48,6 +48,26 @@ namespace Tests
 		}
 		}
 
+	public class CultureRegion : IDisposable
+	{
+		private readonly CultureInfo? _original;
+
+		public CultureRegion(string culture)
+		{
+			if (!Thread.CurrentThread.CurrentCulture.Equals(CultureInfo.InvariantCulture))
+			{
+				_original = Thread.CurrentThread.CurrentCulture;
+				Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+			}
+		}
+
+		void IDisposable.Dispose()
+		{
+			if (_original != null)
+				Thread.CurrentThread.CurrentCulture = _original;
+		}
+	}
+
 	public class InvariantCultureRegion : IDisposable
 	{
 		private readonly CultureInfo? _original;
