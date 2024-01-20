@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
@@ -12,12 +13,7 @@ namespace LinqToDB.SqlProvider
 			var hint  = ((SqlValue)sqlQueryExtension.Arguments["hint"]).    Value;
 			var param = GetValue((SqlValue)sqlQueryExtension.Arguments["hintParameter"]);
 
-			stringBuilder
-				.Append(hint)
-				.Append('(')
-				.Append(param)
-				.Append(')');
-
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}({1})", hint, param);
 
 			object? GetValue(SqlValue value)
 			{

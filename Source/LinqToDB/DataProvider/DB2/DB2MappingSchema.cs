@@ -92,7 +92,7 @@ namespace LinqToDB.DataProvider.DB2
 				var dbtype = type.Type.DbType.ToLowerInvariant();
 				if (dbtype.StartsWith("timestamp("))
 				{
-					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), out var fromDbType))
+					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var fromDbType))
 						precision = fromDbType;
 				}
 			}
@@ -159,11 +159,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "chr({0})", value);
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

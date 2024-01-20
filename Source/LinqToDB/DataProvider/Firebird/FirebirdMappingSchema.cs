@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.Append("_utf8 x'");
 
 			foreach (var bt in bytes)
-				stringBuilder.AppendFormat("{0:X2}", bt);
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0:X2}", bt);
 
 			stringBuilder.Append('\'');
 		}

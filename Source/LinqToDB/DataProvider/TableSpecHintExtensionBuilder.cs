@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider
@@ -39,7 +40,7 @@ namespace LinqToDB.DataProvider
 				var delimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg) && extArg is SqlValue { Value : string val } ? val : " ";
 
 				stringBuilder.Append(delimiter);
-				stringBuilder.Append(param);
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", param);
 			}
 			else if (args.TryGetValue("hintParameters.Count", out var hintParametersCount))
 			{
@@ -57,7 +58,7 @@ namespace LinqToDB.DataProvider
 
 						if (i > 0)
 							stringBuilder.Append(delimiter1);
-						stringBuilder.Append(value);
+						stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
 					}
 				}
 			}

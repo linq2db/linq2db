@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -144,6 +145,7 @@ namespace LinqToDB.DataProvider.Oracle
 					var  c= ed.Columns[i];
 
 					columns.Value.AppendFormat(
+						CultureInfo.InvariantCulture,
 						"{0} {1} path 'c{2}'",
 						sqlBuilder.ConvertInline(c.ColumnName, ConvertType.NameToQueryField),
 						string.IsNullOrEmpty(c.DbType)

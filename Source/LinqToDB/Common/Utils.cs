@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
@@ -98,7 +99,7 @@ namespace LinqToDB.Common
 
 					if (!currentCounters.TryGetValue(name, out startDigit))
 					{
-						startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount));
+						startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount), NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 					}
 				}
 

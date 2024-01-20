@@ -1344,7 +1344,7 @@ namespace LinqToDB.SqlProvider
 						ctx.this_.BuildPhysicalTable(ctx.createTable.Table!, null);
 					}, (this_: this, createTable));
 
-				AppendIndent().AppendFormat(createTable.StatementHeader, name);
+				AppendIndent().AppendFormat(CultureInfo.InvariantCulture, createTable.StatementHeader, name);
 			}
 		}
 
@@ -1539,14 +1539,18 @@ namespace LinqToDB.SqlProvider
 
 				if (field.Field.CreateFormat != null)
 				{
-					StringBuilder.AppendFormat(field.Field.CreateFormat, field.Name, field.Type, field.Null, field.Identity);
+					StringBuilder.AppendFormat(CultureInfo.InvariantCulture, field.Field.CreateFormat, field.Name, field.Type, field.Null, field.Identity);
 
 					while (StringBuilder.Length > 0 && StringBuilder[StringBuilder.Length - 1] == ' ')
 						StringBuilder.Length--;
 				}
 				else
 				{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
 					StringBuilder.Append(field.StringBuilder);
+#else
+					StringBuilder.Append(field.StringBuilder.ToString());
+#endif
 				}
 			}
 
@@ -2272,19 +2276,19 @@ namespace LinqToDB.SqlProvider
 
 			if (SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
-					SkipFormat, WithStringBuilderBuildExpression(skipExpr!));
+					CultureInfo.InvariantCulture, SkipFormat, WithStringBuilderBuildExpression(skipExpr!));
 
 			if (NeedTake(takeExpr) && FirstFormat(selectQuery) != null)
 			{
 				StringBuilder.Append(' ').AppendFormat(
-					FirstFormat(selectQuery)!, WithStringBuilderBuildExpression(takeExpr!));
+					CultureInfo.InvariantCulture, FirstFormat(selectQuery)!, WithStringBuilderBuildExpression(takeExpr!));
 
 				BuildTakeHints(selectQuery);
 			}
 
 			if (!SkipFirst && NeedSkip(takeExpr, skipExpr) && SkipFormat != null)
 				StringBuilder.Append(' ').AppendFormat(
-					SkipFormat, WithStringBuilderBuildExpression(skipExpr!));
+					CultureInfo.InvariantCulture, SkipFormat, WithStringBuilderBuildExpression(skipExpr!));
 		}
 
 		protected virtual void BuildTakeHints(SelectQuery selectQuery)
@@ -2313,7 +2317,7 @@ namespace LinqToDB.SqlProvider
 				if (doSkip && OffsetFirst)
 		{
 					StringBuilder.AppendFormat(
-						OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(skipExpr!));
+						CultureInfo.InvariantCulture, OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(skipExpr!));
 
 					if (doTake)
 						StringBuilder.Append(' ');
@@ -2322,7 +2326,7 @@ namespace LinqToDB.SqlProvider
 				if (doTake)
 		{
 					StringBuilder.AppendFormat(
-						LimitFormat(selectQuery)!, WithStringBuilderBuildExpression(takeExpr!));
+						CultureInfo.InvariantCulture, LimitFormat(selectQuery)!, WithStringBuilderBuildExpression(takeExpr!));
 
 					if (doSkip)
 						StringBuilder.Append(' ');
@@ -2330,7 +2334,7 @@ namespace LinqToDB.SqlProvider
 
 				if (doSkip && !OffsetFirst)
 					StringBuilder.AppendFormat(
-						OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(skipExpr!));
+						CultureInfo.InvariantCulture, OffsetFormat(selectQuery)!, WithStringBuilderBuildExpression(skipExpr!));
 
 				StringBuilder.AppendLine();
 			}
@@ -3064,7 +3068,7 @@ namespace LinqToDB.SqlProvider
 					values[i] = WithStringBuilderBuildExpression(precedence, value);
 				}
 
-				StringBuilder.AppendFormat(format, values);
+				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, values);
 			}
 		}
 
@@ -3322,13 +3326,13 @@ namespace LinqToDB.SqlProvider
 				case DataType.Boolean: StringBuilder.Append("Bit");      return;
 			}
 
-			StringBuilder.Append(type.Type.DataType);
+			StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", type.Type.DataType);
 
 			if (type.Type.Length > 0)
-				StringBuilder.Append('(').Append(type.Type.Length).Append(')');
+				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "({0})", type.Type.Length);
 
 			if (type.Type.Precision > 0)
-				StringBuilder.Append('(').Append(type.Type.Precision).Append(InlineComma).Append(type.Type.Scale).Append(')');
+				StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "({0}{1}{2})", type.Type.Precision, InlineComma, type.Type.Scale);
 		}
 
 		#endregion
@@ -3545,7 +3549,7 @@ namespace LinqToDB.SqlProvider
 							}
 
 							sb.Value.Length = 0;
-							sb.Value.AppendFormat(tbl.Expression!, values);
+							sb.Value.AppendFormat(CultureInfo.InvariantCulture, tbl.Expression!, values);
 						}
 						else if (tbl.SqlTableType == SqlTableType.Function)
 						{
@@ -3660,7 +3664,7 @@ namespace LinqToDB.SqlProvider
 				if (parameter.Size > 0)
 				{
 					if (t1.IndexOf('(') < 0)
-						sb.Append('(').Append(parameter.Size).Append(')');
+						sb.AppendFormat(CultureInfo.InvariantCulture, "({0})", parameter.Size);
 				}
 #if NET45
 #pragma warning disable RS0030 // API missing from DbParameter in NET 4.5
@@ -3674,7 +3678,7 @@ namespace LinqToDB.SqlProvider
 				else if (parameter.Precision > 0)
 				{
 					if (t1.IndexOf('(') < 0)
-						sb.Append('(').Append(parameter.Precision).Append(InlineComma).Append(parameter.Scale).Append(')');
+						sb.AppendFormat(CultureInfo.InvariantCulture, "({0}{1}{2})", parameter.Precision, InlineComma, parameter.Scale);
 				}
 #endif
 				else
@@ -3689,7 +3693,7 @@ namespace LinqToDB.SqlProvider
 								var value = parameter.Value as string;
 
 								if (!string.IsNullOrEmpty(value))
-									sb.Append('(').Append(value!.Length).Append(')');
+									sb.AppendFormat(CultureInfo.InvariantCulture, "({0})", value!.Length);
 
 								break;
 							}
@@ -3700,7 +3704,7 @@ namespace LinqToDB.SqlProvider
 								if (value is decimal dec)
 								{
 									var d = new SqlDecimal(dec);
-									sb.Append('(').Append(d.Precision).Append(InlineComma).Append(d.Scale).Append(')');
+									sb.AppendFormat(CultureInfo.InvariantCulture, "({0}{1}{2})", d.Precision, InlineComma, d.Scale);
 								}
 
 								break;
@@ -3708,7 +3712,7 @@ namespace LinqToDB.SqlProvider
 						case DbType.Binary:
 							{
 								if (parameter.Value is byte[] value)
-									sb.Append('(').Append(value.Length).Append(')');
+									sb.AppendFormat(CultureInfo.InvariantCulture, "({0})", value.Length);
 
 								break;
 							}
@@ -3833,7 +3837,7 @@ namespace LinqToDB.SqlProvider
 				return trimmed;
 			}
 			else
-				sb.Append(value);
+				sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
 
 			return false;
 		}

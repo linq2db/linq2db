@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -137,7 +138,7 @@ namespace LinqToDB.SqlQuery
 						.Append(strVal.Replace("\'", "''"))
 						.Append('\'')
 				:
-					sb.Append(Value);
+					sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", Value);
 		}
 
 		#endregion

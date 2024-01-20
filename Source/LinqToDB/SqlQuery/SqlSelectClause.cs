@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -382,7 +383,7 @@ namespace LinqToDB.SqlQuery
 
 					csb.Value
 						.Append('t')
-						.Append(c.Parent?.SourceID ?? -1)
+						.Append((c.Parent?.SourceID ?? -1).ToString(NumberFormatInfo.InvariantInfo))
 #if DEBUG
 						.Append('[').Append(c.ColumnNumber).Append(']')
 #endif

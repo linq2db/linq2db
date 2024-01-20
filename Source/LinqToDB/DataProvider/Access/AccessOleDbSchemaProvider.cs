@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using System.Globalization;
+
 	using Common;
 	using Data;
 	using SchemaProvider;
@@ -294,7 +296,7 @@ namespace LinqToDB.DataProvider.Access
 					if (paramValues.All(v => v != null))
 					{
 						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => $"{{{i}}}"))})";
-						dbType     = string.Format(format, paramValues);
+						dbType     = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 					}
 				}
 			}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -627,14 +628,14 @@ namespace LinqToDB.SchemaProvider
 						{
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
-							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(); break;
+							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(NumberFormatInfo.InvariantInfo); break;
 							case "precision"  : paramValues[i] = precision;   break;
 							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : precision; break;
 						}
 					}
 
 					if (paramValues.All(v => v != null))
-						dbType = string.Format(format, paramValues);
+						dbType = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 				}
 			}
 

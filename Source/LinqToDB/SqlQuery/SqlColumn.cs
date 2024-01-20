@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -260,7 +261,7 @@ namespace LinqToDB.SqlQuery
 
 			sb
 				.Append('t')
-				.Append(Parent?.SourceID ?? - 1)
+				.AppendFormat(CultureInfo.InvariantCulture, "{0}", Parent?.SourceID ?? - 1)
 #if DEBUG
 				.Append('[').Append(_columnNumber).Append(']')
 #endif

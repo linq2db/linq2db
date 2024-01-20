@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -506,8 +507,8 @@ namespace LinqToDB.DataProvider.SapHana
 				commandText = "SELECT * FROM " + commandText + "(";
 				commandText += string.Join(",", procedure.Parameters.Select(p => (
 					p.SystemType == typeof (DateTime)
-						? "'" + DateTime.Now + "'"
-						: DefaultValue.GetValue(p.SystemType ?? typeof(object))) ?? "''"));
+						? string.Format(CultureInfo.InvariantCulture, "'{0}'", DateTime.Now)
+						: string.Format(CultureInfo.InvariantCulture, "{0}", DefaultValue.GetValue(p.SystemType ?? typeof(object))) ?? "''")));
 
 				commandText += ")";
 				commandType = CommandType.Text;

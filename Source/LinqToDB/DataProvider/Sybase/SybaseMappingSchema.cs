@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			if (sqlDataType.Type.DataType == DataType.Int64)
 			{
-				stringBuilder.Append(value.Ticks);
+				stringBuilder.Append(value.Ticks.ToString(NumberFormatInfo.InvariantInfo));
 			}
 			else
 			{
@@ -51,11 +51,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("char(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "char({0})", value);
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

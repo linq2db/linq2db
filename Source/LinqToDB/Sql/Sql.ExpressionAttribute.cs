@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -394,7 +395,7 @@ namespace LinqToDB
 					{
 						ctx.WriteableValue = true;
 
-						var argIdx = int.Parse(v);
+						var argIdx = int.Parse(v, NumberFormatInfo.InvariantInfo);
 						var idx    = argIdx;
 
 						if (ctx.StaticValue.argIndices != null)

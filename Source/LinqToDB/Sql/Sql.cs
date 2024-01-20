@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -269,7 +270,7 @@ namespace LinqToDB
 
 		[CLSCompliant(false)]
 		[Function("Convert", 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = ProviderName.ClickHouse)]
+		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = PN.ClickHouse)]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -285,7 +286,7 @@ namespace LinqToDB
 		// TODO: v5 remove. bltoolkit legacy which duplicates Convert function above (without ServerSideOnly, but it shouldn't matter)
 		[CLSCompliant(false)]
 		[Function("Convert", 0, 1, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = ProviderName.ClickHouse)]
+		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = PN.ClickHouse)]
 		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
@@ -983,7 +984,7 @@ namespace LinqToDB
 		[Expression(PN.SqlServer2008, "REPLICATE('0', CASE WHEN LEN(CAST({0} as NVARCHAR)) > {1} THEN 0 ELSE ({1} - LEN(CAST({0} as NVARCHAR))) END) + CAST({0} as NVARCHAR)", IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static string? ZeroPad(int? val, int length)
 		{
-			return val?.ToString("d" + length);
+			return val?.ToString($"d{length}", NumberFormatInfo.InvariantInfo);
 		}
 
 		sealed class ConcatAttribute : ExpressionAttribute

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -153,10 +154,8 @@ namespace LinqToDB.SqlQuery
 			sb.Append('(').Append(_paramNumber).Append(')');
 #endif
 			if (Value != null)
-				sb
-					.Append('[')
-					.Append(Value)
-					.Append(']');
+				sb.AppendFormat(CultureInfo.InvariantCulture, "[{0}]", Value);
+
 			return sb;
 		}
 

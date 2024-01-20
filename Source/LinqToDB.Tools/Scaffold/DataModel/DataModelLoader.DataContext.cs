@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using System.Globalization;
+
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
 using LinqToDB.Naming;
@@ -43,11 +45,11 @@ namespace LinqToDB.Scaffold
 			{
 				var summary = new StringBuilder();
 				if (_schemaProvider.DatabaseName != null)
-					summary.AppendFormat("Database       : {0}", _schemaProvider.DatabaseName ).AppendLine();
+					summary.AppendFormat(CultureInfo.InvariantCulture, "Database       : {0}", _schemaProvider.DatabaseName ).AppendLine();
 				if (_schemaProvider.DataSource != null)
-					summary.AppendFormat("Data Source    : {0}", _schemaProvider.DataSource   ).AppendLine();
+					summary.AppendFormat(CultureInfo.InvariantCulture, "Data Source    : {0}", _schemaProvider.DataSource   ).AppendLine();
 				if (_schemaProvider.ServerVersion != null)
-					summary.AppendFormat("Server Version : {0}", _schemaProvider.ServerVersion).AppendLine();
+					summary.AppendFormat(CultureInfo.InvariantCulture, "Server Version : {0}", _schemaProvider.ServerVersion).AppendLine();
 
 				if (summary.Length > 0)
 					dataContextClass.Summary = summary.ToString();

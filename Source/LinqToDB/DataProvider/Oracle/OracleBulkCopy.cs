@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -193,7 +194,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void OracleMultipleRowsCopy1Add(MultipleRowsHelper helper, object item, string? from)
 		{
-			helper.StringBuilder.AppendFormat("\tINTO {0} (", helper.TableName);
+			helper.StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "\tINTO {0} (", helper.TableName);
 
 			foreach (var column in helper.Columns)
 			{
@@ -229,7 +230,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static List<object> OracleMultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
-			helper.StringBuilder.AppendFormat("INSERT INTO {0} (", helper.TableName);
+			helper.StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "INSERT INTO {0} (", helper.TableName);
 
 			foreach (var column in helper.Columns)
 			{
@@ -424,7 +425,8 @@ namespace LinqToDB.DataProvider.Oracle
 		static void OracleMultipleRowsCopy3Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.AppendFormat(CultureInfo.InvariantCulture, "INSERT INTO {0}", helper.TableName)
+				.AppendLine()
 				.Append('(');
 
 			foreach (var column in helper.Columns)

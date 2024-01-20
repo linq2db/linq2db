@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider.Access
 			SetDataType(typeof(DateTime),  DataType.DateTime);
 			SetDataType(typeof(DateTime?), DataType.DateTime);
 
-			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append(v));
+			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append(v.ToString()));
 			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append('\'').Append(((Guid)v).ToString("B")).Append('\''));
 			SetValueToSqlConverter(typeof(DateTime), (sb,_,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 #if NET6_0_OR_GREATER
@@ -38,9 +38,9 @@ namespace LinqToDB.DataProvider.Access
 			// 2. we need to use string type for decimal parameters
 			// This leads to issues with database data parsing as ConvertBuilder will generate parse with InvariantCulture
 			// We need to specify culture-specific converter explicitly
-			SetConvertExpression((string v) => decimal.Parse(v));
-			SetConvertExpression((string v) => float.Parse(v));
-			SetConvertExpression((string v) => double.Parse(v));
+			SetConvertExpression((string v) => decimal.Parse(v, NumberFormatInfo.InvariantInfo));
+			SetConvertExpression((string v) => float.Parse(v, NumberFormatInfo.InvariantInfo));
+			SetConvertExpression((string v) => double.Parse(v, NumberFormatInfo.InvariantInfo));
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -54,11 +54,7 @@ namespace LinqToDB.DataProvider.Access
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "chr({0})", value);
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

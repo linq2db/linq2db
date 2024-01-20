@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
@@ -156,10 +157,7 @@ namespace LinqToDB.SqlQuery
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
 		{
 			if (Table != null)
-				sb
-					.Append('t')
-					.Append(Table.SourceID)
-					.Append('.');
+				sb.AppendFormat(CultureInfo.InvariantCulture, "t{0}, ", Table.SourceID);
 
 			return sb.Append(Name);
 		}

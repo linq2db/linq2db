@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
@@ -134,7 +135,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Length == null || type.Type.Length == 0)
 						StringBuilder.Append("BLOB");
 					else
-						StringBuilder.Append("Raw(").Append(type.Type.Length).Append(')');
+						StringBuilder.Append("Raw(").Append(type.Type.Length?.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
 					break;
 				default: base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);         break;
 			}
@@ -422,7 +423,9 @@ namespace LinqToDB.DataProvider.Oracle
 				case SqlTruncateTableStatement truncate:
 					var sequenceName = ConvertInline(MakeIdentitySequenceName(truncate.Table!.TableName.Name), ConvertType.SequenceName);
 					StringBuilder
-						.AppendFormat(@"DECLARE
+						.AppendFormat(
+						CultureInfo.InvariantCulture,
+						@"DECLARE
 	l_value number;
 BEGIN
 	-- Select the next value of the sequence
@@ -461,7 +464,7 @@ END;",
 						Convert(StringBuilder, MakeIdentityTriggerName(createTable.Table!.TableName.Name), ConvertType.TriggerName);
 						StringBuilder
 							.AppendLine()
-							.AppendFormat("BEFORE INSERT ON ");
+							.Append("BEFORE INSERT ON ");
 
 						BuildPhysicalTable(createTable.Table, null);
 
@@ -729,7 +732,7 @@ END;",
 				HintBuilder.Insert(0, " /*+ ");
 				HintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, HintBuilder);
+				StringBuilder.Insert(_hintPosition, HintBuilder.ToString());
 			}
 		}
 

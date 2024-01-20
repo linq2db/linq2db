@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Data.Common;
@@ -79,10 +80,11 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				AppendIndent()
 					.AppendFormat(
+						CultureInfo.InvariantCulture,
 						"LIMIT {0}, {1}",
 						WithStringBuilderBuildExpression(selectQuery.Select.SkipValue),
 						selectQuery.Select.TakeValue == null ?
-							long.MaxValue.ToString() :
+							long.MaxValue.ToString(NumberFormatInfo.InvariantInfo) :
 							WithStringBuilderBuildExpression(selectQuery.Select.TakeValue))
 					.AppendLine();
 			}
@@ -607,7 +609,7 @@ namespace LinqToDB.DataProvider.MySql
 				_hintBuilder.Insert(0, " /*+ ");
 				_hintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, _hintBuilder);
+				StringBuilder.Insert(_hintPosition, _hintBuilder.ToString());
 			}
 		}
 

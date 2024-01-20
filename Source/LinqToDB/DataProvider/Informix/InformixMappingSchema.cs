@@ -58,11 +58,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			// chr works with values in 0..255 range, bigger/smaller values will be converted to byte
 			// this is fine as long as we don't have out-of-range characters in _extraEscapes
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "chr({0})", value);
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

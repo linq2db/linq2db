@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
@@ -15,10 +16,7 @@ namespace LinqToDB.SqlProvider
 			var count     = (int)   ((SqlValue)args["hintParameters.Count"]).Value!;
 			var delimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val0 } ? val0 : " ";
 
-			stringBuilder
-				.Append(hint)
-				.Append(delimiter)
-				;
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}{1}", hint, delimiter);
 
 			if (count > 0)
 			{
@@ -27,7 +25,7 @@ namespace LinqToDB.SqlProvider
 				for (var i = 0; i < count; i++)
 					ps[i] = GetValue((SqlValue)args[$"hintParameters.{i}"]);
 
-				stringBuilder.AppendFormat(format, ps);
+				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, ps);
 			}
 			else
 			{

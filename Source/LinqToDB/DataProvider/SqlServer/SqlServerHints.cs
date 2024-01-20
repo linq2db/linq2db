@@ -170,19 +170,11 @@ namespace LinqToDB.DataProvider.SqlServer
 
 				if (count == 0)
 				{
-					stringBuilder
-						.Append("ForceSeek, Index(")
-						.Append(value.Value)
-						.Append(')')
-						;
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "ForceSeek, Index({0})", value.Value);
 				}
 				else
 				{
-					stringBuilder
-						.Append("ForceSeek(")
-						.Append(value.Value)
-						.Append('(')
-						;
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "ForceSeek({0})", value.Value);
 
 					for (var i = 0; i < count; i++)
 					{
@@ -236,17 +228,17 @@ namespace LinqToDB.DataProvider.SqlServer
 			{
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["values.Count"]).Value!;
 
-				stringBuilder
-					.Append(((SqlValue)sqlQueryExtension.Arguments[".ExtensionArguments.0"]).Value)
-					.Append('(');
-					;
+				stringBuilder.AppendFormat(
+					CultureInfo.InvariantCulture,
+					"{0}(",
+					((SqlValue)sqlQueryExtension.Arguments[".ExtensionArguments.0"]).Value);
 
 				for (var i = 0; i < count; i++)
 				{
 					if (i > 0)
 						stringBuilder.Append(", ");
 					var value = (SqlValue)sqlQueryExtension.Arguments[$"values.{i}"];
-					stringBuilder.Append(value.Value);
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value.Value);
 				}
 
 				stringBuilder.Append(')');
@@ -310,7 +302,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					stringBuilder.Append(", ");
 					var value = (SqlValue)sqlQueryExtension.Arguments[$"values.{i}"];
-					stringBuilder.Append(value.Value);
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value.Value);
 				}
 
 				stringBuilder.Append(')');

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -71,7 +72,7 @@ namespace LinqToDB.DataProvider.SapHana
 						ctx.this_.BuildPhysicalTable(ctx.createTable.Table, null);
 					}, (this_: this, createTable));
 
-				AppendIndent().AppendFormat(createTable.StatementHeader, name);
+				AppendIndent().AppendFormat(CultureInfo.InvariantCulture, createTable.StatementHeader, name);
 			}
 		}
 
@@ -111,9 +112,8 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.VarBinary:
 					if (type.Type.Length == null || type.Type.Length > 5000 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(5000)");
+						StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}(5000)", type.Type.DataType);
+
 						return;
 					}
 					break;

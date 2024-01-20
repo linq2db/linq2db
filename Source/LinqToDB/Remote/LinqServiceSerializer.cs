@@ -115,7 +115,7 @@ namespace LinqToDB.Remote
 
 			protected void Append(int value)
 			{
-				Builder.Append(' ').Append(value);
+				Builder.AppendFormat(CultureInfo.InvariantCulture, " {0}", value);
 			}
 
 			protected void AppendStringList(ICollection<string> strings)
@@ -131,12 +131,12 @@ namespace LinqToDB.Remote
 				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
 
 				if (value.HasValue)
-					Builder.Append(value.Value);
+					Builder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value.Value);
 			}
 
 			protected void Append(Type? value)
 			{
-				Builder.Append(' ').Append(GetType(value));
+				Builder.AppendFormat(CultureInfo.InvariantCulture, " {0}", GetType(value));
 			}
 
 			protected void Append(bool value)
@@ -173,7 +173,7 @@ namespace LinqToDB.Remote
 
 			protected void Append(IQueryElement? element)
 			{
-				Builder.Append(' ').Append(element == null ? 0 : ObjectIndices[element]);
+				Builder.AppendFormat(CultureInfo.InvariantCulture, " {0}", element == null ? 0 : ObjectIndices[element]);
 			}
 
 			protected void AppendDelayed(IQueryElement? element)
@@ -181,11 +181,11 @@ namespace LinqToDB.Remote
 				Builder.Append(' ');
 
 				if (element == null)
-					Builder.Append(0);
+					Builder.Append('0');
 				else
 				{
 					if (ObjectIndices.TryGetValue(element, out var idx))
-						Builder.Append(idx);
+						Builder.Append(idx.ToString(NumberFormatInfo.InvariantInfo));
 					else
 					{
 						if (!DelayedObjects.TryGetValue(element, out var id))
@@ -210,10 +210,7 @@ namespace LinqToDB.Remote
 				}
 				else
 				{
-					Builder
-						.Append(str.Length)
-						.Append(':')
-						.Append(str);
+					Builder.AppendFormat(CultureInfo.InvariantCulture, "{0}:{1}", str.Length, str);
 				}
 			}
 
@@ -230,21 +227,13 @@ namespace LinqToDB.Remote
 
 						ObjectIndices.Add(type, idx = ++Index);
 
-						Builder
-							.Append(idx)
-							.Append(' ')
-							.Append(TypeArrayIndex)
-							.Append(' ')
-							.Append(elementType);
+						Builder.AppendFormat(CultureInfo.InvariantCulture, "{0} {1} {2}", idx, TypeArrayIndex, elementType);
 					}
 					else
 					{
 						ObjectIndices.Add(type, idx = ++Index);
 
-						Builder
-							.Append(idx)
-							.Append(' ')
-							.Append(TypeIndex);
+						Builder.AppendFormat(CultureInfo.InvariantCulture, "{0} {1}", idx, TypeIndex);
 
 						Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					}
@@ -648,7 +637,7 @@ namespace LinqToDB.Remote
 			{
 				var queryHintCount = queryHints?.Count ?? 0;
 
-				Builder.AppendLine(queryHintCount.ToString());
+				Builder.AppendLine(queryHintCount.ToString(NumberFormatInfo.InvariantInfo));
 
 				if (queryHintCount > 0)
 					foreach (var hint in queryHints!)
@@ -737,15 +726,13 @@ namespace LinqToDB.Remote
 				ObjectIndices.Add(e, ++Index);
 
 				Builder
-					.Append(Index)
-					.Append(' ')
-					.Append((int)e.ElementType);
+					.AppendFormat(CultureInfo.InvariantCulture, "{0} {1}", Index, (int)e.ElementType);
 
 				if (DelayedObjects.Count > 0)
 				{
 					if (DelayedObjects.TryGetValue(e, out var id))
 					{
-						Builder.Replace(id, Index.ToString());
+						Builder.Replace(id, Index.ToString(NumberFormatInfo.InvariantInfo));
 						DelayedObjects.Remove(e);
 					}
 				}

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 
@@ -188,8 +189,7 @@ namespace LinqToDB.SqlQuery
 				Source.ToString(sb, dic);
 
 			sb
-				.Append(" as t")
-				.Append(SourceID);
+				.AppendFormat(CultureInfo.InvariantCulture, " as t{0}", SourceID);
 
 			foreach (IQueryElement join in Joins)
 			{

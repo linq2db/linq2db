@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -67,11 +68,7 @@ namespace LinqToDB.DataProvider.SqlCe
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("nchar(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "nchar({0})", value);
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

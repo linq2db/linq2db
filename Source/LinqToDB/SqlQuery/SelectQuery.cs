@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -308,10 +309,7 @@ namespace LinqToDB.SqlQuery
 
 			dic.Add(this, this);
 
-			sb
-				.Append('(')
-				.Append(SourceID)
-				.Append(") ");
+			sb.AppendFormat(CultureInfo.InvariantCulture, "({0}) ", SourceID);
 
 			((IQueryElement)Select). ToString(sb, dic);
 			((IQueryElement)From).   ToString(sb, dic);

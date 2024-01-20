@@ -553,7 +553,7 @@ namespace LinqToDB.Linq
 		static readonly Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> _commonMembers = new()
 		{
 			#region ToString
-
+#pragma warning disable RS0030 // Do not used banned APIs
 			{ MT<bool   >(() => ((bool)   true).ToString()), N(() => L<bool,    string>((bool    p0) => Sql.ConvertTo<string>.From(p0) )) },
 			{ MT<byte   >(() => ((byte)    0)  .ToString()), N(() => L<byte,    string>((byte    p0) => Sql.ConvertTo<string>.From(p0) )) },
 			{ MT<char   >(() => ((char)   '0') .ToString()), N(() => L<char,    string>((char    p0) => Sql.ConvertTo<string>.From(p0) )) },
@@ -585,7 +585,7 @@ namespace LinqToDB.Linq
 
 			// handle all other as default
 			{ MT<object>(() => ((object)0).ToString()!), N(() => L<object, string>((object   p0) => Sql.ConvertTo<string>.From(p0) )) },
-
+#pragma warning restore RS0030 // Do not used banned APIs
 			#endregion
 
 			#region string
@@ -744,11 +744,12 @@ namespace LinqToDB.Linq
 			#region Parse
 
 			{ M(() => bool.    Parse("")), N(() => L<string,bool>    ((string p0) => Sql.ConvertTo<bool>.    From(p0))) },
+#pragma warning disable RS0030 // Do not used banned APIs
 			{ M(() => byte.    Parse("")), N(() => L<string,byte>    ((string p0) => Sql.ConvertTo<byte>.    From(p0))) },
+#pragma warning restore RS0030 // Do not used banned APIs
 			{ M(() => char.    Parse("")), N(() => L<string,char>    ((string p0) => Sql.ConvertTo<char>.    From(p0))) },
 #pragma warning disable RS0030 // Do not used banned APIs
 			{ M(() => DateTime.Parse("")), N(() => L<string,DateTime>((string p0) => Sql.ConvertTo<DateTime>.From(p0))) },
-#pragma warning restore RS0030 // Do not used banned APIs
 			{ M(() => decimal. Parse("")), N(() => L<string,decimal> ((string p0) => Sql.ConvertTo<decimal>. From(p0))) },
 			{ M(() => double.  Parse("")), N(() => L<string,double>  ((string p0) => Sql.ConvertTo<double>.  From(p0))) },
 			{ M(() => short.   Parse("")), N(() => L<string,short>   ((string p0) => Sql.ConvertTo<short>.   From(p0))) },
@@ -759,6 +760,7 @@ namespace LinqToDB.Linq
 			{ M(() => ushort.  Parse("")), N(() => L<string,ushort>  ((string p0) => Sql.ConvertTo<ushort>.  From(p0))) },
 			{ M(() => uint.    Parse("")), N(() => L<string,uint>    ((string p0) => Sql.ConvertTo<uint>.    From(p0))) },
 			{ M(() => ulong.   Parse("")), N(() => L<string,ulong>   ((string p0) => Sql.ConvertTo<ulong>.   From(p0))) },
+#pragma warning restore RS0030 // Do not used banned APIs
 
 #if NET6_0_OR_GREATER
 #pragma warning disable RS0030 // Do not used banned APIs

@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System.Globalization;
+
+namespace LinqToDB.DataProvider.DB2
 {
 	using Mapping;
 	using SqlProvider;
@@ -28,10 +30,10 @@
 			{
 				case DataType.VarBinary:
 					// https://www.ibm.com/docs/en/db2-for-zos/12?topic=strings-varying-length-binary
-					StringBuilder
-						.Append("VARBINARY(")
-						.Append(type.Type.Length == null || type.Type.Length > 32704 || type.Type.Length < 1 ? 32704 : type.Type.Length)
-						.Append(')');
+					StringBuilder.AppendFormat(
+						CultureInfo.InvariantCulture,
+						"VARBINARY({0})",
+						type.Type.Length == null || type.Type.Length > 32704 || type.Type.Length < 1 ? 32704 : type.Type.Length);
 					return;
 			}
 

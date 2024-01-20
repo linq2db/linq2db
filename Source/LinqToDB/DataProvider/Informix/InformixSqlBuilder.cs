@@ -123,7 +123,7 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
 				case DataType.Time       :
 					StringBuilder.Append("INTERVAL HOUR TO FRACTION");
-					StringBuilder.AppendFormat("({0})", (type.Type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
+					StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "({0})", (type.Type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
 					return;
 				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
 				case DataType.SByte      :
@@ -133,6 +133,7 @@ namespace LinqToDB.DataProvider.Informix
 					StringBuilder.Append("Decimal");
 					if (type.Type.Precision != null && type.Type.Scale != null)
 						StringBuilder.AppendFormat(
+							CultureInfo.InvariantCulture,
 							"({0}, {1})",
 							type.Type.Precision.Value.ToString(CultureInfo.InvariantCulture),
 							type.Type.Scale.Value.ToString(CultureInfo.InvariantCulture));
@@ -140,9 +141,8 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.NVarChar:
 					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(255)");
+						StringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}(255)", type.Type.DataType);
+
 						return;
 					}
 

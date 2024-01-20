@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -118,17 +119,18 @@ namespace LinqToDB.Remote
 									value = "'" + value!.ToString()!.Replace("'", "''") + "'";
 
 							sb.Value
-								.Append("-- SET ")
-								.Append(p.Name)
-								.Append(" = ")
-								.Append(value)
-								.AppendLine();
+								.AppendFormat(CultureInfo.InvariantCulture, "-- SET {0} = {1}", p.Name, value)
+									.AppendLine();
 						}
 
 						sb.Value.AppendLine();
 					}
 
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1
 					sb.Value.Append(sqlStringBuilder.Value);
+#else
+					sb.Value.Append(sqlStringBuilder.Value.ToString());
+#endif
 					sqlStringBuilder.Value.Length = 0;
 				}
 

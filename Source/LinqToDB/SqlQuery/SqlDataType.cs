@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Text;
@@ -325,7 +326,7 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType UInt16           = new (DataType.UInt16,         typeof(ushort),        (int?)null,     (int?)null, null, null);
 		public static readonly SqlDataType Int32            = DbInt32;
 		public static readonly SqlDataType UInt32           = new (DataType.UInt32,         typeof(uint),          (int?)null,     (int?)null, null, null);
-		public static readonly SqlDataType UInt64           = new (DataType.UInt64,         typeof(ulong),         (int?)null, ulong.MaxValue.ToString().Length, null, null);
+		public static readonly SqlDataType UInt64           = new (DataType.UInt64,         typeof(ulong),         (int?)null, ulong.MaxValue.ToString(NumberFormatInfo.InvariantInfo).Length, null, null);
 		public static readonly SqlDataType Single           = DbSingle;
 		public static readonly SqlDataType Double           = DbDouble;
 		public static readonly SqlDataType Decimal          = DbDecimal;
@@ -419,15 +420,15 @@ namespace LinqToDB.SqlQuery
 
 		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
 		{
-			sb.Append(Type.DataType);
+			sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", Type.DataType);
 
 			if (!string.IsNullOrEmpty(Type.DbType))
 				sb.Append($":\"{Type.DbType}\"");
 
 			if (Type.Length != 0)
-				sb.Append('(').Append(Type.Length).Append(')');
+				sb.AppendFormat(CultureInfo.InvariantCulture, "({0})", Type.Length);
 			else if (Type.Precision != 0)
-				sb.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
+				sb.AppendFormat(CultureInfo.InvariantCulture, "({0},{1})", Type.Precision, Type.Scale);
 
 			return sb;
 		}

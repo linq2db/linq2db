@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.Linq;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -26,11 +27,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			// char works with values in 0..255 range
 			// this is fine as long as we use it only for \0 character
-			stringBuilder
-				.Append("char(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "char({0})", value);
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

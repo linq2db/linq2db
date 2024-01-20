@@ -1560,7 +1560,7 @@ namespace LinqToDB.Data
 			{
 				sb.Value.Append(dataReader.GetName(i))
 					.Append(',')
-					.Append(dataReader.GetFieldType(i))
+					.Append(dataReader.GetFieldType(i).ToString())
 					.Append(';');
 			}
 

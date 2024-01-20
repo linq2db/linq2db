@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 
@@ -508,7 +509,7 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append(info.TraceInfoStep);
+					sb.Value.AppendFormat(CultureInfo.InvariantCulture, "{0}", info.TraceInfoStep);
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
@@ -529,7 +530,7 @@ namespace LinqToDB.Data
 							// list contains any elements or not
 							sb.Value
 								.AppendLine()
-								.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
+								.AppendFormat(CultureInfo.InvariantCulture, "Failed while tried to log failure of type {0}", ex.GetType())
 								;
 						}
 					}

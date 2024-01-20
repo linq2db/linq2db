@@ -213,11 +213,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("char(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "char({0})", value);
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, DataType dataType, string value)
