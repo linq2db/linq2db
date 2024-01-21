@@ -373,7 +373,7 @@ namespace LinqToDB.Remote
 
 				if (names.Contains(name))
 				{
-					while (names.Contains(name = FormattableString.Invariant($"c{+idx}")))
+					while (names.Contains(name = FormattableString.Invariant($"c{++idx}")))
 					{
 					}
 				}
