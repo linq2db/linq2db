@@ -143,7 +143,7 @@ namespace LinqToDB.SqlQuery
 
 		static int Len(object obj)
 		{
-			return obj.ToString()!.Length;
+			return string.Format(CultureInfo.InvariantCulture, "{0}", obj).Length;
 		}
 
 		static readonly TypeInfo[] _typeInfo = SortTypeInfo

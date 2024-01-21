@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
@@ -94,7 +95,7 @@ namespace LinqToDB.DataProvider.SapHana
 						value = b ? (byte)1 : (byte)0;
 					break;
 				case DataType.Guid:
-					value          = value?.ToString();
+					value          = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 					dataType       = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;

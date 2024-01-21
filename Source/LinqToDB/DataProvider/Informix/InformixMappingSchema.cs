@@ -27,7 +27,7 @@ namespace LinqToDB.DataProvider.Informix
 			SetDataType(typeof(byte),   new SqlDataType(DataType.Int16,    typeof(byte)));
 			SetDataType(typeof(byte?),  new SqlDataType(DataType.Int16,    typeof(byte)));
 
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(DateTime), (sb,dt,o,v) => ConvertDateTimeToSql(sb, dt, o, (DateTime)v));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => BuildIntervalLiteral(sb, (TimeSpan)v));

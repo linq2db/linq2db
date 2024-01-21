@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 // ReSharper disable InconsistentNaming
@@ -1734,7 +1735,7 @@ namespace LinqToDB.SqlProvider
 					if (v1 && v2)
 					{
 						if (value1 is int i1 && value2 is int i2) return CreateSqlValue(i1 + i2, be);
-						if (value1 is string || value2 is string) return CreateSqlValue(value1?.ToString() + value2, be);
+						if (value1 is string || value2 is string) return CreateSqlValue(string.Format(CultureInfo.InvariantCulture, "{0}{1}", value1, value2), be);
 					}
 
 					break;

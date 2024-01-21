@@ -170,7 +170,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			SqlServerTypes.Configure(this);
 
-			SetValueToSqlConverter(typeof(string), (sb,dt,_,v) => ConvertStringToSql(sb, dt.Type.DataType, v.ToString()!));
+			SetValueToSqlConverter(typeof(string), (sb,dt,_,v) => ConvertStringToSql(sb, dt.Type.DataType, (string)v));
 			SetValueToSqlConverter(typeof(char),   (sb,dt,_,v) => ConvertCharToSql  (sb, dt, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb, _,_,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb, _,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));

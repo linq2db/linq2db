@@ -11,6 +11,7 @@ dotnet_diagnostic.MA0075.severity = error # MA0075: Do not use implicit culture-
 MA0075.consider_nullable_types = true
 dotnet_diagnostic.MA0076.severity = error # MA0076: Do not use implicit culture-sensitive ToString in interpolated strings
 MA0076.consider_nullable_types = true
+dotnet_diagnostic.MA0107.severity = error # MA0107: Do not use culture-sensitive object.ToString
 
 
 dotnet_diagnostic.ca1827.severity = error # CA1827: Do not use Count/LongCount when Any can be used

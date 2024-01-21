@@ -64,7 +64,7 @@ namespace LinqToDB.Tools
 						if      (value == null)            values[i] = "<NULL>";
 						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G", DateTimeFormatInfo.InvariantInfo);
 						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo);
-						else                               values[i] = value.ToString() ?? string.Empty;
+						else                               values[i] = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 					}
 
 					itemValues.Add(values);

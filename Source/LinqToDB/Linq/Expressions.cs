@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -586,7 +587,9 @@ namespace LinqToDB.Linq
 
 
 			// handle all other as default
+#pragma warning disable MA0107 // object.ToString is bad, m'kay?
 			{ MT<object>(() => ((object)0).ToString()!), N(() => L<object, string>((object   p0) => Sql.ConvertTo<string>.From(p0) )) },
+#pragma warning restore MA0107 // object.ToString is bad, m'kay?
 #pragma warning restore RS0030, CA1305, MA0011 // Do not used banned APIs
 			#endregion
 
@@ -629,11 +632,13 @@ namespace LinqToDB.Linq
 			{ M(() => "".ToUpper    ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Upper(obj))) },
 #pragma warning restore CA1304, MA0011 // use CultureInfo
 			{ M(() => "".CompareTo  ("")      ), N(() => L<string,string,int>              ((string obj,string p0)                    => ConvertToCaseCompareTo(obj, p0)!.Value)) },
+#pragma warning disable MA0107 // object.ToString is bad, m'kay?
 			{ M(() => "".CompareTo  (1)       ), N(() => L<string,object,int>              ((string obj,object p0)                    => ConvertToCaseCompareTo(obj, p0.ToString())!.Value)) },
 
 			{ M(() => string.Concat((object)null!)                             ), N(() => L<object,string?>                    ((object p0)                               => p0.ToString()))           },
 			{ M(() => string.Concat((object)null!,(object)null!)               ), N(() => L<object,object,string>              ((object p0,object p1)                     => p0.ToString() + p1))      },
 			{ M(() => string.Concat((object)null!,(object)null!,(object)null!) ), N(() => L<object,object,object,string>       ((object p0,object p1,object p2)           => p0.ToString() + p1 + p2)) },
+#pragma warning restore MA0107 // object.ToString is bad, m'kay?
 			{ M(() => string.Concat((object[])null!)                           ), N(() => L<object[],string>                   ((object[] ps)                             => Sql.Concat(ps)))          },
 			{ M(() => string.Concat("","")                                     ), N(() => L<string,string,string>              ((string p0,string p1)                     => p0 + p1))                 },
 			{ M(() => string.Concat("","","")                                  ), N(() => L<string,string,string,string>       ((string p0,string p1,string p2)           => p0 + p1 + p2))            },
@@ -1852,7 +1857,7 @@ namespace LinqToDB.Linq
 		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? VarChar(object? obj, int? size)
 		{
-			return obj?.ToString();
+			return string.Format(CultureInfo.InvariantCulture, "{0}", obj);
 		}
 
 		// DB2

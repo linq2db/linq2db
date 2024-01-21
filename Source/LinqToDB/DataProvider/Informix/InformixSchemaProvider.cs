@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Informix
@@ -123,7 +124,7 @@ namespace LinqToDB.DataProvider.Informix
 					rd =>
 					{
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var tableId = rd[0].ToString();
+						var tableId = string.Format(CultureInfo.InvariantCulture, "{0}", rd[0]);
 						var pkName  = (string)rd[1];
 
 						var arr = new string?[16];
@@ -369,10 +370,10 @@ namespace LinqToDB.DataProvider.Informix
 					rd =>
 					{
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var id           = rd["ID"].ToString();
-						var name         = rd["Name"].ToString()!;
-						var thisTableID  = rd["ThisTableID"]. ToString();
-						var otherTableID = rd["OtherTableID"].ToString();
+						var id           = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ID"]);
+						var name         = string.Format(CultureInfo.InvariantCulture, "{0}", rd["Name"]);
+						var thisTableID  = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ThisTableID"]);
+						var otherTableID = string.Format(CultureInfo.InvariantCulture, "{0}", rd["OtherTableID"]);
 
 						var arr = new string?[16][];
 

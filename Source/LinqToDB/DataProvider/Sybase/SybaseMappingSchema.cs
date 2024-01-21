@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		SybaseMappingSchema() : base(ProviderName.Sybase)
 		{
-			SetValueToSqlConverter(typeof(string)  , (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(string)  , (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char)    , (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,_,v) => ConvertTimeSpanToSql(sb, dt, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));

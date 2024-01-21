@@ -463,7 +463,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
+					return string.Format(CultureInfo.InvariantCulture, "{0}", provider.Adapter.GetDbType(param));
 			}
 
 			return base.GetProviderTypeName(dataContext, parameter);

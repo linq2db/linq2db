@@ -115,8 +115,10 @@ namespace LinqToDB.Remote
 							var value = parameterValue.ProviderValue;
 
 							if(value != null)
-								if (value is string || value is char)
-									value = "'" + value!.ToString()!.Replace("'", "''") + "'";
+								if (value is string str)
+									value = FormattableString.Invariant($"'{str.Replace("'", "''")}'");
+							else if (value is char chr)
+								value = FormattableString.Invariant($"'{(chr == '\'' ? "''" : chr)}'");
 
 							sb.Value
 								.AppendFormat(CultureInfo.InvariantCulture, "-- SET {0} = {1}", p.Name, value)

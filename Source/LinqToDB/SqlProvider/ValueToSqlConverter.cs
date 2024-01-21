@@ -55,8 +55,8 @@ namespace LinqToDB.SqlProvider
 			SetConverter(typeof(double),     (sb,_,_,v) => sb.Append(((double)   v).ToString("G17", _numberFormatInfo)));
 			SetConverter(typeof(decimal),    (sb,_,_,v) => sb.Append(((decimal)  v).ToString(_numberFormatInfo)));
 			SetConverter(typeof(DateTime),   (sb,_,_,v) => BuildDateTime(sb, (DateTime)v));
-			SetConverter(typeof(string),     (sb,_,_,v) => BuildString  (sb, v.ToString()!));
-			SetConverter(typeof(Guid),       (sb,_,_,v) => sb.Append('\'').Append(v.ToString()).Append('\''));
+			SetConverter(typeof(string),     (sb,_,_,v) => BuildString  (sb, (string)v));
+			SetConverter(typeof(Guid),       (sb,_,_,v) => sb.Append('\'').Append(((Guid)v).ToString()).Append('\''));
 
 			SetConverter(typeof(SqlBoolean), (sb,_,_,v) => sb.Append((SqlBoolean)v ? "1" : "0"));
 			SetConverter(typeof(SqlByte),    (sb,_,_,v) => sb.Append(((SqlByte)   v).ToString()));
@@ -68,9 +68,9 @@ namespace LinqToDB.SqlProvider
 			SetConverter(typeof(SqlDecimal), (sb,_,_,v) => sb.Append(((SqlDecimal)v).ToString()));
 			SetConverter(typeof(SqlMoney),   (sb,_,_,v) => sb.Append(((SqlMoney)  v).ToString()));
 			SetConverter(typeof(SqlDateTime),(sb,_,_,v) => BuildDateTime(sb, (DateTime)(SqlDateTime)v));
-			SetConverter(typeof(SqlString),  (sb,_,_,v) => BuildString  (sb, v.ToString()!));
+			SetConverter(typeof(SqlString),  (sb,_,_,v) => BuildString  (sb, ((SqlString)v).Value));
 			SetConverter(typeof(SqlChars),   (sb,_,_,v) => BuildString  (sb, ((SqlChars)v).ToSqlString().ToString()));
-			SetConverter(typeof(SqlGuid),    (sb,_,_,v) => sb.Append('\'').Append(v.ToString()).Append('\''));
+			SetConverter(typeof(SqlGuid),    (sb,_,_,v) => sb.Append('\'').Append(((SqlGuid)v).Value.ToString()).Append('\''));
 
 #if NET6_0_OR_GREATER
 			SetConverter(typeof(DateOnly),   (sb,_,_,v) => BuildDateOnly(sb, (DateOnly)v));
