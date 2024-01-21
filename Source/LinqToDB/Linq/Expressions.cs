@@ -1857,7 +1857,7 @@ namespace LinqToDB.Linq
 		[Sql.Function(IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
 		public static string? VarChar(object? obj, int? size)
 		{
-			return string.Format(CultureInfo.InvariantCulture, "{0}", obj);
+			return obj == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", obj);
 		}
 
 		// DB2
