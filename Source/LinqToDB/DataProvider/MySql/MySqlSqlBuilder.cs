@@ -121,8 +121,8 @@ namespace LinqToDB.DataProvider.MySql
 					// and needs version sniffing
 					(DataType.Double or
 					 DataType.Single,         _,                   _,                  _                   ) => "$decimal$",
-					(DataType.Decimal,        _,                   not null and not 0, _                   ) => $"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})",
-					(DataType.Decimal,        not null and not 10, _,                  _                   ) => $"DECIMAL({type.Type.Precision})",
+					(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})"),
+					(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision})"),
 					(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
 					(DataType.Char      or
 					 DataType.NChar     or
@@ -175,23 +175,23 @@ namespace LinqToDB.DataProvider.MySql
 				(DataType.UInt64,         _,                   _,                  _                   ) => "BIGINT UNSIGNED",
 				(DataType.Money,          _,                   _,                  _                   ) => "DECIMAL(19, 4)",
 				(DataType.SmallMoney,     _,                   _,                  _                   ) => "DECIMAL(10, 4)",
-				(DataType.Decimal,        _,                   not null and not 0, _                   ) => $"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})",
-				(DataType.Decimal,        not null and not 10, _,                  _                   ) => $"DECIMAL({type.Type.Precision})",
+				(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})"),
+				(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Type.Precision})"),
 				(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
-				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => $"DATETIME({type.Type.Precision})",
+				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"DATETIME({type.Type.Precision})"),
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
 				 DataType.SmallDateTime,  _,                   _,                  _                   ) => "DATETIME",
-				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => $"TIMESTAMP({type.Type.Precision})",
+				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIMESTAMP({type.Type.Precision})"),
 				(DataType.DateTimeOffset, _,                   _,                  _                   ) => "TIMESTAMP",
-				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => $"TIME({type.Type.Precision})",
+				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIME({type.Type.Precision})"),
 				(DataType.Time,           _,                   _,                  _                   ) => "TIME",
 				(DataType.Boolean,        _,                   _,                  _                   ) => "BOOLEAN",
-				(DataType.Double,         >= 0 and <= 53,      _,                  _                   ) => $"FLOAT({type.Type.Precision})", // this is correct, FLOAT(p)
+				(DataType.Double,         >= 0 and <= 53,      _,                  _                   ) => FormattableString.Invariant($"FLOAT({type.Type.Precision})"), // this is correct, FLOAT(p)
 				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
-				(DataType.Single,         >= 0 and <= 53,      _,                  _                   ) => $"FLOAT({type.Type.Precision})",
+				(DataType.Single,         >= 0 and <= 53,      _,                  _                   ) => FormattableString.Invariant($"FLOAT({type.Type.Precision})"),
 				(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
 				(DataType.BitArray,       _,                   _,                  null                ) =>
 					type.Type.SystemType.ToNullableUnderlying()
@@ -206,7 +206,7 @@ namespace LinqToDB.DataProvider.MySql
 					switch
 					{
 						0     => "BIT",
-						var l => $"BIT({l})"
+						var l => FormattableString.Invariant($"BIT({l})")
 					},
 				(DataType.BitArray,       _,                  _,                   not 1 and >= 0      ) => $"BIT({type.Type.Length})",
 				(DataType.BitArray,       _,                  _,                   _                   ) => "BIT",

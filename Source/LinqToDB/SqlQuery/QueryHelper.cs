@@ -1363,7 +1363,7 @@ namespace LinqToDB.SqlQuery
 
 				var newIndex = transformFunc(context, idx);
 
-				return $"{{{newIndex}}}";
+				return FormattableString.Invariant($"{{{newIndex}}}");
 			});
 
 			return str;

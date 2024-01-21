@@ -4,6 +4,11 @@ using System.Linq.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
+#if NET45
+// net45 is goner, so it is easier to suppress than fix
+#pragma warning disable MA0076 // Do not use implicit culture-sensitive ToString in interpolated strings
+#endif
+
 namespace LinqToDB.DataProvider.SqlServer
 {
 	public interface ISqlServerExtensions

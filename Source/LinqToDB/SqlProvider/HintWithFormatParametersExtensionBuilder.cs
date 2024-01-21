@@ -23,7 +23,7 @@ namespace LinqToDB.SqlProvider
 				var ps = new object?[count];
 
 				for (var i = 0; i < count; i++)
-					ps[i] = GetValue((SqlValue)args[$"hintParameters.{i}"]);
+					ps[i] = GetValue((SqlValue)args[FormattableString.Invariant($"hintParameters.{i}")]);
 
 				stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, ps);
 			}

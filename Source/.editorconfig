@@ -6,11 +6,11 @@ dotnet_code_quality.CA1305.excluded_symbol_names = M:System.Convert.ToString(Sys
 
 dotnet_diagnostic.MA0011.severity = error # MA0011: IFormatProvider is missing
 MA0011.consider_nullable_types = true
-# MA0044: Remove useless ToString call
-dotnet_diagnostic.MA0044.severity = error
-# MA0075: Do not use implicit culture-sensitive ToString
-dotnet_diagnostic.MA0075.severity = error
+dotnet_diagnostic.MA0044.severity = error # MA0044: Remove useless ToString call
+dotnet_diagnostic.MA0075.severity = error # MA0075: Do not use implicit culture-sensitive ToString
 MA0075.consider_nullable_types = true
+dotnet_diagnostic.MA0076.severity = error # MA0076: Do not use implicit culture-sensitive ToString in interpolated strings
+MA0076.consider_nullable_types = true
 
 
 dotnet_diagnostic.ca1827.severity = error # CA1827: Do not use Count/LongCount when Any can be used

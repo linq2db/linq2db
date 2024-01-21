@@ -3973,7 +3973,7 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				var testToReplace = $"$$${++_testReplaceNumber}$$$";
+				var testToReplace = FormattableString.Invariant($"$$${++_testReplaceNumber}$$$");
 
 				StringBuilder.Append(testToReplace);
 

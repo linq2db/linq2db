@@ -35,7 +35,7 @@ namespace LinqToDB.SqlProvider
 					stringBuilder
 						.Append(delimiter);
 
-					var value = GetValue((SqlValue)args[$"hintParameters.{i}"]);
+					var value = GetValue((SqlValue)args[FormattableString.Invariant($"hintParameters.{i}")]);
 					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "{0}", value);
 				}
 

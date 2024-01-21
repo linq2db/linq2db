@@ -1295,7 +1295,7 @@ namespace LinqToDB.Mapping
 			get
 			{
 				var list = Schemas == null || ConfigurationList == null ? "" : ConfigurationList.Aggregate("", static (s1, s2) => s1.Length == 0 ? s2 : s1 + "." + s2);
-				return $"{GetType().Name} : ({_configurationID}) {list}";
+				return FormattableString.Invariant($"{GetType().Name} : ({_configurationID}) {list}");
 			}
 		}
 
