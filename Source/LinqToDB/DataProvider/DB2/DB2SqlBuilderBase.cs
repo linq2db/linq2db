@@ -140,7 +140,7 @@ namespace LinqToDB.DataProvider.DB2
 				case DataType.DateTime2 :
 					StringBuilder.Append("timestamp");
 					if (type.Type.Precision != null && type.Type.Precision != 6)
-						StringBuilder.Append($"({type.Type.Precision})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Precision})");
 					return;
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;

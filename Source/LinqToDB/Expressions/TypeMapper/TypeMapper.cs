@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -101,7 +102,7 @@ namespace LinqToDB.Expressions
 				if (originalValues.TryGetValue(kvp.Key, out var origValue))
 				{
 					hasCommonMembers = true;
-					if (Convert.ToInt64(kvp.Value) != Convert.ToInt64(origValue))
+					if (Convert.ToInt64(kvp.Value, CultureInfo.InvariantCulture) != Convert.ToInt64(origValue, CultureInfo.InvariantCulture))
 					{
 						hasDifferentValues = true;
 						break;

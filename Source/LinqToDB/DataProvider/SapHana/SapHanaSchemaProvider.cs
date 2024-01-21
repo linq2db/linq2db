@@ -649,10 +649,10 @@ namespace LinqToDB.DataProvider.SapHana
 				{
 					var infoStr = sqlDataTypeParts[1].Substring(0, sqlDataTypeParts[1].Length - 1);
 					var splited = infoStr.Split(',');
-					length = Convert.ToInt32(splited[0]);
+					length = Convert.ToInt32(splited[0], CultureInfo.InvariantCulture);
 					if (splited.Length == 2)
 					{
-						scale = Convert.ToInt32(splited[1]);
+						scale = Convert.ToInt32(splited[1], CultureInfo.InvariantCulture);
 					}
 				}
 

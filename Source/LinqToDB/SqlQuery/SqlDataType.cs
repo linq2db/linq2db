@@ -423,7 +423,7 @@ namespace LinqToDB.SqlQuery
 			sb.AppendFormat(CultureInfo.InvariantCulture, "{0}", Type.DataType);
 
 			if (!string.IsNullOrEmpty(Type.DbType))
-				sb.Append($":\"{Type.DbType}\"");
+				sb.Append(CultureInfo.InvariantCulture, $":\"{Type.DbType}\"");
 
 			if (Type.Length != 0)
 				sb.AppendFormat(CultureInfo.InvariantCulture, "({0})", Type.Length);

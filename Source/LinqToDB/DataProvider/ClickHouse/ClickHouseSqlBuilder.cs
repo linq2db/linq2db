@@ -521,11 +521,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 				switch (join.JoinType)
 				{
 					case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
-					                      StringBuilder.Append($"CROSS {h} JOIN "); return false;
-					case JoinType.Inner : StringBuilder.Append($"INNER {h} JOIN "); return true;
-					case JoinType.Left  : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
-					case JoinType.Right : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
-					case JoinType.Full  : StringBuilder.Append($"FULL {h} JOIN ");  return true;
+					                      StringBuilder.Append(CultureInfo.InvariantCulture, $"CROSS {h} JOIN "); return false;
+					case JoinType.Inner : StringBuilder.Append(CultureInfo.InvariantCulture, $"INNER {h} JOIN "); return true;
+					case JoinType.Left  : StringBuilder.Append(CultureInfo.InvariantCulture, $"LEFT {h} JOIN ");  return true;
+					case JoinType.Right : StringBuilder.Append(CultureInfo.InvariantCulture, $"RIGHT {h} JOIN "); return true;
+					case JoinType.Full  : StringBuilder.Append(CultureInfo.InvariantCulture, $"FULL {h} JOIN ");  return true;
 					default             : throw new InvalidOperationException();
 				}
 			}

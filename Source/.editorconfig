@@ -1,4 +1,9 @@
 [*.cs]
+# do not disable rules below
+dotnet_diagnostic.CA1305.severity = error # CA1305: Specify IFormatProvider
+dotnet_code_quality.CA1305.excluded_symbol_names = M:System.Convert.ToString(System.Boolean)|M:System.Convert.ToChar(System.String)|M:System.Convert.ToBoolean(System.String)
+
+
 dotnet_diagnostic.ca1827.severity = error # CA1827: Do not use Count/LongCount when Any can be used
 dotnet_diagnostic.ca2007.severity = error # CA2007: Do not directly await a Task
 dotnet_diagnostic.ca1829.severity = error # CA1829: Use Length/Count property instead of Enumerable.Count method

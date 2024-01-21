@@ -100,13 +100,13 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Precision == 6 || type.Type.Precision == null)
 						StringBuilder.Append("timestamp");
 					else
-						StringBuilder.Append($"timestamp({type.Type.Precision})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Type.Precision})");
 					break;
 				case DataType.DateTimeOffset :
 					if (type.Type.Precision == 6 || type.Type.Precision == null)
 						StringBuilder.Append("timestamp with time zone");
 					else
-						StringBuilder.Append($"timestamp({type.Type.Precision}) with time zone");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"timestamp({type.Type.Precision}) with time zone");
 					break;
 				case DataType.UInt32         :
 				case DataType.Int64          : StringBuilder.Append("Number(19)");                break;
@@ -118,13 +118,13 @@ namespace LinqToDB.DataProvider.Oracle
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 						StringBuilder.Append("VarChar(4000)");
 					else
-						StringBuilder.Append($"VarChar({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar({type.Type.Length})");
 					break;
 				case DataType.NVarChar       :
 					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
 						StringBuilder.Append("VarChar2(4000)");
 					else
-						StringBuilder.Append($"VarChar2({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"VarChar2({type.Type.Length})");
 					break;
 				case DataType.Boolean        : StringBuilder.Append("Char(1)");                   break;
 				case DataType.NText          : StringBuilder.Append("NClob");                     break;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
@@ -9,8 +10,6 @@ using System.Text;
 
 namespace LinqToDB.Linq.Builder
 {
-	using System.Globalization;
-
 	using Extensions;
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
@@ -561,7 +560,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						attr = "[MapValue(\"" + valueAttribute.Value + "\")] ";
 					}
-					_typeBuilder.AppendLine("\t\t" + attr + nm + " = " + Convert.ToInt64(Enum.Parse(type, nm)) + ",");
+					_typeBuilder.AppendLine("\t\t" + attr + nm + " = " + Convert.ToInt64(Enum.Parse(type, nm), CultureInfo.InvariantCulture) + ",");
 				}
 				_typeBuilder.Remove(_typeBuilder.Length - 1, 1);
 				_typeBuilder.AppendLine("\t}");

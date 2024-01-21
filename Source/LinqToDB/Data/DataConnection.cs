@@ -5,6 +5,7 @@ using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 using JetBrains.Annotations;
@@ -517,8 +518,8 @@ namespace LinqToDB.Data
 						{
 							sb.Value
 								.AppendLine()
-								.AppendLine($"Exception: {ex.GetType()}")
-								.AppendLine($"Message  : {ex.Message}")
+								.AppendLine(CultureInfo.InvariantCulture, $"Exception: {ex.GetType()}")
+								.AppendLine(CultureInfo.InvariantCulture, $"Message  : {ex.Message}")
 								.AppendLine(ex.StackTrace)
 								;
 						}
@@ -558,10 +559,10 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append($"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
+					sb.Value.Append(CultureInfo.InvariantCulture, $"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
-						sb.Value.Append($" Rows Count: {info.RecordsAffected}.");
+						sb.Value.Append(CultureInfo.InvariantCulture, $" Rows Count: {info.RecordsAffected}.");
 
 					sb.Value.AppendLine();
 

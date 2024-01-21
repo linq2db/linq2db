@@ -121,7 +121,7 @@ namespace LinqToDB.DataProvider.Firebird
 					if (type.Type.Length == null || type.Type.Length < 1)
 						StringBuilder.Append("(255)");
 					else
-						StringBuilder.Append($"({type.Type.Length})");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Type.Length})");
 
 					// type for UUID, e.g. see https://firebirdsql.org/refdocs/langrefupd25-intfunc-gen_uuid.html
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");

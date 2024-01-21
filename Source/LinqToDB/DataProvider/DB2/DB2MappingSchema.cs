@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertTimeToSql(StringBuilder stringBuilder, TimeSpan time)
 		{
-			stringBuilder.Append($"'{time:hh\\:mm\\:ss}'");
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"'{time:hh\\:mm\\:ss}'");
 		}
 
 		static string GetTimestampFormat(SqlDataType type)
