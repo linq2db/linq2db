@@ -136,7 +136,9 @@ namespace LinqToDB.Remote
 
 			protected void Append(Type? value)
 			{
-				Builder.AppendFormat(CultureInfo.InvariantCulture, " {0}", GetType(value));
+				// don't move space to format, as GetType is not get-only method...
+				Builder.Append(' ');
+				Builder.AppendFormat(CultureInfo.InvariantCulture, "{0}", GetType(value));
 			}
 
 			protected void Append(bool value)
