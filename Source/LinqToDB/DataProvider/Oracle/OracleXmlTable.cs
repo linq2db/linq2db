@@ -35,7 +35,7 @@ namespace LinqToDB.DataProvider.Oracle
 					case DataType.Byte       : return "Number(3)";
 					case DataType.Money      : return "Number(19,4)";
 					case DataType.SmallMoney : return "Number(10,4)";
-					case DataType.NVarChar   : return FormattableString.Invariant($"VarChar2(${type.Type.Length ?? 10})");
+					case DataType.NVarChar   : return FormattableString.Invariant($"VarChar2(${type.Type.Length ?? 100})");
 					case DataType.NChar      : return FormattableString.Invariant($"Char2({type.Type.Length ?? 100})");
 					case DataType.Double     : return "Float";
 					case DataType.Single     : return "Real";
