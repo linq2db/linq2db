@@ -650,7 +650,7 @@ namespace LinqToDB.SchemaProvider
 			if (name.Contains(" ") || name.Contains("\t"))
 			{
 				var ss = name.Split(_nameSeparators, StringSplitOptions.RemoveEmptyEntries)
-					.Select(s => char.ToUpper(s[0]) + s.Substring(1));
+					.Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1));
 
 				name = string.Concat(ss);
 			}

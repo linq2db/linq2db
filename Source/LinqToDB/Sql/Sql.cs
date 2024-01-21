@@ -963,13 +963,13 @@ namespace LinqToDB
 		[Function(PseudoFunctions.TO_LOWER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Lower(string? str)
 		{
-			return str?.ToLower();
+			return str?.ToLower(CultureInfo.CurrentCulture);
 		}
 
 		[Function(PseudoFunctions.TO_UPPER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Upper(string? str)
 		{
-			return str?.ToUpper();
+			return str?.ToUpper(CultureInfo.CurrentCulture);
 		}
 
 		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
