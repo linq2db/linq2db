@@ -106,7 +106,7 @@ namespace LinqToDB.Common
 				string newName;
 				do
 				{
-					newName = name + startDigit;
+					newName = FormattableString.Invariant($"{name}{startDigit}");
 					++startDigit;
 				} while (currentNames.Contains(newName) || !validatorFunc(newName, namesParameter));
 

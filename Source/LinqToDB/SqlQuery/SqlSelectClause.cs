@@ -388,7 +388,7 @@ namespace LinqToDB.SqlQuery
 						.Append('[').Append(c.ColumnNumber).Append(']')
 #endif
 						.Append('.')
-						.Append(c.Alias ?? "c" + (i + 1));
+						.Append(c.Alias ?? FormattableString.Invariant($"c{i + 1}"));
 
 					var columnName = csb.Value.ToString();
 					columnNames.Add(columnName);

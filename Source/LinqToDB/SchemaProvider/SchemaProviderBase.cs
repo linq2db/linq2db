@@ -319,7 +319,7 @@ namespace LinqToDB.SchemaProvider
 									IsOut                = pr.IsOut,
 									IsResult             = pr.IsResult,
 									Size                 = pr.Length,
-									ParameterName        = ToValidName(pr.ParameterName ?? "par" + ++n),
+									ParameterName        = ToValidName(pr.ParameterName ?? FormattableString.Invariant($"par{++n}")),
 									ParameterType        = ToTypeName(systemType, true),
 									SystemType           = systemType,
 									DataType             = GetDataType(pr.DataType, pr.DataTypeExact, pr.Length, pr.Precision, pr.Scale),

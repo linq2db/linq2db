@@ -243,7 +243,7 @@ namespace LinqToDB.DataProvider.Oracle
 			helper.StringBuilder.Append(") VALUES (");
 
 			for (var i = 0; i < helper.Columns.Length; i++)
-				helper.StringBuilder.Append(":p" + (i + 1)).Append(", ");
+				helper.StringBuilder.AppendFormat(CultureInfo.InvariantCulture, ":p{0}, ", i + 1);
 
 			helper.StringBuilder.Length -= 2;
 
@@ -374,7 +374,7 @@ namespace LinqToDB.DataProvider.Oracle
 				for (var j = 0; j < value.Length; j++)
 					value[j] = column.GetProviderValue(list[j]);
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
+				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, dataType, column.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
@@ -409,7 +409,7 @@ namespace LinqToDB.DataProvider.Oracle
 				for (var j = 0; j < value.Length; j++)
 					value[j] = column.GetProviderValue(list[j]);
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
+				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, dataType, column.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,

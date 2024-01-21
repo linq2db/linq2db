@@ -3910,7 +3910,7 @@ namespace LinqToDB.SqlProvider
 					break;
 				}
 
-				alias = desiredAlias + i;
+				alias = FormattableString.Invariant($"{desiredAlias}{i}");
 			}
 
 			return alias;

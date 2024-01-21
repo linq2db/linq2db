@@ -266,7 +266,7 @@ namespace LinqToDB.SqlQuery
 				.Append('[').Append(_columnNumber).Append(']')
 #endif
 				.Append('.')
-				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
+				.Append(Alias ?? FormattableString.Invariant($"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
 
 			return sb;
 		}

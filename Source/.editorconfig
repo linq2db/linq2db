@@ -4,6 +4,14 @@ dotnet_diagnostic.CA1304.severity = error # CA1304: Specify CultureInfo
 dotnet_diagnostic.CA1305.severity = error # CA1305: Specify IFormatProvider
 dotnet_code_quality.CA1305.excluded_symbol_names = M:System.Convert.ToString(System.Boolean)|M:System.Convert.ToChar(System.String)|M:System.Convert.ToBoolean(System.String)
 
+dotnet_diagnostic.MA0011.severity = error # MA0011: IFormatProvider is missing
+MA0011.consider_nullable_types = true
+# MA0044: Remove useless ToString call
+dotnet_diagnostic.MA0044.severity = error
+# MA0075: Do not use implicit culture-sensitive ToString
+dotnet_diagnostic.MA0075.severity = error
+MA0075.consider_nullable_types = true
+
 
 dotnet_diagnostic.ca1827.severity = error # CA1827: Do not use Count/LongCount when Any can be used
 dotnet_diagnostic.ca2007.severity = error # CA2007: Do not directly await a Task

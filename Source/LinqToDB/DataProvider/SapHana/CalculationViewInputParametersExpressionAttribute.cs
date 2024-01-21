@@ -56,7 +56,7 @@ namespace LinqToDB.DataProvider.SapHana
 			arg[0] = new SqlExpression(
 				string.Join(", ",
 					Enumerable.Range(0, sqlValues.Count)
-						.Select(static x => "{" + x + "}")),
+						.Select(static x => FormattableString.Invariant($"{{{x}}}"))),
 				sqlValues.ToArray());
 
 			table.SqlTableType   = SqlTableType.Expression;

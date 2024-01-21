@@ -130,7 +130,7 @@ namespace LinqToDB.DataProvider.Informix
 
 						for (var i = 0; i < arr.Length; i++)
 						{
-							var value = rd["col" + (i + 1)];
+							var value = rd[FormattableString.Invariant($"col{i + 1}")];
 							arr[i] = value is DBNull ? null : (string)value;
 						}
 
@@ -241,7 +241,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (len == 0 || j > 11) // is the default 12 on have the precision already coded
 			{
-				c.ColumnType = c.DataType + " " + arr[j].datetype + " TO " + arr[i].datetype;
+				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} TO {arr[i].datetype}");
 			}
 			else // # isn't the default
 			{
@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider.Informix
 				// add in the extra
 				k += len;
 
-				c.ColumnType = c.DataType + " " + arr[j].datetype + " (" + k + ") TO " + arr[i].datetype;
+				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} ({k}) TO {arr[i].datetype}");
 				c.Precision = 5;
 			}
 		}
@@ -378,8 +378,8 @@ namespace LinqToDB.DataProvider.Informix
 
 						for (var i = 0; i < arr.Length; i++)
 						{
-							var value1 = rd["ThisCol"  + (i + 1)];
-							var value2 = rd["OtherCol" + (i + 1)];
+							var value1 = rd[FormattableString.Invariant($"ThisCol{i + 1}")];
+							var value2 = rd[FormattableString.Invariant($"OtherCol{i + 1}")];
 
 							arr[i] = new[]
 							{
@@ -401,7 +401,7 @@ namespace LinqToDB.DataProvider.Informix
 								var n        = 0;
 
 								while (names.Contains(name))
-									name = origName + "_" + ++n;
+									name = FormattableString.Invariant($"{origName}_{++n}");
 
 								names.Add(name);
 							}

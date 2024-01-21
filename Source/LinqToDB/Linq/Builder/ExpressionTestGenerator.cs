@@ -560,7 +560,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						attr = "[MapValue(\"" + valueAttribute.Value + "\")] ";
 					}
-					_typeBuilder.AppendLine("\t\t" + attr + nm + " = " + Convert.ToInt64(Enum.Parse(type, nm), CultureInfo.InvariantCulture) + ",");
+					_typeBuilder.AppendLine(CultureInfo.InvariantCulture, $"\t\t{attr}{nm} = {Convert.ToInt64(Enum.Parse(type, nm), CultureInfo.InvariantCulture)},");
 				}
 				_typeBuilder.Remove(_typeBuilder.Length - 1, 1);
 				_typeBuilder.AppendLine("\t}");
@@ -762,7 +762,7 @@ namespace LinqToDB.Linq.Builder
 				if (_nameDic.TryGetValue(prefix + oldNames[i], out var mangledName))
 					newNames[i] = mangledName;
 				else
-					newNames[i] = _nameDic[prefix + oldNames[i]] = prefix + _nameDic.Count;
+					newNames[i] = _nameDic[prefix + oldNames[i]] = FormattableString.Invariant($"{prefix}{_nameDic.Count}");
 			}
 
 			return string.Join(".", newNames);
@@ -960,7 +960,7 @@ namespace LinqToDB.Linq.Builder
 
 				var number = 0;//DateTime.Now.Ticks;
 
-				fileName = Path.Combine(dir, "ExpressionTest." + number + ".cs");
+				fileName = Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.{number}.cs"));
 
 				sw = File.CreateText(fileName);
 

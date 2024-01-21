@@ -65,6 +65,7 @@
 	<ItemGroup>
 		<PackageReference Include="PolySharp" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
+		<PackageReference Include="Meziantou.Analyzer" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
 			<PrivateAssets>all</PrivateAssets>

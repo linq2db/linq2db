@@ -291,7 +291,7 @@ WHERE
 							var format = string.Join(",",
 								type.CreateParameters
 									.Split(',')
-									.Select((p,i) => "{" + i + "}"));
+									.Select((p,i) => FormattableString.Invariant($"{{{i}}}")));
 
 							type.CreateFormat = type.TypeName + "(" + format + ")";
 						}
