@@ -40,7 +40,7 @@ namespace Tests.Mapping
 
 			AreEqual(
 				[ new { ID = 1, Data = "OOO"} ],
-				t.OrderBy(_ => _.ID).Select(r => new { r.ID, r.Data}));
+				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
 
 			using var db1 = GetDataContext(context);
 
@@ -68,7 +68,7 @@ namespace Tests.Mapping
 
 			AreEqual(
 				[ new { ID = 1, Data = "OOO"} ],
-				t.OrderBy(_ => _.ID).Select(r => new { r.ID, r.Data}));
+				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
 
 			using var db1 = GetDataContext(context);
 
@@ -93,7 +93,7 @@ namespace Tests.Mapping
 
 			AreEqual(
 				[ new { ID = 1, Data = "OOO"} ],
-				t.OrderBy(_ => _.ID).Select(r => new { r.ID, r.Data}));
+				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
 
 			using var db1 = GetDataContext(context);
 
@@ -103,5 +103,52 @@ namespace Tests.Mapping
 				[ new { ID = 1, Data = "***OOO***"} ],
 				db1.GetTable<TrimTestTable>().OrderBy(_ => _.ID).Select(r => new { r.ID, r.Data}));
 		}
+
+		[Test]
+		public void UpdateTest([DataSources] string context, [Values] bool inlineParameters)
+		{
+			using var db = GetDataContext(context, _trimMappingSchema);
+
+			db.InlineParameters = inlineParameters;
+
+			using var t  = db.CreateLocalTable<TrimTestTable>(
+				[
+					new TrimTestTable { ID = 1, Data = "XXX" },
+					new TrimTestTable { ID = 2, Data = "HHH" },
+				]);
+
+			t
+				.Where(t => t.Data == "XXX")
+				.Set(t => t.Data, "OOO")
+				.Update();
+
+			var p = "HHH";
+
+			t
+				.Where(t => t.Data == p)
+				.Set(t => t.Data, "SSS")
+				.Update();
+
+			Debug.WriteLine(t.ToDiagnosticString());
+
+			AreEqual(
+				[
+					new { ID = 1, Data = "OOO"},
+					new { ID = 2, Data = "SSS"},
+				],
+				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
+
+			using var db1 = GetDataContext(context);
+
+			Debug.WriteLine(db1.GetTable<TrimTestTable>().ToDiagnosticString());
+
+			AreEqual(
+				[
+					new { ID = 1, Data = "***OOO***"},
+					new { ID = 2, Data = "***SSS***"},
+				],
+				db1.GetTable<TrimTestTable>().OrderBy(_ => _.ID).Select(r => new { r.ID, r.Data}));
+		}
+
 	}
 }

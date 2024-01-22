@@ -104,7 +104,7 @@ namespace LinqToDB.Common
 
 		readonly object _sync = new();
 
-		ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> GetExpressions(ConversionType conversionType)
+		ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> GetForSetExpressions(ConversionType conversionType)
 		{
 			switch (conversionType)
 			{
@@ -123,12 +123,12 @@ namespace LinqToDB.Common
 
 		public void Set(Type from, Type to, ConversionType conversionType, LambdaInfo expr)
 		{
-			Set(GetExpressions(conversionType), new DbDataType(from), new DbDataType(to), expr);
+			Set(GetForSetExpressions(conversionType), new DbDataType(from), new DbDataType(to), expr);
 		}
 
 		public void Set(DbDataType from, DbDataType to, ConversionType conversionType, LambdaInfo expr)
 		{
-			Set(GetExpressions(conversionType), from, to, expr);
+			Set(GetForSetExpressions(conversionType), from, to, expr);
 		}
 
 		static void Set(ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> expressions, DbDataType from, DbDataType to, LambdaInfo expr)
@@ -141,10 +141,27 @@ namespace LinqToDB.Common
 
 		public LambdaInfo? Get(DbDataType from, DbDataType to, ConversionType conversionType)
 		{
-			if (GetExpressions(conversionType).TryGetValue(from, out var dic) && dic.TryGetValue(to, out var li))
-				return li;
+			switch (conversionType)
+			{
+				case ConversionType.FromDatabase:
+				{
+					if (_fromDatabaseExpressions != null &&
+						_fromDatabaseExpressions.TryGetValue(from, out var dic) && dic.TryGetValue(to, out var li))
+						return li;
+					break;
+				}
+				case ConversionType.ToDatabase:
+				{
+					if (_toDatabaseExpressions != null &&
+						_toDatabaseExpressions.TryGetValue(from, out var dic) && dic.TryGetValue(to, out var li))
+						return li;
+					break;
+				}
+			}
 
-			return conversionType != ConversionType.Common && _expressions.TryGetValue(from, out dic) && dic.TryGetValue(to, out li) ? li : null;
+			{
+				return _expressions.TryGetValue(from, out var dic) && dic.TryGetValue(to, out var li) ? li : null;
+			}
 		}
 
 		public LambdaInfo? Get(Type from, Type to, ConversionType conversionType)
@@ -163,7 +180,7 @@ namespace LinqToDB.Common
 			var lm  = ex.Item1.CompileExpression();
 			var ret = new LambdaInfo(ex.Item1, ex.Item2, lm, ex.Item3);
 
-			Set(GetExpressions(conversionType), from, to , ret);
+			Set(GetForSetExpressions(conversionType), from, to , ret);
 
 			return ret;
 		}
