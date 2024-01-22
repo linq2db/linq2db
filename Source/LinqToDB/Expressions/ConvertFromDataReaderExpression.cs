@@ -73,7 +73,7 @@ namespace LinqToDB.Expressions
 
 		static Expression ConvertExpressionToType(Expression current, Type toType, MappingSchema mappingSchema)
 		{
-			var toConvertExpression = mappingSchema.GetConvertExpression(current.Type, toType, false, current.Type != toType);
+			var toConvertExpression = mappingSchema.GetConvertExpression(current.Type, toType, false, current.Type != toType, ConversionType.FromDatabase);
 
 			if (toConvertExpression == null)
 				return current;
@@ -144,8 +144,8 @@ namespace LinqToDB.Expressions
 				{
 					// Use only defined convert
 					var econv =
-						mappingSchema.GetConvertExpression(ex.Type, type,     false, false) ??
-						mappingSchema.GetConvertExpression(ex.Type, mapType!, false)!;
+						mappingSchema.GetConvertExpression(ex.Type, type,     false, false, ConversionType.FromDatabase) ??
+						mappingSchema.GetConvertExpression(ex.Type, mapType!, false, true,  ConversionType.ToDatabase)!;
 
 					ex = InternalExtensions.ApplyLambdaToExpression(econv, ex);
 				}

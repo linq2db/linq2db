@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -184,9 +185,10 @@ namespace LinqToDB.Mapping
 		/// - value SQL type descriptor;
 		/// - value.
 		/// </param>
-		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
+		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, (sb,dt,_,v) => converter(sb, dt, v));
+			return this;
 		}
 
 		/// <summary>
@@ -198,9 +200,10 @@ namespace LinqToDB.Mapping
 		/// - value SQL type descriptor;
 		/// - value.
 		/// </param>
-		public void SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
+		public MappingSchema SetValueToSqlConverter(Type type, Action<StringBuilder,SqlDataType,DataOptions,object> converter)
 		{
 			ValueToSqlConverter.SetConverter(type, converter);
+			return this;
 		}
 
 		#endregion
@@ -443,10 +446,14 @@ namespace LinqToDB.Mapping
 		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
 		/// </param>
 		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
-		public Expression<Func<TFrom,TTo>>? GetConvertExpression<TFrom,TTo>(bool checkNull = true, bool createDefault = true)
+		public Expression<Func<TFrom,TTo>>? GetConvertExpression<TFrom,TTo>(
+			bool           checkNull      = true,
+			bool           createDefault  = true,
+			ConversionType conversionType = ConversionType.Common)
 		{
-			return (Expression<Func<TFrom, TTo>>?)GetConvertExpression(typeof(TFrom), typeof(TTo), checkNull, createDefault);
+			return (Expression<Func<TFrom, TTo>>?)GetConvertExpression(typeof(TFrom), typeof(TTo), checkNull, createDefault, conversionType);
 		}
 
 		/// <summary>
@@ -458,10 +465,16 @@ namespace LinqToDB.Mapping
 		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
 		/// </param>
 		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
-		public LambdaExpression? GetConvertExpression(Type from, Type to, bool checkNull = true, bool createDefault = true)
+		public LambdaExpression? GetConvertExpression(
+			Type           from,
+			Type           to,
+			bool           checkNull      = true,
+			bool           createDefault  = true,
+			ConversionType conversionType = ConversionType.Common)
 		{
-			return GetConvertExpression(new DbDataType(from), new DbDataType(to), checkNull, createDefault);
+			return GetConvertExpression(new DbDataType(from), new DbDataType(to), checkNull, createDefault, conversionType);
 		}
 
 		/// <summary>
@@ -473,10 +486,16 @@ namespace LinqToDB.Mapping
 		/// <see cref="SetDefaultValue(Type, object)"/> for more details.
 		/// </param>
 		/// <param name="createDefault">Create new conversion expression, if conversion is not defined.</param>
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		/// <returns>Conversion expression or <c>null</c>, if there is no such conversion and <paramref name="createDefault"/> is <c>false</c>.</returns>
-		public LambdaExpression? GetConvertExpression(DbDataType from, DbDataType to, bool checkNull = true, bool createDefault = true)
+		public LambdaExpression? GetConvertExpression(
+			DbDataType     from,
+			DbDataType     to,
+			bool           checkNull      = true,
+			bool           createDefault  = true,
+			ConversionType conversionType = ConversionType.Common)
 		{
-			var li = GetConverter(from, to, createDefault);
+			var li = GetConverter(from, to, createDefault, conversionType);
 			return li == null ? null : (LambdaExpression)ReduceDefaultValue(checkNull ? li.CheckNullLambda : li.Lambda);
 		}
 
@@ -486,12 +505,13 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <typeparam name="TFrom">Source type.</typeparam>
 		/// <typeparam name="TTo">Target type.</typeparam>
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		/// <returns>Conversion delegate or <c>null</c> if conversion is not defined.</returns>
-		public Func<TFrom,TTo>? GetConverter<TFrom,TTo>()
+		public Func<TFrom,TTo>? GetConverter<TFrom,TTo>(ConversionType conversionType = ConversionType.Common)
 		{
 			var from = new DbDataType(typeof(TFrom));
 			var to   = new DbDataType(typeof(TTo));
-			var li   = GetConverter(from, to, true);
+			var li   = GetConverter(from, to, true, conversionType);
 
 			if (li == null)
 				return null;
@@ -503,7 +523,7 @@ namespace LinqToDB.Mapping
 
 				lock (_syncRoot)
 				{
-					Schemas[0].SetConvertInfo(from, to, new (li.CheckNullLambda, null, l, li.IsSchemaSpecific), resetId: false);
+					Schemas[0].SetConvertInfo(from, to, conversionType, new (li.CheckNullLambda, null, l, li.IsSchemaSpecific), false);
 				}
 
 				return l;
@@ -523,11 +543,13 @@ namespace LinqToDB.Mapping
 		/// default value provider.
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
 		/// </param>
-		public void SetConvertExpression(
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
+		public MappingSchema SetConvertExpression(
 			Type             fromType,
 			Type             toType,
 			LambdaExpression expr,
-			bool             addNullCheck = true)
+			bool             addNullCheck   = true,
+			ConversionType   conversionType = ConversionType.Common)
 		{
 			if (fromType == null) throw new ArgumentNullException(nameof(fromType));
 			if (toType   == null) throw new ArgumentNullException(nameof(toType));
@@ -539,9 +561,11 @@ namespace LinqToDB.Mapping
 
 			lock (_syncRoot)
 			{
-				Schemas[0].SetConvertInfo(new DbDataType(fromType), new DbDataType(toType), new (ex, expr, null, false));
+				Schemas[0].SetConvertInfo(new DbDataType(fromType), new DbDataType(toType), conversionType, new (ex, expr, null, false), true);
 				ResetID();
 			}
+
+			return this;
 		}
 
 		/// <summary>
@@ -555,11 +579,13 @@ namespace LinqToDB.Mapping
 		/// default value provider.
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
 		/// </param>
-		public void SetConvertExpression(
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
+		public MappingSchema SetConvertExpression(
 			DbDataType       fromType,
 			DbDataType       toType,
 			LambdaExpression expr,
-			bool             addNullCheck = true)
+			bool             addNullCheck   = true,
+			ConversionType   conversionType = ConversionType.Common)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
@@ -569,9 +595,11 @@ namespace LinqToDB.Mapping
 
 			lock (_syncRoot)
 			{
-				Schemas[0].SetConvertInfo(fromType, toType, new (ex, expr, null, false));
+				Schemas[0].SetConvertInfo(fromType, toType, conversionType, new (ex, expr, null, false), true);
 				ResetID();
 			}
+
+			return this;
 		}
 
 		/// <summary>
@@ -585,9 +613,11 @@ namespace LinqToDB.Mapping
 		/// default value provider.
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
 		/// </param>
-		public void SetConvertExpression<TFrom,TTo>(
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
+		public MappingSchema SetConvertExpression<TFrom,TTo>(
 			Expression<Func<TFrom,TTo>> expr,
-			bool addNullCheck = true)
+			bool                        addNullCheck   = true,
+			ConversionType              conversionType = ConversionType.Common)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
@@ -597,9 +627,11 @@ namespace LinqToDB.Mapping
 
 			lock (_syncRoot)
 			{
-				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new (ex, expr, null, false));
+				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), conversionType, new (ex, expr, null, false));
 				ResetID();
 			}
+
+			return this;
 		}
 
 		/// <summary>
@@ -609,17 +641,21 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="TTo">Target type.</typeparam>
 		/// <param name="checkNullExpr"><c>null</c> values conversion expression.</param>
 		/// <param name="expr">Conversion expression.</param>
-		public void SetConvertExpression<TFrom,TTo>(
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
+		public MappingSchema SetConvertExpression<TFrom,TTo>(
 			Expression<Func<TFrom,TTo>> checkNullExpr,
-			Expression<Func<TFrom,TTo>> expr)
+			Expression<Func<TFrom,TTo>> expr,
+			ConversionType              conversionType = ConversionType.Common)
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
 			lock (_syncRoot)
 			{
-				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new (checkNullExpr, expr, null, false));
+				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), conversionType, new (checkNullExpr, expr, null, false));
 				ResetID();
 			}
+
+			return this;
 		}
 
 		/// <summary>
@@ -628,7 +664,10 @@ namespace LinqToDB.Mapping
 		/// <typeparam name="TFrom">Source type.</typeparam>
 		/// <typeparam name="TTo">Target type.</typeparam>
 		/// <param name="func">Conversion delegate.</param>
-		public void SetConverter<TFrom,TTo>(Func<TFrom,TTo> func)
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
+		public MappingSchema SetConverter<TFrom,TTo>(
+			Func<TFrom,TTo> func,
+			ConversionType  conversionType = ConversionType.Common)
 		{
 			if (func == null) throw new ArgumentNullException(nameof(func));
 
@@ -637,9 +676,11 @@ namespace LinqToDB.Mapping
 
 			lock (_syncRoot)
 			{
-				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), new (ex, null, func, false));
+				Schemas[0].SetConvertInfo(typeof(TFrom), typeof(TTo), conversionType, new (ex, null, func, false));
 				ResetID();
 			}
+
+			return this;
 		}
 
 		/// <summary>
@@ -650,7 +691,12 @@ namespace LinqToDB.Mapping
 		/// <param name="func">Conversion delegate.</param>
 		/// <param name="from">Source type detalization</param>
 		/// <param name="to">Target type detalization</param>
-		public void SetConverter<TFrom,TTo>(Func<TFrom,TTo> func, DbDataType from, DbDataType to)
+		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
+		public MappingSchema SetConverter<TFrom,TTo>(
+			Func<TFrom,TTo> func,
+			DbDataType      from,
+			DbDataType      to,
+			ConversionType  conversionType = ConversionType.Common)
 		{
 			if (func == null) throw new ArgumentNullException(nameof(func));
 
@@ -665,9 +711,11 @@ namespace LinqToDB.Mapping
 
 			lock (_syncRoot)
 			{
-				Schemas[0].SetConvertInfo(from, to, new (ex, null, func, false));
+				Schemas[0].SetConvertInfo(from, to, conversionType, new (ex, null, func, false), true);
 				ResetID();
 			}
+
+			return this;
 		}
 
 		internal LambdaExpression AddNullCheck(LambdaExpression expr)
@@ -770,7 +818,7 @@ namespace LinqToDB.Mapping
 			return false;
 		}
 
-		internal ConvertInfo.LambdaInfo? GetConverter(DbDataType from, DbDataType to, bool create)
+		internal ConvertInfo.LambdaInfo? GetConverter(DbDataType from, DbDataType to, bool create, ConversionType conversionType)
 		{
 			var currentFrom = from;
 			do
@@ -781,7 +829,7 @@ namespace LinqToDB.Mapping
 					for (var i = 0; i < Schemas.Length; i++)
 					{
 						var info = Schemas[i];
-						var li   = info.GetConvertInfo(currentFrom, currentTo);
+						var li   = info.GetConvertInfo(currentFrom, currentTo, conversionType);
 
 						if (li != null && (i == 0 || !li.IsSchemaSpecific))
 							return i == 0 ? li : new ConvertInfo.LambdaInfo(li.CheckNullLambda, li.Lambda, null, false);
@@ -791,8 +839,8 @@ namespace LinqToDB.Mapping
 
 			} while (Simplify(ref currentFrom));
 
-			var isFromGeneric = from.SystemType.IsGenericType && !from.SystemType.IsGenericTypeDefinition;
-			var isToGeneric   = to.SystemType.  IsGenericType && !to.SystemType.  IsGenericTypeDefinition;
+			var isFromGeneric = from.SystemType is { IsGenericType: true, IsGenericTypeDefinition: false };
+			var isToGeneric   = to.  SystemType is { IsGenericType: true, IsGenericTypeDefinition: false };
 
 			if (isFromGeneric || isToGeneric)
 			{
@@ -804,7 +852,7 @@ namespace LinqToDB.Mapping
 					: fromGenericArgs.Concat(toGenericArgs).ToArray();
 
 				if (InitGenericConvertProvider(args))
-					return GetConverter(from, to, create);
+					return GetConverter(from, to, create, conversionType);
 			}
 
 			if (create)
@@ -817,7 +865,7 @@ namespace LinqToDB.Mapping
 
 				if (from.SystemType != ufrom)
 				{
-					var li = GetConverter(new DbDataType(ufrom), to, false);
+					var li = GetConverter(new DbDataType(ufrom), to, false, conversionType);
 
 					if (li != null)
 					{
@@ -835,7 +883,7 @@ namespace LinqToDB.Mapping
 					}
 					else if (to.SystemType != uto)
 					{
-						li = GetConverter(new DbDataType(ufrom), new DbDataType(uto), false);
+						li = GetConverter(new DbDataType(ufrom), new DbDataType(uto), false, conversionType);
 
 						if (li != null)
 						{
@@ -863,7 +911,7 @@ namespace LinqToDB.Mapping
 				{
 					// For int? -> byte? try to find int -> byte and convert int to int? and result to byte?
 					//
-					var li = GetConverter(from, new DbDataType(uto), false);
+					var li = GetConverter(from, new DbDataType(uto), false, conversionType);
 
 					if (li != null)
 					{
@@ -882,10 +930,10 @@ namespace LinqToDB.Mapping
 				if (ex != null)
 					return new ConvertInfo.LambdaInfo(AddNullCheck(ex), ex, null, ss);
 
-				var d = ConvertInfo.Default.Get(from, to);
+				var d = ConvertInfo.Default.Get(from, to, conversionType);
 
 				if (d == null || d.IsSchemaSpecific)
-					d = ConvertInfo.Default.Create(this, from, to);
+					d = ConvertInfo.Default.Create(this, from, to, conversionType);
 
 				return new ConvertInfo.LambdaInfo(d.CheckNullLambda, d.Lambda, null, d.IsSchemaSpecific);
 			}

@@ -37,6 +37,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Grpc", "..\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Wcf", "..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj", "{4899DD08-E70C-4EAF-84F4-44D6EA80C567}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mapping", "Mapping", "{39BBD7D1-A352-42EA-9D64-75389CD01679}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UtcDateTime", "Mapping\UtcDateTime\UtcDateTime.csproj", "{4AFDCBC9-29DF-459C-A470-94BCDBFD702F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +75,10 @@ Global
 		{4899DD08-E70C-4EAF-84F4-44D6EA80C567}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4899DD08-E70C-4EAF-84F4-44D6EA80C567}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4899DD08-E70C-4EAF-84F4-44D6EA80C567}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AFDCBC9-29DF-459C-A470-94BCDBFD702F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AFDCBC9-29DF-459C-A470-94BCDBFD702F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AFDCBC9-29DF-459C-A470-94BCDBFD702F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AFDCBC9-29DF-459C-A470-94BCDBFD702F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,6 +93,7 @@ Global
 		{875876C6-D790-4BA7-893C-5181977864A2} = {03B313B1-C785-4FC9-A3C7-DE58295B7D20}
 		{FAD195CA-B6D8-4F15-B629-0BECA0245623} = {03B313B1-C785-4FC9-A3C7-DE58295B7D20}
 		{4899DD08-E70C-4EAF-84F4-44D6EA80C567} = {03B313B1-C785-4FC9-A3C7-DE58295B7D20}
+		{4AFDCBC9-29DF-459C-A470-94BCDBFD702F} = {39BBD7D1-A352-42EA-9D64-75389CD01679}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A26E409B-1097-4260-A7B2-9C8F09E0635D}
