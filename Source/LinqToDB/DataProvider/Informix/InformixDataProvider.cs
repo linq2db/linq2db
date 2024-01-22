@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			else if (value is Guid || value == null && dataType.DataType == DataType.Guid)
 			{
-				value    = string.Format(CultureInfo.InvariantCulture, "{0}", value);
+				value    = value == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", value);
 				dataType = dataType.WithDataType(DataType.Char);
 			}
 			else if (value is byte byteValue && dataType.DataType == DataType.Int16)

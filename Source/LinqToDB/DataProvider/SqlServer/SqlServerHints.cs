@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				}
 				else
 				{
-					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "ForceSeek({0})", value.Value);
+					stringBuilder.AppendFormat(CultureInfo.InvariantCulture, "ForceSeek({0}(", value.Value);
 
 					for (var i = 0; i < count; i++)
 					{

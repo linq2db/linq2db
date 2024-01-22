@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.SapHana
 						value = b ? (byte)1 : (byte)0;
 					break;
 				case DataType.Guid:
-					value          = string.Format(CultureInfo.InvariantCulture, "{0}", value);
+					value          = value == null ? null : string.Format(CultureInfo.InvariantCulture, "{0}", value);
 					dataType       = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
