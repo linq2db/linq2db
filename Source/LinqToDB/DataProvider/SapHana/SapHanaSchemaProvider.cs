@@ -508,7 +508,7 @@ namespace LinqToDB.DataProvider.SapHana
 				commandText += string.Join(",", procedure.Parameters.Select(p => (
 					p.SystemType == typeof (DateTime)
 						? string.Format(CultureInfo.InvariantCulture, "'{0}'", DateTime.Now)
-						: string.Format(CultureInfo.InvariantCulture, "{0}", DefaultValue.GetValue(p.SystemType ?? typeof(object))) ?? "''")));
+						: string.Format(CultureInfo.InvariantCulture, "{0}", DefaultValue.GetValue(p.SystemType ?? typeof(object)) ?? "''"))));
 
 				commandText += ")";
 				commandType = CommandType.Text;
