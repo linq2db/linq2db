@@ -205,6 +205,7 @@ namespace Tests.Mapping
 			TestProvName.AllPostgreSQL,
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
+			TestProvName.AllSqlServer2005,
 			])] string context,
 			[Values] bool inlineParameters)
 		{
