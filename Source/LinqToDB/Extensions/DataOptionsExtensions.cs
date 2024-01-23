@@ -1523,7 +1523,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-		/// Default value: <c>false</c>.
+		/// Default value: <c>true</c>.
 		/// </summary>
 		public static SqlOptions WithIgnoreConstantExpressionInOrderBy(this SqlOptions options, bool ignoreConstantExpressionInOrderBy)
 		{
@@ -1572,7 +1572,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-		/// Default value: <c>false</c>.
+		/// Default value: <c>true</c>.
 		/// </summary>
 		public static DataOptions UseIgnoreConstantExpressionInOrderBy(this DataOptions options, bool ignoreConstantExpressionInOrderBy)
 		{

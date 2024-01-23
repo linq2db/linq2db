@@ -668,7 +668,7 @@ namespace LinqToDB.Common
 
 			/// <summary>
 			/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-			/// Default value: <c>false</c>.
+			/// Default value: <c>true</c>.
 			/// </summary>
 			public static bool IgnoreConstantExpressionInOrderBy
 			{

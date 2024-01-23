@@ -587,8 +587,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 				StringBuilder.Append(value);
 			else
 				base.BuildExpressionForOrderBy(expr);
-    }
-    
+		}
+
 		protected override void MergeSqlBuilderData(BasicSqlBuilder sqlBuilder)
 		{
 			if (sqlBuilder is ClickHouseSqlBuilder { _finalHints: {} fh } )

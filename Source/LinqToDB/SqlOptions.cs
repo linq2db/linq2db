@@ -7,7 +7,7 @@ namespace LinqToDB
 
 	/// <param name="IgnoreConstantExpressionInOrderBy">
 	/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-	/// Default value: <c>false</c>.
+	/// Default value: <c>true</c>.
 	/// </param>
 	/// <param name="GenerateFinalAliases">
 	/// Indicates whether SQL Builder should generate aliases for final projection.
@@ -42,13 +42,13 @@ namespace LinqToDB
 	/// </param>
 	public sealed record SqlOptions
 	(
-		bool IgnoreConstantExpressionInOrderBy = default,
+		bool IgnoreConstantExpressionInOrderBy = true,
 		bool GenerateFinalAliases              = false
 
 	)
 		: IOptionSet
 	{
-		public SqlOptions() : this(false)
+		public SqlOptions() : this(true)
 		{
 		}
 
