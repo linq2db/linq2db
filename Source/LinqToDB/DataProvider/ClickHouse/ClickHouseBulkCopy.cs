@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Async;
@@ -503,7 +505,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (copyOptions.WithoutSession)
 				{
-					var cnBuilder         = _provider.Adapter.CreateClientConnectionStringBuilder!(connection.ConnectionString);
+					var cnBuilder = _provider.Adapter.CreateClientConnectionStringBuilder!(connection.ConnectionString);
 
 					if (cnBuilder.UseSession)
 					{
@@ -511,9 +513,22 @@ namespace LinqToDB.DataProvider.ClickHouse
 						connection           = _provider.Adapter.CreateConnection!(cnBuilder.ToString());
 						disposeConnection    = true;
 
-						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpening(new(null), connection);
-						await connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpened(new(null), connection);
+						if (options.ConnectionOptions.ConnectionInterceptor == null)
+						{
+							await connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						}
+						else
+						{
+							await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpeningAsync))
+								await options.ConnectionOptions.ConnectionInterceptor.ConnectionOpeningAsync(new(null), connection, cancellationToken)
+									.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+							await connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
+							await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpenedAsync))
+								await options.ConnectionOptions.ConnectionInterceptor.ConnectionOpenedAsync(new(null), connection, cancellationToken)
+									.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						}
 					}
 				}
 
