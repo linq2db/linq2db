@@ -31,7 +31,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				sequence.SelectQuery.Select.OptimizeDistinct = true;
 			}
-			else
+			else if (sequence.SelectQuery.ParentSelect != null)
 			{
 				sequence.ConvertToIndex(null, 0, ConvertFlags.All);
 			}
