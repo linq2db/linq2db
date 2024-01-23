@@ -182,14 +182,14 @@ namespace Tests.UserTests
 			using var s = new DataConnection(context);
 
 			using var channelQry                          = s.CreateLocalTable<ChannelDTO>();
-			using var inventoryResourceTbl                = s.CreateTempTable<InventoryResourceDTO>();
-			using var materialQry                         = s.CreateTempTable<MaterialDTO>();
-			using var resourceQry                         = s.CreateTempTable<WmsLoadCarrierDTO>();
-			using var refResourceStorageShelfDTO          = s.CreateTempTable<RefResourceStorageShelfDTO>();
-			using var aisleDTO                            = s.CreateTempTable<AisleDTO>();
-			using var refOutfeedTransportOrderResourceDTO = s.CreateTempTable<RefOutfeedTransportOrderResourceDTO>();
-			using var infeedAdvicePositionDTO             = s.CreateTempTable<InfeedAdvicePositionDTO>();
-			using var storageShelfDTO                     = s.CreateTempTable<StorageShelfDTO>();
+			using var inventoryResourceTbl                = s.CreateLocalTable<InventoryResourceDTO>();
+			using var materialQry                         = s.CreateLocalTable<MaterialDTO>();
+			using var resourceQry                         = s.CreateLocalTable<WmsLoadCarrierDTO>();
+			using var refResourceStorageShelfDTO          = s.CreateLocalTable<RefResourceStorageShelfDTO>();
+			using var aisleDTO                            = s.CreateLocalTable<AisleDTO>();
+			using var refOutfeedTransportOrderResourceDTO = s.CreateLocalTable<RefOutfeedTransportOrderResourceDTO>();
+			using var infeedAdvicePositionDTO             = s.CreateLocalTable<InfeedAdvicePositionDTO>();
+			using var storageShelfDTO                     = s.CreateLocalTable<StorageShelfDTO>();
 
 			var inventoryResourceQry = inventoryResourceTbl.Where(x => x.Status < 99);
 
@@ -229,7 +229,7 @@ namespace Tests.UserTests
 
 			#region Depth 2
 
-			join a2 in storageShelfDTO on new { Id = c.Id, Depth = 2 } equals new { Id = a2.ChannelID, Depth = a2.DepthCoordinate } into a2n
+			join a2 in s.GetTable<StorageShelfDTO>() on new { Id = c.Id, Depth = 2 } equals new { Id = a2.ChannelID, Depth = a2.DepthCoordinate } into a2n
 			from a2 in a2n.DefaultIfEmpty()
 			join b2 in refResourceStorageShelfDTO on a2.Id equals b2.StorageShelfID into b2n
 			from b2 in b2n.DefaultIfEmpty()

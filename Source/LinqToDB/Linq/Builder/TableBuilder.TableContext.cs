@@ -270,7 +270,7 @@ namespace LinqToDB.Linq.Builder
 					expr = Expression.Convert(
 							Expression.Call(
 								_onEntityCreatedMethodInfo,
-								ExpressionConstants.DataContextParam,
+								ExpressionBuilder.DataContextParam,
 								expr,
 								Expression.Constant(SqlTable.TableOptions),
 								Expression.Constant(SqlTable.TableName.Name,     typeof(string)),

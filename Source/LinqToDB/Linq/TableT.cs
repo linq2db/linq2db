@@ -4,7 +4,6 @@ using System.Reflection;
 namespace LinqToDB.Linq
 {
 	using Extensions;
-	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
@@ -17,7 +16,7 @@ namespace LinqToDB.Linq
 			var expression = typeof(T).IsScalar()
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
-					Expression.Constant(dataContext));
+					Expression.Constant(null, typeof(IDataContext)));
 //					ExpressionConstants.DataContextParam);
 
 			InitTable(dataContext, expression, null);
@@ -28,7 +27,7 @@ namespace LinqToDB.Linq
 			var expression = typeof(T).IsScalar()
 				? null
 				: Expression.Call(Methods.LinqToDB.GetTable.MakeGenericMethod(typeof(T)),
-					Expression.Constant(dataContext));
+					Expression.Constant(null, typeof(IDataContext)));
 //					ExpressionConstants.DataContextParam);
 
 			InitTable(dataContext, expression, tableDescriptor);

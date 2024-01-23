@@ -192,12 +192,6 @@ namespace LinqToDB.Linq.Builder
 
 				case ExpressionType.Parameter :
 					{
-						if (expr == ExpressionConstants.DataContextParam)
-						{
-							_exprBuilder.Append("db");
-							return true;
-						}
-
 						var e = (ParameterExpression)expr;
 						_exprBuilder.Append(MangleName(e.Name, "p"));
 						return false;
@@ -277,7 +271,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (typeof(Table<>).IsSameOrParentOf(expr.Type))
 							_exprBuilder.AppendFormat("db.GetTable<{0}>()", GetTypeName(expr.Type.GetGenericArguments()[0]));
-						else if (c.Value == _dataContext)
+						else if (c.Value == _dataContext || c.Value == null && typeof(IDataContext).IsSameOrParentOf(c.Type))
 							_exprBuilder.Append("db");
 						else if (expr.ToString() == "value(" + expr.Type + ")")
 							_exprBuilder.Append("value(").Append(GetTypeName(expr.Type)).Append(')');
@@ -286,7 +280,6 @@ namespace LinqToDB.Linq.Builder
 
 						return true;
 					}
-
 
 				case ExpressionType.Lambda:
 					{
@@ -745,7 +738,7 @@ namespace LinqToDB.Linq.Builder
 
 		string MangleName(string? name, string prefix)
 		{
-			name ??= ""; 
+			name ??= "";
 			if (!_mangleNames)
 				return name;
 

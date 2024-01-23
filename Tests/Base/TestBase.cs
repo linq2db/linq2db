@@ -24,11 +24,10 @@ using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
-using Tests.Remote.ServerContainer;
-
 namespace Tests
 {
 	using Model;
+	using Remote.ServerContainer;
 	using Tools;
 
 	public partial class TestBase
@@ -1292,9 +1291,13 @@ namespace Tests
 
 		public T[] AssertQuery<T>(IQueryable<T> query)
 		{
-			var expr    = query.Expression.Replace(ExpressionConstants.DataContextParam, Expression.Constant(Internals.GetDataContext(query), typeof(IDataContext)));
-			var loaded  = new Dictionary<Type, Expression>();
+			var loaded  = new Dictionary<Type,Expression>();
 			var actual  = query.ToArray();
+			var expr    = query.Expression.Transform(
+				query,
+				static (ctx, e) => e is ConstantExpression { Value : null } ce && ce.Type == typeof(IDataContext)
+					? Expression.Constant(Internals.GetDataContext(ctx), typeof(IDataContext))
+					: e);
 
 			var newExpr = expr.Transform(loaded, static (loaded, e) =>
 			{
