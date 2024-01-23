@@ -2514,7 +2514,7 @@ namespace LinqToDB.SqlProvider
 				case SqlPredicate.Operator.NotLess        : StringBuilder.Append(" !< "); break;
 				case SqlPredicate.Operator.Overlaps       : StringBuilder.Append(" OVERLAPS "); break;
 			}
-			}
+		}
 
 		protected virtual void BuildExprExprPredicate(SqlPredicate.ExprExpr expr)
 		{

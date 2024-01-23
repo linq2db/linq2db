@@ -6,6 +6,8 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.DataProvider.DB2
 {
 	using Configuration;
@@ -51,9 +53,21 @@ namespace LinqToDB.DataProvider.DB2
 						try
 						{
 							using var conn = DB2ProviderAdapter.Instance.CreateConnection(options.ConnectionString);
-							options.ConnectionInterceptor?.ConnectionOpening(new(null), ((IConnectionWrapper)conn).Connection);
-							conn.Open();
-							options.ConnectionInterceptor?.ConnectionOpened(new(null), ((IConnectionWrapper)conn).Connection);
+
+							if (options.ConnectionInterceptor == null)
+							{
+								conn.Open();
+							}
+							else
+							{
+								using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+									options.ConnectionInterceptor.ConnectionOpening(new(null), ((IConnectionWrapper)conn).Connection);
+
+								conn.Open();
+
+								using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+									options.ConnectionInterceptor.ConnectionOpened(new(null), ((IConnectionWrapper)conn).Connection);
+							}
 
 							var iszOS = conn.eServerType == DB2ProviderAdapter.DB2ServerTypes.DB2_390;
 
@@ -61,6 +75,7 @@ namespace LinqToDB.DataProvider.DB2
 						}
 						catch
 						{
+							// ignored
 						}
 					}
 
