@@ -3,6 +3,8 @@ using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.DataProvider
 {
 	using Common;
@@ -164,13 +166,19 @@ namespace LinqToDB.DataProvider
 			if (command is RetryingDbCommand rcmd)
 				command = rcmd.UnderlyingObject;
 
-			command = dataContext.UnwrapDataObjectInterceptor?.UnwrapCommand(dataContext, command) ?? command;
+			if (dataContext.UnwrapDataObjectInterceptor != null)
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapCommand))
+					command = dataContext.UnwrapDataObjectInterceptor?.UnwrapCommand(dataContext, command) ?? command;
+
 			return Adapter.CommandType.IsSameOrParentOf(command.GetType()) ? command : null;
 		}
 
 		public virtual DbConnection? TryGetProviderConnection(IDataContext dataContext, DbConnection connection)
 		{
-			connection = dataContext.UnwrapDataObjectInterceptor?.UnwrapConnection(dataContext, connection) ?? connection;
+			if (dataContext.UnwrapDataObjectInterceptor != null)
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapConnection))
+					connection = dataContext.UnwrapDataObjectInterceptor?.UnwrapConnection(dataContext, connection) ?? connection;
+
 			return Adapter.ConnectionType.IsSameOrParentOf(connection.GetType()) ? connection : null;
 		}
 
@@ -179,7 +187,10 @@ namespace LinqToDB.DataProvider
 			if (Adapter.TransactionType == null)
 				return null;
 
-			transaction = dataContext.UnwrapDataObjectInterceptor?.UnwrapTransaction(dataContext, transaction) ?? transaction;
+			if (dataContext.UnwrapDataObjectInterceptor != null)
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapTransaction))
+					transaction = dataContext.UnwrapDataObjectInterceptor.UnwrapTransaction(dataContext, transaction) ?? transaction;
+
 			return Adapter.TransactionType.IsSameOrParentOf(transaction.GetType()) ? transaction : null;
 		}
 
