@@ -29,8 +29,6 @@ namespace Tests
 	using Model;
 	using Remote.ServerContainer;
 	using Tools;
-	using Remote.ServerContainer;
-	using StackExchange.Profiling.Internal;
 
 	public partial class TestBase
 	{
