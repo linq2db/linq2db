@@ -1450,7 +1450,7 @@ namespace LinqToDB.Linq.Builder
 		private static int RegisterPreamblesDetached<TD>(ExpressionBuilder builder, IQueryable<TD> detailQuery)
 		{
 			var detailQueryPrepared = Query<TD>.CreateQuery(builder.OptimizationContext, builder.ParametersContext, builder.DataContext,
-				detailQuery.Expression);
+				detailQuery.Expression, detailQuery.Expression);
 
 			var idx = builder.RegisterPreamble(detailQueryPrepared,
 				static (data, dc, expr, ps) =>
@@ -1483,7 +1483,7 @@ namespace LinqToDB.Linq.Builder
 			expression     = FinalizeExpressionKeys(new HashSet<Expression>(), expression);
 
 			var detailQueryPrepared = Query<KeyDetailEnvelope<TKey, TD>>.CreateQuery(builder.OptimizationContext, builder.ParametersContext, builder.DataContext,
-				expression);
+				detailQuery.Expression, expression);
 
 			// Filler code is duplicated for the future usage with IAsyncEnumerable
 			var idx = builder.RegisterPreamble(detailQueryPrepared,

@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
 	using Common.Internal.Cache;
 	using SqlQuery;
 
@@ -40,7 +39,7 @@ namespace LinqToDB.Linq
 
 				deleteStatement.SelectQuery.From.Table(sqlTable);
 
-				var ei = new Query<int>(dataContext, null)
+				var ei = new Query<int>(dataContext)
 				{
 					Queries = { new QueryInfo { Statement = deleteStatement, } }
 				};
