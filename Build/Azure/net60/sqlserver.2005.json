@@ -1,5 +1,7 @@
 ﻿{
 	"NET60.Azure": {
+		// it's hard to setup TLS 1.1 for SQL Server and TLS 1.2+ for gRPC at the same time...
+		"DisableRemoteContext": true,
 		"Providers": [
 			"SqlServer.2005",
 			"SqlServer.2005.MS"

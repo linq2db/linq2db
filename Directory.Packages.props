@@ -4,7 +4,7 @@
 
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
-	
+
 	IMPORTANT:
 	avoid use of different package versions in tests for different frameworks just for testing purposes if package referenced by source project
 	as it will result in old package consumed by released package and affect users (especially for projects where user has no control
@@ -30,8 +30,8 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.7.0"         />
 		<!--data providers-->
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"        />
-		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.5"         />
-		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.1.1"         />
+		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.6"         />
+		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.1.4"         />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.11.0"       />
 		<!--3.21 provider currently contains bug which leads to test failures with oracle 12+-->
 		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="2.19.200"      />
@@ -47,7 +47,6 @@
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="7.0.0.200"     />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="7.0.0.200"     />
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="2.2.9"         />
-		<PackageVersion Include="Npgsql"                                                Version="7.0.6"         />
 		<PackageVersion Include="ClickHouse.Client"                                     Version="6.7.5"         />
 		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="7.0.11"        />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.1000.6"    />
@@ -120,6 +119,14 @@
 		<PackageVersion Include="System.Data.Odbc"                                      Version="7.0.0"         />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="7.0.0"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="7.0.0"         />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
+		<PackageVersion Include="Npgsql"                                                Version="8.0.0-rc.2"    />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net7.0' ">
+		<PackageVersion Include="Npgsql"                                                Version="7.0.6"         />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' AND '$(TargetFramework)' != 'netcoreapp3.1' ">

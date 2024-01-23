@@ -274,7 +274,7 @@ namespace Tests.UserTests
 			if (withDatabase) table = table.DatabaseName(dbName);
 			if (withSchema  ) table = table.SchemaName  (schemaName);
 
-			if (throws && context.Contains(".LinqService"))
+			if (throws && context.IsRemote())
 			{
 #if NETFRAMEWORK
 				Assert.ThrowsAsync<FaultException>(() => operation(db, table, schemaName, dbName, serverName));

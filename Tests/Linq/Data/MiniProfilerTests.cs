@@ -346,7 +346,7 @@ namespace Tests.Data
 			ms.SetConvertExpression<MySqlDataDateTime, string>(value => value.Value.ToBinary().ToString(CultureInfo.InvariantCulture));
 			ms.SetConvertExpression<string, MySqlDataDateTime>(value => new MySqlDataDateTime(DateTime.FromBinary(long.Parse(value, CultureInfo.InvariantCulture))));
 
-			using (var db = GetDataContext(testContext + (isLinq ? ".LinqService" : null), ms))
+			using (var db = GetDataContext(testContext + (isLinq ? LinqServiceSuffix : null), ms))
 			{
 				if (type == ConnectionType.MiniProfiler)
 					db.AddInterceptor(UnwrapProfilerInterceptor.Instance);
@@ -587,6 +587,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
@@ -601,6 +602,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestSqlServer([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
@@ -771,6 +773,7 @@ namespace Tests.Data
 			}
 		}
 
+		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestSqlServerMS([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{

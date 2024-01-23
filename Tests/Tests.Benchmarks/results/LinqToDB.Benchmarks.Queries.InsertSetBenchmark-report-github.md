@@ -1,20 +1,20 @@
-``` ini
+```
 
-BenchmarkDotNet=v0.13.5, OS=Windows 10 (10.0.17763.4010/1809/October2018Update/Redstone5), VM=Hyper-V
+BenchmarkDotNet v0.13.9+228a464e8be6c580ad9408e98f18813f6407fb5a, Windows 10 (10.0.17763.4644/1809/October2018Update/Redstone5) (Hyper-V)
 AMD Ryzen 9 5950X, 2 CPU, 32 logical and 16 physical cores
-.NET SDK=7.0.201
-  [Host]     : .NET 7.0.3 (7.0.323.6910), X64 RyuJIT AVX2
-  Job-ZOLDKB : .NET 6.0.14 (6.0.1423.7309), X64 RyuJIT AVX2
-  Job-EHWHZK : .NET 7.0.3 (7.0.323.6910), X64 RyuJIT AVX2
-  Job-LWJRKG : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
-  Job-AGOWOF : .NET Framework 4.8 (4.8.4614.0), X64 RyuJIT VectorSize=256
+.NET SDK 7.0.401
+  [Host]     : .NET 7.0.11 (7.0.1123.42427), X64 RyuJIT AVX2
+  Job-DAXXNM : .NET 6.0.22 (6.0.2223.42425), X64 RyuJIT AVX2
+  Job-SLTPYD : .NET 7.0.11 (7.0.1123.42427), X64 RyuJIT AVX2
+  Job-YOWJJJ : .NET Core 3.1.32 (CoreCLR 4.700.22.55902, CoreFX 4.700.22.56512), X64 RyuJIT AVX2
+  Job-OZLLFF : .NET Framework 4.8 (4.8.4645.0), X64 RyuJIT VectorSize=256
 
 Jit=RyuJit  Platform=X64  
 
 ```
-| Method |              Runtime |     Mean | Allocated |
+| Method | Runtime              | Mean     | Allocated |
 |------- |--------------------- |---------:|----------:|
-|   Test |             .NET 6.0 | 1.836 ms | 590.64 KB |
-|   Test |             .NET 7.0 | 1.736 ms | 587.78 KB |
-|   Test |        .NET Core 3.1 | 2.028 ms | 590.46 KB |
-|   Test | .NET Framework 4.7.2 | 2.778 ms | 931.07 KB |
+| Test   | .NET 6.0             | 1.810 ms | 594.75 KB |
+| Test   | .NET 7.0             | 1.758 ms | 592.06 KB |
+| Test   | .NET Core 3.1        | 2.286 ms | 594.77 KB |
+| Test   | .NET Framework 4.7.2 | 2.667 ms |    933 KB |
