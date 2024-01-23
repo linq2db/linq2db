@@ -1200,7 +1200,7 @@ namespace Tests.Linq
 		{
 			if (context.IsAnyOf(TestProvName.AllSQLite))
 			{
-				using var dc = (TestDataConnection)GetDataContext(context.Replace(".LinqService", string.Empty));
+				using var dc = (TestDataConnection)GetDataContext(context.StripRemote());
 				if (TestUtils.GetSqliteVersion(dc) < new Version(3, 34))
 				{
 					// SQLite Error 1: 'circular reference: cte'.

@@ -45,15 +45,7 @@ namespace LinqToDB.Linq.Builder
 			switch (expr.NodeType)
 			{
 				case ExpressionType.MemberAccess:
-				{
-					var ma = (MemberExpression)expr;
-					if (ma.Expression == null)
-						break;
-
-					if (ma.Expression.NodeType != ExpressionType.Constant)
-						return false;
-					break;
-				}
+					return CanBuildMemberChain(((MemberExpression)expr).Expression);
 				case ExpressionType.Constant:
 					if (((ConstantExpression)expr).Value is not IEnumerable)
 						return false;
@@ -63,6 +55,17 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return true;
+
+			static bool CanBuildMemberChain(Expression? expr)
+			{
+				if (expr == null)
+					return true;
+
+				if (expr.NodeType == ExpressionType.MemberAccess)
+					return CanBuildMemberChain(((MemberExpression)expr).Expression);
+
+				return expr.NodeType == ExpressionType.Constant;
+			}
 
 		}
 

@@ -6,8 +6,6 @@ using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
-
 	public class SqlColumn : IEquatable<SqlColumn>, ISqlExpression
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
@@ -174,7 +172,7 @@ namespace LinqToDB.SqlQuery
 #else
 			if (Expression is SqlField)
 			{
-				using var sb = Pools.StringBuilder.Allocate();
+				using var sb = Common.Internal.Pools.StringBuilder.Allocate();
 				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
 			}
 

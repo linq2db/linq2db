@@ -13,6 +13,7 @@ namespace Tests.Tools
 
 	public class TestSettings
 	{
+		public bool?                               DisableRemoteContext { get; set; }
 		public string?                             BasedOn              { get; set; }
 		public string?                             BaselinesPath        { get; set; }
 		public string[]?                           Providers            { get; set; }

@@ -91,7 +91,7 @@ namespace LinqToDB.Tools.EntityServices
 					_mapper = v =>
 					{
 						var e = entityDesc.TypeAccessor.CreateInstanceEx();
-						_keyColumns![0].Setter!(e, v);
+						_keyColumns![0].SetValue(e, v);
 						return (T)e;
 					};
 				}

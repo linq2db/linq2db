@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.Access
 						{
 							switch (sc.Conditions[0].Predicate)
 							{
-								case SqlPredicate.FuncLike p when p.Function.Name == "EXISTS":
+								case SqlPredicate.FuncLike { Function.Name: "EXISTS" } :
 									BuildAnyAsCount(selectQuery);
 									return;
 								case SqlPredicate.InSubQuery:
@@ -230,7 +230,24 @@ namespace LinqToDB.DataProvider.Access
 				case "Convert"   :
 					switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
 					{
-						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr",  func.Parameters[1]); break;
+						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr" , func.Parameters[1]); break;
+						case TypeCode.Boolean  :
+						{
+							var newFunc = new SqlFunction(func.SystemType, "CBool", func.Parameters[1]);
+							if (func.Parameters[1].CanBeNull)
+							{
+								var isNull = new SqlSearchCondition();
+								isNull.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[1], false)));
+
+								newFunc = new SqlFunction(func.SystemType, "CASE", false, true, isNull, new SqlValue(func.SystemType, null), newFunc)
+								{
+									CanBeNull = true
+								};
+							}
+
+							func = newFunc;
+							break;
+						}
 						case TypeCode.DateTime :
 							if (IsDateDataType(func.Parameters[0], "Date"))
 								func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
