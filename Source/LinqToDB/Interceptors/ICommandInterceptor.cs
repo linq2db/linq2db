@@ -16,7 +16,7 @@ namespace LinqToDB.Interceptors
 		/// <param name="eventData">Additional data for event.</param>
 		/// <param name="command">Initialized command instance.</param>
 		/// <returns>Returns command instance for execution.</returns>
-		DbCommand CommandInitialized(CommandEventData eventData, DbCommand command);
+		DbCommand                  CommandInitialized  (CommandEventData eventData, DbCommand command);
 
 		/// <summary>
 		/// Event, triggered before command execution using <see cref="DbCommand.ExecuteScalar"/> method.

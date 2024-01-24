@@ -23,10 +23,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Remote\Wcf\Client
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Host", "Remote\Wcf\Host\Host.csproj", "{F6BF5912-40EA-4EA0-BEAA-5FCC5BCEDE8F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{64E5C3A3-6945-4422-91EC-0821E4D76D19}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".root", ".root", "{64E5C3A3-6945-4422-91EC-0821E4D76D19}"
 	ProjectSection(SolutionItems) = preProject
 		Compile.cmd = Compile.cmd
 		Directory.Build.props = Directory.Build.props
+		..\Directory.Packages.props = ..\Directory.Packages.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Source", "Source", "{03B313B1-C785-4FC9-A3C7-DE58295B7D20}"
@@ -36,6 +37,17 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Grpc", "..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj", "{FAD195CA-B6D8-4F15-B629-0BECA0245623}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Remote.Wcf", "..\Source\LinqToDB.Remote.Wcf\LinqToDB.Remote.Wcf.csproj", "{4899DD08-E70C-4EAF-84F4-44D6EA80C567}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Metrics", "Metrics", "{F97CFE3B-CAF6-468C-8ECB-BEBAF7738D28}"
+	ProjectSection(SolutionItems) = preProject
+		Metrics\README.md = Metrics\README.md
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tools", "Metrics\Tools\Tools.csproj", "{8E19CD88-696F-42F0-8DAF-69D4FE502758}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.Tools", "..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj", "{DC97914F-B88A-49B6-BCA9-2320704F1467}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OpenTelemetryExample", "Metrics\OpenTelemetry\OpenTelemetryExample.csproj", "{067C3148-8524-4A43-A0CF-A5FE7BF68490}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +83,18 @@ Global
 		{4899DD08-E70C-4EAF-84F4-44D6EA80C567}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4899DD08-E70C-4EAF-84F4-44D6EA80C567}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4899DD08-E70C-4EAF-84F4-44D6EA80C567}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E19CD88-696F-42F0-8DAF-69D4FE502758}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E19CD88-696F-42F0-8DAF-69D4FE502758}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E19CD88-696F-42F0-8DAF-69D4FE502758}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E19CD88-696F-42F0-8DAF-69D4FE502758}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC97914F-B88A-49B6-BCA9-2320704F1467}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC97914F-B88A-49B6-BCA9-2320704F1467}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC97914F-B88A-49B6-BCA9-2320704F1467}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC97914F-B88A-49B6-BCA9-2320704F1467}.Release|Any CPU.Build.0 = Release|Any CPU
+		{067C3148-8524-4A43-A0CF-A5FE7BF68490}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{067C3148-8524-4A43-A0CF-A5FE7BF68490}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{067C3148-8524-4A43-A0CF-A5FE7BF68490}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{067C3148-8524-4A43-A0CF-A5FE7BF68490}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -85,6 +109,9 @@ Global
 		{875876C6-D790-4BA7-893C-5181977864A2} = {03B313B1-C785-4FC9-A3C7-DE58295B7D20}
 		{FAD195CA-B6D8-4F15-B629-0BECA0245623} = {03B313B1-C785-4FC9-A3C7-DE58295B7D20}
 		{4899DD08-E70C-4EAF-84F4-44D6EA80C567} = {03B313B1-C785-4FC9-A3C7-DE58295B7D20}
+		{8E19CD88-696F-42F0-8DAF-69D4FE502758} = {F97CFE3B-CAF6-468C-8ECB-BEBAF7738D28}
+		{DC97914F-B88A-49B6-BCA9-2320704F1467} = {03B313B1-C785-4FC9-A3C7-DE58295B7D20}
+		{067C3148-8524-4A43-A0CF-A5FE7BF68490} = {F97CFE3B-CAF6-468C-8ECB-BEBAF7738D28}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A26E409B-1097-4260-A7B2-9C8F09E0635D}
