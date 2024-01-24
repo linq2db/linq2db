@@ -519,7 +519,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(true)))
+			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(false)))
 			{
 				var param = 2;
 				var query =
@@ -536,7 +536,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderByConstant2([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(true)))
+			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(false)))
 			{
 				var param = 2;
 				var query =
@@ -553,7 +553,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderByImmutableSubquery([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(true)))
+			using (var db = (TestDataConnection)GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(false)))
 			{
 				var param = 2;
 
@@ -632,9 +632,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void IgnoreConstantExpressionInOrderByTest([DataSources(ProviderName.SqlCe)] string context, [Values] bool ignoreConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
-			using var db  = GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(ignoreConstantExpressionInOrderBy));
+			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
 			var q =
 			(
@@ -649,13 +649,13 @@ namespace Tests.Linq
 			)
 			.ToList();
 
-			Assert.That(q[0].ID, Is.EqualTo(ignoreConstantExpressionInOrderBy ? 3 : 1));
+			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
 		}
 
 		[Test]
-		public void IgnoreConstantExpressionInOrderByTest2([DataSources(ProviderName.SqlCe)] string context, [Values] bool ignoreConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest2([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
-			using var db  = GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(ignoreConstantExpressionInOrderBy));
+			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
 			var q =
 			(
@@ -670,13 +670,13 @@ namespace Tests.Linq
 			)
 			.ToList();
 
-			Assert.That(q[0].ID, Is.EqualTo(ignoreConstantExpressionInOrderBy ? 1 : 3));
+			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 3 : 1));
 		}
 
 		[Test]
-		public void IgnoreConstantExpressionInOrderByTest3([DataSources(ProviderName.SqlCe)] string context, [Values] bool ignoreConstantExpressionInOrderBy)
+		public void EnableConstantExpressionInOrderByTest3([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
 		{
-			using var db  = GetDataContext(context, o => o.UseIgnoreConstantExpressionInOrderBy(ignoreConstantExpressionInOrderBy));
+			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
 
 			var q =
 			(
@@ -687,7 +687,7 @@ namespace Tests.Linq
 			)
 			.ToList();
 
-			Assert.That(q[0].ID, Is.EqualTo(ignoreConstantExpressionInOrderBy ? 3 : 1));
+			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
 		}
 	}
 }

@@ -5,9 +5,9 @@ namespace LinqToDB
 	using Common;
 	using Common.Internal;
 
-	/// <param name="IgnoreConstantExpressionInOrderBy">
-	/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-	/// Default value: <c>true</c>.
+	/// <param name="EnableConstantExpressionInOrderBy">
+	/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
+	/// Default value: <c>false</c>.
 	/// </param>
 	/// <param name="GenerateFinalAliases">
 	/// Indicates whether SQL Builder should generate aliases for final projection.
@@ -42,19 +42,18 @@ namespace LinqToDB
 	/// </param>
 	public sealed record SqlOptions
 	(
-		bool IgnoreConstantExpressionInOrderBy = true,
+		bool EnableConstantExpressionInOrderBy = false,
 		bool GenerateFinalAliases              = false
-
 	)
 		: IOptionSet
 	{
-		public SqlOptions() : this(true)
+		public SqlOptions() : this(false)
 		{
 		}
 
 		SqlOptions(SqlOptions original)
 		{
-			IgnoreConstantExpressionInOrderBy = original.IgnoreConstantExpressionInOrderBy;
+			EnableConstantExpressionInOrderBy = original.EnableConstantExpressionInOrderBy;
 			GenerateFinalAliases              = original.GenerateFinalAliases;
 		}
 
@@ -67,13 +66,27 @@ namespace LinqToDB
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
-						.Add(IgnoreConstantExpressionInOrderBy)
+						.Add(EnableConstantExpressionInOrderBy)
 						.Add(GenerateFinalAliases)
 						.CreateID();
 				}
 
 				return _configurationID.Value;
 			}
+		}
+
+		public int Pack()
+		{
+			return
+				(EnableConstantExpressionInOrderBy ? 0b01 : 0b00) |
+				(GenerateFinalAliases              ? 0b10 : 0b00);
+		}
+
+		public SqlOptions Unpack(int n)
+		{
+			return new SqlOptions(
+				EnableConstantExpressionInOrderBy : (n & 0b01) != 0,
+				GenerateFinalAliases              : (n & 0b10) != 0);
 		}
 
 		#region IEquatable implementation

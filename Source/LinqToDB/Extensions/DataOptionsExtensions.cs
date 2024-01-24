@@ -1522,12 +1522,12 @@ namespace LinqToDB
 		#region SqlOptions
 
 		/// <summary>
-		/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-		/// Default value: <c>true</c>.
+		/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
+		/// Default value: <c>false</c>.
 		/// </summary>
-		public static SqlOptions WithIgnoreConstantExpressionInOrderBy(this SqlOptions options, bool ignoreConstantExpressionInOrderBy)
+		public static SqlOptions WithEnableConstantExpressionInOrderBy(this SqlOptions options, bool enableConstantExpressionInOrderBy)
 		{
-			return options with { IgnoreConstantExpressionInOrderBy = ignoreConstantExpressionInOrderBy };
+			return options with { EnableConstantExpressionInOrderBy = enableConstantExpressionInOrderBy };
 		}
 
 		/// <summary>
@@ -1571,12 +1571,12 @@ namespace LinqToDB
 		#region DataOptions.SqlOptions
 
 		/// <summary>
-		/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-		/// Default value: <c>true</c>.
+		/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
+		/// Default value: <c>false</c>.
 		/// </summary>
-		public static DataOptions UseIgnoreConstantExpressionInOrderBy(this DataOptions options, bool ignoreConstantExpressionInOrderBy)
+		public static DataOptions UseEnableConstantExpressionInOrderBy(this DataOptions options, bool enableConstantExpressionInOrderBy)
 		{
-			return options.WithOptions<SqlOptions>(o => o with { IgnoreConstantExpressionInOrderBy = ignoreConstantExpressionInOrderBy });
+			return options.WithOptions<SqlOptions>(o => o with { EnableConstantExpressionInOrderBy = enableConstantExpressionInOrderBy });
 		}
 
 		/// <summary>

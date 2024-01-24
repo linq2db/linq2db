@@ -672,13 +672,13 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// If <c>true</c>, linq2db will ignore any constant expressions in ORDER BY clause.
-			/// Default value: <c>true</c>.
+			/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
+			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool IgnoreConstantExpressionInOrderBy
+			public static bool EnableConstantExpressionInOrderBy
 			{
-				get => Options.IgnoreConstantExpressionInOrderBy;
-				set => Options = Options with { IgnoreConstantExpressionInOrderBy = value };
+				get => Options.EnableConstantExpressionInOrderBy;
+				set => Options = Options with { EnableConstantExpressionInOrderBy = value };
 			}
 		}
 	}
