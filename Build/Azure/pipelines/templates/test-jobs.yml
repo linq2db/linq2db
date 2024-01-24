@@ -133,6 +133,7 @@ jobs:
 - job: test_windows_job
   pool:
     vmImage: 'windows-2022'
+
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}

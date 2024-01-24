@@ -138,4 +138,10 @@
 		<PackageVersion Include="MySql.Data"                                            Version="8.1.0"         />
 	</ItemGroup>
 
+	<!-- examples -->
+	<ItemGroup>
+		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="7.0.13"        />
+		<PackageVersion Include="OpenTelemetry"                                         Version="1.6.0"         />
+		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.6.0"         />
+	</ItemGroup>
 </Project>

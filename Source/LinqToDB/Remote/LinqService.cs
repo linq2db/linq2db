@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.Tools;
 
 namespace LinqToDB.Remote
 {
@@ -344,7 +347,17 @@ namespace LinqToDB.Remote
 
 		private LinqServiceResult ProcessDataReaderWrapper(LinqServiceQuery query, DataConnection db, DataReaderWrapper rd)
 		{
-			var reader = ((IDataContext)db).UnwrapDataObjectInterceptor?.UnwrapDataReader(db, rd.DataReader!) ?? rd.DataReader!;
+			DbDataReader reader;
+
+			if (((IDataContext)db).UnwrapDataObjectInterceptor is {} interceptor)
+			{
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+					reader = interceptor.UnwrapDataReader(db, rd.DataReader!);
+			}
+			else
+			{
+				reader = rd.DataReader!;
+			}
 
 			var ret = new LinqServiceResult
 			{
