@@ -156,9 +156,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var memberInfo in memberPath)
 			{
-				var declaringType = memberInfo.MemberInfo.DeclaringType;
-
-				if (result.Type != declaringType && (declaringType == null || !result.Type.IsSubclassOf(declaringType)))
+				if (memberInfo.MemberInfo.DeclaringType?.IsSameOrParentOf(result.Type) == false)
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
@@ -185,10 +183,11 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression? ConstructMemberPath(IEnumerable<MemberInfo> memberPath, Expression ob, bool throwOnError)
 		{
-			Expression result = ob;
+			var result = ob;
+
 			foreach (var memberInfo in memberPath)
 			{
-				if (!memberInfo.DeclaringType!.IsSameOrParentOf(result.Type))
+				if (memberInfo.DeclaringType?.IsSameOrParentOf(result.Type) == false)
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.Name}.");
