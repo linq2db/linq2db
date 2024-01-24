@@ -152,15 +152,19 @@ namespace LinqToDB.Linq.Builder
 
 		static Expression? ConstructMemberPath(IEnumerable<AccessorMember> memberPath, Expression ob, bool throwOnError)
 		{
-			Expression result = ob;
+			var result = ob;
+
 			foreach (var memberInfo in memberPath)
 			{
-				if (result.Type != memberInfo.MemberInfo.DeclaringType)
+				var declaringType = memberInfo.MemberInfo.DeclaringType;
+
+				if (result.Type != declaringType && (declaringType == null || !result.Type.IsSubclassOf(declaringType)))
 				{
 					if (throwOnError)
 						throw new LinqToDBException($"Type {result.Type.Name} does not have member {memberInfo.MemberInfo.Name}.");
 					return null;
 				}
+
 				if (memberInfo.MemberInfo.IsMethodEx())
 				{
 					var methodInfo = (MethodInfo)memberInfo.MemberInfo;
@@ -850,7 +854,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					masterKeys.AddRange(ExtractKeys(extractContext, masterParam));
 				}
-				
+
 				var desiredType = association.GetAssociationDesiredAssignmentType(associationMember.MemberInfo, parentType, objectType);
 				ExtractNotSupportedPart(mappingSchema, detailQuery, desiredType, out detailQuery, out finalExpression, out replaceParam);
 
