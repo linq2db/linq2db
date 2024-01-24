@@ -1,5 +1,5 @@
-﻿using System.Data.Common;
-using LinqToDB.Async;
+﻿using System;
+using System.Data.Common;
 
 namespace LinqToDB.Data
 {

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data.Common;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.DataProvider
 {
 	using Common.Internal.Cache;
@@ -59,9 +61,20 @@ namespace LinqToDB.DataProvider
 					_                    => throw new InvalidOperationException()
 				};
 
-				options.ConnectionInterceptor?.ConnectionOpening(new(null), cn);
-				cn.Open();
-				options.ConnectionInterceptor?.ConnectionOpened(new(null), cn);
+				if (options.ConnectionInterceptor == null)
+				{
+					cn.Open();
+				}
+				else
+				{
+					using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+						options.ConnectionInterceptor.ConnectionOpening(new(null), cn);
+
+					cn.Open();
+
+					using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+						options.ConnectionInterceptor.ConnectionOpened(new(null), cn);
+				}
 
 				return DetectServerVersion(conn);
 			});

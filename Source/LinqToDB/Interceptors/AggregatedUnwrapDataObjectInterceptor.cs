@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Data.Common;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Interceptors
 {
 	sealed class AggregatedUnwrapDataObjectInterceptor : AggregatedInterceptor<IUnwrapDataObjectInterceptor>, IUnwrapDataObjectInterceptor
@@ -15,7 +17,8 @@ namespace LinqToDB.Interceptors
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					connection = interceptor.UnwrapConnection(dataContext, connection);
+					using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapConnection))
+						connection = interceptor.UnwrapConnection(dataContext, connection);
 				return connection;
 			});
 		}
@@ -25,7 +28,8 @@ namespace LinqToDB.Interceptors
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					transaction = interceptor.UnwrapTransaction(dataContext, transaction);
+					using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapTransaction))
+						transaction = interceptor.UnwrapTransaction(dataContext, transaction);
 				return transaction;
 			});
 		}
@@ -35,7 +39,8 @@ namespace LinqToDB.Interceptors
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					command = interceptor.UnwrapCommand(dataContext, command);
+					using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapCommand))
+						command = interceptor.UnwrapCommand(dataContext, command);
 				return command;
 			});
 		}
@@ -45,7 +50,8 @@ namespace LinqToDB.Interceptors
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					dataReader = interceptor.UnwrapDataReader(dataContext, dataReader);
+					using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
+						dataReader = interceptor.UnwrapDataReader(dataContext, dataReader);
 				return dataReader;
 			});
 		}

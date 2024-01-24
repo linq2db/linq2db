@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -374,5 +375,16 @@ namespace LinqToDB
 
 		#endregion
 
+#if NATIVE_ASYNC
+		internal static ConfiguredAsyncDisposable ConfigureForUsing(this IAsyncDisposable asyncDisposable)
+		{
+			return asyncDisposable.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+#else
+		internal static IAsyncDisposable ConfigureForUsing(this IAsyncDisposable asyncDisposable)
+		{
+			return asyncDisposable;
+		}
+#endif
 	}
 }
