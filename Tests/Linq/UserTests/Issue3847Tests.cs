@@ -35,6 +35,11 @@ namespace Tests.UserTests.Test3847
 				{
 					var _lastCheck = new Dictionary<Guid, DateTime>();
 					var _nextCheck = new Dictionary<Guid, DateTime>();
+					_lastCheck.Add(Guid.NewGuid(), DateTime.UtcNow);
+					_lastCheck.Add(Guid.NewGuid(), DateTime.UtcNow);
+					_lastCheck.Add(Guid.NewGuid(), DateTime.UtcNow);
+					_nextCheck.Add(Guid.NewGuid(), DateTime.UtcNow);
+					_nextCheck.Add(Guid.NewGuid(), DateTime.UtcNow);
 					IQueryable<KeyValuePair<Guid, DateTime>> lastcheckquery = _lastCheck.AsQueryable();
 					IQueryable<KeyValuePair<Guid, DateTime>> nextcheckquery = _nextCheck.AsQueryable();
 
