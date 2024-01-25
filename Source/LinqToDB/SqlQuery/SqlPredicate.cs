@@ -615,13 +615,11 @@ namespace LinqToDB.SqlQuery
 
 				var predicate = new ExprExpr(Expr1, Operator.Equal, IsNot ? FalseValue : TrueValue, null);
 
-				// #4217 fix.
-				//if (WithNull != true || !Expr1.ShouldCheckForNull())
-				if (WithNull == null || !Expr1.ShouldCheckForNull())
+				if (WithNull != true || !Expr1.ShouldCheckForNull())
 					return predicate;
 
 				var search = new SqlSearchCondition();
-				search.Conditions.Add(new SqlCondition(false, predicate, WithNull.Value));
+				search.Conditions.Add(new SqlCondition(false, predicate,                          WithNull.Value));
 				search.Conditions.Add(new SqlCondition(false, new IsNull(Expr1, !WithNull.Value), WithNull.Value));
 				return search;
 			}
