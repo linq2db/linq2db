@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using JetBrains.Annotations;
+
 namespace LinqToDB
 {
 	using Common;
@@ -42,6 +44,7 @@ namespace LinqToDB
 			return Clone();
 		}
 
+		[Pure]
 		public override DataOptions WithOptions(IOptionSet options)
 		{
 			switch (options)
@@ -90,6 +93,7 @@ namespace LinqToDB
 			}
 		}
 
+		[Pure]
 		public override TSet? Find<TSet>()
 			where TSet : class
 		{
