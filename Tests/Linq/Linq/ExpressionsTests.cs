@@ -510,7 +510,6 @@ namespace Tests.Linq
 		[Test]
 		public void ToLowerInvariantTest([DataSources] string context)
 		{
-#pragma warning disable CA1311 // Specify a culture or use an invariant version
 			Expressions.MapMember((string s) => s.ToLowerInvariant(), s => s.ToLower());
 
 			using (var db = GetDataContext(context))
@@ -518,7 +517,6 @@ namespace Tests.Linq
 				AreEqual(
 					   Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()),
 					db.Doctor.Where(p => p.Taxonomy.ToLowerInvariant() == "psychiatry").Select(p => p.Taxonomy.ToLower()));
-#pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
 		}
 

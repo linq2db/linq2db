@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 
 using LinqToDB;
@@ -14,9 +15,6 @@ using NUnit.Framework;
 
 namespace Tests.SchemaProvider
 {
-	using System.Net;
-	using Model;
-
 	[TestFixture]
 	public class PostgreSQLTests : TestBase
 	{
@@ -89,7 +87,11 @@ namespace Tests.SchemaProvider
 							new ColumnSchema { ColumnName = "circleDataType",      ColumnType = "circle",                          MemberName = "circleDataType",      MemberType = "NpgsqlCircle?",               SystemType = typeof(NpgsqlCircle),               ProviderSpecificType = "NpgsqlCircle",   IsNullable = true, DataType = DataType.Udt            },
 							new ColumnSchema { ColumnName = "lineDataType",        ColumnType = "line",                            MemberName = "lineDataType",        MemberType = "NpgsqlLine?",                 SystemType = typeof(NpgsqlLine),                 ProviderSpecificType = "NpgsqlLine",     IsNullable = true, DataType = DataType.Udt            },
 							new ColumnSchema { ColumnName = "inetDataType",        ColumnType = "inet",                            MemberName = "inetDataType",        MemberType = "IPAddress",                   SystemType = typeof(IPAddress),                  ProviderSpecificType = "NpgsqlInet",     IsNullable = true, DataType = DataType.Udt            },
+#if NET7_0_OR_GREATER
+							new ColumnSchema { ColumnName = "cidrDataType",        ColumnType = "cidr",                            MemberName = "cidrDataType",        MemberType = "ValueTuple<IPAddress, byte>?", SystemType = typeof(ValueTuple<IPAddress, byte>), ProviderSpecificType = "NpgsqlCidr",   IsNullable = true, DataType = DataType.Udt            },
+#else
 							new ColumnSchema { ColumnName = "cidrDataType",        ColumnType = "cidr",                            MemberName = "cidrDataType",        MemberType = "ValueTuple<IPAddress, int>?", SystemType = typeof(ValueTuple<IPAddress, int>), ProviderSpecificType = "NpgsqlInet",     IsNullable = true, DataType = DataType.Udt            },
+#endif
 							new ColumnSchema { ColumnName = "macaddrDataType",     ColumnType = "macaddr",                         MemberName = "macaddrDataType",     MemberType = "PhysicalAddress",             SystemType = typeof(PhysicalAddress),                                         IsNullable = true, DataType = DataType.Udt            },
 							new ColumnSchema { ColumnName = "macaddr8DataType",    ColumnType = "macaddr8",                        MemberName = "macaddr8DataType",    MemberType = "PhysicalAddress",             SystemType = typeof(PhysicalAddress),                                         IsNullable = true, DataType = DataType.Udt            },
 							new ColumnSchema { ColumnName = "jsonDataType",        ColumnType = "json",                            MemberName = "jsonDataType",        MemberType = "string",                      SystemType = typeof(string),                                                  IsNullable = true, DataType = DataType.Json           },

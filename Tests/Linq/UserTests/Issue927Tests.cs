@@ -12,7 +12,9 @@ namespace Tests.UserTests
 		[Test, Theory]
 		public void ExternalConnectionDisposing(bool dispose)
 		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			var connection = new TestNoopConnection("");
+#pragma warning restore CA2000 // Dispose objects before losing scope
 			Assert.AreEqual(ConnectionState.Closed, connection.State);
 
 			using (var db = new DataConnection(new TestNoopProvider(), connection, dispose))
@@ -44,7 +46,9 @@ namespace Tests.UserTests
 		[Test]
 		public void ExternalConnectionNotClosed()
 		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			var connection = new TestNoopConnection("");
+#pragma warning restore CA2000 // Dispose objects before losing scope
 			connection.Open();
 
 			Assert.AreEqual(ConnectionState.Open, connection.State);
@@ -62,7 +66,9 @@ namespace Tests.UserTests
 		[Test]
 		public void CloneConnectionDisposed()
 		{
+#pragma warning disable CA2000 // Dispose objects before losing scope
 			var connection = new TestNoopConnection("");
+#pragma warning restore CA2000 // Dispose objects before losing scope
 			connection.Open();
 
 			Assert.AreEqual(ConnectionState.Open, connection.State);

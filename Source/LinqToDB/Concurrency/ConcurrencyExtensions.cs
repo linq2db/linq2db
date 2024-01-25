@@ -27,7 +27,7 @@ namespace LinqToDB.Concurrency
 			{
 				var equality = Expression.Equal(
 					Expression.MakeMemberAccess(param, cd.MemberInfo),
-					cd.MemberAccessor.GetterExpression.GetBody(instance));
+					cd.MemberAccessor.GetGetterExpression(instance));
 
 				predicate = predicate == null ? equality : Expression.AndAlso(predicate, equality);
 			}
@@ -94,13 +94,13 @@ namespace LinqToDB.Concurrency
 				LambdaExpression? valueExpression;
 				if (concurrencyAttribute != null)
 				{
-					valueExpression = concurrencyAttribute?.GetNextValue(cd, param);
+					valueExpression = concurrencyAttribute.GetNextValue(cd, param);
 
 					if (valueExpression == null)
 						continue;
 				}
 				else
-					valueExpression = Expression.Lambda(cd.MemberAccessor.GetterExpression.GetBody(instance), param);
+					valueExpression = Expression.Lambda(cd.MemberAccessor.GetGetterExpression(instance), param);
 
 				updatable = (IUpdatable<T>)updateMethod.Invoke(null, new object[] { updatable, propExpression, valueExpression })!;
 			}

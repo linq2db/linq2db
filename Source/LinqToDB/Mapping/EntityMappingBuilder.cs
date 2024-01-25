@@ -325,7 +325,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		/// <param name="func">Primary key getter expression.</param>
 		/// <param name="order">Primary key field order.
-		/// When multiple fields specified by getter expression, fields will be ordered from first menthioned
+		/// When multiple fields specified by getter expression, fields will be ordered from first mentioned
 		/// field to last one starting from provided order with step <c>1</c>.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>
 		public EntityMappingBuilder<TEntity> HasPrimaryKey<TProperty>(Expression<Func<TEntity,TProperty>> func, int order = -1)
@@ -340,7 +340,7 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Adds identity column mappping to current entity.
+		/// Adds identity column mapping to current entity.
 		/// </summary>
 		/// <param name="func">Identity field getter expression.</param>
 		/// <returns>Returns current fluent entity mapping builder.</returns>

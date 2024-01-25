@@ -47,7 +47,7 @@ namespace Tests.xUpdate
 			{
 				TestProvName.AllSybase,
 				TestProvName.AllSqlServer2008Plus,
-				ProviderName.PostgreSQL15,
+				TestProvName.AllPostgreSQL15Plus,
 			}.SelectMany(_ => _.Split(',')).ToArray();
 
 			public IdentityInsertMergeDataContextSourceAttribute(params string[] except)

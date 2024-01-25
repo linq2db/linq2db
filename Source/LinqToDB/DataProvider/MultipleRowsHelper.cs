@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider
 {
 	using Data;
+	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Extensions;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
 		where T : notnull
@@ -27,25 +27,27 @@ namespace LinqToDB.DataProvider
 	{
 		protected MultipleRowsHelper(IDataContext dataConnection, DataOptions options, Type entityType)
 		{
-			DataConnection = dataConnection is DataConnection dc
+			OriginalContext = dataConnection;
+			DataConnection  = dataConnection is DataConnection dc
 				? dc
 				: dataConnection is DataContext dx
 					? dx.GetDataConnection()
 					: throw new ArgumentException($"Must be of {nameof(DataConnection)} or {nameof(DataContext)} type but was {dataConnection.GetType()}", nameof(dataConnection));
 
-			MappingSchema  = dataConnection.MappingSchema;
-			Options        = options;
-			SqlBuilder     = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema, DataConnection.Options);
-			Descriptor     = MappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
-			Columns        = Descriptor.Columns
+			MappingSchema   = dataConnection.MappingSchema;
+			Options         = options;
+			SqlBuilder      = DataConnection.DataProvider.CreateSqlBuilder(MappingSchema, DataConnection.Options);
+			Descriptor      = MappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
+			Columns         = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.BulkCopyOptions.KeepIdentity == true)
 				.ToArray();
-			ColumnTypes    = Columns.Select(c => new SqlDataType(c)).ToArray();
-			ParameterName  = "p";
-			BatchSize      = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
+			ColumnTypes     = Columns.Select(c => new SqlDataType(c)).ToArray();
+			ParameterName   = "p";
+			BatchSize       = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
 		}
 
 		public readonly ISqlBuilder         SqlBuilder;
+		public readonly IDataContext        OriginalContext;
 		public readonly DataConnection      DataConnection;
 		public readonly MappingSchema       MappingSchema;
 		public readonly DataOptions         Options;
@@ -65,6 +67,8 @@ namespace LinqToDB.DataProvider
 		public int BatchSize;
 		public int LastRowStringIndex;
 		public int LastRowParameterIndex;
+
+		public bool SuppressCloseAfterUse { get; set; }
 
 		public void SetHeader()
 		{

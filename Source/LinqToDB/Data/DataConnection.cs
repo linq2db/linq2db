@@ -17,6 +17,8 @@ namespace LinqToDB.Data
 	using Expressions;
 	using Mapping;
 	using RetryPolicy;
+	using Tools;
+
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
@@ -484,6 +486,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		static void OnTraceInternal(TraceInfo info)
 		{
+			using var m = ActivityService.Start(ActivityID.OnTraceInternal);
+
 			var dc = info.DataConnection;
 
 			switch (info.TraceInfoStep)
@@ -633,7 +637,7 @@ namespace LinqToDB.Data
 		/// Defaults to <see cref="WriteTraceLine"/>.
 		/// Used for the current instance.
 		/// </summary>
-		public Action<string?,string?,TraceLevel> WriteTraceLineConnection { get; private set; } = WriteTraceLine;
+		public Action<string?, string?, TraceLevel> WriteTraceLineConnection { get; protected set; } = WriteTraceLine;
 
 		#endregion
 
@@ -659,6 +663,7 @@ namespace LinqToDB.Data
 				if (_connection == null)
 				{
 					DbConnection connection;
+
 					if (_connectionFactory != null)
 						connection = _connectionFactory(Options);
 					else
@@ -674,12 +679,16 @@ namespace LinqToDB.Data
 
 				if (connect && _connection.State == ConnectionState.Closed)
 				{
-					_connectionInterceptor?.ConnectionOpening(new(this), _connection.Connection);
+					if (_connectionInterceptor != null)
+						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+							_connectionInterceptor.ConnectionOpening(new(this), _connection.Connection);
 
 					_connection.Open();
 					_closeConnection = true;
 
-					_connectionInterceptor?.ConnectionOpened(new(this), _connection.Connection);
+					if (_connectionInterceptor != null)
+						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+							_connectionInterceptor.ConnectionOpened(new(this), _connection.Connection);
 				}
 			}
 			catch (Exception ex)
@@ -706,7 +715,9 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void Close()
 		{
-			_dataContextInterceptor?.OnClosing(new (this));
+			if (_dataContextInterceptor != null)
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
+					_dataContextInterceptor.OnClosing(new(this));
 
 			DisposeCommand();
 
@@ -727,14 +738,18 @@ namespace LinqToDB.Data
 					_connection.Close();
 			}
 
-			_dataContextInterceptor?.OnClosed(new (this));
+			if (_dataContextInterceptor != null)
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosed))
+					_dataContextInterceptor.OnClosed(new (this));
 		}
 
 		#endregion
 
 		#region Command
 
+#pragma warning disable CA2213 // Disposable fields should be disposed : disposed using Close[Async] call from Dispose[Async]
 		private DbCommand? _command;
+#pragma warning restore CA2213 // Disposable fields should be disposed
 
 		/// <summary>
 		/// Gets current command instance if it exists or <c>null</c> otherwise.
@@ -765,7 +780,8 @@ namespace LinqToDB.Data
 		internal void CommitCommandInit()
 		{
 			if (_commandInterceptor != null)
-				_command = _commandInterceptor.CommandInitialized(new (this), _command!);
+				using (ActivityService.Start(ActivityID.CommandInterceptorCommandInitialized))
+					_command = _commandInterceptor.CommandInitialized(new (this), _command!);
 
 			LastQuery = _command!.CommandText;
 		}
@@ -786,6 +802,8 @@ namespace LinqToDB.Data
 				{
 					// to reset to default timeout we dispose command because as command has no reset timeout API
 					_commandTimeout = null;
+					// TODO: that's not good - user is not aware that he can trigger blocking operation
+					// we should postpone disposal till command used (or redesign CommandTimeout to methods)
 					DisposeCommand();
 				}
 				else
@@ -830,13 +848,20 @@ namespace LinqToDB.Data
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
 			if (_commandInterceptor == null)
-				return command.ExecuteNonQuery();
+				using(ActivityService.Start(ActivityID.CommandExecuteNonQuery))
+					return command.ExecuteNonQuery();
 
-			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+			Option<int> result;
 
-			return result.HasValue
-				? result.Value
-				: command.ExecuteNonQuery();
+			using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
+				result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+
+			if (result.HasValue)
+				return result.Value;
+
+			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQuery);
+
+			return command.ExecuteNonQuery();
 		}
 
 		internal int ExecuteNonQuery()
@@ -901,8 +926,10 @@ namespace LinqToDB.Data
 			if (_commandInterceptor == null)
 				return customExecute(command);
 
-			// remove?
-			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+			Option<int> result;
+
+			using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
+				result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
 
 			return result.HasValue
 				? result.Value
@@ -975,11 +1002,15 @@ namespace LinqToDB.Data
 			var result = Option<object?>.None;
 
 			if (_commandInterceptor != null)
-				result = _commandInterceptor.ExecuteScalar(new (this), command, result);
+				using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
+					result = _commandInterceptor.ExecuteScalar(new (this), command, result);
 
-			return result.HasValue
-				? result.Value
-				: command.ExecuteScalar();
+			if (result.HasValue)
+				return result.Value;
+
+			using var m = ActivityService.Start(ActivityID.CommandExecuteScalar);
+
+			return command.ExecuteScalar();
 		}
 
 		object? ExecuteScalar()
@@ -1047,14 +1078,24 @@ namespace LinqToDB.Data
 			var result = Option<DbDataReader>.None;
 
 			if (_commandInterceptor != null)
-				result = _commandInterceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
+				using (ActivityService.Start(ActivityID.CommandInterceptorExecuteReader))
+					result = _commandInterceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
 
-			var rd = result.HasValue
-				? result.Value
-				: _command!.ExecuteReader(commandBehavior);
+			DbDataReader? rd;
+
+			if (result.HasValue)
+			{
+				rd = result.Value;
+			}
+			else
+			{
+				using var m = ActivityService.Start(ActivityID.CommandExecuteReader);
+				rd = _command!.ExecuteReader(commandBehavior);
+			}
 
 			if (_commandInterceptor != null)
-				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
+				using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
+					_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
 
 			var wrapper = new DataReaderWrapper(this, rd, _command!);
 

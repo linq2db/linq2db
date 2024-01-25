@@ -2,16 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Reflection;
-	using System.Data.Common;
 
 	sealed class SelectBuilder : MethodCallBuilder
 	{
@@ -88,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 					Builder.BuildBlock(expr), new []
 					{
 						ExpressionBuilder.QueryRunnerParam,
-						ExpressionBuilder.DataContextParam,
+						ExpressionConstants.DataContextParam,
 						ExpressionBuilder.DataReaderParam,
 						ExpressionBuilder.ExpressionParam,
 						ExpressionBuilder.ParametersParam,

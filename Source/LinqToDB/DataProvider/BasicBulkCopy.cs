@@ -380,9 +380,17 @@ namespace LinqToDB.DataProvider
 						helper.StringBuilder.Length = helper.LastRowStringIndex;
 						helper.RowsCopied.RowsCopied--;
 					}
+
 					finishFunction(helper);
+
 					if (!helper.Execute())
+					{
+						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+							helper.OriginalContext.Close();
+
 						return helper.RowsCopied;
+					}
+
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);
@@ -395,6 +403,9 @@ namespace LinqToDB.DataProvider
 				finishFunction(helper);
 				helper.Execute();
 			}
+
+			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+				helper.OriginalContext.Close();
 
 			return helper.RowsCopied;
 		}
@@ -435,7 +446,12 @@ namespace LinqToDB.DataProvider
 					}
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					{
+						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 						return helper.RowsCopied;
+					}
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);
@@ -448,6 +464,9 @@ namespace LinqToDB.DataProvider
 				finishFunction(helper);
 				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
+
+			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return helper.RowsCopied;
 		}
@@ -489,7 +508,12 @@ namespace LinqToDB.DataProvider
 					}
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					{
+						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 						return helper.RowsCopied;
+					}
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);
@@ -502,6 +526,9 @@ namespace LinqToDB.DataProvider
 				finishFunction(helper);
 				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
+
+			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return helper.RowsCopied;
 		}

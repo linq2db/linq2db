@@ -154,9 +154,11 @@ namespace LinqToDB.DataModel
 
 			// partial init method, called by all constructors, which could be used by user to add
 			// additional initialization logic
-			var initDataContext = context.MainDataContextPartialMethods
-				.New(context.AST.Name(DataModelConstants.CONTEXT_INIT_METHOD))
-					.SetModifiers(Modifiers.Partial);
+			var initDataContext = !context.Options.GenerateInitDataContextMethod
+				? null
+				: context.MainDataContextPartialMethods
+					.New(context.AST.Name(DataModelConstants.CONTEXT_INIT_METHOD))
+						.SetModifiers(Modifiers.Partial);
 
 			foreach (var body in ctors)
 			{
@@ -167,7 +169,8 @@ namespace LinqToDB.DataModel
 				if (initSchemasMethodName != null)
 					body.Append(context.AST.Call(context.ContextReference, initSchemasMethodName));
 
-				body.Append(context.AST.Call(context.ContextReference, initDataContext.Method.Name));
+				if (initDataContext != null)
+					body.Append(context.AST.Call(context.ContextReference, initDataContext.Method.Name));
 			}
 		}
 	}

@@ -28,7 +28,7 @@ namespace Tests.xUpdate
 				// original 2500 actually works, but sometimes fails with
 				// "cannot allocate enough memory: please check traces for further information"
 				// as HANA virtual machine is PITA to configure, we just use smaller data set
-				string when context.IsAnyOf (TestProvName.AllSapHana)                        => 1000,
+				string when context.IsAnyOf (TestProvName.AllSapHana)                        => 50,
 				// big batches leads to a lot of memory use by oracle, which could mess with testing environment
 				string when context.IsAnyOf (TestProvName.AllOracle)                         => 1000,
 				_                                                                            => 2500,

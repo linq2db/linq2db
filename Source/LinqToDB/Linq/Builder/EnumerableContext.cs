@@ -65,10 +65,14 @@ namespace LinqToDB.Linq.Builder
 			if (Builder.MappingSchema.IsScalarType(_elementType))
 			{
 				var rows = new List<ISqlExpression[]>();
+
 				foreach (var e in arrayExpression.Expressions)
 					rows.Add(new[] { Builder.ConvertToSql(Parent, e) });
 
-				var field = new SqlField(Table, "item");
+				var elementType = arrayExpression.Type.GetElementType();
+
+				var field = new SqlField(Table, "item") { Type = new (elementType!) };
+
 				return new SqlValuesTable(new[] { field }, null, rows);
 			}
 
@@ -299,7 +303,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		ConstructorInfo SelectParameterizedConstructor(Type objectType)
+		static ConstructorInfo SelectParameterizedConstructor(Type objectType)
 		{
 			var constructors = objectType.GetConstructors();
 

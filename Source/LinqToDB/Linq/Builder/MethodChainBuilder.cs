@@ -3,14 +3,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common.Internal;
+	using Common.Internal;
+	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using Reflection;
+	using SqlQuery;
 
 	sealed class MethodChainBuilder : MethodCallBuilder
 	{
@@ -29,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 			// evaluating IQueryableContainer
 			while (root.NodeType == ExpressionType.Constant && typeof(Sql.IQueryableContainer).IsSameOrParentOf(root.Type))
 			{
-				root = ((Sql.IQueryableContainer)root.EvaluateExpression()!).Query.Expression;
+				root = root.EvaluateExpression<Sql.IQueryableContainer>(builder.DataContext)!.Query.Expression;
 				root = root.SkipMethodChain(builder.MappingSchema);
 			}
 

@@ -4,14 +4,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
 using JetBrains.Annotations;
-using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Tools.Comparers
 {
+	using Common;
+	using Expressions;
+	using Extensions;
+	using Reflection;
+
 	/// <summary>
 	/// Builds comparer functions and comparers.
 	/// </summary>
@@ -35,7 +37,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static Func<T,T,bool> GetEqualsFunc<T>([InstantHandle] IEnumerable<MemberAccessor> members)
-			=> CreateEqualsFunc<T>(members.Select(m => m.GetterExpression));
+			=> CreateEqualsFunc<T>(members.Select(m => (Func<Expression, Expression>)m.GetGetterExpression));
 
 		/// <summary>
 		/// Returns GetEqualsFunc function for provided members for type T to compare.
@@ -45,7 +47,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static Func<T,T,bool> GetEqualsFunc<T>(params Expression<Func<T,object?>>[] members)
-			=> CreateEqualsFunc<T>(members);
+			=> CreateEqualsFunc<T>(members.Select(e => (Func<Expression, Expression>)e.GetBody));
 
 		/// <summary>
 		/// Returns GetHashCode function for type T to compare.
@@ -66,7 +68,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static Func<T,int> GetGetHashCodeFunc<T>([InstantHandle] IEnumerable<MemberAccessor> members)
-			=> CreateGetHashCodeFunc<T>(members.Select(m => m.GetterExpression));
+			=> CreateGetHashCodeFunc<T>(members.Select(m => (Func<Expression, Expression>)m.GetGetterExpression));
 
 		/// <summary>
 		/// Returns GetHashCode function for provided members for type T to compare.
@@ -76,7 +78,7 @@ namespace LinqToDB.Tools.Comparers
 		/// <typeparam name="T">The type of objects to compare.</typeparam>
 		[Pure]
 		public static Func<T,int> GetGetHashCodeFunc<T>(params Expression<Func<T, object?>>[] members)
-			=> CreateGetHashCodeFunc<T>(members);
+			=> CreateGetHashCodeFunc<T>(members.Select(e => (Func<Expression, Expression>)e.GetBody));
 
 		sealed class Comparer<T> : EqualityComparer<T>
 		{
@@ -127,7 +129,7 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer<T> GetEqualityComparer<T>(params Expression<Func<T,object?>>[] membersToCompare)
 		{
 			if (membersToCompare == null) throw new ArgumentNullException(nameof(membersToCompare));
-			return new Comparer<T>(CreateEqualsFunc<T>(membersToCompare), CreateGetHashCodeFunc<T>(membersToCompare));
+			return new Comparer<T>(CreateEqualsFunc<T>(membersToCompare.Select(e => (Func<Expression, Expression>)e.GetBody)), CreateGetHashCodeFunc<T>(membersToCompare.Select(e => (Func<Expression, Expression>)e.GetBody)));
 		}
 
 		/// <summary>
@@ -175,15 +177,15 @@ namespace LinqToDB.Tools.Comparers
 		}
 
 		[Pure]
-		static Func<T,T,bool> CreateEqualsFunc<T>(IEnumerable<LambdaExpression> membersToCompare)
+		static Func<T,T,bool> CreateEqualsFunc<T>(IEnumerable<Func<Expression, Expression>> membersToCompare)
 		{
 			var x = Expression.Parameter(typeof(T), "x");
 			var y = Expression.Parameter(typeof(T), "y");
 
 			var expressions = membersToCompare.Select(me =>
 			{
-				var arg0 = RemoveCastToObject(me.GetBody(x));
-				var arg1 = RemoveCastToObject(me.GetBody(y));
+				var arg0 = RemoveCastToObject(me(x));
+				var arg1 = RemoveCastToObject(me(y));
 				var eq   = GetEqualityComparerExpression(arg1.Type);
 				var mi   = eq.Type.GetMethods().Single(m => m.IsPublic && m.Name == "Equals" && m.GetParameters().Length == 2);
 
@@ -232,14 +234,14 @@ namespace LinqToDB.Tools.Comparers
 		}
 
 		[Pure]
-		static Func<T,int> CreateGetHashCodeFunc<T>(IEnumerable<LambdaExpression> membersToCompare)
+		static Func<T,int> CreateGetHashCodeFunc<T>(IEnumerable<Func<Expression, Expression>> membersToCompare)
 		{
 			var parameter  = Expression.Parameter(typeof(T), "parameter");
 			var expression = membersToCompare.Aggregate(
 				(Expression)Expression.Constant(_randomSeed),
 				(e, me) =>
 				{
-					var ma = RemoveCastToObject(me.GetBody(parameter));
+					var ma = RemoveCastToObject(me(parameter));
 					var eq = GetEqualityComparerExpression(ma.Type);
 					var mi = eq.Type.GetMethods().Single(m => m.IsPublic && m.Name == "GetHashCode" && m.GetParameters().Length == 1);
 

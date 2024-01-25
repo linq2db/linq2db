@@ -27,24 +27,19 @@ namespace Cli.NoMetadata.SqlServer
 		public TestDataDB()
 		{
 			InitSchemas();
-			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
 			InitSchemas();
-			InitDataContext();
 		}
 
 		public TestDataDB(DataOptions<TestDataDB> options)
 			: base(options.Options)
 		{
 			InitSchemas();
-			InitDataContext();
 		}
-
-		partial void InitDataContext();
 
 		#region Schemas
 		public void InitSchemas()

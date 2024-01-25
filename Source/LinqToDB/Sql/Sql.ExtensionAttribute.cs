@@ -599,7 +599,7 @@ namespace LinqToDB
 							{
 								if (typeof(IQueryableContainer).IsSameOrParentOf(current.Type))
 								{
-									next = ((IQueryableContainer)current.EvaluateExpression()!).Query.Expression;
+									next = current.EvaluateExpression<IQueryableContainer>(dataContext)!.Query.Expression;
 								}
 								break;
 							}
@@ -690,8 +690,12 @@ namespace LinqToDB
 										foreach (var pair
 											in TypeHelper.EnumTypeRemapping(elementType, argElementType, templateGenericArguments))
 										{
+#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
+											descriptorMapping.TryAdd(pair.Item1, descriptor);
+#else
 											if (!descriptorMapping.ContainsKey(pair.Item1))
 												descriptorMapping.Add(pair.Item1, descriptor);
+#endif
 										}
 									}
 								}
@@ -917,7 +921,7 @@ namespace LinqToDB
 				foreach (var c in replacementMap)
 				{
 					var first = c.UnderName[0];
-					if (c.Name == "" || first.Extension == null)
+					if (c.Name.Length == 0 || first.Extension == null)
 					{
 						for (var i = 0; i < c.UnderName.Length; i++)
 						{

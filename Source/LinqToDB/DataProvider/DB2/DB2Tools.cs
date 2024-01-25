@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using System.Data.Common;
 	using Configuration;
 	using Data;
 
@@ -51,9 +53,21 @@ namespace LinqToDB.DataProvider.DB2
 						try
 						{
 							using var conn = DB2ProviderAdapter.Instance.CreateConnection(options.ConnectionString);
-							options.ConnectionInterceptor?.ConnectionOpening(new(null), ((IConnectionWrapper)conn).Connection);
-							conn.Open();
-							options.ConnectionInterceptor?.ConnectionOpened(new(null), ((IConnectionWrapper)conn).Connection);
+
+							if (options.ConnectionInterceptor == null)
+							{
+								conn.Open();
+							}
+							else
+							{
+								using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+									options.ConnectionInterceptor.ConnectionOpening(new(null), ((IConnectionWrapper)conn).Connection);
+
+								conn.Open();
+
+								using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+									options.ConnectionInterceptor.ConnectionOpened(new(null), ((IConnectionWrapper)conn).Connection);
+							}
 
 							var iszOS = conn.eServerType == DB2ProviderAdapter.DB2ServerTypes.DB2_390;
 
@@ -61,6 +75,7 @@ namespace LinqToDB.DataProvider.DB2
 						}
 						catch
 						{
+							// ignored
 						}
 					}
 
@@ -81,10 +96,9 @@ namespace LinqToDB.DataProvider.DB2
 		public static void ResolveDB2(string path)
 		{
 			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyName);
-			if (DB2ProviderAdapter.AssemblyNameOld != null)
-#pragma warning disable CS0162 // Unreachable code detected
-				new AssemblyResolver(path, DB2ProviderAdapter.AssemblyNameOld);
-#pragma warning restore CS0162 // Unreachable code detected
+#if !NETFRAMEWORK
+			new AssemblyResolver(path, DB2ProviderAdapter.AssemblyNameOld);
+#endif
 		}
 
 		public static void ResolveDB2(Assembly assembly)

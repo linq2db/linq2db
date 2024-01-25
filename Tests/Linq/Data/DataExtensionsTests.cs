@@ -281,8 +281,9 @@ namespace Tests.Data
 			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 16 | tv.Value2 });
 #pragma warning restore CS0675
 
-			using (var conn = new DataConnection().AddMappingSchema(ms))
+			using (var conn = new DataConnection())
 			{
+				conn.AddMappingSchema(ms);
 				var n = conn.Execute<long>("SELECT @p", new { p = new TwoValues { Value1 = 1, Value2 = 2 } });
 
 				Assert.AreEqual(1L << 16 | 2, n);

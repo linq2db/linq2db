@@ -68,9 +68,6 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression sqlExpression = new SqlFunction(methodCall.Type, methodName, true, sql);
 
-			if (sqlExpression == null)
-				throw new LinqToDBException("Invalid Aggregate function implementation");
-
 			context.Sql        = context.SelectQuery;
 			context.FieldIndex = context.SelectQuery.Select.Add(sqlExpression, methodName);
 

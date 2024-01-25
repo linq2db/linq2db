@@ -188,7 +188,7 @@ namespace Tests.xUpdate
 		public void MergeChar1([MergeDataContextSource(
 			false,
 			ProviderName.DB2,
-			ProviderName.PostgreSQL15,
+			TestProvName.AllPostgreSQL15Plus,
 			TestProvName.AllSybase,
 			TestProvName.AllInformix)]
 			string context)
@@ -222,7 +222,7 @@ namespace Tests.xUpdate
 		public void MergeChar2([MergeDataContextSource(
 			false,
 			ProviderName.DB2,
-			ProviderName.PostgreSQL15,
+			TestProvName.AllPostgreSQL15Plus,
 			ProviderName.Sybase,
 			TestProvName.AllInformix)]
 			string context)
@@ -256,7 +256,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void MergeString([MergeDataContextSource(
 			false,
-			ProviderName.PostgreSQL15,
+			TestProvName.AllPostgreSQL15Plus,
 			ProviderName.DB2,
 			ProviderName.Sybase,
 			TestProvName.AllInformix,

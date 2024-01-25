@@ -25,11 +25,7 @@ using LinqToDB.Tools.Comparers;
 using NUnit.Framework;
 using MySqlDataDateTime      = MySqlData::MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal       = MySqlData::MySql.Data.Types.MySqlDecimal;
-#if NETFRAMEWORK
-using MySqlConnectorDateTime = MySqlConnector::MySql.Data.Types.MySqlDateTime;
-#else
 using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
-#endif
 #if NET6_0_OR_GREATER
 using MySqlConnectorDecimal  = MySqlConnector::MySqlConnector.MySqlDecimal;
 #endif

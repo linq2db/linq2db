@@ -72,7 +72,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 					if (supported)
 					{
-						var rd         = new BulkCopyReader<T>(dataConnection, columns, source);
+						using var rd   = new BulkCopyReader<T>(dataConnection, columns, source);
 						var sqlopt     = OracleProviderAdapter.BulkCopyOptions.Default;
 						var rc         = new BulkCopyRowsCopied();
 
@@ -119,11 +119,13 @@ namespace LinqToDB.DataProvider.Oracle
 								opts.RowsCopiedCallback(rc);
 						}
 
+						if (table.DataContext.CloseAfterUse)
+							table.DataContext.Close();
+
 						return rc;
 					}
 				}
 			}
-
 
 			return MultipleRowsCopy(table, options, source);
 		}
@@ -264,7 +266,12 @@ namespace LinqToDB.DataProvider.Oracle
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
 					if (!Execute(helper, list))
+					{
+						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+							helper.OriginalContext.Close();
+
 						return helper.RowsCopied;
+					}
 
 					list.Clear();
 				}
@@ -272,6 +279,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (helper.CurrentCount > 0)
 				Execute(helper, list);
+
+			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+				helper.OriginalContext.Close();
 
 			return helper.RowsCopied;
 		}
@@ -290,7 +300,12 @@ namespace LinqToDB.DataProvider.Oracle
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
 					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					{
+						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 						return helper.RowsCopied;
+					}
 
 					list.Clear();
 				}
@@ -300,6 +315,9 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
+
+			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return helper.RowsCopied;
 		}
@@ -319,7 +337,12 @@ namespace LinqToDB.DataProvider.Oracle
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
 					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					{
+						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+
 						return helper.RowsCopied;
+					}
 
 					list.Clear();
 				}
@@ -329,6 +352,9 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
+
+			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
 			return helper.RowsCopied;
 		}

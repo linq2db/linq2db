@@ -11,6 +11,7 @@ namespace LinqToDB.Linq
 	using Common.Internal.Cache;
 	using Mapping;
 	using SqlQuery;
+	using Tools;
 
 	static partial class QueryRunner
 	{
@@ -43,9 +44,9 @@ namespace LinqToDB.Linq
 				TableOptions           tableOptions,
 				Type                   type)
 			{
-				var sqlTable = SqlTable.Create<T>(dataContext);
+				var sqlTable = new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
 
-				if (tableName != null || schemaName != null || databaseName != null || databaseName != null)
+				if (tableName != null || schemaName != null || databaseName != null || serverName != null)
 				{
 					sqlTable.TableName = new(
 						          tableName    ?? sqlTable.TableName.Name,
@@ -124,6 +125,8 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
+				using var a = ActivityService.Start(ActivityID.UpdateObject);
+
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
@@ -165,33 +168,36 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type             = GetType<T>(obj!, dataContext);
-				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.UpdateObjectAsync))
+				{
+					var type             = GetType<T>(obj!, dataContext);
+					var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
-				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
-					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache.QueryCache.GetOrCreate(
-						(
-							dataContext.ConfigurationID,
-							columnFilter,
-							tableName,
-							schemaName,
-							databaseName,
-							serverName,
-							tableOptions,
-							type,
-							queryFlags: dataContext.GetQueryFlags()
-						),
-						(dataContext, entityDescriptor, obj),
-						static (entry, key, context) =>
-						{
-							entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
-							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
-						});
+					var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
+						? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
+						: Cache.QueryCache.GetOrCreate(
+							(
+								dataContext.ConfigurationID,
+								columnFilter,
+								tableName,
+								schemaName,
+								databaseName,
+								serverName,
+								tableOptions,
+								type,
+								queryFlags: dataContext.GetQueryFlags()
+							),
+							(dataContext, entityDescriptor, obj),
+							static (entry, key, context) =>
+							{
+								entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
+							});
 
-				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 
-				return (int)result!;
+					return (int)result!;
+				}
 			}
 		}
 	}

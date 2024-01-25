@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LinqToDB.CodeModel;
-using LinqToDB.Data;
-using LinqToDB.Scaffold;
-using LinqToDB.SchemaProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {
+	using CodeModel;
+	using Data;
+	using Scaffold;
+	using SchemaProvider;
+	using SqlQuery;
+
 	// Because linq2db schema API is quite an abomination, created to leverage T4 functionality and includes not
 	// only schema but also names generation for generated code and type mapping of database types to .net types.
 	// To not work with this API directly, we introduced schema provider interface and perform conversion of data
@@ -396,9 +397,9 @@ namespace LinqToDB.Schema
 
 			if (hasPrimaryKey)
 			{
-				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey);
+				var pkColumns = table.Columns.Where(c => c.IsPrimaryKey).ToList();
 
-				if (pkColumns.Count() != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Count())
+				if (pkColumns.Count != pkColumns.Select(c => c.PrimaryKeyOrder).Distinct().Count())
 					throw new InvalidOperationException($"Primary key columns have duplicate ordinals on table {tableName}");
 
 				primaryKey = new PrimaryKey(null, table.Columns.Where(c => c.IsPrimaryKey).OrderBy(c => c.PrimaryKeyOrder).Select(c => c.ColumnName).ToList());
@@ -526,6 +527,7 @@ namespace LinqToDB.Schema
 					case "NpgsqlCircle"  : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCircle"  , true); break;
 					case "NpgsqlLine"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlLine"    , true); break;
 					case "NpgsqlInet"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInet"    , true); break;
+					case "NpgsqlCidr"    : type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlCidr"    , true); break;
 					case "NpgsqlInterval": type = _languageProvider.TypeParser.Parse("NpgsqlTypes.NpgsqlInterval", true); break;
 
 					// SQL Server spatial types

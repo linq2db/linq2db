@@ -1135,13 +1135,13 @@ namespace Tests.DataProvider
 
 				if (actualValue is SqlGeometry geometry)
 				{
-					Assert.That(actualValue == null  || geometry.IsNull                  ? null : actualValue.ToString(),
+					Assert.That(geometry.IsNull ? null : actualValue.ToString(),
 						Is.EqualTo(testValue == null || ((SqlGeometry) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
 				else if (actualValue is SqlGeography geography)
 				{
-					Assert.That(actualValue == null  || geography.IsNull                  ? null : actualValue.ToString(),
+					Assert.That(geography.IsNull ? null : actualValue.ToString(),
 						Is.EqualTo(testValue == null || ((SqlGeography) testValue).IsNull ? null : testValue.ToString()),
 						"Column  : {0}", column.MemberName);
 				}
@@ -2166,7 +2166,9 @@ DROP TABLE IF EXISTS TemporalTable3History
 		public void GetDataConnectionTest([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);
-			_ = SqlServerTools.CreateDataConnection(cs);
+			using (SqlServerTools.CreateDataConnection(cs))
+			{
+			}
 		}
 
 		[Test]

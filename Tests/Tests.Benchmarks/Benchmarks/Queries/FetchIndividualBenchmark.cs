@@ -62,7 +62,7 @@ namespace LinqToDB.Benchmarks.Queries
 		[Benchmark(Baseline = true)]
 		public object? RawAdoNet()
 		{
-			var toExecute = new MockDbCommand(CommandText + " WHERE SalesOrderId=@p", _result);
+			using var toExecute = new MockDbCommand(CommandText + " WHERE SalesOrderId=@p", _result);
 			toExecute.Parameters.Add(new MockDbParameter("@p", _key));
 
 			var results = MaterializeSet(toExecute);

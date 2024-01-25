@@ -17,6 +17,8 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
+	using Tools;
+
 
 	sealed partial class ExpressionBuilder
 	{
@@ -154,23 +156,10 @@ namespace LinqToDB.Linq.Builder
 		public readonly List<IBuildContext>    Contexts = new ();
 
 		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-		public static readonly ParameterExpression DataContextParam = Expression.Parameter(typeof(IDataContext), "dctx");
 		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
 		public        readonly ParameterExpression DataReaderLocal;
 		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
 		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
-
-		static bool _isDataContextParamInitialized;
-
-		public static ParameterExpression GetDataContextParam()
-		{
-			if (!_isDataContextParamInitialized)
-			{
-				_isDataContextParamInitialized = true;
-			}
-
-			return DataContextParam;
-		}
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
@@ -182,14 +171,22 @@ namespace LinqToDB.Linq.Builder
 
 		public Query<T> Build<T>()
 		{
+			using var m = ActivityService.Start(ActivityID.Build);
+
 			var sequence = BuildSequence(new BuildInfo((IBuildContext?)null, Expression, new SelectQuery()));
 
 			if (_reorder)
+			{
+				using var mr = ActivityService.Start(ActivityID.ReorderBuilders);
+
 				lock (_sync)
 				{
-					_reorder = false;
+					_reorder          = false;
 					_sequenceBuilders = _sequenceBuilders.OrderByDescending(static _ => _.BuildCounter).ToArray();
 				}
+			}
+
+			using var mq = ActivityService.Start(ActivityID.BuildQuery);
 
 			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
@@ -204,14 +201,23 @@ namespace LinqToDB.Linq.Builder
 
 		public IBuildContext BuildSequence(BuildInfo buildInfo)
 		{
+			using var m = ActivityService.Start(ActivityID.BuildSequence);
+
 			buildInfo.Expression = buildInfo.Expression.Unwrap();
 
 			var n = _builders[0].BuildCounter;
 
 			foreach (var builder in _builders)
 			{
-				if (builder.CanBuild(this, buildInfo))
+				bool canBuild;
+
+				using (ActivityService.Start(ActivityID.BuildSequenceCanBuild))
+					canBuild = builder.CanBuild(this, buildInfo);
+
+				if (canBuild)
 				{
+					using var mb = ActivityService.Start(ActivityID.BuildSequenceBuild);
+
 					var sequence = builder.BuildSequence(this, buildInfo);
 
 					lock (builder)
@@ -1395,7 +1401,7 @@ namespace LinqToDB.Linq.Builder
 								new[] { fakeQuery.Expression }.Concat(callExpression.Arguments.Skip(1)));
 							if (CanBeCompiled(callExpression))
 							{
-								if (!(callExpression.EvaluateExpression() is IQueryable appliedQuery))
+								if (!(callExpression.EvaluateExpression(DataContext) is IQueryable appliedQuery))
 									throw new LinqToDBException($"Method call '{expression}' returned null value.");
 								var newExpression = appliedQuery.Expression.Replace(fakeQuery.Expression, firstArgument);
 								return newExpression;
@@ -1508,7 +1514,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)
+		static MethodInfo GetQueryableMethodInfo<TContext>(TContext context, MethodCallExpression method, [InstantHandle] Func<TContext,MethodInfo, bool,bool> predicate)
 		{
 			if (method.Method.DeclaringType == typeof(Enumerable))
 			{
@@ -1532,7 +1538,7 @@ namespace LinqToDB.Linq.Builder
 			throw new InvalidOperationException("Sequence contains no elements");
 		}
 
-		MethodInfo GetMethodInfo(MethodCallExpression method, string name)
+		static MethodInfo GetMethodInfo(MethodCallExpression method, string name)
 		{
 			if (method.Method.DeclaringType == typeof(Enumerable))
 			{

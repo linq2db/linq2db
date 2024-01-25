@@ -1,24 +1,20 @@
 ﻿using System;
-using System.Globalization;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
-using System.Linq;
+using System.Globalization;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB.Common;
-using LinqToDB.DataProvider.MySql;
-using LinqToDB.Expressions;
-using LinqToDB.Mapping;
-using LinqToDB.Extensions;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
+	using Common;
+	using MySql;
+	using Expressions;
+	using Mapping;
+	using SqlQuery;
+
 	public class ClickHouseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _octonicaSyncRoot = new ();
@@ -101,10 +97,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 			ParameterType  = mySqlProviderAdapter.ParameterType;
 			CommandType    = mySqlProviderAdapter.CommandType;
 
-			GetSByteReaderMethod  = mySqlProviderAdapter.GetSByteMethodName;
-			GetUInt16ReaderMethod = mySqlProviderAdapter.GetUInt16MethodName;
-			GetUInt32ReaderMethod = mySqlProviderAdapter.GetUInt32MethodName;
-			GetUInt64ReaderMethod = mySqlProviderAdapter.GetUInt64MethodName;
+			GetSByteReaderMethod        = mySqlProviderAdapter.GetSByteMethodName;
+			GetUInt16ReaderMethod       = mySqlProviderAdapter.GetUInt16MethodName;
+			GetUInt32ReaderMethod       = mySqlProviderAdapter.GetUInt32MethodName;
+			GetUInt64ReaderMethod       = mySqlProviderAdapter.GetUInt64MethodName;
+			GetMySqlDecimalReaderMethod = mySqlProviderAdapter.GetMySqlDecimalMethodName;
+
 		}
 
 		// IDynamicProviderAdapter
@@ -136,6 +134,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		internal string? GetSByteReaderMethod          { get; }
 		internal string? GetBigIntegerReaderMethod     { get; }
 		internal string? GetDateOnlyReaderMethod       { get; }
+		internal string? GetMySqlDecimalReaderMethod   { get; }
 
 		// Client connection management
 		internal Func<string, ClientWrappers.ClickHouseConnectionStringBuilder>? CreateClientConnectionStringBuilder { get; }
@@ -146,24 +145,39 @@ namespace LinqToDB.DataProvider.ClickHouse
 			if (provider == ClickHouseProvider.Octonica)
 			{
 				if (_octonicaAdapter == null)
+				{
 					lock (_octonicaSyncRoot)
+						// https://github.com/dotnet/roslyn-analyzers/issues/1649
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_octonicaAdapter ??= CreateOctonicaAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _octonicaAdapter;
 			}
 			else if (provider == ClickHouseProvider.MySqlConnector)
 			{
 				if (_mysqlAdapter == null)
+				{
 					lock (_mysqlSyncRoot)
+						// https://github.com/dotnet/roslyn-analyzers/issues/1649
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_mysqlAdapter ??= new ClickHouseProviderAdapter(MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector));
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _mysqlAdapter;
 			}
 			else
 			{
 				if (_clientAdapter == null)
+				{
 					lock (_clientSyncRoot)
+						// https://github.com/dotnet/roslyn-analyzers/issues/1649
+#pragma warning disable CA1508 // Avoid dead conditional code
 						_clientAdapter ??= CreateClientAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _clientAdapter;
 			}
@@ -171,7 +185,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateClientAdapter()
 		{
-			var assembly = Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
+			var assembly = Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
 
@@ -236,7 +250,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
 		{
-			var assembly = Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
+			var assembly = Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
 

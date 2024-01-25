@@ -15,6 +15,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Extensions
 {
+	using Common;
+	using Common.Internal;
 	using Reflection;
 
 	[PublicAPI]
@@ -38,7 +40,7 @@ namespace LinqToDB.Extensions
 			var baseType = type.BaseType;
 			if (baseType == null || baseType == typeof(object) || baseType == typeof(ValueType))
 				return members;
-			
+
 			// in the case of inheritance, we want to:
 			//  - list base class members first
 			//  - remove shadowed members (new modifier)
@@ -99,6 +101,7 @@ namespace LinqToDB.Extensions
 			return type.GetMember(name, BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
 		}
 
+		private static readonly ConcurrentDictionary<(Type, MemberInfo), MemberInfo?> _getMemberExCache = new();
 		/// <summary>
 		/// Returns <see cref="MemberInfo"/> of <paramref name="type"/> described by <paramref name="memberInfo"/>
 		/// It us useful when member's declared and reflected types are not the same.
@@ -109,36 +112,40 @@ namespace LinqToDB.Extensions
 		/// <returns><see cref="MemberInfo"/> or null</returns>
 		public static MemberInfo? GetMemberEx(this Type type, MemberInfo memberInfo)
 		{
-			if (memberInfo.ReflectedType == type)
-				return memberInfo;
-
-			if (memberInfo.IsPropertyEx())
+			return _getMemberExCache.GetOrAdd((type, memberInfo), static key =>
 			{
-				var props = type.GetProperties();
+				var (type, memberInfo) = key;
+				if (memberInfo.ReflectedType == type)
+					return memberInfo;
 
-				PropertyInfo? foundByName = null;
-				foreach (var prop in props)
+				if (memberInfo.IsPropertyEx())
 				{
-					if (prop.Name == memberInfo.Name)
+					var props = type.GetProperties();
+
+					PropertyInfo? foundByName = null;
+					foreach (var prop in props)
 					{
-						foundByName ??= prop;
-						if (prop.GetMemberType() == memberInfo.GetMemberType())
+						if (prop.Name == memberInfo.Name)
 						{
-							return prop;
+							foundByName ??= prop;
+							if (prop.GetMemberType() == memberInfo.GetMemberType())
+							{
+								return prop;
+							}
 						}
 					}
+
+					return foundByName;
 				}
 
-				return foundByName;
-			}
+				if (memberInfo.IsFieldEx())
+					return type.GetField(memberInfo.Name);
 
-			if (memberInfo.IsFieldEx())
-				return type.GetField   (memberInfo.Name);
+				if (memberInfo.IsMethodEx())
+					return type.GetMethodEx(memberInfo.Name, ((MethodInfo)memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
 
-			if (memberInfo.IsMethodEx())
-				return type.GetMethodEx(memberInfo.Name, ((MethodInfo) memberInfo).GetParameters().Select(_ => _.ParameterType).ToArray());
-
-			return null;
+				return null;
+			});
 		}
 
 		public static MethodInfo? GetMethodEx(this Type type, string name)
@@ -302,39 +309,28 @@ namespace LinqToDB.Extensions
 			return type.GetMember(name);
 		}
 
-#if NETSTANDARD2_0
-		private static Func<Type, Type, InterfaceMapping>? _getInterfaceMap;
-#endif
+		// GetInterfaceMap could fail in AOT builds
+		// - CoreRT runtime could miss this method implementation
+		// - NativeAOT builds at least up to .NET 8 doesn't support interfaces with statics or/and default implementations
+		// for such cases we return empty stub
 		public static InterfaceMapping GetInterfaceMapEx(this Type type, Type interfaceType)
 		{
-			// native UWP builds (corert) had no GetInterfaceMap() implementation
-			// (added here https://github.com/dotnet/corert/pull/8144)
-#if NETSTANDARD2_0
-			if (_getInterfaceMap == null)
+			try
 			{
-				_getInterfaceMap = (t, i) => t.GetInterfaceMap(i);
-				try
-				{
-					return _getInterfaceMap(type, interfaceType);
-				}
-				catch (PlatformNotSupportedException)
-				{
-					// porting of https://github.com/dotnet/corert/pull/8144 is not possible as it requires access
-					// to non-public runtime data and reflection doesn't work in corert
-					_getInterfaceMap = (t, i) => new InterfaceMapping()
-					{
-						TargetType       = t,
-						InterfaceType    = i,
-						TargetMethods    = Array.Empty<MethodInfo>(),
-						InterfaceMethods = Array.Empty<MethodInfo>()
-					};
-				}
+				return type.GetInterfaceMap(interfaceType);
 			}
-
-			return _getInterfaceMap(type, interfaceType);
-#else
-			return type.GetInterfaceMap(interfaceType);
-#endif
+			// PNSE: corert
+			// NSE: NativeAOUT
+			catch (Exception ex) when (ex is NotSupportedException or PlatformNotSupportedException)
+			{
+				return new InterfaceMapping()
+				{
+					TargetType = type,
+					InterfaceType = interfaceType,
+					TargetMethods = Array<MethodInfo>.Empty,
+					InterfaceMethods = Array<MethodInfo>.Empty
+				};
+			}
 		}
 
 		/// <summary>
@@ -820,10 +816,17 @@ namespace LinqToDB.Extensions
 
 		public static object? GetDefaultValue(this Type type)
 		{
+			if (type.IsNullableType())
+				return null;
+
+#if NETSTANDARD2_1PLUS
+			return RuntimeHelpers.GetUninitializedObject(type);
+#else
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
 			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype)!;
 
 			return helper.GetDefaultValue();
+#endif
 		}
 
 		public static EventInfo? GetEventEx(this Type type, string eventName)
@@ -833,7 +836,7 @@ namespace LinqToDB.Extensions
 
 #endregion
 
-#region MethodInfo extensions
+		#region MethodInfo extensions
 
 		[return: NotNullIfNotNull(nameof(method))]
 		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
@@ -855,9 +858,9 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-#endregion
+		#endregion
 
-#region MemberInfo extensions
+		#region MemberInfo extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
@@ -1019,7 +1022,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-#endregion
+		#endregion
 
 		public static bool IsAnonymous(this Type type)
 		{

@@ -24,9 +24,9 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override DB2Version Version => DB2Version.LUW;
 
-		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
+		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
-			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression, defaultDatabaseName);
+			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression, defaultDatabaseName, withoutSuffix: withoutSuffix);
 
 			if (table.SqlTableType == SqlTableType.Function)
 				return $"TABLE({name})";
@@ -34,7 +34,7 @@ namespace LinqToDB.DataProvider.DB2
 			return name;
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			if (objectType == ConvertType.NameToProcedure && name.Database != null)
 				throw new LinqToDBException("DB2 LUW cannot address functions/procedures with database name specified.");
