@@ -141,7 +141,7 @@ namespace Tests.UserTests
 
 
 		[Test]
-		public void TestComplexQueryWms([IncludeDataSources(ProviderName.SQLiteMS, ProviderName.SqlServer)] string context)
+		public void TestComplexQueryWms([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
 			using (var s = new DataConnection(context))
 			{
@@ -232,27 +232,16 @@ namespace Tests.UserTests
 									ManuallyInfeededMaterial = inventoryResourceQryUsed.Any(x => x.IR.ResourceID == c2.Id && (x.IR.InfeedAdviceID == null || s.GetTable<InfeedAdvicePositionDTO>().Any(y => y.Id == x.IR.InfeedAdviceID && y.InfeedAdviceType ==1)))
 								} : null),
 							};
+				
+				var maxDepth = 1;
+				var qry = query.Select(x => new ChannelInfoCombinedDTO() { Id = x.Id, ChannelInfo = x.ChannelInfo, Shelf1 = x.Shelf1 });
 
-				try
-				{
-					var maxDepth = 1;
-					var qry = query.Select(x => new ChannelInfoCombinedDTO() { Id = x.Id, ChannelInfo = x.ChannelInfo, Shelf1 = x.Shelf1 });
-
-					if (maxDepth > 1)
-						qry =  query.Select(x => new ChannelInfoCombinedDTO() { Id = x.Id, ChannelInfo = x.ChannelInfo, Shelf1 = x.Shelf1, Shelf2 = x.Shelf2 });
+				if (maxDepth > 1)
+					qry =  query.Select(x => new ChannelInfoCombinedDTO() { Id = x.Id, ChannelInfo = x.ChannelInfo, Shelf1 = x.Shelf1, Shelf2 = x.Shelf2 });
 					
-					var lst = qry.ToList();
-				}
-				catch (Exception ex)
-				{
-
-				}
+				var lst = qry.ToList();
 
 				var sql = s.LastQuery;
-
-
-
-
 			}
 		}
 	}
