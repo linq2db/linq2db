@@ -36,7 +36,7 @@ namespace Tests.UserTests
 								MessageEventDTO = evt,
 							};
 
-					var queryDelete = q.Select(x => x.MessageEventDTO);
+					var queryDelete = q.Select(x => x.MessageEventDTO!);
 
 					var destination = db.GetTable<MessageEventDTO>().TableName("MessageEventDTOTb2");
 
@@ -60,7 +60,7 @@ namespace Tests.UserTests
 								MessageEventDTO = evt,
 							};
 
-					var queryDelete = q.Select(x => x.MessageEventDTO);
+					var queryDelete = q.Select(x => x.MessageEventDTO!);
 
 					var rows = db.Delete(queryDelete);
 				}
