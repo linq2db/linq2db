@@ -19,6 +19,7 @@ parameters:
 # - '[sqlite.all]' - SQLite targets supported
 # - '[sqlserver.all]' - SQL Server targets supported
 # - '[sqlserver.2019]' - SQL Server 2019 targets supported
+# - '[sqlserver.2022]' - SQL Server 2022 targets supported
 # - '[sybase.ase.all]' - SAP/Sybase ASE targets supported
 # - '[clickhouse.all]' - Yandex ClickHouse targets supported
 # Note that filter value enclosed in [] brackets as we check filter using contains substring function and this allows

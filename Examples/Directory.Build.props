@@ -4,9 +4,10 @@
 	<PropertyGroup>
 		<SignAssembly>False</SignAssembly>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
 		<ProjectReference Include="$(MSBuildThisFileDirectory)\..\Source\LinqToDB\LinqToDB.csproj" />
-	</ItemGroup>
 
+		<Compile Remove="$(MSBuildThisFileDirectory)/../Source/Shared/*.cs" />
+	</ItemGroup>
 </Project>
