@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-//using ClickHouse.Client;
-
 using LinqToDB;
 using LinqToDB.Data;
 
@@ -17,10 +15,6 @@ namespace Tests.UserTests
 		public async Task Test([IncludeDataSources(ProviderName.ClickHouseClient)] string context)
 		{
 			await using var db  = GetDataContext(context);
-
-			//await new ClickHouseBulkCopy("").InitAsync();
-
-			//ClickHouse.Client.
 
 			await using var tmp = db.CreateTempTable("UniqueIdTmp",
 				[ new { ID = 1 } ],
